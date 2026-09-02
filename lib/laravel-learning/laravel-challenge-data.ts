@@ -1,14 +1,12 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { LARAVEL_DAY_18_DETAIL } from "@/lib/laravel-learning/laravel-day-18-detail";
 import { laravelDayTitle, laravelTags, laravelWeekTitle } from "@/lib/laravel-learning/laravel-roadmap-i18n";
 
 export const LARAVEL_CURRENT_DAY = 1;
 
-export const LARAVEL_TOTAL_DAYS = 34;
+export const LARAVEL_TOTAL_DAYS = 33;
 
 const LARAVEL_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  18: LARAVEL_DAY_18_DETAIL,
 };
 
 function laravelDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -63,7 +61,6 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
       laravelDayRow(15, ["relations", "eloquent"]),
       laravelDayRow(16, ["advanced-eloquent", "resources"]),
       laravelDayRow(17, ["database", "factories"]),
-      laravelDayRow(18, ["session", "caching"]),
     ],
   },
   {
@@ -71,10 +68,10 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#38bdf8)]",
     days: [
-      laravelDayRow(19, ["auth", "security"]),
-      laravelDayRow(20, ["authorization", "security"]),
-      laravelDayRow(21, ["security", "middleware"]),
-      laravelDayRow(22, ["storage", "api"]),
+      laravelDayRow(18, ["auth", "security"]),
+      laravelDayRow(19, ["authorization", "security"]),
+      laravelDayRow(20, ["security", "middleware"]),
+      laravelDayRow(21, ["storage", "api"]),
     ],
   },
   {
@@ -82,9 +79,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5b"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_49%,#22d3ee)]",
     days: [
-      laravelDayRow(23, ["sanctum", "rest-api"]),
-      laravelDayRow(24, ["livewire", "inertia"]),
-      laravelDayRow(25, ["i18n", "collections"]),
+      laravelDayRow(22, ["sanctum", "rest-api"]),
+      laravelDayRow(23, ["livewire", "inertia"]),
+      laravelDayRow(24, ["i18n", "collections"]),
     ],
   },
   {
@@ -92,9 +89,9 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5c"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_43%,#c084fc)]",
     days: [
-      laravelDayRow(26, ["queues", "jobs"]),
-      laravelDayRow(27, ["events", "mail"]),
-      laravelDayRow(28, ["broadcasting", "events"]),
+      laravelDayRow(25, ["queues", "jobs"]),
+      laravelDayRow(26, ["events", "mail"]),
+      laravelDayRow(27, ["broadcasting", "events"]),
     ],
   },
   {
@@ -102,8 +99,8 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5d"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_41%,#fbbf24)]",
     days: [
-      laravelDayRow(29, ["testing", "pest"]),
-      laravelDayRow(30, ["artisan", "tooling"]),
+      laravelDayRow(28, ["testing", "pest"]),
+      laravelDayRow(29, ["artisan", "tooling"]),
     ],
   },
   {
@@ -111,8 +108,8 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5e"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_39%,#34d399)]",
     days: [
-      laravelDayRow(31, ["ai", "agents"]),
-      laravelDayRow(32, ["search", "ai"]),
+      laravelDayRow(30, ["ai", "agents"]),
+      laravelDayRow(31, ["search", "ai"]),
     ],
   },
   {
@@ -120,8 +117,8 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: laravelWeekTitle("laravel-w5f"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_37%,#38bdf8)]",
     days: [
-      laravelDayRow(33, ["performance", "caching"]),
-      laravelDayRow(34, ["deployment", "devops"]),
+      laravelDayRow(32, ["performance", "caching"]),
+      laravelDayRow(33, ["deployment", "devops"]),
     ],
   },
 ];

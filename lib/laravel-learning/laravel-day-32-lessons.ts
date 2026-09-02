@@ -2,2621 +2,2788 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_32_LESSONS: LessonDay = {
   day: 32,
-  title: "Semantic search — Scout, pgvector & hybrid ranking",
-  totalMinutes: 93,
+  title: "Caching & performance — measure, then optimise",
+  totalMinutes: 94,
   difficulty: "Advanced",
   lessons: [
     {
-      id: "scout-and-search-engines",
-      title: "Laravel Scout & why search engines exist",
+      id: "cache-drivers",
+      title: "Cache drivers — file, database, Redis, Memcached, array",
       durationMinutes: 11,
-      explanation: "Today is about getting from text search to meaning search, and knowing when that is a downgrade.\n\n```text\ntraditional   \"Laravel queues\" → match words → documents with those words\n\nsemantic      \"how do I run work in the background?\"\n              → understand meaning → vector similarity\n              → the Laravel queue documentation\n```\n\n<b>The senior skill is not building semantic search.</b> It is knowing when it helps and when it makes your search worse, which it very often does.\n\n---\n\n### 1. Basic — Scout\n\nScout makes an Eloquent model searchable:\n\n```php\nclass Product extends Model\n{\n    use Searchable;\n}\n```\n\n```php\nProduct::search('MacBook')->get();\n```\n\n```text\nwithout Scout   controller → Eloquent → LIKE query → database\nwith Scout      model → Scout → search engine\n```\n\n<b>The benefit is that your application does not learn a search engine's query language.</b> The same `search()` call works whether the driver is your database or a dedicated engine, so the decision is reversible.\n\n---\n\n### 2. Intermediate — why not just use the database?\n\nYour database is excellent at:\n\n```text\nCRUD · relationships · transactions · constraints\n```\n\nA search engine is built for:\n\n```text\ntext search · ranking · typo tolerance\nautocomplete · facets · filters · large indexes\n```\n\n<b>Ranking is the one people underestimate.</b> `LIKE '%laptop%'` gives you rows that contain the word, in whatever order the database felt like. It has no concept of one result being <b>better</b> than another. A search engine scores every match: a term in the title beats a term buried in paragraph nine, a rare word counts for more than a common one, and two matching terms beat one.\n\n<b>And typo tolerance is what users actually experience.</b> `LIKE '%macbok%'` returns nothing. A real search engine returns MacBooks, and the user never knows they made a mistake.\n\n---\n\n### 3. Advanced — the split, and its cost\n\n```text\nPostgreSQL      your application data, the source of truth\nsearch engine   a searchable representation of it\n```\n\n<b>That is two copies of your data</b>, and everything awkward about search follows from it.\n\n<b>The index goes stale.</b> Scout syncs on save, which means a direct SQL update, a mass `update()` on a query builder, or a migration that rewrites a column all change the database without telling the index. Your search then confidently returns a product whose price changed last week.\n\n<b>The index can be down while your app is fine.</b> So `Product::search(...)` must have an answer for \"the engine is unreachable\", and that answer is usually a degraded database search rather than a 500 on your busiest page.\n\n<b>And deletes matter more than writes.</b> A stale price is embarrassing; a deleted record still appearing in search results is a data leak with a nice interface on it. Confirm your delete path removes from the index, especially for soft deletes, where the row still exists.\n\nThe honest summary: <b>you do not need a search engine because you have a search box.</b> You need one when ranking, typo tolerance or facets are the difference between users finding things and giving up.",
-      diagram: `The day in one picture
+      explanation: "This elective is about making a Laravel application faster <b>without blindly adding caching everywhere</b>.\n\n```text\nslow application → measure → find the bottleneck\n→ fix the query or the code → cache only when useful → measure again\n```\n\n<b>Do not start with \"it's slow, add Redis\".</b> Start with \"why is it slow?\". Everything today serves that order, and the last lesson comes back to it.\n\n---\n\n### 1. Basic — one API, several backends\n\n```text\n            Cache API\n   ┌────┬─────────┬───────┬───────────┐\n  file database Redis Memcached array\n```\n\nYour code stays `Cache::get('key')` while the driver changes underneath. Same abstraction shape as Storage, Queue and Scout.\n\n<b>File</b> is the simplest: cache entries as files on disk. Fine for local development and a single small server.\n\n<b>Array</b> lives only for the current request and vanishes when it ends, which makes it the right driver for tests. <b>It is also why a cache bug can pass every test</b>: your test cache is empty every time, so a stale-value problem never appears.\n\n---\n\n### 2. Intermediate — where file and database fall down\n\n<b>File cache breaks the moment you have two servers:</b>\n\n```text\nserver A → its own cache\nserver B → a different cache\nserver C → a different cache\n```\n\nNothing is shared, so a user's next request may hit a server that never cached anything, and `Cache::forget()` on one server leaves the value alive on the other two. <b>That is not a slow cache, it is an inconsistent one</b>, which is worse.\n\nAnd it is the same failure you met on Day 29 with `onOneServer()` and isolation locks: <b>anything coordinating across servers needs shared storage</b>, and a file driver silently provides none.\n\n<b>Database cache</b> avoids running another service, which is genuinely convenient. But notice what you are doing:\n\n> <b>You are using the database to avoid database work.</b>\n\nIt helps when the cached thing is expensive to compute rather than expensive to read, and it stops helping at high throughput, where your cache reads become load on the system you were protecting.\n\n---\n\n### 3. Advanced — Redis, and separating workloads\n\n<b>Redis</b> is the usual production answer: memory-based, so reads are fast, and it does far more than caching:\n\n```text\ncache · queues · locks · sessions · counters · pub/sub · rate limiting\n```\n\n<b>Memcached</b> is also in-memory, deliberately narrower, and does caching only. Redis has the richer feature set, which is why it usually wins.\n\n<b>But that versatility is a trap.</b> If cache, queue, session and locks all share one Redis instance, then `cache:clear` can wipe your queued jobs, a cache-driven memory spike evicts your sessions, and one busy workload starves the others.\n\n<b>So separate them</b>, by connection or by instance:\n\n```text\nRedis: cache      evictable, allowed to lose data\nRedis: queue      persistent, must not lose data\nRedis: sessions   persistent-ish, losing it logs everyone out\n```\n\n<b>The critical setting is eviction.</b> A cache Redis should evict old keys when memory fills, which is exactly right. A queue Redis with the same policy <b>silently deletes jobs</b> under pressure, and you will not find out until somebody's invoice never sent.\n\nAnd one thing every driver shares: <b>a cache must be allowed to disappear.</b> If clearing it breaks your application, it was not a cache, it was a database with no backups.\n\nThree footnotes.\n\n<b>Two Redis clients exist.</b> `phpredis` is a C extension, faster and the default; `predis` is pure PHP, installed with `composer require predis/predis`, and the answer when you cannot install an extension. `REDIS_CLIENT` picks between them and nothing else in your code changes.\n\n<b>The env key was renamed.</b> Laravel 11 uses `CACHE_STORE`; Laravel 10 and earlier use `CACHE_DRIVER`. An old tutorial's `.env` line is silently ignored on a current version, which looks like a cache that will not switch.\n\n<b>And do not confuse the cache with the session.</b>\n\n```text\nsession   private to one user, and scoped to their browser\ncache     shared by every user and every server\n```\n\nThey often sit on the same Redis, which is where the confusion starts. <b>Anything user-specific in the cache needs the user in the key</b>, and anything genuinely sensitive belongs in the session or nowhere, because a cache is a shared space with a shared namespace.",
+      diagram: `The order this elective follows
 
-  TRADITIONAL
-    "Laravel queues"
-      ↓  match words
-    documents containing those words
+    slow application
+        ↓
+    MEASURE
+        ↓
+    find the bottleneck
+        ↓
+    fix the query or the code
+        ↓
+    cache only when useful
+        ↓
+    measure again
 
-  SEMANTIC
-    "how do I run work in the background?"
-      ↓  understand meaning
-      ↓  vector similarity
-    the Laravel queue documentation
-
-  The senior skill is NOT building semantic search.
-  It is knowing when it helps and when it makes your
-  search worse — which it very often does.
-
-
-Scout
-
-    class Product extends Model { use Searchable; }
-
-    Product::search('MacBook')->get();
-
-    without   controller → Eloquent → LIKE → database
-    with      model → Scout → search engine
-
-  Your application never learns a search engine's
-  query language, so the decision stays reversible.
+  Do NOT start with "it's slow, add Redis".
+  Start with "why is it slow?".
 
 
-Why not just the database?
+One API, several backends
 
-    the database is great at
-      CRUD · relationships · transactions · constraints
+               Cache API
+      ┌────┬────────┬───────┬──────────┬───────┐
+     file  database  Redis  Memcached  array
 
-    a search engine is built for
-      text search · RANKING · typo tolerance
-      autocomplete · facets · filters · large indexes
+    Cache::get('key')   stays the same
 
-  RANKING is the underestimated one:
+  FILE     simplest; files on disk
+           fine for local dev and one small server
 
-    LIKE '%laptop%' returns rows containing the word,
-    in whatever order the database felt like. It has
-    no concept of one result being BETTER.
+  ARRAY    lives for one request, then vanishes
+           the right driver for tests
 
-    A search engine scores every match:
-      title beats paragraph nine
-      a rare word counts more than a common one
-      two matching terms beat one
-
-  TYPO TOLERANCE is what users actually experience:
-
-    LIKE '%macbok%'  → nothing
-    search engine    → MacBooks, and the user never
-                       knows they mistyped
+    ⚠️  which is also why a cache bug passes every
+        test — your test cache is empty each time,
+        so a stale-value problem never appears
 
 
-  ⚠️  The split, and its cost
+  ⚠️  File cache breaks with two servers
 
-      PostgreSQL      source of truth
-      search engine   a COPY, shaped for searching
+      server A → its own cache
+      server B → a different cache
+      server C → a different cache
 
-      Two copies of your data. Everything awkward
-      about search follows from that.
+      Nothing shared. A user's next request may hit
+      a server that cached nothing, and forget() on
+      one leaves the value alive on the other two.
 
-    The index goes STALE
-      Scout syncs on save — so a raw SQL update, a
-      mass update() on a builder, or a migration
-      rewriting a column changes the database and
-      not the index
+        not a SLOW cache — an INCONSISTENT one,
+        which is worse
 
-    The index can be DOWN while your app is fine
-      search() needs an answer for "engine
-      unreachable", and it should be a degraded
-      database search, not a 500 on your busiest page
-
-    DELETES matter more than writes
-      a stale price is embarrassing
-      a deleted record still in search results is a
-      data leak with a nice interface on it
-      (watch soft deletes — the row still exists)
+      Same failure as Day 29's onOneServer() and
+      isolation locks: cross-server coordination
+      needs shared storage, and file provides none.
 
 
-  You do not need a search engine because you have a
-  search box. You need one when ranking, typo
-  tolerance or facets decide whether users find
-  things or give up.`,
+  DATABASE cache
+
+    convenient — no extra service. But notice:
+
+      YOU ARE USING THE DATABASE TO AVOID DATABASE
+      WORK.
+
+    helps when the value is expensive to COMPUTE
+    stops helping at high throughput, where cache
+    reads become load on the system you were
+    protecting
+
+
+REDIS — the usual production answer
+
+    memory-based, and far more than a cache:
+
+      cache · queues · locks · sessions
+      counters · pub/sub · rate limiting
+
+    Memcached: also in-memory, deliberately narrower,
+    caching only
+
+  ⚠️  That versatility is a trap.
+
+      one Redis for everything means:
+        cache:clear can wipe queued jobs
+        a cache memory spike evicts sessions
+        one busy workload starves the others
+
+      Separate by connection or instance:
+
+        cache      evictable, allowed to lose data
+        queue      persistent, must NOT lose data
+        sessions   losing it logs everyone out
+
+  ⚠️  EVICTION is the critical setting.
+
+      cache Redis   evicts old keys when full  ✅
+      queue Redis   same policy SILENTLY DELETES JOBS
+
+      You find out when somebody's invoice never sent.
+
+
+  And every driver shares one rule:
+
+    A CACHE MUST BE ALLOWED TO DISAPPEAR.
+
+    If clearing it breaks your application, it was
+    not a cache — it was a database with no backups.`,
       codeExample: {
-        title: "Making a model searchable, and the parts nobody mentions",
-        code: `<?php
+        title: "Drivers, separation and the settings that matter",
+        code: `# ---------- .env ----------
 
-namespace App\\Models;
+CACHE_STORE=redis
+QUEUE_CONNECTION=redis
+SESSION_DRIVER=redis
 
-use Laravel\\Scout\\Searchable;
-
-class Product extends Model
-{
-    use Searchable;
-
-    // What actually goes into the index — not the whole row
-    public function toSearchableArray(): array
-    {
-        return [
-            'id'          => (int) $this->id,
-            'name'        => $this->name,
-            'description' => $this->description,
-            'brand'       => $this->brand->name,        // denormalised on purpose
-            'price_cents' => (int) $this->price_cents,   // for filtering
-            'in_stock'    => (bool) $this->in_stock,
-            'team_id'     => (int) $this->team_id,       // for scoping
-        ];
-    }
-
-    // Do not index what should not be findable
-    public function shouldBeSearchable(): bool
-    {
-        return $this->published_at !== null && ! $this->trashed();
-    }
-}
+# Local / tests
+CACHE_STORE=array          # vanishes each request — right for tests,
+                           # and why cache bugs hide there
 
 
 <?php
-// ---------- Searching ----------
-
-Product::search('MacBook')->get();
-Product::search('MacBook')->paginate(20);
-Product::search('MacBook')->where('team_id', $user->team_id)->get();
-
-
-<?php
-// ---------- ⚠️ What silently does NOT update the index ----------
-
-// Scout syncs on model events. These skip them:
-
-DB::table('products')->where('id', 5)->update(['price_cents' => 999]);   // raw
-Product::where('discontinued', true)->update(['in_stock' => false]);     // mass
-// and any migration that rewrites a column
-
-// Your search now confidently returns last week's price.
-
-// The fix — be explicit when you bypass Eloquent:
-Product::where('discontinued', true)->update(['in_stock' => false]);
-Product::where('discontinued', true)->searchable();      // re-index them
-
-
-<?php
-// ---------- Deletes matter more than writes ----------
-
-// A stale price is embarrassing.
-// A deleted record still appearing is a data leak.
-
-$product->delete();          // Scout removes it — good
-
-// Soft deletes: the row still exists, so be explicit
-class Product extends Model
-{
-    use SoftDeletes, Searchable;
-
-    public function shouldBeSearchable(): bool
-    {
-        return ! $this->trashed();
-    }
-}
-
-// config/scout.php
-'soft_delete' => false,      // do not index trashed records at all
-
-
-<?php
-// ---------- The engine can be down while your app is fine ----------
-
-class ProductSearch
-{
-    public function search(string $query, User $user): Collection
-    {
-        try {
-            return Product::search($query)
-                ->where('team_id', $user->team_id)
-                ->take(50)
-                ->get();
-        } catch (SearchEngineUnavailable $e) {
-            report($e);
-
-            // Degraded, not broken. A 500 on your busiest
-            // page is a worse outcome than mediocre ranking.
-            return Product::query()
-                ->where('team_id', $user->team_id)
-                ->where('name', 'like', "%{$query}%")
-                ->limit(50)
-                ->get();
-        }
-    }
-}
-
-
-# ---------- What ranking buys you ----------
-
-# LIKE '%laptop%'
-#   → rows containing "laptop", in arbitrary order
-#   → no concept of one result being better
-#
-# search('laptop')
-#   → title match ranks above a mention in paragraph 9
-#   → a rare term counts more than a common one
-#   → 'macbok' still finds MacBooks`,
-      },
-      keyTakeaways: [
-        "<b>Scout makes an Eloquent model searchable</b> with `use Searchable` and `Model::search(...)`.",
-        "<b>Your application never learns a search engine's query language</b>, so the choice stays reversible.",
-        "<b>Databases are built for CRUD, relationships, transactions and constraints.</b>",
-        "<b>Search engines are built for ranking, typo tolerance, autocomplete, facets and large indexes.</b>",
-        "<b>Ranking is the underestimated part</b>: `LIKE` has no notion of one result being better than another.",
-        "<b>Typo tolerance is what users actually experience</b>: `LIKE '%macbok%'` returns nothing.",
-        "<b>An index is a second copy of your data</b>, and every awkward thing about search follows from that.",
-        "<b>Raw SQL, mass updates and migrations bypass Scout's sync</b> and silently leave the index stale.",
-        "<b>Deletes matter more than writes</b>: a deleted record still in search results is a leak.",
-        "<b>Soft deletes need explicit handling</b>, because the row still exists.",
-        "<b>Search must degrade rather than 500</b> when the engine is unreachable.",
-        "<b>A search box is not a reason to add a search engine</b>; ranking, typos and facets are.",
-      ],
-      commonMistakes: [
-        "<b>Assuming every write updates the index.</b> Raw SQL and mass updates do not fire model events.",
-        "<b>Indexing soft-deleted records.</b> They come back in results after being deleted.",
-        "<b>Indexing the whole model.</b> Pick fields deliberately, including what you will filter on.",
-        "<b>No fallback when the engine is down.</b> A search outage becomes a site outage.",
-        "<b>Adding a search engine for a small dataset.</b> A second service and a sync problem you did not need.",
-      ],
-      quiz: [
-        {
-          question: "What does Scout give you architecturally?",
-          options: [
-            "A faster database",
-            "A common interface so your application never learns a search engine's query language",
-            "Automatic embeddings",
-            "Free hosting",
-          ],
-          correctIndex: 1,
-          explanation: "Which is what makes the driver choice reversible.",
-        },
-        {
-          question: "What does a search engine offer that `LIKE` cannot?",
-          options: [
-            "Transactions",
-            "Ranking and typo tolerance: better matches first, and `macbok` still finds MacBooks",
-            "Constraints",
-            "Relationships",
-          ],
-          correctIndex: 1,
-          explanation: "`LIKE` has no concept of one result being better than another.",
-        },
-        {
-          question: "Which operations silently leave the search index stale?",
-          options: [
-            "All model saves",
-            "Raw SQL updates, mass `update()` on a builder, and migrations rewriting columns",
-            "Deletes",
-            "None",
-          ],
-          correctIndex: 1,
-          explanation: "Scout syncs on model events, which those bypass.",
-        },
-        {
-          question: "Why do stale deletes matter more than stale updates?",
-          options: [
-            "They are harder to fix",
-            "A deleted record still appearing in search is a data leak, not just wrong data",
-            "They break pagination",
-            "They do not",
-          ],
-          correctIndex: 1,
-          explanation: "Soft deletes especially, since the row still exists.",
-        },
-      ],
-    },
-    {
-      id: "scout-drivers",
-      title: "Scout drivers — database, Meilisearch, Algolia, Typesense",
-      durationMinutes: 11,
-      explanation: "One interface, several engines behind it.\n\n```text\n              Scout\n     ┌──────────┼──────────┐\n  database  Meilisearch  Algolia\n                        Typesense\n```\n\n---\n\n### 1. Basic — the database driver\n\nThe simplest start: search stays inside the database you already run.\n\n```text\nsmall application · moderate search needs · simple infrastructure\n```\n\n<b>You do not need another service just because you have a search box.</b> A second service means another thing to deploy, monitor, back up, secure and keep in sync, and for a few thousand rows it buys you very little.\n\n<b>Start here.</b> Scout's interface is the same, so moving later is a config change plus a re-import, not a rewrite. That is the entire point of the abstraction.\n\n---\n\n### 2. Intermediate — the dedicated engines\n\n<b>Meilisearch</b> is built for fast, user-friendly search: product search, documentation, autocomplete, typo tolerance. Self-hosted, one binary, sensible defaults. <b>For most applications outgrowing the database driver, this is the answer.</b>\n\n<b>Algolia</b> is hosted, so somebody else operates the cluster. Attractive when search is a major product feature and you do not want to run infrastructure. <b>The trade is cost, which is usage-based and scales with your traffic</b>, so model it before you commit.\n\n<b>Typesense</b> is the third option, similar in shape to Meilisearch, self-hosted or cloud.\n\n<b>The lesson is not the driver list.</b> It is that Scout gives you a common interface while the driver does the work.\n\n---\n\n### 3. Advanced — what the abstraction does not cover\n\n<b>The searching is portable. The configuration is not.</b>\n\nRanking rules, synonyms, stop words, typo tolerance settings, faceting and filterable attributes are all engine-specific, and they live in each engine's own configuration rather than in Scout. <b>So the switch is a config change plus a re-import plus rebuilding all of that tuning</b>, which is where the real time goes.\n\nThree things worth knowing before you pick.\n\n<b>The database driver does not do typo tolerance or real ranking.</b> If your users mistype, and they do, you have already outgrown it. That, not row count, is usually the signal.\n\n<b>Index size and memory.</b> Meilisearch and Typesense keep indexes largely in memory, so a very large corpus is a hosting decision, not just a `composer require`.\n\n<b>And the sync path matters more than the engine.</b> Scout can queue index updates, and in production it should: an inline index write means your product save now depends on the search engine being up. <b>Queue it, and a search outage stops being a write outage.</b>\n\nOne practical note on choosing: <b>the correct question is not which engine is best, but whether you need one at all yet.</b> Most applications reach for a search engine well before their search is bad enough to justify it.",
-      diagram: `One interface, several engines
-
-                  Scout
-                    │
-        ┌───────────┼───────────┐
-        ▼           ▼           ▼
-    database   Meilisearch   Algolia
-                             Typesense
-
-
-The database driver
-
-    small application · moderate search needs
-    simple infrastructure
-
-  You do not need another service just because you
-  have a search box. A second service is another
-  thing to deploy, monitor, back up, secure and keep
-  in sync.
-
-  START HERE. Moving later is a config change plus a
-  re-import, not a rewrite. That is the entire point
-  of the abstraction.
-
-
-The dedicated engines
-
-  Meilisearch   fast, user-friendly, typo-tolerant
-                self-hosted, one binary, good defaults
-                → for most apps outgrowing the
-                  database driver, this is the answer
-
-  Algolia       hosted; somebody else runs the cluster
-                good when search IS the product
-                ⚠️ usage-based cost that scales with
-                   your traffic — model it first
-
-  Typesense     similar shape to Meilisearch,
-                self-hosted or cloud
-
-  The lesson is not the driver list. It is that Scout
-  gives you a common interface while the driver does
-  the work.
-
-
-  ⚠️  What the abstraction does NOT cover
-
-      The SEARCHING is portable.
-      The CONFIGURATION is not.
-
-        ranking rules · synonyms · stop words
-        typo tolerance settings · faceting
-        filterable attributes
-
-      All engine-specific, all living in the engine's
-      own config rather than in Scout.
-
-      So a switch is: config change + re-import +
-      REBUILDING ALL THAT TUNING. That last part is
-      where the time goes.
-
-
-Three things before you pick
-
-  The database driver has no typo tolerance and no
-  real ranking
-
-    if your users mistype — and they do — you have
-    already outgrown it
-    that, not row count, is usually the signal
-
-  Index size is a MEMORY decision
-
-    Meilisearch and Typesense hold indexes largely in
-    memory; a very large corpus is a hosting
-    decision, not a composer require
-
-  The SYNC PATH matters more than the engine
-
-    inline index writes mean your product save now
-    depends on the search engine being up
-
-      queue it → a search outage stops being a
-                 write outage
-
-
-  The right question is not which engine is best.
-  It is whether you need one AT ALL yet. Most apps
-  reach for one long before their search is bad
-  enough to justify it.`,
-      codeExample: {
-        title: "Choosing a driver, and queueing the sync",
-        code: `# ---------- config/scout.php ----------
-
-'driver' => env('SCOUT_DRIVER', 'database'),
-
-# Queue index updates. In production this is not optional:
-# inline writes make your product save depend on the
-# search engine being up.
-'queue' => [
-    'connection' => 'redis',
-    'queue'      => 'scout',
-],
-
-'chunk' => [
-    'searchable'   => 500,
-    'unsearchable' => 500,
-],
-
-
-# ---------- Start here ----------
-
-SCOUT_DRIVER=database
-
-# No second service to deploy, monitor, back up or
-# secure. For a few thousand rows it buys very little.
-
-
-# ---------- Outgrown it? ----------
-
-composer require meilisearch/meilisearch-php http-interop/http-factory-guzzle
-
-SCOUT_DRIVER=meilisearch
-MEILISEARCH_HOST=http://127.0.0.1:7700
-MEILISEARCH_KEY=masterKey
-
-php artisan scout:import "App\\Models\\Product"
-
-# The application code did not change. That is the
-# whole point of the abstraction.
-
-
-<?php
-// ---------- What does NOT move with you ----------
-
-// config/scout.php — Meilisearch-specific tuning
-'meilisearch' => [
-    'index-settings' => [
-        Product::class => [
-            'filterableAttributes' => ['brand', 'price_cents', 'in_stock', 'team_id'],
-            'sortableAttributes'   => ['price_cents', 'created_at'],
-            'searchableAttributes' => ['name', 'description', 'brand'],  // order = weight
-            'rankingRules' => [
-                'words', 'typo', 'proximity', 'attribute', 'exactness',
-                'price_cents:asc',
-            ],
-            'synonyms' => [
-                'laptop' => ['notebook', 'macbook'],
-                'phone'  => ['mobile', 'smartphone'],
-            ],
-            'stopWords' => ['the', 'a', 'of'],
-        ],
+// ---------- config/database.php: separate the workloads ----------
+
+'redis' => [
+    'client' => env('REDIS_CLIENT', 'phpredis'),
+
+    // Evictable. Losing this is fine, by definition.
+    'cache' => [
+        'host'     => env('REDIS_HOST'),
+        'port'     => env('REDIS_PORT', 6379),
+        'database' => 1,
+    ],
+
+    // Must NOT lose data. A job deleted under memory
+    // pressure is an invoice that never sent.
+    'queue' => [
+        'host'     => env('REDIS_QUEUE_HOST', env('REDIS_HOST')),
+        'port'     => env('REDIS_PORT', 6379),
+        'database' => 2,
+    ],
+
+    // Losing this logs everyone out.
+    'sessions' => [
+        'host'     => env('REDIS_HOST'),
+        'database' => 3,
     ],
 ],
 
-php artisan scout:sync-index-settings
-
-// None of this is portable. Switching engines means
-// rebuilding every one of these rules in the new
-// engine's own vocabulary — which is where the real
-// time goes, not the config change.
+// One instance for everything means cache:clear can wipe
+// your queued jobs, and a cache spike evicts sessions.
 
 
-<?php
-// ---------- The signal that you have outgrown the database driver ----------
+# ---------- The eviction policy, per instance ----------
 
-// Database driver
-Product::search('macbok')->get();     // → nothing
+# Cache Redis — correct behaviour
+maxmemory 2gb
+maxmemory-policy allkeys-lru      # evict old keys when full
 
-// Meilisearch
-Product::search('macbok')->get();     // → MacBooks
-
-// It is usually typos and ranking that force the move,
-// not row count.
+# Queue Redis — the same line here silently deletes jobs
+maxmemory 1gb
+maxmemory-policy noeviction       # refuse writes instead of losing data
 
 
 <?php
-// ---------- Filtering differs per engine ----------
+// ---------- Why file cache fails on two servers ----------
 
-// Meilisearch / Typesense
-Product::search('laptop')
-    ->where('in_stock', true)
-    ->whereIn('brand', ['Apple', 'Dell'])
-    ->get();
+// Server A
+Cache::put('product:5', $product, now()->addHour());
 
-// Algolia
-Product::search('laptop', function ($algolia, $query, $options) {
-    $options['filters'] = 'in_stock=1 AND price_cents < 100000';
+// Server B — different disk, different cache
+Cache::get('product:5');            // null
 
-    return $algolia->search($query, $options);
-})->get();
+// Server A
+Cache::forget('product:5');         // B and C still serve the old value
 
-// Scout normalises the common cases. Anything
-// engine-specific leaks through the callback — and
-// that callback does not survive a driver change.
+// Not a slow cache. An INCONSISTENT one, which is worse.
+// Same failure as Day 29's onOneServer() with a file driver.
 
 
-# ---------- Hosting reality ----------
+<?php
+// ---------- Database cache: using the database to avoid the database ----------
 
-# Meilisearch and Typesense keep indexes largely in
-# memory. A 20M-document corpus is a hosting decision,
-# not a composer require.
-#
-# Algolia removes that problem and adds a usage-based
-# bill that scales with your traffic. Model it before
-# you commit.`,
+php artisan make:cache-table
+php artisan migrate
+
+// CACHE_STORE=database
+//
+// Helps when the value is expensive to COMPUTE:
+Cache::remember('monthly-report', now()->addHours(6),
+    fn () => $this->reportBuilder->build());     // 8s of aggregation
+
+// Does not help when the value is expensive to READ:
+Cache::remember('user:5', now()->addHour(),
+    fn () => User::find(5));                     // you swapped one row read
+                                                 // for another row read
+
+
+<?php
+// ---------- The rule that tests everything ----------
+
+// Ask: can I run this right now, in production?
+php artisan cache:clear
+
+// If the answer is "no, that would break things", it is
+// not a cache. It is a database with no backups.
+
+// ✅ A cache
+$total = Cache::remember("team:{$team->id}:invoice-total", now()->addMinutes(10),
+    fn () => $team->invoices()->sum('total_cents'));
+
+// ❌ Not a cache — nothing else knows this value
+Cache::forever("user:{$user->id}:onboarding-step", 3);`,
       },
       keyTakeaways: [
-        "<b>Scout supports a database driver plus Meilisearch, Algolia and Typesense.</b>",
-        "<b>Start with the database driver.</b> A search box is not a reason to run another service.",
-        "<b>Moving later is a config change and a re-import</b>, which is exactly what the abstraction is for.",
-        "<b>Meilisearch is the usual answer</b> when you outgrow the database driver: self-hosted, fast, typo-tolerant.",
-        "<b>Algolia is hosted</b>, good when search is the product, with usage-based cost that scales with traffic.",
-        "<b>The searching is portable; the configuration is not.</b>",
-        "<b>Ranking rules, synonyms, stop words and facets are engine-specific</b> and must be rebuilt on a switch.",
-        "<b>The database driver has no typo tolerance or real ranking</b>, and that is usually the signal to move.",
-        "<b>Meilisearch and Typesense hold indexes in memory</b>, so a large corpus is a hosting decision.",
-        "<b>Queue your index updates</b>, or a search-engine outage becomes a write outage.",
-        "<b>The right question is whether you need an engine yet</b>, not which one is best.",
+        "<b>The order is measure, find the bottleneck, fix the code or query, then cache.</b>",
+        "<b>One Cache API sits over file, database, Redis, Memcached and array drivers.</b>",
+        "<b>The array driver lives for one request</b>, which is right for tests and hides stale-cache bugs.",
+        "<b>File cache breaks with more than one server</b>: each has its own, and `forget()` only clears one.",
+        "<b>That is inconsistency, not slowness</b>, and it is the same shared-storage rule as Day 29's locks.",
+        "<b>Database cache means using the database to avoid database work.</b>",
+        "<b>It helps for expensive computation, not expensive reads</b>, and stops helping at high throughput.",
+        "<b>Redis is the usual production answer</b> and also does queues, locks, sessions, counters and rate limiting.",
+        "<b>That versatility is a trap</b>: one instance means `cache:clear` can wipe queued jobs.",
+        "<b>Separate cache, queue and session Redis by connection or instance.</b>",
+        "<b>Eviction policy is the critical difference</b>: a cache should evict, a queue must never.",
+        "<b>A cache must be allowed to disappear</b>, or it is a database with no backups.",
       ],
       commonMistakes: [
-        "<b>Adding a search service on day one.</b> Another thing to deploy, monitor, secure and keep in sync.",
-        "<b>Expecting a driver switch to be free.</b> Ranking rules and synonyms do not travel with you.",
-        "<b>Syncing the index inline.</b> Every product save now depends on the search engine being up.",
-        "<b>Choosing Algolia without modelling cost.</b> Usage-based pricing grows exactly as your traffic does.",
-        "<b>Judging readiness by row count.</b> Typos and bad ranking are the real signal.",
+        "<b>File cache on multiple servers.</b> Three different caches and a `forget()` that clears one.",
+        "<b>One Redis for everything.</b> `cache:clear` deletes jobs and a cache spike evicts sessions.",
+        "<b>`allkeys-lru` on a queue Redis.</b> Jobs vanish silently under memory pressure.",
+        "<b>Storing something only the cache knows.</b> That is not a cache, and clearing it loses data.",
+        "<b>Trusting tests with the array driver to catch cache bugs.</b> The cache is empty every time.",
       ],
       quiz: [
         {
-          question: "Which driver should most applications start with?",
+          question: "Why is file cache a problem on multiple servers?",
           options: [
-            "Algolia",
-            "The database driver, since a search box alone does not justify another service",
-            "Meilisearch",
-            "Typesense",
+            "It is slow",
+            "Each server has its own cache, so nothing is shared and `forget()` only clears one",
+            "It cannot store objects",
+            "It has no TTL",
           ],
           correctIndex: 1,
-          explanation: "Moving later is a config change plus a re-import.",
+          explanation: "That is inconsistency, which is worse than slowness.",
         },
         {
-          question: "What does Scout's abstraction not cover?",
+          question: "What is the catch with the database cache driver?",
           options: [
-            "Searching",
-            "Engine-specific configuration: ranking rules, synonyms, stop words and facets",
-            "Pagination",
-            "Indexing",
+            "It has no TTL support",
+            "You are using the database to avoid database work, so it helps computation but not reads",
+            "It cannot be cleared",
+            "It is not supported in production",
           ],
           correctIndex: 1,
-          explanation: "Rebuilding that tuning is where a driver switch actually costs you.",
+          explanation: "At high throughput your cache reads become load on the system you were protecting.",
         },
         {
-          question: "What usually signals you have outgrown the database driver?",
+          question: "Why separate cache and queue Redis instances?",
           options: [
-            "Row count",
-            "Typos returning nothing and results arriving in no useful order",
-            "Disk usage",
-            "Query volume",
+            "For speed",
+            "`cache:clear` can wipe queued jobs, and a cache eviction policy silently deletes them",
+            "Laravel requires it",
+            "For monitoring",
           ],
           correctIndex: 1,
-          explanation: "`LIKE '%macbok%'` returns nothing, and users mistype constantly.",
+          explanation: "A cache should evict; a queue must never.",
         },
         {
-          question: "Why queue Scout index updates in production?",
+          question: "What is the test for whether something is really a cache?",
           options: [
-            "For speed only",
-            "Inline writes make every model save depend on the search engine being up",
-            "Queues are required",
-            "To batch requests",
+            "It has a TTL",
+            "You could run `cache:clear` in production right now without breaking anything",
+            "It uses Redis",
+            "It is under 1MB",
           ],
           correctIndex: 1,
-          explanation: "Queued, a search outage stops being a write outage.",
+          explanation: "Otherwise it is a database with no backups.",
         },
       ],
     },
     {
-      id: "indexing-pagination-and-filters",
-      title: "Importing, flushing, pagination & filters",
-      durationMinutes: 12,
-      explanation: "The operational half of search, which is where most of the surprises live.\n\n---\n\n### 1. Basic — importing\n\nYour database has data. Your index does not.\n\n```text\ndatabase → scout:import → search index\n```\n\n```bash\nphp artisan scout:import \"App\\Models\\Product\"\nphp artisan scout:flush \"App\\Models\\Product\"\n```\n\n<b>Flush then import is the standard rebuild</b>, and you need it when:\n\n```text\nsearchable fields changed\nindex configuration changed\ndata drifted out of sync\n```\n\n---\n\n### 2. Intermediate — the rebuild problem\n\nHere is the part that bites in production: <b>flush deletes the index, and import takes minutes.</b> In between, your search returns nothing.\n\n```text\nflush → [ search is empty for 8 minutes ] → import\n```\n\nOn a live site that is an outage you scheduled yourself.\n\n<b>The fix is an index alias</b>: build a new index alongside the old one, then swap the alias atomically when it is complete. Users search the old index right up until the moment they search the new one. If your engine does not support that, rebuild during your quietest hour and know exactly how long it takes, because you will need that number under pressure.\n\n<b>And import is not free either.</b> It reads every row and writes every document, which is real load on both systems. Chunk it, run it off-peak, and watch memory: `scout:import` with eager-loaded relations on a large table is a classic out-of-memory kill.\n\n---\n\n### 3. Advanced — pagination and filters\n\nSearch results need ordinary UX:\n\n```text\nsearch → ranking → pagination → response\n```\n\n```php\nProduct::search('laptop')->paginate(20);\n```\n\n<b>But search pagination is not database pagination.</b> Two differences that catch people.\n\n<b>Engines cap total results.</b> Most refuse to paginate past a few thousand hits, because deep pagination in a ranked index is expensive and nobody visits page 400. Your UI has to handle \"no more results\" rather than assuming every page exists.\n\n<b>And the index shifts under the user.</b> Between page one and page two, a product is added and the ranking changes, so an item can appear twice or never. Cursor pagination helps; accepting it is usually fine for search, where nobody expects a stable list.\n\nThen filters. Real search is never just a keyword:\n\n```text\n\"laptop\" + brand: Apple + price: 1000–2000 + in stock\n```\n\n```text\nkeyword + filters + ranking + pagination\n```\n\n<b>Two rules.</b>\n\n<b>Filter in the engine, not in PHP.</b> Fetching a hundred results and filtering the collection breaks your counts, your pagination and your ranking all at once. The engine has to know the filterable attributes up front, which is why the index configuration from the last lesson matters.\n\n<b>And scope in the query, not the interface.</b> A multi-tenant search must filter by tenant inside the search call. This is exactly the tool-scoping rule from Day 31: if the constraint lives anywhere except the query, something will eventually return another customer's data.",
-      diagram: `Importing
+      id: "the-cache-api",
+      title: "get, put, remember, rememberForever & touch",
+      durationMinutes: 11,
+      explanation: "Five methods cover almost everything you will write.\n\n---\n\n### 1. Basic — get and put\n\n```php\n$value = Cache::get('users');          // null if missing\n$value = Cache::get('users', []);      // with a default\n\nCache::put('users', $users, now()->addMinutes(10));\n```\n\n<b>TTL</b> is time to live: after ten minutes the entry is no longer valid.\n\n```text\nkey → cache → value\n```\n\n---\n\n### 2. Intermediate — remember\n\nThe one you will use most:\n\n```php\n$users = Cache::remember('users', now()->addMinutes(10), fn () => User::all());\n```\n\n```text\ncache exists?\n  yes → return it\n  no  → run the closure → store the result → return it\n```\n\n<b>The expensive work happens only on a miss</b>, and the read-check-write logic you would otherwise write by hand is gone, along with the race between checking and writing.\n\n`rememberForever` has no expiry:\n\n```php\nCache::rememberForever('countries', fn () => Country::all());\n```\n\n<b>\"Forever\" does not mean \"never needs invalidating\".</b> It means you have taken responsibility for invalidating it yourself, and if you forget, the value is wrong until somebody runs `cache:clear`. <b>Use it only for genuinely static data</b>, and even then, ask what happens when it changes.\n\n---\n\n### 3. Advanced — TTL is a correctness decision\n\n<b>The TTL is how long you are willing to serve wrong data.</b> That is the whole question, and it is a business one rather than a technical one:\n\n```text\nan invoice total       seconds, or invalidate on write\na product listing      minutes\na country list         hours or days\n```\n\n<b>Ten minutes is not a default, it is a decision</b> that says a user may see a ten-minute-old figure. Sometimes that is fine. On a payment page it is not.\n\n<b>And a `remember` block is not automatically a win.</b> If the closure takes two milliseconds, you have replaced a fast query with a network round trip to Redis plus serialisation, and made the code harder to reason about. <b>Cache what is slow, not what is frequent.</b>\n\n`Cache::touch()` extends a TTL without rewriting the value:\n\n```text\nvalue: same    TTL: 5 minutes → 10 minutes\n```\n\nUseful when the value is still valid and you want to keep it alive, typically for something expensive to rebuild that is still being actively used.\n\nTwo practical points that cause real bugs.\n\n<b>Keys must include everything the value depends on.</b> A key of `dashboard` on a multi-tenant application serves one tenant's dashboard to everybody. It should be `dashboard:team:{id}:v2`, and the version suffix is how you invalidate a shape change without a deploy-time flush.\n\n<b>And do not cache `null` accidentally.</b> `Cache::remember` stores whatever the closure returns, including `null`, so a lookup that failed once keeps returning \"not found\" for the whole TTL. That is a cached outage.\n\nThe rest of the surface, briefly:\n\n```php\nCache::has($key);            // present and unexpired\nCache::missing($key);        // the inverse, reads better in a guard\nCache::pull($key);           // read it and forget it, in one call\nCache::increment('views');\nCache::decrement('slots');\nCache::forever($key, $value); // no expiry\n```\n\n<b>`pull()` is the one worth remembering</b>, because it is how you consume a single-use value, a one-time token or a queued flash message, without the gap between reading and deleting where a second request can read it too.\n\nAnd the TTL takes plain seconds as well as a date:\n\n```php\nCache::put($key, $value, 3600);\nCache::put($key, $value, now()->addHour());\n```\n\n<b>The second form is worth the extra characters</b>, because `3600` is a number somebody has to decode and `addHour()` is not.\n\nOne piece of vocabulary for reading other people's code: what `remember()` does has a name, the <b>cache-aside pattern</b>. Check the cache, compute on a miss, store, return. You have been writing it all along; that is what it is called.",
+      diagram: `get and put
 
-    database → scout:import → search index
+    Cache::get('users');           null if missing
+    Cache::get('users', []);       with a default
 
-    php artisan scout:import "App\\Models\\Product"
-    php artisan scout:flush  "App\\Models\\Product"
+    Cache::put('users', $users, now()->addMinutes(10));
 
-  Flush + import is the standard rebuild. You need it
-  when searchable fields changed, index config
-  changed, or data drifted.
+      key → cache → value
 
-
-  ⚠️  Flush DELETES the index. Import takes minutes.
-
-      flush → [ search returns NOTHING for 8 min ]
-            → import
-
-      On a live site that is an outage you scheduled
-      yourself.
-
-      The fix: an INDEX ALIAS
-
-        build products_v2 alongside products_v1
-        swap the alias atomically when complete
-
-        users search the old index right up until
-        they search the new one
-
-      No alias support? Rebuild in your quietest hour
-      and KNOW HOW LONG IT TAKES — you will need that
-      number under pressure.
-
-  And import is not free: every row read, every
-  document written, real load on both systems.
-  Chunk it, run it off-peak, and watch memory —
-  scout:import with eager-loaded relations on a big
-  table is a classic OOM kill.
+    TTL = time to live. After 10 minutes the entry is
+    no longer valid.
 
 
-Pagination
+remember — the one you will use most
 
-    search → ranking → pagination → response
+    Cache::remember('users', now()->addMinutes(10),
+        fn () => User::all());
 
-    Product::search('laptop')->paginate(20);
+              cache exists?
+                   │
+             ┌─────┴─────┐
+            YES          NO
+             │            │
+             ▼            ▼
+         return      run the closure
+         value            ↓
+                     store result
+                          ↓
+                     return result
 
-  ⚠️  Search pagination is NOT database pagination.
-
-      Engines CAP total results
-        most refuse to paginate past a few thousand
-        hits — deep pagination in a ranked index is
-        expensive and nobody visits page 400
-        → your UI must handle "no more results"
-
-      The index SHIFTS under the user
-        between page 1 and page 2 a product is added,
-        ranking changes, an item appears twice or
-        never
-        → cursor pagination helps; accepting it is
-          usually fine, nobody expects search to be
-          a stable list
+  The expensive work happens only on a miss, and the
+  read-check-write logic (and its race) is gone.
 
 
-Filters — real search is never just a keyword
+rememberForever
 
-    "laptop"
-      + brand: Apple
-      + price: 1000–2000
-      + in stock
+    Cache::rememberForever('countries',
+        fn () => Country::all());
 
-    keyword + filters + ranking + pagination
+  ⚠️  "Forever" does not mean "never needs
+      invalidating".
 
-  Two rules:
+      It means YOU have taken responsibility for
+      invalidating it. Forget, and the value is wrong
+      until somebody runs cache:clear.
 
-    FILTER IN THE ENGINE, not in PHP
+      Genuinely static data only — and even then, ask
+      what happens when it changes.
 
-      fetching 100 results and filtering the
-      collection breaks your counts, your pagination
-      AND your ranking, all at once
 
-      the engine must know filterable attributes up
-      front — which is why index configuration matters
+  ⚠️  THE TTL IS HOW LONG YOU ARE WILLING TO SERVE
+      WRONG DATA.
 
-    SCOPE IN THE QUERY, not the interface
+      A business question, not a technical one:
 
-      multi-tenant search filters by tenant INSIDE
-      the search call
+        an invoice total     seconds, or invalidate
+                             on write
+        a product listing    minutes
+        a country list       hours or days
 
-      exactly Day 31's tool-scoping rule: a
-      constraint that lives anywhere but the query
-      will eventually return another customer's data`,
+      Ten minutes is not a default. It is a decision
+      that a user may see a ten-minute-old figure.
+
+      Fine on a listing page. Not on a payment page.
+
+
+  ⚠️  A remember block is not automatically a win.
+
+      closure takes 2ms
+        → you replaced a fast query with a network
+          round trip plus serialisation, and made the
+          code harder to reason about
+
+      CACHE WHAT IS SLOW, NOT WHAT IS FREQUENT.
+
+
+Cache::touch()
+
+    value: unchanged      TTL: 5 min → 10 min
+
+  Extend the lifetime without rewriting the value.
+  For something expensive to rebuild that is still
+  actively used.
+
+
+Two bugs worth avoiding
+
+  KEYS must include everything the value depends on
+
+    'dashboard'                  ← serves one tenant's
+                                   dashboard to everyone
+    'dashboard:team:5:v2'        ← and the version
+                                   suffix invalidates a
+                                   shape change with no
+                                   deploy-time flush
+
+  Do not cache NULL by accident
+
+    remember() stores whatever the closure returns,
+    including null — so a lookup that failed once
+    keeps returning "not found" for the whole TTL
+
+      that is a CACHED OUTAGE`,
       codeExample: {
-        title: "Rebuilds without downtime, and filters that hold",
-        code: `# ---------- The commands ----------
+        title: "The five methods, and the traps in each",
+        code: `<?php
+// ---------- The basics ----------
 
-php artisan scout:import "App\\Models\\Product"
-php artisan scout:flush  "App\\Models\\Product"
-php artisan scout:sync-index-settings
+$users = Cache::get('users');                        // null if missing
+$users = Cache::get('users', []);                    // default
 
-# ❌ The naive rebuild, on a live site
-php artisan scout:flush "App\\Models\\Product"    # search now returns nothing
-php artisan scout:import "App\\Models\\Product"   # ...for the next 8 minutes
+Cache::put('users', $users, now()->addMinutes(10));
+Cache::add('lock:import', true, now()->addMinute());  // only if absent
+Cache::increment('views:post:5');
 
 
 <?php
-// ---------- ✅ Build alongside, then swap ----------
+// ---------- remember: the workhorse ----------
 
-class RebuildProductIndex extends Command
+$total = Cache::remember(
+    "team:{$team->id}:invoice-total",
+    now()->addMinutes(10),
+    fn () => $team->invoices()->sum('total_cents'),
+);
+
+// Replaces this, including the race between the check
+// and the write:
+//
+//   if (Cache::has($key)) { return Cache::get($key); }
+//   $value = expensive();
+//   Cache::put($key, $value, $ttl);
+//   return $value;
+
+
+<?php
+// ---------- Keys must carry everything the value depends on ----------
+
+// ❌ One tenant's dashboard, served to everybody
+Cache::remember('dashboard', now()->addMinutes(5),
+    fn () => $this->build($user));
+
+// ✅ Scoped, and versioned
+Cache::remember(
+    "dashboard:team:{$user->team_id}:v2",
+    now()->addMinutes(5),
+    fn () => $this->build($user),
+);
+
+// The v2 suffix is how you invalidate a SHAPE change:
+// bump it, and every old entry is orphaned instantly —
+// no deploy-time flush, no stampede.
+
+
+<?php
+// ---------- ⚠️ The cached outage ----------
+
+// The API was down for ten seconds. Now "not found" is
+// cached for an hour.
+$profile = Cache::remember("profile:{$id}", now()->addHour(),
+    fn () => $this->api->fetchProfile($id));      // returned null
+
+// ✅ Decide what a miss means, and cache it differently
+$profile = Cache::get("profile:{$id}");
+
+if ($profile === null) {
+    $profile = $this->api->fetchProfile($id);
+
+    Cache::put(
+        "profile:{$id}",
+        $profile,
+        $profile ? now()->addHour() : now()->addSeconds(30),   // short negative TTL
+    );
+}
+
+
+<?php
+// ---------- TTL is a business decision ----------
+
+// Seconds, or invalidated on write — a stale total on a
+// payment page is a support ticket
+Cache::remember("invoice:{$id}:total", now()->addSeconds(30), $fn);
+
+// Minutes — a listing can lag
+Cache::remember('products:featured', now()->addMinutes(15), $fn);
+
+// Days — this genuinely does not change
+Cache::rememberForever('countries', fn () => Country::all());
+// ...and you still need a plan for the day it does.
+
+
+<?php
+// ---------- touch(): keep it alive without rebuilding ----------
+
+$report = Cache::get("report:{$id}");
+
+if ($report) {
+    Cache::touch("report:{$id}", now()->addMinutes(10));   // still valid, keep it
+}
+
+// Useful for something expensive to rebuild that is
+// still being actively used.
+
+
+<?php
+// ---------- Cache what is SLOW, not what is FREQUENT ----------
+
+// ❌ A 2ms query, replaced by a network round trip plus
+//    serialisation — and now harder to reason about
+Cache::remember("user:{$id}", now()->addMinutes(5),
+    fn () => User::find($id));
+
+// ✅ Eight seconds of aggregation
+Cache::remember("team:{$team->id}:annual-report", now()->addHours(6),
+    fn () => $this->reportBuilder->build($team));`,
+      },
+      keyTakeaways: [
+        "<b>`get` reads with an optional default; `put` writes with a TTL.</b>",
+        "<b>`remember` runs the closure only on a miss</b>, replacing read-check-write and its race.",
+        "<b>`rememberForever` means you have taken responsibility for invalidation</b>, not that none is needed.",
+        "<b>The TTL is how long you are willing to serve wrong data</b>, which is a business decision.",
+        "<b>Ten minutes is not a default</b>: fine on a listing, wrong on a payment page.",
+        "<b>Cache what is slow, not what is frequent.</b>",
+        "<b>Caching a 2ms query adds a network round trip and serialisation</b> for no gain.",
+        "<b>`Cache::touch()` extends a TTL without rewriting the value.</b>",
+        "<b>Keys must include everything the value depends on</b>, especially the tenant.",
+        "<b>A version suffix in the key invalidates a shape change instantly</b>, with no flush.",
+        "<b>`remember` caches `null` too</b>, so a failed lookup becomes a cached outage for the whole TTL.",
+      ],
+      commonMistakes: [
+        "<b>An unscoped key like `dashboard`.</b> One tenant's data served to everyone.",
+        "<b>Caching a null from a failed API call.</b> The outage now lasts as long as your TTL.",
+        "<b>Picking ten minutes because it looks reasonable.</b> Decide what staleness the page can tolerate.",
+        "<b>Caching fast queries.</b> You added a network hop and complexity to save nothing.",
+        "<b>Treating `rememberForever` as fire and forget.</b> It is wrong until somebody clears the cache.",
+      ],
+      quiz: [
+        {
+          question: "What does `Cache::remember` actually save you?",
+          options: [
+            "Memory",
+            "The read-check-write logic and its race, running the expensive closure only on a miss",
+            "Serialisation",
+            "The TTL",
+          ],
+          correctIndex: 1,
+          explanation: "It is the method you will reach for most.",
+        },
+        {
+          question: "How should you choose a TTL?",
+          options: [
+            "Ten minutes by default",
+            "By deciding how long you are willing to serve wrong data on that page",
+            "By query duration",
+            "By cache size",
+          ],
+          correctIndex: 1,
+          explanation: "A business decision, not a technical one.",
+        },
+        {
+          question: "What is a cached outage?",
+          options: [
+            "A Redis failure",
+            "`remember` storing the `null` from a failed lookup, so \"not found\" persists for the whole TTL",
+            "An expired key",
+            "A cache stampede",
+          ],
+          correctIndex: 1,
+          explanation: "Give negative results a much shorter TTL.",
+        },
+        {
+          question: "When is caching a query not worth it?",
+          options: [
+            "When it runs rarely",
+            "When it is already fast: you add a network round trip and serialisation to save nothing",
+            "When it returns many rows",
+            "When it uses a join",
+          ],
+          correctIndex: 1,
+          explanation: "Cache what is slow, not what is frequent.",
+        },
+      ],
+    },
+    {
+      id: "invalidation-tags-and-locks",
+      title: "Invalidation, cache tags & atomic locks",
+      durationMinutes: 12,
+      explanation: "Storing a value is easy. Knowing when it stopped being true is the hard part.\n\n---\n\n### 1. Basic — forget\n\n```php\nCache::forget('users');\n```\n\nThe standard flow:\n\n```text\nupdate the database → invalidate the cache\n```\n\n```text\nuser updated → DB update → Cache::forget(\"user:123\")\n```\n\n---\n\n### 2. Intermediate — why invalidation is hard\n\n```text\ndatabase: price = $100        cache: price = $100\n```\n\nSomebody changes the price:\n\n```text\ndatabase: price = $120        cache: price = $100\n```\n\n```text\ndatabase ≠ cache\n```\n\nTwo strategies:\n\n```text\nwrite → database → forget the cache      (recompute on next read)\nwrite → database → update the cache      (write-through)\n```\n\n<b>Forgetting is safer.</b> Updating means writing the value twice, and if the two writes disagree, or the second one fails after the first succeeded, you have cached something that was never true.\n\n<b>And the real difficulty is not one key, it is the other five.</b> Changing a price invalidates the product, the category listing, the search facet, the homepage block and the cached total. <b>Miss one and it stays wrong indefinitely</b>, which is why invalidation bugs are so long-lived: nothing errors, the page just quietly lies.\n\n---\n\n### 3. Advanced — tags and locks\n\n<b>Cache tags</b> group related entries:\n\n```text\nproducts\n ├── product:1\n ├── product:2\n └── product:3\n```\n\nSo you invalidate the group rather than tracking every key. <b>But not every driver supports tags</b>: file and database drivers do not, so a design built on tags cannot fall back to them. Check before you depend on it.\n\n<b>Atomic locks</b> solve a different problem. A popular key expires:\n\n```text\n100 requests → all miss → all run the expensive query\n```\n\n<b>That is a cache stampede</b>, and it is at its worst exactly when you can least afford it: the key expired because the page is popular, so a hundred copies of your slowest query arrive at once and the database falls over. <b>The cache expiring took the site down.</b>\n\nA lock serialises the rebuild:\n\n```text\nA obtains the lock → B, C, D wait\nA computes → A stores → A releases\nB, C, D read the cached value\n```\n\nThree things to get right.\n\n<b>Always set a lock timeout.</b> A process killed mid-rebuild without releasing leaves everyone waiting until it expires, which is the same 24-hour trap as Day 29's `withoutOverlapping()`.\n\n<b>Decide what waiters do.</b> Blocking is fine for a few seconds; beyond that, serving slightly stale data beats holding a hundred connections open.\n\n<b>And locks need shared storage.</b> On a file driver each server takes its own lock, so you have not prevented the stampede, you have made it three-way.\n\nAnd the blunt instrument, for completeness:\n\n```php\nCache::flush();     // the whole store, from PHP\n```\n\n<b>Which is almost never what you want in application code.</b> On a shared Redis it discards every other feature's cache too, and if your sessions live on the same store, it logs everybody out. Reach for a scoped `forget()` or a tag; keep `flush()` for `php artisan cache:clear` during a deploy.",
+      diagram: `Invalidation
+
+    Cache::forget('users');
+
+    update the database → invalidate the cache
+
+      user updated → DB update
+                   → Cache::forget("user:123")
+
+
+Why it is hard
+
+    database: price = $100   cache: price = $100
+              ↓ someone edits
+    database: price = $120   cache: price = $100
+
+              database ≠ cache
+
+  Two strategies:
+
+    write → database → FORGET      recompute on read
+    write → database → UPDATE      write-through
+
+    Forgetting is SAFER: updating writes the value
+    twice, and if the two disagree — or the second
+    fails after the first succeeded — you have cached
+    something that was never true.
+
+  ⚠️  The real difficulty is not one key. It is the
+      other five.
+
+      changing a price invalidates:
+        the product · the category listing
+        the search facet · the homepage block
+        the cached total
+
+      Miss one and it stays wrong INDEFINITELY.
+
+      Which is why invalidation bugs are so
+      long-lived: nothing errors, the page just
+      quietly lies.
+
+
+Cache tags
+
+    products
+      ├── product:1
+      ├── product:2
+      └── product:3
+
+    invalidate the GROUP, not every key
+
+  ⚠️  Not every driver supports tags. File and
+      database do not — so a design built on tags
+      cannot fall back to them.
+
+
+Atomic locks — a different problem
+
+    a popular key expires
+
+      100 requests → all miss → all run the
+                                expensive query
+
+    THAT IS A CACHE STAMPEDE
+
+  And it is worst exactly when you can least afford
+  it: the key expired BECAUSE the page is popular, so
+  a hundred copies of your slowest query arrive at
+  once and the database falls over.
+
+    the cache EXPIRING took the site down
+
+  A lock serialises the rebuild:
+
+    A obtains the lock
+    B, C, D wait
+        ↓
+    A computes → stores → releases
+        ↓
+    B, C, D read the cached value
+
+
+Three things to get right
+
+  ALWAYS set a lock timeout
+
+    a process killed mid-rebuild without releasing
+    leaves everyone waiting until it expires
+
+    same trap as Day 29's withoutOverlapping()
+
+  Decide what WAITERS do
+
+    blocking is fine for a few seconds
+    beyond that, serving slightly stale data beats
+    holding a hundred connections open
+
+  Locks need SHARED STORAGE
+
+    on a file driver each server takes its own lock —
+    you have not prevented the stampede, you have
+    made it three-way`,
+      codeExample: {
+        title: "Invalidating on write, tagging groups, and stopping a stampede",
+        code: `<?php
+// ---------- Invalidate on write, in one place ----------
+
+class Product extends Model
 {
-    protected $signature = 'products:reindex';
+    protected static function booted(): void
+    {
+        static::saved(fn (Product $p) => $p->flushCaches());
+        static::deleted(fn (Product $p) => $p->flushCaches());
+    }
+
+    public function flushCaches(): void
+    {
+        // It is never one key. This is the list you will
+        // forget to update in six months.
+        Cache::forget("product:{$this->id}");
+        Cache::forget("category:{$this->category_id}:products");
+        Cache::forget('homepage:featured');
+        Cache::forget("team:{$this->team_id}:catalogue-total");
+    }
+}
+
+// Miss one and it stays wrong indefinitely. Nothing
+// errors — the page just quietly lies.
+
+
+<?php
+// ---------- Tags: invalidate a group instead ----------
+
+// Requires Redis or Memcached. File and database
+// drivers do not support tags.
+Cache::tags(['products', "category:{$id}"])
+    ->remember("product:{$productId}", now()->addHour(), $fn);
+
+// One line replaces the list above
+Cache::tags(['products'])->flush();
+
+// ⚠️ Check driver support before designing around this.
+if (! Cache::supportsTags()) {
+    // your fallback has to exist
+}
+
+
+<?php
+// ---------- Forget vs update ----------
+
+// ✅ Safer: recompute on the next read
+DB::transaction(function () use ($product, $price) {
+    $product->update(['price_cents' => $price]);
+});
+Cache::forget("product:{$product->id}");
+
+// ⚠️ Write-through: the value is written twice, so a
+//    disagreement or a failed second write caches
+//    something that was never true
+$product->update(['price_cents' => $price]);
+Cache::put("product:{$product->id}", $product->fresh(), now()->addHour());
+
+
+<?php
+// ---------- The stampede, and the lock that stops it ----------
+
+// ❌ A popular key expires at 09:00. One hundred
+//    requests all miss, all run the eight-second query,
+//    and the database falls over.
+$report = Cache::remember('dashboard:global', now()->addMinutes(10),
+    fn () => $this->buildExpensiveReport());
+
+// ✅ One rebuild, everyone else waits for it
+$report = Cache::get('dashboard:global');
+
+if ($report === null) {
+    $lock = Cache::lock('dashboard:global:rebuild', 30);   // ← always a timeout
+
+    if ($lock->get()) {
+        try {
+            $report = $this->buildExpensiveReport();
+            Cache::put('dashboard:global', $report, now()->addMinutes(10));
+        } finally {
+            $lock->release();
+        }
+    } else {
+        // Decide what waiters do. Blocking for seconds is
+        // fine; holding 100 connections is not.
+        $lock->block(5);
+        $report = Cache::get('dashboard:global') ?? $this->staleFallback();
+    }
+}
+
+
+<?php
+// ---------- Or: serve stale while one process rebuilds ----------
+
+// Store with a longer TTL than the "freshness" window,
+// so there is always something to serve.
+$entry = Cache::get('dashboard:global');
+
+if ($entry && $entry['fresh_until'] > now()) {
+    return $entry['value'];                    // fresh
+}
+
+if ($entry && Cache::lock('dashboard:rebuild', 30)->get()) {
+    dispatch(new RebuildDashboard());          // refresh in the background
+}
+
+return $entry['value'] ?? $this->buildExpensiveReport();   // stale beats down
+
+
+<?php
+// ---------- Locks need shared storage ----------
+
+// CACHE_STORE=file, three servers:
+//   server A takes its own lock  → runs the query
+//   server B takes its own lock  → runs the query
+//   server C takes its own lock  → runs the query
+//
+// You did not prevent the stampede. You made it
+// three-way. Same rule as Day 29's isolation locks.`,
+      },
+      keyTakeaways: [
+        "<b>The standard flow is write to the database, then invalidate the cache.</b>",
+        "<b>Stale cache means the database and cache disagree</b>, and nothing errors while it happens.",
+        "<b>Forgetting is safer than updating</b>, because write-through writes the value twice.",
+        "<b>The hard part is the other five keys</b>: product, listing, facet, homepage block, total.",
+        "<b>A missed key stays wrong indefinitely</b>, which is why invalidation bugs live so long.",
+        "<b>Cache tags group related entries</b> so you can invalidate the group.",
+        "<b>File and database drivers do not support tags</b>, so a tag-based design cannot fall back to them.",
+        "<b>A cache stampede is a hundred requests all missing and all running the expensive query.</b>",
+        "<b>It happens at the worst moment</b>, because the key expired precisely because the page is popular.",
+        "<b>An atomic lock serialises the rebuild</b> so one process computes and the rest read the result.",
+        "<b>Always give a lock a timeout</b>, or a killed process blocks everyone until it expires.",
+        "<b>Locks need shared storage</b>, or each server takes its own and the stampede becomes three-way.",
+      ],
+      commonMistakes: [
+        "<b>Invalidating only the obvious key.</b> The listing and the totals stay wrong for weeks.",
+        "<b>Designing around tags without checking the driver.</b> File and database drivers do not support them.",
+        "<b>No lock on an expensive popular key.</b> Its expiry becomes an outage.",
+        "<b>A lock with no timeout.</b> One killed process blocks every request behind it.",
+        "<b>Locks on a file cache driver.</b> Each server locks itself and nothing is coordinated.",
+      ],
+      quiz: [
+        {
+          question: "Why is forgetting a key safer than updating it?",
+          options: [
+            "It is faster",
+            "Write-through writes the value twice, so a disagreement or failed second write caches something untrue",
+            "It uses less memory",
+            "It is not safer",
+          ],
+          correctIndex: 1,
+          explanation: "Forgetting makes the next read recompute from the source of truth.",
+        },
+        {
+          question: "What makes invalidation bugs so long-lived?",
+          options: [
+            "They throw silently",
+            "Nothing errors: a missed key just serves wrong data indefinitely",
+            "They only occur in production",
+            "Tags hide them",
+          ],
+          correctIndex: 1,
+          explanation: "One price change usually invalidates five different keys.",
+        },
+        {
+          question: "Why is a cache stampede worst on your most popular pages?",
+          options: [
+            "They have more data",
+            "The key expired because the page is popular, so a hundred copies of the slow query arrive at once",
+            "They use more memory",
+            "They have longer TTLs",
+          ],
+          correctIndex: 1,
+          explanation: "The cache expiring is what takes the site down.",
+        },
+        {
+          question: "What does an atomic lock need to work across servers?",
+          options: [
+            "A queue",
+            "Shared cache storage, or each server takes its own lock and nothing is coordinated",
+            "A database transaction",
+            "A longer TTL",
+          ],
+          correctIndex: 1,
+          explanation: "Same rule as Day 29's isolation locks.",
+        },
+      ],
+    },
+    {
+      id: "redis-pipelining-and-pubsub",
+      title: "Redis connections, pipelining & pub/sub",
+      durationMinutes: 11,
+      explanation: "Beyond `Cache::get`, Redis is a general-purpose tool you talk to directly.\n\n---\n\n### 1. Basic — connections\n\nRedis supports multiple logical connections and databases:\n\n```text\nLaravel\n  ├── cache Redis\n  ├── queue Redis\n  └── application Redis\n```\n\nSame reasoning as the first lesson: <b>separating workloads stops one from destroying another.</b> The application connection is for things you use Redis for deliberately, counters, leaderboards, sets, rather than as a cache.\n\n---\n\n### 2. Intermediate — pipelining\n\nWithout it, every command is a round trip:\n\n```text\nLaravel → Redis\nLaravel → Redis\nLaravel → Redis\nLaravel → Redis\n```\n\nWith pipelining:\n\n```text\nLaravel ──── batch ────→ Redis (many operations)\n```\n\n<b>The saving is network latency, not Redis time.</b> Redis handles a command in microseconds; the round trip takes a millisecond or so. So a thousand commands is roughly a second of waiting, almost all of it doing nothing, and pipelined it becomes a few milliseconds.\n\n<b>Which means the loop is the thing to look for</b>, not the individual call. `Cache::get` inside a `foreach` over five hundred items is five hundred round trips, and it is the exact same shape as the N+1 problem from Day 15, just against Redis instead of your database. <b>Use `Cache::many()` and `Cache::putMany()`</b>, which pipeline for you.\n\n---\n\n### 3. Advanced — pub/sub, and what it is not\n\n```text\npublisher → Redis channel → subscribers\n```\n\n```text\norder service → \"order.created\" → Redis\n   ├── email\n   ├── analytics\n   └── notifications\n```\n\n<b>The critical distinction:</b>\n\n> <b>Pub/sub is messaging, not storage.</b>\n\nA message is delivered to whoever is listening <b>at that moment</b> and then it is gone. No subscriber connected means nobody receives it, and there is no retry, no acknowledgement and no record that it happened. <b>A subscriber restarting during a deploy misses everything published during the restart</b>, silently.\n\nSo the rule is straightforward: <b>if losing the message matters, use a queue.</b> Day 25's queues persist jobs, retry them and record failures, which is exactly what pub/sub does not do.\n\nPub/sub is right for genuinely ephemeral fan-out: live dashboard updates, cache-invalidation signals between servers, presence pings. <b>Anything you would be upset to lose belongs on a queue</b>, and this is also why Day 27's broadcasting sits on top of a different mechanism when durability matters.\n\nOne last note: a Redis subscriber holds a connection open and blocks, so it is a long-running process with all the supervision needs of a queue worker, not something you start in a controller.\n\nOne last note on using Redis directly, since `Cache::` is not the only door:\n\n```php\nRedis::set('invoice:5:status', 'paid');\nRedis::get('invoice:5:status');\nRedis::expire('invoice:5:status', 3600);\nRedis::del('invoice:5:status');\n```\n\nAnd <b>hashes</b>, which store a record as fields under one key:\n\n```php\nRedis::hset('invoice:5', 'status', 'paid');\nRedis::hset('invoice:5', 'total', 3000);\n\nRedis::hget('invoice:5', 'status');\nRedis::hgetall('invoice:5');\n```\n\n<b>The gain over one serialised blob is that you can read or update a single field</b> without fetching and rewriting the whole thing. Worth knowing, and worth noting that anything you reach for `Redis::` directly for is outside `Cache::`, so it has no driver abstraction and does not disappear on `cache:clear`.",
+      diagram: `Connections — separate the workloads
+
+    Laravel
+      ├── cache Redis
+      ├── queue Redis
+      └── application Redis
+
+  Same reasoning as lesson 1: separating workloads
+  stops one destroying another.
+
+  The application connection is for what you use Redis
+  for DELIBERATELY — counters, leaderboards, sets —
+  rather than as a cache.
+
+
+Pipelining
+
+  Without:
+
+    Laravel → Redis
+    Laravel → Redis
+    Laravel → Redis
+    Laravel → Redis        ← a round trip each time
+
+  With:
+
+    Laravel ──── batch ────→ Redis
+                            many operations
+
+  ⚠️  The saving is NETWORK LATENCY, not Redis time.
+
+      Redis handles a command in microseconds.
+      The round trip takes ~1ms.
+
+        1,000 commands ≈ 1 second of waiting,
+        almost all of it doing nothing
+
+        pipelined ≈ a few milliseconds
+
+  So look for the LOOP, not the call:
+
+    Cache::get inside a foreach over 500 items
+      = 500 round trips
+
+    the exact shape of Day 15's N+1 — against Redis
+    instead of your database
+
+      Cache::many() · Cache::putMany()
+      pipeline for you
+
+
+Pub/sub
+
+    publisher → Redis channel → subscribers
+
+    order service → "order.created" → Redis
+                       ├── email
+                       ├── analytics
+                       └── notifications
+
+
+  ⚠️  THE CRITICAL DISTINCTION
+
+      PUB/SUB IS MESSAGING, NOT STORAGE.
+
+      Delivered to whoever is listening AT THAT
+      MOMENT, then gone.
+
+        no subscriber connected → nobody receives it
+        no retry
+        no acknowledgement
+        no record that it happened
+
+      A subscriber restarting during a deploy misses
+      everything published during the restart —
+      silently.
+
+
+  THE RULE
+
+    If losing the message matters, USE A QUEUE.
+
+    Day 25's queues persist, retry and record
+    failures. That is exactly what pub/sub does not
+    do.
+
+  Pub/sub is right for genuinely ephemeral fan-out:
+
+    live dashboard updates
+    cache-invalidation signals between servers
+    presence pings
+
+  Anything you would be upset to lose belongs on a
+  queue.
+
+
+  And a subscriber holds a connection open and blocks:
+  a long-running process with all the supervision
+  needs of a queue worker — not something you start in
+  a controller.`,
+      codeExample: {
+        title: "Pipelining a loop, and choosing pub/sub or a queue",
+        code: `<?php
+// ---------- The Redis N+1 ----------
+
+// ❌ 500 network round trips. ~500ms of pure waiting.
+foreach ($productIds as $id) {
+    $prices[$id] = Cache::get("product:{$id}:price");
+}
+
+// ✅ One round trip
+$keys   = collect($productIds)->map(fn ($id) => "product:{$id}:price");
+$prices = Cache::many($keys->all());
+
+// Same shape as Day 15's N+1, against Redis instead of
+// your database.
+
+
+<?php
+// ---------- Writing many ----------
+
+// ❌
+foreach ($products as $product) {
+    Cache::put("product:{$product->id}:price", $product->price_cents, 3600);
+}
+
+// ✅
+Cache::putMany(
+    $products->mapWithKeys(fn ($p) => ["product:{$p->id}:price" => $p->price_cents])->all(),
+    3600,
+);
+
+
+<?php
+// ---------- Raw pipelining, when you need Redis commands ----------
+
+Redis::pipeline(function ($pipe) use ($views) {
+    foreach ($views as $postId => $count) {
+        $pipe->incrby("views:post:{$postId}", $count);
+        $pipe->expire("views:post:{$postId}", 86400);
+    }
+});
+
+// 2,000 commands, one round trip.
+
+// transaction() when they must all apply together
+Redis::transaction(function ($tx) use ($from, $to, $amount) {
+    $tx->decrby("credits:{$from}", $amount);
+    $tx->incrby("credits:{$to}", $amount);
+});
+
+
+<?php
+// ---------- Separate connections ----------
+
+Redis::connection('cache')->get('key');
+Redis::connection('queue')->llen('queues:default');
+Redis::connection('default')->zadd('leaderboard', 950, "user:{$id}");
+
+
+<?php
+// ---------- ⚠️ Pub/sub: fire and forget, literally ----------
+
+// Publisher
+Redis::publish('dashboard.updated', json_encode([
+    'team_id' => $team->id,
+    'total'   => $total,
+]));
+
+// Subscriber — a long-running process, supervised like
+// a queue worker. Never started from a controller.
+class SubscribeToDashboard extends Command
+{
+    protected $signature = 'dashboard:subscribe';
 
     public function handle(): int
     {
-        $new = 'products_' . now()->format('YmdHis');
-
-        // Build the new index while the old one keeps serving
-        Product::query()
-            ->with('brand')
-            ->chunkById(500, function ($products) use ($new) {
-                $products->searchableUsing(app(EngineManager::class)->engine())
-                         ->searchableOn($new);
-            });
-
-        // Atomic swap: users search the old index right up
-        // until they search the new one
-        $this->engine->swapAlias('products', $new);
-
-        $this->info("Swapped alias to {$new}.");
+        Redis::subscribe(['dashboard.updated'], function (string $message) {
+            $this->broadcastToWebsocket(json_decode($message, true));
+        });
 
         return self::SUCCESS;
     }
 }
 
-// chunkById, not all() — scout:import with eager-loaded
-// relations on a large table is a classic OOM kill.
+// During a deploy this process restarts. Everything
+// published in those four seconds is gone. No retry,
+// no record, no error.
 
 
 <?php
-// ---------- Pagination, with the caps acknowledged ----------
+// ---------- The choice, made explicit ----------
 
-class ProductSearchController
-{
-    public function index(SearchRequest $request)
+// ❌ Pub/sub for something that matters
+Redis::publish('invoice.paid', json_encode(['id' => $invoice->id]));
+// The listener was restarting. The receipt never sent.
+// Nothing failed. Nothing was logged.
+
+// ✅ A queue: persisted, retried, failures recorded
+SendPaymentReceipt::dispatch($invoice);
+
+// ✅ Pub/sub for genuinely ephemeral fan-out
+Redis::publish('presence.ping', json_encode(['user' => $user->id]));
+Redis::publish('cache.invalidate', json_encode(['key' => "product:{$id}"]));
+
+
+<?php
+// ---------- A useful non-cache use of Redis ----------
+
+Redis::zadd('leaderboard:weekly', $score, "user:{$user->id}");
+Redis::zrevrange('leaderboard:weekly', 0, 9, 'WITHSCORES');
+
+// Sorted sets, counters and sets are things Redis does
+// well that your database does awkwardly. That is the
+// "application" connection.`,
+      },
+      keyTakeaways: [
+        "<b>Redis supports separate connections and databases</b>, so cache, queue and application data stay apart.",
+        "<b>Pipelining batches commands into one round trip.</b>",
+        "<b>The saving is network latency</b>: Redis is microseconds, the round trip is a millisecond.",
+        "<b>A thousand un-pipelined commands is about a second of pure waiting.</b>",
+        "<b>Look for the loop, not the call.</b> `Cache::get` inside a `foreach` is Day 15's N+1 against Redis.",
+        "<b>`Cache::many()` and `Cache::putMany()` pipeline for you.</b>",
+        "<b>Pub/sub is messaging, not storage</b>: delivered to whoever is listening, then gone.",
+        "<b>No subscriber means nobody receives it</b>, with no retry, acknowledgement or record.",
+        "<b>A subscriber restarting during a deploy silently misses everything published.</b>",
+        "<b>If losing the message matters, use a queue</b>, which persists, retries and records failures.",
+        "<b>Pub/sub suits ephemeral fan-out</b>: live dashboard updates, invalidation signals, presence pings.",
+        "<b>A subscriber is a supervised long-running process</b>, never started from a controller.",
+      ],
+      commonMistakes: [
+        "<b>Cache calls inside a loop.</b> Hundreds of round trips, and the profile blames Redis rather than your loop.",
+        "<b>Using pub/sub for anything that matters.</b> A deploy-time restart drops messages silently.",
+        "<b>Expecting pub/sub retries.</b> There is no acknowledgement and no record it happened.",
+        "<b>One Redis connection for cache, queue and app data.</b> One workload's problem becomes everyone's.",
+        "<b>Starting a subscriber from a web request.</b> It blocks and holds a connection open.",
+      ],
+      quiz: [
+        {
+          question: "What does pipelining actually save?",
+          options: [
+            "Redis CPU time",
+            "Network round trips: Redis is microseconds per command, the round trip is a millisecond",
+            "Memory",
+            "Serialisation",
+          ],
+          correctIndex: 1,
+          explanation: "A thousand un-pipelined commands is about a second of waiting.",
+        },
+        {
+          question: "What pattern should you look for when profiling Redis usage?",
+          options: [
+            "Large values",
+            "Cache calls inside a loop, which is the N+1 shape against Redis",
+            "Long keys",
+            "Expired keys",
+          ],
+          correctIndex: 1,
+          explanation: "`Cache::many()` and `putMany()` pipeline it for you.",
+        },
+        {
+          question: "What is the critical property of Redis pub/sub?",
+          options: [
+            "It persists messages",
+            "It is messaging, not storage: no listener means the message is simply gone",
+            "It retries automatically",
+            "It acknowledges delivery",
+          ],
+          correctIndex: 1,
+          explanation: "A subscriber restarting during a deploy misses everything silently.",
+        },
+        {
+          question: "When should you use a queue instead of pub/sub?",
+          options: [
+            "For live dashboards",
+            "Whenever losing the message matters, since queues persist, retry and record failures",
+            "For presence pings",
+            "Never",
+          ],
+          correctIndex: 1,
+          explanation: "Pub/sub suits genuinely ephemeral fan-out only.",
+        },
+      ],
+    },
     {
-        $results = Product::search($request->validated('q'))
-            // Scope in the QUERY. Day 31's rule, again.
-            ->where('team_id', $request->user()->team_id)
-            ->where('in_stock', true)
-            ->whereIn('brand', $request->validated('brands', []))
-            ->paginate(20);
+      id: "query-optimization",
+      title: "Indexes, EXPLAIN, columns & N+1",
+      durationMinutes: 13,
+      explanation: "Before you cache anything, fix the thing you were about to cache.\n\n<b>Caching is not the first solution to a bad query.</b> It is a way to run a bad query less often, which leaves the bad query in place for every cache miss, every invalidation and every new page that needs the same data.\n\n---\n\n### 1. Basic — indexes\n\n```sql\nSELECT * FROM orders WHERE user_id = 123 ORDER BY created_at DESC;\n```\n\nWith no index on `user_id`, the database reads a great many rows to find a few.\n\n```text\nwithout   1M rows → scan → find matches\nwith      1M rows → index → jump to matches\n```\n\n```sql\nCREATE INDEX orders_user_id_index ON orders(user_id);\n```\n\n<b>An index frequently beats caching by more</b>, and it helps every query on that column rather than the one you remembered to wrap.\n\n---\n\n### 2. Intermediate — composite indexes and EXPLAIN\n\nFor:\n\n```sql\nWHERE user_id = ? AND status = ? ORDER BY created_at DESC\n```\n\nOne composite index beats three separate ones:\n\n```text\n(user_id, status, created_at)\n```\n\n<b>Order matters, and it is not arbitrary.</b> An index on `(user_id, status)` serves a query filtering on `user_id` alone; one on `(status, user_id)` does not. <b>Equality columns first, then the range or sort column</b>, and having `created_at` last is what lets the database skip sorting entirely.\n\nAnd then stop guessing:\n\n```sql\nEXPLAIN ANALYZE SELECT ...\n```\n\n```text\nindex scan or sequential scan?  rows examined vs returned?\njoin strategy?  sort cost?\n```\n\n<b>The number to look at is rows examined versus rows returned.</b> Examining 400,000 to return 20 tells you exactly what is wrong, and no amount of reading the query would have.\n\n<b>Indexes are not free.</b> Each one slows every insert and update and takes disk space, so an unused index is pure cost. Add them from real query patterns, not speculation.\n\n---\n\n### 3. Advanced — data volume and N+1\n\n<b>Select only what you need:</b>\n\n```php\nUser::select(['id', 'name'])->get();\n```\n\nInstead of pulling every column, you move less data and hydrate less:\n\n```text\nless I/O · less memory · less network · less hydration\n```\n\n<b>The hidden win is covering indexes.</b> If an index contains every column you selected, the database answers from the index and never touches the table at all.\n\n<b>And then N+1</b>, from Day 15:\n\n```php\n$posts = Post::all();\nforeach ($posts as $post) { echo $post->user->name; }   // 101 queries\n\n$posts = Post::with('user')->get();                      // 2 queries\n```\n\n<b>Caching is not the fix for N+1.</b> It hides it: the first request still runs 101 queries, every cache miss runs 101 queries, and the moment the data changes you are back to 101. <b>Fix the query architecture first</b>, then decide whether the two remaining queries are worth caching.\n\nOne more, because it is the version that bites in production: <b>a page that is fast on your machine and slow on production usually has an N+1 you cannot see at 50 rows.</b> Ten posts is eleven queries and feels fine. Ten thousand is unusable. Turn on `Model::preventLazyLoading()` in development and the problem announces itself instead of waiting.",
+      diagram: `Caching is not the fix for a bad query
 
-        return ProductResource::collection($results);
+  It runs the bad query LESS OFTEN — leaving it in
+  place for every cache miss, every invalidation, and
+  every new page that needs the same data.
+
+
+Indexes
+
+    SELECT * FROM orders
+    WHERE user_id = 123
+    ORDER BY created_at DESC;
+
+    without   1M rows → scan → find matches
+    with      1M rows → index → jump to matches
+
+    CREATE INDEX orders_user_id_index ON orders(user_id);
+
+  Frequently beats caching by more — and helps EVERY
+  query on that column, not just the one you
+  remembered to wrap.
+
+
+Composite indexes
+
+    WHERE user_id = ? AND status = ?
+    ORDER BY created_at DESC
+
+      (user_id, status, created_at)
+
+  ⚠️  Order matters, and is not arbitrary.
+
+      (user_id, status)  serves a query on user_id
+                         alone
+      (status, user_id)  does not
+
+      EQUALITY columns first, then the range/sort
+      column. created_at last is what lets the
+      database skip sorting entirely.
+
+
+EXPLAIN — stop guessing
+
+    EXPLAIN ANALYZE SELECT ...
+
+      index scan or sequential scan?
+      rows examined vs rows RETURNED?
+      join strategy?  sort cost?
+
+  ⚠️  The number to look at is EXAMINED vs RETURNED.
+
+      examining 400,000 to return 20 tells you
+      exactly what is wrong — and no amount of
+      reading the query would have
+
+  And indexes are not free: each slows every insert
+  and update and costs disk. An unused index is pure
+  cost. Add them from real query patterns.
+
+
+Select only what you need
+
+    User::select(['id', 'name'])->get();
+
+      less I/O · less memory · less network
+      less hydration
+
+  The hidden win: a COVERING INDEX. If the index
+  contains every column you selected, the database
+  answers from the index and never touches the table.
+
+
+N+1 — Day 15, again
+
+    Post::all();
+    foreach → $post->user->name        101 queries
+
+    Post::with('user')->get();           2 queries
+
+  ⚠️  CACHING IS NOT THE FIX FOR N+1.
+
+      It hides it:
+        the first request still runs 101 queries
+        every cache miss runs 101 queries
+        the data changes → back to 101
+
+      Fix the query architecture FIRST. Then decide
+      whether the two remaining queries are worth
+      caching.
+
+
+  And the production version:
+
+    fast on your machine, slow in production
+      = an N+1 you cannot see at 50 rows
+
+      10 posts     → 11 queries, feels fine
+      10,000 posts → unusable
+
+    Model::preventLazyLoading() in development makes
+    it announce itself instead of waiting.`,
+      codeExample: {
+        title: "Index, explain, trim, and kill the N+1",
+        code: `<?php
+// ---------- The index ----------
+
+Schema::table('orders', function (Blueprint $table) {
+    // Equality first, then the sort column — so the
+    // database can skip sorting entirely
+    $table->index(['user_id', 'status', 'created_at']);
+});
+
+// This one composite index serves:
+//   WHERE user_id = ?
+//   WHERE user_id = ? AND status = ?
+//   WHERE user_id = ? AND status = ? ORDER BY created_at DESC
+//
+// It does NOT serve:
+//   WHERE status = ?          ← wrong leading column
+
+
+# ---------- EXPLAIN: ask, do not guess ----------
+
+EXPLAIN ANALYZE
+SELECT * FROM orders
+WHERE user_id = 123 AND status = 'paid'
+ORDER BY created_at DESC
+LIMIT 20;
+
+# Before
+#   Seq Scan on orders  (rows=412,000)
+#   Filter: (user_id = 123 AND status = 'paid')
+#   Rows Removed by Filter: 411,980
+#   Execution Time: 890 ms
+#
+#   ← 412,000 examined to return 20. That is the number.
+
+# After
+#   Index Scan using orders_user_id_status_created_at_index
+#   (rows=20)
+#   Execution Time: 0.8 ms
+
+
+<?php
+// ---------- Laravel-side profiling ----------
+
+DB::listen(function ($query) {
+    if ($query->time > 100) {
+        Log::warning('Slow query', [
+            'sql'      => $query->sql,
+            'bindings' => $query->bindings,
+            'time'     => $query->time,
+        ]);
+    }
+});
+
+// Or for one page, right now:
+DB::enableQueryLog();
+// ... the code ...
+dd(count(DB::getQueryLog()), DB::getQueryLog());
+
+
+<?php
+// ---------- Select only what you need ----------
+
+// ❌ Every column, including a 40KB description
+User::all();
+
+// ✅
+User::select(['id', 'name'])->get();
+
+// And if an index covers (id, name), the database
+// answers from the index and never reads the table.
+
+// The relation version, which people forget:
+Post::with(['user:id,name', 'comments:id,post_id,body'])->get();
+
+
+<?php
+// ---------- N+1: fix it, do not cache it ----------
+
+// ❌ 1 + 100 + 100 + 100 = 301 queries
+$posts = Post::latest()->get();
+
+foreach ($posts as $post) {
+    echo $post->user->name;
+
+    foreach ($post->comments as $comment) {
+        echo $comment->user->name;
     }
 }
 
-// Engines cap total hits — most refuse to paginate past
-// a few thousand. The UI must handle "no more results"
-// rather than assuming page 400 exists.
+// ❌❌ Worse: caching the symptom
+Cache::remember('posts-page', now()->addMinutes(5), function () {
+    // still 301 queries on every miss, and every
+    // invalidation, and the first request after a deploy
+});
+
+// ✅ 4 queries
+$posts = Post::with(['user', 'comments.user'])->latest()->get();
+
+// ✅ And when you only need a count
+$posts = Post::withCount('comments')->latest()->get();
 
 
 <?php
-// ---------- ❌ Filtering in PHP breaks three things at once ----------
+// ---------- Make it impossible to reintroduce ----------
 
-$results = Product::search($query)->take(100)->get()
-    ->filter(fn ($p) => $p->price_cents < 100000)
-    ->filter(fn ($p) => $p->team_id === $user->team_id);   // ← and a leak risk
+// app/Providers/AppServiceProvider.php
+public function boot(): void
+{
+    Model::preventLazyLoading(! $this->app->isProduction());
+    Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
+}
 
-// The total count is wrong.
-// The pagination is wrong.
-// The ranking is wrong — you kept the top 100 by
-// relevance, then threw most away, so page 2 is
-// arbitrary.
-
-// ✅ Filter in the engine
-Product::search($query)
-    ->where('team_id', $user->team_id)
-    ->where('price_cents', '<', 100000)
-    ->paginate(20);
+// Now a lazy load throws in development instead of
+// waiting to be slow in production, where 10,000 rows
+// makes the difference you could not see at 50.
 
 
 <?php
-// ---------- Which requires declaring them filterable ----------
+// ---------- Chunk what you cannot trim ----------
 
-// config/scout.php
-'meilisearch' => [
-    'index-settings' => [
-        Product::class => [
-            'filterableAttributes' => ['team_id', 'brand', 'price_cents', 'in_stock'],
-            'sortableAttributes'   => ['price_cents', 'created_at'],
-        ],
+// ❌ 400,000 models in memory
+foreach (Order::all() as $order) { ... }
+
+// ✅
+Order::query()->chunkById(500, function ($orders) { ... });
+Order::query()->lazyById()->each(function ($order) { ... });`,
+      },
+      keyTakeaways: [
+        "<b>Caching a bad query runs it less often; it does not fix it.</b>",
+        "<b>An index turns a scan into a jump</b>, and helps every query on that column.",
+        "<b>A composite index beats three separate ones</b> for a multi-column filter.",
+        "<b>Column order matters</b>: equality columns first, then the range or sort column.",
+        "<b>`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.</b>",
+        "<b>`EXPLAIN ANALYZE` tells you what the database will actually do.</b>",
+        "<b>Rows examined versus rows returned is the number that matters.</b>",
+        "<b>Indexes are not free</b>: each slows writes and costs disk, so an unused one is pure cost.",
+        "<b>Selecting only needed columns cuts I/O, memory, network and hydration.</b>",
+        "<b>A covering index lets the database answer without touching the table.</b>",
+        "<b>Caching is not the fix for N+1</b>: every miss still runs all 101 queries.",
+        "<b>An N+1 invisible at 50 rows is fatal at 10,000</b>, so use `preventLazyLoading` in development.",
+      ],
+      commonMistakes: [
+        "<b>Caching the slow page instead of fixing the query.</b> Every miss pays the full cost.",
+        "<b>Guessing at query plans.</b> `EXPLAIN ANALYZE` answers in seconds what an afternoon of reading will not.",
+        "<b>Adding an index per column.</b> Three single-column indexes rarely beat one composite one.",
+        "<b>Getting composite column order wrong.</b> The index then serves fewer queries than you think.",
+        "<b>Indexing speculatively.</b> Unused indexes slow every write for nothing.",
+        "<b>`select *` everywhere.</b> You move and hydrate columns nobody reads.",
+      ],
+      quiz: [
+        {
+          question: "Why is caching not the answer to a slow query?",
+          options: [
+            "It is too complex",
+            "It runs the bad query less often, leaving it for every miss, invalidation and new page",
+            "Caches are unreliable",
+            "It is the answer",
+          ],
+          correctIndex: 1,
+          explanation: "Fix the query, then decide whether it still needs caching.",
+        },
+        {
+          question: "What order should a composite index use?",
+          options: [
+            "Alphabetical",
+            "Equality columns first, then the range or sort column",
+            "Most selective last",
+            "Any order",
+          ],
+          correctIndex: 1,
+          explanation: "`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.",
+        },
+        {
+          question: "What is the key number in an `EXPLAIN ANALYZE` output?",
+          options: [
+            "Total cost",
+            "Rows examined versus rows returned",
+            "Planning time",
+            "Buffer count",
+          ],
+          correctIndex: 1,
+          explanation: "Examining 400,000 to return 20 tells you exactly what is wrong.",
+        },
+        {
+          question: "Why does an N+1 often only appear in production?",
+          options: [
+            "Different PHP version",
+            "Eleven queries at 50 rows feels fine; at 10,000 rows it is unusable",
+            "Caching is disabled there",
+            "The index is missing",
+          ],
+          correctIndex: 1,
+          explanation: "`preventLazyLoading` in development makes it announce itself.",
+        },
+      ],
+    },
+    {
+      id: "deployment-caches",
+      title: "Route, config, view & event caching",
+      durationMinutes: 11,
+      explanation: "A different kind of caching: not your data, but Laravel's own startup work.\n\n---\n\n### 1. Basic — the four\n\n```bash\nphp artisan route:cache\nphp artisan config:cache\nphp artisan view:cache\nphp artisan event:cache\n```\n\n```text\nroute files  → a compiled representation → faster bootstrap\nconfig files → one cached array          → faster config loading\nBlade views  → precompiled PHP           → no compilation per request\nlisteners    → a discovered map          → no discovery per boot\n```\n\n<b>These are deployment steps, not things you touch while developing.</b> In development they actively get in your way, because a cached route file means your new route does not exist until you clear it.\n\nOr all at once:\n\n```bash\nphp artisan optimize\nphp artisan optimize:clear\n```\n\n---\n\n### 2. Intermediate — the config rule\n\n<b>This is the one that causes real incidents:</b>\n\n> After config is cached, `env()` returns `null` outside config files.\n\n```text\nnot cached   env() reads .env, everywhere, and works\ncached       env() returns null anywhere except config/\n```\n\nSo a service class calling `env('STRIPE_KEY')` works perfectly in development and returns `null` in production, <b>the moment somebody runs `config:cache`</b>. Not at deploy time necessarily. Whenever that command next runs.\n\n<b>The rule is absolute: `env()` belongs in `config/` files only.</b> Everywhere else, `config('services.stripe.key')`. Grep for `env(` outside `config/` right now; on most codebases you will find some.\n\nAnd the sequel: <b>changing `.env` in production does nothing until you re-run `config:cache`.</b> People edit the file, restart nothing, and spend an hour wondering why the new API key is not being used.\n\n---\n\n### 3. Advanced — what breaks, and what the gain is\n\n<b>`route:cache` fails with closure routes.</b> A closure cannot be serialised, so the command errors out. That is a reason to use controller classes, which is where they belonged anyway.\n\n<b>And a cached route file that is stale is invisible.</b> Nothing warns you; the old routes just keep working. So caching must be part of the deploy script, not something a person remembers.\n\n<b>Be honest about the size of the win.</b> These save framework bootstrap time: a few milliseconds to perhaps twenty on a large application. <b>That is worth having and it is not going to fix a 1.8-second page.</b> If your page is slow, it is your queries, not Laravel's boot.\n\nWhere it does matter is <b>high request volume</b>, because you pay boot cost on every single request. Twenty milliseconds across a million requests a day is real.\n\n<b>The rule that ties it together:</b> caching must go in the deploy script, and clearing must happen before anything else in development. A half-cached deploy, config cached against the previous `.env`, is a genuinely confusing outage, because the code is right, the environment file is right, and the application disagrees with both.",
+      diagram: `Four deployment caches
+
+    php artisan route:cache
+    php artisan config:cache
+    php artisan view:cache
+    php artisan event:cache
+
+    route files  → compiled representation
+                   → faster bootstrap
+    config files → one cached array
+                   → faster config loading
+    Blade views  → precompiled PHP
+                   → no compilation per request
+    listeners    → a discovered map
+                   → no discovery per boot
+
+  DEPLOYMENT steps. Not things you touch while
+  developing — a cached route file means your new
+  route does not exist until you clear it.
+
+    php artisan optimize
+    php artisan optimize:clear
+
+
+  ⚠️  THE CONFIG RULE — the one that causes incidents
+
+      After config is cached, env() returns NULL
+      outside config files.
+
+        not cached   env() reads .env everywhere,
+                     and works
+        cached       env() → null anywhere except
+                     config/
+
+      So a service calling env('STRIPE_KEY') works
+      perfectly in development and returns null in
+      production — the moment somebody runs
+      config:cache.
+
+      Not necessarily at deploy time. Whenever that
+      command next runs.
+
+    THE RULE IS ABSOLUTE
+
+      env()    in config/ files ONLY
+      config() everywhere else
+
+    Grep for env( outside config/ right now. Most
+    codebases have some.
+
+  And the sequel:
+
+    changing .env in production does NOTHING until
+    you re-run config:cache
+
+    people edit the file, restart nothing, and spend
+    an hour wondering why the new API key is ignored
+
+
+What breaks
+
+  route:cache FAILS with closure routes
+
+    a closure cannot be serialised — which is a
+    reason to use controller classes, where they
+    belonged anyway
+
+  A stale cached route file is INVISIBLE
+
+    nothing warns you; the old routes keep working
+    → caching belongs in the DEPLOY SCRIPT, not in
+      somebody's memory
+
+
+Be honest about the win
+
+    these save FRAMEWORK BOOTSTRAP time
+    a few ms, up to ~20ms on a large app
+
+    worth having. NOT going to fix a 1.8s page.
+
+    if your page is slow it is your QUERIES, not
+    Laravel's boot
+
+  Where it does matter: HIGH REQUEST VOLUME. You pay
+  boot cost on every request, and 20ms × 1M/day is
+  real.
+
+
+  ⚠️  A half-cached deploy — config cached against
+      the PREVIOUS .env — is a genuinely confusing
+      outage: the code is right, the env file is
+      right, and the application disagrees with both.`,
+      codeExample: {
+        title: "The deploy script, and the env() rule",
+        code: `# ---------- The deploy script ----------
+
+php artisan down --render="errors::503"
+
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+
+# Clear first, then cache — against the CURRENT .env
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+php artisan queue:restart        # workers hold old code in memory
+php artisan up
+
+# A half-cached deploy — config cached against the
+# PREVIOUS .env — is a confusing outage: the code is
+# right, the env file is right, and the app disagrees
+# with both.
+
+
+<?php
+// ---------- ⚠️ The env() rule ----------
+
+// ❌ Works in development. Returns null in production
+//    the moment config:cache runs.
+class StripeGateway
+{
+    public function __construct()
+    {
+        $this->key = env('STRIPE_SECRET');      // null once cached
+    }
+}
+
+// ✅ config/services.php — the ONLY place env() belongs
+return [
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'key'    => env('STRIPE_KEY'),
+    ],
+];
+
+// ✅ Everywhere else
+class StripeGateway
+{
+    public function __construct()
+    {
+        $this->key = config('services.stripe.secret');
+    }
+}
+
+
+# ---------- Find them now ----------
+
+grep -rn "env(" app/ routes/ database/ | grep -v "config/"
+
+# Most codebases have at least one. Each is a
+# production null waiting for somebody to run
+# config:cache.
+
+
+<?php
+// ---------- route:cache and closures ----------
+
+// ❌ php artisan route:cache fails: closures cannot be
+//    serialised
+Route::get('/health', function () {
+    return response()->json(['ok' => true]);
+});
+
+// ✅
+Route::get('/health', HealthController::class);
+
+// Which is where it belonged anyway.
+
+
+# ---------- Changing .env in production ----------
+
+# ❌ Edit .env, wonder why nothing changed
+vim .env
+
+# ✅
+vim .env
+php artisan config:cache          # rebuild against the new values
+php artisan queue:restart         # workers cached the old config too
+
+
+# ---------- Local development: the opposite ----------
+
+php artisan optimize:clear
+
+# A cached route file locally means your new route
+# genuinely does not exist. This is the first thing to
+# try when a route 404s for no reason.
+
+
+# ---------- Honest numbers ----------
+
+# Before optimize:  bootstrap ≈ 25ms
+# After optimize:   bootstrap ≈  6ms
+#
+# Real, and worth having on every request.
+#
+# Your 1.8s page was 1.75s of queries. This changes
+# nothing about that. Fix the queries.
+#
+# Where it counts: 19ms × 1,000,000 requests/day.
+
+
+<?php
+// ---------- Verify what is actually cached ----------
+
+php artisan about        // shows which caches are active
+
+// Output includes:
+//   Config ............ CACHED
+//   Events ............ NOT CACHED
+//   Routes ............ CACHED
+//   Views ............. CACHED`,
+      },
+      keyTakeaways: [
+        "<b>`route:cache`, `config:cache`, `view:cache` and `event:cache` speed up framework bootstrap.</b>",
+        "<b>They are deployment steps</b>, and in development they get in your way.",
+        "<b>After config is cached, `env()` returns `null` outside config files.</b>",
+        "<b>So `env()` belongs in `config/` only, and `config()` everywhere else.</b>",
+        "<b>The failure appears whenever `config:cache` runs</b>, not necessarily at deploy time.",
+        "<b>Changing `.env` in production does nothing until you re-run `config:cache`.</b>",
+        "<b>`route:cache` fails on closure routes</b>, since closures cannot be serialised.",
+        "<b>A stale cached route file is invisible</b>: the old routes simply keep working.",
+        "<b>So caching belongs in the deploy script</b>, not in somebody's memory.",
+        "<b>The gain is a few milliseconds to about twenty of bootstrap time.</b>",
+        "<b>That will not fix a slow page</b>, which is almost always queries rather than boot.",
+        "<b>It matters most at high request volume</b>, since you pay boot cost on every request.",
+      ],
+      commonMistakes: [
+        "<b>Calling `env()` outside config files.</b> It returns `null` the moment config is cached.",
+        "<b>Editing `.env` in production without re-caching.</b> Nothing changes and nobody knows why.",
+        "<b>Caching routes with closures still in the file.</b> The command fails during deploy.",
+        "<b>Caching before clearing.</b> You cache against the previous environment values.",
+        "<b>Expecting these to fix a slow page.</b> Twenty milliseconds against 1.8 seconds of queries.",
+        "<b>Forgetting `queue:restart`.</b> Workers keep running the old code and old config.",
+      ],
+      quiz: [
+        {
+          question: "What happens to `env()` after `config:cache` runs?",
+          options: [
+            "Nothing",
+            "It returns `null` anywhere outside config files",
+            "It reads from the cache",
+            "It throws an exception",
+          ],
+          correctIndex: 1,
+          explanation: "So `env()` belongs in `config/` only, and `config()` everywhere else.",
+        },
+        {
+          question: "Why does changing `.env` in production appear to do nothing?",
+          options: [
+            "The file is read-only",
+            "Config is cached, so the values are not re-read until `config:cache` runs again",
+            "Laravel ignores it",
+            "It needs a reboot",
+          ],
+          correctIndex: 1,
+          explanation: "And workers need `queue:restart` too.",
+        },
+        {
+          question: "Why does `route:cache` fail on some applications?",
+          options: [
+            "Too many routes",
+            "Closure routes cannot be serialised",
+            "Missing middleware",
+            "Duplicate names",
+          ],
+          correctIndex: 1,
+          explanation: "Use controller classes instead, which is where they belonged.",
+        },
+        {
+          question: "How much do these caches actually save?",
+          options: [
+            "Most of the page time",
+            "A few milliseconds to about twenty of bootstrap, which matters at volume but will not fix a slow page",
+            "Nothing measurable",
+            "Half the response time",
+          ],
+          correctIndex: 1,
+          explanation: "A 1.8-second page is queries, not boot.",
+        },
+      ],
+    },
+    {
+      id: "octane",
+      title: "Octane — long-running workers & shared state",
+      durationMinutes: 12,
+      explanation: "Octane changes the execution model PHP has had since the beginning, and that change is both the gain and the danger.\n\n---\n\n### 1. Basic — the shift\n\n<b>Traditional PHP:</b>\n\n```text\nrequest → boot Laravel → execute → response → process ends\n```\n\nEvery request rebuilds the entire framework, then throws it away.\n\n<b>Octane:</b>\n\n```text\nLaravel boots once → request 1 → request 2 → request 3 → …\n```\n\nThe application stays in memory. <b>You stop paying for boot on every request</b>, which is where the gain comes from.\n\nIt runs on <b>FrankenPHP</b> or <b>Swoole</b>, and the server matters far less than the idea: <b>keep the application alive between requests.</b>\n\n---\n\n### 2. Intermediate — why this is dangerous\n\nTraditional PHP forgives a lot, because everything is destroyed at the end of the request. Under Octane it is not.\n\n```php\nclass Something\n{\n    public static array $data = [];\n}\n```\n\n```text\nrequest 1 → static state changes\nrequest 2 → same process → the state is still there\n```\n\n<b>That is a state leak between users.</b> And it is worse than a normal bug, because the symptom is one customer seeing another's data, intermittently, on a server that has been up for a while, which is close to impossible to reproduce locally.\n\n<b>The pattern to look for is anything holding a request-specific value beyond the request:</b> static properties, singletons that captured the current user, a container binding resolved with a request in its constructor, a config value mutated at runtime, a global set once.\n\n<b>Singletons are the sharp one.</b> A singleton resolved during request 1 keeps whatever it captured, so a service that took `Auth::user()` in its constructor serves request 2 with request 1's user.\n\n---\n\n### 3. Advanced — memory, and whether you need it\n\n```text\ntraditional  request → memory allocated → process ends → released\nOctane       request → allocated → worker stays alive → request 2 → 3 → 4\n```\n\nA leak that was invisible now accumulates:\n\n```text\n100 MB → 150 MB → 250 MB → 500 MB → the worker dies\n```\n\n<b>Set a max-requests limit</b> so workers recycle, which turns a slow leak into a non-event. That is a mitigation and not a fix: <b>find the leak</b>, because a worker restarting every fifty requests has given back most of what Octane bought you.\n\n<b>And be clear about whether you need it.</b> Octane removes boot cost, which is the twenty milliseconds from the last lesson. <b>If your page takes 1.8 seconds, Octane makes it 1.78 seconds</b> and introduces a class of bug you have never debugged before.\n\nSo the honest positioning: <b>Octane is the last item on the list, not the first.</b> It is for applications that have already fixed their queries, already cache well, and are now bound by framework overhead at high volume. Reaching for it before that is choosing the hardest optimisation to get the smallest win, and paying for it in state bugs.",
+      diagram: `The shift
+
+  TRADITIONAL PHP
+
+    request → boot Laravel → execute → response
+            → process ends
+
+    every request rebuilds the framework, then
+    throws it away
+
+  OCTANE
+
+    Laravel boots ONCE
+        ↓
+    request 1 → request 2 → request 3 → request 4 …
+
+    the application stays in memory
+    you stop paying boot cost per request
+
+    runs on FrankenPHP or Swoole — the server matters
+    far less than the idea:
+
+      KEEP THE APPLICATION ALIVE BETWEEN REQUESTS
+
+
+  ⚠️  Why this is dangerous
+
+      Traditional PHP forgives a lot, because
+      everything is destroyed at the end of the
+      request. Octane does not.
+
+        class Something {
+            public static array $data = [];
+        }
+
+        request 1 → static state changes
+        request 2 → same process
+                  → the state is STILL THERE
+
+      THAT IS A STATE LEAK BETWEEN USERS.
+
+      Worse than a normal bug: the symptom is one
+      customer seeing another's data, intermittently,
+      on a server that has been up a while — close to
+      impossible to reproduce locally.
+
+  The pattern: anything holding a request-specific
+  value BEYOND the request
+
+    static properties
+    singletons that captured the current user
+    container bindings resolved with a request
+    config mutated at runtime
+    globals set once
+
+  ⚠️  Singletons are the sharp one.
+
+      resolved during request 1, it keeps what it
+      captured — a service that took Auth::user() in
+      its constructor serves request 2 with request
+      1's user
+
+
+Memory
+
+    traditional  request → allocated → process ends
+                                     → released
+
+    Octane       request → allocated
+                 worker stays alive
+                 → request 2 → 3 → 4 …
+
+    a leak that was invisible now accumulates:
+
+      100 MB → 150 MB → 250 MB → 500 MB → 💥
+
+  Set a MAX-REQUESTS limit so workers recycle. That
+  turns a slow leak into a non-event.
+
+  It is a mitigation, not a fix — a worker restarting
+  every 50 requests has given back most of what
+  Octane bought you. FIND THE LEAK.
+
+
+  ⚠️  Do you need it?
+
+      Octane removes BOOT COST — the ~20ms from the
+      last lesson.
+
+        a 1.8s page becomes a 1.78s page
+
+      and introduces a class of bug you have never
+      debugged before.
+
+    OCTANE IS THE LAST ITEM ON THE LIST, NOT THE
+    FIRST.
+
+    For applications that have already fixed their
+    queries, already cache well, and are now bound by
+    framework overhead at high volume.
+
+    Reaching for it earlier is choosing the hardest
+    optimisation for the smallest win, and paying in
+    state bugs.`,
+      codeExample: {
+        title: "The state leaks Octane exposes",
+        code: `# ---------- Running it ----------
+
+composer require laravel/octane
+php artisan octane:install --server=frankenphp
+
+php artisan octane:start --workers=4 --max-requests=500
+#                                     └─ recycle workers,
+#                                        so a slow leak
+#                                        is a non-event
+
+php artisan octane:reload      # after a deploy — workers
+                               # hold the old code in memory
+
+
+<?php
+// ---------- ❌ Static state: one customer's data, served to another ----------
+
+class TenantContext
+{
+    public static ?Team $current = null;      // survives the request
+
+    public static function set(Team $team): void
+    {
+        static::$current = $team;
+    }
+}
+
+// Request 1 (team 5) sets it.
+// Request 2 (team 9) reads it before setting it.
+// Team 9 sees team 5's data. Intermittently. On a server
+// that has been up a while.
+
+
+<?php
+// ---------- ❌ A singleton that captured the request ----------
+
+$this->app->singleton(ReportBuilder::class, function ($app) {
+    return new ReportBuilder(
+        user: auth()->user(),          // ← frozen at first resolution
+        team: request()->route('team'),
+    );
+});
+
+// Resolved during request 1. Every later request gets
+// request 1's user.
+
+// ✅ Resolve per request
+$this->app->bind(ReportBuilder::class, fn () => new ReportBuilder());
+
+// ✅ Or take the dependency at call time
+class ReportBuilder
+{
+    public function buildFor(User $user, Team $team): Report { ... }
+}
+
+
+<?php
+// ---------- ❌ Mutating config at runtime ----------
+
+public function handle(Request $request, Closure $next)
+{
+    config(['mail.from.address' => $request->user()->team->from_address]);
+
+    return $next($request);       // and it stays that way for the worker
+}
+
+// ✅ Pass it where it is needed
+Mail::to($user)->send((new InvoiceMail($invoice))->from($team->from_address));
+
+
+<?php
+// ---------- Octane's own hooks ----------
+
+// config/octane.php
+'listeners' => [
+    RequestReceived::class => [
+        // ...
     ],
 ],
 
-php artisan scout:sync-index-settings
-
-// A ->where() on an attribute the engine does not know
-// is filterable fails at query time, in production,
-// on the one filter nobody tested.
-
-
-<?php
-// ---------- Keeping the index honest ----------
-
-// After any operation that bypasses model events
-Product::where('discontinued', true)->update(['in_stock' => false]);
-Product::where('discontinued', true)->searchable();
-
-// A nightly consistency check is cheap insurance
-Schedule::command('products:reindex')->weeklyOn(0, '03:00')->onOneServer();`,
-      },
-      keyTakeaways: [
-        "<b>`scout:import` populates the index; `scout:flush` empties it.</b>",
-        "<b>Flush then import is the standard rebuild</b>, needed when fields, configuration or data change.",
-        "<b>On a live site that sequence is a self-inflicted outage</b>, because search returns nothing in between.",
-        "<b>Build a new index alongside the old and swap an alias</b>, so users never see an empty index.",
-        "<b>Without alias support, rebuild off-peak and know exactly how long it takes.</b>",
-        "<b>Import is real load on both systems</b>, so chunk it and watch memory with eager-loaded relations.",
-        "<b>Search pagination is not database pagination.</b>",
-        "<b>Engines cap total hits</b>, so your UI must handle \"no more results\" rather than assuming a page exists.",
-        "<b>The index shifts between pages</b>, so items can appear twice or not at all.",
-        "<b>Filter in the engine, never in PHP</b>, or you break counts, pagination and ranking together.",
-        "<b>Attributes must be declared filterable</b> in the engine's configuration first.",
-        "<b>Scope multi-tenant search inside the query</b>, exactly as with AI tools.",
-      ],
-      commonMistakes: [
-        "<b>Running flush then import on a live site.</b> Search is empty for the whole import.",
-        "<b>Importing with `all()` or heavy eager loading.</b> The command dies partway with an OOM.",
-        "<b>Filtering the result collection in PHP.</b> Wrong counts, wrong pages, wrong ranking.",
-        "<b>Filtering on an attribute the engine does not know is filterable.</b> It fails at query time in production.",
-        "<b>Assuming search pagination behaves like the database.</b> Caps and shifting results are normal.",
-        "<b>Scoping tenants outside the search call.</b> One missed filter returns another customer's data.",
-      ],
-      quiz: [
-        {
-          question: "Why is flush-then-import dangerous on a live site?",
-          options: [
-            "It is slow",
-            "The index is empty for the whole import, so search returns nothing for minutes",
-            "It corrupts data",
-            "It locks the database",
-          ],
-          correctIndex: 1,
-          explanation: "Build a new index alongside and swap an alias instead.",
-        },
-        {
-          question: "What breaks when you filter search results in PHP?",
-          options: [
-            "Nothing",
-            "Counts, pagination and ranking all at once, since you discard part of a ranked page",
-            "Only the count",
-            "Only performance",
-          ],
-          correctIndex: 1,
-          explanation: "Filter in the engine, with attributes declared filterable.",
-        },
-        {
-          question: "How does search pagination differ from database pagination?",
-          options: [
-            "It does not",
-            "Engines cap total hits, and results shift between pages as the index changes",
-            "It is always faster",
-            "It cannot be cursor-based",
-          ],
-          correctIndex: 1,
-          explanation: "The UI must handle \"no more results\" and occasional duplicates.",
-        },
-        {
-          question: "Where must a multi-tenant constraint live?",
-          options: [
-            "In the UI",
-            "Inside the search query itself",
-            "In a middleware",
-            "In the index settings",
-          ],
-          correctIndex: 1,
-          explanation: "Same rule as scoping AI tools on Day 31.",
-        },
-      ],
-    },
-    {
-      id: "keyword-vs-semantic",
-      title: "Keyword search vs semantic search",
-      durationMinutes: 11,
-      explanation: "The distinction the rest of the day depends on.\n\n---\n\n### 1. Basic — two different questions\n\n<b>Keyword search asks:</b>\n\n```text\nquery:  \"Laravel queue\"\nsearch: does this document contain these words?\n```\n\n<b>Semantic search asks:</b>\n\n```text\nquery:  \"how can I run expensive work in the background?\"\nsearch: which documents mean something similar?\n```\n\n<b>One matches characters. The other matches meaning.</b>\n\nAnd notice the second query contains none of the words in your documentation. Not \"queue\", not \"job\", not \"dispatch\". <b>Keyword search has nothing to work with.</b>\n\n---\n\n### 2. Intermediate — how meaning becomes a number\n\n```text\n\"Laravel queues allow background jobs\"\n            ↓ embedding model\n   [0.13, -0.52, 0.77, …]\n\n\"Run expensive operations asynchronously\"\n            ↓ embedding model\n   [0.15, -0.48, 0.74, …]\n```\n\nThe vectors are close because the <b>concepts</b> are close, and not one word overlaps.\n\nThat is the trick in its entirety: <b>similarity of meaning becomes distance between points</b>, and distance is something a database can sort by.\n\n---\n\n### 3. Advanced — what \"meaning\" actually means here\n\nThree things worth understanding before you trust it.\n\n<b>The model decides what similar means, and you did not choose the model's opinion.</b> Embeddings are trained on general text, so they know \"physician\" and \"doctor\" are close. They may not know that in <b>your</b> domain, \"draft\" and \"pending\" are different states with different rules. <b>General semantics is not your semantics</b>, and where they diverge, semantic search confidently returns the wrong thing.\n\n<b>Similarity is not the same as opposite-detection.</b> \"The invoice was paid\" and \"the invoice was not paid\" are semantically very close: same subject, same vocabulary, one negation. Vectors are poor at negation, which matters enormously when the difference between two documents is a single \"not\".\n\n<b>And there is no exact match.</b> Keyword search can tell you a document definitely contains a word. Semantic search returns a ranked list of things that are <b>kind of like</b> what you asked, always, including when the right answer is not in your corpus at all. <b>That is the failure mode to keep in mind for the next three lessons.</b>\n\nSo the honest framing, and the one to carry forward:\n\n> <b>Semantic search is not better search. It is a different signal.</b>\n\nIt answers \"what is this about?\" where keyword search answers \"does this contain that?\", and knowing which question your user is asking is the entire skill.",
-      diagram: `Two different questions
-
-  KEYWORD
-    query   "Laravel queue"
-    asks    does this document CONTAIN these words?
-
-  SEMANTIC
-    query   "how can I run expensive work in the
-             background?"
-    asks    which documents MEAN something similar?
-
-  One matches characters. The other matches meaning.
-
-  Notice: that second query contains none of your
-  documentation's words. Not "queue", not "job", not
-  "dispatch". Keyword search has nothing to work with.
-
-
-How meaning becomes a number
-
-    "Laravel queues allow background jobs"
-                ↓  embedding model
-        [0.13, -0.52, 0.77, …]
-
-    "Run expensive operations asynchronously"
-                ↓  embedding model
-        [0.15, -0.48, 0.74, …]
-
-  Close vectors, because the CONCEPTS are close —
-  and not one word overlaps.
-
-  That is the whole trick:
-
-    similarity of meaning → distance between points
-    distance → something a database can sort by
-
-
-  ⚠️  Three things before you trust it
-
-    1. The model decides what "similar" means, and
-       you did not choose its opinion.
-
-       Embeddings are trained on general text. They
-       know physician ≈ doctor. They may NOT know
-       that in YOUR domain "draft" and "pending" are
-       different states with different rules.
-
-         general semantics ≠ your semantics
-
-       Where they diverge, semantic search
-       confidently returns the wrong thing.
-
-    2. Vectors are BAD AT NEGATION.
-
-         "the invoice was paid"
-         "the invoice was NOT paid"
-
-       Same subject, same vocabulary, one negation —
-       and semantically very close. Which matters
-       enormously when a single "not" is the whole
-       difference.
-
-    3. There is no EXACT MATCH.
-
-       Keyword search can tell you a document
-       definitely contains a word.
-
-       Semantic search returns a ranked list of
-       things that are KIND OF LIKE what you asked —
-       always, including when the right answer is not
-       in your corpus at all.
-
-
-  The framing to carry forward:
-
-    SEMANTIC SEARCH IS NOT BETTER SEARCH.
-    IT IS A DIFFERENT SIGNAL.
-
-    keyword    "does this contain that?"
-    semantic   "what is this about?"
-
-    Knowing which question your user is asking is
-    the entire skill.`,
-      codeExample: {
-        title: "The same corpus, two kinds of query",
-        code: `<?php
-// ---------- The corpus ----------
-
-// Document A: "Laravel queues process background jobs."
-// Document B: "Laravel validation rules."
-// Document C: "Laravel database migrations."
-
-
-<?php
-// ---------- Keyword: does it contain these words? ----------
-
-Document::where('content', 'like', '%queue%')->get();
-// → A
-
-Document::where('content', 'like', '%background%')->get();
-// → A
-
-Document::where('content', 'like', '%run work later%')->get();
-// → nothing. The user's words are not in your documents.
-
-
-<?php
-// ---------- Semantic: what is this about? ----------
-
-Document::query()
-    ->whereVectorSimilarTo('embedding', 'How do I run work later without blocking?')
-    ->limit(3)
-    ->get();
-// → A first, because "run work later without blocking"
-//   and "queues process background jobs" mean nearly
-//   the same thing, sharing not one word.
-
-
-<?php
-// ---------- Where general semantics is not YOUR semantics ----------
-
-// Your invoice states, with different rules each:
-//   draft     → editable, not sent
-//   pending   → sent, awaiting payment
-//   overdue   → past due date
-
-Invoice::query()
-    ->whereVectorSimilarTo('notes_embedding', 'invoices still waiting')
-    ->get();
-
-// The embedding model considers draft ≈ pending ≈
-// awaiting. It has no idea your business treats them
-// as different things with different rules.
-//
-// ✅ State is structured data. Filter it.
-Invoice::where('status', 'pending')
-    ->whereVectorSimilarTo('notes_embedding', 'chase this client')
-    ->get();
-
-
-<?php
-// ---------- Negation: where vectors quietly fail ----------
-
-// These two sentences are semantically VERY close:
-//   "The invoice was paid on time."
-//   "The invoice was not paid on time."
-//
-// Same subject, same vocabulary, one word different —
-// and that word inverts the meaning completely.
-
-// ❌ Do not ask a vector search to distinguish them
-Invoice::whereVectorSimilarTo('notes_embedding', 'invoices that were not paid')->get();
-
-// ✅ That is a column, not a meaning
-Invoice::where('paid_at', null)->get();
-
-
-<?php
-// ---------- No exact match, ever ----------
-
-// Keyword: a definite answer, including "no"
-Document::where('content', 'like', '%CP-10460%')->exists();   // true / false
-
-// Semantic: ALWAYS a ranked list, even when your corpus
-// contains nothing relevant
-Document::whereVectorSimilarTo('embedding', 'CP-10460')->limit(5)->get();
-// → five documents. All of them wrong. None of them
-//   flagged as wrong.
-//
-// Which is why the next three lessons exist.`,
-      },
-      keyTakeaways: [
-        "<b>Keyword search asks whether a document contains these words.</b>",
-        "<b>Semantic search asks which documents mean something similar.</b>",
-        "<b>A natural-language question often contains none of your documents' words</b>, leaving keyword search nothing.",
-        "<b>An embedding turns meaning into a vector</b>, so similarity becomes distance a database can sort by.",
-        "<b>Two sentences with no shared words can have very close vectors.</b>",
-        "<b>The model decides what \"similar\" means, and you did not choose its opinion.</b>",
-        "<b>General semantics is not your domain's semantics</b>: it may treat your distinct states as the same.",
-        "<b>Vectors are poor at negation</b>, so \"paid\" and \"not paid\" sit very close together.",
-        "<b>Semantic search has no exact match</b>: it always returns a ranked list, even with nothing relevant.",
-        "<b>Semantic search is not better search, it is a different signal.</b>",
-      ],
-      commonMistakes: [
-        "<b>Treating semantic search as an upgrade.</b> It answers a different question, not the same one better.",
-        "<b>Assuming the model shares your domain's distinctions.</b> Draft and pending may be identical to it.",
-        "<b>Relying on vectors to handle negation.</b> \"Not paid\" is nearly identical to \"paid\".",
-        "<b>Forgetting there is no \"no results\".</b> A ranked list of irrelevant documents looks like an answer.",
-      ],
-      quiz: [
-        {
-          question: "What is the fundamental difference between the two?",
-          options: [
-            "Speed",
-            "Keyword asks whether words are present; semantic asks what a document is about",
-            "Semantic is always more accurate",
-            "Keyword cannot rank",
-          ],
-          correctIndex: 1,
-          explanation: "Different questions, not better and worse answers.",
-        },
-        {
-          question: "How does semantic similarity become searchable?",
-          options: [
-            "Through synonyms",
-            "Meaning becomes a vector, so similarity becomes distance a database can sort by",
-            "Through stemming",
-            "By expanding the query",
-          ],
-          correctIndex: 1,
-          explanation: "Two sentences with no shared words can sit very close together.",
-        },
-        {
-          question: "Why are vectors unreliable for negation?",
-          options: [
-            "They ignore short words",
-            "\"Paid\" and \"not paid\" share subject and vocabulary, so their vectors are very close",
-            "Negation is not embedded",
-            "They are reliable",
-          ],
-          correctIndex: 1,
-          explanation: "When a single \"not\" is the whole difference, use a column instead.",
-        },
-        {
-          question: "What does semantic search never do?",
-          options: [
-            "Rank results",
-            "Return nothing: it always gives a ranked list, even when nothing relevant exists",
-            "Handle long queries",
-            "Use an index",
-          ],
-          correctIndex: 1,
-          explanation: "Irrelevant results look exactly like relevant ones.",
-        },
-      ],
-    },
-    {
-      id: "pgvector-and-vector-queries",
-      title: "pgvector & whereVectorSimilarTo()",
-      durationMinutes: 12,
-      explanation: "If you already run PostgreSQL, you may not need another service at all.\n\n---\n\n### 1. Basic — vectors in your database\n\n<b>pgvector</b> lets PostgreSQL store and search embeddings:\n\n```text\ndocuments\n─────────\nid\ntitle\ncontent\nembedding    ← the vector\n```\n\n```text\nLaravel → PostgreSQL\n           ├── normal columns\n           └── vector column\n```\n\n<b>That is a genuinely big deal.</b> Your vectors live next to your data, in the same transaction, with the same backups, joinable against every other table you have. No second service, no sync problem, no second copy to go stale.\n\nGenerating them:\n\n```text\ntitle + content → embedding model → vector → database\n```\n\n---\n\n### 2. Intermediate — querying\n\n```php\nDocument::query()\n    ->whereVectorSimilarTo('embedding', 'Best wineries in Napa Valley')\n    ->get();\n```\n\nWhat happens:\n\n```text\nquery text → embedding → compare against every document vector\n→ similarity score → rank\n```\n\n```text\n         [Q]\n        / | \\\n       A  B  C     ← distance(Q,A), distance(Q,B), distance(Q,C)\n     closest = best semantic match\n```\n\n<b>You do not implement the maths.</b> The database computes distance and sorts by it, which is exactly the kind of work a database is good at.\n\n---\n\n### 3. Advanced — the three things that decide whether it works\n\n<b>The query is itself an embedding call.</b> Every search costs you a model request before the database sees anything, which adds latency and money to every keystroke. <b>So never embed on an autocomplete keypress</b>, and cache embeddings of repeated queries: the same text always produces the same vector, so caching is free correctness.\n\n<b>You need a vector index, and it changes the answers.</b> Without one, PostgreSQL compares your query against every row, which is fine at ten thousand documents and unusable at ten million. With an HNSW or IVFFlat index it is fast, and <b>approximate</b>: the index trades a small amount of recall for a large amount of speed, so a result that should have been fourth occasionally is not returned at all. That is the deal, and it is usually the right one.\n\n<b>And the vector column has a fixed dimension.</b> `vector(1536)` accepts vectors of exactly that size, so switching embedding models means a migration, not just a re-embed. Combined with Day 31's rule about storing the model name, that gives you the full picture: <b>changing embedding models is a schema change, a backfill and a re-index.</b>\n\nOne more thing that surprises people: <b>the vector is large.</b> A 1536-dimension float vector is about 6KB per row, so a million documents is several gigabytes before you index them. Vectors are not a free extra column.\n\n<b>And the practical rule for choosing pgvector over a dedicated engine:</b> if your corpus is in the low millions and you already run PostgreSQL, pgvector is almost always the right answer, because one system you understand beats two you half-understand.",
-      diagram: `Vectors in your own database
-
-    documents
-    ─────────
-    id
-    title
-    content
-    embedding     ← the vector
-
-    Laravel → PostgreSQL
-                ├── normal columns
-                └── vector column
-
-  Genuinely a big deal: vectors live NEXT TO your
-  data — same transaction, same backups, joinable
-  against every other table.
-
-    no second service
-    no sync problem
-    no second copy to go stale
-
-    title + content → embedding model → vector → db
-
-
-Querying
-
-    Document::query()
-        ->whereVectorSimilarTo('embedding',
-              'Best wineries in Napa Valley')
-        ->get();
-
-    query text
-        ↓  embedding
-    compare against every document vector
-        ↓
-    similarity score → rank
-
-               [Q]
-              / | \\
-             ▼  ▼  ▼
-             A  B  C
-
-        distance(Q,A) · distance(Q,B) · distance(Q,C)
-        closest = best semantic match
-
-  You do not implement the maths. The database
-  computes distance and sorts by it.
-
-
-  ⚠️  Three things that decide whether it works
-
-    1. The QUERY is itself an embedding call.
-
-       Every search costs a model request before the
-       database sees anything: latency and money on
-       every keystroke.
-
-         never embed on an autocomplete keypress
-         cache query embeddings — same text always
-         gives the same vector, so caching is free
-         correctness
-
-    2. You need a vector index, and it CHANGES THE
-       ANSWERS.
-
-       without   compare against every row
-                 fine at 10k, unusable at 10M
-       with      HNSW / IVFFlat — fast, and
-                 APPROXIMATE
-
-         the index trades a little recall for a lot
-         of speed: a result that should have been 4th
-         occasionally is not returned at all
-
-       That is the deal, and usually the right one.
-
-    3. The column has a FIXED DIMENSION.
-
-         vector(1536) accepts exactly 1536
-
-       Switching embedding models is a MIGRATION, not
-       just a re-embed.
-
-       With Day 31's "store the model name" rule:
-
-         changing embedding models
-           = schema change + backfill + re-index
-
-
-  And vectors are BIG. A 1536-dim float vector is
-  ~6KB per row — a million documents is several GB
-  before you index them. Not a free extra column.
-
-
-  Choosing pgvector over a dedicated engine:
-
-    low-millions corpus + you already run PostgreSQL
-      → pgvector, almost always
-
-    one system you understand beats two you
-    half-understand`,
-      codeExample: {
-        title: "pgvector end to end",
-        code: `<?php
-// ---------- Migration ----------
-
-DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
-
-Schema::create('documents', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('team_id')->constrained();
-    $table->string('title');
-    $table->text('content');
-    $table->vector('embedding', 1536);        // ← fixed dimension
-    $table->string('embedding_model');        // ← Day 31's rule
-    $table->timestamps();
-});
-
-// Without an index, PostgreSQL compares your query to
-// EVERY row. Fine at 10k documents. Unusable at 10M.
-DB::statement('
-    CREATE INDEX documents_embedding_idx
-    ON documents
-    USING hnsw (embedding vector_cosine_ops)
-');
-
-// HNSW is APPROXIMATE: a little recall traded for a lot
-// of speed. A result that should have ranked 4th
-// occasionally will not come back at all.
-
-
-<?php
-// ---------- Embed on write, in a job ----------
-
-class EmbedDocument implements ShouldQueue
-{
-    public function handle(): void
-    {
-        $this->document->update([
-            'embedding'       => Str::of($this->document->title . "\\n\\n" . $this->document->content)
-                                    ->toEmbeddings(),
-            'embedding_model' => config('ai.uses.embeddings'),
-        ]);
-    }
-}
-
-
-<?php
-// ---------- Searching ----------
-
-Document::query()
-    ->where('team_id', $user->team_id)                 // scope in the query
-    ->where('embedding_model', config('ai.uses.embeddings'))
-    ->whereVectorSimilarTo('embedding', $question)
-    ->limit(5)
-    ->get();
-
-// The vector lives beside your normal columns, so this
-// is one query with one WHERE clause — not a search
-// engine call plus a database call plus a merge.
-
-
-<?php
-// ---------- ⚠️ The query is an embedding call ----------
-
-// ❌ An embedding request on every keystroke: latency
-//    and money, per character
-Route::get('/autocomplete', fn (Request $r) =>
-    Document::whereVectorSimilarTo('embedding', $r->query('q'))->limit(5)->get()
-);
-
-// ✅ Keyword for autocomplete, semantic on submit
-Route::get('/autocomplete', fn (Request $r) =>
-    Document::where('title', 'ilike', $r->query('q') . '%')->limit(5)->get()
-);
-
-// ✅ And cache query embeddings — identical text always
-//    produces an identical vector
-$vector = Cache::rememberForever(
-    'embedding:' . config('ai.uses.embeddings') . ':' . sha1($question),
-    fn () => Str::of($question)->toEmbeddings(),
-);
-
-
-<?php
-// ---------- Changing embedding model is a schema change ----------
-
-// The new model produces 3072-dimension vectors.
-// vector(1536) will not take them.
-
-Schema::table('documents', function (Blueprint $table) {
-    $table->vector('embedding_v2', 3072)->nullable();
-});
-
-// Backfill in a command, keeping the old column serving
-Document::whereNull('embedding_v2')->chunkById(200, function ($docs) {
-    foreach ($docs as $doc) {
-        $doc->update([
-            'embedding_v2'    => Str::of($doc->searchableText())->toEmbeddings(),
-            'embedding_model' => config('ai.uses.embeddings'),
-        ]);
-    }
-});
-
-// Then rebuild the index, swap the column, drop the old.
-// Schema change + backfill + re-index. Plan for it.
-
-
-# ---------- Storage is not free ----------
-
-# 1536 dimensions × 4 bytes ≈ 6KB per row
-#   100,000 documents  ≈ 600 MB
-# 1,000,000 documents  ≈   6 GB   before indexing
-#
-# Vectors are not a free extra column.
-
-
-# ---------- When pgvector is the right call ----------
-
-# corpus in the low millions
-# + you already run PostgreSQL
-#   → pgvector
-#
-# One system you understand beats two you
-# half-understand.`,
-      },
-      keyTakeaways: [
-        "<b>pgvector stores and searches embeddings inside PostgreSQL</b>, beside your normal columns.",
-        "<b>That removes the second service, the sync problem and the second copy of your data.</b>",
-        "<b>`whereVectorSimilarTo()` embeds the query, compares distances and ranks</b>, without you writing the maths.",
-        "<b>Every semantic query is itself an embedding call</b>, adding latency and cost before the database is touched.",
-        "<b>Never embed on an autocomplete keystroke</b>, and cache query embeddings since identical text is identical vectors.",
-        "<b>You need an HNSW or IVFFlat index</b>, or PostgreSQL compares against every row.",
-        "<b>Those indexes are approximate</b>: they trade a little recall for a lot of speed.",
-        "<b>The vector column has a fixed dimension</b>, so a new embedding model means a migration.",
-        "<b>Changing embedding models is a schema change, a backfill and a re-index.</b>",
-        "<b>Vectors are large</b>: about 6KB per row at 1536 dimensions, so a million documents is gigabytes.",
-        "<b>If your corpus is in the low millions and you run PostgreSQL, pgvector is usually right.</b>",
-      ],
-      commonMistakes: [
-        "<b>No vector index.</b> Every query scans every row, and it degrades silently as you grow.",
-        "<b>Embedding on every keystroke.</b> You pay a model request per character typed.",
-        "<b>Assuming an approximate index returns exactly the top N.</b> Some recall is traded for speed.",
-        "<b>Planning a model switch as a re-embed.</b> The dimension changes, so the schema changes.",
-        "<b>Ignoring storage.</b> A million vectors is several gigabytes before indexing.",
-      ],
-      quiz: [
-        {
-          question: "What is the main architectural advantage of pgvector?",
-          options: [
-            "It is faster than dedicated engines",
-            "Vectors live beside your data: same transaction, same backups, no second service to sync",
-            "It generates embeddings for you",
-            "It needs no index",
-          ],
-          correctIndex: 1,
-          explanation: "One system you understand beats two you half-understand.",
-        },
-        {
-          question: "What does every semantic query cost before the database is involved?",
-          options: [
-            "Nothing",
-            "An embedding call for the query text, adding latency and money",
-            "A full table scan",
-            "An index rebuild",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why autocomplete should stay keyword-based.",
-        },
-        {
-          question: "What is the trade-off of an HNSW index?",
-          options: [
-            "Storage only",
-            "It is approximate: a little recall traded for a lot of speed",
-            "It is slower to query",
-            "It requires more memory only",
-          ],
-          correctIndex: 1,
-          explanation: "A result that should rank fourth occasionally will not come back.",
-        },
-        {
-          question: "What does switching embedding models require?",
-          options: [
-            "A re-embed only",
-            "A schema change for the new dimension, a backfill and a re-index",
-            "A config change",
-            "Nothing",
-          ],
-          correctIndex: 1,
-          explanation: "`vector(1536)` will not accept 3072-dimension vectors.",
-        },
-      ],
-    },
-    {
-      id: "when-semantic-is-better",
-      title: "When semantic search actually wins",
-      durationMinutes: 11,
-      explanation: "Semantic search is not magic, and \"AI search is always better\" is simply false. So here is the narrow, real set of cases where it wins clearly.\n\n---\n\n### 1. Basic — the user does not know your vocabulary\n\nThis is the main one, and it covers most genuine wins.\n\n```text\nuser:          \"how do I make something happen later without blocking the request?\"\nyour docs say: \"Laravel queues and delayed jobs\"\n```\n\nKeyword search has: `make`, `happen`, `later`, `blocking`. <b>None of them appear in the answer.</b>\n\nSemantic search sees:\n\n```text\n\"execute later without blocking\"  ≈  \"queues and delayed jobs\"\n```\n\n<b>The pattern: the user describes an outcome, your content uses a technical term.</b> That gap is exactly what embeddings close, and it is why documentation search and support search are the flagship use cases.\n\n---\n\n### 2. Intermediate — synonyms and paraphrase\n\n```text\nuser types \"car\"        your data says \"automobile\"\nuser types \"doctor\"     your data says \"physician\"\n```\n\n<b>A semantic system recognises the relationship without you writing a synonym list.</b>\n\nWhich is the real saving: synonym lists work, and they are permanent manual labour. Somebody has to think of \"notebook\" for \"laptop\", and nobody thinks of all of them. <b>Embeddings give you the long tail for free.</b>\n\n---\n\n### 3. Advanced — two worked examples, and the shared pattern\n\n<b>Documentation search.</b> Your corpus covers queues, events, authentication, middleware, Eloquent. A user asks:\n\n```text\n\"how do I execute work after the user leaves the page?\"\n```\n\nNo document contains \"after the user leaves the page\". One discusses `dispatchAfterResponse()`. <b>Semantic search finds the conceptual link that no keyword ever would.</b>\n\n<b>Ecommerce.</b> A user searches:\n\n```text\n\"lightweight laptop for programming\"\n```\n\nProducts described as portable, developer-friendly, long battery life, 16GB RAM. <b>None contain that phrase.</b> Semantic ranking surfaces them, and then structured filters handle price, brand, RAM and availability.\n\n<b>Notice what both examples share.</b> The query is long, natural language, and describes an intent rather than naming a thing. <b>That is the signal.</b>\n\nAnd notice what neither does. <b>Neither user was looking for a specific known record.</b> They were exploring, which is the honest boundary: <b>semantic search helps people who do not yet know what they are looking for.</b>\n\nOne last thing worth naming. <b>Semantic search is much better at recall than at precision.</b> It finds things keyword search misses entirely, and it also finds several things that are merely adjacent. That is a good trade when the alternative is zero results, and a bad one when the user knew exactly what they wanted, which is where the next lesson starts.",
-      diagram: `The main win — the user does not know your vocabulary
-
-    user says   "how do I make something happen later
-                 without blocking the request?"
-    docs say    "Laravel queues and delayed jobs"
-
-  Keyword search has: make · happen · later · blocking
-  None of them appear in the answer.
-
-  Semantic sees:
-
-    "execute later without blocking"
-              ≈
-    "queues and delayed jobs"
-
-  THE PATTERN
-
-    the user describes an OUTCOME
-    your content uses a TECHNICAL TERM
-
-  That gap is what embeddings close — which is why
-  documentation and support search are the flagship
-  use cases.
-
-
-Synonyms and paraphrase, for free
-
-    user types "car"     data says "automobile"
-    user types "doctor"  data says "physician"
-
-  A synonym list also solves this — and is permanent
-  manual labour. Somebody has to think of "notebook"
-  for "laptop", and nobody thinks of all of them.
-
-    embeddings give you the LONG TAIL for free
-
-
-Two worked examples
-
-  DOCUMENTATION
-    corpus: queues · events · auth · middleware · Eloquent
-    query:  "how do I execute work after the user
-             leaves the page?"
-
-    No document contains that phrase.
-    One discusses dispatchAfterResponse().
-
-    Semantic finds the conceptual link no keyword
-    would.
-
-  ECOMMERCE
-    query: "lightweight laptop for programming"
-
-    products described as: portable · developer-
-    friendly · long battery life · 16GB RAM
-
-    None contain that phrase. Semantic ranking
-    surfaces them; structured filters then handle
-    price, brand, RAM, availability.
-
-
-  WHAT BOTH SHARE
-
-    the query is LONG, NATURAL LANGUAGE, and
-    describes an INTENT rather than naming a thing
-
-    that is the signal
-
-
-  AND WHAT NEITHER DOES
-
-    neither user was looking for a specific KNOWN
-    RECORD — they were exploring
-
-    semantic search helps people who do not yet know
-    what they are looking for
-
-
-  One last thing:
-
-    semantic is much better at RECALL than PRECISION
-
-    it finds what keyword misses entirely — and also
-    several things that are merely adjacent
-
-      good trade when the alternative is zero results
-      bad trade when the user knew exactly what they
-      wanted  → which is the next lesson`,
-      codeExample: {
-        title: "The queries where semantic earns its keep",
-        code: `<?php
-// ---------- Documentation search ----------
-
-// Corpus:
-//   "Laravel queues process background jobs."
-//   "dispatchAfterResponse sends the response first, then runs the job."
-//   "Laravel validation rules."
-//   "Laravel database migrations."
-
-$question = 'How do I execute work after the user leaves the page?';
-
-// ❌ Keyword: the phrase appears nowhere
-Doc::where('content', 'like', "%{$question}%")->get();      // nothing
-Doc::whereFullText('content', $question)->get();            // noise at best
-
-// ✅ Semantic: finds dispatchAfterResponse, which shares
-//    not one word with the question
-Doc::query()
-    ->whereVectorSimilarTo('embedding', $question)
-    ->limit(5)
-    ->get();
-
-
-<?php
-// ---------- Synonyms you never had to write down ----------
-
-// A synonym list works, and is permanent manual labour:
-'synonyms' => [
-    'laptop'  => ['notebook', 'macbook', 'ultrabook'],
-    'doctor'  => ['physician', 'gp', 'clinician'],
-    'car'     => ['automobile', 'vehicle'],
-    // ...and the fifty you did not think of
+// Reset anything that must not survive a request
+'flush' => [
+    TenantContext::class,
 ],
 
-// Embeddings cover the long tail without a list
-Product::whereVectorSimilarTo('embedding', 'automobile')->get();
-// → cars, vehicles, motors
+// And the container bindings to rebuild each request
+'warm' => [...],
 
 
 <?php
-// ---------- Ecommerce: intent, then structured filters ----------
+// ---------- Finding a leak ----------
 
-class ProductSearch
+Route::get('/octane-memory', fn () => [
+    'mb'       => round(memory_get_usage(true) / 1048576, 1),
+    'peak_mb'  => round(memory_get_peak_usage(true) / 1048576, 1),
+    'requests' => app('octane.requests') ?? null,
+]);
+
+// Watch it across a few hundred requests. Flat is
+// healthy. Climbing means something is accumulating —
+// usually a static array, a growing collection on a
+// singleton, or an event listener registered per request.
+
+
+<?php
+// ---------- ⚠️ Registering listeners per request ----------
+
+// ❌ Under Octane this adds another listener every request
+public function boot(): void
 {
-    public function search(User $user, SearchFilters $filters): LengthAwarePaginator
-    {
-        return Product::query()
-            ->where('team_id', $user->team_id)
-            ->where('in_stock', true)
-
-            // Structured constraints stay structured
-            ->when($filters->brand, fn ($q, $b) => $q->where('brand', $b))
-            ->when($filters->maxPrice, fn ($q, $p) => $q->where('price_cents', '<=', $p))
-            ->when($filters->minRam, fn ($q, $r) => $q->where('ram_gb', '>=', $r))
-
-            // Meaning does the ranking
-            ->whereVectorSimilarTo('embedding', $filters->query)
-            ->paginate(24);
-    }
+    Event::listen(InvoicePaid::class, fn ($e) => $this->log($e));
 }
+// Request 500 fires the listener 500 times.
 
-// "lightweight laptop for programming"
-//   → products described as portable, developer-friendly,
-//     long battery life — none containing that phrase
-//   → then price, brand and RAM as real filters
+// ✅ Register once, in a service provider that boots once
 
 
-<?php
-// ---------- The signal, in code ----------
+# ---------- Where Octane belongs on the list ----------
 
-final class QueryShape
-{
-    // Long, natural language, describing an intent
-    public static function looksSemantic(string $query): bool
-    {
-        return str_word_count($query) >= 5
-            && ! preg_match('/[A-Z]{2,}-\\d+|\\d{4,}|@/', $query);
-    }
-}
-
-// ✅ semantic
-//   "how do I run work in the background?"
-//   "lightweight laptop for programming"
-//   "what happens when a payment fails halfway through"
-//
-// ❌ not semantic
-//   "CP-10460"
-//   "rajan@example.com"
-//   "Mac"
-
-
-<?php
-// ---------- Recall vs precision, made explicit ----------
-
-// Semantic search finds what keyword misses ENTIRELY —
-// and also several things that are merely adjacent.
-
-$results = Doc::whereVectorSimilarTo('embedding', $question)
-    ->limit(10)
-    ->get();
-
-// Good trade: the alternative was zero results.
-//
-// Bad trade: the user typed an invoice number and now
-// has ten invoices, one of which might be theirs.
-//
-// Which is the next lesson.`,
+# 1. measure
+# 2. fix the code
+# 3. fix the queries
+# 4. add indexes
+# 5. fix N+1
+# 6. reduce payload
+# 7. add caching
+# 8. Redis / CDN
+# 9. Octane          ← here. Not before.
+#
+# A 1.8s page becomes 1.78s, and you have inherited a
+# class of bug you have never debugged.`,
       },
       keyTakeaways: [
-        "<b>Semantic search is not magic</b>, and \"AI search is always better\" is false.",
-        "<b>Its main win is a vocabulary gap</b>: the user describes an outcome, your content uses a technical term.",
-        "<b>That is why documentation and support search are the flagship cases.</b>",
-        "<b>It handles synonyms and paraphrase without a synonym list.</b>",
-        "<b>Synonym lists work and are permanent manual labour</b>; embeddings give you the long tail free.",
-        "<b>Documentation example</b>: \"work after the user leaves the page\" finds `dispatchAfterResponse`.",
-        "<b>Ecommerce example</b>: \"lightweight laptop for programming\" finds products described as portable.",
-        "<b>The signal is a long, natural-language query describing an intent</b> rather than naming a thing.",
-        "<b>Neither example was looking for a specific known record.</b>",
-        "<b>Semantic search helps people who do not yet know what they are looking for.</b>",
-        "<b>It is better at recall than precision</b>, which is a good trade only when the alternative is zero results.",
+        "<b>Traditional PHP boots Laravel per request and discards it; Octane boots once and stays alive.</b>",
+        "<b>The gain is eliminating boot cost on every request.</b>",
+        "<b>It runs on FrankenPHP or Swoole</b>, and the idea matters more than the server.",
+        "<b>Static properties now survive between requests</b>, which is a state leak between users.",
+        "<b>The symptom is one customer seeing another's data, intermittently</b>, on a long-lived worker.",
+        "<b>Look for anything holding request-specific values beyond the request.</b>",
+        "<b>Singletons are the sharp edge</b>: one resolved with `Auth::user()` serves everyone that user.",
+        "<b>Config mutated at runtime stays mutated for the worker's lifetime.</b>",
+        "<b>Memory leaks accumulate instead of being freed at the end of the request.</b>",
+        "<b>Set a max-requests limit so workers recycle</b>, which is mitigation rather than a fix.",
+        "<b>Octane removes boot cost, so a 1.8-second page becomes 1.78 seconds.</b>",
+        "<b>It is the last item on the optimisation list, not the first.</b>",
       ],
       commonMistakes: [
-        "<b>Treating semantic search as a general upgrade.</b> Its wins are a specific, narrow shape.",
-        "<b>Using it for users who know exactly what they want.</b> Extra adjacent results are noise, not help.",
-        "<b>Letting semantic ranking decide structured constraints.</b> Price and brand are filters, not meanings.",
-        "<b>Ignoring the query shape.</b> A four-word query rarely has enough context to be worth embedding.",
+        "<b>Static properties holding request data.</b> Request two reads request one's values.",
+        "<b>Singletons capturing the authenticated user.</b> Every later request gets the first one's identity.",
+        "<b>Mutating config in middleware.</b> The change persists for the whole worker.",
+        "<b>Registering event listeners per request.</b> Request 500 fires the listener 500 times.",
+        "<b>Reaching for Octane before fixing queries.</b> The smallest win for the hardest debugging.",
+        "<b>No max-requests limit.</b> A slow leak eventually kills the worker under load.",
       ],
       quiz: [
         {
-          question: "What is the main pattern where semantic search wins?",
+          question: "What does Octane change?",
           options: [
-            "Short queries",
-            "The user describes an outcome while your content uses a technical term",
-            "Exact identifiers",
-            "Numeric filters",
+            "How queries run",
+            "The execution model: Laravel boots once and stays in memory across requests",
+            "The cache driver",
+            "How Blade compiles",
           ],
           correctIndex: 1,
-          explanation: "That vocabulary gap is exactly what embeddings close.",
+          explanation: "You stop paying boot cost on every request.",
         },
         {
-          question: "What does semantic search give you over a synonym list?",
+          question: "Why are static properties dangerous under Octane?",
           options: [
-            "Faster queries",
-            "The long tail for free, without somebody manually thinking of every related word",
-            "Better filters",
-            "Exact matching",
+            "They use more memory",
+            "They survive between requests, so one user's data can be served to another",
+            "They are slower",
+            "They cannot be serialised",
           ],
           correctIndex: 1,
-          explanation: "Synonym lists work and are permanent manual labour.",
+          explanation: "The symptom is intermittent and nearly impossible to reproduce locally.",
         },
         {
-          question: "What do the documentation and ecommerce examples have in common?",
+          question: "What is the risk with a singleton under Octane?",
           options: [
-            "Short queries",
-            "Long natural-language queries describing an intent rather than naming a specific record",
-            "Numeric constraints",
-            "Exact identifiers",
+            "It is rebuilt too often",
+            "It keeps whatever it captured at first resolution, such as the authenticated user",
+            "It cannot be injected",
+            "It leaks database connections",
           ],
           correctIndex: 1,
-          explanation: "And neither user was looking for a record they already knew existed.",
+          explanation: "Bind per request, or take dependencies at call time.",
         },
         {
-          question: "Where does semantic search sit on recall versus precision?",
+          question: "Where does Octane belong in the optimisation order?",
           options: [
-            "Better precision",
-            "Better recall: it finds what keyword misses, and also things that are merely adjacent",
-            "Equal on both",
-            "Worse on both",
+            "First, for the biggest win",
+            "Last, after queries, indexes, N+1 and caching are already handled",
+            "Second, after indexes",
+            "It is not an optimisation",
           ],
           correctIndex: 1,
-          explanation: "A good trade against zero results, a bad one when the user knew what they wanted.",
+          explanation: "It removes boot cost, so a 1.8-second page becomes 1.78 seconds.",
         },
       ],
     },
     {
-      id: "when-semantic-is-worse",
-      title: "When semantic search is worse than LIKE",
-      durationMinutes: 12,
-      explanation: "This is the most useful lesson in the elective, because it is the part everyone skips.\n\n---\n\n### 1. Basic — exact identifiers\n\nA user types:\n\n```text\nCP-10460\n```\n\nThey are not asking \"what concept resembles CP-10460?\". They are asking <b>find this exact thing</b>.\n\n```sql\nWHERE ticket_number = 'CP-10460'\n```\n\n<b>Semantic search here is worse in every way</b>: slower, more expensive, and it returns five tickets that are vaguely similar instead of the one that exists. The correct behaviour for a wrong identifier is <b>no results</b>, and a vector search cannot express that.\n\nThe whole category:\n\n```text\nuser IDs · order IDs · ticket numbers · SKUs · invoice numbers\nproduct codes · email addresses · URLs · phone numbers\nfile names · version numbers · postcodes · VINs\n```\n\n<b>`INV-2026-00982` should return that invoice or nothing.</b> \"Similar invoices\" is not an answer anyone wanted.\n\n---\n\n### 2. Intermediate — short queries and names\n\n<b>Short queries have no context to embed.</b>\n\n```text\n\"Mac\"  →  MacBook? macOS? MAC address? macaroni?\n```\n\nA model given three characters is guessing, and it will guess confidently. <b>Keyword search is far more predictable</b>, and prefix matching is what an autocomplete actually wants.\n\n<b>Names and proper nouns are the same problem.</b> Somebody searching \"Rajan\" wants records containing Rajan, not people who are semantically similar to Rajan. There is no such thing as a person who is 0.91 similar to a name, and returning one is a strange experience.\n\n---\n\n### 3. Advanced — structured data is not a meaning\n\n```text\n\"red Nike shoes under $100\"\n```\n\n<b>Do not ask semantic similarity to work out that `color = red`, `brand = Nike`, `price < 100`.</b> Those are structured constraints with exact answers, and a vector will get them approximately right, which is the worst kind of right: a £110 shoe is semantically very close to a £100 one, and returning it is simply wrong.\n\n```text\nsemantic ranking  +  brand = Nike  +  price < 100  +  color = red\n```\n\n<b>Meaning for the fuzzy part, columns for the exact part.</b> That split is the entire architecture of good search.\n\nAnd the deeper reason all of these fail the same way: <b>semantic search cannot say \"no\".</b> Every one of these queries returns a confident ranked list. A wrong ticket number returns five tickets. A misspelled name returns five people. A price constraint returns things nearby. <b>The user cannot tell a good result from a bad one</b>, because both look identical.\n\nOne more, worth stating plainly: <b>this is also a cost decision.</b> Every semantic query costs an embedding call plus a vector search. Running that for `CP-10460` means paying money and adding latency to produce a worse answer than a `WHERE` clause would have given you for free.",
-      diagram: `Exact identifiers
-
-    user types    CP-10460
-
-    They are not asking "what concept resembles
-    CP-10460?" They are asking FIND THIS EXACT THING.
-
-      WHERE ticket_number = 'CP-10460'
-
-  Semantic here is worse in EVERY way: slower, more
-  expensive, and it returns five vaguely similar
-  tickets instead of the one that exists.
-
-  ⚠️  The correct answer for a wrong identifier is
-      NO RESULTS — and a vector search cannot express
-      that.
-
-  The whole category:
-
-    user IDs · order IDs · ticket numbers · SKUs
-    invoice numbers · product codes · emails · URLs
-    phone numbers · file names · version numbers
-    postcodes · VINs
-
-    INV-2026-00982 → that invoice, or nothing
-    "similar invoices" is not an answer anyone wanted
-
-
-Short queries
-
-    "Mac"  →  MacBook? macOS? MAC address? macaroni?
-
-  Three characters is not context. The model guesses,
-  and guesses confidently.
-
-  Keyword is far more predictable — and prefix
-  matching is what autocomplete actually wants.
-
-
-Names and proper nouns
-
-    "Rajan"  →  records containing Rajan
-
-  Not people semantically similar to Rajan. There is
-  no such thing as a person who is 0.91 similar to a
-  name, and returning one is a strange experience.
-
-
-Structured data is not a meaning
-
-    "red Nike shoes under $100"
-
-  Do NOT ask similarity to work out:
-
-    color = red · brand = Nike · price < 100
-
-  A vector gets them APPROXIMATELY right, which is
-  the worst kind of right:
-
-    a £110 shoe is semantically very close to a £100
-    one — and returning it is simply wrong
-
-    semantic ranking
-      + brand = Nike
-      + price < 100
-      + color = red
-
-  Meaning for the fuzzy part. Columns for the exact
-  part. That split is the whole architecture of good
-  search.
-
-
-  ⚠️  THE COMMON CAUSE
-
-      SEMANTIC SEARCH CANNOT SAY "NO".
-
-      Every one of these returns a confident ranked
-      list:
-
-        wrong ticket number  → five tickets
-        misspelled name      → five people
-        price constraint     → things nearby
-
-      And the user cannot tell a good result from a
-      bad one, because they look identical.
-
-
-  And it is a COST decision too. Every semantic query
-  is an embedding call plus a vector search. Running
-  that for CP-10460 means paying money and adding
-  latency to produce a worse answer than a free WHERE
-  clause.`,
-      codeExample: {
-        title: "The queries where LIKE wins outright",
-        code: `<?php
-// ---------- Exact identifiers ----------
-
-// ✅ Right answer, or no answer
-Ticket::where('reference', 'CP-10460')->first();
-Invoice::where('reference', 'INV-2026-00982')->first();
-User::where('email', 'rajan@example.com')->first();
-
-// ❌ Five vaguely similar tickets, none of them the one
-Ticket::whereVectorSimilarTo('embedding', 'CP-10460')->limit(5)->get();
-//
-// And when the reference does not exist, this STILL
-// returns five tickets. There is no "no results".
-
-
-<?php
-// ---------- Detect the shape before you choose ----------
-
-final class QueryClassifier
-{
-    private const EXACT_PATTERNS = [
-        '/^[A-Z]{2,5}-\\d+$/i',                 // CP-10460
-        '/^INV-\\d{4}-\\d+$/i',                 // INV-2026-00982
-        '/^[\\w.+-]+@[\\w-]+\\.[\\w.]+$/',      // email
-        '/^\\+?\\d[\\d\\s-]{6,}$/',             // phone
-        '/^https?:\\/\\//i',                    // URL
-        '/^\\d{4,}$/',                          // bare long number
-        '/^v?\\d+\\.\\d+(\\.\\d+)?$/',          // version
-    ];
-
-    public function isExact(string $query): bool
-    {
-        foreach (self::EXACT_PATTERNS as $pattern) {
-            if (preg_match($pattern, trim($query))) {
-                return true;
-            }
-        }
-
-        // Too short to embed meaningfully: "Mac" is
-        // MacBook, macOS, MAC address or macaroni
-        return str_word_count($query) < 3;
-    }
-}
-
-
-<?php
-// ---------- Structured constraints are columns, not meanings ----------
-
-// ❌ Asking a vector to understand "under $100"
-Product::whereVectorSimilarTo('embedding', 'red Nike shoes under $100')->get();
-//
-// A £110 shoe is semantically very close to a £100 one.
-// The vector will happily return it. That is not
-// "close enough" — it is wrong.
-
-// ✅ Meaning for the fuzzy part, columns for the exact part
-Product::query()
-    ->where('brand', 'Nike')
-    ->where('color', 'red')
-    ->where('price_cents', '<', 10000)
-    ->whereVectorSimilarTo('embedding', 'shoes')
-    ->get();
-
-
-<?php
-// ---------- Names: exact, with a little tolerance ----------
-
-// ❌ People "semantically similar to Rajan"
-User::whereVectorSimilarTo('embedding', 'Rajan')->get();
-
-// ✅ What the user meant
-User::where('name', 'ilike', '%Rajan%')->get();
-
-// With typo tolerance, if you need it — still not semantic
-User::search('Rajen')->get();      // Scout + Meilisearch
-
-
-<?php
-// ---------- The routing, in one place ----------
-
-class SearchRouter
-{
-    public function search(User $user, string $query): Collection
-    {
-        // Free, instant, and correct — including the
-        // ability to return nothing
-        if ($this->classifier->isExact($query)) {
-            return $this->exactSearch($user, $query);
-        }
-
-        return $this->semanticSearch($user, $query);
-    }
-
-    private function exactSearch(User $user, string $query): Collection
-    {
-        return Ticket::query()
-            ->where('team_id', $user->team_id)
-            ->where(fn ($q) => $q
-                ->where('reference', $query)
-                ->orWhere('title', 'ilike', "%{$query}%"))
-            ->limit(20)
-            ->get();
-        // Returns an empty collection for a wrong reference.
-        // That is the correct answer, and semantic search
-        // cannot produce it.
-    }
-}
-
-
-<?php
-// ---------- Autocomplete is prefix matching, not meaning ----------
-
-// ❌ An embedding call per keystroke, for three characters
-Product::whereVectorSimilarTo('embedding', $request->query('q'))->limit(5)->get();
-
-// ✅
-Product::where('name', 'ilike', $request->query('q') . '%')
-    ->limit(5)
-    ->get();`,
-      },
-      keyTakeaways: [
-        "<b>Exact identifiers should use exact search</b>: the user wants that record or nothing.",
-        "<b>The category is large</b>: IDs, tickets, SKUs, invoices, emails, URLs, phones, filenames, versions.",
-        "<b>A wrong identifier should return no results</b>, and semantic search cannot express that.",
-        "<b>Short queries have no context to embed</b>: \"Mac\" could be four unrelated things.",
-        "<b>Names and proper nouns want exact matching</b>, because \"similar to Rajan\" is meaningless.",
-        "<b>Structured constraints are columns, not meanings.</b>",
-        "<b>A vector gets \"under $100\" approximately right</b>, which is the worst kind of right.",
-        "<b>Meaning for the fuzzy part, columns for the exact part.</b>",
-        "<b>Everything here fails the same way: semantic search cannot say no.</b>",
-        "<b>A wrong query returns a confident ranked list</b>, and users cannot tell good results from bad.",
-        "<b>It is also a cost decision</b>: paying for an embedding call to get a worse answer than a `WHERE`.",
-      ],
-      commonMistakes: [
-        "<b>Routing every query through embeddings.</b> Slower, costlier and worse for half of them.",
-        "<b>Semantic autocomplete.</b> An embedding call per keystroke, on three characters of context.",
-        "<b>Letting a vector handle price or date constraints.</b> Approximately right is wrong.",
-        "<b>Semantic search for names.</b> Users get people who are not the person they typed.",
-        "<b>Forgetting that no results is a valid answer.</b> Vector search always returns something.",
-      ],
-      quiz: [
-        {
-          question: "Why is semantic search wrong for `CP-10460`?",
-          options: [
-            "It is too slow",
-            "The user wants that exact record or nothing, and a vector search always returns similar ones",
-            "Vectors cannot handle hyphens",
-            "It is not wrong",
-          ],
-          correctIndex: 1,
-          explanation: "No results is the correct answer for a wrong identifier.",
-        },
-        {
-          question: "Why do short queries suit keyword search?",
-          options: [
-            "They are faster",
-            "Three characters carry no context, so the model guesses confidently between unrelated meanings",
-            "Vectors reject them",
-            "They cannot be embedded",
-          ],
-          correctIndex: 1,
-          explanation: "\"Mac\" could be MacBook, macOS, MAC address or macaroni.",
-        },
-        {
-          question: "How should \"red Nike shoes under $100\" be handled?",
-          options: [
-            "Pure semantic search",
-            "Semantic ranking for \"shoes\" plus real column filters for colour, brand and price",
-            "Pure keyword search",
-            "A synonym list",
-          ],
-          correctIndex: 1,
-          explanation: "A £110 shoe is semantically close to a £100 one, and returning it is wrong.",
-        },
-        {
-          question: "What single flaw connects every failure case in this lesson?",
-          options: [
-            "Cost",
-            "Semantic search cannot say no: it always returns a confident ranked list",
-            "Latency",
-            "Index size",
-          ],
-          correctIndex: 1,
-          explanation: "And the user cannot tell a good result from a bad one.",
-        },
-      ],
-    },
-    {
-      id: "hybrid-search-and-the-decision-rule",
-      title: "Hybrid search, cost & the decision rule",
+      id: "measure-response-caching-and-the-hierarchy",
+      title: "Response caching, CDNs & measuring first",
       durationMinutes: 13,
-      explanation: "Two lessons said semantic wins, then semantic loses. Here is how to stop choosing.\n\n---\n\n### 1. Basic — run both\n\n```text\n            search\n         ┌────┴────┐\n     keyword    semantic\n         └────┬────┘\n         combined ranking\n              ↓\n           results\n```\n\n<b>That is hybrid search</b>, and it beats either alone because a real query usually contains both kinds of signal:\n\n```text\n\"CP-10460 Laravel queue issue\"\n```\n\nKeyword nails `CP-10460`. Semantic understands \"Laravel queue issue\". <b>Together you get the exact ticket and the conceptually related ones</b>, which is what the user actually wanted.\n\n---\n\n### 2. Intermediate — combining the rankings\n\nThe hard part is that the two searches return <b>incomparable scores</b>. A BM25 keyword score of 8.4 and a cosine distance of 0.23 are not on the same scale, so you cannot add them.\n\nThe standard fix is <b>reciprocal rank fusion</b>: ignore the scores, use the positions.\n\n```text\nscore(doc) = Σ  1 / (k + rank in that list)\n```\n\nA document that appears in both lists rises; one that appears only in a single list still ranks, just lower. <b>It needs no tuning and no score normalisation</b>, which is why it is the default answer.\n\n---\n\n### 3. Advanced — routing, cost, and the rule\n\nBefore fusing anything, <b>classify the query</b>:\n\n```text\n         user query\n      ┌──────┴──────┐\n  exact/structured?   natural language?\n      ↓                    ↓\n exact search        semantic search\n      └──────┬────────────┘\n          results\n```\n\n<b>Routing saves you the embedding call entirely</b> on the queries where semantic search adds nothing, which is a real share of your traffic. `CP-10460` should never reach a model.\n\nAnd cost is why routing matters:\n\n```text\nper document   embedding generation + vector storage\nper query      embedding generation + vector search\n```\n\n<b>Every search costs money and latency before your database is touched.</b> Keyword search is free by comparison. So route first, embed second.\n\n<b>The decision rule</b>, which is the thing to remember from the entire day:\n\n> <b>Does the user care about exact words, or about meaning?</b>\n\n```text\nexact words  → LIKE / full-text / exact\nmeaning      → semantic\nboth         → hybrid\n```\n\n```text\nCP-10460                            exact\nINV-2026-0098                       exact\nrajan@example.com                   exact\n\"Laravel queues\"                    keyword / hybrid\n\"how do I run work in background?\"  semantic\n\"best laptop for programming\"       semantic\n\"Nike shoes under $100\"             hybrid + filters\n\"doctor near Tokyo\"                 hybrid + filters\n\"red shirt SKU 8821\"                exact + filters\n```\n\n<b>And the golden rule underneath all of it:</b>\n\n> <b>Semantic search is not a replacement for traditional search. It is another search signal.</b>\n\nFor IDs, names, SKUs, codes, emails and exact terms: keyword. For natural-language questions where the user expresses an idea rather than your words: semantic. <b>For real applications: hybrid plus structured filters</b>, which is almost always the strongest architecture and the one nobody builds first because it is less exciting than the other two.",
-      diagram: `Hybrid — stop choosing, run both
+      explanation: "The last two tools, and then the rule that governs all of them.\n\n---\n\n### 1. Basic — response caching and CDNs\n\nSometimes you can cache the entire response:\n\n```text\nnormal   request → Laravel → database → Eloquent → Blade → response\ncached   request → response cache → the whole response\n```\n\nExtremely fast, and <b>extremely dangerous when the response is personalised.</b> Cache a page with a \"Hi, Rajan\" header and the next visitor is greeted as Rajan. <b>Response caching belongs on genuinely public pages</b>, and the cache key must include everything that varies the output: locale, currency, device, feature flags.\n\n<b>A CDN</b> puts content near users:\n\n```text\nwithout   Tokyo user → US server → response\nwith      Tokyo user → Tokyo edge → cached content\n```\n\nGreat for images, CSS, JavaScript, video and cacheable responses. <b>And the win is latency, not compute</b>: a round trip to another continent costs 150ms or more before your server does anything at all, which is often larger than everything you have optimised so far.\n\n---\n\n### 2. Intermediate — measure first\n\n<b>This is the most important idea in the elective.</b>\n\nDo not say \"Redis will make it faster\". Measure.\n\n```text\nslow page → measure → database? or PHP?\n→ slow query / expensive code → fix → measure again\n```\n\nWhat to look at:\n\n```text\nresponse time · query count · query duration · memory\nCPU · external API calls · cache hit rate · N+1\n```\n\n<b>Numbers, before and after:</b>\n\n```text\nbefore   1.8s · 152 queries · 80 MB\nafter    420ms · 12 queries · 35 MB\n```\n\n<b>Without the before, you have an opinion.</b> With it you have evidence, and you also find out when a change made things worse, which happens more than people admit.\n\n<b>Telescope</b> answers \"what happened in this request?\" and shows you the 152 queries. <b>Pulse</b> answers \"how is the application doing?\". <b>Nightwatch</b> is production monitoring. Day 29 covered all three.\n\n---\n\n### 3. Advanced — the hierarchy\n\n```text\n1 measure\n2 fix algorithm and code problems\n3 fix database queries\n4 add indexes\n5 fix N+1\n6 reduce payload and data\n7 add caching\n8 add Redis / CDN\n9 consider Octane\n```\n\n<b>Do not jump to 8 or 9.</b> The order is deliberate: each step is cheaper, safer and larger than the ones below it. Caching at step 7 is where most people start, and it is the first step that adds a whole category of new bugs, invalidation, staleness, stampedes, rather than removing work.\n\n<b>The rule that separates senior performance work from cargo cult:</b>\n\n> <b>Do not optimise what you have not measured.</b>\n\nA slow page with 150 queries does not need Octane. <b>It needs those 150 queries to become 10</b>, and once they are, you may find you did not need anything else on the list.\n\nOne final honesty check: <b>every item from step 7 down adds operational complexity you carry forever</b>, more services, more failure modes, more things to reason about. Steps 2 to 6 remove work permanently and make the code simpler. <b>That asymmetry is why the order is what it is.</b>",
+      diagram: `Response caching
 
-                 search
-                   │
-             ┌─────┴─────┐
-             ▼           ▼
-         keyword      semantic
-             │           │
-             └─────┬─────┘
-                   ▼
-           combined ranking
-                   ↓
-                results
+    normal   request → Laravel → database → Eloquent
+                     → Blade → response
 
-  A real query usually carries BOTH signals:
+    cached   request → response cache
+                     → the whole response
 
-    "CP-10460 Laravel queue issue"
+  Extremely fast — and extremely dangerous when the
+  response is PERSONALISED.
 
-      keyword   nails CP-10460
-      semantic  understands "Laravel queue issue"
+  ⚠️  Cache a page with a "Hi, Rajan" header and the
+      next visitor is greeted as Rajan.
 
-      together: the exact ticket AND the
-      conceptually related ones
+      Public pages only, and the key must include
+      everything that varies the output: locale,
+      currency, device, feature flags.
 
 
-Combining the rankings
+CDN
 
-  ⚠️  The two searches return INCOMPARABLE scores.
+    without   Tokyo user → US server → response
+    with      Tokyo user → Tokyo edge → cached content
 
-      BM25 keyword score  8.4
-      cosine distance     0.23
+    images · CSS · JS · video · cacheable responses
 
-      Not the same scale. You cannot add them.
-
-  RECIPROCAL RANK FUSION — ignore scores, use
-  positions:
-
-      score(doc) = Σ  1 / (k + rank in that list)
-
-    a document in BOTH lists rises
-    a document in one list still ranks, lower
-
-    no tuning, no score normalisation
-    → which is why it is the default answer
+  The win is LATENCY, not compute: a cross-continent
+  round trip costs 150ms+ before your server does
+  anything — often more than everything you have
+  optimised so far.
 
 
-Route before you fuse
+  ⚠️  MEASURE FIRST — the most important idea here
 
-              user query
-                   │
-        ┌──────────┴──────────┐
-        ▼                     ▼
-  exact/structured?    natural language?
-        │                     │
-        ▼                     ▼
-   exact search        semantic search
-        └──────────┬──────────┘
-                   ▼
-                results
+      Do not say "Redis will make it faster".
 
-  Routing saves the embedding call ENTIRELY on the
-  queries where semantic adds nothing — a real share
-  of your traffic.
+              slow page
+                  ↓
+               MEASURE
+                  ↓
+          ┌───────┴───────┐
+          ▼               ▼
+       database          PHP
+          │               │
+      slow query    expensive code
+          └───────┬───────┘
+                  ▼
+                 FIX
+                  ↓
+            MEASURE AGAIN
 
-    CP-10460 should never reach a model.
+    What to look at:
 
+      response time · query count · query duration
+      memory · CPU · external API calls
+      cache hit rate · N+1
 
-Cost is why routing matters
+    Numbers, before and after:
 
-    per document   embedding generation
-                   + vector storage
+      before   1.8s  · 152 queries · 80 MB
+      after    420ms ·  12 queries · 35 MB
 
-    per query      embedding generation
-                   + vector search
+    Without the BEFORE you have an opinion. With it
+    you have evidence — and you find out when a
+    change made things worse, which happens more than
+    people admit.
 
-  Every semantic search costs money and latency
-  BEFORE your database is touched. Keyword search is
-  free by comparison.
-
-    route first, embed second
-
-
-  THE DECISION RULE
-
-    Does the user care about EXACT WORDS or MEANING?
-
-      exact words  →  LIKE / full-text / exact
-      meaning      →  semantic
-      both         →  hybrid
-
-  ┌────────────────────────────────┬────────────────┐
-  │ CP-10460                       │ exact          │
-  │ INV-2026-0098                  │ exact          │
-  │ rajan@example.com              │ exact          │
-  │ "Laravel queues"               │ keyword/hybrid │
-  │ "how do I run work in the bg?" │ semantic       │
-  │ "best laptop for programming"  │ semantic       │
-  │ "Nike shoes under $100"        │ hybrid+filters │
-  │ "doctor near Tokyo"            │ hybrid+filters │
-  │ "red shirt SKU 8821"           │ exact+filters  │
-  └────────────────────────────────┴────────────────┘
+      Telescope   what happened in THIS request?
+      Pulse       how is the application doing?
+      Nightwatch  production monitoring
 
 
-  THE GOLDEN RULE
+THE HIERARCHY
 
-    Semantic search is not a REPLACEMENT for
-    traditional search. It is ANOTHER SIGNAL.
+    1  measure
+    2  fix algorithm and code problems
+    3  fix database queries
+    4  add indexes
+    5  fix N+1
+    6  reduce payload and data
+    7  add caching
+    8  add Redis / CDN
+    9  consider Octane
 
-      IDs, names, SKUs, codes, emails  → keyword
-      natural-language ideas           → semantic
-      real applications                → HYBRID
-                                         + filters
+  Do NOT jump to 8 or 9.
 
-  Which almost nobody builds first, because it is
-  less exciting than the other two.`,
+  The order is deliberate: each step is cheaper,
+  safer and larger than the ones below it.
+
+  Caching at 7 is where most people START — and it is
+  the first step that ADDS a category of bugs
+  (invalidation, staleness, stampedes) rather than
+  removing work.
+
+
+  THE RULE
+
+    DO NOT OPTIMISE WHAT YOU HAVE NOT MEASURED.
+
+    A slow page with 150 queries does not need
+    Octane. It needs those 150 queries to become 10 —
+    and once they are, you may not need anything else
+    on the list.
+
+
+  The asymmetry behind the order:
+
+    steps 2–6   REMOVE work permanently, and make
+                the code simpler
+
+    steps 7–9   ADD operational complexity you carry
+                forever: more services, more failure
+                modes, more to reason about`,
       codeExample: {
-        title: "Routing, fusing and the full search service",
+        title: "Measuring, then response caching, in that order",
         code: `<?php
+// ---------- 1. MEASURE. Always first. ----------
 
-namespace App\\Search;
+// The crudest version, and often enough
+DB::enableQueryLog();
+$start = microtime(true);
 
-class HybridSearch
-{
-    public function __construct(
-        private QueryClassifier $classifier,
-        private KeywordSearch $keyword,
-        private SemanticSearch $semantic,
-    ) {}
+$response = $this->buildPage();
 
-    public function search(User $user, string $query, SearchFilters $filters): Collection
-    {
-        // 1. ROUTE. CP-10460 should never reach a model.
-        if ($this->classifier->isExact($query)) {
-            return $this->keyword->search($user, $query, $filters);
-        }
+dd([
+    'ms'      => round((microtime(true) - $start) * 1000),
+    'queries' => count(DB::getQueryLog()),
+    'memory'  => round(memory_get_peak_usage(true) / 1048576, 1) . ' MB',
+]);
 
-        // 2. Both lists, filtered identically
-        $keywordHits  = $this->keyword->search($user, $query, $filters, limit: 50);
-        $semanticHits = $this->semantic->search($user, $query, $filters, limit: 50);
-
-        // 3. FUSE by rank, because the scores are not comparable
-        return $this->reciprocalRankFusion([$keywordHits, $semanticHits]);
-    }
-
-    // BM25 8.4 and cosine 0.23 are not on the same scale.
-    // Ignore the scores; use the positions.
-    private function reciprocalRankFusion(array $lists, int $k = 60): Collection
-    {
-        $scores = [];
-        $byId   = [];
-
-        foreach ($lists as $list) {
-            foreach ($list->values() as $rank => $item) {
-                $scores[$item->id] = ($scores[$item->id] ?? 0) + 1 / ($k + $rank + 1);
-                $byId[$item->id]   = $item;
-            }
-        }
-
-        arsort($scores);
-
-        return collect($scores)->keys()->map(fn ($id) => $byId[$id]);
-    }
-}
-
-// A document appearing in BOTH lists rises. One in a
-// single list still ranks, lower. No tuning required.
+// Before: ['ms' => 1834, 'queries' => 152, 'memory' => '80 MB']
 
 
 <?php
-// ---------- Both sides, filtered the same way ----------
+// ---------- A middleware that records it for every request ----------
 
-class KeywordSearch
+class RecordPerformance
 {
-    public function search(User $user, string $q, SearchFilters $f, int $limit = 50): Collection
+    public function handle(Request $request, Closure $next)
     {
-        return Document::query()
-            ->where('team_id', $user->team_id)              // always
-            ->when($f->type, fn ($query, $t) => $query->where('type', $t))
-            ->whereFullText(['title', 'content'], $q)
-            ->limit($limit)
-            ->get();
+        DB::enableQueryLog();
+        $start = microtime(true);
+
+        $response = $next($request);
+
+        $ms      = (microtime(true) - $start) * 1000;
+        $queries = count(DB::getQueryLog());
+
+        if ($ms > 500 || $queries > 30) {
+            Log::warning('Slow request', [
+                'route'   => $request->route()?->getName(),
+                'ms'      => round($ms),
+                'queries' => $queries,
+                'memory'  => round(memory_get_peak_usage(true) / 1048576, 1),
+            ]);
+        }
+
+        return $response;
     }
 }
 
-class SemanticSearch
-{
-    public function search(User $user, string $q, SearchFilters $f, int $limit = 50): Collection
-    {
-        return Document::query()
-            ->where('team_id', $user->team_id)              // always
-            ->when($f->type, fn ($query, $t) => $query->where('type', $t))
-            ->whereVectorSimilarTo('embedding', $this->embed($q))
-            ->limit($limit)
-            ->get();
-    }
-
-    // Same text, same vector — caching is free correctness
-    private function embed(string $q): array
-    {
-        return Cache::remember(
-            'embedding:' . config('ai.uses.embeddings') . ':' . sha1($q),
-            now()->addDays(7),
-            fn () => Str::of($q)->toEmbeddings(),
-        );
-    }
-}
+// Now "the dashboard feels slow" becomes a log line with
+// a query count in it.
 
 
 <?php
-// ---------- "CP-10460 Laravel queue issue" ----------
+// ---------- 2–6. Fix, then measure again ----------
 
-// keyword  → the exact ticket, ranked 1
-// semantic → tickets about queue failures, ranked 1–5
-// fused    → the exact ticket first, related ones after
+// $posts = Post::latest()->get();          // 152 queries
+$posts = Post::with(['user', 'comments.user'])
+    ->select(['id', 'user_id', 'title', 'created_at'])
+    ->latest()
+    ->limit(20)
+    ->get();
+
+// After: ['ms' => 420, 'queries' => 12, 'memory' => '35 MB']
 //
-// Which is what the user actually wanted, and what
-// neither search alone would have given them.
+// Now you have evidence. And you would also have seen
+// it if the change made things WORSE.
 
 
 <?php
-// ---------- The decision rule, in one method ----------
+// ---------- 7–8. Only now: response caching ----------
 
-public function strategyFor(string $query): SearchStrategy
+class CacheResponse
 {
-    // Does the user care about exact words, or meaning?
-    return match (true) {
-        $this->classifier->isExact($query)      => SearchStrategy::Exact,
-        str_word_count($query) >= 6             => SearchStrategy::Hybrid,
-        default                                 => SearchStrategy::Keyword,
-    };
+    public function handle(Request $request, Closure $next)
+    {
+        // Never cache a personalised response. "Hi, Rajan"
+        // served to the next visitor is the classic
+        // version of this bug.
+        if ($request->user() || ! $request->isMethod('GET')) {
+            return $next($request);
+        }
+
+        // The key must carry everything that varies output
+        $key = 'response:' . sha1(implode('|', [
+            $request->fullUrl(),
+            app()->getLocale(),
+            $request->header('X-Currency', 'GBP'),
+        ]));
+
+        return Cache::remember($key, now()->addMinutes(10),
+            fn () => $next($request));
+    }
 }
 
-// CP-10460                            → Exact
-// INV-2026-0098                       → Exact
-// rajan@example.com                   → Exact
-// "Laravel queues"                    → Keyword
-// "how do I run work in background?"  → Hybrid
-// "best laptop for programming"       → Hybrid
 
+# ---------- CDN: the latency win ----------
 
-# ---------- Where the money goes ----------
-
-# per document   embedding generation + vector storage
-# per query      embedding generation + vector search
+# Without: Tokyo → US origin  ≈ 150ms round trip,
+#          before your server does anything
 #
-# Every semantic search costs money and latency before
-# your database is touched. Keyword is free by
-# comparison.
+# With:    Tokyo → Tokyo edge ≈ 10ms
 #
-# Routing removes that cost on the queries where
-# semantic search adds nothing — and that is a real
-# share of your traffic.`,
+# Often larger than everything you optimised in PHP.
+
+Cache-Control: public, max-age=31536000, immutable   # hashed assets
+Cache-Control: public, s-maxage=300, max-age=0       # cacheable HTML
+
+
+<?php
+// ---------- The hierarchy, as a checklist ----------
+
+// 1. measure                    ← you are here
+// 2. fix code / algorithms
+// 3. fix queries
+// 4. add indexes
+// 5. fix N+1
+// 6. reduce payload
+// 7. add caching                ← first step that ADDS bugs
+// 8. Redis / CDN
+// 9. Octane
+//
+// 152 queries → 12 is step 5.
+// Octane would have made 1.834s into 1.814s.
+
+
+<?php
+// ---------- Prove it in a test, so it stays fixed ----------
+
+it('renders the dashboard in under 15 queries', function () {
+    $user = User::factory()->has(Post::factory()->count(30))->create();
+
+    DB::enableQueryLog();
+
+    $this->actingAs($user)->get('/dashboard')->assertOk();
+
+    expect(count(DB::getQueryLog()))->toBeLessThan(15);
+});
+
+// An N+1 reintroduced in six months now turns a test
+// red instead of a page slow.`,
       },
       keyTakeaways: [
-        "<b>Hybrid search runs keyword and semantic and combines the rankings.</b>",
-        "<b>Real queries carry both signals</b>: an identifier plus a natural-language description.",
-        "<b>The two searches return incomparable scores</b>, so you cannot simply add them.",
-        "<b>Reciprocal rank fusion uses positions instead of scores</b>, needing no tuning or normalisation.",
-        "<b>A document in both lists rises; one in a single list still ranks, lower.</b>",
-        "<b>Classify the query before searching</b>, so exact identifiers never reach a model.",
-        "<b>Routing removes the embedding cost on a real share of your traffic.</b>",
-        "<b>Cost is per document and per query</b>: generation, storage, and generation again on every search.",
-        "<b>The decision rule: does the user care about exact words or meaning?</b>",
-        "<b>Exact words means keyword, meaning means semantic, both means hybrid.</b>",
-        "<b>Structured constraints stay as filters</b> on either path.",
-        "<b>The golden rule: semantic search is not a replacement, it is another signal.</b>",
-        "<b>Hybrid plus structured filters is usually the strongest architecture</b>, and the one nobody builds first.",
+        "<b>Response caching returns the whole response</b> without touching Laravel's normal pipeline.",
+        "<b>It is dangerous for personalised pages</b>: one user's greeting served to the next visitor.",
+        "<b>The cache key must include everything that varies output</b>: locale, currency, device, flags.",
+        "<b>A CDN wins latency, not compute</b>, and a cross-continent round trip can exceed all your PHP work.",
+        "<b>Measuring first is the most important idea in the elective.</b>",
+        "<b>Track response time, query count, query duration, memory, CPU, external calls and cache hit rate.</b>",
+        "<b>Without a before number you have an opinion, not evidence.</b>",
+        "<b>Telescope shows one request; Pulse shows application health; Nightwatch monitors production.</b>",
+        "<b>The order is measure, code, queries, indexes, N+1, payload, caching, Redis/CDN, Octane.</b>",
+        "<b>Caching is step seven and the first that adds bugs</b> rather than removing work.",
+        "<b>Do not optimise what you have not measured.</b>",
+        "<b>A 150-query page needs 10 queries, not Octane.</b>",
+        "<b>Steps two to six remove work permanently; steps seven onward add complexity you carry forever.</b>",
       ],
       commonMistakes: [
-        "<b>Adding keyword and vector scores together.</b> They are on different scales and the result is noise.",
-        "<b>Embedding every query.</b> You pay for identifiers and autocomplete that gain nothing from it.",
-        "<b>Applying filters to only one side of a hybrid search.</b> The fused list then contains excluded records.",
-        "<b>Replacing keyword search entirely.</b> Semantic is a signal, not an upgrade.",
-        "<b>Building semantic-only first because it is more interesting.</b> Hybrid is what actually works.",
+        "<b>Caching a personalised response.</b> The next visitor sees somebody else's page.",
+        "<b>A response cache key missing locale or currency.</b> Everyone gets the first visitor's version.",
+        "<b>Optimising without a baseline.</b> You cannot tell improvement from regression.",
+        "<b>Starting at caching or Octane.</b> The smallest wins, the most new bugs, the query still broken.",
+        "<b>Never re-measuring.</b> Some optimisations make things slower and nobody notices.",
+        "<b>No test locking in the query count.</b> The N+1 comes back within a year.",
       ],
       quiz: [
         {
-          question: "Why can you not add keyword and vector scores together?",
+          question: "When is response caching unsafe?",
           options: [
-            "They are the same scale",
-            "BM25 relevance and cosine distance are on different scales, so the sum is meaningless",
-            "One is always higher",
-            "You can",
+            "For static pages",
+            "For personalised responses, where one user's page is served to the next visitor",
+            "For JSON",
+            "For GET requests",
           ],
           correctIndex: 1,
-          explanation: "Reciprocal rank fusion uses positions instead.",
+          explanation: "The key must also carry locale, currency and anything else that varies output.",
         },
         {
-          question: "What does classifying the query before searching save you?",
+          question: "What does a CDN primarily save?",
           options: [
-            "Index size",
-            "The embedding call on queries where semantic search adds nothing, which is real traffic",
-            "Database load",
-            "Storage",
+            "Server CPU",
+            "Latency: a cross-continent round trip costs more than most of your PHP optimisation",
+            "Database queries",
+            "Memory",
           ],
           correctIndex: 1,
-          explanation: "`CP-10460` should never reach a model.",
+          explanation: "150ms before your server does anything at all.",
         },
         {
-          question: "What is the decision rule for choosing a search strategy?",
+          question: "Why measure before optimising?",
           options: [
-            "Corpus size",
-            "Does the user care about exact words or about meaning, and hybrid when both",
-            "Query volume",
-            "Latency budget",
+            "For reporting",
+            "Without a baseline you have an opinion, and you cannot tell an improvement from a regression",
+            "To pick a cache driver",
+            "It is not necessary",
           ],
           correctIndex: 1,
-          explanation: "Exact words means keyword; meaning means semantic.",
+          explanation: "Some optimisations make things slower.",
         },
         {
-          question: "What is the golden rule of the elective?",
+          question: "What does a slow page with 150 queries need?",
           options: [
-            "Always use semantic search",
-            "Semantic search is not a replacement for traditional search, it is another signal",
-            "Always use keyword search",
-            "Always use pgvector",
+            "Octane",
+            "Those 150 queries to become 10, which is step five, not step nine",
+            "Redis",
+            "A CDN",
           ],
           correctIndex: 1,
-          explanation: "Hybrid plus structured filters is usually the strongest architecture.",
+          explanation: "Octane would turn 1.834 seconds into 1.814 seconds.",
+        },
+        {
+          question: "Why is caching placed at step seven rather than first?",
+          options: [
+            "It is slow to set up",
+            "It is the first step that adds bugs, invalidation, staleness and stampedes, instead of removing work",
+            "It requires Redis",
+            "It only helps reads",
+          ],
+          correctIndex: 1,
+          explanation: "Steps two to six remove work permanently and simplify the code.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What does Scout give you architecturally?",
-      options: [
-        "A faster database",
-        "A common interface, so your application never learns a search engine's query language",
-        "Automatic embeddings",
-        "Free hosting",
-      ],
-      correctIndex: 1,
-      explanation: "Which is what makes the driver choice reversible.",
-    },
-    {
-      question: "What does a search engine offer that `LIKE` cannot?",
-      options: [
-        "Transactions",
-        "Ranking and typo tolerance: better matches first, and `macbok` still finds MacBooks",
-        "Constraints",
-        "Joins",
-      ],
-      correctIndex: 1,
-      explanation: "`LIKE` has no concept of one result being better than another.",
-    },
-    {
-      question: "Which operations silently leave a Scout index stale?",
-      options: [
-        "All saves",
-        "Raw SQL updates, mass `update()` on a builder, and migrations rewriting columns",
-        "Deletes",
-        "None",
-      ],
-      correctIndex: 1,
-      explanation: "Scout syncs on model events, which those bypass.",
-    },
-    {
-      question: "Why do stale deletes matter more than stale updates?",
-      options: [
-        "They are harder to fix",
-        "A deleted record still appearing in search is a data leak, not just wrong data",
-        "They break pagination",
-        "They do not",
-      ],
-      correctIndex: 1,
-      explanation: "Soft deletes especially, since the row still exists.",
-    },
-    {
-      question: "Which Scout driver should most applications start with?",
-      options: [
-        "Algolia",
-        "The database driver, since a search box alone does not justify another service",
-        "Meilisearch",
-        "Typesense",
-      ],
-      correctIndex: 1,
-      explanation: "Moving later is a config change plus a re-import.",
-    },
-    {
-      question: "What does Scout's abstraction not cover?",
-      options: [
-        "Searching",
-        "Engine-specific configuration: ranking rules, synonyms, stop words and facets",
-        "Pagination",
-        "Importing",
-      ],
-      correctIndex: 1,
-      explanation: "Rebuilding that tuning is where a driver switch actually costs you.",
-    },
-    {
-      question: "Why should Scout index updates be queued in production?",
-      options: [
-        "For batching",
-        "Inline writes make every model save depend on the search engine being up",
-        "Queues are required",
-        "For ordering",
-      ],
-      correctIndex: 1,
-      explanation: "Queued, a search outage stops being a write outage.",
-    },
-    {
-      question: "Why is flush-then-import dangerous on a live site?",
-      options: [
-        "It corrupts data",
-        "The index is empty for the whole import, so search returns nothing for minutes",
-        "It locks the database",
-        "It is slow only",
-      ],
-      correctIndex: 1,
-      explanation: "Build a new index alongside and swap an alias.",
-    },
-    {
-      question: "What breaks when you filter search results in PHP?",
-      options: [
-        "Nothing",
-        "Counts, pagination and ranking together, since you discard part of a ranked page",
-        "Only the count",
-        "Only performance",
-      ],
-      correctIndex: 1,
-      explanation: "Filter in the engine, with attributes declared filterable.",
-    },
-    {
-      question: "How does search pagination differ from database pagination?",
-      options: [
-        "It does not",
-        "Engines cap total hits, and results shift between pages as the index changes",
-        "It is always faster",
-        "It cannot be cursor-based",
-      ],
-      correctIndex: 1,
-      explanation: "The UI must handle \"no more results\" and occasional duplicates.",
-    },
-    {
-      question: "What is the fundamental difference between keyword and semantic search?",
-      options: [
-        "Speed",
-        "Keyword asks whether words are present; semantic asks what a document is about",
-        "Semantic is more accurate",
-        "Keyword cannot rank",
-      ],
-      correctIndex: 1,
-      explanation: "Different questions, not better and worse answers.",
-    },
-    {
-      question: "How does semantic similarity become searchable?",
-      options: [
-        "Through synonyms",
-        "Meaning becomes a vector, so similarity becomes distance a database can sort by",
-        "Through stemming",
-        "By query expansion",
-      ],
-      correctIndex: 1,
-      explanation: "Two sentences with no shared words can sit very close together.",
-    },
-    {
-      question: "Why are vectors unreliable for negation?",
-      options: [
-        "They drop short words",
-        "\"Paid\" and \"not paid\" share subject and vocabulary, so their vectors are very close",
-        "Negation is stripped",
-        "They are reliable",
-      ],
-      correctIndex: 1,
-      explanation: "When a single \"not\" is the whole difference, use a column.",
-    },
-    {
-      question: "What is the main architectural advantage of pgvector?",
-      options: [
-        "Raw speed",
-        "Vectors live beside your data: same transaction, same backups, no second service to sync",
-        "It generates embeddings",
-        "It needs no index",
-      ],
-      correctIndex: 1,
-      explanation: "One system you understand beats two you half-understand.",
-    },
-    {
-      question: "What does every semantic query cost before the database is touched?",
-      options: [
-        "Nothing",
-        "An embedding call for the query text, adding latency and money",
-        "A table scan",
-        "An index rebuild",
-      ],
-      correctIndex: 1,
-      explanation: "Which is why autocomplete should stay keyword-based.",
-    },
-    {
-      question: "What is the trade-off of an HNSW vector index?",
-      options: [
-        "Storage only",
-        "It is approximate: a little recall traded for a lot of speed",
-        "Slower queries",
-        "No trade-off",
-      ],
-      correctIndex: 1,
-      explanation: "A result that should rank fourth occasionally will not come back.",
-    },
-    {
-      question: "What does switching embedding models require?",
-      options: [
-        "A re-embed",
-        "A schema change for the new dimension, a backfill and a re-index",
-        "A config change",
-        "Nothing",
-      ],
-      correctIndex: 1,
-      explanation: "`vector(1536)` will not accept 3072-dimension vectors.",
-    },
-    {
-      question: "What is the main pattern where semantic search wins?",
-      options: [
-        "Short queries",
-        "The user describes an outcome while your content uses a technical term",
-        "Exact identifiers",
-        "Numeric filters",
-      ],
-      correctIndex: 1,
-      explanation: "That vocabulary gap is exactly what embeddings close.",
-    },
-    {
-      question: "What does semantic search give you over a synonym list?",
-      options: [
-        "Faster queries",
-        "The long tail for free, without manually listing every related word",
-        "Better filters",
-        "Exact matching",
-      ],
-      correctIndex: 1,
-      explanation: "Synonym lists work and are permanent manual labour.",
-    },
-    {
-      question: "Where does semantic search sit on recall versus precision?",
-      options: [
-        "Better precision",
-        "Better recall: it finds what keyword misses, plus things that are merely adjacent",
-        "Equal",
-        "Worse on both",
-      ],
-      correctIndex: 1,
-      explanation: "Good against zero results, bad when the user knew what they wanted.",
-    },
-    {
-      question: "Why is semantic search wrong for `CP-10460`?",
+      question: "Why is file cache a problem on multiple servers?",
       options: [
         "It is slow",
-        "The user wants that exact record or nothing, and vector search always returns similar ones",
-        "Vectors cannot handle hyphens",
-        "It is not wrong",
+        "Each server has its own cache, so nothing is shared and `forget()` clears only one",
+        "It cannot store objects",
+        "It has no TTL",
       ],
       correctIndex: 1,
-      explanation: "No results is the correct answer for a wrong identifier.",
+      explanation: "That is inconsistency, which is worse than slowness.",
     },
     {
-      question: "Why do short queries suit keyword search?",
+      question: "What is the catch with the database cache driver?",
       options: [
-        "Speed",
-        "Three characters carry no context, so the model guesses between unrelated meanings",
-        "Vectors reject them",
-        "They cannot be embedded",
+        "No TTL support",
+        "You use the database to avoid database work, so it helps computation but not reads",
+        "It cannot be cleared",
+        "It is unsupported in production",
       ],
       correctIndex: 1,
-      explanation: "\"Mac\" could be MacBook, macOS, MAC address or macaroni.",
+      explanation: "At high throughput the cache reads become load on the system you were protecting.",
     },
     {
-      question: "How should \"red Nike shoes under $100\" be handled?",
+      question: "Why separate cache and queue Redis instances?",
       options: [
-        "Pure semantic",
-        "Semantic ranking for \"shoes\" plus real column filters for colour, brand and price",
-        "Pure keyword",
-        "A synonym list",
+        "For speed",
+        "`cache:clear` can wipe queued jobs, and a cache eviction policy silently deletes them",
+        "Laravel requires it",
+        "For monitoring",
       ],
       correctIndex: 1,
-      explanation: "A £110 shoe is semantically close to a £100 one, and returning it is wrong.",
+      explanation: "A cache should evict; a queue must never.",
     },
     {
-      question: "What single flaw connects every semantic failure case?",
+      question: "What is the test for whether something is really a cache?",
       options: [
-        "Cost",
-        "Semantic search cannot say no: it always returns a confident ranked list",
-        "Latency",
-        "Index size",
+        "It has a TTL",
+        "You could run `cache:clear` in production right now without breaking anything",
+        "It uses Redis",
+        "It is small",
       ],
       correctIndex: 1,
-      explanation: "And the user cannot tell a good result from a bad one.",
+      explanation: "Otherwise it is a database with no backups.",
     },
     {
-      question: "Why can you not add keyword and vector scores together?",
+      question: "What does `Cache::remember` save you?",
       options: [
-        "They are comparable",
-        "BM25 relevance and cosine distance are on different scales, so the sum is meaningless",
-        "One is always higher",
-        "You can",
+        "Memory",
+        "The read-check-write logic and its race, running the closure only on a miss",
+        "Serialisation",
+        "The TTL",
       ],
       correctIndex: 1,
-      explanation: "Reciprocal rank fusion uses positions instead.",
+      explanation: "It is the method you will use most.",
     },
     {
-      question: "What does routing a query before searching save?",
+      question: "How should you choose a TTL?",
       options: [
-        "Index size",
-        "The embedding call on queries where semantic adds nothing, which is real traffic",
-        "Database load",
-        "Storage",
+        "Ten minutes by default",
+        "By deciding how long you are willing to serve wrong data on that page",
+        "By query duration",
+        "By cache size",
       ],
       correctIndex: 1,
-      explanation: "`CP-10460` should never reach a model.",
+      explanation: "A business decision, not a technical one.",
     },
     {
-      question: "What is the decision rule for choosing a strategy?",
+      question: "What is a cached outage?",
       options: [
-        "Corpus size",
-        "Does the user care about exact words or meaning, and hybrid when both",
-        "Query volume",
-        "Latency budget",
+        "A Redis failure",
+        "`remember` storing the `null` from a failed lookup, so \"not found\" persists for the whole TTL",
+        "An expired key",
+        "A stampede",
       ],
       correctIndex: 1,
-      explanation: "Exact words means keyword; meaning means semantic.",
+      explanation: "Give negative results a much shorter TTL.",
     },
     {
-      question: "What is the golden rule of this elective?",
+      question: "When is caching a query not worth it?",
       options: [
-        "Always use semantic search",
-        "Semantic search is not a replacement for traditional search, it is another signal",
-        "Always use keyword search",
-        "Always use pgvector",
+        "When it runs rarely",
+        "When it is already fast: you add a network round trip and serialisation to save nothing",
+        "When it returns many rows",
+        "When it joins",
       ],
       correctIndex: 1,
-      explanation: "Hybrid plus structured filters is usually the strongest architecture.",
+      explanation: "Cache what is slow, not what is frequent.",
+    },
+    {
+      question: "Why is forgetting a key safer than updating it?",
+      options: [
+        "It is faster",
+        "Write-through writes the value twice, so a disagreement or failed write caches something untrue",
+        "It uses less memory",
+        "It is not safer",
+      ],
+      correctIndex: 1,
+      explanation: "Forgetting makes the next read recompute from the source of truth.",
+    },
+    {
+      question: "What makes invalidation bugs so long-lived?",
+      options: [
+        "They throw quietly",
+        "Nothing errors: a missed key just serves wrong data indefinitely",
+        "They only occur in production",
+        "Tags hide them",
+      ],
+      correctIndex: 1,
+      explanation: "One price change usually invalidates five different keys.",
+    },
+    {
+      question: "Why is a cache stampede worst on popular pages?",
+      options: [
+        "They have more data",
+        "The key expired because the page is popular, so a hundred copies of the slow query arrive at once",
+        "They use more memory",
+        "They have longer TTLs",
+      ],
+      correctIndex: 1,
+      explanation: "The cache expiring is what takes the site down.",
+    },
+    {
+      question: "What does an atomic lock need to work across servers?",
+      options: [
+        "A queue",
+        "Shared cache storage, or each server takes its own lock and nothing is coordinated",
+        "A transaction",
+        "A longer TTL",
+      ],
+      correctIndex: 1,
+      explanation: "Same rule as Day 29's isolation locks.",
+    },
+    {
+      question: "What does Redis pipelining save?",
+      options: [
+        "Redis CPU",
+        "Network round trips: Redis is microseconds per command, the round trip is a millisecond",
+        "Memory",
+        "Serialisation",
+      ],
+      correctIndex: 1,
+      explanation: "A thousand un-pipelined commands is about a second of waiting.",
+    },
+    {
+      question: "What is the critical property of Redis pub/sub?",
+      options: [
+        "It persists messages",
+        "It is messaging, not storage: no listener means the message is simply gone",
+        "It retries",
+        "It acknowledges delivery",
+      ],
+      correctIndex: 1,
+      explanation: "A subscriber restarting during a deploy misses everything silently.",
+    },
+    {
+      question: "When should you use a queue rather than pub/sub?",
+      options: [
+        "For live dashboards",
+        "Whenever losing the message matters, since queues persist, retry and record failures",
+        "For presence pings",
+        "Never",
+      ],
+      correctIndex: 1,
+      explanation: "Pub/sub suits genuinely ephemeral fan-out only.",
+    },
+    {
+      question: "Why is caching not the answer to a slow query?",
+      options: [
+        "It is complex",
+        "It runs the bad query less often, leaving it for every miss, invalidation and new page",
+        "Caches are unreliable",
+        "It is the answer",
+      ],
+      correctIndex: 1,
+      explanation: "Fix the query, then decide whether it still needs caching.",
+    },
+    {
+      question: "What order should a composite index use?",
+      options: [
+        "Alphabetical",
+        "Equality columns first, then the range or sort column",
+        "Least selective first",
+        "Any order",
+      ],
+      correctIndex: 1,
+      explanation: "`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.",
+    },
+    {
+      question: "What is the key number in an `EXPLAIN ANALYZE` output?",
+      options: [
+        "Total cost",
+        "Rows examined versus rows returned",
+        "Planning time",
+        "Buffer count",
+      ],
+      correctIndex: 1,
+      explanation: "Examining 400,000 to return 20 tells you exactly what is wrong.",
+    },
+    {
+      question: "Why does an N+1 often only appear in production?",
+      options: [
+        "Different PHP version",
+        "Eleven queries at 50 rows feels fine; at 10,000 rows it is unusable",
+        "Caching is off there",
+        "The index is missing",
+      ],
+      correctIndex: 1,
+      explanation: "`preventLazyLoading` in development makes it announce itself.",
+    },
+    {
+      question: "What happens to `env()` after `config:cache` runs?",
+      options: [
+        "Nothing",
+        "It returns `null` anywhere outside config files",
+        "It reads from the cache",
+        "It throws",
+      ],
+      correctIndex: 1,
+      explanation: "`env()` belongs in `config/` only; `config()` everywhere else.",
+    },
+    {
+      question: "Why does editing `.env` in production appear to do nothing?",
+      options: [
+        "The file is read-only",
+        "Config is cached, so values are not re-read until `config:cache` runs again",
+        "Laravel ignores it",
+        "It needs a reboot",
+      ],
+      correctIndex: 1,
+      explanation: "And workers need `queue:restart` too.",
+    },
+    {
+      question: "How much do the deployment caches actually save?",
+      options: [
+        "Most of the page time",
+        "A few milliseconds to about twenty of bootstrap, which matters at volume but will not fix a slow page",
+        "Nothing measurable",
+        "Half the response time",
+      ],
+      correctIndex: 1,
+      explanation: "A 1.8-second page is queries, not boot.",
+    },
+    {
+      question: "Why are static properties dangerous under Octane?",
+      options: [
+        "They use more memory",
+        "They survive between requests, so one user's data can be served to another",
+        "They are slower",
+        "They cannot be serialised",
+      ],
+      correctIndex: 1,
+      explanation: "The symptom is intermittent and nearly impossible to reproduce locally.",
+    },
+    {
+      question: "What is the risk with a singleton under Octane?",
+      options: [
+        "It rebuilds too often",
+        "It keeps whatever it captured at first resolution, such as the authenticated user",
+        "It cannot be injected",
+        "It leaks connections",
+      ],
+      correctIndex: 1,
+      explanation: "Bind per request, or take dependencies at call time.",
+    },
+    {
+      question: "Where does Octane belong in the optimisation order?",
+      options: [
+        "First",
+        "Last, after queries, indexes, N+1 and caching are handled",
+        "Second",
+        "It is not an optimisation",
+      ],
+      correctIndex: 1,
+      explanation: "It removes boot cost, so a 1.8-second page becomes 1.78 seconds.",
+    },
+    {
+      question: "When is response caching unsafe?",
+      options: [
+        "For static pages",
+        "For personalised responses, where one user's page is served to the next visitor",
+        "For JSON",
+        "For GET requests",
+      ],
+      correctIndex: 1,
+      explanation: "The key must also carry locale, currency and anything else that varies output.",
+    },
+    {
+      question: "What does a CDN primarily save?",
+      options: [
+        "Server CPU",
+        "Latency: a cross-continent round trip can cost more than all your PHP optimisation",
+        "Queries",
+        "Memory",
+      ],
+      correctIndex: 1,
+      explanation: "150ms before your server does anything at all.",
+    },
+    {
+      question: "Why measure before optimising?",
+      options: [
+        "For reporting",
+        "Without a baseline you have an opinion, and cannot tell an improvement from a regression",
+        "To pick a driver",
+        "It is unnecessary",
+      ],
+      correctIndex: 1,
+      explanation: "Some optimisations make things slower.",
+    },
+    {
+      question: "What does a slow page with 150 queries need?",
+      options: [
+        "Octane",
+        "Those 150 queries to become 10, which is step five, not step nine",
+        "Redis",
+        "A CDN",
+      ],
+      correctIndex: 1,
+      explanation: "Octane would turn 1.834 seconds into 1.814 seconds.",
+    },
+    {
+      question: "Why is caching step seven rather than step one?",
+      options: [
+        "It is slow to set up",
+        "It is the first step that adds bugs, invalidation, staleness and stampedes, rather than removing work",
+        "It needs Redis",
+        "It only helps reads",
+      ],
+      correctIndex: 1,
+      explanation: "Steps two to six remove work permanently and simplify the code.",
     },
   ],
   project: {
-    name: "InvoiceHub — the search box that knows which search to run",
-    goal: "Build keyword, semantic and hybrid search over InvoiceHub documents, then run nine real queries through all three and record which one won each time.",
+    name: "InvoiceHub — profile a slow page and halve the queries",
+    goal: "Build a deliberately slow dashboard, measure it properly, then work down the hierarchy step by step, recording the numbers after each change so you can see which step actually mattered.",
     brief:
-      "The self-check is a search page with keyword and semantic paths and combined ranking. <b>Building all three is straightforward. Knowing which to run is the actual skill</b>, and the only way to learn it is to see the same query answered three ways and notice which answer you would want.\n\nThe architecture:\n\n```text\n              search query\n                   │\n           ┌───────┴───────┐\n           ▼               ▼\n     keyword search   semantic search\n           │               │\n           └───────┬───────┘\n                   ▼\n            ranked results\n```\n\nThe schema:\n\n```text\ndocuments\n─────────\nid\nteam_id\ntitle\ncontent\nembedding\nembedding_model\n```\n\nAnd the deliverable that matters is not the code. It is <b>a table of nine queries with the winning strategy for each and one sentence saying why</b>, because that table is the thing you will still be using in two years when the models have all changed.",
+      "The self-check is to take a slow page, profile it, and cut the query count by half. <b>Halving it is easy. The exercise is proving which change did it</b>, because the whole elective is about not guessing.\n\nBuild the slow page first, on purpose:\n\n```php\n$invoices = Invoice::latest()->get();\n\nforeach ($invoices as $invoice) {\n    echo $invoice->client->name;\n\n    foreach ($invoice->lines as $line) {\n        echo $line->product->name;\n    }\n}\n```\n\nWhich gives you roughly:\n\n```text\n1 query   → invoices\nN queries → clients\nN queries → lines\nN queries → products\n```\n\nThen work the hierarchy in order, measuring after every single step:\n\n```text\n1 measure → 2 code → 3 queries → 4 indexes → 5 N+1\n→ 6 payload → 7 caching → 8 Redis/CDN → 9 Octane\n```\n\n<b>The deliverable is a table with one row per step</b>: query count, response time, memory. By the end you will be able to point at the row where the page actually got fast, and it will not be the caching row.",
     steps: [
-      "Set up the schema with pgvector: a `documents` table with `title`, `content`, a `vector(1536)` embedding, an `embedding_model` column and a `team_id`. Add an HNSW index. Note in a comment that the index is approximate.",
-      "Seed a corpus of at least sixty documents with real variety: support tickets with references like `CP-10460`, invoices like `INV-2026-00982`, help articles about queues and background jobs, product descriptions, and a few client names. You need this variety or every query will look the same.",
-      "Embed on write in a queued job, from `title` plus `content`, storing the model name alongside. Confirm no embedding happens in a web request.",
-      "Build `KeywordSearch`: full-text or `LIKE` over title and content, scoped by `team_id`, with filters and a limit. This is your baseline and it must be genuinely good, not a straw man.",
-      "Build `SemanticSearch`: embed the query (cached by hash and model), `whereVectorSimilarTo`, scoped by `team_id` and `embedding_model`, with a distance threshold so it can return nothing.",
-      "Build `QueryClassifier` that detects exact shapes: `XX-1234` references, `INV-YYYY-NNNNN`, emails, URLs, phone numbers, bare long numbers, version strings, and anything under three words. Test it with twenty inputs, half of each kind.",
-      "Build `HybridSearch` that routes exact queries straight to keyword, and for everything else runs both searches and fuses them with reciprocal rank fusion. Apply the same filters and the same `team_id` scope to <b>both</b> sides, or the fused list will contain records the filters excluded.",
-      "Build one search endpoint with pagination and filters, plus a `?strategy=` parameter you can force to `keyword`, `semantic` or `hybrid`. That parameter is what makes the next step possible.",
-      "NOW RUN THE COMPARISON. Nine queries, three strategies each, twenty-seven result sets: `CP-10460` · `INV-2026-00982` · `rajan@example.com` · `Mac` · `Laravel queues` · `how do I run work in the background?` · `lightweight laptop for programming` · `Nike shoes under $100` · `CP-10460 queue issue`. Record the top three results for each.",
-      "Write the table: query, winning strategy, one sentence why. Then find the queries where semantic search returned a confident, entirely wrong list, and note what the user would have thought looking at it.",
-      "Add the operational pieces: queue the index sync, add a fallback so a search-engine or embedding failure degrades to keyword rather than 500ing, and confirm soft-deleted documents do not appear in results.",
-      "Write tests for the classifier (exact shapes route to keyword), the tenant scope (one team never sees another's documents through any strategy), the threshold (a nonsense query returns nothing rather than five documents), and the fallback (embedding failure still returns keyword results).",
+      "Seed real volume: 300 invoices, each with 5 lines, across 40 clients and 60 products. A page that is fast at 20 rows teaches you nothing, and that gap is the whole reason N+1 hides until production.",
+      "Build the deliberately slow dashboard exactly as above, with no eager loading, `select *`, and a total computed in PHP by looping. Add a second slow element: a per-client outstanding balance calculated inside the loop.",
+      "MEASURE THE BASELINE before touching anything. Record response time, query count, slowest single query, and peak memory. Write these four numbers down before you read further, because you cannot recover a baseline afterwards.",
+      "Add a middleware that logs route, milliseconds, query count and peak memory for every request over a threshold. This is the tool you will use for the rest of the project and, more usefully, for the rest of your career.",
+      "Step 2, code: find anything computing in PHP that the database should do. Replace the looped total with a `sum()` and the per-client balance with `withSum`. Measure. Record.",
+      "Step 3 and 4, queries and indexes: run `EXPLAIN ANALYZE` on your slowest query. Note rows examined versus rows returned before adding anything. Add the composite index the query actually needs, with equality columns first. Re-run `EXPLAIN`, and record both numbers.",
+      "Step 5, N+1: add the eager loads. Measure. <b>This is the row where the page gets fast</b>, and the point of recording everything is that you will be able to see that.",
+      "Step 6, payload: select only the columns the page renders, including on the relations (`with('client:id,name')`). Add pagination. Measure and record memory in particular.",
+      "Turn on `Model::preventLazyLoading()` in development, then write a test asserting the dashboard renders in under fifteen queries. That test is what stops the N+1 coming back in six months.",
+      "Step 7, caching: only now, cache one genuinely expensive thing, such as a monthly aggregate that takes real time to compute. Give it a key scoped by team and a version suffix, invalidate it on invoice save, and pick a TTL by deciding how stale the number may be.",
+      "Add an atomic lock around that cache rebuild with a timeout, then prove the stampede is real: clear the key and fire fifty concurrent requests with and without the lock, watching the query log both times.",
+      "Write the table: nine rows, four columns, one line each on what changed. Then answer two questions in writing. Which single step produced the biggest improvement? And how much would Octane have saved you, given your final numbers?",
     ],
     acceptance: [
-      "Embeddings are generated in a queued job, never in a web request, and cached by hash plus model for queries.",
-      "Every search path scopes by `team_id` inside the query, and a test proves one team cannot see another's documents through keyword, semantic or hybrid.",
-      "The classifier routes all seven exact shapes to keyword, verified by tests, and those queries never trigger an embedding call.",
-      "Semantic search has a distance threshold and returns an empty result for a query with no relevant documents.",
-      "Hybrid fusion uses ranks rather than raw scores, and both sides receive identical filters.",
-      "Pagination works and handles the case where no further pages exist.",
-      "A search-engine or embedding failure degrades to keyword search instead of returning a 500.",
-      "Soft-deleted documents are absent from all three strategies.",
-      "The comparison table exists: nine queries, the winning strategy, and one sentence of reasoning each.",
-      "You can point to at least two queries where semantic search returned a confident, entirely wrong result set.",
+      "A baseline exists with all four numbers, recorded before any change.",
+      "A performance-logging middleware records route, duration, query count and peak memory for slow requests.",
+      "`EXPLAIN ANALYZE` output is recorded before and after the index, including rows examined versus returned.",
+      "The composite index puts equality columns first, and you can say which queries it does not serve.",
+      "Query count is at least halved, and in practice cut by far more than half.",
+      "Selected columns are explicit, on the model and on eager-loaded relations, and the page is paginated.",
+      "`preventLazyLoading` is on in development, and a test asserts the dashboard stays under fifteen queries.",
+      "Exactly one thing is cached, and it is genuinely expensive to compute rather than merely frequent.",
+      "The cache key is scoped by team and versioned, and invalidation happens on write.",
+      "The cache rebuild is protected by a lock with a timeout, and you have query-log evidence of the stampede with and without it.",
+      "The results table has one row per step with all four numbers.",
+      "You can name the single step that mattered most, and estimate what Octane would have saved.",
     ],
     stretch: [
-      "Time all twenty-seven searches and add a latency column to your table. Then add a cost column using your provider's embedding price. The gap between the keyword row and the semantic row on `CP-10460` is the entire argument for routing.",
-      "Remove the distance threshold and re-run the nonsense query. Look at the five documents it confidently returns and ask whether a user could tell they were wrong. That is the failure mode this elective exists for.",
-      "Add a synonym list to your keyword search for five terms, then find a query where semantic search handles a synonym you did not think to add. That difference is the long tail.",
-      "Break the index deliberately: update a document with raw SQL, then search for its old content and watch it come back. Fix it with `->searchable()` and note where else in your codebase that could happen.",
-      "Try the same nine queries after switching your embedding model in config, without re-embedding. Watch what happens when vectors from two spaces sit in one column, and then write the migration you would actually need.",
+      "Deliberately cache a personalised value with an unscoped key, log in as two different users, and watch one see the other's data. That is thirty seconds of work and the clearest possible memory of why keys carry the tenant.",
+      "Run the same page with `CACHE_STORE=file` on two local processes writing to different directories, invalidate on one, and confirm the other keeps serving the old value. That is the multi-server failure, reproduced on your laptop.",
+      "Cache a value returned from a deliberately failing API call and watch the failure persist for the full TTL. Then add a short negative TTL and confirm the recovery time drops from an hour to thirty seconds.",
+      "Add `config:cache` to a local deploy script, then move one `env()` call from a config file into a service class and watch it return null. Put it back, and grep your whole codebase for `env(` outside `config/`.",
+      "Install Octane locally, add a static property that stores the current user, and hit the page as two different users. The bug you see is the one that is nearly impossible to find in production.",
+      "Add a `Cache::many()` version of a loop that currently calls `Cache::get()` per item, and time both. The gap is Day 15's N+1, measured against Redis.",
     ],
   },
 };

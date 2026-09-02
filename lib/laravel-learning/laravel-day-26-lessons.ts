@@ -2,2531 +2,2548 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_26_LESSONS: LessonDay = {
   day: 26,
-  title: "Queues & jobs — batching, retries, failures & Horizon",
-  totalMinutes: 92,
+  title: "Events, listeners, scheduling, mail & notifications",
+  totalMinutes: 91,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "why-queues",
-      title: "Why queues exist, and what a job is",
+      id: "events-and-listeners",
+      title: "Events, listeners & the difference from commands",
       durationMinutes: 11,
-      explanation: "One idea, and everything today follows from it:\n\n> <b>Do not make the user wait for work that does not need to happen during the request.</b>\n\n---\n\n### 1. Basic — the problem\n\nSomebody uploads a podcast. Without a queue:\n\n```text\nupload\n  ↓\nprocess the audio\n  ↓\ngenerate a waveform\n  ↓\ngenerate a transcript\n  ↓\nsend a notification\n  ↓\nHTTP response\n```\n\nThirty seconds of staring at a spinner, and a PHP worker occupied for all of it. Ten uploads at once and the site is unresponsive for everybody.\n\nWith a queue:\n\n```text\nupload\n  ↓\nsave the podcast\ndispatch a job\n  ↓\nHTTP response          ← immediately\n```\n\nand separately:\n\n```text\nQueue → Worker → process → waveform → transcript → notify\n```\n\n<b>The request does the minimum that must be true before answering</b>, and everything else happens after.\n\nThat framing is the useful one. The question is not \"is this slow\", it is <b>does the user need this to have finished before they get a response?</b>\n\n---\n\n### 2. Intermediate — a job\n\n<b>A <i>job</i></b> is a unit of work Laravel can run later:\n\n```text\nProcessPodcast · SendInvoice · ResizeImage\nSendWelcomeEmail · GenerateReport · SyncCustomer\n```\n\nIt is two things:\n\n```text\nthe data it needs\n       +\na handle() method\n```\n\n```bash\nphp artisan make:job ProcessPodcast\n```\n\n```php\nclass ProcessPodcast implements ShouldQueue\n{\n    public function __construct(public Podcast $podcast) {}\n\n    public function handle(): void\n    {\n        $this->podcast->process();\n    }\n}\n```\n\n<b>`ShouldQueue` is what makes it a queued job</b> rather than something dispatched and run immediately.\n\nAnd the distinction to hold on to:\n\n```text\ndispatch()   put the job in the queue\nhandle()     actually do the work, later, elsewhere\n```\n\n---\n\n### 3. Advanced — the constructor is the wire\n\n```php\nProcessPodcast::dispatch($podcast);\n```\n\n```text\napplication → dispatch() → the queue → a worker → handle()\n```\n\nAnd here is the thing that explains most job bugs. <b>Everything in the constructor is serialised, stored, and deserialised later, in a different process.</b>\n\nThree consequences.\n\n<b>Models are stored as an id, not as data.</b> Laravel re-fetches the model when the job runs, which is usually what you want and occasionally not: if the row was deleted in the meantime, the job fails to find it.\n\n<b>The job runs against the state at execution time, not at dispatch time.</b> Dispatch a job to email an invoice, edit the invoice, and the email contains the edit. Sometimes correct, sometimes a surprise, and always worth knowing which you meant.\n\n<b>And whatever you pass must be serialisable.</b> A closure, a request, or an open file handle cannot cross that boundary. Pass ids and simple values, and look up the rest inside `handle()`.\n\nOne more, which the rest of the day expands on: <b>a job can run more than once.</b> A retry, a duplicate dispatch or a worker restart can all cause it, so `handle()` should be safe to repeat. That property is called idempotency, and it is the difference between a queue that works and one that sends the same invoice twice.",
-      diagram: `The idea
+      explanation: "Yesterday moved slow work off the request. Today is about <b>decoupling actions from their side effects</b>, which is a different problem with a different answer.\n\n---\n\n### 1. Basic — the method that keeps growing\n\nA user registers. What has to happen?\n\n```php\nregisterUser();\nsendWelcomeEmail();\ncreateProfile();\ntrackAnalytics();\nsendSlackNotification();\nsubscribeToNewsletter();\n```\n\nEvery new requirement is another line in one method, and that method now knows about email, analytics, Slack and a newsletter. <b>Registration has become the place where everything about a new user lives</b>, and nobody can change any of it safely.\n\nEvents invert it:\n\n```text\nregisterUser()\n      ↓\nUserRegistered\n      ↓\n ┌────┼─────────┐\n ▼    ▼         ▼\nEmail Profile Analytics\n```\n\n<b>Registration announces what happened, and does not know who is listening.</b> Adding a sixth consequence means adding a listener and touching nothing else.\n\n---\n\n### 2. Intermediate — an event is not a command\n\nThis distinction decides whether events help you or confuse you:\n\n```text\nProcessPodcast       a command   →  \"do this\"\nPodcastProcessed     an event    →  \"this happened\"\n```\n\nA command names an action and has exactly one handler. <b>An event names a fact, in the past tense, and can have any number of listeners including none.</b>\n\nWhich means an event should not describe what should happen next:\n\n```text\n✓ UserRegistered           a fact\n✗ SendWelcomeEmailEvent    a command wearing an event's name\n```\n\nThe second one has already decided the consequence, so it gains nothing over calling the method directly.\n\nThe past tense is a genuinely useful test. If you cannot name it in the past tense, you have a command:\n\n```text\nOrderPlaced · PaymentCompleted · InvoicePaid\nSubscriptionCancelled · PodcastProcessed\n```\n\n---\n\n### 3. Advanced — when events are worth it\n\nThey are not free, and it is worth being honest about the cost.\n\n<b>An event makes the consequences invisible from the call site.</b> Somebody reading `registerUser()` sees an event dispatched and has no idea that six things happen. That is exactly the decoupling you wanted, and exactly what makes debugging harder.\n\nSo the judgement:\n\n```text\nWorth an event                   Not worth an event\n──────────────                   ──────────────────\nseveral unrelated consequences   one consequence\nconsequences added over time     the consequence is the point\ndifferent parts of the app       the caller needs the result\n  care about the same fact\nthe caller should not know\n```\n\n<b>One consequence, called directly, is clearer than an event with one listener.</b> The event costs a file, a class and an indirection, and buys nothing until there is a second listener.\n\nAnd the one that matters most: <b>if the caller needs the result, it is not an event.</b> An event is fire-and-forget by design; a listener's return value goes nowhere. Something you need an answer from is a method call.\n\nOne more thing worth knowing now, because it shapes everything after: <b>listeners run synchronously by default.</b> Dispatching `UserRegistered` with three listeners runs all three before the next line, in the request. Making them asynchronous is the next lesson, and until then an event is a decoupling tool, not a speed one.\n\nOne piece of vocabulary: `event(new InvoicePaid($invoice))` and `InvoicePaid::dispatch($invoice)` are the same thing. <b>The helper is what you will see in older code and in the framework's own source</b>; the static form reads better and is what to write.",
+      diagram: `The method that keeps growing
 
-  > Do not make the user wait for work that does not
-    need to happen during the request.
+    registerUser();
+    sendWelcomeEmail();
+    createProfile();
+    trackAnalytics();
+    sendSlackNotification();
+    subscribeToNewsletter();
 
-
-  Without a queue:
-
-    upload → process audio → waveform → transcript
-           → notify → HTTP response
-
-  Thirty seconds of spinner, and a PHP worker occupied
-  for all of it. Ten uploads at once and the site is
-  unresponsive for everybody.
-
-
-  With a queue:
-
-    upload → save, dispatch a job → HTTP response
-                                    (immediately)
-
-    Queue → Worker → process → waveform → transcript
-                   → notify
-
-  The request does the minimum that must be true before
-  answering.
-
-  The question is not "is this slow". It is:
-    does the user need this FINISHED before they get
-    a response?
+  Every new requirement is another line, and registration
+  now knows about email, analytics, Slack and a newsletter.
+  It has become the place where everything about a new
+  user lives, and nobody can change any of it safely.
 
 
-A job
+  Events invert it:
 
-  ProcessPodcast · SendInvoice · ResizeImage
-  SendWelcomeEmail · GenerateReport
+    registerUser()
+          ↓
+    UserRegistered
+          ↓
+     ┌────┼─────────┐
+     ▼    ▼         ▼
+    Email Profile Analytics
 
-  Two things:
-
-    the data it needs
-           +
-    a handle() method
-
-  php artisan make:job ProcessPodcast
-
-  implements ShouldQueue    ← what makes it QUEUED
-
-    dispatch()   put it in the queue
-    handle()     do the work, later, elsewhere
+  Registration announces what HAPPENED and does not know
+  who is listening. A sixth consequence is a new listener
+  and nothing else touched.
 
 
-The constructor is the wire
+An event is not a command
 
-  ProcessPodcast::dispatch(\$podcast)
+    ProcessPodcast     a command  →  "do this"
+    PodcastProcessed   an event   →  "this happened"
 
-    application → dispatch() → queue → worker → handle()
+  A command names an ACTION and has exactly one handler.
+  An event names a FACT, in the past tense, and can have
+  any number of listeners — including none.
 
-  ⚠️  Everything in the constructor is SERIALISED,
-      stored, and deserialised later, in a different
-      process.
+    ✓ UserRegistered          a fact
+    ✗ SendWelcomeEmailEvent   a command in an event's name
 
-  Three consequences:
+  The second has already decided the consequence, so it
+  gains nothing over calling the method.
 
-    Models are stored as an ID, not as data.
-      Laravel re-fetches when the job runs — usually
-      right, and a failure if the row was deleted.
+  The past tense is a real test:
 
-    The job runs against the state at EXECUTION time.
-      Dispatch, then edit the invoice, and the email
-      contains the edit. Sometimes correct, sometimes
-      a surprise. Know which you meant.
-
-    Whatever you pass must be serialisable.
-      Not a closure, a request or a file handle.
-      Pass ids and simple values; look the rest up
-      inside handle().
+    OrderPlaced · PaymentCompleted · InvoicePaid
+    SubscriptionCancelled · PodcastProcessed
 
 
-  And one the whole day expands on:
+When events are worth it
 
-    A job can run MORE THAN ONCE.
+  ⚠️  An event makes the consequences INVISIBLE from the
+      call site. Somebody reading registerUser() sees a
+      dispatch and has no idea six things happen.
 
-  A retry, a duplicate dispatch or a worker restart can
-  each cause it. handle() should be safe to repeat. That
-  property is idempotency, and it is the difference
-  between a queue that works and one that sends the same
-  invoice twice.`,
+      That is the decoupling you wanted, and what makes
+      debugging harder.
+
+  Worth an event                  Not worth an event
+  ──────────────                  ──────────────────
+  several unrelated               one consequence
+    consequences                  the consequence IS
+  consequences added over time      the point
+  different parts of the app      the caller needs
+    care about the same fact        the result
+  the caller should not know
+
+  One consequence, called directly, is clearer than an
+  event with one listener. The event costs a file, a
+  class and an indirection, and buys nothing until
+  there is a second listener.
+
+  And: if the caller needs the RESULT, it is not an
+  event. An event is fire-and-forget; a listener's
+  return value goes nowhere.
+
+
+  ⚠️  Listeners run SYNCHRONOUSLY by default.
+      Three listeners run before the next line, in the
+      request. Making them async is the next lesson.
+
+      Until then, an event is a decoupling tool,
+      not a speed one.`,
       codeExample: {
-        title: "A job, and what crosses the wire",
+        title: "An event, and the listeners that react to it",
         code: `<?php
-// php artisan make:job ProcessPodcast
+// ---------- The method that kept growing ----------
 
-namespace App\\Jobs;
-
-use App\\Models\\Podcast;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Foundation\\Queue\\Queueable;
-
-class ProcessPodcast implements ShouldQueue
+public function register(Request $request)
 {
-    use Queueable;
+    $user = User::create($request->validated());
 
-    // Serialised at dispatch, deserialised in the worker.
-    public function __construct(public Podcast $podcast) {}
+    // Registration now knows about all of this.
+    Mail::to($user)->send(new WelcomeEmail($user));
+    $user->profile()->create(['bio' => '']);
+    Analytics::track('registered', $user->id);
+    Slack::notify("New user: {$user->email}");
+    Newsletter::subscribe($user->email);
 
-    public function handle(): void
+    return redirect('/dashboard');
+}
+
+
+<?php
+// ---------- With an event ----------
+
+// php artisan make:event UserRegistered
+
+namespace App\\Events;
+
+use App\\Models\\User;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+
+class UserRegistered
+{
+    use Dispatchable;
+
+    public function __construct(public User $user) {}
+}
+
+// A fact, in the past tense. It does not say what
+// should happen next.
+
+
+<?php
+// The controller now announces, and stops there.
+
+public function register(Request $request)
+{
+    $user = User::create($request->validated());
+
+    UserRegistered::dispatch($user);
+
+    return redirect('/dashboard');
+}
+
+
+<?php
+// ---------- The listeners ----------
+
+// php artisan make:listener SendWelcomeEmail --event=UserRegistered
+
+namespace App\\Listeners;
+
+use App\\Events\\UserRegistered;
+
+class SendWelcomeEmail
+{
+    public function handle(UserRegistered $event): void
     {
-        $this->podcast->process();
-        $this->podcast->generateWaveform();
-        $this->podcast->generateTranscript();
-
-        $this->podcast->user->notify(new PodcastReady($this->podcast));
+        Mail::to($event->user)->send(new WelcomeEmail($event->user));
     }
 }
 
-// ShouldQueue is what makes it queued. Without it,
-// dispatch() runs it immediately.
-
-
-<?php
-// ---------- The controller ----------
-
-public function store(Request $request)
+class CreateUserProfile
 {
-    $podcast = Podcast::create([
-        'user_id' => $request->user()->id,
-        'path'    => $request->file('audio')->store('podcasts', 's3'),
-    ]);
-
-    // The minimum that must be true before answering.
-    ProcessPodcast::dispatch($podcast);
-
-    return redirect()->route('podcasts.show', $podcast);
-}
-
-// The response goes out now. The thirty seconds of work
-// happens in a worker.
-
-
-<?php
-// ---------- What can and cannot cross the wire ----------
-
-// ✓ A model: stored as an id, re-fetched when the job runs.
-new ProcessPodcast($podcast);
-
-// ✓ Ids and simple values.
-new GenerateReport($user->id, $from->toDateString(), $to->toDateString());
-
-// ❌ Not serialisable.
-new ProcessPodcast(fn () => $podcast->process());
-new ProcessUpload($request);
-new ProcessFile(fopen($path, 'r'));
-
-// ❌ A whole collection is serialised in full, and may
-//    be stale by the time it runs.
-new NotifyUsers(User::all());
-
-// ✓ Pass the ids, look them up in handle().
-new NotifyUsers(User::pluck('id')->all());
-
-
-<?php
-// ---------- State at execution time, not dispatch time ----------
-
-$invoice->update(['total' => 100]);
-
-SendInvoice::dispatch($invoice);       // stored as an id
-
-$invoice->update(['total' => 200]);    // a second later
-
-// The email contains 200, because the job re-fetched the
-// invoice when it ran. Sometimes correct. Always worth
-// knowing which you meant.
-
-
-<?php
-// ---------- A job can run twice ----------
-
-// ❌ Charged twice if this job is retried.
-public function handle(): void
-{
-    $this->gateway->charge($this->invoice->total);
-
-    $this->invoice->update(['status' => 'paid']);
-}
-
-// ✓ Safe to repeat.
-public function handle(): void
-{
-    if ($this->invoice->status === 'paid') {
-        return;
-    }
-
-    $this->gateway->charge(
-        $this->invoice->total,
-        idempotencyKey: $this->invoice->uuid,
-    );
-
-    $this->invoice->update(['status' => 'paid']);
-}`,
-      },
-      keyTakeaways: [
-        "<b>A queue exists so the user does not wait for work that need not finish during the request.</b>",
-        "The question is not whether something is slow, but whether the response depends on it being done.",
-        "<b>A job is the data it needs plus a `handle()` method</b>, and `ShouldQueue` is what makes it queued.",
-        "<b>`dispatch()` puts the job in the queue; `handle()` does the work later, in a different process.</b>",
-        "<b>Everything in the constructor is serialised and deserialised elsewhere</b>, which explains most job bugs.",
-        "<b>Models are stored as an id and re-fetched</b>, so a deleted row makes the job fail.",
-        "<b>A job runs against the state at execution time</b>, not the state at dispatch.",
-        "Closures, requests and file handles cannot cross that boundary; pass ids and look things up inside.",
-        "<b>A job can run more than once</b>, through a retry, a duplicate dispatch or a worker restart.",
-        "<b>`handle()` should therefore be safe to repeat</b>, which is idempotency and the theme of the day.",
-      ],
-      commonMistakes: [
-        "<b>Doing slow work in the request because it is \"only a few seconds\".</b> Ten concurrent uploads is a stalled site.",
-        "<b>Passing a closure or a request into a job.</b> Neither can be serialised across the boundary.",
-        "<b>Passing a whole collection.</b> It is serialised in full and is stale by the time the job runs.",
-        "<b>Assuming the job sees the data as it was at dispatch.</b> The model is re-fetched when it runs.",
-        "<b>Writing a `handle()` that cannot be repeated.</b> One retry and the customer is charged twice.",
-      ],
-      quiz: [
-        {
-          question: "What question decides whether work belongs in a queue?",
-          options: [
-            "Is it slow?",
-            "Does the user need it finished before they get a response?",
-            "Does it use the database?",
-            "Is it called often?",
-          ],
-          correctIndex: 1,
-          explanation: "The request does the minimum that must be true before answering.",
-        },
-        {
-          question: "How is a model stored when passed to a job?",
-          options: [
-            "As a full serialised copy",
-            "As an id, and re-fetched when the job runs",
-            "As JSON",
-            "It cannot be passed",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why a deleted row makes the job fail, and why it sees later edits.",
-        },
-        {
-          question: "What makes a class a queued job?",
-          options: [
-            "The `Job` suffix",
-            "Implementing `ShouldQueue`",
-            "Being in `app/Jobs`",
-            "Having a `handle()` method",
-          ],
-          correctIndex: 1,
-          explanation: "Without it, `dispatch()` runs the work immediately.",
-        },
-        {
-          question: "Why must `handle()` be safe to run twice?",
-          options: [
-            "Laravel always runs jobs twice",
-            "A retry, a duplicate dispatch or a worker restart can each cause it",
-            "For performance",
-            "It does not need to be",
-          ],
-          correctIndex: 1,
-          explanation: "That property is idempotency, and it is the theme of the day.",
-        },
-      ],
-    },
+    public function handle(UserRegistered $event): void
     {
-      id: "dispatch-variants-and-drivers",
-      title: "Dispatch variants & queue drivers",
-      durationMinutes: 12,
-      explanation: "Three ways to dispatch, and where the pending jobs actually live.\n\n---\n\n### 1. Basic — the three dispatches\n\n```php\nProcessPodcast::dispatch($podcast);              // queued\nProcessPodcast::dispatchSync($podcast);          // now, in this process\nProcessPodcast::dispatchAfterResponse($podcast); // after the response\n```\n\n<b>`dispatchSync()` runs the job immediately</b>, in the current request, and returns when it is done. No worker involved.\n\nWhich is useful for a job that is genuinely synchronous, and in tests where you want the work to have happened by the assertion. <b>And it is a trap when used because the queue is not configured</b>: the code looks queued, reviews as queued, and blocks the request like it never was.\n\n<b>`dispatchAfterResponse()` sits between the two:</b>\n\n```text\nHTTP request\n    ↓\nLaravel\n    ↓\nsend the response      ← the user is done waiting\n    ↓\nrun the work\n```\n\nThe user is not waiting, and no worker is needed. But <b>the PHP process is still busy</b>, so it is holding a slot that cannot serve another request, and a failure has nowhere to be recorded.\n\n```text\ndispatchAfterResponse   small, quick, and losing it is survivable\na real queue            heavy work, retries, failure tracking\n```\n\nA thirty-second podcast job is not an after-response task.\n\n---\n\n### 2. Intermediate — drivers\n\n<b>A driver is where pending jobs are stored:</b>\n\n```text\nsync · database · redis · sqs · beanstalkd\n```\n\n<b>`sync` does not queue at all.</b> Dispatch runs the job immediately, which makes local development simple and hides every queue-related behaviour: no retries, no failures table, no concurrency. Code that works on `sync` and breaks on `redis` is a common first surprise.\n\n<b>`database` puts jobs in a table:</b>\n\n```text\nLaravel → jobs table → worker\n```\n\nSimple, inspectable with SQL, and no extra infrastructure. The cost is that every worker polls the database, so a busy queue adds real load to the thing your application also needs for everything else.\n\n<b>`redis` is the usual production answer:</b>\n\n```text\nLaravel → Redis → worker\n```\n\nFast, built for this, and the only driver Horizon supports. If you expect meaningful queue traffic, this is where you end up.\n\n<b>`sqs`</b> is Amazon's managed queue: no server to run, and worth it when you are already on AWS. It has its own constraints, notably a maximum message size and at-least-once delivery, which is the same idempotency point from the last lesson made formal.\n\n---\n\n### 3. Advanced — choosing, and one thing to know about each\n\n```text\nsync        local development, and tests that need it done\ndatabase    small applications, low volume, no extra services\nredis       anything with real queue traffic, and Horizon\nsqs         AWS, managed, no infrastructure to operate\n```\n\n<b>The important thing is to run the same driver in staging that you run in production.</b> Queue bugs are timing bugs, and `sync` in development means every one of them waits to appear until it matters.\n\nThree practical notes.\n\n<b>The database driver needs its tables.</b> `php artisan queue:table` and a migration, and the same for `failed_jobs` and `job_batches`. A driver switch that forgets those fails at the first dispatch.\n\n<b>Redis persistence is a decision.</b> Redis configured without persistence loses every pending job on restart, and \"where did the queue go\" is a question you only ask once.\n\n<b>And the driver is per connection, not global.</b> `config/queue.php` can define several, so a high-volume queue can use Redis while something rare uses the database. That is what the routing in a later lesson builds on.",
-      diagram: `Three dispatches
-
-  ProcessPodcast::dispatch(\$podcast)              queued
-  ProcessPodcast::dispatchSync(\$podcast)          now, this process
-  ProcessPodcast::dispatchAfterResponse(\$podcast) after the response
-
-  dispatchSync
-    runs immediately, in the request, no worker.
-    Useful for genuinely synchronous work and in tests.
-
-    ⚠️  A trap when used because the queue is not
-        configured: the code LOOKS queued, REVIEWS as
-        queued, and blocks the request like it never was.
-
-  dispatchAfterResponse
-
-    HTTP request → Laravel → send the response
-                           → run the work
-
-    The user is not waiting, and no worker is needed.
-    But the PHP process is still busy — holding a slot
-    that cannot serve another request — and a failure
-    has nowhere to be recorded.
-
-      after-response   small, quick, losing it survivable
-      a real queue     heavy work, retries, failure tracking
-
-    A thirty-second podcast job is not an after-response
-    task.
-
-
-Drivers: where pending jobs live
-
-  sync · database · redis · sqs · beanstalkd
-
-  sync       does not queue at all. Dispatch runs it.
-             Simple locally, and hides every queue
-             behaviour: no retries, no failures table,
-             no concurrency. Works on sync, breaks on
-             redis is a common first surprise.
-
-  database   Laravel → jobs table → worker
-             Simple, inspectable with SQL, no extra
-             infrastructure. Every worker POLLS the
-             database, so a busy queue loads the thing
-             your application needs for everything else.
-
-  redis      Laravel → Redis → worker
-             Fast, built for this, and the only driver
-             Horizon supports.
-
-  sqs        Amazon's managed queue. No server to run.
-             Max message size, and at-least-once
-             delivery — the idempotency point from the
-             last lesson, made formal.
-
-
-Choosing
-
-  sync        local development, tests that need it done
-  database    small apps, low volume, no extra services
-  redis       real queue traffic, and Horizon
-  sqs         AWS, managed, nothing to operate
-
-  ⚠️  Run the SAME driver in staging as in production.
-      Queue bugs are timing bugs, and sync in
-      development means every one waits until it matters.
-
-
-Three practical notes
-
-  The database driver needs its tables: queue:table,
-  plus failed_jobs and job_batches. A driver switch
-  that forgets them fails at the first dispatch.
-
-  Redis persistence is a decision. Without it, a restart
-  loses every pending job. "Where did the queue go" is
-  a question you ask once.
-
-  The driver is per CONNECTION, not global. config/queue
-  can define several, so a high-volume queue uses Redis
-  while something rare uses the database — which the
-  routing lesson builds on.`,
-      codeExample: {
-        title: "Dispatching, and configuring where jobs live",
-        code: `<?php
-
-// ---------- The three dispatches ----------
-
-// Queued: a worker picks it up.
-ProcessPodcast::dispatch($podcast);
-
-// Now, in this process. No worker.
-ProcessPodcast::dispatchSync($podcast);
-
-// After the response is sent, still in this process.
-ProcessPodcast::dispatchAfterResponse($podcast);
-
-
-// ---------- Where each belongs ----------
-
-// ✓ Heavy, needs retries and a failure record.
-ProcessPodcast::dispatch($podcast);
-
-// ✓ Small, quick, and losing it is survivable.
-RecordPageView::dispatchAfterResponse($request->path());
-
-// ❌ Thirty seconds of work holding a PHP process that
-//    cannot serve another request, with no failure record.
-ProcessPodcast::dispatchAfterResponse($podcast);
-
-// ❌ Used because the queue is not configured. The code
-//    reads as queued and blocks the request.
-ProcessPodcast::dispatchSync($podcast);
-
-
-<?php
-// ---------- Conditional dispatch ----------
-
-ProcessPodcast::dispatchIf($podcast->needsProcessing(), $podcast);
-ProcessPodcast::dispatchUnless($podcast->isProcessed(), $podcast);
-
-
-<?php
-// ---------- config/queue.php ----------
-
-return [
-    'default' => env('QUEUE_CONNECTION', 'database'),
-
-    'connections' => [
-
-        // Does not queue. Runs immediately.
-        'sync' => ['driver' => 'sync'],
-
-        // A table. Simple, inspectable, polls the database.
-        'database' => [
-            'driver' => 'database',
-            'table'  => 'jobs',
-            'retry_after' => 90,
-        ],
-
-        // The usual production answer, and the only one
-        // Horizon supports.
-        'redis' => [
-            'driver'      => 'redis',
-            'connection'  => 'default',
-            'queue'       => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
-        ],
-
-        // Managed. Nothing to operate.
-        'sqs' => [
-            'driver' => 'sqs',
-            'queue'  => env('SQS_QUEUE'),
-        ],
-
-    ],
-];
-
-// Several connections can coexist: a high-volume queue
-// on Redis, something rare on the database.
-
-
-<?php
-// ---------- Choosing per dispatch ----------
-
-ProcessPodcast::dispatch($podcast)->onConnection('redis');
-GenerateReport::dispatch($user)->onQueue('reports');
-
-
-# ---------- The tables the database driver needs ----------
-
-php artisan queue:table
-php artisan queue:failed-table
-php artisan queue:batches-table
-php artisan migrate
-
-# A driver switch that forgets these fails at the first
-# dispatch.
-
-
-# ---------- And the rule worth following ----------
-
-# .env, locally
-QUEUE_CONNECTION=redis
-
-# Not sync. Queue bugs are timing bugs, and sync hides
-# every one of them until production.`,
-      },
-      keyTakeaways: [
-        "<b>`dispatch()` queues, `dispatchSync()` runs immediately, and `dispatchAfterResponse()` runs after the response.</b>",
-        "<b>`dispatchSync()` used because the queue is unconfigured is a trap</b>: the code reads as queued and blocks the request.",
-        "<b>`dispatchAfterResponse()` frees the user but not the PHP process</b>, and offers no retries or failure record.",
-        "It suits small, quick work whose loss is survivable, and not a thirty-second job.",
-        "<b>A driver is where pending jobs are stored</b>: `sync`, `database`, `redis`, `sqs`.",
-        "<b>`sync` does not queue at all</b>, hiding retries, failures and concurrency until production.",
-        "<b>`database` is simple and inspectable</b>, at the cost of every worker polling your main database.",
-        "<b>`redis` is the usual production choice</b>, and the only driver Horizon supports.",
-        "<b>Run the same driver in staging as in production</b>, because queue bugs are timing bugs.",
-        "The database driver needs its tables, Redis needs persistence configured, and drivers are per connection.",
-      ],
-      commonMistakes: [
-        "<b>Using `dispatchSync()` to work around a broken queue.</b> The request blocks and the code hides it.",
-        "<b>Putting heavy work in `dispatchAfterResponse()`.</b> The PHP process stays busy and failures vanish.",
-        "<b>Developing on `sync` and deploying on `redis`.</b> Every timing bug appears for the first time in production.",
-        "<b>Switching to the database driver without running the migrations.</b> The first dispatch fails.",
-        "<b>Running Redis without persistence.</b> A restart empties the queue with no record of what was in it.",
-      ],
-      quiz: [
-        {
-          question: "What does `dispatchAfterResponse()` free up?",
-          options: [
-            "The PHP process",
-            "The user's wait, but not the PHP process",
-            "Both",
-            "Neither",
-          ],
-          correctIndex: 1,
-          explanation: "The process stays busy, and a failure has nowhere to be recorded.",
-        },
-        {
-          question: "What does the `sync` driver do?",
-          options: [
-            "Queues jobs and runs them in order",
-            "Runs the job immediately, so no queue behaviour exists",
-            "Stores jobs in the database",
-            "Runs jobs after the response",
-          ],
-          correctIndex: 1,
-          explanation: "Which hides retries, failures and concurrency until production.",
-        },
-        {
-          question: "What is the cost of the database queue driver?",
-          options: [
-            "It cannot retry",
-            "Every worker polls your main database, adding load to what the application also needs",
-            "It loses jobs on restart",
-            "It has a message size limit",
-          ],
-          correctIndex: 1,
-          explanation: "Simple and inspectable, at that price.",
-        },
-        {
-          question: "Why run the same queue driver locally as in production?",
-          options: [
-            "For speed",
-            "Queue bugs are timing bugs, and `sync` hides all of them until it matters",
-            "Laravel requires it",
-            "To use Horizon",
-          ],
-          correctIndex: 1,
-          explanation: "Code that works on `sync` and breaks on `redis` is a common first surprise.",
-        },
-      ],
-    },
-    {
-      id: "workers",
-      title: "Workers, queue:work & delayed dispatch",
-      durationMinutes: 11,
-      explanation: "Dispatching puts a job somewhere. Something has to come and get it.\n\n---\n\n### 1. Basic — what a worker does\n\n```text\nWorker\n  ↓\nget a job\n  ↓\nrun it\n  ↓\nget the next job\n  ↓\n...\n```\n\n```bash\nphp artisan queue:work\n```\n\n<b>It is a long-running process</b>, which is the whole difference from everything else in Laravel. A web request boots the framework, answers, and exits. A worker boots once and then loops, potentially for days.\n\nThat single fact causes most worker confusion:\n\n<b>Code changes do not take effect.</b> The worker booted with the old code and is still running it. Deploying without restarting workers means new jobs running old logic, which produces bugs that make no sense against the code in front of you.\n\n```bash\nphp artisan queue:restart\n```\n\ntells workers to finish the current job and exit, so the process manager starts them fresh. <b>That command belongs in every deploy script.</b>\n\n<b>And memory accumulates.</b> A process alive for days holds whatever leaks, which is why workers are given limits and restarted regularly rather than trusted to run forever.\n\n---\n\n### 2. Intermediate — `work` versus `listen`\n\n```bash\nphp artisan queue:listen\n```\n\nreboots the framework for every job:\n\n```text\nboot Laravel → job → reload → job → reload → ...\n```\n\nSo code changes apply immediately, and every job pays the boot cost.\n\n```text\nqueue:work      boots once, fast, needs a restart to pick up changes\nqueue:listen    boots per job, slow, always current\n```\n\n<b>`work` in production, `listen` occasionally while developing</b> if restarting is annoying you. Most people use `work` everywhere and get used to `queue:restart`.\n\nThe options worth knowing:\n\n```text\n--queue=high,default    process these queues, in this order\n--tries=3               attempts before failing\n--timeout=60            seconds before killing a job\n--max-jobs=1000         exit after this many\n--max-time=3600         exit after this long\n--sleep=3               seconds to wait when the queue is empty\n--stop-when-empty       exit when there is nothing left\n```\n\n<b>`--max-jobs` and `--max-time` are the memory answer:</b> exit deliberately, and let the process manager start a fresh one.\n\n---\n\n### 3. Advanced — delay, and what \"later\" means\n\n```php\nProcessPodcast::dispatch($podcast)->delay(now()->addMinutes(10));\n```\n\n```text\ndispatch → waiting → 10 minutes → a worker runs it\n```\n\nUseful for:\n\n```text\nreminders · scheduled notifications\nfollow-ups · delayed cleanup\n```\n\nAnd a useful pattern with it: <b>a delay is how you wait for something you cannot control.</b> A webhook that says a file is being processed, checked again in thirty seconds, is a delayed job re-dispatching itself until the answer arrives.\n\nThree things about delays that surprise people.\n\n<b>The delay is a minimum, not a promise.</b> The job becomes available at that time; a busy queue runs it later. If the exact time matters, a delay is the wrong tool and the scheduler is the right one.\n\n<b>SQS caps delays at fifteen minutes.</b> Longer delays on that driver silently need a different approach.\n\n<b>And a delayed job still holds its data.</b> Dispatching ten thousand jobs delayed by a day means ten thousand rows sitting in your queue for a day, which is fine on Redis and noticeable on a database driver.\n\nOne last practical note: <b>a worker only processes the queues you tell it to.</b> A job dispatched to `reports` with no worker listening to `reports` sits there forever, and looks exactly like a job that is broken. The first thing to check when a job never runs is whether anything is watching that queue.\n\nOne more limit alongside those: <b>`--memory=128` restarts a worker once it exceeds that many megabytes.</b>\n\n```bash\nphp artisan queue:work --memory=128 --max-time=3600\n```\n\nWhich matters because <b>memory is usually what actually kills a worker</b>, not time or job count. A job loading a large collection leaves the process bigger than it found it, and without a ceiling that grows until the OS intervenes at whatever moment is least convenient.",
-      diagram: `What a worker does
-
-    Worker → get a job → run it → get the next → ...
-
-    php artisan queue:work
-
-  It is a LONG-RUNNING process, which is the whole
-  difference. A web request boots, answers and exits.
-  A worker boots once and loops, potentially for days.
-
-  Which causes most worker confusion:
-
-    ⚠️  Code changes do not take effect.
-        The worker booted with the old code and is still
-        running it. Deploying without restarting workers
-        means new jobs running old logic — bugs that make
-        no sense against the code in front of you.
-
-        php artisan queue:restart
-
-        finishes the current job and exits, so the
-        process manager starts them fresh.
-        This belongs in every deploy script.
-
-    ⚠️  Memory accumulates.
-        A process alive for days holds whatever leaks,
-        which is why workers get limits rather than
-        being trusted to run forever.
-
-
-work versus listen
-
-  queue:listen reboots the framework per job:
-
-    boot → job → reload → job → reload → ...
-
-    queue:work     boots once, fast, needs a restart
-                   to pick up changes
-    queue:listen   boots per job, slow, always current
-
-  work in production. listen occasionally while
-  developing. Most people use work everywhere and get
-  used to queue:restart.
-
-
-  Options worth knowing:
-
-    --queue=high,default   these queues, in this order
-    --tries=3              attempts before failing
-    --timeout=60           seconds before killing a job
-    --max-jobs=1000        exit after this many
-    --max-time=3600        exit after this long
-    --sleep=3              wait when the queue is empty
-    --stop-when-empty      exit when nothing is left
-
-  --max-jobs and --max-time are the memory answer: exit
-  deliberately, and let the process manager start a
-  fresh one.
-
-
-Delay
-
-    ->delay(now()->addMinutes(10))
-
-    dispatch → waiting → 10 minutes → a worker runs it
-
-  reminders · scheduled notifications
-  follow-ups · delayed cleanup
-
-  And: a delay is how you wait for something you cannot
-  control. A job that checks again in thirty seconds,
-  re-dispatching itself until the answer arrives.
-
-
-  Three surprises:
-
-    The delay is a MINIMUM, not a promise. A busy queue
-    runs it later. If the exact time matters, the
-    scheduler is the right tool.
-
-    SQS caps delays at fifteen minutes.
-
-    A delayed job still holds its data. Ten thousand
-    jobs delayed by a day is ten thousand rows sitting
-    there for a day — fine on Redis, noticeable on a
-    database driver.
-
-
-  ⚠️  A worker only processes the queues you tell it to.
-      A job on 'reports' with nothing listening to
-      'reports' sits there forever, and looks exactly
-      like a broken job.
-
-      First thing to check when a job never runs.`,
-      codeExample: {
-        title: "Running workers, and delaying work",
-        code: `# ---------- The worker ----------
-
-php artisan queue:work
-
-# Long-running. Boots once, then loops.
-
-
-# Options that matter in production:
-
-php artisan queue:work redis \\
-    --queue=high,default,low \\
-    --tries=3 \\
-    --timeout=60 \\
-    --max-jobs=1000 \\
-    --max-time=3600 \\
-    --sleep=3
-
-# --queue     processed in that order: high first
-# --max-jobs  exit after 1000, and let the process
-# --max-time  manager start a fresh process. This is
-#             the answer to a long-lived process
-#             accumulating memory.
-
-
-# ---------- After every deploy ----------
-
-php artisan queue:restart
-
-# Workers finish the current job and exit. Without this,
-# they keep running the code they booted with, and new
-# jobs execute old logic.
-
-
-# ---------- While developing ----------
-
-php artisan queue:listen
-
-# Reboots per job, so code changes apply immediately.
-# Slower, and fine locally.
-
-php artisan queue:work --stop-when-empty
-# Useful in a test or a one-off script.
-
-
-<?php
-// ---------- Delay ----------
-
-ProcessPodcast::dispatch($podcast)->delay(now()->addMinutes(10));
-
-SendReminder::dispatch($invoice)->delay(
-    $invoice->due_at->subDays(3)
-);
-
-// A job that waits for something outside your control,
-// by re-dispatching itself:
-class CheckTranscodingStatus implements ShouldQueue
-{
-    public function __construct(public Video $video, public int $attempt = 1) {}
-
-    public function handle(): void
-    {
-        $status = $this->transcoder->status($this->video->external_id);
-
-        if ($status === 'processing' && $this->attempt < 20) {
-            self::dispatch($this->video, $this->attempt + 1)
-                ->delay(now()->addSeconds(30));
-
-            return;
-        }
-
-        $this->video->update(['status' => $status]);
+        $event->user->profile()->create(['bio' => '']);
     }
 }
 
+class TrackRegistration
+{
+    public function handle(UserRegistered $event): void
+    {
+        Analytics::track('registered', $event->user->id);
+    }
+}
+
+// A sixth consequence is a sixth listener, and the
+// controller does not change.
+
 
 <?php
-// ---------- Delay is a minimum, not a promise ----------
+// ---------- Naming: a fact, not an instruction ----------
 
-// Available in 10 minutes. Run in 10 minutes, or later,
-// depending on how busy the queue is.
-SendReminder::dispatch($invoice)->delay(now()->addMinutes(10));
+// ✓ Facts.
+class OrderPlaced {}
+class PaymentCompleted {}
+class SubscriptionCancelled {}
 
-// If the exact time matters, this is the scheduler's job:
-// routes/console.php
-Schedule::command('invoices:remind')->dailyAt('09:00');
+// ❌ A command wearing an event's name. It has already
+//    decided the consequence, so it gains nothing over
+//    calling the method.
+class SendWelcomeEmailEvent {}
+class ShouldGenerateInvoice {}
 
 
 <?php
-// ---------- Choosing a queue ----------
+// ---------- When NOT to use an event ----------
 
-GenerateReport::dispatch($user)->onQueue('reports');
+// ❌ One consequence. The event costs a file, a class and
+//    an indirection, and buys nothing.
+InvoiceCreated::dispatch($invoice);   // one listener: send it
 
-// ⚠️ And something must be listening to it:
-//    php artisan queue:work --queue=high,default,reports
-//
-// A job on a queue no worker watches sits there forever,
-// and looks exactly like a broken job. First thing to
-// check when a job never runs.`,
+// ✓
+Mail::to($invoice->customer)->send(new InvoiceCreated($invoice));
+
+
+// ❌ The caller needs the answer. A listener's return
+//    value goes nowhere.
+$total = InvoiceTotalRequested::dispatch($invoice);
+
+// ✓ That is a method call.
+$total = $this->calculator->total($invoice);`,
       },
       keyTakeaways: [
-        "<b>A worker is a long-running process</b> that loops over jobs, unlike a request that boots, answers and exits.",
-        "<b>A worker keeps running the code it booted with</b>, so a deploy without a restart runs old logic.",
-        "<b>`php artisan queue:restart` belongs in every deploy script.</b>",
-        "<b>Long-lived processes accumulate memory</b>, which `--max-jobs` and `--max-time` address by exiting deliberately.",
-        "<b>`queue:work` boots once and is fast; `queue:listen` reboots per job and is always current.</b>",
-        "Use `work` in production, and `listen` locally if restarting becomes annoying.",
-        "`--queue=high,default` sets the order queues are drained in, and `--timeout` kills a job that hangs.",
-        "<b>`->delay()` makes a job available later</b>, which suits reminders, follow-ups and delayed cleanup.",
-        "<b>A delay is a minimum, not a promise</b>; when the exact time matters, use the scheduler.",
-        "<b>A worker only processes the queues it is told to</b>, so a job on an unwatched queue waits forever.",
+        "<b>Events decouple an action from its side effects</b>, so one method stops accumulating every consequence.",
+        "<b>The dispatcher announces what happened and does not know who is listening.</b>",
+        "Adding a new consequence means adding a listener, with the original code untouched.",
+        "<b>A command says \"do this\" and has one handler; an event says \"this happened\" and can have any number.</b>",
+        "<b>Name events as facts in the past tense</b>: `OrderPlaced`, `PaymentCompleted`, `InvoicePaid`.",
+        "An event that names an action, such as `SendWelcomeEmailEvent`, has already decided the consequence.",
+        "<b>Events make consequences invisible from the call site</b>, which is the decoupling and the debugging cost.",
+        "<b>One consequence is clearer called directly</b> than dispatched to a single listener.",
+        "<b>If the caller needs a result, it is not an event</b>: a listener's return value goes nowhere.",
+        "<b>Listeners run synchronously by default</b>, so an event is a decoupling tool rather than a speed one.",
       ],
       commonMistakes: [
-        "<b>Deploying without `queue:restart`.</b> Workers run the old code and produce bugs that match no source you can see.",
-        "<b>Running a worker with no memory or job limit.</b> It grows until something kills it at an inconvenient moment.",
-        "<b>Using `queue:listen` in production.</b> Every job pays a full framework boot.",
-        "<b>Dispatching to a named queue nothing is listening to.</b> The job waits forever and looks broken.",
-        "<b>Relying on `->delay()` for an exact time.</b> It is the earliest the job may run, not when it will.",
+        "<b>Naming an event after the action it should cause.</b> That is a command with extra indirection.",
+        "<b>Dispatching an event with exactly one listener.</b> A direct call says the same thing more clearly.",
+        "<b>Expecting a return value from an event.</b> Dispatch is fire-and-forget by design.",
+        "<b>Assuming an event makes the request faster.</b> Listeners run inline unless you queue them.",
+        "<b>Putting the whole workflow in one listener.</b> That is the original method, moved.",
       ],
       quiz: [
         {
-          question: "Why does a code change not affect a running worker?",
-          options: [
-            "The cache needs clearing",
-            "The worker is a long-running process still executing the code it booted with",
-            "Jobs are compiled",
-            "It does affect it",
-          ],
-          correctIndex: 1,
-          explanation: "`queue:restart` is what makes workers pick up new code.",
-        },
-        {
-          question: "What is the difference between `queue:work` and `queue:listen`?",
+          question: "What is the difference between a command and an event?",
           options: [
             "None",
-            "`work` boots once and is fast; `listen` reboots per job and always has current code",
-            "`listen` is for Redis only",
-            "`work` cannot retry",
+            "A command says \"do this\" and has one handler; an event says \"this happened\" and can have many",
+            "Commands are queued",
+            "Events return values",
           ],
           correctIndex: 1,
-          explanation: "`work` in production, and a restart after each deploy.",
+          explanation: "Which is why events are named as facts, in the past tense.",
         },
         {
-          question: "Why give a worker `--max-jobs` or `--max-time`?",
-          options: [
-            "To limit database load",
-            "So it exits deliberately and a fresh process starts, rather than accumulating memory for days",
-            "To retry failed jobs",
-            "To prioritise queues",
-          ],
-          correctIndex: 1,
-          explanation: "A long-lived process holds whatever leaks.",
+          question: "Which is a well-named event?",
+          options: ["SendWelcomeEmail", "ProcessOrder", "OrderPlaced", "ShouldNotifyUser"],
+          correctIndex: 2,
+          explanation: "A fact in the past tense, which has not decided the consequence.",
         },
         {
-          question: "A job never runs. What is the first thing to check?",
+          question: "When is an event not the right tool?",
           options: [
-            "The database connection",
-            "Whether any worker is listening to the queue it was dispatched to",
-            "The job's constructor",
-            "The cache driver",
+            "When there are several consequences",
+            "When the caller needs the result of the work",
+            "When the consequences change over time",
+            "When different parts of the app care",
           ],
           correctIndex: 1,
-          explanation: "A job on an unwatched queue waits forever and looks broken.",
+          explanation: "A listener's return value goes nowhere; that is a method call.",
+        },
+        {
+          question: "Do listeners run asynchronously by default?",
+          options: [
+            "Yes, always",
+            "No; they run inline, before the next line of the dispatcher",
+            "Only in production",
+            "Only if queued workers exist",
+          ],
+          correctIndex: 1,
+          explanation: "An event decouples; queueing the listener is what makes it asynchronous.",
         },
       ],
     },
     {
-      id: "chains-and-batches",
-      title: "Chains & batches",
+      id: "registration-and-queued-listeners",
+      title: "Discovery, registration & queued listeners",
       durationMinutes: 12,
-      explanation: "One job is easy. The interesting problems start when there are many.\n\n---\n\n### 1. Basic — chains, for order\n\nSome work has to happen in sequence:\n\n```text\nDownloadPodcast\n      ↓\nProcessPodcast\n      ↓\nGenerateTranscript\n      ↓\nNotifyUser\n```\n\n<b>A <i>chain</i></b> runs jobs one after another, each starting only when the last succeeded:\n\n```php\nBus::chain([\n    new DownloadPodcast($podcast),\n    new ProcessPodcast($podcast),\n    new GenerateTranscript($podcast),\n    new NotifyUser($podcast),\n])->dispatch();\n```\n\n```text\nA → success → B → success → C → success → D\n```\n\n<b>If one fails, the chain stops.</b> Nothing after it runs, which is exactly right: transcribing a podcast that was never processed produces nothing useful.\n\n`->catch()` gives you somewhere to react when it breaks.\n\n---\n\n### 2. Intermediate — batches, for volume\n\nA hundred podcasts to process is a different shape: they do not depend on each other, and you want them all done.\n\n```text\nChain                 Batch\n─────                 ─────\nA → B → C → D                ┌→ A\n                             ├→ B\norder matters        Batch ──┼→ C\none failure stops            ├→ D\n  the rest                   └→ E\n\n                     independent, and\n                     parallel across workers\n```\n\n```php\nBus::batch($jobs)->dispatch();\n```\n\n<b>Laravel tracks the batch as a whole:</b>\n\n```text\ntotal jobs · pending · failed · processed · progress\n```\n\nWhich is what a batch is really for. Dispatching a hundred jobs individually gives you a hundred unrelated jobs; a batch gives you one thing to ask \"is it done?\" about, and a progress bar you can show somebody.\n\nAnd because the jobs are independent, <b>four workers process the batch four times faster.</b> A chain cannot do that, by definition.\n\n---\n\n### 3. Advanced — callbacks, and choosing\n\nA batch has lifecycle hooks:\n\n```php\nBus::batch($jobs)\n    ->before(fn (Batch $batch) => ...)   // created, not yet running\n    ->progress(fn (Batch $batch) => ...) // after each job\n    ->then(fn (Batch $batch) => ...)     // all succeeded\n    ->catch(fn (Batch $batch, $e) => ...)// the first failure\n    ->finally(fn (Batch $batch) => ...)  // finished either way\n    ->dispatch();\n```\n\n<b>`then()` is the one that makes batches worth using</b>: \"when all hundred are done, generate the summary and email it\". Without it, that is a polling loop you write yourself.\n\nTwo behaviours to know.\n\n<b>By default one failure cancels the batch.</b> Remaining jobs are not run. `->allowFailures()` changes that, and it is usually what you want for something like a bulk import where one bad row should not stop the other ninety-nine.\n\n<b>And callbacks are serialised too</b>, so `$this` is not available inside them. That is the same wire from lesson one: pass what the callback needs, or reference a static.\n\nThe two can combine, and that is often the real shape:\n\n```php\nBus::batch([\n    [new DownloadPodcast($a), new ProcessPodcast($a)],\n    [new DownloadPodcast($b), new ProcessPodcast($b)],\n])->dispatch();\n```\n\nA batch of chains: each podcast's steps in order, and the podcasts in parallel.\n\nWhich makes the choice a question about the work rather than the API:\n\n```text\ndoes step two need step one's result?     →  a chain\nare they independent, and you want to\n  know when they are all done?            →  a batch\nboth, at different levels?                →  a batch of chains\n```",
-      diagram: `Chains, for order
+      explanation: "Connecting a listener to an event, and getting it off the request.\n\n---\n\n### 1. Basic — how Laravel finds a listener\n\n```bash\nphp artisan make:event UserRegistered\nphp artisan make:listener SendWelcomeEmail --event=UserRegistered\n```\n\n```php\npublic function handle(UserRegistered $event): void\n{\n    // ...\n}\n```\n\n<b>Laravel discovers the wiring from that type hint.</b> A class in `app/Listeners` whose `handle()` takes `UserRegistered` is registered for it, with nothing to configure.\n\nWhich is convenient, and has a cost: <b>nothing lists what happens when an event fires.</b> Finding out means searching the codebase for the type hint.\n\n```bash\nphp artisan event:list\n```\n\nis the answer to that, and worth knowing before you need it.\n\nManual registration is the alternative:\n\n```php\nEvent::listen(UserRegistered::class, SendWelcomeEmail::class);\n```\n\n```text\ndiscovery              nothing to wire, nothing to read\nmanual registration    one file listing every consequence\n```\n\nUse manual registration when the wiring is unusual, when a listener lives outside the conventional place, or when you want one file somebody can audit.\n\n---\n\n### 2. Intermediate — queued listeners\n\nListeners run inline, so this is a problem:\n\n```text\nUserRegistered\n      ↓\ngenerate a 50-page PDF\n```\n\nThe user waits for it, which is exactly what yesterday was about.\n\n<b>`ShouldQueue` on the listener moves it to the queue:</b>\n\n```php\nclass SendWelcomeEmail implements ShouldQueue\n{\n}\n```\n\n```text\nUserRegistered → Queue → Worker → the PDF\n```\n\nAnd the two ideas compose properly:\n\n```text\nevent       decoupling: the caller does not know\nqueue       timing: the user does not wait\n```\n\nA listener can be queued while its siblings stay inline, which is usually right: creating a profile is instant and belongs in the request, and sending mail is not.\n\n<b>A queued listener is a job.</b> Everything from yesterday applies: it is serialised, `$tries` and `$backoff` work, it can fail, and it appears in `failed_jobs`. Which also means a failing listener no longer breaks the request that dispatched it, and that is a change in behaviour worth knowing about.\n\n---\n\n### 3. Advanced — the details, and debouncing\n\n<b>Order is not guaranteed once listeners are queued.</b> Three queued listeners are three independent jobs; if the second depends on the first, they are a chain, not listeners.\n\n<b>A queued listener sees the state at execution time</b>, not at dispatch. Yesterday's point, and it matters more here because the event is named after something that already happened: `SubscriptionCancelled` fires, the listener runs a minute later, and the subscription may have been reinstated.\n\n<b>And events inside a transaction fire before it commits</b>, unless the listener implements `ShouldQueueAfterCommit` (or `ShouldHandleEventsAfterCommit`). Otherwise a queued listener can start, look up the model, and find nothing there yet, which is a race that only appears under load.\n\n---\n\n### Debounced listeners\n\nLaravel 13 adds debouncing, for a specific and common shape:\n\n```text\nprofile updated → event → listener\nprofile updated → event → listener\nprofile updated → event → listener\n```\n\nSomebody editing a form triggers the same expensive work three times in five seconds, and only the last result matters.\n\n```text\nevent\nevent\nevent\nevent\n  │\n  └── debounce\n        ↓\n  one execution\n```\n\n<b>Rapid repeated triggers collapse into one run</b>, which suits exactly the work where re-running is wasteful rather than wrong:\n\n```text\nsearch indexing · document processing\ncache rebuilding · synchronisation\n```\n\nThe trade is a delay: the work happens after the quiet period rather than immediately. For a search index that is invisible; for something a user is waiting to see, it is not.",
+      diagram: `How Laravel finds a listener
 
-    DownloadPodcast → ProcessPodcast
-                    → GenerateTranscript → NotifyUser
+    php artisan make:listener SendWelcomeEmail \\
+        --event=UserRegistered
 
-    Bus::chain([...])->dispatch()
+    public function handle(UserRegistered \$event)
 
-    A → success → B → success → C → success → D
+  Discovery reads that TYPE HINT. A class in app/Listeners
+  whose handle() takes the event is registered for it.
 
-  If one fails, the chain STOPS. Nothing after it runs,
-  which is right: transcribing a podcast that was never
-  processed produces nothing.
+  ⚠️  Convenient, and nothing lists what happens when an
+      event fires. Finding out means grepping for the
+      type hint.
 
-  ->catch() gives you somewhere to react.
+      php artisan event:list
 
+  Manual registration is the alternative:
 
-Batches, for volume
+    Event::listen(UserRegistered::class, SendWelcomeEmail::class)
 
-  Chain                  Batch
-  ─────                  ─────
-  A → B → C → D                 ┌→ A
-                                ├→ B
-  order matters         Batch ──┼→ C
-  one failure stops             ├→ D
-    the rest                    └→ E
+    discovery     nothing to wire, nothing to read
+    manual        one file listing every consequence
 
-                        independent, and parallel
-                        across workers
+  Use manual for unusual wiring, listeners outside the
+  conventional place, or when you want something to audit.
 
-    Bus::batch(\$jobs)->dispatch()
 
-  Laravel tracks it as a whole:
+Queued listeners
 
-    total · pending · failed · processed · progress
+  Listeners run inline, so:
 
-  Which is the point. A hundred individual dispatches is
-  a hundred unrelated jobs. A batch is ONE thing to ask
-  "is it done?" about, and a progress bar you can show.
+    UserRegistered → generate a 50-page PDF
 
-  And because the jobs are independent, four workers
-  process a batch four times faster. A chain cannot,
-  by definition.
+  means the user waits for it.
 
+    implements ShouldQueue
 
-Callbacks
+    UserRegistered → Queue → Worker → the PDF
 
-    ->before()    created, not yet running
-    ->progress()  after each job
-    ->then()      all succeeded
-    ->catch()     the first failure
-    ->finally()   finished either way
+  And the two ideas compose:
 
-  then() is what makes batches worth using: "when all
-  hundred are done, generate the summary and email it".
-  Without it, that is a polling loop you write yourself.
+    event   decoupling: the caller does not know
+    queue   timing: the user does not wait
 
-  Two behaviours:
+  One listener can be queued while its siblings stay
+  inline — usually right: creating a profile is instant
+  and belongs in the request; sending mail is not.
 
-    By default ONE FAILURE CANCELS the batch. Remaining
-    jobs do not run. ->allowFailures() changes that, and
-    is usually right for a bulk import where one bad row
-    should not stop the other ninety-nine.
+  A queued listener IS a job. Serialised, \$tries and
+  \$backoff work, it can fail, it appears in failed_jobs.
 
-    Callbacks are SERIALISED too, so \$this is not
-    available inside them. Same wire as lesson one.
+  Which also means a failing listener no longer breaks
+  the request that dispatched it.
 
 
-They combine
+Three details
 
-    Bus::batch([
-        [new DownloadPodcast(\$a), new ProcessPodcast(\$a)],
-        [new DownloadPodcast(\$b), new ProcessPodcast(\$b)],
-    ])->dispatch();
+  Order is NOT guaranteed once listeners are queued.
+  Three queued listeners are three independent jobs. If
+  the second depends on the first, that is a chain.
 
-  A batch of chains: each podcast's steps in order, and
-  the podcasts in parallel.
+  A queued listener sees the state at EXECUTION time.
+  SubscriptionCancelled fires, the listener runs a minute
+  later, and the subscription may have been reinstated.
 
+  Events inside a transaction fire BEFORE it commits,
+  unless the listener uses ShouldQueueAfterCommit. A
+  queued listener can otherwise start, look up the model,
+  and find nothing — a race that only appears under load.
 
-  Which makes it a question about the WORK:
 
-    does step two need step one's result?   →  a chain
-    independent, and you want to know when
-      they are all done?                    →  a batch
-    both, at different levels?              →  a batch
-                                               of chains`,
-      codeExample: {
-        title: "Ordered work, and a lot of work",
-        code: `<?php
+Debouncing
 
-use Illuminate\\Bus\\Batch;
-use Illuminate\\Support\\Facades\\Bus;
-use Throwable;
+    profile updated → event → listener
+    profile updated → event → listener
+    profile updated → event → listener
 
-// ---------- A chain: order matters ----------
+  Somebody editing a form triggers the same expensive
+  work three times in five seconds, and only the last
+  result matters.
 
-Bus::chain([
-    new DownloadPodcast($podcast),
-    new ProcessPodcast($podcast),
-    new GenerateTranscript($podcast),
-    new NotifyUser($podcast),
-])->catch(function (Throwable $e) use ($podcast) {
-    $podcast->update(['status' => 'failed']);
-})->dispatch();
-
-// Each step starts only when the last succeeded. If
-// ProcessPodcast fails, the transcript is never attempted,
-// which is correct: it would have nothing to transcribe.
-
-// From inside a job, to continue the chain:
-$this->chain([new GenerateTranscript($this->podcast)]);
-
-
-<?php
-// ---------- A batch: many independent jobs ----------
-
-$jobs = Podcast::where('status', 'pending')
-    ->pluck('id')
-    ->map(fn ($id) => new ProcessPodcast($id))
-    ->all();
-
-$batch = Bus::batch($jobs)
-    ->name('Process pending podcasts')
-
-    // One failure should not stop the other ninety-nine.
-    ->allowFailures()
-
-    ->progress(function (Batch $batch) {
-        // After each job. Useful for a progress bar.
-        Cache::put("batch:{$batch->id}:progress", $batch->progress());
-    })
-
-    ->then(function (Batch $batch) {
-        // All of them succeeded. This is what a batch
-        // is for: one place to react when it is done.
-        Notification::route('mail', 'ops@example.com')
-            ->notify(new BatchFinished($batch->id));
-    })
-
-    ->catch(function (Batch $batch, Throwable $e) {
-        Log::error('Batch failed', ['batch' => $batch->id]);
-    })
-
-    ->finally(function (Batch $batch) {
-        Cache::forget("batch:{$batch->id}:progress");
-    })
-
-    ->dispatch();
-
-// One thing to ask about:
-$batch->id;
-$batch->totalJobs;
-$batch->pendingJobs;
-$batch->failedJobs;
-$batch->progress();      // a percentage
-$batch->finished();
-
-
-<?php
-// ---------- Checking on it later ----------
-
-$batch = Bus::findBatch($batchId);
-
-return [
-    'progress' => $batch->progress(),
-    'pending'  => $batch->pendingJobs,
-    'failed'   => $batch->failedJobs,
-];
-
-$batch->cancel();     // stop the remaining jobs
-
-
-<?php
-// ---------- A batch of chains ----------
-
-// Each podcast's steps in order; the podcasts in parallel.
-Bus::batch(
-    $podcasts->map(fn ($podcast) => [
-        new DownloadPodcast($podcast),
-        new ProcessPodcast($podcast),
-        new GenerateTranscript($podcast),
-    ])->all()
-)->dispatch();
-
-
-<?php
-// ---------- Callbacks are serialised too ----------
-
-// ❌ $this is not available inside the callback.
-Bus::batch($jobs)->then(function (Batch $batch) {
-    $this->notify();
-})->dispatch();
-
-// ✓ Pass what it needs.
-$userId = $request->user()->id;
-
-Bus::batch($jobs)->then(function (Batch $batch) use ($userId) {
-    User::find($userId)->notify(new BatchFinished($batch->id));
-})->dispatch();
-
-
-<?php
-// ---------- Making the job batch-aware ----------
-
-class ProcessPodcast implements ShouldQueue
-{
-    use Batchable, Queueable;
-
-    public function handle(): void
-    {
-        // Stop early if the batch was cancelled.
-        if ($this->batch()?->cancelled()) {
-            return;
-        }
-
-        // ...
-    }
-}`,
-      },
-      keyTakeaways: [
-        "<b>A chain runs jobs in sequence</b>, each starting only when the previous one succeeded.",
-        "<b>A failure stops the chain</b>, which is correct when later steps depend on earlier ones.",
-        "<b>A batch runs independent jobs and tracks them as one unit</b>: total, pending, failed, progress.",
-        "That tracking is the point: a hundred dispatches is a hundred unrelated jobs, a batch is one thing to ask about.",
-        "<b>Batched jobs run in parallel across workers</b>, which a chain cannot do by definition.",
-        "<b>`then()` runs when every job succeeded</b>, which replaces a polling loop you would otherwise write.",
-        "`before()`, `progress()`, `catch()` and `finally()` cover the rest of the lifecycle.",
-        "<b>One failure cancels a batch by default</b>, and `allowFailures()` is usually right for a bulk import.",
-        "<b>Batch callbacks are serialised</b>, so `$this` is unavailable and values must be passed in.",
-        "<b>A batch of chains does both</b>: ordered steps per item, items in parallel.",
-      ],
-      commonMistakes: [
-        "<b>Using a batch where order matters.</b> The jobs run in parallel and the second may finish first.",
-        "<b>Using a chain for a hundred independent jobs.</b> They run one at a time, however many workers you have.",
-        "<b>Forgetting `allowFailures()` on an import.</b> One bad row cancels the remaining ninety-nine.",
-        "<b>Referring to `$this` in a batch callback.</b> It is serialised separately and has no instance.",
-        "<b>Polling to find out when a batch is done.</b> `then()` exists for exactly that.",
-      ],
-      quiz: [
-        {
-          question: "What happens when a job in a chain fails?",
-          options: [
-            "The chain continues",
-            "The chain stops, and nothing after it runs",
-            "The chain restarts",
-            "Only that job is retried",
-          ],
-          correctIndex: 1,
-          explanation: "Which is correct when later steps depend on earlier ones.",
-        },
-        {
-          question: "What does a batch give you that a hundred individual dispatches do not?",
-          options: [
-            "Faster execution",
-            "One unit to track: total, pending, failed and progress, and a `then()` when all are done",
-            "Automatic retries",
-            "Ordering",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise, knowing when everything finished is a polling loop.",
-        },
-        {
-          question: "What does `allowFailures()` change?",
-          options: [
-            "Failed jobs are retried",
-            "One failure no longer cancels the remaining jobs in the batch",
-            "Failures are not recorded",
-            "The batch never completes",
-          ],
-          correctIndex: 1,
-          explanation: "Usually what a bulk import wants.",
-        },
-        {
-          question: "Why is `$this` unavailable inside a batch callback?",
-          options: [
-            "It is a static context",
-            "The callback is serialised and stored separately, like the jobs themselves",
-            "Laravel forbids it",
-            "It is available",
-          ],
-          correctIndex: 1,
-          explanation: "Pass in what it needs with `use`.",
-        },
-      ],
-    },
-    {
-      id: "routing-and-attributes",
-      title: "Queue routing & job attributes",
-      durationMinutes: 10,
-      explanation: "Two Laravel 13 additions that move configuration to where it belongs.\n\n---\n\n### 1. Basic — separating queues\n\nOne queue with everything in it has a problem you meet the first busy day:\n\n```text\n10,000 podcast jobs\n        +\n1 password reset email\n        ↓\nthe email is behind ten thousand podcasts\n```\n\nThe fix is separate queues:\n\n```text\nredis\n ├── podcasts\n ├── emails\n ├── reports\n └── imports\n```\n\nand workers that specialise. Two workers on `emails` are never blocked by the import queue, whatever is in it.\n\n<b>Laravel 13's queue routing declares where a job goes, once:</b>\n\n```php\nQueue::route(ProcessPodcast::class, connection: 'redis', queue: 'podcasts');\n```\n\n```text\nProcessPodcast\n      ├── connection → redis\n      └── queue      → podcasts\n```\n\nWhich is a real improvement over the alternatives. Setting `$queue` inside every job scatters routing across your job classes; calling `->onQueue('podcasts')` at each dispatch site means one caller eventually forgets. <b>One file that says where every kind of work goes is something you can read and audit.</b>\n\n---\n\n### 2. Intermediate — attributes\n\nJob configuration used to be properties:\n\n```php\npublic $tries = 3;\npublic $backoff = 10;\npublic $timeout = 120;\n```\n\nLaravel 13 expresses it as attributes on the class:\n\n```php\n#[Tries(3)]\n#[Backoff(10)]\n#[Timeout(120)]\nclass ProcessPodcast implements ShouldQueue\n{\n}\n```\n\n```text\n#[Tries]     maximum attempts\n#[Backoff]   delay between attempts\n#[Timeout]   maximum execution time\n```\n\nAnd `#[FailOnTimeout]`, which says a timeout should fail the job rather than be treated as something to retry.\n\n<b>The gain is that the configuration is visible above the class</b>, next to its name, rather than mixed in with its properties. Reading `ProcessPodcast`, you see how it behaves before you see what it does.\n\nThe properties still work, and you will see both. The next lesson is about choosing the values.\n\n---\n\n### 3. Advanced — priorities in practice\n\nSeparate queues are only useful if workers respect the difference:\n\n```php\nphp artisan queue:work --queue=high,default,low\n```\n\n<b>The order is a priority order</b>: the worker drains `high` completely before looking at `default`. Which is the behaviour you want, and also the failure mode to know about: <b>a permanently busy `high` queue starves everything below it.</b>\n\nThe usual split:\n\n```text\nhigh      payments · password resets · anything a\n          person is waiting for\n\ndefault   email · notifications · normal work\n\nlow       analytics · cleanup · reports · imports\n```\n\n<b>The question that sorts a job is not how important the work is</b>, it is who is waiting. A password reset email is trivial work that somebody is staring at an inbox for. A monthly report is important work nobody is watching.\n\nTwo practical notes.\n\n<b>Dedicated workers beat priorities for anything that must not be delayed.</b> One worker on `--queue=high` alone can never be blocked by anything else, where a shared worker with a priority list can be busy with a long job when the urgent one arrives.\n\n<b>And connection matters as much as queue.</b> Routing a rare, slow job to the database connection while everything else uses Redis keeps ten thousand rows out of your fast path, and is exactly what per-job routing makes easy to express.\n\nAnd in a test, the queue a job landed on is assertable too:\n\n```php\nQueue::assertPushedOn('emails', SendInvoiceEmail::class);\n```\n\n<b>Which is what proves the routing actually works</b>, rather than that the job was dispatched somewhere.",
-      diagram: `Separating queues
-
-  One queue with everything in it:
-
-    10,000 podcast jobs
-            +
-    1 password reset email
+    event
+    event
+    event
+      │
+      └── debounce
             ↓
-    the email is behind ten thousand podcasts
+      one execution
 
-  Separate them:
+  Suits work where re-running is WASTEFUL rather than
+  wrong:
 
-    redis
-     ├── podcasts
-     ├── emails
-     ├── reports
-     └── imports
+    search indexing · document processing
+    cache rebuilding · synchronisation
 
-  and workers specialise. Two workers on emails are
-  never blocked by the import queue.
-
-
-  Laravel 13 declares routing once:
-
-    Queue::route(ProcessPodcast::class,
-        connection: 'redis', queue: 'podcasts');
-
-      ProcessPodcast
-            ├── connection → redis
-            └── queue      → podcasts
-
-  Better than the alternatives: \$queue inside every job
-  scatters routing across your job classes, and
-  ->onQueue() at each dispatch site means one caller
-  eventually forgets.
-
-  One file saying where every kind of work goes is
-  something you can read and audit.
-
-
-Attributes
-
-  Before:                    Laravel 13:
-
-    public \$tries = 3;         #[Tries(3)]
-    public \$backoff = 10;      #[Backoff(10)]
-    public \$timeout = 120;     #[Timeout(120)]
-
-    #[Tries]     maximum attempts
-    #[Backoff]   delay between attempts
-    #[Timeout]   maximum execution time
-    #[FailOnTimeout]  a timeout FAILS the job rather
-                      than being retried
-
-  The configuration sits above the class, next to its
-  name, rather than mixed in with its properties.
-  Reading the job, you see how it BEHAVES before you
-  see what it does.
-
-
-Priorities in practice
-
-    queue:work --queue=high,default,low
-
-  The order is a PRIORITY order: high is drained
-  completely before default is looked at.
-
-  ⚠️  Which is also the failure mode: a permanently busy
-      high queue starves everything below it.
-
-  The usual split:
-
-    high      payments · password resets · anything a
-              person is waiting for
-    default   email · notifications · normal work
-    low       analytics · cleanup · reports · imports
-
-  And the sorting question is not how IMPORTANT the work
-  is. It is WHO IS WAITING.
-
-    a password reset   trivial work, somebody staring
-                       at an inbox
-    a monthly report   important work nobody is watching
-
-
-  Two notes:
-
-    Dedicated workers beat priorities for anything that
-    must not be delayed. A worker on --queue=high alone
-    can never be blocked; a shared worker with a priority
-    list can be mid-way through a long job.
-
-    Connection matters as much as queue. Routing a rare,
-    slow job to the database while everything else uses
-    Redis keeps ten thousand rows out of your fast path.`,
+  The trade is a delay: the work happens after the quiet
+  period. Invisible for a search index; not invisible
+  for something a user is waiting to see.`,
       codeExample: {
-        title: "Routing jobs, and declaring their behaviour",
+        title: "Wiring listeners, and getting them off the request",
         code: `<?php
-// In a test, the queue itself is assertable:
-// Queue::assertPushedOn('emails', SendInvoiceEmail::class);
+// ---------- Discovery: the type hint is the wiring ----------
 
-// ---------- Routing, in one place ----------
+namespace App\\Listeners;
+
+use App\\Events\\UserRegistered;
+
+class SendWelcomeEmail
+{
+    // This type hint is what registers the listener.
+    public function handle(UserRegistered $event): void
+    {
+        Mail::to($event->user)->send(new WelcomeEmail($event->user));
+    }
+}
+
+
+# What is actually listening to what:
+php artisan event:list
+
+
+<?php
+// ---------- Manual registration, when you want a list ----------
 
 // app/Providers/AppServiceProvider.php
 
-use Illuminate\\Support\\Facades\\Queue;
+use Illuminate\\Support\\Facades\\Event;
 
 public function boot(): void
 {
-    // Heavy, and nobody is waiting.
-    Queue::route(ProcessPodcast::class, connection: 'redis', queue: 'podcasts');
-    Queue::route(ImportCustomers::class, connection: 'redis', queue: 'imports');
+    Event::listen(UserRegistered::class, SendWelcomeEmail::class);
+    Event::listen(UserRegistered::class, CreateUserProfile::class);
+    Event::listen(UserRegistered::class, TrackRegistration::class);
 
-    // Somebody is staring at an inbox.
-    Queue::route(SendPasswordReset::class, connection: 'redis', queue: 'high');
-    Queue::route(ChargeCard::class, connection: 'redis', queue: 'high');
-
-    // Rare and slow: keep it off the fast path entirely.
-    Queue::route(GenerateAnnualReport::class, connection: 'database', queue: 'reports');
+    // Or a closure, for something trivial.
+    Event::listen(function (InvoicePaid $event) {
+        Log::info('Invoice paid', ['id' => $event->invoice->id]);
+    });
 }
-
-// One file that says where every kind of work goes.
-// The alternatives scatter it across job classes or
-// across dispatch sites, and one of those eventually
-// forgets.
 
 
 <?php
-// ---------- Attributes ----------
+// ---------- Queued, and inline, side by side ----------
 
-namespace App\\Jobs;
-
-use Illuminate\\Queue\\Attributes\\Backoff;
-use Illuminate\\Queue\\Attributes\\FailOnTimeout;
-use Illuminate\\Queue\\Attributes\\Timeout;
-use Illuminate\\Queue\\Attributes\\Tries;
-
-#[Tries(3)]
-#[Backoff(10)]
-#[Timeout(120)]
-class ProcessPodcast implements ShouldQueue
+// Instant, and the request should wait for it.
+class CreateUserProfile
 {
-    public function handle(): void
+    public function handle(UserRegistered $event): void
     {
-        // ...
+        $event->user->profile()->create(['bio' => '']);
     }
 }
 
-// A job talking to a flaky API: more attempts, growing
-// delay, and a timeout means give up rather than retry.
-#[Tries(5)]
-#[Backoff([10, 30, 60, 120])]
-#[Timeout(30)]
-#[FailOnTimeout]
-class SyncWithProvider implements ShouldQueue
+// Slow, and the request should not.
+class SendWelcomeEmail implements ShouldQueue
 {
-}
+    use InteractsWithQueue, Queueable;
 
-
-<?php
-// ---------- The older form, which still works ----------
-
-class ProcessPodcast implements ShouldQueue
-{
+    // A queued listener IS a job: all of yesterday applies.
     public int $tries = 3;
-    public int $backoff = 10;
-    public int $timeout = 120;
+    public array $backoff = [10, 30, 60];
+    public string $queue = 'emails';
+
+    public function handle(UserRegistered $event): void
+    {
+        Mail::to($event->user)->send(new WelcomeEmail($event->user));
+    }
+
+    public function failed(UserRegistered $event, \\Throwable $e): void
+    {
+        Log::error('Welcome email failed', ['user' => $event->user->id]);
+    }
 }
-
-// You will see both. The attributes put the behaviour
-// above the class, where it reads before the code does.
-
-
-# ---------- Workers that respect the split ----------
-
-# A priority order: high is drained before default.
-php artisan queue:work redis --queue=high,default,low
-
-# A dedicated worker for anything that must not wait.
-# It cannot be blocked by a long job on another queue.
-php artisan queue:work redis --queue=high
-
-# The heavy queue, with more workers and a longer timeout.
-php artisan queue:work redis --queue=podcasts --timeout=300
 
 
 <?php
-// ---------- Per-dispatch, when it is genuinely one-off ----------
+// ---------- The transaction race ----------
 
-GenerateReport::dispatch($user)->onQueue('reports');
+DB::transaction(function () use ($data) {
+    $user = User::create($data);
 
-ProcessPodcast::dispatch($podcast)
-    ->onConnection('redis')
-    ->onQueue('podcasts');
+    // Fires here, INSIDE the transaction. A queued
+    // listener can start and find no such user yet.
+    UserRegistered::dispatch($user);
+});
 
-// Fine for an exception. As the default mechanism, it
-// puts routing in every caller.`,
+// ✓ Wait for the commit.
+use Illuminate\\Contracts\\Events\\ShouldQueueAfterCommit;
+
+class SendWelcomeEmail implements ShouldQueue, ShouldQueueAfterCommit
+{
+}
+
+// A race that only appears under load, which is the
+// worst kind to find in production.
+
+
+<?php
+// ---------- Order is not guaranteed ----------
+
+// ❌ Three queued listeners are three independent jobs.
+//    The second may run before the first finishes.
+class GenerateInvoicePdf implements ShouldQueue {}
+class EmailInvoicePdf implements ShouldQueue {}     // needs the PDF
+
+// ✓ That is a chain, from yesterday.
+Bus::chain([
+    new GenerateInvoicePdf($invoice),
+    new EmailInvoicePdf($invoice),
+])->dispatch();
+
+
+<?php
+// ---------- Debounced ----------
+
+// Somebody editing a form fires this three times in five
+// seconds, and only the last one matters.
+class ReindexProfile implements ShouldQueue
+{
+    public function handle(ProfileUpdated $event): void
+    {
+        Search::index($event->user);
+    }
+}
+
+// Collapsing the rapid repeats into one run suits
+// indexing, cache rebuilding and synchronisation:
+// re-running is wasteful rather than wrong.
+//
+// The trade is a delay. Fine for a search index; not
+// fine for something a user is waiting to see.`,
       },
       keyTakeaways: [
-        "<b>One queue for everything means urgent work waits behind bulk work.</b>",
-        "<b>Separate queues let workers specialise</b>, so an email queue is never blocked by an import.",
-        "<b>`Queue::route()` declares a job's connection and queue in one place</b>, rather than in every job or every caller.",
-        "Setting `$queue` per job scatters routing; setting it per dispatch means a caller eventually forgets.",
-        "<b>`#[Tries]`, `#[Backoff]`, `#[Timeout]` and `#[FailOnTimeout]` put job behaviour above the class.</b>",
-        "The equivalent properties still work, and you will see both forms.",
-        "<b>`--queue=high,default,low` is a priority order</b>, draining each queue before the next.",
-        "<b>A permanently busy high queue starves the ones below it</b>, which is the failure mode of priorities.",
-        "<b>What sorts a job is who is waiting, not how important the work is.</b>",
-        "<b>A dedicated worker beats a priority list</b> for anything that must never be delayed.",
+        "<b>Laravel discovers a listener from the event type hint on its `handle()` method.</b>",
+        "<b>Discovery means nothing lists an event's consequences</b>, so `php artisan event:list` is worth knowing.",
+        "<b>Manual registration puts every wiring in one auditable file</b>, which suits unusual or important cases.",
+        "<b>`ShouldQueue` on a listener moves it to the queue</b>, so the user does not wait for it.",
+        "<b>An event decouples and a queue defers</b>: they solve different problems and compose.",
+        "One listener can be queued while its siblings stay inline, which is usually the right split.",
+        "<b>A queued listener is a job</b>: serialised, retryable, failable, and visible in `failed_jobs`.",
+        "<b>Order is not guaranteed between queued listeners</b>; dependent steps are a chain, not listeners.",
+        "<b>Events inside a transaction fire before the commit</b>, so a queued listener needs `ShouldQueueAfterCommit`.",
+        "<b>Debouncing collapses rapid repeated events into one run</b>, at the cost of a delay.",
       ],
       commonMistakes: [
-        "<b>Putting every job on one queue.</b> A password reset waits behind ten thousand imports.",
-        "<b>Routing at each dispatch site.</b> One caller forgets, and that job lands on the default queue.",
-        "<b>Sorting queues by importance rather than by who is waiting.</b> A monthly report is important and nobody is watching.",
-        "<b>Relying on a priority list for urgent work.</b> The worker may be mid-way through a long job when it arrives.",
-        "<b>Creating queues nothing is listening to.</b> The job waits forever, exactly as in the last lesson.",
+        "<b>Relying on discovery and then not knowing what fires.</b> `event:list` or manual registration answers it.",
+        "<b>Queueing every listener.</b> Instant work belongs in the request, where its failure is visible.",
+        "<b>Depending on the order of queued listeners.</b> They are independent jobs; use a chain.",
+        "<b>Dispatching inside a transaction without `ShouldQueueAfterCommit`.</b> The listener may find nothing there.",
+        "<b>Debouncing something a user is waiting for.</b> The delay is the whole mechanism.",
       ],
       quiz: [
         {
-          question: "What problem do separate queues solve?",
+          question: "How does Laravel know which event a listener handles?",
           options: [
-            "Slow jobs",
-            "Urgent work waiting behind bulk work on a single shared queue",
-            "Failed jobs",
-            "Memory use",
+            "From the class name",
+            "From the event type hint on `handle()`",
+            "From a config file only",
+            "From the directory",
           ],
           correctIndex: 1,
-          explanation: "Workers can then specialise per queue.",
+          explanation: "Which is convenient, and means nothing lists an event's consequences.",
         },
         {
-          question: "What does `Queue::route()` improve on?",
+          question: "What does `ShouldQueue` on a listener change?",
           options: [
-            "Dispatch performance",
-            "Routing scattered across job classes or across every dispatch site",
-            "Retry behaviour",
-            "Failure handling",
+            "The listener runs first",
+            "It runs on the queue, so the request does not wait for it",
+            "It runs after the response",
+            "It is retried automatically only",
           ],
           correctIndex: 1,
-          explanation: "One file you can read and audit.",
+          explanation: "The event decouples; the queue defers.",
         },
         {
-          question: "What does `--queue=high,default,low` mean?",
+          question: "Two queued listeners must run in order. What should you use?",
           options: [
-            "Three separate workers",
-            "A priority order: `high` is drained before `default` is looked at",
-            "Round-robin between them",
-            "Only `high` is processed",
+            "Listener priorities",
+            "A chain, because queued listeners are independent jobs",
+            "A debounce",
+            "Manual registration",
           ],
           correctIndex: 1,
-          explanation: "Which also means a busy `high` queue can starve the rest.",
+          explanation: "Nothing guarantees the order in which independent jobs run.",
         },
         {
-          question: "What decides which queue a job belongs on?",
+          question: "Why can a queued listener fail to find a model that was just created?",
           options: [
-            "How long it takes",
-            "Who is waiting for it",
-            "How often it runs",
-            "Which model it touches",
+            "The queue is slow",
+            "The event fired inside a transaction that had not committed yet",
+            "The model was serialised wrongly",
+            "The worker cached it",
           ],
           correctIndex: 1,
-          explanation: "A password reset is trivial work somebody is watching; a report is not.",
+          explanation: "`ShouldQueueAfterCommit` waits for the commit.",
         },
       ],
     },
     {
-      id: "retries-backoff-timeouts",
-      title: "Retries, backoff, timeouts & permanent failures",
-      durationMinutes: 12,
-      explanation: "A job that always works needs none of this. Everything here is about the other kind.\n\n---\n\n### 1. Basic — retries\n\n```text\ncall an API\n     ↓\nnetwork error\n     ↓\nretry\n```\n\nA worker can attempt a job several times before giving up:\n\n```php\n#[Tries(3)]\n```\n\nAnd the important question is not how many, it is <b>why did it fail?</b>\n\n```text\na temporary network failure    retrying works\nan invalid database record     retrying changes nothing\na programming bug              retrying changes nothing,\n                                 three times\n```\n\n<b>Retrying a permanent failure is not harmless.</b> It occupies a worker three times, delays every other job, and buries the real error under three identical stack traces.\n\nDay 22 made the same point about HTTP retries, and it has the same answer: retry transient failures, and fail fast on everything else.\n\n---\n\n### 2. Intermediate — backoff and timeouts\n\nRetrying immediately is worse than not retrying:\n\n```text\nfail → retry → fail → retry → fail\n```\n\nThat is three requests in a hundred milliseconds at a service that is already struggling, which is how a slow dependency becomes a dead one.\n\n<b>Backoff waits, and waits longer each time:</b>\n\n```text\nfail → wait 10s → retry → wait 30s → retry → wait 60s → retry\n```\n\n```php\n#[Backoff([10, 30, 60])]\n```\n\nThe growing delay is the point: it gives whatever broke time to recover, and it stops your workers being the reason it cannot.\n\n<b>A timeout stops a job hanging forever:</b>\n\n```text\njob starts\n   ↓\nan HTTP call that never answers\n   ↓\nthe worker is stuck\n```\n\n```php\n#[Timeout(120)]\n```\n\nWithout one, a single hung job holds a worker indefinitely. Enough of those and every worker is stuck on nothing.\n\n<b>Set it from the work, not from fear.</b> A ninety-second job with a one-hour timeout means an hour before anybody notices it hung. And <b>the worker's `--timeout` must be shorter than the driver's `retry_after`</b>, or the queue hands the job to a second worker while the first is still running it.\n\n---\n\n### 3. Advanced — telling the two kinds apart\n\nSome failures should stop immediately:\n\n```text\ninvalid input\npermission denied\na permanent business rule violation\na record that no longer exists\n```\n\n<b>Retrying those is three attempts at the same wrong answer.</b>\n\n```text\ntransient failure  →  retry\npermanent failure  →  fail immediately\n```\n\nLaravel gives you several ways to say which is which:\n\n```php\npublic function failOnException(): array\n{\n    return [InvalidInputException::class];\n}\n```\n\nor `$this->fail($e)` inside `handle()`, or `release()` to put a job back deliberately.\n\nAnd two more limits worth knowing.\n\n<b>`retryUntil()` sets a deadline instead of a count</b>, which is often what you actually mean: \"keep trying for an hour\" rather than \"try five times\", because five attempts with growing backoff could be four minutes or four hours.\n\n<b>`maxExceptions` limits failures separately from attempts</b>, which matters for a long-running job that releases itself.\n\nThe judgement that ties it together, and it is the one that separates a queue that works from one that hurts:\n\n```text\nWill retrying this produce a different result?\n\n  yes  →  retry, with backoff\n  no   →  fail now, loudly, with the real error visible\n```\n\nAnd the second half of that: <b>a retried job must be safe to run twice.</b> If attempt one charged a card and then timed out, attempt two charges it again. Idempotency is not a separate topic from retries; it is the thing that makes retries safe.",
-      diagram: `Retries
+      id: "subscribers-and-model-events",
+      title: "Subscribers, and model events versus domain events",
+      durationMinutes: 10,
+      explanation: "Grouping listeners, and a naming decision that shapes how an application reads.\n\n---\n\n### 1. Basic — subscribers\n\nFour listeners for four events in the same area means four files:\n\n```text\nListener A · Listener B · Listener C · Listener D\n```\n\n<b>A <i>subscriber</i></b> puts them in one class:\n\n```text\nUserEventSubscriber\n ├── user registered\n ├── user logged in\n ├── user updated\n └── user deleted\n```\n\n```php\nclass UserEventSubscriber\n{\n    public function subscribe(Dispatcher $events): array\n    {\n        return [\n            UserRegistered::class => 'onRegistered',\n            UserDeleted::class    => 'onDeleted',\n        ];\n    }\n}\n```\n\n<b>The gain is that the whole area is readable in one place</b>, which is exactly what discovery costs you. Four separate listeners are four files to find; one subscriber is one file that lists what it reacts to.\n\nThe cost is that a subscriber cannot be queued as a unit: each handler is inline unless you dispatch a job from it. So a subscriber suits cheap, related reactions, and slow work still wants its own queued listener.\n\n---\n\n### 2. Intermediate — model events are events too\n\nDay 14's model lifecycle:\n\n```text\ncreating · created · updating · updated\nsaving · saved · deleting · deleted\n```\n\nThose are events, dispatched by Eloquent. Which raises a fair question: <b>if `User::created` already fires, why write `UserRegistered`?</b>\n\nBecause they mean different things:\n\n```text\nUser was created           an Eloquent fact\nUserRegistered             a business fact\n```\n\nA `User` row is created by registration, by an admin adding somebody, by an import, by a seeder and by a test factory. <b>Only one of those is a registration</b>, and a listener on `created` cannot tell them apart.\n\n```php\nprotected $dispatchesEvents = [\n    'created' => UserCreated::class,\n];\n```\n\nmaps one to the other when that is genuinely what you want. Usually it is not.\n\n---\n\n### 3. Advanced — naming for the domain\n\nThe deeper version of the same point:\n\n```text\nUserUpdated             generic. Which field? Why?\nSubscriptionUpgraded    a thing the business does\n```\n\n<b>A generic event forces every listener to work out whether it cares.</b> A listener on `UserUpdated` starts with \"was it the plan that changed, and did it go up?\", and that logic is now in the listener rather than in the thing that knew.\n\n```php\nif ($user->wasChanged('plan_id') && $user->plan->tier > $previous->tier) {\n    // ...\n}\n```\n\nrepeated in three listeners, each with its own version of the check.\n\n<b>The code that made the change knows what the change meant.</b> Dispatch `SubscriptionUpgraded` there, and the listeners are three lines with no conditions.\n\nWhich gives a rule worth carrying:\n\n```text\nmodel events        infrastructure: timestamps, slugs,\n                    cache invalidation, audit rows\n\ndomain events       business facts: registered, upgraded,\n                    cancelled, paid, shipped\n```\n\nModel events for the things that are true of every row however it arrived. Domain events for the things that happened for a reason.\n\nAnd the pragmatic note, because this can be overdone: <b>a small application does not need a domain event for every state change.</b> Start with a direct call, promote to an event when there is a second consumer, and name it after what happened rather than after the model that changed.",
+      diagram: `Subscribers
 
-    call an API → network error → retry
+  Four listeners in the same area, four files:
 
-    #[Tries(3)]
+    Listener A · B · C · D
 
-  The question is not how many. It is WHY did it fail?
+  A subscriber puts them together:
 
-    a temporary network failure   retrying works
-    an invalid database record    retrying changes nothing
-    a programming bug             retrying changes nothing,
-                                    three times
+    UserEventSubscriber
+     ├── user registered
+     ├── user logged in
+     ├── user updated
+     └── user deleted
 
-  ⚠️  Retrying a permanent failure is not harmless. It
-      occupies a worker three times, delays every other
-      job, and buries the real error under three
-      identical stack traces.
+  The gain is that the whole AREA is readable in one
+  place — which is what discovery costs you. Four
+  listeners are four files to find; one subscriber lists
+  what it reacts to.
 
-
-Backoff
-
-  Retrying immediately is worse than not retrying:
-
-    fail → retry → fail → retry → fail
-
-  Three requests in a hundred milliseconds, at a service
-  already struggling. That is how a slow dependency
-  becomes a dead one.
-
-    fail → wait 10s → retry → wait 30s → retry
-         → wait 60s → retry
-
-    #[Backoff([10, 30, 60])]
-
-  The growing delay gives whatever broke time to
-  recover, and stops your workers being the reason it
-  cannot.
+  The cost: it cannot be queued as a unit. Each handler
+  is inline unless it dispatches a job. Cheap related
+  reactions suit a subscriber; slow work still wants its
+  own queued listener.
 
 
-Timeouts
+Model events are events too
 
-    job starts → an HTTP call that never answers
-               → the worker is stuck
+  creating · created · updating · updated
+  saving · saved · deleting · deleted
 
-    #[Timeout(120)]
+  So if User::created already fires, why write
+  UserRegistered?
 
-  Without one, a single hung job holds a worker
-  indefinitely. Enough of those and every worker is
-  stuck on nothing.
+    User was created    an ELOQUENT fact
+    UserRegistered      a BUSINESS fact
 
-  Set it from the WORK, not from fear. A ninety-second
-  job with a one-hour timeout means an hour before
-  anybody notices it hung.
+  A User row is created by registration, by an admin
+  adding somebody, by an import, by a seeder and by a
+  test factory.
 
-  ⚠️  The worker's --timeout must be SHORTER than the
-      driver's retry_after, or the queue hands the job
-      to a second worker while the first is still
-      running it.
+  Only one of those is a registration, and a listener on
+  created cannot tell them apart.
 
 
-Telling the two kinds apart
+Naming for the domain
 
-    invalid input · permission denied
-    a permanent rule violation · a record that is gone
+    UserUpdated            generic. Which field? Why?
+    SubscriptionUpgraded   a thing the business does
 
-  Retrying those is three attempts at the same wrong
-  answer.
+  A generic event forces every listener to work out
+  whether it cares:
 
-    transient  →  retry
-    permanent  →  fail immediately
+    if (\$user->wasChanged('plan_id')
+        && \$user->plan->tier > \$previous->tier) { ... }
 
-    failOnException()   these exceptions stop the job
-    \$this->fail(\$e)     stop, from inside handle()
-    release()           put it back, deliberately
+  repeated in three listeners, each with its own version
+  of the check.
 
-  retryUntil()    a DEADLINE instead of a count, which
-                  is often what you meant: "keep trying
-                  for an hour" rather than "five times",
-                  because five attempts with backoff
-                  could be four minutes or four hours
-
-  maxExceptions   limits failures separately from
-                  attempts, for a job that releases
-                  itself
+  The code that MADE the change knows what the change
+  meant. Dispatch SubscriptionUpgraded there, and the
+  listeners are three lines with no conditions.
 
 
-The judgement
+The rule
 
-    Will retrying this produce a different result?
+  model events    infrastructure: timestamps, slugs,
+                  cache invalidation, audit rows
+                  — true of every row, however it arrived
 
-      yes  →  retry, with backoff
-      no   →  fail now, loudly, with the real error visible
+  domain events   business facts: registered, upgraded,
+                  cancelled, paid, shipped
+                  — things that happened for a reason
 
 
-  And the second half:
+  And the pragmatic note: a small application does not
+  need a domain event for every state change.
 
-    A retried job must be SAFE TO RUN TWICE.
-
-  If attempt one charged a card and then timed out,
-  attempt two charges it again.
-
-  Idempotency is not a separate topic from retries.
-  It is what makes retries safe.`,
+    start with a direct call
+    promote to an event when there is a second consumer
+    name it after what HAPPENED, not after the model`,
       codeExample: {
-        title: "Failing well",
+        title: "One class per area, and events that mean something",
         code: `<?php
+// ---------- A subscriber ----------
 
-namespace App\\Jobs;
+namespace App\\Listeners;
 
-use App\\Exceptions\\InvalidPodcastException;
-use Illuminate\\Http\\Client\\ConnectionException;
-use Illuminate\\Queue\\Attributes\\Backoff;
-use Illuminate\\Queue\\Attributes\\Timeout;
-use Illuminate\\Queue\\Attributes\\Tries;
+use App\\Events\\UserDeleted;
+use App\\Events\\UserRegistered;
+use Illuminate\\Events\\Dispatcher;
 
-#[Tries(5)]
-#[Backoff([10, 30, 60, 120])]   // growing, not fixed
-#[Timeout(120)]                  // from the work, not from fear
-class SyncWithProvider implements ShouldQueue
+class UserEventSubscriber
 {
-    use Queueable;
+    public function onRegistered(UserRegistered $event): void
+    {
+        Analytics::track('registered', $event->user->id);
+    }
 
-    public function __construct(public Customer $customer) {}
+    public function onDeleted(UserDeleted $event): void
+    {
+        Analytics::track('deleted', $event->user->id);
+    }
 
-    // Retrying these produces the same wrong answer.
-    public function failOnException(): array
+    public function subscribe(Dispatcher $events): array
     {
         return [
-            InvalidPodcastException::class,
-            AuthorizationException::class,
+            UserRegistered::class => 'onRegistered',
+            UserDeleted::class    => 'onDeleted',
         ];
     }
+}
 
-    // Often what you actually meant: keep trying for an
-    // hour, rather than five times.
-    public function retryUntil(): DateTime
+// One file listing what this area reacts to, rather than
+// four files to find. Each handler is inline, so slow
+// work still belongs in its own queued listener.
+
+
+<?php
+// ---------- Model events: infrastructure ----------
+
+class Post extends Model
+{
+    protected static function booted(): void
     {
-        return now()->addHour();
-    }
+        // True of every post, however it was created.
+        static::creating(fn (Post $post) => $post->slug = Str::slug($post->title));
 
-    public function handle(): void
-    {
-        // Safe to run twice: attempt one may have
-        // succeeded and then timed out.
-        if ($this->customer->synced_at?->isAfter(now()->subHour())) {
-            return;
-        }
-
-        $response = Http::timeout(30)
-            ->withToken(config('services.provider.token'))
-            ->post('/customers', $this->customer->toSyncPayload());
-
-        // Permanent: stop now, with the real error visible.
-        if ($response->status() === 422) {
-            $this->fail(new InvalidPodcastException($response->body()));
-
-            return;
-        }
-
-        // Transient: back off and try again later.
-        if ($response->status() === 429) {
-            $this->release(60);
-
-            return;
-        }
-
-        $response->throw();
-
-        $this->customer->update(['synced_at' => now()]);
-    }
-
-    public function failed(\\Throwable $e): void
-    {
-        // Runs after the final attempt.
-        $this->customer->update(['sync_error' => $e->getMessage()]);
+        static::saved(fn (Post $post) => Cache::forget("post:{$post->id}"));
     }
 }
 
 
 <?php
-// ---------- Why the failure kind matters ----------
+// ---------- Why a domain event is different ----------
 
-// ❌ A validation error, retried five times with backoff.
-//    Four minutes of worker time, five identical stack
-//    traces, and the real error buried.
+// A User row is created by:
+//   registration · an admin adding somebody
+//   an import · a seeder · a test factory
+//
+// A listener on created cannot tell them apart, and
+// only one of them is a registration.
 
-// ✓ failOnException() stops at the first attempt, and
-//    the error is the first thing in the log.
+// ❌ Every seeded user now gets a welcome email.
+static::created(fn (User $user) => Mail::to($user)->send(new WelcomeEmail($user)));
 
-
-<?php
-// ---------- Backoff shapes ----------
-
-#[Backoff(10)]                    // 10s each time
-#[Backoff([10, 30, 60])]          // growing, then 60s
-                                   // for the rest
-
-// Growing is almost always right: a fixed delay still
-// hammers a struggling service, just more slowly.
-
-
-# ---------- The timeout relationship ----------
-
-# The worker's timeout must be SHORTER than the driver's
-# retry_after, or the queue reassigns a job that is
-# still running.
-
-# config/queue.php
-#   'redis' => ['retry_after' => 90]
-
-php artisan queue:work --timeout=60      # ✓ 60 < 90
-php artisan queue:work --timeout=120     # ❌ the job runs twice
-
-
-<?php
-// ---------- Idempotency is what makes retries safe ----------
-
-// ❌ Attempt one charged the card, then the response was
-//    lost and the job timed out. Attempt two charges again.
-public function handle(): void
+// ✓ Dispatched by the thing that knows.
+public function register(Request $request)
 {
-    $this->gateway->charge($this->invoice->total);
-    $this->invoice->update(['status' => 'paid']);
+    $user = User::create($request->validated());
+
+    UserRegistered::dispatch($user);
 }
 
-// ✓
-public function handle(): void
+
+<?php
+// ---------- Generic events push logic into listeners ----------
+
+// ❌ Every listener starts by working out whether it cares.
+class HandleUserUpdate
 {
-    if ($this->invoice->status === 'paid') {
-        return;
+    public function handle(UserUpdated $event): void
+    {
+        if (! $event->user->wasChanged('plan_id')) {
+            return;
+        }
+
+        if ($event->user->plan->tier <= $event->previousTier) {
+            return;
+        }
+
+        // ...and that check is repeated in two other listeners.
     }
+}
 
-    $this->gateway->charge(
-        $this->invoice->total,
-        idempotencyKey: $this->invoice->uuid,   // Day 22
-    );
+// ✓ The code that made the change knows what it meant.
+public function upgrade(User $user, Plan $plan): void
+{
+    $previous = $user->plan;
 
-    $this->invoice->update(['status' => 'paid']);
-}`,
+    $user->update(['plan_id' => $plan->id]);
+
+    if ($plan->tier > $previous->tier) {
+        SubscriptionUpgraded::dispatch($user, $previous, $plan);
+    }
+}
+
+// And the listener is three lines with no conditions:
+class SendUpgradeThanks
+{
+    public function handle(SubscriptionUpgraded $event): void
+    {
+        Mail::to($event->user)->send(new UpgradeThanks($event->plan));
+    }
+}
+
+
+<?php
+// ---------- Mapping a model event, when you do want one ----------
+
+class Order extends Model
+{
+    protected $dispatchesEvents = [
+        'created' => OrderCreated::class,
+    ];
+}
+
+// Reasonable when "an order row exists" really is the
+// business fact. Usually the business fact is
+// OrderPlaced, and it happens somewhere more specific.`,
       },
       keyTakeaways: [
-        "<b>The question is not how many retries, but whether retrying will produce a different result.</b>",
-        "<b>Retrying a permanent failure occupies a worker repeatedly</b> and buries the real error under identical traces.",
-        "<b>Backoff waits between attempts, and a growing delay lets a struggling dependency recover.</b>",
-        "Retrying immediately is worse than not retrying, because it adds load to something already failing.",
-        "<b>A timeout stops one hung job from holding a worker indefinitely.</b>",
-        "<b>Set the timeout from the work</b>, because an hour-long timeout on a ninety-second job hides a hang for an hour.",
-        "<b>The worker's `--timeout` must be shorter than the driver's `retry_after`</b>, or the job runs twice at once.",
-        "<b>`failOnException()` and `$this->fail()` stop a job that cannot succeed</b>, and `release()` puts one back deliberately.",
-        "<b>`retryUntil()` sets a deadline rather than a count</b>, which is often what you actually meant.",
-        "<b>A retried job must be safe to run twice</b>: idempotency is what makes retries safe, not a separate topic.",
+        "<b>A subscriber groups several event handlers into one class</b>, so an area is readable in one file.",
+        "That is what discovery costs you: four listeners are four files to find.",
+        "<b>A subscriber cannot be queued as a unit</b>, so slow work still belongs in its own queued listener.",
+        "<b>Eloquent's lifecycle events are events too</b>, dispatched for every row however it was created.",
+        "<b>A `User` row is created by registration, an admin, an import, a seeder and a factory</b>, and `created` cannot tell them apart.",
+        "<b>A model event is an Eloquent fact; a domain event is a business fact.</b>",
+        "<b>A generic event pushes the \"do I care\" logic into every listener</b>, repeated and slightly different each time.",
+        "<b>The code that made the change knows what it meant</b>, so dispatch the specific event there.",
+        "<b>Model events suit infrastructure</b>: slugs, cache invalidation, audit rows.",
+        "<b>Domain events suit business facts</b>: registered, upgraded, cancelled, paid, shipped.",
+        "Start with a direct call and promote to an event when a second consumer appears.",
       ],
       commonMistakes: [
-        "<b>Retrying every failure.</b> A validation error retried five times is four minutes of worker time and a buried error.",
-        "<b>Retrying with no backoff.</b> Three requests in a hundred milliseconds finishes off a struggling service.",
-        "<b>Running jobs with no timeout.</b> One hung HTTP call occupies a worker forever.",
-        "<b>Setting the worker timeout above `retry_after`.</b> The queue hands the job to a second worker mid-run.",
-        "<b>Enabling retries on a job that is not idempotent.</b> The first attempt charged the card; the second charges it again.",
+        "<b>Sending a welcome email from a `created` model event.</b> Every seeded and imported user gets one too.",
+        "<b>Dispatching `UserUpdated` and filtering in the listener.</b> The same check is repeated and drifts.",
+        "<b>Putting slow work in a subscriber.</b> Each handler runs inline, so the request waits.",
+        "<b>Naming an event after the model rather than the fact.</b> `SubscriptionUpgraded` says something; `UserUpdated` does not.",
+        "<b>Creating a domain event for every state change in a small application.</b> A direct call is clearer until there are two consumers.",
       ],
       quiz: [
         {
-          question: "What decides whether a job should be retried?",
+          question: "What does a subscriber give you?",
           options: [
-            "How long it takes",
-            "Whether retrying could produce a different result",
-            "How many workers are free",
-            "Which queue it is on",
+            "Queued listeners",
+            "Several event handlers in one class, so an area is readable in one file",
+            "Automatic registration",
+            "Priority ordering",
           ],
           correctIndex: 1,
-          explanation: "A permanent failure retried is the same wrong answer, three times.",
+          explanation: "Which is what discovery across four separate listeners costs.",
         },
         {
-          question: "Why does backoff grow between attempts?",
+          question: "Why not send a welcome email from the `created` model event?",
           options: [
-            "To reduce database load",
-            "To give a struggling dependency time to recover instead of adding load",
-            "Laravel requires it",
-            "To spread jobs across workers",
+            "It is slower",
+            "Rows are also created by imports, seeders and factories, and `created` cannot tell them apart",
+            "Model events cannot send mail",
+            "It runs twice",
           ],
           correctIndex: 1,
-          explanation: "Retrying immediately is how a slow service becomes a dead one.",
+          explanation: "Registration is a business fact; row creation is not.",
         },
         {
-          question: "Why must a worker's `--timeout` be shorter than `retry_after`?",
+          question: "What is wrong with a generic `UserUpdated` event?",
           options: [
-            "For memory",
-            "Otherwise the queue reassigns the job while the first worker is still running it",
-            "It is a config requirement",
-            "To allow backoff",
+            "It is too slow",
+            "Every listener has to work out whether it cares, repeating the same drifting check",
+            "It cannot be queued",
+            "Nothing",
           ],
           correctIndex: 1,
-          explanation: "The job then runs twice, concurrently.",
+          explanation: "The code that made the change already knew what it meant.",
         },
         {
-          question: "What makes retries safe?",
+          question: "What are model events best suited to?",
           options: [
-            "Backoff",
-            "The job being idempotent, so running it twice has the same effect as once",
-            "A short timeout",
-            "A high `tries` value",
+            "Business workflows",
+            "Infrastructure: slugs, cache invalidation, audit rows",
+            "Sending notifications",
+            "Anything that must be queued",
           ],
           correctIndex: 1,
-          explanation: "Otherwise attempt two charges the card attempt one already charged.",
+          explanation: "Things true of every row, however it arrived.",
         },
       ],
     },
     {
-      id: "unique-and-rate-limited",
-      title: "Unique jobs & rate limiting",
-      durationMinutes: 10,
-      explanation: "Two ways of controlling how much work reaches the queue, and how fast it leaves.\n\n---\n\n### 1. Basic — the duplicate problem\n\n```php\nGenerateReport::dispatch($user);\n```\n\nFive requests arrive at once. Five identical jobs:\n\n```text\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\n```\n\nFive workers building the same report, four of them for nothing. And if the job writes, they may write over each other.\n\n<b>A <i>unique job</i></b> refuses to queue while one with the same key is already pending:\n\n```php\nclass GenerateReport implements ShouldQueue, ShouldBeUnique\n{\n    public function uniqueId(): string\n    {\n        return $this->user->id;\n    }\n}\n```\n\nNow the second dispatch is silently ignored. <b>Silently is the word to notice</b>: nothing errors, and nothing tells the caller their dispatch did nothing.\n\nWhat it suits:\n\n```text\nimports · report generation\nsynchronisation · recalculating something derived\n```\n\nAnything where doing it once is the same as doing it five times, and doing it five times is a waste.\n\n---\n\n### 2. Intermediate — the details that matter\n\n<b>Uniqueness is held by a lock, and a lock needs a lifetime:</b>\n\n```php\npublic int $uniqueFor = 3600;\n```\n\nWithout one, a job that dies in a way that skips its cleanup can leave a lock behind, and then <i>nothing</i> queues until it expires. Which is a hard failure to diagnose, because nothing is failing: dispatches simply do nothing.\n\n<b>The lock is released when the job starts by default</b>, so a second dispatch while the first is running is allowed. `ShouldBeUniqueUntilProcessing` is the explicit version of that, and plain `ShouldBeUnique` holds it until the job finishes.\n\n```text\nShouldBeUnique                   until it finishes\nShouldBeUniqueUntilProcessing    until it starts\n```\n\nWhich you want depends on whether a change during processing should produce another run.\n\n<b>And uniqueness needs a cache the workers share.</b> On the `array` driver it does nothing, and with several servers each has its own lock unless the cache is shared, exactly as with rate limiting on Day 21.\n\n---\n\n### 3. Advanced — rate limiting\n\nAn API says:\n\n```text\n100 requests per minute\n```\n\nAnd your queue has five thousand jobs, each making one call. Four workers will happily send them as fast as they can:\n\n```text\nWorker → rate limiter → API\n```\n\n<b>Without a limit, you get throttled, and then every one of those jobs fails and retries</b>, which sends even more requests. A rate limit is not politeness, it is what stops a queue turning a limit into an outage.\n\n```php\nRateLimiter::for('provider-api', fn () => Limit::perMinute(100));\n```\n\n```php\npublic function middleware(): array\n{\n    return [new RateLimited('provider-api')];\n}\n```\n\n<b>A rate-limited job that cannot run right now is released back to the queue</b>, not failed. So it waits and tries again, which is why the delay matters more than it looks: released too eagerly and the job bounces between the queue and the limiter thousands of times.\n\nThe other middleware worth knowing:\n\n```text\nRateLimited            fewer than N per period\nWithoutOverlapping     one at a time, per key\nSkipIfBatchCancelled   stop when the batch was cancelled\n```\n\n<b>`WithoutOverlapping` is the one people need and do not know exists.</b> Two jobs recalculating the same invoice concurrently is a race, and a key of `invoice-{id}` makes them queue behind each other rather than fight.\n\nWhich gives the pair a clean split:\n\n```text\nunique             do not queue the same work twice\nWithoutOverlapping do not RUN the same work twice at once\nRateLimited        do not run it faster than something else can take\n```",
-      diagram: `The duplicate problem
+      id: "scheduling",
+      title: "Task scheduling — frequencies & constraints",
+      durationMinutes: 11,
+      explanation: "Events react to something happening. The scheduler handles work that happens because of the time.\n\n---\n\n### 1. Basic — one cron entry\n\nWithout Laravel, every recurring task is a crontab line:\n\n```text\n0 2 * * *   php /var/www/artisan report:daily\n*/15 * * * * php /var/www/artisan sync:customers\n0 * * * *   php /var/www/artisan cache:warm\n```\n\nWhich lives on a server, outside your repository, unreviewed and undiscoverable. Somebody adds one during an incident and nobody knows about it two years later.\n\n<b>Laravel inverts it: one cron entry, and the schedule lives in your code:</b>\n\n```text\nsystem cron (every minute)\n        ↓\nLaravel scheduler\n        ↓\nyour scheduled tasks\n```\n\n```php\n// routes/console.php\n\nSchedule::job(GenerateDailyReport::class)->daily();\n```\n\n<b>Now the schedule is in version control</b>, reviewed like anything else, and visible to everybody.\n\n---\n\n### 2. Intermediate — schedule a job, not the work\n\n```php\nSchedule::job(GenerateDailyReport::class)->dailyAt('02:00');\n```\n\n```text\nScheduler → Queue → Worker → the heavy work\n```\n\nThat indirection is the good architecture, and it is worth being deliberate about.\n\n<b>The scheduler process should decide <i>when</i>, and a worker should do the work.</b> A `Schedule::call()` containing an hour of report generation blocks the scheduler for an hour, so nothing else scheduled in that hour runs on time. Dispatching a job takes a millisecond.\n\nThe three forms:\n\n```text\nSchedule::job(...)        dispatch a queued job     ← usually this\nSchedule::command(...)    run an Artisan command\nSchedule::call(...)       run a closure, inline\n```\n\nAnd the frequencies:\n\n```text\neveryMinute() · everyFiveMinutes() · hourly()\ndaily() · dailyAt('02:00') · weekly() · monthly()\nweeklyOn(1, '8:00') · cron('0 2 * * *')\n```\n\n<b>Prefer a specific time to `daily()`</b>, because `daily()` means midnight, and everything else defaulting to midnight means everything runs at once.\n\n---\n\n### 3. Advanced — constraints and hooks\n\nA schedule can carry conditions:\n\n```php\nSchedule::job(SendInvoiceReminders::class)\n    ->weekdays()\n    ->at('09:00')\n    ->timezone('Asia/Kathmandu')\n    ->environments(['production']);\n```\n\n```text\nweekdays · weekends · mondays() · sundays()\nbetween('9:00', '17:00') · unlessBetween(...)\nwhen(fn () => ...) · skip(fn () => ...)\ntimezone(...) · environments([...])\n```\n\n<b>Which lets the schedule express a business rule rather than hiding it in the task.</b> \"Reminders on weekdays at nine\" belongs next to the schedule; a task that starts by checking whether today is a Saturday has that rule buried in it.\n\n<b>`timezone()` is not optional for anything user-facing.</b> A server on UTC running a nine o'clock reminder sends it at a quarter to three in the afternoon in Kathmandu, and the bug report will say \"the emails arrive at a weird time\".\n\n<b>And `environments()` matters more than it looks.</b> Without it, a staging environment sharing a database happily sends the same invoice reminders your production environment does. That is a real incident, and one line prevents it.\n\nHooks run around a task:\n\n```php\n->before(fn () => Log::info('starting'))\n->after(fn () => Log::info('done'))\n->onSuccess(fn () => ...)\n->onFailure(fn () => Notification::route(...))\n```\n\n<b>`onFailure()` is the one to actually use.</b> A scheduled task that stops working fails silently by definition: nobody is watching, nothing is broken on the site, and you find out when somebody asks where last month's report went.\n\nTwo practical details. <b>A scheduled command can take arguments</b>, passed as an array:\n\n```php\nSchedule::command('queue:prune-failed', ['--hours=168'])->weekly();\n```\n\nAnd <b>its output goes nowhere by default</b>, which is why a scheduled task that prints something useful prints it into the void:\n\n```php\nSchedule::command('reports:generate')\n    ->daily()\n    ->appendOutputTo(storage_path('logs/reports.log'))\n    ->emailOutputOnFailure('ops@example.com');\n```\n\n```text\nsendOutputTo()          overwrite a file\nappendOutputTo()        add to it\nemailOutputTo()         email it every time\nemailOutputOnFailure()  email it only when it fails\n```\n\n<b>`emailOutputTo()` on a task that runs every minute is a mailbox nobody reads within a week</b>, so the failure-only variant is almost always the one you want.",
+      diagram: `One cron entry
 
-    GenerateReport::dispatch(\$user)   × 5 requests
+  Without Laravel, every recurring task is a crontab line:
 
-    GenerateReport 123
-    GenerateReport 123
-    GenerateReport 123     five workers, one report,
-    GenerateReport 123     four of them for nothing
-    GenerateReport 123
+    0 2 * * *    php artisan report:daily
+    */15 * * * * php artisan sync:customers
+    0 * * * *    php artisan cache:warm
 
-  And if the job writes, they may write over each other.
+  Living on a server, outside your repository,
+  unreviewed and undiscoverable. Somebody adds one
+  during an incident and nobody knows two years later.
 
-    implements ShouldBeUnique
-    public function uniqueId(): string
+  Laravel inverts it:
 
-  The second dispatch is silently ignored.
+    system cron (every minute)
+            ↓
+    Laravel scheduler
+            ↓
+    your scheduled tasks
 
-  ⚠️  SILENTLY. Nothing errors, and nothing tells the
-      caller their dispatch did nothing.
+    // routes/console.php
+    Schedule::job(GenerateDailyReport::class)->daily();
 
-  Suits: imports · report generation · synchronisation
-         recalculating something derived
-
-
-Details that matter
-
-  Uniqueness is a LOCK, and a lock needs a lifetime:
-
-    public int \$uniqueFor = 3600;
-
-  ⚠️  Without one, a job that dies in a way that skips
-      cleanup leaves the lock behind — and then NOTHING
-      queues until it expires. A hard failure to
-      diagnose, because nothing is failing: dispatches
-      simply do nothing.
-
-  ShouldBeUnique                 until it FINISHES
-  ShouldBeUniqueUntilProcessing  until it STARTS
-
-  Which you want depends on whether a change during
-  processing should produce another run.
-
-  And it needs a cache the workers SHARE. On the array
-  driver it does nothing; across several servers each
-  has its own lock unless the cache is shared — the
-  same point as rate limiting on Day 21.
+  The schedule is now in version control, reviewed, and
+  visible to everybody.
 
 
-Rate limiting
+Schedule a JOB, not the work
 
-  An API says 100 requests per minute.
-  Your queue has 5,000 jobs, each making one call.
-  Four workers send them as fast as they can.
+    Schedule::job(GenerateDailyReport::class)->dailyAt('02:00')
 
-    Worker → rate limiter → API
+    Scheduler → Queue → Worker → the heavy work
 
-  ⚠️  Without a limit you get throttled, and then every
-      one of those jobs FAILS AND RETRIES — which sends
-      even more requests.
+  ⚠️  The scheduler decides WHEN. A worker does the work.
 
-      A rate limit is not politeness. It is what stops a
-      queue turning a limit into an outage.
+      A Schedule::call() containing an hour of report
+      generation blocks the scheduler for an hour, so
+      nothing else scheduled in that hour runs on time.
 
-    RateLimiter::for('provider-api',
-        fn () => Limit::perMinute(100));
+      Dispatching a job takes a millisecond.
 
-    public function middleware(): array
-    {
-        return [new RateLimited('provider-api')];
-    }
+    Schedule::job(...)      dispatch a queued job  ← usually
+    Schedule::command(...)  run an Artisan command
+    Schedule::call(...)     run a closure, inline
 
-  A limited job that cannot run is RELEASED back to the
-  queue, not failed. Which is why the delay matters:
-  released too eagerly, it bounces between the queue and
-  the limiter thousands of times.
+  everyMinute() · everyFiveMinutes() · hourly()
+  daily() · dailyAt('02:00') · weekly() · monthly()
+  weeklyOn(1, '8:00') · cron('0 2 * * *')
+
+  ⚠️  Prefer a specific time to daily(). daily() means
+      midnight, and everything defaulting to midnight
+      runs at once.
 
 
-  The middleware worth knowing:
+Constraints
 
-    RateLimited           fewer than N per period
-    WithoutOverlapping    one at a time, per key
-    SkipIfBatchCancelled  stop when the batch was cancelled
+    ->weekdays()->at('09:00')
+    ->timezone('Asia/Kathmandu')
+    ->environments(['production'])
 
-  WithoutOverlapping is the one people need and do not
-  know exists. Two jobs recalculating the same invoice
-  concurrently is a race; a key of invoice-{id} makes
-  them queue behind each other rather than fight.
+    weekdays · weekends · mondays() · sundays()
+    between('9:00','17:00') · unlessBetween(...)
+    when(fn () => ...) · skip(fn () => ...)
+
+  The schedule expresses a BUSINESS RULE rather than
+  hiding it in the task. "Reminders on weekdays at nine"
+  belongs next to the schedule; a task that starts by
+  checking whether today is Saturday has it buried.
+
+  ⚠️  timezone() is not optional for anything user-facing.
+      A UTC server running a nine o'clock reminder sends
+      it at 2:45pm in Kathmandu, and the bug report says
+      "the emails arrive at a weird time".
+
+  ⚠️  environments() matters more than it looks. Without
+      it, a staging environment sharing a database sends
+      the same invoice reminders production does. That
+      is a real incident, and one line prevents it.
 
 
-The split
+Hooks
 
-  unique               do not QUEUE the same work twice
-  WithoutOverlapping   do not RUN it twice at once
-  RateLimited          do not run it faster than
-                       something else can take`,
+    ->before()  ->after()  ->onSuccess()  ->onFailure()
+
+  onFailure() is the one to actually use.
+
+  A scheduled task that stops working fails SILENTLY by
+  definition: nobody is watching, nothing is broken on
+  the site, and you find out when somebody asks where
+  last month's report went.`,
       codeExample: {
-        title: "Not queueing, not overlapping, not overwhelming",
+        title: "A schedule that lives in the repository",
+        code: `# ---------- The one cron entry ----------
+
+* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
+
+# That is the only crontab line you add. Everything else
+# lives in the repository.
+
+
+<?php
+// routes/console.php
+
+use App\\Jobs\\GenerateDailyReport;
+use App\\Jobs\\SendInvoiceReminders;
+use Illuminate\\Support\\Facades\\Schedule;
+
+// ---------- Dispatch a job: the scheduler stays free ----------
+
+Schedule::job(GenerateDailyReport::class)
+    ->dailyAt('02:00')
+    ->timezone('Asia/Kathmandu');
+
+// Scheduler → Queue → Worker → the heavy work
+//
+// ❌ This blocks the scheduler for as long as it runs,
+//    so nothing else scheduled meanwhile runs on time.
+// Schedule::call(fn () => (new ReportBuilder)->build())->dailyAt('02:00');
+
+
+// ---------- An Artisan command ----------
+
+Schedule::command('sync:customers')
+    ->everyFifteenMinutes()
+    ->environments(['production']);
+
+
+// ---------- Constraints as business rules ----------
+
+Schedule::job(SendInvoiceReminders::class)
+    ->weekdays()                    // not at the weekend
+    ->at('09:00')
+    ->timezone('Asia/Kathmandu')    // 09:00 for the reader
+    ->environments(['production']); // staging shares the
+                                    // database and must not
+                                    // email real customers
+
+// The rule is next to the schedule, rather than buried
+// in a task that starts by checking today's date.
+
+
+Schedule::command('cache:warm')
+    ->hourly()
+    ->between('6:00', '23:00');     // nobody is browsing at 4am
+
+Schedule::command('backups:run')
+    ->dailyAt('03:00')
+    ->when(fn () => config('backups.enabled'));
+
+
+// ---------- Hooks ----------
+
+Schedule::job(GenerateDailyReport::class)
+    ->dailyAt('02:00')
+
+    ->onSuccess(function () {
+        Log::info('Daily report dispatched');
+    })
+
+    // The one that matters. A scheduled task that stops
+    // working fails silently: nobody is watching, and
+    // nothing on the site is broken.
+    ->onFailure(function () {
+        Notification::route('slack', config('services.slack.ops'))
+            ->notify(new ScheduledTaskFailed('daily report'));
+    });
+
+
+// ---------- Prefer a specific time ----------
+
+// ❌ daily() means midnight, and so does everything else
+//    that used daily(). They all run at once.
+Schedule::command('reports:daily')->daily();
+Schedule::command('cleanup:old')->daily();
+Schedule::command('sync:all')->daily();
+
+// ✓ Spread them.
+Schedule::command('reports:daily')->dailyAt('02:00');
+Schedule::command('cleanup:old')->dailyAt('03:30');
+Schedule::command('sync:all')->dailyAt('04:15');`,
+      },
+      keyTakeaways: [
+        "<b>Without the scheduler, every recurring task is a crontab line outside your repository</b>, unreviewed and undiscoverable.",
+        "<b>One cron entry runs `schedule:run` every minute</b>, and the schedule itself lives in `routes/console.php`.",
+        "<b>Schedule a job rather than the work</b>: the scheduler decides when, a worker does it.",
+        "<b>A long `Schedule::call()` blocks the scheduler</b>, so nothing else scheduled meanwhile runs on time.",
+        "`Schedule::job()`, `Schedule::command()` and `Schedule::call()` cover the three forms.",
+        "<b>Prefer `dailyAt('02:00')` to `daily()`</b>, because everything defaulting to midnight runs at once.",
+        "<b>Constraints let the schedule express a business rule</b> rather than burying it in the task.",
+        "<b>`timezone()` is not optional for user-facing tasks</b>, or nine o'clock happens at somebody else's teatime.",
+        "<b>`environments(['production'])` stops staging emailing real customers</b> when it shares a database.",
+        "<b>`onFailure()` matters because a scheduled task fails silently</b>: nobody is watching, and nothing looks broken.",
+      ],
+      commonMistakes: [
+        "<b>Adding crontab entries per task.</b> They live outside the repository and nobody knows they exist.",
+        "<b>Doing the work in `Schedule::call()`.</b> The scheduler is blocked and everything else runs late.",
+        "<b>Using `daily()` for everything.</b> They all run at midnight, together.",
+        "<b>Omitting `timezone()`.</b> The reminder arrives at the wrong hour for every user.",
+        "<b>Omitting `environments()`.</b> Staging sends production's emails to real customers.",
+      ],
+      quiz: [
+        {
+          question: "How many cron entries does a Laravel application need?",
+          options: [
+            "One per task",
+            "One, running `schedule:run` every minute",
+            "None",
+            "One per environment",
+          ],
+          correctIndex: 1,
+          explanation: "The schedule itself then lives in your repository.",
+        },
+        {
+          question: "Why schedule a job rather than doing the work in the schedule?",
+          options: [
+            "Jobs are faster",
+            "A long-running task blocks the scheduler, so nothing else runs on time",
+            "Closures cannot be scheduled",
+            "It enables retries only",
+          ],
+          correctIndex: 1,
+          explanation: "The scheduler decides when; a worker does the work.",
+        },
+        {
+          question: "What does `environments(['production'])` prevent?",
+          options: [
+            "Overlapping runs",
+            "Staging running the task and, for example, emailing real customers",
+            "Timezone errors",
+            "Failed jobs",
+          ],
+          correctIndex: 1,
+          explanation: "Particularly when staging shares a database.",
+        },
+        {
+          question: "Why does `onFailure()` matter for a scheduled task?",
+          options: [
+            "It retries the task",
+            "A scheduled task fails silently: nobody is watching and nothing on the site looks broken",
+            "It is required",
+            "It logs the output",
+          ],
+          correctIndex: 1,
+          explanation: "You otherwise find out when somebody asks where last month's report went.",
+        },
+      ],
+    },
+    {
+      id: "overlaps-and-servers",
+      title: "Overlaps, multiple servers & running the scheduler",
+      durationMinutes: 12,
+      explanation: "The two ways a schedule goes wrong in production, and the commands for finding out.\n\n---\n\n### 1. Basic — overlapping runs\n\nAn hourly report that takes two hours:\n\n```text\n01:00  report starts\n02:00  the scheduler starts another one\n03:00  and another\n```\n\n```text\nReport A ──────────────────>\nReport B         ──────────────────>\nReport C                   ──────────────────>\n```\n\n<b>Three copies of the same task running at once</b>, competing for the same rows, doubling the load, and producing whatever a race produces.\n\nAnd it compounds: each run is slower because of the others, so more overlap, until nothing finishes.\n\n```php\n->withoutOverlapping()\n```\n\n```text\ntask starts → lock acquired → another invocation? → skipped\n```\n\n<b>Essential for anything that takes an unpredictable time</b>, which is most real work: billing, reports, imports, synchronisation, cleanup.\n\nThe lock has an expiry, defaulting to 24 hours. <b>Set it from the work</b>, because a task killed in a way that skips its cleanup leaves the lock behind, and then the task silently never runs again until it expires.\n\n---\n\n### 2. Intermediate — more than one server\n\nTwo application servers, both running the scheduler:\n\n```text\nServer A → the task\nServer B → the task\nServer C → the task\n```\n\n<b>Every invoice reminder is sent three times.</b> Which is not a subtle bug: it is customer-visible, and it happens the moment you scale from one server.\n\n```php\n->onOneServer()\n```\n\nThe first server to acquire a shared lock runs it; the others skip.\n\n<b>The requirement is a shared cache</b>: Redis or Memcached, not `file` and not `array`. With a per-server cache, each acquires its own lock and all three still run, and nothing warns you.\n\nSo the pair together:\n\n```text\nwithoutOverlapping   the same server, twice, over time\nonOneServer          several servers, at once\n```\n\nBoth are needed on anything scheduled in a multi-server deployment, and they are answering different questions.\n\n---\n\n### 3. Advanced — running and inspecting\n\n```bash\nphp artisan schedule:run\n```\n\nchecks what is due and runs it, then exits. That is the command the cron entry calls, every minute.\n\n```bash\nphp artisan schedule:work\n```\n\nstays alive and does the checking itself:\n\n```text\nschedule:run     check once, then exit        ← cron calls this\nschedule:work    keep checking, continuously  ← a long-running process\n```\n\n`work` suits local development, and containers where a cron daemon is awkward. <b>Laravel 13 improved its graceful shutdown</b>, so a deploy or a container replacement lets running work finish rather than killing it mid-task, which matters because that is exactly when it happens.\n\n```bash\nphp artisan schedule:list\n```\n\n<b>This is the first thing to run when a scheduled task did not happen.</b>\n\n```text\ntask · frequency · next run\n```\n\nIt answers the four usual causes in one look: the task is not registered, the frequency is not what you thought, the timezone shifted it, or an `environments()` constraint excluded it.\n\nAnd the fifth cause, which `schedule:list` cannot show: <b>the cron entry is not there at all.</b> On a fresh server that is the answer more often than anything in your code.\n\nOne last thing worth checking early, because it is invisible: <b>the scheduler runs as a user</b>, and that user needs to be able to write your logs and read your `.env`. A scheduler running as `root` while the application runs as `www-data` produces log files nobody else can write to, and the failure appears somewhere else entirely.\n\nOne more, for a different problem. <b>The scheduler runs tasks in sequence</b>, so a task taking four minutes delays everything scheduled behind it in that minute:\n\n```php\nSchedule::command('reports:generate')->daily()->runInBackground();\n```\n\nThat gives the task its own process so the rest of the schedule carries on. <b>It is the lighter answer to the problem `Schedule::job()` solves properly</b>: pushing the work to a queue means the scheduler is never blocked and you get retries as well. Reach for `runInBackground()` when the work genuinely belongs in a command and you do not want a queue involved.\n\nAnd the schedule itself is testable, which is worth knowing because \"does this actually run at 2am\" is otherwise a question you answer by waiting until 2am:\n\n```php\n$this->travelTo(now()->setTime(2, 0));\n\n$events = app(Schedule::class)->events();\n\n$report = collect($events)->first(fn ($e) =>\n    str_contains($e->command, 'reports:generate'));\n\nexpect($report->isDue(app()))->toBeTrue();\nexpect($report->getSummaryForDisplay())->toContain('reports:generate');\n```\n\n<b>`isDue()` combined with `travelTo()` from Day 28 is the whole trick</b>, and it catches the cron expression you got subtly wrong far earlier than production does.",
+      diagram: `Overlapping runs
+
+  An hourly report that takes two hours:
+
+    01:00  report starts
+    02:00  the scheduler starts another
+    03:00  and another
+
+    Report A ──────────────────>
+    Report B         ──────────────────>
+    Report C                   ──────────────────>
+
+  Three copies competing for the same rows, doubling
+  the load, producing whatever a race produces.
+
+  And it compounds: each run is slower because of the
+  others, so more overlap, until nothing finishes.
+
+    ->withoutOverlapping()
+
+    task starts → lock acquired
+                → another invocation? → skipped
+
+  Essential for anything of unpredictable duration —
+  which is most real work: billing, reports, imports,
+  synchronisation, cleanup.
+
+  ⚠️  The lock expires (24h by default). Set it from the
+      work: a task killed without cleanup leaves the lock
+      behind, and the task silently never runs again
+      until it expires.
+
+
+More than one server
+
+    Server A → the task
+    Server B → the task
+    Server C → the task
+
+  Every invoice reminder sent three times. Not subtle:
+  customer-visible, and it happens the moment you scale
+  past one server.
+
+    ->onOneServer()
+
+  The first to acquire a SHARED lock runs it.
+
+  ⚠️  Requires a shared cache: Redis or Memcached, not
+      file and not array. With a per-server cache each
+      acquires its own lock, all three still run, and
+      nothing warns you.
+
+
+  withoutOverlapping   the same server, twice, over time
+  onOneServer          several servers, at once
+
+  Different questions. A multi-server deployment needs
+  both.
+
+
+Running it
+
+    schedule:run     check once, then exit  ← cron calls this
+    schedule:work    keep checking          ← long-running
+
+  work suits local development, and containers where a
+  cron daemon is awkward. Laravel 13 improved its
+  graceful shutdown, so a deploy lets running work
+  finish rather than killing it mid-task — which is
+  exactly when deploys happen.
+
+
+Inspecting it
+
+    php artisan schedule:list
+
+      task · frequency · next run
+
+  The FIRST thing to run when a task did not happen. It
+  answers four of the five usual causes at a glance:
+
+    the task is not registered
+    the frequency is not what you thought
+    the timezone shifted it
+    an environments() constraint excluded it
+
+  And the fifth, which it cannot show:
+
+    ⚠️  the cron entry is not there at all
+
+      On a fresh server, that is the answer more often
+      than anything in your code.
+
+
+  One more invisible one: the scheduler runs as a USER,
+  and that user must be able to write your logs and read
+  your .env. Running as root while the app runs as
+  www-data produces log files nobody else can write, and
+  the failure surfaces somewhere else entirely.`,
+      codeExample: {
+        title: "A schedule that survives production",
         code: `<?php
+// routes/console.php
 
-namespace App\\Jobs;
+use Illuminate\\Support\\Facades\\Schedule;
 
-use Illuminate\\Contracts\\Queue\\ShouldBeUnique;
+// ---------- Overlapping: the same server, twice ----------
+
+// ❌ Takes two hours, runs hourly. By 03:00 there are three.
+Schedule::command('reports:hourly')->hourly();
+
+// ✓ A second invocation is skipped while the first runs.
+Schedule::command('reports:hourly')
+    ->hourly()
+    ->withoutOverlapping(120);      // the lock expires after
+                                     // 120 minutes, set from
+                                     // the work — not the
+                                     // 24-hour default
+
+
+// ---------- Several servers, at once ----------
+
+// ❌ Three application servers, three copies of every
+//    reminder, sent to real customers.
+Schedule::job(SendInvoiceReminders::class)->dailyAt('09:00');
+
+// ✓ The first to take a shared lock runs it.
+Schedule::job(SendInvoiceReminders::class)
+    ->dailyAt('09:00')
+    ->onOneServer();
+
+// ⚠️ Requires a shared cache. With CACHE_STORE=file each
+//    server takes its own lock and all three still run.
+
+
+// ---------- Both, because they answer different questions ----------
+
+Schedule::command('billing:run')
+    ->dailyAt('01:00')
+    ->withoutOverlapping(180)   // not twice over time
+    ->onOneServer()             // not on three servers at once
+    ->environments(['production'])
+    ->onFailure(fn () => Notification::route('slack', $ops)
+        ->notify(new ScheduledTaskFailed('billing')));
+
+
+# ---------- Running the scheduler ----------
+
+# Production: one cron entry, calling schedule:run each minute.
+* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
+
+# Local development, or a container with no cron daemon:
+php artisan schedule:work
+
+#   schedule:run    check once, then exit
+#   schedule:work   keep checking, continuously
+
+
+# ---------- When a task did not run ----------
+
+php artisan schedule:list
+
+# Command                        Interval      Next Due
+# ------------------------------ ------------- -----------
+# billing:run                    0 1 * * *     11 hours from now
+# reports:hourly                 0 * * * *     23 minutes from now
+#
+# Four of the five usual causes are visible here:
+#   not registered · wrong frequency
+#   timezone shift · environments() excluded it
+#
+# The fifth is not:
+#   the cron entry is missing.  crontab -l
+
+
+# ---------- Testing without waiting ----------
+
+php artisan schedule:run          # run anything due now
+php artisan schedule:test         # pick a task and run it
+
+
+# ---------- The permissions one ----------
+
+# The scheduler runs as a user. That user must be able
+# to write storage/logs and read .env.
+#
+# root running the scheduler while www-data runs the app
+# creates log files nobody else can write to, and the
+# failure appears somewhere else entirely.
+
+* * * * * cd /var/www && sudo -u www-data php artisan schedule:run`,
+      },
+      keyTakeaways: [
+        "<b>A task that takes longer than its interval overlaps with itself</b>, and each run makes the next slower.",
+        "<b>`withoutOverlapping()` skips a run while one is already going</b>, which most real work needs.",
+        "<b>Set the lock expiry from the work</b>, because a killed task can leave the lock and silently stop running.",
+        "<b>Several servers each run the scheduler</b>, so a daily email is sent once per server.",
+        "<b>`onOneServer()` lets the first server to take a shared lock run it</b>, and the others skip.",
+        "<b>It requires a shared cache</b>: with a per-server cache, all of them still run and nothing warns you.",
+        "<b>`withoutOverlapping()` and `onOneServer()` answer different questions</b>, and both are needed on several servers.",
+        "<b>`schedule:run` checks once; `schedule:work` keeps checking</b>, and cron calls the first every minute.",
+        "<b>`schedule:list` is the first thing to run when a task did not happen</b>, showing four of the five usual causes.",
+        "<b>The fifth is a missing cron entry</b>, which on a fresh server is the answer more often than the code.",
+        "The scheduler runs as a user, which must be able to write your logs and read your `.env`.",
+      ],
+      commonMistakes: [
+        "<b>Scheduling a long task hourly with no overlap guard.</b> Three copies compete and each makes the next slower.",
+        "<b>Setting no lock expiry.</b> A killed task leaves the lock and the schedule silently stops for a day.",
+        "<b>Deploying to several servers without `onOneServer()`.</b> Every customer email is sent once per server.",
+        "<b>Using `onOneServer()` with a file cache.</b> Each server takes its own lock, so all of them run.",
+        "<b>Debugging a missing task in the code first.</b> Check `schedule:list`, then check the crontab.",
+      ],
+      quiz: [
+        {
+          question: "What does `withoutOverlapping()` prevent?",
+          options: [
+            "Two servers running the task",
+            "A new run starting while a previous run of the same task is still going",
+            "The task failing",
+            "The task running at the wrong time",
+          ],
+          correctIndex: 1,
+          explanation: "Essential for anything of unpredictable duration.",
+        },
+        {
+          question: "What does `onOneServer()` require to work?",
+          options: [
+            "A queue worker",
+            "A cache shared between the servers, such as Redis",
+            "A database lock table",
+            "Nothing",
+          ],
+          correctIndex: 1,
+          explanation: "With a per-server cache, each takes its own lock and all still run.",
+        },
+        {
+          question: "What is the difference between `schedule:run` and `schedule:work`?",
+          options: [
+            "None",
+            "`run` checks once and exits; `work` keeps checking continuously",
+            "`work` is for production",
+            "`run` only lists tasks",
+          ],
+          correctIndex: 1,
+          explanation: "Cron calls `schedule:run` every minute.",
+        },
+        {
+          question: "A scheduled task did not run. What should you check first?",
+          options: [
+            "The queue workers",
+            "`schedule:list`, then whether the cron entry exists at all",
+            "The database",
+            "The job class",
+          ],
+          correctIndex: 1,
+          explanation: "It shows registration, frequency, timezone and environment constraints in one look.",
+        },
+      ],
+    },
+    {
+      id: "mail",
+      title: "Mail — mailables, Markdown & attachments",
+      durationMinutes: 11,
+      explanation: "Sending email, and the parts of it that are not obvious.\n\n---\n\n### 1. Basic — a mailable\n\n```text\napplication → Mailable → transport → provider → recipient\n```\n\n```bash\nphp artisan make:mail WelcomeEmail\n```\n\n<b>A mailable is a class representing one email:</b>\n\n```text\nsubject · content · view · data · attachments\n```\n\n```php\nMail::to($user)->send(new WelcomeEmail($user));\n```\n\nWhich reads well, and hides something worth knowing: <b>that line talks to an SMTP server during your request.</b> A slow mail provider is a slow page, and a mail provider that is down is a failed request for something that had nothing to do with mail.\n\n```php\nclass WelcomeEmail extends Mailable implements ShouldQueue\n{\n}\n```\n\n<b>Almost every mailable should be queued.</b> The exception is one the user is explicitly waiting for confirmation of, and even then the queue is usually right.\n\n---\n\n### 2. Intermediate — Markdown mail\n\nEmail HTML is not web HTML. Clients strip stylesheets, ignore flexbox, and require tables for layout, and the result has to survive Outlook, Gmail and a phone.\n\n<b>Markdown mailables give you components that already handle that:</b>\n\n```text\nMailable → Markdown → HTML email\n```\n\n```blade\n<x-mail::message>\n# Welcome, {{ $user->name }}\n\nThanks for joining.\n\n<x-mail::button :url=\"$url\">\nGet started\n</x-mail::button>\n</x-mail::message>\n```\n\n```text\nbutton · panel · table · subcopy\n```\n\n<b>Which is the difference between writing an email and writing email HTML.</b> The components are publishable if you need to restyle them, and the fallback plain-text version is generated for you.\n\nOne detail: <b>a mailable can define a plain-text version</b>, and some clients and filters prefer one. Markdown gives you it automatically; a hand-written HTML mailable does not.\n\n---\n\n### 3. Advanced — attachments, and their limits\n\n```text\nInvoice → PDF → attachment\n```\n\n```php\npublic function attachments(): array\n{\n    return [\n        Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)\n            ->as('invoice.pdf')\n            ->withMime('application/pdf'),\n    ];\n}\n```\n\n<b>And attachments are where email gets awkward.</b>\n\n```text\nsize      most providers reject over ~10–25 MB\nencoding  base64 adds about a third to the size\nspam      attachments raise the odds of being filtered\nmemory    the file is read into the message\n```\n\nSo the honest guidance: <b>attach small things, and link to large ones.</b> A signed temporary URL from Day 21 is better than a 20 MB attachment in every way, including that you can revoke it and see whether it was downloaded.\n\n<b>Inline images</b> are the other kind:\n\n```blade\n<img src=\"{{ $message->embed($pathToLogo) }}\">\n```\n\nWhich embeds the image in the message rather than linking to it. That matters because <b>most clients block remote images by default</b>, so a linked logo is an empty box until the reader clicks \"show images\". Embedding it costs message size and gains a header that renders.\n\nTwo last practical notes.\n\n<b>A queued mailable serialises its constructor</b>, exactly like a job. Passing a model passes an id, and the mail is rendered against the state when it sends.\n\n<b>And `Mail::to()` accepts anything with an email</b>: a user, a collection of users, or a bare address. Sending to a collection sends one message per recipient, which is what you want; putting fifty addresses in one `to()` shows all fifty to each of them.\n\nQueueing can also be decided at the call site rather than on the class:\n\n```php\nMail::to($user)->queue(new WelcomeEmail($user));\nMail::to($user)->later(now()->addHours(3), new OnboardingTip($user));\n```\n\n<b>`later()` is the one worth remembering</b>, because delayed mail is a whole category of feature: the tip three hours after signup, the reminder the day before the due date, the nudge a week after an abandoned draft. `ShouldQueue` on the class cannot express any of those.",
+      diagram: `A mailable
+
+  application → Mailable → transport → provider → recipient
+
+    php artisan make:mail WelcomeEmail
+
+    subject · content · view · data · attachments
+
+    Mail::to(\$user)->send(new WelcomeEmail(\$user));
+
+  ⚠️  That line talks to an SMTP server DURING your
+      request. A slow provider is a slow page; a provider
+      that is down is a failed request for something
+      unrelated to mail.
+
+    class WelcomeEmail extends Mailable implements ShouldQueue
+
+  Almost every mailable should be queued.
+
+
+Markdown mail
+
+  Email HTML is not web HTML. Clients strip stylesheets,
+  ignore flexbox, and want tables for layout — and the
+  result has to survive Outlook, Gmail and a phone.
+
+    Mailable → Markdown → HTML email
+
+    <x-mail::message>
+    # Welcome
+    <x-mail::button :url="\$url">Get started</x-mail::button>
+    </x-mail::message>
+
+    button · panel · table · subcopy
+
+  The difference between writing an EMAIL and writing
+  email HTML. The components are publishable, and the
+  plain-text version is generated for you — which a
+  hand-written HTML mailable does not give you, and
+  some clients and filters prefer.
+
+
+Attachments
+
+    Invoice → PDF → attachment
+
+    Attachment::fromStorageDisk('s3', \$path)->as('invoice.pdf')
+
+  Where email gets awkward:
+
+    size      most providers reject over ~10–25 MB
+    encoding  base64 adds about a third
+    spam      attachments raise filtering odds
+    memory    the file is read into the message
+
+  So: attach small things, LINK to large ones.
+
+  A signed temporary URL from Day 21 beats a 20 MB
+  attachment in every way — including that you can
+  revoke it and see whether it was downloaded.
+
+
+Inline images
+
+    <img src="{{ \$message->embed(\$pathToLogo) }}">
+
+  Embeds the image rather than linking it.
+
+  ⚠️  Most clients BLOCK remote images by default, so a
+      linked logo is an empty box until the reader clicks
+      "show images". Embedding costs size and gains a
+      header that renders.
+
+
+Two last notes
+
+  A queued mailable serialises its constructor, exactly
+  like a job. A model becomes an id, and the mail is
+  rendered against the state when it SENDS.
+
+  Mail::to() accepts a user, a collection, or a bare
+  address. A collection sends one message PER recipient
+  — which is what you want. Fifty addresses in one to()
+  shows all fifty to each of them.`,
+      codeExample: {
+        title: "A queued, Markdown mailable with an attachment",
+        code: `<?php
+// php artisan make:mail InvoicePaid --markdown=mail.invoices.paid
+
+namespace App\\Mail;
+
+use App\\Models\\Invoice;
+use Illuminate\\Bus\\Queueable;
 use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Queue\\Middleware\\RateLimited;
-use Illuminate\\Queue\\Middleware\\WithoutOverlapping;
+use Illuminate\\Mail\\Mailable;
+use Illuminate\\Mail\\Mailables\\Attachment;
+use Illuminate\\Mail\\Mailables\\Content;
+use Illuminate\\Mail\\Mailables\\Envelope;
 
-// ---------- Unique: do not queue it twice ----------
-
-class GenerateReport implements ShouldQueue, ShouldBeUnique
+// Queued: this otherwise talks to an SMTP server during
+// the request.
+class InvoicePaid extends Mailable implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
-    public function __construct(public User $user) {}
+    // Serialised like a job: the invoice becomes an id,
+    // and the mail renders against the state when it sends.
+    public function __construct(public Invoice $invoice) {}
 
-    public function uniqueId(): string
+    public function envelope(): Envelope
     {
-        return "report:{$this->user->id}";
+        return new Envelope(
+            subject: "Invoice {$this->invoice->number} paid",
+
+            // Defaults to MAIL_FROM_ADDRESS / MAIL_FROM_NAME.
+            // Override per mailable when one message should
+            // come from somewhere else — billing, support:
+            from: new Address('billing@example.com', 'InvoiceHub Billing'),
+
+            replyTo: [config('mail.support')],
+        );
     }
 
-    // ⚠️ Without this, a job that dies badly leaves the
-    //    lock behind and NOTHING queues until somebody
-    //    notices. Dispatches simply do nothing.
-    public int $uniqueFor = 3600;
-
-    public function handle(): void
+    public function content(): Content
     {
-        // ...
+        return new Content(
+            markdown: 'mail.invoices.paid',
+            with: ['invoice' => $this->invoice],
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [
+            Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)
+                ->as("invoice-{$this->invoice->number}.pdf")
+                ->withMime('application/pdf'),
+        ];
     }
 }
+?>
 
-// Five simultaneous dispatches, one job. The other four
-// are ignored — silently, which is worth knowing when
-// a caller expects a confirmation.
+{{-- resources/views/mail/invoices/paid.blade.php --}}
+
+<x-mail::message>
+# Invoice {{ $invoice->number }} paid
+
+Thank you. We received {{ $invoice->total->format() }} on
+{{ $invoice->paid_at->format('j F Y') }}.
+
+<x-mail::panel>
+The PDF is attached for your records.
+</x-mail::panel>
+
+<x-mail::button :url="route('invoices.show', $invoice)">
+View invoice
+</x-mail::button>
+
+<x-mail::subcopy>
+Questions? Just reply to this email.
+</x-mail::subcopy>
+</x-mail::message>
+
+{{-- Components that already survive Outlook, Gmail and a
+     phone — and a plain-text version generated for you. --}}
 
 
 <?php
-// ---------- Unique until it starts, or until it finishes ----------
+// ---------- Sending ----------
 
-use Illuminate\\Contracts\\Queue\\ShouldBeUniqueUntilProcessing;
+Mail::to($invoice->customer)->send(new InvoicePaid($invoice));
 
-// The lock is released when the job STARTS, so a change
-// during processing queues another run.
-class SyncCustomer implements ShouldQueue, ShouldBeUniqueUntilProcessing
-{
-    public function uniqueId(): string
-    {
-        return "sync:{$this->customer->id}";
-    }
-}
+Mail::to($user)
+    ->cc($accountant)
+    ->bcc(config('mail.archive'))
+    ->send(new InvoicePaid($invoice));
+
+// ✓ One message per recipient.
+Mail::to($team->members)->send(new WeeklyDigest());
+
+// ❌ Every recipient sees all fifty addresses.
+Mail::to($fiftyAddresses)->send(new Announcement());
 
 
 <?php
-// ---------- Rate limiting ----------
+// ---------- Attach small, link large ----------
 
-// AppServiceProvider
-RateLimiter::for('provider-api', function () {
-    return Limit::perMinute(100);
+// ❌ 20 MB: likely rejected, likely filtered, and base64
+//    makes it about 27 MB on the wire.
+Attachment::fromStorageDisk('s3', $export->path);
+Attachment::fromPath(storage_path('app/terms.pdf'));   // a local path
+Attachment::fromData(fn () => $pdfBytes, 'invoice.pdf'); // generated in memory
+
+// ✓ A signed temporary URL from Day 21. Revocable, and
+//   you can see whether it was downloaded.
+'downloadUrl' => Storage::disk('s3')->temporaryUrl(
+    $export->path,
+    now()->addDays(7),
+),
+
+
+{{-- ---------- Inline images ---------- --}}
+
+{{-- Most clients block remote images, so a linked logo
+     is an empty box until "show images" is clicked. --}}
+<img src="{{ $message->embed(public_path('logo.png')) }}"
+     alt="InvoiceHub" width="120">`,
+      },
+      keyTakeaways: [
+        "<b>A mailable is a class representing one email</b>, holding its subject, content, data and attachments.",
+        "<b>`Mail::send()` talks to an SMTP server during the request</b>, so a slow provider is a slow page.",
+        "<b>Almost every mailable should implement `ShouldQueue`.</b>",
+        "<b>Email HTML is not web HTML</b>: clients strip stylesheets and want tables, across Outlook, Gmail and phones.",
+        "<b>Markdown mailables give you components that already survive that</b>, plus a generated plain-text version.",
+        "<b>Attachments are limited by size, encoding, spam filtering and memory</b>, so attach small things and link to large ones.",
+        "<b>A signed temporary URL beats a large attachment</b>, and can be revoked and tracked.",
+        "<b>Most clients block remote images</b>, so a logo should be embedded rather than linked.",
+        "<b>A queued mailable serialises its constructor</b>, so a model becomes an id and renders against later state.",
+        "<b>`Mail::to()` on a collection sends one message per recipient</b>, where fifty addresses in one `to()` exposes them all.",
+      ],
+      commonMistakes: [
+        "<b>Sending mail synchronously in a request.</b> A slow or failing provider breaks a page about something else.",
+        "<b>Hand-writing email HTML.</b> Markdown components already handle the clients you have to support.",
+        "<b>Attaching a large export.</b> It may be rejected, filtered, or read entirely into memory.",
+        "<b>Linking to a logo.</b> Most clients block remote images and the reader sees an empty box.",
+        "<b>Putting many addresses in one `to()`.</b> Every recipient sees the full list.",
+      ],
+      quiz: [
+        {
+          question: "Why should most mailables implement `ShouldQueue`?",
+          options: [
+            "For retries only",
+            "Otherwise the request talks to an SMTP server, so a slow provider is a slow page",
+            "Laravel requires it",
+            "To attach files",
+          ],
+          correctIndex: 1,
+          explanation: "A provider outage otherwise fails a request about something else.",
+        },
+        {
+          question: "What do Markdown mailables give you?",
+          options: [
+            "Faster sending",
+            "Components that survive real email clients, plus a generated plain-text version",
+            "Automatic attachments",
+            "Localisation",
+          ],
+          correctIndex: 1,
+          explanation: "Email HTML is not web HTML, and the components already handle that.",
+        },
+        {
+          question: "What should you do with a large export?",
+          options: [
+            "Attach it",
+            "Link to it with a signed temporary URL",
+            "Split it across several emails",
+            "Compress and attach it",
+          ],
+          correctIndex: 1,
+          explanation: "It is revocable, trackable, and will not be rejected or filtered.",
+        },
+        {
+          question: "Why embed a logo rather than linking it?",
+          options: [
+            "It loads faster",
+            "Most email clients block remote images, so a linked logo is an empty box",
+            "Links are stripped",
+            "It reduces message size",
+          ],
+          correctIndex: 1,
+          explanation: "Embedding costs size and gains a header that actually renders.",
+        },
+      ],
+    },
+    {
+      id: "mail-drivers-and-testing",
+      title: "Mail drivers, previewing & testing",
+      durationMinutes: 11,
+      explanation: "Where mail actually goes, and how to see it before a customer does.\n\n---\n\n### 1. Basic — transports\n\n```text\nLaravel Mail\n     ↓\ntransport abstraction\n     ↓\nSMTP · SES · Postmark · Resend · log\n```\n\n<b>Your application code does not change when the provider does</b>, which is the same abstraction argument as the filesystem on Day 21. `Mail::to($user)->send(...)` is the same line whichever transport is configured.\n\nAnd the one that matters most while you work:\n\n```text\nMail → log\n```\n\n<b>The `log` driver writes the email to your log file instead of sending it.</b> Which means you can build and re-run a registration flow forty times without emailing anybody, and read exactly what would have gone out.\n\nThere is a better local option than the log too: a local mail catcher that gives you an inbox in the browser, so you see the rendered HTML rather than a wall of it in a log file.\n\nLaravel 13 also adds SES tenant support, for multi-tenant systems that need per-tenant sending configuration and isolation.\n\n---\n\n### 2. Intermediate — previewing\n\nEmail is the one part of an application you cannot see while building it, which is why it is the part most often broken.\n\n<b>A mailable can be returned from a route</b>, and Laravel renders it in the browser:\n\n```php\nRoute::get('/preview/invoice', fn () => new InvoicePaid(Invoice::first()));\n```\n\n```text\nbuild → preview → check the HTML\n      → check it on a phone → test → production\n```\n\nWhich takes ten seconds and catches the things that are otherwise found by a customer: a broken layout, a variable that renders as nothing, a link pointing at `localhost`.\n\n<b>That last one is worth naming.</b> A mailable built with `route()` uses `APP_URL`, so an email sent from a queue worker with the wrong `APP_URL` contains links nobody outside your machine can open. It is invisible locally, because your links work.\n\n---\n\n### 3. Advanced — testing\n\nA test that actually sends email is slow, flaky, costs money, and eventually emails a real person from a seeded address.\n\n```php\nMail::fake();\n```\n\n```text\nMail::fake() → run the code → assert what was sent\n```\n\nAnd the assertions are the point:\n\n```php\nMail::assertSent(InvoicePaid::class);\n\nMail::assertSent(InvoicePaid::class, fn ($mail) =>\n    $mail->hasTo($customer->email) && $mail->invoice->is($invoice));\n\nMail::assertNotSent(InvoicePaid::class);\nMail::assertSentCount(1);\nMail::assertQueued(WelcomeEmail::class);\n```\n\n<b>`assertNotSent()` is the underrated one.</b> \"A draft invoice does not email the customer\" is a rule worth a test, and it is exactly the kind that breaks quietly when somebody moves a dispatch.\n\nTwo details.\n\n<b>A queued mailable is asserted with `assertQueued()`, not `assertSent()`</b>, and getting that wrong produces a passing-looking failure that says nothing was sent when it was queued perfectly.\n\n<b>And `Mail::fake()` stops mail actually being sent</b>, which means anything the mailable would have done — rendering, attaching, hitting storage — does not happen. A mailable that throws while rendering passes a faked test and fails in production. <b>Rendering it in a test is what catches that:</b>\n\n```php\n(new InvoicePaid($invoice))->render();\n```\n\nOne assertion that the email can be built at all, which is the failure mode a fake cannot see.",
+      diagram: `Transports
+
+    Laravel Mail
+         ↓
+    transport abstraction
+         ↓
+    SMTP · SES · Postmark · Resend · log
+
+  Your code does not change when the provider does —
+  the same argument as the filesystem on Day 21.
+
+  And the one that matters while you work:
+
+    Mail → log
+
+  The log driver writes the email to your log file
+  instead of sending it. Build and re-run a registration
+  flow forty times without emailing anybody, and read
+  exactly what would have gone out.
+
+  Better still locally: a mail catcher, giving you an
+  inbox in the browser so you see the rendered HTML
+  rather than a wall of it in a log.
+
+  Laravel 13 adds SES tenant support, for multi-tenant
+  systems needing per-tenant sending configuration.
+
+
+Previewing
+
+  Email is the one part of an application you cannot see
+  while building it — which is why it is the part most
+  often broken.
+
+    Route::get('/preview/invoice',
+        fn () => new InvoicePaid(Invoice::first()));
+
+    build → preview → check the HTML
+          → check it on a phone → test → production
+
+  Ten seconds, and it catches what a customer otherwise
+  finds: a broken layout, a variable rendering as
+  nothing, a link pointing at localhost.
+
+  ⚠️  That last one. A mailable built with route() uses
+      APP_URL, so mail sent from a worker with the wrong
+      APP_URL contains links nobody outside your machine
+      can open — and it is invisible locally, because
+      your links work.
+
+
+Testing
+
+  A test that really sends email is slow, flaky, costs
+  money, and eventually emails a real person from a
+  seeded address.
+
+    Mail::fake() → run the code → assert what was sent
+
+    Mail::assertSent(InvoicePaid::class)
+    Mail::assertSent(InvoicePaid::class, fn (\$mail) =>
+        \$mail->hasTo(\$customer->email))
+    Mail::assertNotSent(...)
+    Mail::assertSentCount(1)
+    Mail::assertQueued(...)
+
+  assertNotSent() is the underrated one. "A draft invoice
+  does not email the customer" is a rule worth a test,
+  and exactly the kind that breaks quietly when somebody
+  moves a dispatch.
+
+
+Two details
+
+  A QUEUED mailable is asserted with assertQueued(), not
+  assertSent(). Getting that wrong produces a failure
+  saying nothing was sent, when it was queued perfectly.
+
+  ⚠️  Mail::fake() stops the mail being BUILT as well as
+      sent. Rendering, attachments, storage access —
+      none of it happens.
+
+      A mailable that throws while rendering passes a
+      faked test and fails in production.
+
+      (new InvoicePaid(\$invoice))->render();
+
+      One assertion that the email can be built at all,
+      which is the failure a fake cannot see.`,
+      codeExample: {
+        title: "Local mail, previews and tests",
+        code: `# ---------- Local: do not send anything ----------
+
+# .env
+MAIL_MAILER=log
+
+# The email is written to storage/logs/laravel.log.
+# Build a registration flow forty times without emailing
+# anybody.
+
+# Better: Mailpit, a local catcher with an inbox in the
+# browser. Laravel Sail ships it; otherwise brew/docker.
+MAIL_MAILER=smtp
+MAIL_HOST=localhost
+MAIL_PORT=1025
+
+
+# ---------- Production SMTP ----------
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.postmarkapp.com
+MAIL_PORT=587
+MAIL_USERNAME=your-token
+MAIL_PASSWORD=your-token
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=hello@example.com
+MAIL_FROM_NAME="InvoiceHub"
+
+# ⚠️ Gmail will not accept your account password here.
+#    It needs an app password, with 2FA enabled on the
+#    account — and Gmail is a poor choice for
+#    transactional mail anyway: low limits, and your
+#    deliverability is somebody else's reputation.
+
+
+<?php
+// config/mail.php
+
+'mailers' => [
+    'smtp'     => ['transport' => 'smtp',     /* ... */],
+    'ses'      => ['transport' => 'ses'],
+    'postmark' => ['transport' => 'postmark'],
+    'resend'   => ['transport' => 'resend'],
+    'log'      => ['transport' => 'log'],
+    'array'    => ['transport' => 'array'],   // tests
+],
+
+// The same Mail::to(...)->send(...) line, whichever is
+// configured.
+
+
+<?php
+// ---------- Previewing ----------
+
+// routes/web.php
+
+if (! app()->isProduction()) {
+    Route::get('/preview/invoice-paid', function () {
+        return new InvoicePaid(Invoice::latest()->first());
+    });
+
+    Route::get('/preview/welcome', function () {
+        return new WelcomeEmail(User::latest()->first());
+    });
+}
+
+// Ten seconds in a browser, and it catches a broken
+// layout, a variable rendering as nothing, and a link
+// pointing at localhost.
+
+
+# ---------- The links-to-localhost one ----------
+
+# A mailable built with route() uses APP_URL. A worker
+# with the wrong APP_URL sends links nobody can open,
+# and it is invisible locally because yours work.
+
+APP_URL=https://invoicehub.example.com
+
+
+<?php
+// ---------- Testing ----------
+
+use Illuminate\\Support\\Facades\\Mail;
+
+it('emails the customer when an invoice is paid', function () {
+    Mail::fake();
+
+    $invoice = Invoice::factory()->create();
+
+    $this->post("/invoices/{$invoice->id}/pay", ['amount' => 100]);
+
+    Mail::assertSent(InvoicePaid::class, function ($mail) use ($invoice) {
+        return $mail->hasTo($invoice->customer->email)
+            && $mail->invoice->is($invoice);
+    });
+});
+
+it('does not email the customer for a draft invoice', function () {
+    Mail::fake();
+
+    $invoice = Invoice::factory()->draft()->create();
+
+    $this->post("/invoices/{$invoice->id}/send");
+
+    // The underrated assertion. This rule breaks quietly
+    // when somebody moves a dispatch.
+    Mail::assertNotSent(InvoicePaid::class);
 });
 
 
-// The job opts in.
-class SyncWithProvider implements ShouldQueue
-{
-    public function middleware(): array
-    {
-        return [
-            // Released back to the queue when the limit
-            // is reached, with a delay so it does not
-            // bounce thousands of times.
-            (new RateLimited('provider-api'))->releaseAfter(30),
-        ];
-    }
-}
+<?php
+// ---------- Queued mailables ----------
 
-// Without this: 5,000 jobs, four workers, and an API
-// that allows 100 a minute. You get throttled, every
-// job fails and retries, and the retries send more
-// requests than the original run did.
+// ❌ Reports that nothing was sent, when it was queued
+//    perfectly.
+Mail::assertSent(WelcomeEmail::class);
+
+// ✓
+Mail::assertQueued(WelcomeEmail::class);
 
 
 <?php
-// ---------- WithoutOverlapping: the one people miss ----------
+// ---------- What a fake cannot catch ----------
 
-class RecalculateInvoice implements ShouldQueue
-{
-    public function __construct(public Invoice $invoice) {}
-
-    public function middleware(): array
-    {
-        return [
-            // Two of these on the same invoice would race.
-            (new WithoutOverlapping("invoice:{$this->invoice->id}"))
-                ->releaseAfter(10)      // try again shortly
-                ->expireAfter(180),     // and never hold the lock forever
-        ];
-    }
-}
-
-// Different invoices still run in parallel. Only the
-// same one queues behind itself.
-
-
-<?php
-// ---------- The split ----------
-
-// unique              do not QUEUE the same work twice
-// WithoutOverlapping  do not RUN it twice at once
-// RateLimited         do not run it faster than
-//                     something else can take
+// Mail::fake() stops the mailable being BUILT: no
+// rendering, no attachments, no storage access.
 //
-// They solve different problems and combine freely:
+// A mailable that throws while rendering passes this
+// test and fails in production.
 
-class SyncCustomer implements ShouldQueue, ShouldBeUnique
-{
-    public function uniqueId(): string
-    {
-        return "sync:{$this->customer->id}";
-    }
+it('renders', function () {
+    $invoice = Invoice::factory()->create();
 
-    public function middleware(): array
-    {
-        return [
-            new WithoutOverlapping("sync:{$this->customer->id}"),
-            new RateLimited('provider-api'),
-        ];
-    }
-}`,
+    // No fake. Actually build it.
+    expect((new InvoicePaid($invoice))->render())
+        ->toContain($invoice->number);
+});
+
+// One assertion that the email can be built at all.`,
       },
       keyTakeaways: [
-        "<b>Several simultaneous dispatches create several identical jobs</b>, most of them wasted and possibly racing.",
-        "<b>A unique job refuses to queue while one with the same key is pending</b>, and the refusal is silent.",
-        "It suits imports, report generation and synchronisation, where once is the same as five times.",
-        "<b>Uniqueness is a lock, so `$uniqueFor` is essential</b>: a stuck lock means dispatches quietly do nothing.",
-        "<b>`ShouldBeUnique` holds the lock until the job finishes; `ShouldBeUniqueUntilProcessing` until it starts.</b>",
-        "It needs a cache the workers share, or each server keeps its own lock.",
-        "<b>Without a rate limit, hitting a third-party limit makes every job fail and retry</b>, sending more requests than before.",
-        "<b>A rate-limited job is released back to the queue rather than failed</b>, so the release delay matters.",
-        "<b>`WithoutOverlapping` stops the same work running twice concurrently</b>, keyed per record.",
-        "<b>Unique stops it queueing twice, `WithoutOverlapping` stops it running twice, `RateLimited` stops it going too fast.</b>",
+        "<b>Laravel abstracts the mail transport</b>, so switching provider does not change your code.",
+        "<b>The `log` driver writes the email to your log instead of sending it</b>, which is what local development wants.",
+        "A local mail catcher is better still, because you see the rendered HTML rather than a log dump.",
+        "<b>Email is the part of an application you cannot see while building it</b>, and therefore the part most often broken.",
+        "<b>Returning a mailable from a route renders it in the browser</b>, which catches layout and data problems in seconds.",
+        "<b>A wrong `APP_URL` produces emails full of links nobody can open</b>, and it is invisible locally.",
+        "<b>`Mail::fake()` makes tests fast, deterministic and free</b>, and stops a seeded address emailing a real person.",
+        "<b>`assertNotSent()` is the underrated assertion</b>, because \"this must not send\" breaks quietly.",
+        "<b>A queued mailable is asserted with `assertQueued()`</b>, and using `assertSent()` reports a failure that is not one.",
+        "<b>A fake stops the mailable being built</b>, so render it in one test to catch a mailable that throws.",
       ],
       commonMistakes: [
-        "<b>Omitting `$uniqueFor`.</b> A stuck lock blocks every future dispatch, and nothing reports an error.",
-        "<b>Expecting a duplicate dispatch to complain.</b> It is silently discarded.",
-        "<b>Relying on uniqueness with an array cache or unshared cache across servers.</b> Each worker keeps its own lock.",
-        "<b>Not rate limiting a queue that calls a limited API.</b> The throttling causes retries, which cause more throttling.",
-        "<b>Using unique when you needed `WithoutOverlapping`.</b> One prevents queueing, the other prevents concurrent execution.",
+        "<b>Testing against a real mail provider.</b> Slow, flaky, and eventually a real person receives a test email.",
+        "<b>Never previewing an email.</b> The broken layout is found by a customer.",
+        "<b>Deploying with the wrong `APP_URL`.</b> Every link in every email points somewhere unreachable.",
+        "<b>Using `assertSent()` on a queued mailable.</b> The test fails despite the code being correct.",
+        "<b>Only ever faking mail.</b> A mailable that throws while rendering passes every test.",
       ],
       quiz: [
         {
-          question: "What does a unique job prevent?",
+          question: "What does the `log` mail driver do?",
           options: [
-            "The job failing",
-            "A second job with the same key being queued while one is pending",
-            "Concurrent execution",
-            "Retries",
+            "Sends the email and logs it",
+            "Writes the email to the log instead of sending it",
+            "Queues the email",
+            "Sends only to admins",
           ],
           correctIndex: 1,
-          explanation: "And the second dispatch is discarded silently.",
+          explanation: "Which is what lets you re-run a flow without emailing anybody.",
         },
         {
-          question: "Why does `$uniqueFor` matter?",
+          question: "Why does a wrong `APP_URL` matter for email?",
           options: [
-            "It sets the retry delay",
-            "A lock left behind blocks every future dispatch until it expires",
-            "It limits the queue size",
-            "It sets the timeout",
+            "Mail fails to send",
+            "Links built with `route()` point somewhere nobody outside your machine can open",
+            "The subject is wrong",
+            "Attachments break",
           ],
           correctIndex: 1,
-          explanation: "And the symptom is dispatches quietly doing nothing.",
+          explanation: "And it is invisible locally, because your own links work.",
         },
         {
-          question: "What happens without a rate limit on jobs calling a limited API?",
+          question: "How do you assert a queued mailable was sent?",
           options: [
-            "Jobs run slower",
-            "You get throttled, those jobs fail and retry, and the retries send even more requests",
-            "The API queues them",
-            "Nothing",
+            "`Mail::assertSent()`",
+            "`Mail::assertQueued()`",
+            "`Queue::assertPushed()` only",
+            "You cannot",
           ],
           correctIndex: 1,
-          explanation: "A rate limit is what stops a queue turning a limit into an outage.",
+          explanation: "`assertSent()` reports a failure that is not one.",
         },
         {
-          question: "What does `WithoutOverlapping` do that unique does not?",
+          question: "What can `Mail::fake()` not catch?",
           options: [
-            "Nothing",
-            "It stops the same work running twice concurrently, rather than being queued twice",
-            "It retries the job",
-            "It rate limits the job",
+            "The wrong recipient",
+            "A mailable that throws while rendering, because a fake never builds it",
+            "The wrong subject",
+            "A missing attachment name",
           ],
           correctIndex: 1,
-          explanation: "Two jobs recalculating one invoice at once is a race.",
+          explanation: "One test that actually calls `render()` covers it.",
         },
       ],
     },
     {
-      id: "failures-supervisor-horizon",
-      title: "Failed jobs, Supervisor & Horizon",
-      durationMinutes: 14,
-      explanation: "Everything so far was about writing jobs. This is about running them somewhere real.\n\n---\n\n### 1. Basic — failed jobs\n\nWhen a job exhausts its attempts, Laravel records it:\n\n```text\njob → attempts → failure → failed_jobs\n```\n\n```bash\nphp artisan queue:failed\n```\n\n```text\nid · connection · queue · exception · failed_at\n```\n\n<b>This is the first command to learn for production queues</b>, because it is the answer to \"the email never arrived\" that does not involve guessing.\n\nAnd the payload is stored with it, which is what makes the next command possible:\n\n```bash\nphp artisan queue:retry 9f2b...\nphp artisan queue:retry all\nphp artisan queue:retry --queue=emails\n```\n\n<b>Retrying one failed job, rather than replaying a run</b>, is the point. Ninety-nine succeeded and one failed; you want the one.\n\n```bash\nphp artisan queue:flush\n```\n\nremoves the records. <b>That is cleanup, not recovery.</b> Flushing loses the payloads, so those jobs can never be retried, and loses the history of what went wrong. Read before you flush.\n\nA `failed()` method on the job runs after the last attempt, which is where a status update or an alert belongs.\n\n---\n\n### 2. Intermediate — keeping workers alive\n\nA worker started by hand is not a production system:\n\n```text\nthe worker crashes\nthe server restarts\nPHP runs out of memory\n```\n\nand nothing is processing anything, silently, until somebody notices.\n\n<b>A process manager restarts them.</b> Supervisor is the usual one:\n\n```text\nSupervisor\n    ├── worker 1\n    ├── worker 2\n    ├── worker 3\n    └── worker 4\n```\n\n```text\na worker dies → Supervisor notices → it starts another\n```\n\nWhich is also what makes `--max-jobs` and `--max-time` from the workers lesson safe: <b>a worker exiting on purpose is only a good idea if something starts a new one.</b>\n\nAnd more workers is how a queue scales:\n\n```text\n1 worker    job → job → job → ...\n\n4 workers   Worker 1 ─┐\n            Worker 2 ─┼→ Queue\n            Worker 3 ─┤\n            Worker 4 ─┘\n```\n\nFour workers, four jobs at once, which is the moment idempotency stops being theoretical: <b>two workers can now genuinely process related jobs at the same time.</b>\n\nAnd the priorities from the routing lesson, applied here:\n\n```text\nhigh      payments · password resets\ndefault   email · notifications\nlow       analytics · cleanup · imports\n```\n\n---\n\n### 3. Advanced — Horizon\n\nOn Redis, <b>Horizon is the answer to \"why are our jobs slow?\"</b>\n\n```text\nRedis\n  ↓\nHorizon\n  ├── jobs\n  ├── throughput\n  ├── runtime\n  ├── wait time\n  ├── failures\n  ├── workers\n  └── balancing\n```\n\nWithout it, a queue is a black box: jobs go in, something happens, and your only evidence is that a customer says they did not get an email.\n\n<b>Wait time is the metric that matters most</b>, and it is the one nobody thinks to look at. A job that runs in 200ms but sits in the queue for eleven minutes is a slow feature, and neither the code nor the logs say so.\n\nHorizon also balances workers by workload:\n\n```text\nbefore                     after balancing\n\npodcasts  ███████████      podcasts → many workers\nemails    ██               emails   → few workers\n```\n\nRather than a fixed split that leaves workers idle on an empty queue while another has ten thousand jobs waiting.\n\n---\n\n### Pausing, and the whole picture\n\n```bash\nphp artisan queue:pause --all\n```\n\n<b>Pausing is not deleting.</b> Jobs stay queued; workers stop taking new ones. Which is what you want during a deploy, a migration, a dependency outage, or an incident where you would rather nothing ran than everything failed.\n\n```text\n                       Laravel\n                          │\n                     dispatch()\n                          ↓\n                        Queue\n            ┌─────────────┼─────────────┐\n            ↓             ↓             ↓\n         Redis           SQS         Database\n            ↓\n      Queue workers\n            ↓\n        handle()\n            ↓\n  external service · database · storage\n\nSupervisor  keeps workers alive\nHorizon     shows you what they are doing\n```\n\nAnd the question this day exists to answer. Not \"how do I dispatch a job\", but:\n\n> <b>What happens if this job runs twice, fails halfway through, takes ten minutes, is retried five times, the external API is down, or a hundred thousand of them arrive at once?</b>\n\n<b>A job you can answer that about is production code.</b> One you cannot is a function you moved off the request and hoped about.\n\nTwo housekeeping commands that nobody adds until the table is enormous:\n\n```bash\nphp artisan queue:prune-failed --hours=168\nphp artisan queue:prune-batches --hours=48\n```\n\n<b>`failed_jobs` and `job_batches` grow forever otherwise</b>, and a failed job from eight months ago helps nobody. Schedule both weekly.\n\nAnd one deploy detail: <b>under Horizon, `queue:restart` is not the command.</b> Use `php artisan horizon:terminate`, which lets Horizon shut its workers down gracefully and start them again on the new code. Putting the wrong one in a deploy script gives you workers that keep running the old release, which is Day 34's warning with a Horizon-shaped edge.\n\nThree Horizon details worth having.\n\n<b>Its commands are its own.</b> Just as `queue:restart` is wrong under Horizon, so are the pause commands:\n\n```bash\nphp artisan horizon:pause      # not queue:pause\nphp artisan horizon:continue\nphp artisan horizon:status\n```\n\n<b>The memory ceiling has a config key too</b>, alongside `tries` and `timeout`:\n\n```php\n'supervisor-1' => [\n    'balance'      => 'auto',\n    'minProcesses' => 1,\n    'maxProcesses' => 10,\n    'memory'       => 128,\n],\n```\n\n<b>And on picking the number of workers:</b> start at roughly one per CPU core, then watch queue wait time and add more while it stays high. Memory is normally the constraint before CPU is, so the honest ceiling is how many workers fit in RAM rather than how many the processor could run.\n\nLastly, a dashboard is not alerting, which is Day 30's point arriving here. Horizon can notify you when a queue's wait time crosses a threshold:\n\n```php\nHorizon::routeMailNotificationsTo('ops@example.com');\n\n// config/horizon.php\n'waits' => ['redis:default' => 60],\n```\n\n<b>Without it, a backed-up queue waits to be noticed</b>, and the person who notices is usually a customer.",
-      diagram: `Failed jobs
+      id: "notifications",
+      title: "Notifications & the whole architecture",
+      durationMinutes: 13,
+      explanation: "Mail is one way of telling somebody something. Notifications are the general case.\n\n---\n\n### 1. Basic — one message, several channels\n\n```text\n                Notification\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n       Mail       Database      Slack\n```\n\n```text\nMailable        one thing: email\nNotification    the message, and how it reaches somebody\n```\n\nWhich matters as soon as a message has more than one destination:\n\n```text\nInvoicePaid\n ├── email\n ├── the in-app bell\n └── the finance Slack channel\n```\n\nWith mailables that is three pieces of code that must agree. With a notification it is one class with a `via()` and three formatting methods.\n\n```php\npublic function via(object $notifiable): array\n{\n    return ['mail', 'database', 'slack'];\n}\n```\n\nTwo pieces of setup make that work, and both are easy to miss because the default `User` already has one of them. <b>The `Notifiable` trait</b> is what puts `notify()` and the notification relations on a model, so a `Team` or a `Client` needs it added. And <b>the database channel needs a table</b>:\n\n```bash\nphp artisan make:notifications-table\nphp artisan migrate\n```\n\nBeyond mail, database, Slack and broadcast, there is a `vonage` channel for SMS, and community packages for most things you would want.\n\n<b>And `via()` can decide per recipient</b>, which is the real payoff: a user's notification preferences become one method rather than conditionals everywhere.\n\n---\n\n### 2. Intermediate — the channels\n\n<b>Database notifications</b> are stored, not sent:\n\n```text\nnotifications\n ├── \"Your invoice was paid\"\n ├── \"New comment\"\n └── \"Your report is ready\"\n```\n\n```text\n🔔 3\n```\n\nWhich is what gives an application a bell with a count, a read state and a history. Nothing is delivered anywhere; the frontend queries them.\n\nReading them back:\n\n```php\n$user->unreadNotifications;      // and $user->readNotifications\n$notification->data['message'];  // whatever toDatabase() returned\n$notification->markAsRead();\n```\n\n<b>If `toDatabase()` is absent the channel falls back to `toArray()`</b>, which is worth knowing because it means one method can serve both.\n\nAnd they are ordinary rows, which means <b>something has to delete them</b>. A notifications table nobody prunes is a table that grows for the life of the application.\n\n<b>Broadcast notifications</b> push to the browser over a websocket:\n\n```text\nLaravel → broadcast → WebSocket → the UI updates\n```\n\nSo the bell increments without a refresh, and that is tomorrow's topic.\n\n<b>On-demand notifications</b> are for when there is no user:\n\n```php\nNotification::route('mail', 'ops@example.com')->notify(new BackupFailed());\n```\n\nUseful for administrators, alerting, and anywhere the recipient is an address rather than a model.\n\nAnd when the recipient <i>is</i> a model but the address is not where the channel expects, the model says so:\n\n```php\npublic function routeNotificationForMail(): string\n{\n    return $this->billing_contact_email;\n}\n```\n\n<b>Each channel looks for a `routeNotificationFor{Channel}` method</b> before falling back to its default, which is what lets a `Team` receive mail at a billing address that has nothing to do with any user.\n\n<b>Queued notifications</b> work exactly as queued mail:\n\n```text\nrequest → queue the notifications → response → workers send them\n```\n\nWhich matters more here, because a notification with three channels is three external calls.\n\n<b>And localization</b> connects straight back to Day 24:\n\n```php\n$user->notify((new InvoicePaid($invoice))->locale($user->locale));\n```\n\n```text\nUser A → en → English\nUser B → ja → Japanese\n```\n\nA notification sent from a queue worker has no request locale, so <b>if you do not set it, everybody gets the application default</b>. That is the bug where translations work perfectly on screen and every email is in English.\n\n---\n\n### 3. Advanced — the whole picture\n\nThree days now fit together:\n\n```text\n                 business action\n                       │\n                       ▼\n                     Event\n                       │\n           ┌───────────┼───────────┐\n           ▼           ▼           ▼\n       Listener    Listener    Listener\n           │           │           │\n           ▼           ▼           ▼\n         Queue       Queue       Queue\n           │           │           │\n           ▼           ▼           ▼\n         Mail    Notification   other work\n```\n\nand separately:\n\n```text\nScheduler → dispatch a job → Queue → Worker\n```\n\n<b>Both end in the same place and start from completely different reasons</b>, and that difference is the thing to take from today.\n\nSo the question is not \"how do I send an email\". It is:\n\n> <b>Should this happen during the request, through a queued listener, as a notification, or from a scheduled job?</b>\n\n```text\nsomething happened, and several things\n  should follow                          →  an event\n\nthe user should not wait for it          →  a queued listener\n\none message, several destinations,\n  per-user preferences                   →  a notification\n\nit happens because of the time,\n  not because of an action                →  the scheduler\n\nthe caller needs the result               →  none of these.\n                                             call the method.\n```\n\nA welcome email and a nightly summary both end as mail. <b>One is event-driven and one is time-driven, and building the second as the first is how a report ends up being sent whenever somebody logs in.</b>\n\nThe broadcast channel has a method like the others:\n\n```php\npublic function toBroadcast(object $notifiable): BroadcastMessage\n{\n    return new BroadcastMessage([\n        'invoice_id' => $this->invoice->id,\n        'message'    => \"Invoice {$this->invoice->number} was paid\",\n    ]);\n}\n```\n\n<b>Add `'broadcast'` to `via()` and the same notification that wrote a database row also pushes it to the browser</b>, so the bell increments without a refresh. It goes out on a channel Laravel names for you, `App.Models.User.{id}`, which is the detail that makes a hand-written channel name receive nothing.",
+      diagram: `One message, several channels
 
-    job → attempts → failure → failed_jobs
+                  Notification
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+         Mail       Database      Slack
 
-    php artisan queue:failed
+    Mailable       one thing: email
+    Notification   the message, and how it reaches somebody
 
-      id · connection · queue · exception · failed_at
+  Which matters as soon as there is more than one
+  destination:
 
-  The first command to learn for production queues: the
-  answer to "the email never arrived" that does not
-  involve guessing.
+    InvoicePaid
+     ├── email
+     ├── the in-app bell
+     └── the finance Slack channel
 
-  The payload is stored too, which is what makes this
-  possible:
+  Three mailables must agree. One notification has a
+  via() and three formatting methods.
 
-    php artisan queue:retry 9f2b...
-    php artisan queue:retry all
-    php artisan queue:retry --queue=emails
-
-  Retrying ONE failed job rather than replaying a run.
-  Ninety-nine succeeded; you want the one.
-
-    php artisan queue:flush
-
-  ⚠️  Cleanup, not recovery. Flushing loses the payloads
-      — those jobs can never be retried — and loses the
-      history of what went wrong. Read before you flush.
-
-  A failed() method on the job runs after the last
-  attempt: a status update, or an alert.
+  And via() can decide PER RECIPIENT — so a user's
+  notification preferences become one method rather
+  than conditionals everywhere.
 
 
-Keeping workers alive
+The channels
 
-  A worker started by hand is not a production system:
+  database    stored, not sent
 
-    the worker crashes · the server restarts
-    PHP runs out of memory
+    notifications
+     ├── "Your invoice was paid"
+     ├── "New comment"
+     └── "Your report is ready"
 
-  and nothing is processing anything, silently.
+    🔔 3
 
-    Supervisor
-        ├── worker 1
-        ├── worker 2
-        ├── worker 3
-        └── worker 4
+    A bell with a count, a read state and a history.
+    Nothing is delivered; the frontend queries them.
 
-    a worker dies → Supervisor notices → starts another
+  broadcast   Laravel → WebSocket → the UI updates
+              The bell increments with no refresh.
+              Tomorrow's topic.
 
-  Which is what makes --max-jobs safe: a worker exiting
-  on purpose is a good idea only if something starts a
-  new one.
+  on-demand   when there is no user
 
-  And more workers is how a queue scales:
+    Notification::route('mail', 'ops@example.com')
+        ->notify(new BackupFailed());
 
-    1 worker    job → job → job → ...
+  queued      request → queue them → response
+                      → workers send them
 
-    4 workers   Worker 1 ─┐
-                Worker 2 ─┼→ Queue
-                Worker 3 ─┤
-                Worker 4 ─┘
+    Matters more here: three channels is three
+    external calls.
 
-  Four jobs at once — the moment idempotency stops being
-  theoretical.
+  localised   Day 24, connected
 
+    \$user->notify((new InvoicePaid(\$i))->locale(\$user->locale))
 
-Horizon
+      User A → en → English
+      User B → ja → Japanese
 
-    Redis → Horizon
-              ├── jobs        ├── failures
-              ├── throughput  ├── workers
-              ├── runtime     └── balancing
-              └── WAIT TIME
-
-  Without it a queue is a black box: jobs go in,
-  something happens, and your evidence is a customer
-  saying they got no email.
-
-  ⚠️  Wait time is the metric that matters most and the
-      one nobody looks at. A job that RUNS in 200ms and
-      WAITS eleven minutes is a slow feature, and
-      neither the code nor the logs say so.
-
-  Balancing:
-
-    before                  after
-
-    podcasts ███████████    podcasts → many workers
-    emails   ██             emails   → few workers
-
-  Rather than a fixed split leaving workers idle while
-  another queue has ten thousand jobs waiting.
+    ⚠️  A notification sent from a WORKER has no request
+        locale. Without setting it, everybody gets the
+        application default — the bug where the screen
+        translates perfectly and every email is English.
 
 
-Pausing, and the whole picture
+The whole picture
 
-    php artisan queue:pause --all
+                   business action
+                         │
+                         ▼
+                       Event
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+         Listener    Listener    Listener
+             │           │           │
+             ▼           ▼           ▼
+           Queue       Queue       Queue
+             │           │           │
+             ▼           ▼           ▼
+           Mail    Notification   other work
 
-  Pausing is NOT deleting. Jobs stay queued; workers
-  stop taking new ones. For a deploy, a migration, a
-  dependency outage, or an incident where you would
-  rather nothing ran than everything failed.
+  and separately:
 
+    Scheduler → dispatch a job → Queue → Worker
 
-                       Laravel
-                          │
-                     dispatch()
-                          ↓
-                        Queue
-            ┌─────────────┼─────────────┐
-            ↓             ↓             ↓
-         Redis           SQS         Database
-            ↓
-      Queue workers
-            ↓
-        handle()
-            ↓
-  external service · database · storage
-
-  Supervisor  keeps workers alive
-  Horizon     shows you what they are doing
+  Both end in the same place, from completely different
+  reasons. That difference is the thing to take away.
 
 
-The question this day exists for
+The question
 
-  Not "how do I dispatch a job", but:
+  Not "how do I send an email", but:
 
-    What happens if this job runs twice, fails halfway
-    through, takes ten minutes, is retried five times,
-    the external API is down, or a hundred thousand of
-    them arrive at once?
+    something happened, and several things
+      should follow                        →  an event
 
-  A job you can answer that about is production code.
-  One you cannot is a function you moved off the
-  request and hoped about.`,
+    the user should not wait                →  a queued listener
+
+    one message, several destinations,
+      per-user preferences                  →  a notification
+
+    it happens because of the TIME,
+      not because of an action               →  the scheduler
+
+    the caller needs the result              →  none of these.
+                                                call the method.
+
+
+  A welcome email and a nightly summary both end as mail.
+  One is event-driven and one is time-driven, and
+  building the second as the first is how a report ends
+  up being sent whenever somebody logs in.`,
       codeExample: {
-        title: "Operating a queue",
-        code: `# ---------- Failed jobs ----------
+        title: "One notification, three channels",
+        code: `<?php
+// ---------- Two things that must exist first ----------
 
-php artisan queue:failed
+// 1. The trait. It is what puts notify() and the
+//    notification relations on the model — and it is on
+//    the default User, which is why nobody notices it
+//    until they add notifications to a Team or a Client.
+use Illuminate\\Notifications\\Notifiable;
 
-# id                                    queue    exception
-# 9f2b1c3d-...                          emails   ConnectionException
+class User extends Authenticatable
+{
+    use Notifiable;
+}
 
-php artisan queue:failed --json | jq '.[0].exception'
-
-# And the housekeeping nobody adds until the table is huge:
-php artisan queue:prune-failed --hours=168     # a week
-php artisan queue:prune-batches --hours=48
-
-# routes/console.php
-Schedule::command('queue:prune-failed --hours=168')->weekly();
-Schedule::command('queue:prune-batches --hours=48')->daily();
-
-
-# ---------- Deploying, under Horizon ----------
-
-# ❌ Not the command when Horizon is managing the workers
-php artisan queue:restart
-
-# ✅
-php artisan horizon:terminate
-
-# Horizon shuts its workers down gracefully and starts
-# them again on the new code. The wrong one leaves
-# workers running the old release.
-
-
-# Retry the one that failed, not the ninety-nine that worked.
-php artisan queue:retry 9f2b1c3d-...
-php artisan queue:retry all
-php artisan queue:retry --queue=emails
-
-php artisan queue:forget 9f2b1c3d-...     # drop one
-
-# ⚠️ Cleanup, not recovery. The payloads go with it.
-php artisan queue:flush
+// 2. The table the database channel writes to:
+//    php artisan make:notifications-table
+//    php artisan migrate
 
 
 <?php
-// ---------- The last-attempt hook ----------
+// php artisan make:notification InvoicePaid
 
-class SyncWithProvider implements ShouldQueue
+namespace App\\Notifications;
+
+use Illuminate\\Bus\\Queueable;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Notifications\\Messages\\MailMessage;
+use Illuminate\\Notifications\\Notification;
+
+class InvoicePaid extends Notification implements ShouldQueue
 {
-    public function failed(\\Throwable $e): void
-    {
-        // After the final attempt. A status, or an alert.
-        $this->customer->update([
-            'sync_status' => 'failed',
-            'sync_error'  => $e->getMessage(),
-        ]);
+    use Queueable;
 
-        Notification::route('slack', config('services.slack.ops'))
-            ->notify(new SyncFailed($this->customer, $e));
+    public function __construct(public Invoice $invoice) {}
+
+    // Per recipient: preferences become one method rather
+    // than conditionals everywhere.
+    public function via(object $notifiable): array
+    {
+        return array_filter([
+            'database',
+            $notifiable->wants_email ? 'mail' : null,
+            $notifiable->slack_webhook ? 'slack' : null,
+        ]);
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject("Invoice {$this->invoice->number} paid")
+            ->greeting("Hello {$notifiable->name},")
+            ->line("We received {$this->invoice->total->format()}.")
+            ->action('View invoice', route('invoices.show', $this->invoice));
+    }
+
+    // Stored, not sent. This is what the bell reads.
+    // Omit it and the database channel falls back to
+    // toArray(), which is fine when both want the same
+    // payload — define toArray() and skip this one.
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'invoice_id' => $this->invoice->id,
+            'message'    => "Invoice {$this->invoice->number} was paid",
+        ];
+    }
+
+    public function toSlack(object $notifiable): SlackMessage
+    {
+        return (new SlackMessage)
+            ->text("Invoice {$this->invoice->number} paid");
     }
 }
 
 
-# ---------- Supervisor ----------
+<?php
+// ---------- Sending ----------
 
-# /etc/supervisor/conf.d/worker.conf
+$user->notify(new InvoicePaid($invoice));
 
-[program:invoicehub-worker]
-process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/artisan queue:work redis --queue=high,default,low --tries=3 --timeout=60 --max-time=3600
-autostart=true
-autorestart=true
-stopwaitsecs=3600
-numprocs=4
-user=www-data
-redirect_stderr=true
-stdout_logfile=/var/log/worker.log
+Notification::send($team->members, new InvoicePaid($invoice));
 
-# autorestart      a crashed worker comes back
-# numprocs=4       four jobs at once
-# stopwaitsecs     let a running job finish on shutdown
-# --max-time       exit deliberately; Supervisor restarts
-
-# A dedicated worker for anything that must not wait:
-# command=php /var/www/artisan queue:work redis --queue=high
-
-
-# ---------- In the deploy script ----------
-
-php artisan queue:restart
-
-# Otherwise workers keep running the code they booted with.
-
-
-# ---------- Pausing ----------
-
-php artisan queue:pause --all
-# Jobs stay queued. Workers stop taking new ones.
-# For a deploy, a migration, or a dependency outage.
-
-php artisan queue:resume --all
+// No user: an address, a webhook, a phone number.
+Notification::route('mail', 'ops@example.com')
+    ->route('slack', config('services.slack.ops'))
+    ->notify(new BackupFailed());
 
 
 <?php
-// ---------- Horizon ----------
+// ---------- Localisation ----------
 
-// composer require laravel/horizon
-// php artisan horizon:install
+// ⚠️ A queued notification has no request locale, so
+//    without this everybody gets the application default:
+//    the screen translates and every email is English.
+$user->notify(
+    (new InvoicePaid($invoice))->locale($user->locale)
+);
 
-// config/horizon.php
-'environments' => [
-    'production' => [
-        'supervisor-urgent' => [
-            'connection'   => 'redis',
-            'queue'        => ['high'],
-            'balance'      => 'simple',
-            'processes'    => 2,     // never blocked by anything else
-            'tries'        => 3,
-        ],
-
-        'supervisor-default' => [
-            'connection'   => 'redis',
-            'queue'        => ['default', 'podcasts', 'imports'],
-
-            // Workers follow the workload rather than a
-            // fixed split.
-            'balance'      => 'auto',
-            'minProcesses' => 1,
-            'maxProcesses' => 10,
-            'tries'        => 3,
-            'timeout'      => 60,
-        ],
-    ],
-],
-
-// Horizon replaces the queue:work lines in Supervisor,
-// and Supervisor then keeps horizon itself alive:
-//   command=php /var/www/artisan horizon
+// Or, once, for the whole notification class:
+public function __construct(public Invoice $invoice)
+{
+    $this->locale = $invoice->customer->locale;
+}
 
 
-# ---------- What to look at first ----------
+<?php
+// ---------- The bell ----------
 
-# Throughput   how many jobs a minute
-# Runtime      how long each takes
-# WAIT TIME    how long they sit before starting  ← this one
-# Failures     what is breaking, and how often
-#
-# A job that runs in 200ms and waits eleven minutes is a
-# slow feature, and nothing in the code or the logs
-# says so.`,
+// The database channel writes to the notifications table.
+
+$user->unreadNotifications->count();     // 🔔 3
+
+$user->notifications()->latest()->take(10)->get();
+$user->readNotifications;                // the other half
+
+foreach ($user->unreadNotifications as $notification) {
+    // The array you returned from toDatabase()/toArray()
+    echo $notification->data['message'];
+    echo $notification->created_at->diffForHumans();
+}
+
+$notification->markAsRead();
+$user->unreadNotifications->markAsRead();
+
+// And they are ordinary rows, so they delete like rows.
+// Something has to, or this table grows forever:
+$user->notifications()->where('created_at', '<', now()->subMonths(3))->delete();
+
+
+<?php
+// ---------- When the address is not on the model ----------
+
+class Team extends Model
+{
+    use Notifiable;
+
+    // The mail channel looks for an email column. When
+    // there is not one, say where to send instead:
+    public function routeNotificationForMail(): string
+    {
+        return $this->billing_contact_email;
+    }
+
+    public function routeNotificationForVonage(): string
+    {
+        return $this->owner->phone;
+    }
+}
+
+$user->unreadNotifications->markAsRead();
+
+// Nothing is delivered anywhere. The frontend queries it,
+// which is what gives you a count, a read state and a
+// history.
+
+
+<?php
+// ---------- Where each belongs ----------
+
+// Something happened, and several things should follow.
+UserRegistered::dispatch($user);
+
+// The user should not wait.
+class SendWelcomeEmail implements ShouldQueue {}
+
+// One message, several destinations, per-user preferences.
+$user->notify(new InvoicePaid($invoice));
+
+// It happens because of the time.
+Schedule::job(SendDailySummary::class)->dailyAt('02:00');
+
+// The caller needs the result: none of the above.
+$total = $this->calculator->total($invoice);
+
+
+// A welcome email and a nightly summary both end as mail.
+// One is event-driven, one is time-driven, and building
+// the second as the first is how a report gets sent
+// whenever somebody logs in.`,
       },
       keyTakeaways: [
-        "<b>`queue:prune-failed` and `queue:prune-batches` keep those tables from growing forever.</b>",
-        "<b>Under Horizon the deploy command is `horizon:terminate`, not `queue:restart`.</b>",
-        "<b>A job that exhausts its attempts is recorded in `failed_jobs`</b>, with its payload and its exception.",
-        "<b>`queue:failed` is the first command to learn</b>, because it answers \"it never arrived\" without guessing.",
-        "<b>`queue:retry` replays one failed job</b> rather than a whole run, which is the point of storing the payload.",
-        "<b>`queue:flush` is cleanup, not recovery</b>: it discards the payloads and the history of what broke.",
-        "A `failed()` method on the job runs after the final attempt, for a status update or an alert.",
-        "<b>A worker started by hand is not a production system</b>, because a crash means nothing runs and nothing says so.",
-        "<b>Supervisor restarts workers</b>, which is what makes `--max-jobs` and `--max-time` a safe strategy.",
-        "<b>More workers means more jobs at once</b>, which is where idempotency stops being theoretical.",
-        "<b>Horizon shows throughput, runtime, wait time, failures and worker activity</b> for Redis queues.",
-        "<b>Wait time is the metric nobody checks</b>: a fast job that queues for eleven minutes is a slow feature.",
-        "<b>Horizon balances workers by workload</b> rather than a fixed split that leaves some idle.",
-        "<b>Pausing stops workers taking new jobs without deleting anything</b>, which is what a deploy or an outage needs.",
-        "<b>The question is what happens on a retry, a timeout, an outage or a hundred thousand jobs</b>, not how to dispatch one.",
+        "<b>A mailable is one thing: email. A notification is a message plus how it reaches somebody.</b>",
+        "<b>One notification can go to mail, the database, Slack and broadcast</b>, from one class with a `via()`.",
+        "<b>`via()` can decide per recipient</b>, which turns user notification preferences into one method.",
+        "<b>Database notifications are stored rather than sent</b>, giving you a bell with a count, a read state and history.",
+        "<b>Broadcast notifications push to the browser</b> so the bell updates without a refresh.",
+        "<b>On-demand notifications go to an address or webhook</b> when there is no user model.",
+        "<b>The `Notifiable` trait is what gives a model `notify()`</b>, and a `Team` or `Client` needs it added explicitly.",
+        "<b>The database channel needs its table</b>: `make:notifications-table` then `migrate`.",
+        "<b>`toArray()` is the database channel's fallback</b> when `toDatabase()` is absent, so one method can serve both.",
+        "<b>`routeNotificationForMail()` overrides where a channel sends</b>, for models with no `email` column.",
+        "<b>Read them back with `unreadNotifications`, `readNotifications` and `$notification->data`</b>, and prune them, or the table grows forever.",
+        "<b>Queued notifications matter more than queued mail</b>, because three channels is three external calls.",
+        "<b>A notification sent from a worker has no request locale</b>, so it must be set explicitly.",
+        "<b>Events, queues, notifications and the scheduler all end in the same place for different reasons.</b>",
+        "<b>Ask whether something is event-driven, time-driven, multi-channel, or simply a method call.</b>",
+        "<b>Building a time-driven task as an event-driven one</b> is how a nightly report gets sent whenever somebody logs in.",
       ],
       commonMistakes: [
-        "<b>Running `queue:flush` before reading the failures.</b> The payloads are gone and nothing can be retried.",
-        "<b>Retrying everything when one job failed.</b> The ninety-nine that succeeded run again.",
-        "<b>Running workers without a process manager.</b> A crash means nothing is processed, silently.",
-        "<b>Never looking at wait time.</b> The job is fast and the feature is slow, and nothing in the logs explains it.",
-        "<b>Assuming a paused queue has lost its jobs.</b> Pausing stops processing; it does not delete.",
+        "<b>Adding notifications to a model without `Notifiable`.</b> `notify()` simply does not exist on it.",
+        "<b>Never pruning the notifications table.</b> It grows for the life of the application.",
+        "<b>Writing three mailables for one message with three destinations.</b> They drift, and only one gets updated.",
+        "<b>Sending notifications synchronously.</b> Three channels is three external calls in the request.",
+        "<b>Forgetting `->locale()` on a queued notification.</b> The interface translates and every email is in English.",
+        "<b>Using a notification when only email is involved and always will be.</b> A mailable says it more directly.",
+        "<b>Triggering time-based work from an event.</b> The nightly summary now depends on somebody logging in.",
       ],
       quiz: [
         {
-          question: "What does `queue:flush` do?",
+          question: "What is the difference between a mailable and a notification?",
           options: [
-            "Retries every failed job",
-            "Deletes the failed-job records, including their payloads, so they can never be retried",
-            "Clears the pending queue",
-            "Restarts the workers",
+            "None",
+            "A mailable is email; a notification is a message plus the channels it reaches somebody through",
+            "Notifications cannot be queued",
+            "Mailables support more formatting",
           ],
           correctIndex: 1,
-          explanation: "Cleanup, not recovery. Read before you flush.",
+          explanation: "Which matters as soon as a message has more than one destination.",
         },
         {
-          question: "Why does a production queue need a process manager?",
+          question: "What does the database notification channel do?",
           options: [
-            "For performance",
-            "A crashed or exited worker means nothing is processed, and nothing reports it",
-            "To run migrations",
-            "To pause the queue",
+            "Emails and logs it",
+            "Stores the notification so the application can show a bell with a count and read state",
+            "Broadcasts it",
+            "Queues it",
           ],
           correctIndex: 1,
-          explanation: "It is also what makes `--max-time` a safe strategy.",
+          explanation: "Nothing is delivered; the frontend queries the table.",
         },
         {
-          question: "Which Horizon metric is most often ignored and most revealing?",
-          options: ["Throughput", "Runtime", "Wait time", "Failures"],
-          correctIndex: 2,
-          explanation: "A 200ms job that queues for eleven minutes is a slow feature.",
-        },
-        {
-          question: "What does `queue:pause` do to queued jobs?",
+          question: "Why does a queued notification need `->locale()` set?",
           options: [
-            "Deletes them",
-            "Nothing; they stay queued while workers stop taking new ones",
-            "Retries them",
-            "Moves them to failed_jobs",
+            "For formatting",
+            "A worker has no request locale, so everybody would get the application default",
+            "It is required by the mail driver",
+            "It is not needed",
           ],
           correctIndex: 1,
-          explanation: "Which is what a deploy or a dependency outage needs.",
+          explanation: "The bug where the interface translates and every email is English.",
+        },
+        {
+          question: "A nightly summary email. Which mechanism?",
+          options: [
+            "An event with a queued listener",
+            "The scheduler dispatching a job",
+            "A notification on login",
+            "A direct call in a controller",
+          ],
+          correctIndex: 1,
+          explanation: "It happens because of the time, not because of an action.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What question decides whether work belongs in a queue?",
+      question: "What is the difference between a command and an event?",
       options: [
-        "Is it slow?",
-        "Does the user need it finished before they get a response?",
-        "Does it touch the database?",
-        "Is it called often?",
+        "None",
+        "A command says \"do this\" and has one handler; an event says \"this happened\" and can have many",
+        "Commands are queued",
+        "Events return values",
       ],
       correctIndex: 1,
-      explanation: "The request does the minimum that must be true before answering.",
+      explanation: "Which is why events are named as facts, in the past tense.",
     },
     {
-      question: "How is a model stored when passed into a job?",
+      question: "When is an event the wrong tool?",
       options: [
-        "As a serialised copy",
-        "As an id, and re-fetched when the job runs",
-        "As JSON",
-        "It cannot be passed",
+        "When there are several consequences",
+        "When the caller needs the result of the work",
+        "When consequences change over time",
+        "When the listener is slow",
       ],
       correctIndex: 1,
-      explanation: "Which is why the job sees edits made after dispatch.",
+      explanation: "A listener's return value goes nowhere; that is a method call.",
     },
     {
-      question: "What is wrong with using `dispatchSync()` because the queue is not configured?",
+      question: "Do listeners run asynchronously by default?",
       options: [
+        "Yes",
+        "No; they run inline unless the listener implements `ShouldQueue`",
+        "Only in production",
+        "Only when a worker is running",
+      ],
+      correctIndex: 1,
+      explanation: "An event decouples; the queue is what defers.",
+    },
+    {
+      question: "Why can a queued listener fail to find a model that was just created?",
+      options: [
+        "The queue is slow",
+        "The event fired inside a transaction that had not committed yet",
+        "The model was not serialised",
+        "The worker cached it",
+      ],
+      correctIndex: 1,
+      explanation: "`ShouldQueueAfterCommit` waits for the commit.",
+    },
+    {
+      question: "Why not send a welcome email from Eloquent's `created` event?",
+      options: [
+        "It is slower",
+        "Rows are also created by imports, seeders and factories, and `created` cannot tell them apart",
+        "Model events cannot send mail",
+        "It fires twice",
+      ],
+      correctIndex: 1,
+      explanation: "Registration is a business fact; row creation is not.",
+    },
+    {
+      question: "Why schedule a job rather than doing the work in the schedule?",
+      options: [
+        "Jobs are faster",
+        "A long-running task blocks the scheduler, so nothing else runs on time",
+        "Closures cannot be scheduled",
+        "For retries",
+      ],
+      correctIndex: 1,
+      explanation: "The scheduler decides when; a worker does the work.",
+    },
+    {
+      question: "What does `withoutOverlapping()` prevent?",
+      options: [
+        "Two servers running the task",
+        "A new run starting while a previous run of the same task is still going",
+        "The task failing",
+        "Timezone problems",
+      ],
+      correctIndex: 1,
+      explanation: "`onOneServer()` is the one that handles several servers.",
+    },
+    {
+      question: "What does `onOneServer()` require?",
+      options: [
+        "A queue worker",
+        "A cache shared between the servers, such as Redis",
+        "A lock table",
         "Nothing",
-        "The code reads and reviews as queued while blocking the request",
-        "It fails silently",
-        "It cannot be tested",
       ],
       correctIndex: 1,
-      explanation: "`dispatchAfterResponse()` frees the user but still holds the PHP process.",
+      explanation: "With a per-server cache each takes its own lock and all of them still run.",
     },
     {
-      question: "Why does a code change not affect a running worker?",
+      question: "A scheduled task did not run. What do you check first?",
       options: [
-        "The config is cached",
-        "A worker is a long-running process still executing the code it booted with",
-        "Jobs are compiled",
-        "It does",
+        "The job class",
+        "`schedule:list`, then whether the cron entry exists at all",
+        "The queue",
+        "The database",
       ],
       correctIndex: 1,
-      explanation: "`queue:restart` belongs in every deploy script.",
+      explanation: "It shows registration, frequency, timezone and environment constraints at a glance.",
     },
     {
-      question: "When should you use a chain rather than a batch?",
+      question: "Why should most mailables be queued?",
       options: [
-        "When there are many jobs",
-        "When each job depends on the previous one succeeding",
-        "When the jobs are slow",
-        "When failures are likely",
+        "For retries",
+        "Otherwise the request talks to an SMTP server, so a slow provider is a slow page",
+        "Laravel requires it",
+        "To allow attachments",
       ],
       correctIndex: 1,
-      explanation: "A batch is for independent jobs you want to track as one unit.",
+      explanation: "A provider outage otherwise fails a request about something else.",
     },
     {
-      question: "What does a batch give you that individual dispatches do not?",
+      question: "What should you do with a large export rather than attaching it?",
       options: [
-        "Faster execution",
-        "One unit to track, with progress and a `then()` when everything succeeded",
-        "Automatic retries",
-        "Ordering",
+        "Compress it",
+        "Link to it with a signed temporary URL",
+        "Split it across emails",
+        "Send it as plain text",
       ],
       correctIndex: 1,
-      explanation: "Otherwise, knowing when a hundred jobs finished is a polling loop.",
+      explanation: "Revocable, trackable, and it will not be rejected or filtered.",
     },
     {
-      question: "What decides which queue a job belongs on?",
+      question: "What can `Mail::fake()` not catch?",
       options: [
-        "How long it takes",
-        "Who is waiting for it",
-        "How often it runs",
-        "Which model it touches",
+        "The wrong recipient",
+        "A mailable that throws while rendering, because a fake never builds it",
+        "The wrong subject",
+        "A missing attachment",
       ],
       correctIndex: 1,
-      explanation: "A password reset is trivial work somebody is watching.",
+      explanation: "One test that calls `render()` covers it.",
     },
     {
-      question: "What decides whether a failed job should be retried?",
+      question: "What is the difference between a mailable and a notification?",
       options: [
-        "How many attempts are left",
-        "Whether retrying could produce a different result",
-        "The queue it is on",
-        "How long it ran",
+        "None",
+        "A mailable is email; a notification is a message plus the channels it reaches somebody through",
+        "Notifications cannot be queued",
+        "Mailables cannot be localised",
       ],
       correctIndex: 1,
-      explanation: "A permanent failure retried is the same wrong answer, three times.",
+      explanation: "One class with a `via()` instead of three that must agree.",
     },
     {
-      question: "Why must a worker's `--timeout` be shorter than the driver's `retry_after`?",
+      question: "A nightly summary email. Which mechanism?",
       options: [
-        "For memory",
-        "Otherwise the queue reassigns the job while the first worker is still running it",
-        "It is a config requirement",
-        "To enable backoff",
+        "An event with a queued listener",
+        "The scheduler dispatching a job",
+        "A notification triggered on login",
+        "A direct call in a controller",
       ],
       correctIndex: 1,
-      explanation: "The job then runs twice, at the same time.",
-    },
-    {
-      question: "What makes retries safe?",
-      options: [
-        "Backoff",
-        "The job being idempotent, so a second run has the same effect as the first",
-        "A short timeout",
-        "A low `tries` value",
-      ],
-      correctIndex: 1,
-      explanation: "Otherwise attempt two charges the card attempt one already charged.",
-    },
-    {
-      question: "What happens without `$uniqueFor` on a unique job?",
-      options: [
-        "Nothing",
-        "A lock left behind blocks every future dispatch until it expires, silently",
-        "The job runs twice",
-        "The queue fills up",
-      ],
-      correctIndex: 1,
-      explanation: "The symptom is dispatches quietly doing nothing.",
-    },
-    {
-      question: "What does `WithoutOverlapping` prevent that a unique job does not?",
-      options: [
-        "Nothing",
-        "The same work running twice concurrently, rather than being queued twice",
-        "Rate limiting",
-        "Failures",
-      ],
-      correctIndex: 1,
-      explanation: "Two jobs recalculating one invoice at once is a race.",
-    },
-    {
-      question: "What does `queue:flush` do?",
-      options: [
-        "Retries the failed jobs",
-        "Deletes the failed-job records and their payloads, so they can never be retried",
-        "Clears the pending queue",
-        "Restarts workers",
-      ],
-      correctIndex: 1,
-      explanation: "Cleanup, not recovery.",
-    },
-    {
-      question: "Which Horizon metric most often explains a slow feature?",
-      options: ["Throughput", "Runtime", "Wait time", "Memory"],
-      correctIndex: 2,
-      explanation: "A 200ms job that sits in the queue for eleven minutes.",
+      explanation: "It happens because of the time, not because of an action.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Move InvoiceHub's slow work off the request, then break it on purpose: fail one job in a hundred, retry only that one, and prove nothing ran twice.",
-    brief: "InvoiceHub does everything during the request. Generating a PDF, sending the email, syncing to the accounting provider: all of it happens while somebody watches a spinner.\n\nToday it moves to a queue, and the interesting half is not the moving. <b>It is what happens when things go wrong.</b> A queue that works when everything works is not a queue you can run; the day is about the retry, the timeout, the duplicate and the failure.\n\nSo the centrepiece is deliberate: dispatch a hundred jobs, make one of them fail, and end with a hundred completed without the ninety-nine having run twice. If you cannot prove that last part, the exercise is not finished.\n\nRun a real driver from the start. Set `QUEUE_CONNECTION=redis` or `database` before you write a line, because `sync` will hide every behaviour this day is about.",
+    goal: "Decouple InvoiceHub's side effects into events and listeners, then add a nightly summary that can never overlap or double-send.",
+    brief: "InvoiceHub's controllers do everything. Marking an invoice paid updates the record, sends an email, writes an audit row, posts to Slack and refreshes a cache, all in one method that nobody wants to touch.\n\nToday that becomes an event and four listeners. And the point is not that events are tidier: <b>it is that adding a fifth consequence should not require opening the controller.</b> You will prove that at the end by adding one.\n\nThe second half is the nightly summary, and its acceptance criteria are the interesting ones. It must not overlap with itself, must not run twice if you had two servers, must not email real customers from staging, and must tell somebody when it fails. Every one of those is a line, and every one of them is a real incident when it is missing.\n\nRun a queue worker throughout. Several things today only behave correctly when something is actually processing the queue.",
     steps: [
-      "Set `QUEUE_CONNECTION` to a real driver and run the migrations for jobs, failed jobs and batches. Confirm a dispatched job appears in the store before any worker runs.",
-      "Create `GenerateInvoicePdf` and move the PDF generation out of the controller. Time the request before and after, and record both numbers.",
-      "Dispatch it, then edit the invoice before the worker picks it up. Look at the generated PDF and write down which version of the data it used, and why.",
-      "Chain `GenerateInvoicePdf` then `SendInvoiceEmail`. Make the PDF job fail and confirm no email was sent.",
-      "Add a `failed()` method that marks the invoice as failed, and check the record after a failure.",
-      "Now the centrepiece: seed 100 invoices and dispatch a batch of `GenerateInvoicePdf`. Make invoice 50 throw. Use `allowFailures()` so the other 99 continue.",
-      "Add `then()` and `catch()` callbacks that log the outcome, and a `progress()` callback that writes the percentage somewhere you can watch.",
-      "Run the batch. Record how many completed and how many failed, then find the failure with `queue:failed`.",
-      "Fix the cause, retry only that job with `queue:retry <id>`, and prove from your logs or a counter that the other 99 did not run again. This is the acceptance criterion for the whole day.",
-      "Add a `SyncToAccounting` job calling an external API. Give it `#[Tries]`, growing `#[Backoff]` and a `#[Timeout]` set from how long the call actually takes.",
-      "Point it at a URL that returns 500 and watch the attempts and the delays. Then point it at one returning 422 and add `failOnException()` so it stops at the first attempt. Compare the two logs.",
-      "Make the job idempotent: run it twice against the same invoice and confirm the provider was called once. Then remove the guard, run it twice, and confirm it was called twice.",
-      "Set the worker's `--timeout` higher than the driver's `retry_after` deliberately, run a slow job, and observe what happens. Then fix it and write down what you saw.",
-      "Make `SyncToAccounting` unique per invoice with a `$uniqueFor`. Dispatch it five times in a loop and confirm only one job was queued.",
-      "Add a rate limiter for the accounting API and apply it as job middleware. Dispatch 200 jobs and confirm from the timestamps that they are spread rather than sent at once.",
-      "Split the queues: `high` for anything a person is waiting for, `default`, and `low` for bulk PDF generation. Route the jobs with `Queue::route()` in one place.",
-      "Run one worker on `--queue=high` alone and another on the rest. Fill the low queue with 500 jobs, then dispatch a password reset and time how long it waits.",
-      "Write a Supervisor config with four workers, `autorestart`, and `--max-time`. Kill a worker and confirm it comes back.",
-      "Add `queue:restart` to your deploy notes. Then change a job's code without restarting, dispatch it, and confirm the old code ran.",
-      "If you are on Redis, install Horizon and watch a batch run. Record the throughput, the runtime and the wait time, and say which of the three would have told you about a problem first.",
-      "Finally, pick your most important job and answer in writing: what happens if it runs twice, fails halfway, takes ten minutes, is retried five times, the API is down, or a hundred thousand arrive at once.",
+      "Find the fattest controller method in InvoiceHub, copy it into `NOTES.md` untouched, and list every side effect it performs.",
+      "Create an `InvoicePaid` event carrying the invoice. Name it as a fact and write one sentence explaining why it is not called `SendInvoicePaidEmail`.",
+      "Move each side effect into its own listener. Confirm the controller is down to the state change and one dispatch.",
+      "Queue the slow listeners and leave the instant ones inline. Write down which is which and why.",
+      "Dispatch the event inside a transaction, with a queued listener that reads the invoice. Under a worker, try to make it fail by committing late, then fix it with `ShouldQueueAfterCommit`.",
+      "Run `php artisan event:list` and check that everything you expect is registered. Then decide whether this event should use manual registration instead, and justify the answer.",
+      "Add a fifth consequence, such as a webhook to a partner, without opening the controller. That is the acceptance test for the first half.",
+      "Convert `InvoicePaid` from a mailable into a notification with `mail`, `database` and one more channel. Add a `via()` that respects a per-user preference column.",
+      "Build a notification bell that reads `unreadNotifications` and shows a count. Mark one read and confirm the count changes.",
+      "Send the notification to a user whose locale is not English and confirm the email is in their language. Then remove the `->locale()` call and confirm what happens.",
+      "Preview the invoice email by returning the mailable from a route. Check it in a browser and on a narrow window, and fix whatever is broken.",
+      "Deliberately set `APP_URL` wrongly, queue the email, and look at the links in the log. Then fix it, and write down why this is invisible locally.",
+      "Write three mail tests: it sends on payment, it does not send for a draft, and the mailable renders. Note which of the three a `Mail::fake()` alone could not have caught.",
+      "Now the scheduler. Create `SendDailySummary` as a queued job and schedule it at 02:00 with an explicit timezone.",
+      "Add `withoutOverlapping()` with an expiry set from the work. Then make the job sleep for longer than its interval and observe what happens with and without it.",
+      "Add `onOneServer()` and `environments(['production'])`. Explain in a comment what each one prevents, with the specific incident in mind.",
+      "Add an `onFailure()` hook that alerts somebody. Then make the job throw and confirm the alert fires.",
+      "Run `php artisan schedule:list` and check the next run time is what you expect in your timezone. Then run `schedule:run` and watch the job reach the queue and the worker.",
+      "Finally, list every email InvoiceHub sends and classify each one: event-driven, time-driven, or a direct call. Anything in the wrong category, move it.",
     ],
     acceptance: [
-      "The invoice request no longer generates a PDF, and you recorded the timing before and after.",
-      "A chain stops after a failure, and no email is sent when the PDF job fails.",
-      "A batch of 100 completes 99 and records 1 failure, with progress visible while it runs.",
-      "Retrying the single failed job brings the total to 100, and you can prove the other 99 did not run again.",
-      "A 500 from the API produces retries with growing delays; a 422 fails on the first attempt.",
-      "`SyncToAccounting` run twice calls the provider once, and you demonstrated the unguarded version calling it twice.",
-      "You observed what a `--timeout` longer than `retry_after` does, and fixed it.",
-      "Five dispatches of the unique job queue one job.",
-      "200 rate-limited jobs are spread over time rather than sent at once, shown by their timestamps.",
-      "A password reset dispatched behind 500 low-priority jobs is processed promptly, because of a dedicated worker.",
-      "A killed worker is restarted by Supervisor.",
-      "You demonstrated a job running old code before a `queue:restart`.",
-      "You have written answers for your most important job about running twice, failing halfway, timing out, being retried, the API being down, and arriving in bulk.",
+      "The controller does the state change and dispatches one event, and `NOTES.md` holds the original for comparison.",
+      "Each side effect is its own listener, with slow ones queued and instant ones inline, and you can justify the split.",
+      "A queued listener dispatched inside a transaction reliably finds the record, and you saw it fail before you fixed it.",
+      "A fifth consequence was added without touching the controller.",
+      "`InvoicePaid` is one notification reaching mail, the database and one more channel, respecting a per-user preference.",
+      "The bell shows an unread count that changes when a notification is marked read.",
+      "A non-English user receives the email in their language, and you saw what happens without `->locale()`.",
+      "The invoice email was previewed in a browser before any test was written.",
+      "You reproduced the wrong-`APP_URL` bug and can explain why it is invisible locally.",
+      "Three mail tests pass, and you know which one a fake could not have replaced.",
+      "The nightly summary is scheduled at 02:00 in an explicit timezone, dispatching a queued job rather than doing the work.",
+      "A long-running summary does not overlap itself, and you observed the overlap before adding the guard.",
+      "`onOneServer()`, `environments()` and `onFailure()` are all present, each with a comment naming what it prevents.",
+      "`schedule:list` shows the task with the next run time you expect.",
+      "Every email InvoiceHub sends is classified as event-driven, time-driven or direct, and anything miscategorised has been moved.",
     ],
     stretch: [
-      "Build a batch of chains: each invoice's PDF then email, with the invoices processed in parallel, and show the batch progress while it runs.",
-      "Add `WithoutOverlapping` to a recalculation job and demonstrate the race it prevents by removing it and running two workers.",
-      "Pause the queue during a simulated deploy, dispatch jobs while paused, resume, and confirm nothing was lost.",
+      "Group the invoice listeners into a subscriber and write down what you gained and what you gave up.",
+      "Add a debounced listener for something recalculated on every edit, and demonstrate three rapid changes producing one run.",
+      "Add an on-demand notification alerting an operations address when the nightly summary fails, and test it by making the job throw.",
     ],
   },
 };

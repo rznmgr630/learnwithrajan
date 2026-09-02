@@ -2,2548 +2,2418 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_27_LESSONS: LessonDay = {
   day: 27,
-  title: "Events, listeners, scheduling, mail & notifications",
-  totalMinutes: 91,
+  title: "Broadcasting & real time — Reverb, channels & Echo",
+  totalMinutes: 92,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "events-and-listeners",
-      title: "Events, listeners & the difference from commands",
+      id: "what-is-broadcasting",
+      title: "Broadcasting & WebSockets",
       durationMinutes: 11,
-      explanation: "Yesterday moved slow work off the request. Today is about <b>decoupling actions from their side effects</b>, which is a different problem with a different answer.\n\n---\n\n### 1. Basic — the method that keeps growing\n\nA user registers. What has to happen?\n\n```php\nregisterUser();\nsendWelcomeEmail();\ncreateProfile();\ntrackAnalytics();\nsendSlackNotification();\nsubscribeToNewsletter();\n```\n\nEvery new requirement is another line in one method, and that method now knows about email, analytics, Slack and a newsletter. <b>Registration has become the place where everything about a new user lives</b>, and nobody can change any of it safely.\n\nEvents invert it:\n\n```text\nregisterUser()\n      ↓\nUserRegistered\n      ↓\n ┌────┼─────────┐\n ▼    ▼         ▼\nEmail Profile Analytics\n```\n\n<b>Registration announces what happened, and does not know who is listening.</b> Adding a sixth consequence means adding a listener and touching nothing else.\n\n---\n\n### 2. Intermediate — an event is not a command\n\nThis distinction decides whether events help you or confuse you:\n\n```text\nProcessPodcast       a command   →  \"do this\"\nPodcastProcessed     an event    →  \"this happened\"\n```\n\nA command names an action and has exactly one handler. <b>An event names a fact, in the past tense, and can have any number of listeners including none.</b>\n\nWhich means an event should not describe what should happen next:\n\n```text\n✓ UserRegistered           a fact\n✗ SendWelcomeEmailEvent    a command wearing an event's name\n```\n\nThe second one has already decided the consequence, so it gains nothing over calling the method directly.\n\nThe past tense is a genuinely useful test. If you cannot name it in the past tense, you have a command:\n\n```text\nOrderPlaced · PaymentCompleted · InvoicePaid\nSubscriptionCancelled · PodcastProcessed\n```\n\n---\n\n### 3. Advanced — when events are worth it\n\nThey are not free, and it is worth being honest about the cost.\n\n<b>An event makes the consequences invisible from the call site.</b> Somebody reading `registerUser()` sees an event dispatched and has no idea that six things happen. That is exactly the decoupling you wanted, and exactly what makes debugging harder.\n\nSo the judgement:\n\n```text\nWorth an event                   Not worth an event\n──────────────                   ──────────────────\nseveral unrelated consequences   one consequence\nconsequences added over time     the consequence is the point\ndifferent parts of the app       the caller needs the result\n  care about the same fact\nthe caller should not know\n```\n\n<b>One consequence, called directly, is clearer than an event with one listener.</b> The event costs a file, a class and an indirection, and buys nothing until there is a second listener.\n\nAnd the one that matters most: <b>if the caller needs the result, it is not an event.</b> An event is fire-and-forget by design; a listener's return value goes nowhere. Something you need an answer from is a method call.\n\nOne more thing worth knowing now, because it shapes everything after: <b>listeners run synchronously by default.</b> Dispatching `UserRegistered` with three listeners runs all three before the next line, in the request. Making them asynchronous is the next lesson, and until then an event is a decoupling tool, not a speed one.\n\nOne piece of vocabulary: `event(new InvoicePaid($invoice))` and `InvoicePaid::dispatch($invoice)` are the same thing. <b>The helper is what you will see in older code and in the framework's own source</b>; the static form reads better and is what to write.",
-      diagram: `The method that keeps growing
+      explanation: "Every day so far has had the browser asking and the server answering. Today the server gets to speak first.\n\n> <b>From \"the browser asks for updates\" to \"the server pushes them when something happens\".</b>\n\n---\n\n### 1. Basic — why HTTP cannot do this\n\nHTTP is a question and an answer:\n\n```text\nBrowser  →  GET /notifications  →  Laravel\nBrowser  ←  the response        ←  Laravel\n```\n\nAnd then it is over. If something changes five seconds later, <b>the browser has no way to find out</b>, because nothing is connecting the two any more.\n\nThe workaround is asking repeatedly:\n\n```text\nGET /notifications\n   wait\nGET /notifications\n   wait\nGET /notifications\n```\n\nWhich works, and is wasteful in a specific way worth understanding: <b>almost every request returns nothing new.</b> Poll every five seconds and you have made 720 requests an hour per user to deliver perhaps three notifications, and the news is still up to five seconds late.\n\n---\n\n### 2. Intermediate — a connection that stays open\n\n<b>A <i>WebSocket</i></b> is a connection that stays open, and either side can send at any time:\n\n```text\nHTTP                    WebSocket\n────                    ─────────\nBrowser → Server        Browser ═══════ Server\nBrowser ← Server              persistent\n(closed)                 either side may send\n```\n\nSo the arrangement becomes:\n\n```text\nLaravel\n   ↓ event\nWebSocket server\n   ↓\npersistent connection\n   ↓\nbrowser\n```\n\nThe server sends the moment something happens, and the browser is not asking about anything.\n\n<b>Which changes the resource question rather than removing it.</b> Polling costs requests; WebSockets cost <i>connections</i>. Ten thousand idle users are ten thousand open sockets sitting in memory, doing nothing, and that is a different scaling problem with different answers.\n\nWhat it makes possible:\n\n```text\nlive notifications · chat · online users\nlive dashboards · typing indicators\nreal-time collaboration · order status\n```\n\n---\n\n### 3. Advanced — when it is worth it\n\nBroadcasting adds a server to run, a connection to maintain, a client library, an authorization layer and a reconnection story. So the honest question is whether the thing you are building genuinely needs it.\n\n```text\nreal time                        not real time\n─────────                        ─────────────\nchat, collaboration              a dashboard refreshed\n  — seconds matter                 every minute\nsomebody is watching             a status that changes\n  right now                        once a day\nseveral people see the           the user triggered it and\n  same thing                       can wait for the response\n```\n\n<b>Two cheaper options are worth knowing before reaching for WebSockets.</b>\n\nA slow poll is fine for a lot of things. A dashboard fetching every thirty seconds costs 120 requests an hour and no infrastructure, and nobody notices the delay.\n\nAnd for a one-way stream from server to browser, <b>server-sent events</b> do that over ordinary HTTP with no extra server. They are less capable than WebSockets and enough for a progress bar or a notification feed.\n\nThe test worth applying: <b>would a five-second delay make this feature wrong, or just slightly less nice?</b> Chat is wrong. A notification bell is slightly less nice.\n\nAnd the piece that connects to yesterday: <b>broadcasting is a delivery mechanism, not a source of truth.</b> The event still happened, the database still recorded it, and a user who reloads the page must see the same thing. A UI that only knows what arrived over the socket is broken for anybody who was disconnected, which is everybody, sometimes.",
+      diagram: `Why HTTP cannot do this
 
-    registerUser();
-    sendWelcomeEmail();
-    createProfile();
-    trackAnalytics();
-    sendSlackNotification();
-    subscribeToNewsletter();
+    Browser  →  GET /notifications  →  Laravel
+    Browser  ←  the response        ←  Laravel
+    (closed)
 
-  Every new requirement is another line, and registration
-  now knows about email, analytics, Slack and a newsletter.
-  It has become the place where everything about a new
-  user lives, and nobody can change any of it safely.
+  Something changes five seconds later and the browser
+  has no way to find out. Nothing connects them any more.
 
+  The workaround:
 
-  Events invert it:
+    GET /notifications
+       wait
+    GET /notifications
+       wait
+    GET /notifications
 
-    registerUser()
-          ↓
-    UserRegistered
-          ↓
-     ┌────┼─────────┐
-     ▼    ▼         ▼
-    Email Profile Analytics
-
-  Registration announces what HAPPENED and does not know
-  who is listening. A sixth consequence is a new listener
-  and nothing else touched.
+  Wasteful in a specific way: almost every request
+  returns NOTHING NEW. Every five seconds is 720
+  requests an hour per user to deliver perhaps three
+  notifications — and the news is still up to five
+  seconds late.
 
 
-An event is not a command
+A connection that stays open
 
-    ProcessPodcast     a command  →  "do this"
-    PodcastProcessed   an event   →  "this happened"
+  HTTP                    WebSocket
+  ────                    ─────────
+  Browser → Server        Browser ═══════ Server
+  Browser ← Server              persistent
+  (closed)                 either side may send
 
-  A command names an ACTION and has exactly one handler.
-  An event names a FACT, in the past tense, and can have
-  any number of listeners — including none.
+    Laravel
+       ↓ event
+    WebSocket server
+       ↓
+    persistent connection
+       ↓
+    browser
 
-    ✓ UserRegistered          a fact
-    ✗ SendWelcomeEmailEvent   a command in an event's name
+  The server sends the moment something happens.
 
-  The second has already decided the consequence, so it
-  gains nothing over calling the method.
+  ⚠️  This changes the resource question rather than
+      removing it. Polling costs REQUESTS. WebSockets
+      cost CONNECTIONS: ten thousand idle users are ten
+      thousand open sockets in memory, doing nothing.
 
-  The past tense is a real test:
+  What it makes possible:
 
-    OrderPlaced · PaymentCompleted · InvoicePaid
-    SubscriptionCancelled · PodcastProcessed
-
-
-When events are worth it
-
-  ⚠️  An event makes the consequences INVISIBLE from the
-      call site. Somebody reading registerUser() sees a
-      dispatch and has no idea six things happen.
-
-      That is the decoupling you wanted, and what makes
-      debugging harder.
-
-  Worth an event                  Not worth an event
-  ──────────────                  ──────────────────
-  several unrelated               one consequence
-    consequences                  the consequence IS
-  consequences added over time      the point
-  different parts of the app      the caller needs
-    care about the same fact        the result
-  the caller should not know
-
-  One consequence, called directly, is clearer than an
-  event with one listener. The event costs a file, a
-  class and an indirection, and buys nothing until
-  there is a second listener.
-
-  And: if the caller needs the RESULT, it is not an
-  event. An event is fire-and-forget; a listener's
-  return value goes nowhere.
+    live notifications · chat · online users
+    live dashboards · typing indicators
+    real-time collaboration · order status
 
 
-  ⚠️  Listeners run SYNCHRONOUSLY by default.
-      Three listeners run before the next line, in the
-      request. Making them async is the next lesson.
+When it is worth it
 
-      Until then, an event is a decoupling tool,
-      not a speed one.`,
+  It adds a server to run, a connection to maintain, a
+  client library, an authorization layer and a
+  reconnection story.
+
+  real time                     not real time
+  ─────────                     ─────────────
+  chat, collaboration           a dashboard refreshed
+    — seconds matter              every minute
+  somebody is watching          a status that changes
+    right now                     once a day
+  several people see the        the user triggered it
+    same thing                    and can wait
+
+
+  Two cheaper options first:
+
+    A slow poll. A dashboard fetching every thirty
+    seconds is 120 requests an hour and no
+    infrastructure, and nobody notices.
+
+    Server-sent events. One-way, server to browser, over
+    ordinary HTTP with no extra server. Less capable,
+    and enough for a progress bar or a feed.
+
+
+  The test:
+
+    would a five-second delay make this feature WRONG,
+    or just slightly less nice?
+
+      chat              wrong
+      notification bell slightly less nice
+
+
+  And: broadcasting is a DELIVERY MECHANISM, not a
+  source of truth. The event happened, the database
+  recorded it, and a reload must show the same thing.
+
+  A UI that only knows what arrived over the socket is
+  broken for anybody who was disconnected — which is
+  everybody, sometimes.`,
       codeExample: {
-        title: "An event, and the listeners that react to it",
-        code: `<?php
-// ---------- The method that kept growing ----------
+        title: "Polling, and what replaces it",
+        code: `// ---------- Polling: what most applications start with ----------
 
-public function register(Request $request)
-{
-    $user = User::create($request->validated());
+setInterval(async () => {
+    const res = await fetch('/api/notifications/unread-count');
+    const { count } = await res.json();
 
-    // Registration now knows about all of this.
-    Mail::to($user)->send(new WelcomeEmail($user));
-    $user->profile()->create(['bio' => '']);
-    Analytics::track('registered', $user->id);
-    Slack::notify("New user: {$user->email}");
-    Newsletter::subscribe($user->email);
+    setUnread(count);
+}, 5000);
 
-    return redirect('/dashboard');
-}
+// 720 requests an hour, per user, to deliver perhaps
+// three notifications. And the news is still up to five
+// seconds old.
 
 
-<?php
-// ---------- With an event ----------
+// ---------- Broadcasting: the server speaks first ----------
 
-// php artisan make:event UserRegistered
-
-namespace App\\Events;
-
-use App\\Models\\User;
-use Illuminate\\Foundation\\Events\\Dispatchable;
-
-class UserRegistered
-{
-    use Dispatchable;
-
-    public function __construct(public User $user) {}
-}
-
-// A fact, in the past tense. It does not say what
-// should happen next.
-
-
-<?php
-// The controller now announces, and stops there.
-
-public function register(Request $request)
-{
-    $user = User::create($request->validated());
-
-    UserRegistered::dispatch($user);
-
-    return redirect('/dashboard');
-}
-
-
-<?php
-// ---------- The listeners ----------
-
-// php artisan make:listener SendWelcomeEmail --event=UserRegistered
-
-namespace App\\Listeners;
-
-use App\\Events\\UserRegistered;
-
-class SendWelcomeEmail
-{
-    public function handle(UserRegistered $event): void
-    {
-        Mail::to($event->user)->send(new WelcomeEmail($event->user));
-    }
-}
-
-class CreateUserProfile
-{
-    public function handle(UserRegistered $event): void
-    {
-        $event->user->profile()->create(['bio' => '']);
-    }
-}
-
-class TrackRegistration
-{
-    public function handle(UserRegistered $event): void
-    {
-        Analytics::track('registered', $event->user->id);
-    }
-}
-
-// A sixth consequence is a sixth listener, and the
-// controller does not change.
-
-
-<?php
-// ---------- Naming: a fact, not an instruction ----------
-
-// ✓ Facts.
-class OrderPlaced {}
-class PaymentCompleted {}
-class SubscriptionCancelled {}
-
-// ❌ A command wearing an event's name. It has already
-//    decided the consequence, so it gains nothing over
-//    calling the method.
-class SendWelcomeEmailEvent {}
-class ShouldGenerateInvoice {}
-
-
-<?php
-// ---------- When NOT to use an event ----------
-
-// ❌ One consequence. The event costs a file, a class and
-//    an indirection, and buys nothing.
-InvoiceCreated::dispatch($invoice);   // one listener: send it
-
-// ✓
-Mail::to($invoice->customer)->send(new InvoiceCreated($invoice));
-
-
-// ❌ The caller needs the answer. A listener's return
-//    value goes nowhere.
-$total = InvoiceTotalRequested::dispatch($invoice);
-
-// ✓ That is a method call.
-$total = $this->calculator->total($invoice);`,
-      },
-      keyTakeaways: [
-        "<b>Events decouple an action from its side effects</b>, so one method stops accumulating every consequence.",
-        "<b>The dispatcher announces what happened and does not know who is listening.</b>",
-        "Adding a new consequence means adding a listener, with the original code untouched.",
-        "<b>A command says \"do this\" and has one handler; an event says \"this happened\" and can have any number.</b>",
-        "<b>Name events as facts in the past tense</b>: `OrderPlaced`, `PaymentCompleted`, `InvoicePaid`.",
-        "An event that names an action, such as `SendWelcomeEmailEvent`, has already decided the consequence.",
-        "<b>Events make consequences invisible from the call site</b>, which is the decoupling and the debugging cost.",
-        "<b>One consequence is clearer called directly</b> than dispatched to a single listener.",
-        "<b>If the caller needs a result, it is not an event</b>: a listener's return value goes nowhere.",
-        "<b>Listeners run synchronously by default</b>, so an event is a decoupling tool rather than a speed one.",
-      ],
-      commonMistakes: [
-        "<b>Naming an event after the action it should cause.</b> That is a command with extra indirection.",
-        "<b>Dispatching an event with exactly one listener.</b> A direct call says the same thing more clearly.",
-        "<b>Expecting a return value from an event.</b> Dispatch is fire-and-forget by design.",
-        "<b>Assuming an event makes the request faster.</b> Listeners run inline unless you queue them.",
-        "<b>Putting the whole workflow in one listener.</b> That is the original method, moved.",
-      ],
-      quiz: [
-        {
-          question: "What is the difference between a command and an event?",
-          options: [
-            "None",
-            "A command says \"do this\" and has one handler; an event says \"this happened\" and can have many",
-            "Commands are queued",
-            "Events return values",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why events are named as facts, in the past tense.",
-        },
-        {
-          question: "Which is a well-named event?",
-          options: ["SendWelcomeEmail", "ProcessOrder", "OrderPlaced", "ShouldNotifyUser"],
-          correctIndex: 2,
-          explanation: "A fact in the past tense, which has not decided the consequence.",
-        },
-        {
-          question: "When is an event not the right tool?",
-          options: [
-            "When there are several consequences",
-            "When the caller needs the result of the work",
-            "When the consequences change over time",
-            "When different parts of the app care",
-          ],
-          correctIndex: 1,
-          explanation: "A listener's return value goes nowhere; that is a method call.",
-        },
-        {
-          question: "Do listeners run asynchronously by default?",
-          options: [
-            "Yes, always",
-            "No; they run inline, before the next line of the dispatcher",
-            "Only in production",
-            "Only if queued workers exist",
-          ],
-          correctIndex: 1,
-          explanation: "An event decouples; queueing the listener is what makes it asynchronous.",
-        },
-      ],
-    },
-    {
-      id: "registration-and-queued-listeners",
-      title: "Discovery, registration & queued listeners",
-      durationMinutes: 12,
-      explanation: "Connecting a listener to an event, and getting it off the request.\n\n---\n\n### 1. Basic — how Laravel finds a listener\n\n```bash\nphp artisan make:event UserRegistered\nphp artisan make:listener SendWelcomeEmail --event=UserRegistered\n```\n\n```php\npublic function handle(UserRegistered $event): void\n{\n    // ...\n}\n```\n\n<b>Laravel discovers the wiring from that type hint.</b> A class in `app/Listeners` whose `handle()` takes `UserRegistered` is registered for it, with nothing to configure.\n\nWhich is convenient, and has a cost: <b>nothing lists what happens when an event fires.</b> Finding out means searching the codebase for the type hint.\n\n```bash\nphp artisan event:list\n```\n\nis the answer to that, and worth knowing before you need it.\n\nManual registration is the alternative:\n\n```php\nEvent::listen(UserRegistered::class, SendWelcomeEmail::class);\n```\n\n```text\ndiscovery              nothing to wire, nothing to read\nmanual registration    one file listing every consequence\n```\n\nUse manual registration when the wiring is unusual, when a listener lives outside the conventional place, or when you want one file somebody can audit.\n\n---\n\n### 2. Intermediate — queued listeners\n\nListeners run inline, so this is a problem:\n\n```text\nUserRegistered\n      ↓\ngenerate a 50-page PDF\n```\n\nThe user waits for it, which is exactly what yesterday was about.\n\n<b>`ShouldQueue` on the listener moves it to the queue:</b>\n\n```php\nclass SendWelcomeEmail implements ShouldQueue\n{\n}\n```\n\n```text\nUserRegistered → Queue → Worker → the PDF\n```\n\nAnd the two ideas compose properly:\n\n```text\nevent       decoupling: the caller does not know\nqueue       timing: the user does not wait\n```\n\nA listener can be queued while its siblings stay inline, which is usually right: creating a profile is instant and belongs in the request, and sending mail is not.\n\n<b>A queued listener is a job.</b> Everything from yesterday applies: it is serialised, `$tries` and `$backoff` work, it can fail, and it appears in `failed_jobs`. Which also means a failing listener no longer breaks the request that dispatched it, and that is a change in behaviour worth knowing about.\n\n---\n\n### 3. Advanced — the details, and debouncing\n\n<b>Order is not guaranteed once listeners are queued.</b> Three queued listeners are three independent jobs; if the second depends on the first, they are a chain, not listeners.\n\n<b>A queued listener sees the state at execution time</b>, not at dispatch. Yesterday's point, and it matters more here because the event is named after something that already happened: `SubscriptionCancelled` fires, the listener runs a minute later, and the subscription may have been reinstated.\n\n<b>And events inside a transaction fire before it commits</b>, unless the listener implements `ShouldQueueAfterCommit` (or `ShouldHandleEventsAfterCommit`). Otherwise a queued listener can start, look up the model, and find nothing there yet, which is a race that only appears under load.\n\n---\n\n### Debounced listeners\n\nLaravel 13 adds debouncing, for a specific and common shape:\n\n```text\nprofile updated → event → listener\nprofile updated → event → listener\nprofile updated → event → listener\n```\n\nSomebody editing a form triggers the same expensive work three times in five seconds, and only the last result matters.\n\n```text\nevent\nevent\nevent\nevent\n  │\n  └── debounce\n        ↓\n  one execution\n```\n\n<b>Rapid repeated triggers collapse into one run</b>, which suits exactly the work where re-running is wasteful rather than wrong:\n\n```text\nsearch indexing · document processing\ncache rebuilding · synchronisation\n```\n\nThe trade is a delay: the work happens after the quiet period rather than immediately. For a search index that is invisible; for something a user is waiting to see, it is not.",
-      diagram: `How Laravel finds a listener
-
-    php artisan make:listener SendWelcomeEmail \\
-        --event=UserRegistered
-
-    public function handle(UserRegistered \$event)
-
-  Discovery reads that TYPE HINT. A class in app/Listeners
-  whose handle() takes the event is registered for it.
-
-  ⚠️  Convenient, and nothing lists what happens when an
-      event fires. Finding out means grepping for the
-      type hint.
-
-      php artisan event:list
-
-  Manual registration is the alternative:
-
-    Event::listen(UserRegistered::class, SendWelcomeEmail::class)
-
-    discovery     nothing to wire, nothing to read
-    manual        one file listing every consequence
-
-  Use manual for unusual wiring, listeners outside the
-  conventional place, or when you want something to audit.
-
-
-Queued listeners
-
-  Listeners run inline, so:
-
-    UserRegistered → generate a 50-page PDF
-
-  means the user waits for it.
-
-    implements ShouldQueue
-
-    UserRegistered → Queue → Worker → the PDF
-
-  And the two ideas compose:
-
-    event   decoupling: the caller does not know
-    queue   timing: the user does not wait
-
-  One listener can be queued while its siblings stay
-  inline — usually right: creating a profile is instant
-  and belongs in the request; sending mail is not.
-
-  A queued listener IS a job. Serialised, \$tries and
-  \$backoff work, it can fail, it appears in failed_jobs.
-
-  Which also means a failing listener no longer breaks
-  the request that dispatched it.
-
-
-Three details
-
-  Order is NOT guaranteed once listeners are queued.
-  Three queued listeners are three independent jobs. If
-  the second depends on the first, that is a chain.
-
-  A queued listener sees the state at EXECUTION time.
-  SubscriptionCancelled fires, the listener runs a minute
-  later, and the subscription may have been reinstated.
-
-  Events inside a transaction fire BEFORE it commits,
-  unless the listener uses ShouldQueueAfterCommit. A
-  queued listener can otherwise start, look up the model,
-  and find nothing — a race that only appears under load.
-
-
-Debouncing
-
-    profile updated → event → listener
-    profile updated → event → listener
-    profile updated → event → listener
-
-  Somebody editing a form triggers the same expensive
-  work three times in five seconds, and only the last
-  result matters.
-
-    event
-    event
-    event
-      │
-      └── debounce
-            ↓
-      one execution
-
-  Suits work where re-running is WASTEFUL rather than
-  wrong:
-
-    search indexing · document processing
-    cache rebuilding · synchronisation
-
-  The trade is a delay: the work happens after the quiet
-  period. Invisible for a search index; not invisible
-  for something a user is waiting to see.`,
-      codeExample: {
-        title: "Wiring listeners, and getting them off the request",
-        code: `<?php
-// ---------- Discovery: the type hint is the wiring ----------
-
-namespace App\\Listeners;
-
-use App\\Events\\UserRegistered;
-
-class SendWelcomeEmail
-{
-    // This type hint is what registers the listener.
-    public function handle(UserRegistered $event): void
-    {
-        Mail::to($event->user)->send(new WelcomeEmail($event->user));
-    }
-}
-
-
-# What is actually listening to what:
-php artisan event:list
-
-
-<?php
-// ---------- Manual registration, when you want a list ----------
-
-// app/Providers/AppServiceProvider.php
-
-use Illuminate\\Support\\Facades\\Event;
-
-public function boot(): void
-{
-    Event::listen(UserRegistered::class, SendWelcomeEmail::class);
-    Event::listen(UserRegistered::class, CreateUserProfile::class);
-    Event::listen(UserRegistered::class, TrackRegistration::class);
-
-    // Or a closure, for something trivial.
-    Event::listen(function (InvoicePaid $event) {
-        Log::info('Invoice paid', ['id' => $event->invoice->id]);
+Echo.private('user.' + userId)
+    .listen('NotificationCreated', (event) => {
+        setUnread((n) => n + 1);
     });
-}
+
+// One connection. Zero requests. Delivered the moment it
+// happens.
 
 
 <?php
-// ---------- Queued, and inline, side by side ----------
+// ---------- The trade ----------
 
-// Instant, and the request should wait for it.
-class CreateUserProfile
-{
-    public function handle(UserRegistered $event): void
-    {
-        $event->user->profile()->create(['bio' => '']);
-    }
-}
-
-// Slow, and the request should not.
-class SendWelcomeEmail implements ShouldQueue
-{
-    use InteractsWithQueue, Queueable;
-
-    // A queued listener IS a job: all of yesterday applies.
-    public int $tries = 3;
-    public array $backoff = [10, 30, 60];
-    public string $queue = 'emails';
-
-    public function handle(UserRegistered $event): void
-    {
-        Mail::to($event->user)->send(new WelcomeEmail($event->user));
-    }
-
-    public function failed(UserRegistered $event, \\Throwable $e): void
-    {
-        Log::error('Welcome email failed', ['user' => $event->user->id]);
-    }
-}
+// Polling costs REQUESTS.
+//   10,000 users × 720/hour = 7.2 million requests
+//   almost all returning nothing new
+//
+// WebSockets cost CONNECTIONS.
+//   10,000 users = 10,000 open sockets held in memory,
+//   doing nothing most of the time
+//
+// A different scaling problem, not an absent one.
 
 
 <?php
-// ---------- The transaction race ----------
+// ---------- Cheaper options, first ----------
 
-DB::transaction(function () use ($data) {
-    $user = User::create($data);
+// A slow poll: no infrastructure, and nobody notices.
+// setInterval(fetchStats, 30000);   // 120 requests/hour
 
-    // Fires here, INSIDE the transaction. A queued
-    // listener can start and find no such user yet.
-    UserRegistered::dispatch($user);
+// Server-sent events: one-way, over ordinary HTTP.
+Route::get('/progress/{job}', function (string $job) {
+    return response()->eventStream(function () use ($job) {
+        while (! Cache::get("job:{$job}:done")) {
+            yield Cache::get("job:{$job}:progress", 0);
+
+            sleep(1);
+        }
+    });
 });
 
-// ✓ Wait for the commit.
-use Illuminate\\Contracts\\Events\\ShouldQueueAfterCommit;
-
-class SendWelcomeEmail implements ShouldQueue, ShouldQueueAfterCommit
-{
-}
-
-// A race that only appears under load, which is the
-// worst kind to find in production.
+// Enough for a progress bar. No WebSocket server.
 
 
 <?php
-// ---------- Order is not guaranteed ----------
+// ---------- Delivery, not truth ----------
 
-// ❌ Three queued listeners are three independent jobs.
-//    The second may run before the first finishes.
-class GenerateInvoicePdf implements ShouldQueue {}
-class EmailInvoicePdf implements ShouldQueue {}     // needs the PDF
+// ❌ The UI only knows what arrived over the socket.
+//    Anybody who was disconnected sees nothing, and a
+//    reload shows an empty bell.
 
-// ✓ That is a chain, from yesterday.
-Bus::chain([
-    new GenerateInvoicePdf($invoice),
-    new EmailInvoicePdf($invoice),
-])->dispatch();
-
-
-<?php
-// ---------- Debounced ----------
-
-// Somebody editing a form fires this three times in five
-// seconds, and only the last one matters.
-class ReindexProfile implements ShouldQueue
+// ✓ The socket updates a UI that could have been built
+//   from the database anyway.
+public function index(Request $request)
 {
-    public function handle(ProfileUpdated $event): void
-    {
-        Search::index($event->user);
-    }
-}
-
-// Collapsing the rapid repeats into one run suits
-// indexing, cache rebuilding and synchronisation:
-// re-running is wasteful rather than wrong.
-//
-// The trade is a delay. Fine for a search index; not
-// fine for something a user is waiting to see.`,
-      },
-      keyTakeaways: [
-        "<b>Laravel discovers a listener from the event type hint on its `handle()` method.</b>",
-        "<b>Discovery means nothing lists an event's consequences</b>, so `php artisan event:list` is worth knowing.",
-        "<b>Manual registration puts every wiring in one auditable file</b>, which suits unusual or important cases.",
-        "<b>`ShouldQueue` on a listener moves it to the queue</b>, so the user does not wait for it.",
-        "<b>An event decouples and a queue defers</b>: they solve different problems and compose.",
-        "One listener can be queued while its siblings stay inline, which is usually the right split.",
-        "<b>A queued listener is a job</b>: serialised, retryable, failable, and visible in `failed_jobs`.",
-        "<b>Order is not guaranteed between queued listeners</b>; dependent steps are a chain, not listeners.",
-        "<b>Events inside a transaction fire before the commit</b>, so a queued listener needs `ShouldQueueAfterCommit`.",
-        "<b>Debouncing collapses rapid repeated events into one run</b>, at the cost of a delay.",
-      ],
-      commonMistakes: [
-        "<b>Relying on discovery and then not knowing what fires.</b> `event:list` or manual registration answers it.",
-        "<b>Queueing every listener.</b> Instant work belongs in the request, where its failure is visible.",
-        "<b>Depending on the order of queued listeners.</b> They are independent jobs; use a chain.",
-        "<b>Dispatching inside a transaction without `ShouldQueueAfterCommit`.</b> The listener may find nothing there.",
-        "<b>Debouncing something a user is waiting for.</b> The delay is the whole mechanism.",
-      ],
-      quiz: [
-        {
-          question: "How does Laravel know which event a listener handles?",
-          options: [
-            "From the class name",
-            "From the event type hint on `handle()`",
-            "From a config file only",
-            "From the directory",
-          ],
-          correctIndex: 1,
-          explanation: "Which is convenient, and means nothing lists an event's consequences.",
-        },
-        {
-          question: "What does `ShouldQueue` on a listener change?",
-          options: [
-            "The listener runs first",
-            "It runs on the queue, so the request does not wait for it",
-            "It runs after the response",
-            "It is retried automatically only",
-          ],
-          correctIndex: 1,
-          explanation: "The event decouples; the queue defers.",
-        },
-        {
-          question: "Two queued listeners must run in order. What should you use?",
-          options: [
-            "Listener priorities",
-            "A chain, because queued listeners are independent jobs",
-            "A debounce",
-            "Manual registration",
-          ],
-          correctIndex: 1,
-          explanation: "Nothing guarantees the order in which independent jobs run.",
-        },
-        {
-          question: "Why can a queued listener fail to find a model that was just created?",
-          options: [
-            "The queue is slow",
-            "The event fired inside a transaction that had not committed yet",
-            "The model was serialised wrongly",
-            "The worker cached it",
-          ],
-          correctIndex: 1,
-          explanation: "`ShouldQueueAfterCommit` waits for the commit.",
-        },
-      ],
-    },
-    {
-      id: "subscribers-and-model-events",
-      title: "Subscribers, and model events versus domain events",
-      durationMinutes: 10,
-      explanation: "Grouping listeners, and a naming decision that shapes how an application reads.\n\n---\n\n### 1. Basic — subscribers\n\nFour listeners for four events in the same area means four files:\n\n```text\nListener A · Listener B · Listener C · Listener D\n```\n\n<b>A <i>subscriber</i></b> puts them in one class:\n\n```text\nUserEventSubscriber\n ├── user registered\n ├── user logged in\n ├── user updated\n └── user deleted\n```\n\n```php\nclass UserEventSubscriber\n{\n    public function subscribe(Dispatcher $events): array\n    {\n        return [\n            UserRegistered::class => 'onRegistered',\n            UserDeleted::class    => 'onDeleted',\n        ];\n    }\n}\n```\n\n<b>The gain is that the whole area is readable in one place</b>, which is exactly what discovery costs you. Four separate listeners are four files to find; one subscriber is one file that lists what it reacts to.\n\nThe cost is that a subscriber cannot be queued as a unit: each handler is inline unless you dispatch a job from it. So a subscriber suits cheap, related reactions, and slow work still wants its own queued listener.\n\n---\n\n### 2. Intermediate — model events are events too\n\nDay 14's model lifecycle:\n\n```text\ncreating · created · updating · updated\nsaving · saved · deleting · deleted\n```\n\nThose are events, dispatched by Eloquent. Which raises a fair question: <b>if `User::created` already fires, why write `UserRegistered`?</b>\n\nBecause they mean different things:\n\n```text\nUser was created           an Eloquent fact\nUserRegistered             a business fact\n```\n\nA `User` row is created by registration, by an admin adding somebody, by an import, by a seeder and by a test factory. <b>Only one of those is a registration</b>, and a listener on `created` cannot tell them apart.\n\n```php\nprotected $dispatchesEvents = [\n    'created' => UserCreated::class,\n];\n```\n\nmaps one to the other when that is genuinely what you want. Usually it is not.\n\n---\n\n### 3. Advanced — naming for the domain\n\nThe deeper version of the same point:\n\n```text\nUserUpdated             generic. Which field? Why?\nSubscriptionUpgraded    a thing the business does\n```\n\n<b>A generic event forces every listener to work out whether it cares.</b> A listener on `UserUpdated` starts with \"was it the plan that changed, and did it go up?\", and that logic is now in the listener rather than in the thing that knew.\n\n```php\nif ($user->wasChanged('plan_id') && $user->plan->tier > $previous->tier) {\n    // ...\n}\n```\n\nrepeated in three listeners, each with its own version of the check.\n\n<b>The code that made the change knows what the change meant.</b> Dispatch `SubscriptionUpgraded` there, and the listeners are three lines with no conditions.\n\nWhich gives a rule worth carrying:\n\n```text\nmodel events        infrastructure: timestamps, slugs,\n                    cache invalidation, audit rows\n\ndomain events       business facts: registered, upgraded,\n                    cancelled, paid, shipped\n```\n\nModel events for the things that are true of every row however it arrived. Domain events for the things that happened for a reason.\n\nAnd the pragmatic note, because this can be overdone: <b>a small application does not need a domain event for every state change.</b> Start with a direct call, promote to an event when there is a second consumer, and name it after what happened rather than after the model that changed.",
-      diagram: `Subscribers
-
-  Four listeners in the same area, four files:
-
-    Listener A · B · C · D
-
-  A subscriber puts them together:
-
-    UserEventSubscriber
-     ├── user registered
-     ├── user logged in
-     ├── user updated
-     └── user deleted
-
-  The gain is that the whole AREA is readable in one
-  place — which is what discovery costs you. Four
-  listeners are four files to find; one subscriber lists
-  what it reacts to.
-
-  The cost: it cannot be queued as a unit. Each handler
-  is inline unless it dispatches a job. Cheap related
-  reactions suit a subscriber; slow work still wants its
-  own queued listener.
-
-
-Model events are events too
-
-  creating · created · updating · updated
-  saving · saved · deleting · deleted
-
-  So if User::created already fires, why write
-  UserRegistered?
-
-    User was created    an ELOQUENT fact
-    UserRegistered      a BUSINESS fact
-
-  A User row is created by registration, by an admin
-  adding somebody, by an import, by a seeder and by a
-  test factory.
-
-  Only one of those is a registration, and a listener on
-  created cannot tell them apart.
-
-
-Naming for the domain
-
-    UserUpdated            generic. Which field? Why?
-    SubscriptionUpgraded   a thing the business does
-
-  A generic event forces every listener to work out
-  whether it cares:
-
-    if (\$user->wasChanged('plan_id')
-        && \$user->plan->tier > \$previous->tier) { ... }
-
-  repeated in three listeners, each with its own version
-  of the check.
-
-  The code that MADE the change knows what the change
-  meant. Dispatch SubscriptionUpgraded there, and the
-  listeners are three lines with no conditions.
-
-
-The rule
-
-  model events    infrastructure: timestamps, slugs,
-                  cache invalidation, audit rows
-                  — true of every row, however it arrived
-
-  domain events   business facts: registered, upgraded,
-                  cancelled, paid, shipped
-                  — things that happened for a reason
-
-
-  And the pragmatic note: a small application does not
-  need a domain event for every state change.
-
-    start with a direct call
-    promote to an event when there is a second consumer
-    name it after what HAPPENED, not after the model`,
-      codeExample: {
-        title: "One class per area, and events that mean something",
-        code: `<?php
-// ---------- A subscriber ----------
-
-namespace App\\Listeners;
-
-use App\\Events\\UserDeleted;
-use App\\Events\\UserRegistered;
-use Illuminate\\Events\\Dispatcher;
-
-class UserEventSubscriber
-{
-    public function onRegistered(UserRegistered $event): void
-    {
-        Analytics::track('registered', $event->user->id);
-    }
-
-    public function onDeleted(UserDeleted $event): void
-    {
-        Analytics::track('deleted', $event->user->id);
-    }
-
-    public function subscribe(Dispatcher $events): array
-    {
-        return [
-            UserRegistered::class => 'onRegistered',
-            UserDeleted::class    => 'onDeleted',
-        ];
-    }
-}
-
-// One file listing what this area reacts to, rather than
-// four files to find. Each handler is inline, so slow
-// work still belongs in its own queued listener.
-
-
-<?php
-// ---------- Model events: infrastructure ----------
-
-class Post extends Model
-{
-    protected static function booted(): void
-    {
-        // True of every post, however it was created.
-        static::creating(fn (Post $post) => $post->slug = Str::slug($post->title));
-
-        static::saved(fn (Post $post) => Cache::forget("post:{$post->id}"));
-    }
-}
-
-
-<?php
-// ---------- Why a domain event is different ----------
-
-// A User row is created by:
-//   registration · an admin adding somebody
-//   an import · a seeder · a test factory
-//
-// A listener on created cannot tell them apart, and
-// only one of them is a registration.
-
-// ❌ Every seeded user now gets a welcome email.
-static::created(fn (User $user) => Mail::to($user)->send(new WelcomeEmail($user)));
-
-// ✓ Dispatched by the thing that knows.
-public function register(Request $request)
-{
-    $user = User::create($request->validated());
-
-    UserRegistered::dispatch($user);
-}
-
-
-<?php
-// ---------- Generic events push logic into listeners ----------
-
-// ❌ Every listener starts by working out whether it cares.
-class HandleUserUpdate
-{
-    public function handle(UserUpdated $event): void
-    {
-        if (! $event->user->wasChanged('plan_id')) {
-            return;
-        }
-
-        if ($event->user->plan->tier <= $event->previousTier) {
-            return;
-        }
-
-        // ...and that check is repeated in two other listeners.
-    }
-}
-
-// ✓ The code that made the change knows what it meant.
-public function upgrade(User $user, Plan $plan): void
-{
-    $previous = $user->plan;
-
-    $user->update(['plan_id' => $plan->id]);
-
-    if ($plan->tier > $previous->tier) {
-        SubscriptionUpgraded::dispatch($user, $previous, $plan);
-    }
-}
-
-// And the listener is three lines with no conditions:
-class SendUpgradeThanks
-{
-    public function handle(SubscriptionUpgraded $event): void
-    {
-        Mail::to($event->user)->send(new UpgradeThanks($event->plan));
-    }
-}
-
-
-<?php
-// ---------- Mapping a model event, when you do want one ----------
-
-class Order extends Model
-{
-    protected $dispatchesEvents = [
-        'created' => OrderCreated::class,
+    return [
+        'notifications' => $request->user()
+            ->unreadNotifications()
+            ->latest()
+            ->take(10)
+            ->get(),
     ];
 }
 
-// Reasonable when "an order row exists" really is the
-// business fact. Usually the business fact is
-// OrderPlaced, and it happens somewhere more specific.`,
+// The page loads its state over HTTP, and the socket
+// keeps it current. A reload must show the same thing.`,
       },
       keyTakeaways: [
-        "<b>A subscriber groups several event handlers into one class</b>, so an area is readable in one file.",
-        "That is what discovery costs you: four listeners are four files to find.",
-        "<b>A subscriber cannot be queued as a unit</b>, so slow work still belongs in its own queued listener.",
-        "<b>Eloquent's lifecycle events are events too</b>, dispatched for every row however it was created.",
-        "<b>A `User` row is created by registration, an admin, an import, a seeder and a factory</b>, and `created` cannot tell them apart.",
-        "<b>A model event is an Eloquent fact; a domain event is a business fact.</b>",
-        "<b>A generic event pushes the \"do I care\" logic into every listener</b>, repeated and slightly different each time.",
-        "<b>The code that made the change knows what it meant</b>, so dispatch the specific event there.",
-        "<b>Model events suit infrastructure</b>: slugs, cache invalidation, audit rows.",
-        "<b>Domain events suit business facts</b>: registered, upgraded, cancelled, paid, shipped.",
-        "Start with a direct call and promote to an event when a second consumer appears.",
+        "<b>HTTP is a question and an answer</b>, so a browser cannot learn about a change made after the response.",
+        "<b>Polling asks repeatedly</b>, and almost every request returns nothing new.",
+        "Five-second polling is 720 requests an hour per user, and the news is still up to five seconds late.",
+        "<b>A WebSocket is a connection that stays open</b>, and either side can send at any time.",
+        "<b>Polling costs requests; WebSockets cost connections</b>, so the scaling problem changes rather than disappearing.",
+        "It enables chat, live notifications, presence, collaborative editing and live dashboards.",
+        "<b>Broadcasting adds a server, a client library, an authorization layer and a reconnection story.</b>",
+        "<b>A slow poll or server-sent events are cheaper</b>, and enough for a dashboard or a progress bar.",
+        "<b>The test is whether a five-second delay would make the feature wrong</b>, or merely slightly less nice.",
+        "<b>Broadcasting is delivery, not truth</b>: the page must still be correct after a reload for somebody who was disconnected.",
       ],
       commonMistakes: [
-        "<b>Sending a welcome email from a `created` model event.</b> Every seeded and imported user gets one too.",
-        "<b>Dispatching `UserUpdated` and filtering in the listener.</b> The same check is repeated and drifts.",
-        "<b>Putting slow work in a subscriber.</b> Each handler runs inline, so the request waits.",
-        "<b>Naming an event after the model rather than the fact.</b> `SubscriptionUpgraded` says something; `UserUpdated` does not.",
-        "<b>Creating a domain event for every state change in a small application.</b> A direct call is clearer until there are two consumers.",
+        "<b>Reaching for WebSockets for a dashboard refreshed once a minute.</b> A poll costs nothing to operate.",
+        "<b>Assuming real time removes the load.</b> Ten thousand idle connections are held open in memory.",
+        "<b>Building a UI only from socket messages.</b> A disconnected user sees an empty page and a reload shows nothing.",
+        "<b>Forgetting the reconnection story.</b> Connections drop, and the UI must recover its state when they do.",
+        "<b>Treating a broadcast as the record of what happened.</b> The database is still the source of truth.",
       ],
       quiz: [
         {
-          question: "What does a subscriber give you?",
+          question: "Why can't a normal HTTP page learn about a later change?",
           options: [
-            "Queued listeners",
-            "Several event handlers in one class, so an area is readable in one file",
-            "Automatic registration",
-            "Priority ordering",
+            "The browser caches it",
+            "The request and response completed, so nothing connects the two any more",
+            "Laravel closes the session",
+            "It can",
           ],
           correctIndex: 1,
-          explanation: "Which is what discovery across four separate listeners costs.",
+          explanation: "Which is why polling exists, and why it asks repeatedly.",
         },
         {
-          question: "Why not send a welcome email from the `created` model event?",
+          question: "What is wasteful about polling?",
           options: [
-            "It is slower",
-            "Rows are also created by imports, seeders and factories, and `created` cannot tell them apart",
-            "Model events cannot send mail",
-            "It runs twice",
+            "It is slow to write",
+            "Almost every request returns nothing new, and the news is still delayed",
+            "It cannot be authenticated",
+            "It breaks caching",
           ],
           correctIndex: 1,
-          explanation: "Registration is a business fact; row creation is not.",
+          explanation: "720 requests an hour per user to deliver perhaps three notifications.",
         },
         {
-          question: "What is wrong with a generic `UserUpdated` event?",
+          question: "What does broadcasting cost that polling does not?",
           options: [
-            "It is too slow",
-            "Every listener has to work out whether it cares, repeating the same drifting check",
-            "It cannot be queued",
+            "More requests",
+            "Open connections held in memory, one per connected user",
+            "More database queries",
             "Nothing",
           ],
           correctIndex: 1,
-          explanation: "The code that made the change already knew what it meant.",
+          explanation: "A different scaling problem, not an absent one.",
         },
         {
-          question: "What are model events best suited to?",
+          question: "Why must a real-time UI still load its state over HTTP?",
           options: [
-            "Business workflows",
-            "Infrastructure: slugs, cache invalidation, audit rows",
-            "Sending notifications",
-            "Anything that must be queued",
+            "For SEO",
+            "Somebody who was disconnected has missed messages, and a reload must show the same thing",
+            "WebSockets cannot send objects",
+            "It does not",
           ],
           correctIndex: 1,
-          explanation: "Things true of every row, however it arrived.",
+          explanation: "Broadcasting is delivery; the database is the source of truth.",
         },
       ],
     },
     {
-      id: "scheduling",
-      title: "Task scheduling — frequencies & constraints",
-      durationMinutes: 11,
-      explanation: "Events react to something happening. The scheduler handles work that happens because of the time.\n\n---\n\n### 1. Basic — one cron entry\n\nWithout Laravel, every recurring task is a crontab line:\n\n```text\n0 2 * * *   php /var/www/artisan report:daily\n*/15 * * * * php /var/www/artisan sync:customers\n0 * * * *   php /var/www/artisan cache:warm\n```\n\nWhich lives on a server, outside your repository, unreviewed and undiscoverable. Somebody adds one during an incident and nobody knows about it two years later.\n\n<b>Laravel inverts it: one cron entry, and the schedule lives in your code:</b>\n\n```text\nsystem cron (every minute)\n        ↓\nLaravel scheduler\n        ↓\nyour scheduled tasks\n```\n\n```php\n// routes/console.php\n\nSchedule::job(GenerateDailyReport::class)->daily();\n```\n\n<b>Now the schedule is in version control</b>, reviewed like anything else, and visible to everybody.\n\n---\n\n### 2. Intermediate — schedule a job, not the work\n\n```php\nSchedule::job(GenerateDailyReport::class)->dailyAt('02:00');\n```\n\n```text\nScheduler → Queue → Worker → the heavy work\n```\n\nThat indirection is the good architecture, and it is worth being deliberate about.\n\n<b>The scheduler process should decide <i>when</i>, and a worker should do the work.</b> A `Schedule::call()` containing an hour of report generation blocks the scheduler for an hour, so nothing else scheduled in that hour runs on time. Dispatching a job takes a millisecond.\n\nThe three forms:\n\n```text\nSchedule::job(...)        dispatch a queued job     ← usually this\nSchedule::command(...)    run an Artisan command\nSchedule::call(...)       run a closure, inline\n```\n\nAnd the frequencies:\n\n```text\neveryMinute() · everyFiveMinutes() · hourly()\ndaily() · dailyAt('02:00') · weekly() · monthly()\nweeklyOn(1, '8:00') · cron('0 2 * * *')\n```\n\n<b>Prefer a specific time to `daily()`</b>, because `daily()` means midnight, and everything else defaulting to midnight means everything runs at once.\n\n---\n\n### 3. Advanced — constraints and hooks\n\nA schedule can carry conditions:\n\n```php\nSchedule::job(SendInvoiceReminders::class)\n    ->weekdays()\n    ->at('09:00')\n    ->timezone('Asia/Kathmandu')\n    ->environments(['production']);\n```\n\n```text\nweekdays · weekends · mondays() · sundays()\nbetween('9:00', '17:00') · unlessBetween(...)\nwhen(fn () => ...) · skip(fn () => ...)\ntimezone(...) · environments([...])\n```\n\n<b>Which lets the schedule express a business rule rather than hiding it in the task.</b> \"Reminders on weekdays at nine\" belongs next to the schedule; a task that starts by checking whether today is a Saturday has that rule buried in it.\n\n<b>`timezone()` is not optional for anything user-facing.</b> A server on UTC running a nine o'clock reminder sends it at a quarter to three in the afternoon in Kathmandu, and the bug report will say \"the emails arrive at a weird time\".\n\n<b>And `environments()` matters more than it looks.</b> Without it, a staging environment sharing a database happily sends the same invoice reminders your production environment does. That is a real incident, and one line prevents it.\n\nHooks run around a task:\n\n```php\n->before(fn () => Log::info('starting'))\n->after(fn () => Log::info('done'))\n->onSuccess(fn () => ...)\n->onFailure(fn () => Notification::route(...))\n```\n\n<b>`onFailure()` is the one to actually use.</b> A scheduled task that stops working fails silently by definition: nobody is watching, nothing is broken on the site, and you find out when somebody asks where last month's report went.\n\nTwo practical details. <b>A scheduled command can take arguments</b>, passed as an array:\n\n```php\nSchedule::command('queue:prune-failed', ['--hours=168'])->weekly();\n```\n\nAnd <b>its output goes nowhere by default</b>, which is why a scheduled task that prints something useful prints it into the void:\n\n```php\nSchedule::command('reports:generate')\n    ->daily()\n    ->appendOutputTo(storage_path('logs/reports.log'))\n    ->emailOutputOnFailure('ops@example.com');\n```\n\n```text\nsendOutputTo()          overwrite a file\nappendOutputTo()        add to it\nemailOutputTo()         email it every time\nemailOutputOnFailure()  email it only when it fails\n```\n\n<b>`emailOutputTo()` on a task that runs every minute is a mailbox nobody reads within a week</b>, so the failure-only variant is almost always the one you want.",
-      diagram: `One cron entry
-
-  Without Laravel, every recurring task is a crontab line:
-
-    0 2 * * *    php artisan report:daily
-    */15 * * * * php artisan sync:customers
-    0 * * * *    php artisan cache:warm
-
-  Living on a server, outside your repository,
-  unreviewed and undiscoverable. Somebody adds one
-  during an incident and nobody knows two years later.
-
-  Laravel inverts it:
-
-    system cron (every minute)
-            ↓
-    Laravel scheduler
-            ↓
-    your scheduled tasks
-
-    // routes/console.php
-    Schedule::job(GenerateDailyReport::class)->daily();
-
-  The schedule is now in version control, reviewed, and
-  visible to everybody.
-
-
-Schedule a JOB, not the work
-
-    Schedule::job(GenerateDailyReport::class)->dailyAt('02:00')
-
-    Scheduler → Queue → Worker → the heavy work
-
-  ⚠️  The scheduler decides WHEN. A worker does the work.
-
-      A Schedule::call() containing an hour of report
-      generation blocks the scheduler for an hour, so
-      nothing else scheduled in that hour runs on time.
-
-      Dispatching a job takes a millisecond.
-
-    Schedule::job(...)      dispatch a queued job  ← usually
-    Schedule::command(...)  run an Artisan command
-    Schedule::call(...)     run a closure, inline
-
-  everyMinute() · everyFiveMinutes() · hourly()
-  daily() · dailyAt('02:00') · weekly() · monthly()
-  weeklyOn(1, '8:00') · cron('0 2 * * *')
-
-  ⚠️  Prefer a specific time to daily(). daily() means
-      midnight, and everything defaulting to midnight
-      runs at once.
-
-
-Constraints
-
-    ->weekdays()->at('09:00')
-    ->timezone('Asia/Kathmandu')
-    ->environments(['production'])
-
-    weekdays · weekends · mondays() · sundays()
-    between('9:00','17:00') · unlessBetween(...)
-    when(fn () => ...) · skip(fn () => ...)
-
-  The schedule expresses a BUSINESS RULE rather than
-  hiding it in the task. "Reminders on weekdays at nine"
-  belongs next to the schedule; a task that starts by
-  checking whether today is Saturday has it buried.
-
-  ⚠️  timezone() is not optional for anything user-facing.
-      A UTC server running a nine o'clock reminder sends
-      it at 2:45pm in Kathmandu, and the bug report says
-      "the emails arrive at a weird time".
-
-  ⚠️  environments() matters more than it looks. Without
-      it, a staging environment sharing a database sends
-      the same invoice reminders production does. That
-      is a real incident, and one line prevents it.
-
-
-Hooks
-
-    ->before()  ->after()  ->onSuccess()  ->onFailure()
-
-  onFailure() is the one to actually use.
-
-  A scheduled task that stops working fails SILENTLY by
-  definition: nobody is watching, nothing is broken on
-  the site, and you find out when somebody asks where
-  last month's report went.`,
-      codeExample: {
-        title: "A schedule that lives in the repository",
-        code: `# ---------- The one cron entry ----------
-
-* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
-
-# That is the only crontab line you add. Everything else
-# lives in the repository.
-
-
-<?php
-// routes/console.php
-
-use App\\Jobs\\GenerateDailyReport;
-use App\\Jobs\\SendInvoiceReminders;
-use Illuminate\\Support\\Facades\\Schedule;
-
-// ---------- Dispatch a job: the scheduler stays free ----------
-
-Schedule::job(GenerateDailyReport::class)
-    ->dailyAt('02:00')
-    ->timezone('Asia/Kathmandu');
-
-// Scheduler → Queue → Worker → the heavy work
-//
-// ❌ This blocks the scheduler for as long as it runs,
-//    so nothing else scheduled meanwhile runs on time.
-// Schedule::call(fn () => (new ReportBuilder)->build())->dailyAt('02:00');
-
-
-// ---------- An Artisan command ----------
-
-Schedule::command('sync:customers')
-    ->everyFifteenMinutes()
-    ->environments(['production']);
-
-
-// ---------- Constraints as business rules ----------
-
-Schedule::job(SendInvoiceReminders::class)
-    ->weekdays()                    // not at the weekend
-    ->at('09:00')
-    ->timezone('Asia/Kathmandu')    // 09:00 for the reader
-    ->environments(['production']); // staging shares the
-                                    // database and must not
-                                    // email real customers
-
-// The rule is next to the schedule, rather than buried
-// in a task that starts by checking today's date.
-
-
-Schedule::command('cache:warm')
-    ->hourly()
-    ->between('6:00', '23:00');     // nobody is browsing at 4am
-
-Schedule::command('backups:run')
-    ->dailyAt('03:00')
-    ->when(fn () => config('backups.enabled'));
-
-
-// ---------- Hooks ----------
-
-Schedule::job(GenerateDailyReport::class)
-    ->dailyAt('02:00')
-
-    ->onSuccess(function () {
-        Log::info('Daily report dispatched');
-    })
-
-    // The one that matters. A scheduled task that stops
-    // working fails silently: nobody is watching, and
-    // nothing on the site is broken.
-    ->onFailure(function () {
-        Notification::route('slack', config('services.slack.ops'))
-            ->notify(new ScheduledTaskFailed('daily report'));
-    });
-
-
-// ---------- Prefer a specific time ----------
-
-// ❌ daily() means midnight, and so does everything else
-//    that used daily(). They all run at once.
-Schedule::command('reports:daily')->daily();
-Schedule::command('cleanup:old')->daily();
-Schedule::command('sync:all')->daily();
-
-// ✓ Spread them.
-Schedule::command('reports:daily')->dailyAt('02:00');
-Schedule::command('cleanup:old')->dailyAt('03:30');
-Schedule::command('sync:all')->dailyAt('04:15');`,
-      },
-      keyTakeaways: [
-        "<b>Without the scheduler, every recurring task is a crontab line outside your repository</b>, unreviewed and undiscoverable.",
-        "<b>One cron entry runs `schedule:run` every minute</b>, and the schedule itself lives in `routes/console.php`.",
-        "<b>Schedule a job rather than the work</b>: the scheduler decides when, a worker does it.",
-        "<b>A long `Schedule::call()` blocks the scheduler</b>, so nothing else scheduled meanwhile runs on time.",
-        "`Schedule::job()`, `Schedule::command()` and `Schedule::call()` cover the three forms.",
-        "<b>Prefer `dailyAt('02:00')` to `daily()`</b>, because everything defaulting to midnight runs at once.",
-        "<b>Constraints let the schedule express a business rule</b> rather than burying it in the task.",
-        "<b>`timezone()` is not optional for user-facing tasks</b>, or nine o'clock happens at somebody else's teatime.",
-        "<b>`environments(['production'])` stops staging emailing real customers</b> when it shares a database.",
-        "<b>`onFailure()` matters because a scheduled task fails silently</b>: nobody is watching, and nothing looks broken.",
-      ],
-      commonMistakes: [
-        "<b>Adding crontab entries per task.</b> They live outside the repository and nobody knows they exist.",
-        "<b>Doing the work in `Schedule::call()`.</b> The scheduler is blocked and everything else runs late.",
-        "<b>Using `daily()` for everything.</b> They all run at midnight, together.",
-        "<b>Omitting `timezone()`.</b> The reminder arrives at the wrong hour for every user.",
-        "<b>Omitting `environments()`.</b> Staging sends production's emails to real customers.",
-      ],
-      quiz: [
-        {
-          question: "How many cron entries does a Laravel application need?",
-          options: [
-            "One per task",
-            "One, running `schedule:run` every minute",
-            "None",
-            "One per environment",
-          ],
-          correctIndex: 1,
-          explanation: "The schedule itself then lives in your repository.",
-        },
-        {
-          question: "Why schedule a job rather than doing the work in the schedule?",
-          options: [
-            "Jobs are faster",
-            "A long-running task blocks the scheduler, so nothing else runs on time",
-            "Closures cannot be scheduled",
-            "It enables retries only",
-          ],
-          correctIndex: 1,
-          explanation: "The scheduler decides when; a worker does the work.",
-        },
-        {
-          question: "What does `environments(['production'])` prevent?",
-          options: [
-            "Overlapping runs",
-            "Staging running the task and, for example, emailing real customers",
-            "Timezone errors",
-            "Failed jobs",
-          ],
-          correctIndex: 1,
-          explanation: "Particularly when staging shares a database.",
-        },
-        {
-          question: "Why does `onFailure()` matter for a scheduled task?",
-          options: [
-            "It retries the task",
-            "A scheduled task fails silently: nobody is watching and nothing on the site looks broken",
-            "It is required",
-            "It logs the output",
-          ],
-          correctIndex: 1,
-          explanation: "You otherwise find out when somebody asks where last month's report went.",
-        },
-      ],
-    },
-    {
-      id: "overlaps-and-servers",
-      title: "Overlaps, multiple servers & running the scheduler",
-      durationMinutes: 12,
-      explanation: "The two ways a schedule goes wrong in production, and the commands for finding out.\n\n---\n\n### 1. Basic — overlapping runs\n\nAn hourly report that takes two hours:\n\n```text\n01:00  report starts\n02:00  the scheduler starts another one\n03:00  and another\n```\n\n```text\nReport A ──────────────────>\nReport B         ──────────────────>\nReport C                   ──────────────────>\n```\n\n<b>Three copies of the same task running at once</b>, competing for the same rows, doubling the load, and producing whatever a race produces.\n\nAnd it compounds: each run is slower because of the others, so more overlap, until nothing finishes.\n\n```php\n->withoutOverlapping()\n```\n\n```text\ntask starts → lock acquired → another invocation? → skipped\n```\n\n<b>Essential for anything that takes an unpredictable time</b>, which is most real work: billing, reports, imports, synchronisation, cleanup.\n\nThe lock has an expiry, defaulting to 24 hours. <b>Set it from the work</b>, because a task killed in a way that skips its cleanup leaves the lock behind, and then the task silently never runs again until it expires.\n\n---\n\n### 2. Intermediate — more than one server\n\nTwo application servers, both running the scheduler:\n\n```text\nServer A → the task\nServer B → the task\nServer C → the task\n```\n\n<b>Every invoice reminder is sent three times.</b> Which is not a subtle bug: it is customer-visible, and it happens the moment you scale from one server.\n\n```php\n->onOneServer()\n```\n\nThe first server to acquire a shared lock runs it; the others skip.\n\n<b>The requirement is a shared cache</b>: Redis or Memcached, not `file` and not `array`. With a per-server cache, each acquires its own lock and all three still run, and nothing warns you.\n\nSo the pair together:\n\n```text\nwithoutOverlapping   the same server, twice, over time\nonOneServer          several servers, at once\n```\n\nBoth are needed on anything scheduled in a multi-server deployment, and they are answering different questions.\n\n---\n\n### 3. Advanced — running and inspecting\n\n```bash\nphp artisan schedule:run\n```\n\nchecks what is due and runs it, then exits. That is the command the cron entry calls, every minute.\n\n```bash\nphp artisan schedule:work\n```\n\nstays alive and does the checking itself:\n\n```text\nschedule:run     check once, then exit        ← cron calls this\nschedule:work    keep checking, continuously  ← a long-running process\n```\n\n`work` suits local development, and containers where a cron daemon is awkward. <b>Laravel 13 improved its graceful shutdown</b>, so a deploy or a container replacement lets running work finish rather than killing it mid-task, which matters because that is exactly when it happens.\n\n```bash\nphp artisan schedule:list\n```\n\n<b>This is the first thing to run when a scheduled task did not happen.</b>\n\n```text\ntask · frequency · next run\n```\n\nIt answers the four usual causes in one look: the task is not registered, the frequency is not what you thought, the timezone shifted it, or an `environments()` constraint excluded it.\n\nAnd the fifth cause, which `schedule:list` cannot show: <b>the cron entry is not there at all.</b> On a fresh server that is the answer more often than anything in your code.\n\nOne last thing worth checking early, because it is invisible: <b>the scheduler runs as a user</b>, and that user needs to be able to write your logs and read your `.env`. A scheduler running as `root` while the application runs as `www-data` produces log files nobody else can write to, and the failure appears somewhere else entirely.\n\nOne more, for a different problem. <b>The scheduler runs tasks in sequence</b>, so a task taking four minutes delays everything scheduled behind it in that minute:\n\n```php\nSchedule::command('reports:generate')->daily()->runInBackground();\n```\n\nThat gives the task its own process so the rest of the schedule carries on. <b>It is the lighter answer to the problem `Schedule::job()` solves properly</b>: pushing the work to a queue means the scheduler is never blocked and you get retries as well. Reach for `runInBackground()` when the work genuinely belongs in a command and you do not want a queue involved.\n\nAnd the schedule itself is testable, which is worth knowing because \"does this actually run at 2am\" is otherwise a question you answer by waiting until 2am:\n\n```php\n$this->travelTo(now()->setTime(2, 0));\n\n$events = app(Schedule::class)->events();\n\n$report = collect($events)->first(fn ($e) =>\n    str_contains($e->command, 'reports:generate'));\n\nexpect($report->isDue(app()))->toBeTrue();\nexpect($report->getSummaryForDisplay())->toContain('reports:generate');\n```\n\n<b>`isDue()` combined with `travelTo()` from Day 29 is the whole trick</b>, and it catches the cron expression you got subtly wrong far earlier than production does.",
-      diagram: `Overlapping runs
-
-  An hourly report that takes two hours:
-
-    01:00  report starts
-    02:00  the scheduler starts another
-    03:00  and another
-
-    Report A ──────────────────>
-    Report B         ──────────────────>
-    Report C                   ──────────────────>
-
-  Three copies competing for the same rows, doubling
-  the load, producing whatever a race produces.
-
-  And it compounds: each run is slower because of the
-  others, so more overlap, until nothing finishes.
-
-    ->withoutOverlapping()
-
-    task starts → lock acquired
-                → another invocation? → skipped
-
-  Essential for anything of unpredictable duration —
-  which is most real work: billing, reports, imports,
-  synchronisation, cleanup.
-
-  ⚠️  The lock expires (24h by default). Set it from the
-      work: a task killed without cleanup leaves the lock
-      behind, and the task silently never runs again
-      until it expires.
-
-
-More than one server
-
-    Server A → the task
-    Server B → the task
-    Server C → the task
-
-  Every invoice reminder sent three times. Not subtle:
-  customer-visible, and it happens the moment you scale
-  past one server.
-
-    ->onOneServer()
-
-  The first to acquire a SHARED lock runs it.
-
-  ⚠️  Requires a shared cache: Redis or Memcached, not
-      file and not array. With a per-server cache each
-      acquires its own lock, all three still run, and
-      nothing warns you.
-
-
-  withoutOverlapping   the same server, twice, over time
-  onOneServer          several servers, at once
-
-  Different questions. A multi-server deployment needs
-  both.
+      id: "reverb-and-services",
+      title: "Reverb, Pusher & Ably",
+      durationMinutes: 10,
+      explanation: "Something has to hold those connections open, and it is not your web server.\n\n---\n\n### 1. Basic — the extra server\n\nPHP answers a request and exits. <b>It cannot hold ten thousand connections open</b>, because that is not what it does.\n\nSo real-time Laravel has a second server in the picture:\n\n```text\nLaravel\n   ↓ broadcast\nWebSocket server\n   ↓ persistent connections\nbrowsers\n```\n\n<b>Laravel Reverb is Laravel's own WebSocket server</b>, written for this and run by you:\n\n```text\nLaravel  →  Reverb  →  browser\n```\n\nIts job is exactly two things: <b>hold the connections, and deliver broadcasts to the right ones.</b> It does not run your application code, touch your database, or know anything about your models.\n\n---\n\n### 2. Intermediate — or somebody else's server\n\nPusher and Ably do the same job as a managed service:\n\n```text\nLaravel  →  Pusher / Ably  →  browser\n```\n\n```text\nReverb                    Pusher / Ably\n──────                    ─────────────\nyou run it                they run it\nno per-message cost       priced per connection\n                            and message\nyour infrastructure       their infrastructure\nyou handle scaling        scaling is included\nyou handle uptime         uptime is their problem\n```\n\n<b>Neither is the right answer.</b> The decision is made by:\n\n```text\ntraffic · infrastructure you already run\ncost at your volume · operational appetite\nscaling needs · how much downtime hurts\n```\n\nA team already running Redis and comfortable with a process manager will find Reverb straightforward. A team without an operations story will find a managed service worth its price on the first outage.\n\n<b>And the switch is a configuration change</b>, because the application code broadcasts through the same abstraction either way. Which means \"start managed, move to Reverb when the bill justifies it\" is a legitimate plan rather than a rewrite.\n\n---\n\n### 3. Advanced — what running it involves\n\nIf you do run Reverb, it is another long-running process, with everything that implies from Day 25:\n\n```text\nit must be started            a process manager\nit must be restarted          on deploy\nit must be watched            when it dies, real time\n                                silently stops\n```\n\n<b>The failure mode is quiet</b>, and worth naming: when the WebSocket server is down, the page still loads, the buttons still work, and nothing updates live. Nobody gets an error, and the bug report is \"it feels laggy sometimes\".\n\nTwo more operational facts.\n\n<b>It needs its own port, and that port has to be reachable</b> through whatever sits in front of your application. A reverse proxy that does not know about WebSocket upgrades will refuse the connection, and the browser reports something unhelpful.\n\n<b>And it needs TLS in production for the same reason your site does.</b> A page served over HTTPS cannot open an insecure WebSocket; browsers refuse it. So the certificate story applies to the socket as well as the site.\n\nThe practical shape most applications land on:\n\n```text\nlocal        Reverb, started alongside the app\nsmall app    a managed service, and no operations at all\nlarger app   Reverb, with a process manager and monitoring\n```\n\nAnd whichever you pick, <b>the thing to check first when real time stops working is whether the server is running at all.</b>",
+      diagram: `The extra server
+
+  PHP answers a request and exits. It cannot hold ten
+  thousand connections open, because that is not what
+  it does.
+
+    Laravel
+       ↓ broadcast
+    WebSocket server
+       ↓ persistent connections
+    browsers
+
+  Laravel Reverb is Laravel's own WebSocket server:
+
+    Laravel  →  Reverb  →  browser
+
+  Its job is exactly two things: hold the connections,
+  and deliver broadcasts to the right ones. It does not
+  run your application code, touch your database, or
+  know anything about your models.
+
+
+Or somebody else's server
+
+    Laravel  →  Pusher / Ably  →  browser
+
+  Reverb                   Pusher / Ably
+  ──────                   ─────────────
+  you run it               they run it
+  no per-message cost      priced per connection
+                             and message
+  your infrastructure      their infrastructure
+  you handle scaling       scaling included
+  you handle uptime        uptime is their problem
+
+  Neither is the right answer. The decision is:
+
+    traffic · infrastructure you already run
+    cost at your volume · operational appetite
+    scaling needs · how much downtime hurts
+
+  A team already running Redis will find Reverb
+  straightforward. A team with no operations story will
+  find a managed service worth its price on the first
+  outage.
+
+  And the switch is a CONFIGURATION change, because the
+  application broadcasts through the same abstraction.
+  "Start managed, move to Reverb when the bill justifies
+  it" is a plan, not a rewrite.
 
 
 Running it
 
-    schedule:run     check once, then exit  ← cron calls this
-    schedule:work    keep checking          ← long-running
+  Another long-running process, with everything Day 25
+  implies:
 
-  work suits local development, and containers where a
-  cron daemon is awkward. Laravel 13 improved its
-  graceful shutdown, so a deploy lets running work
-  finish rather than killing it mid-task — which is
-  exactly when deploys happen.
+    it must be started      a process manager
+    it must be restarted    on deploy
+    it must be watched      when it dies, real time
+                              silently stops
 
+  ⚠️  The failure mode is QUIET. The page loads, the
+      buttons work, and nothing updates live. Nobody
+      gets an error, and the bug report is "it feels
+      laggy sometimes".
 
-Inspecting it
+  Two more:
 
-    php artisan schedule:list
+    It needs its own PORT, reachable through whatever
+    sits in front of your app. A reverse proxy that does
+    not know about WebSocket upgrades refuses the
+    connection, and the browser reports something
+    unhelpful.
 
-      task · frequency · next run
-
-  The FIRST thing to run when a task did not happen. It
-  answers four of the five usual causes at a glance:
-
-    the task is not registered
-    the frequency is not what you thought
-    the timezone shifted it
-    an environments() constraint excluded it
-
-  And the fifth, which it cannot show:
-
-    ⚠️  the cron entry is not there at all
-
-      On a fresh server, that is the answer more often
-      than anything in your code.
+    It needs TLS in production. A page served over HTTPS
+    cannot open an insecure WebSocket; browsers refuse.
+    The certificate story applies to the socket too.
 
 
-  One more invisible one: the scheduler runs as a USER,
-  and that user must be able to write your logs and read
-  your .env. Running as root while the app runs as
-  www-data produces log files nobody else can write, and
-  the failure surfaces somewhere else entirely.`,
+  local       Reverb, started alongside the app
+  small app   a managed service, no operations at all
+  larger app  Reverb, with a process manager and
+              monitoring
+
+  And whichever you pick: when real time stops working,
+  check whether the server is running at all.`,
       codeExample: {
-        title: "A schedule that survives production",
-        code: `<?php
-// routes/console.php
+        title: "Configuring a broadcaster",
+        code: `# ---------- Reverb: you run it ----------
 
-use Illuminate\\Support\\Facades\\Schedule;
+composer require laravel/reverb
+php artisan install:broadcasting
 
-// ---------- Overlapping: the same server, twice ----------
+# .env
+BROADCAST_CONNECTION=reverb
 
-// ❌ Takes two hours, runs hourly. By 03:00 there are three.
-Schedule::command('reports:hourly')->hourly();
+REVERB_APP_ID=123456
+REVERB_APP_KEY=local-key
+REVERB_APP_SECRET=local-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
 
-// ✓ A second invocation is skipped while the first runs.
-Schedule::command('reports:hourly')
-    ->hourly()
-    ->withoutOverlapping(120);      // the lock expires after
-                                     // 120 minutes, set from
-                                     // the work — not the
-                                     // 24-hour default
-
-
-// ---------- Several servers, at once ----------
-
-// ❌ Three application servers, three copies of every
-//    reminder, sent to real customers.
-Schedule::job(SendInvoiceReminders::class)->dailyAt('09:00');
-
-// ✓ The first to take a shared lock runs it.
-Schedule::job(SendInvoiceReminders::class)
-    ->dailyAt('09:00')
-    ->onOneServer();
-
-// ⚠️ Requires a shared cache. With CACHE_STORE=file each
-//    server takes its own lock and all three still run.
+# What the browser connects to. In production these are
+# your public host and 443, over wss.
+VITE_REVERB_APP_KEY="\${REVERB_APP_KEY}"
+VITE_REVERB_HOST="\${REVERB_HOST}"
+VITE_REVERB_PORT="\${REVERB_PORT}"
+VITE_REVERB_SCHEME="\${REVERB_SCHEME}"
 
 
-// ---------- Both, because they answer different questions ----------
+# Start it, and leave it running.
+php artisan reverb:start
 
-Schedule::command('billing:run')
-    ->dailyAt('01:00')
-    ->withoutOverlapping(180)   // not twice over time
-    ->onOneServer()             // not on three servers at once
-    ->environments(['production'])
-    ->onFailure(fn () => Notification::route('slack', $ops)
-        ->notify(new ScheduledTaskFailed('billing')));
-
-
-# ---------- Running the scheduler ----------
-
-# Production: one cron entry, calling schedule:run each minute.
-* * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
-
-# Local development, or a container with no cron daemon:
-php artisan schedule:work
-
-#   schedule:run    check once, then exit
-#   schedule:work   keep checking, continuously
+# Locally, alongside everything else:
+#   php artisan serve
+#   php artisan queue:work
+#   php artisan reverb:start
+#   npm run dev
 
 
-# ---------- When a task did not run ----------
+# ---------- Or a managed service ----------
 
-php artisan schedule:list
+BROADCAST_CONNECTION=pusher
 
-# Command                        Interval      Next Due
-# ------------------------------ ------------- -----------
-# billing:run                    0 1 * * *     11 hours from now
-# reports:hourly                 0 * * * *     23 minutes from now
-#
-# Four of the five usual causes are visible here:
-#   not registered · wrong frequency
-#   timezone shift · environments() excluded it
-#
-# The fifth is not:
-#   the cron entry is missing.  crontab -l
+PUSHER_APP_ID=...
+PUSHER_APP_KEY=...
+PUSHER_APP_SECRET=...
+PUSHER_APP_CLUSTER=eu
+
+# The application code does not change. The switch is a
+# configuration change, which makes "start managed, move
+# to Reverb later" a plan rather than a rewrite.
 
 
-# ---------- Testing without waiting ----------
+<?php
+// config/broadcasting.php
 
-php artisan schedule:run          # run anything due now
-php artisan schedule:test         # pick a task and run it
+'default' => env('BROADCAST_CONNECTION', 'null'),
+
+'connections' => [
+    'reverb' => [
+        'driver' => 'reverb',
+        'key'    => env('REVERB_APP_KEY'),
+        'secret' => env('REVERB_APP_SECRET'),
+        'app_id' => env('REVERB_APP_ID'),
+        'options' => [
+            'host'   => env('REVERB_HOST'),
+            'port'   => env('REVERB_PORT', 443),
+            'scheme' => env('REVERB_SCHEME', 'https'),
+        ],
+    ],
+
+    'pusher' => ['driver' => 'pusher', /* ... */],
+
+    // Tests, and any environment with no real time.
+    'null' => ['driver' => 'null'],
+],
 
 
-# ---------- The permissions one ----------
+# ---------- In production: another process to keep alive ----------
 
-# The scheduler runs as a user. That user must be able
-# to write storage/logs and read .env.
-#
-# root running the scheduler while www-data runs the app
-# creates log files nobody else can write to, and the
-# failure appears somewhere else entirely.
+# /etc/supervisor/conf.d/reverb.conf
 
-* * * * * cd /var/www && sudo -u www-data php artisan schedule:run`,
+[program:reverb]
+command=php /var/www/artisan reverb:start
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/log/reverb.log
+
+# When this dies, the page still loads, the buttons still
+# work, and nothing updates live. Nobody gets an error.
+
+
+# ---------- The proxy has to allow the upgrade ----------
+
+# nginx
+location /app {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_set_header Host $host;
+}
+
+# Without the Upgrade headers the connection is refused,
+# and the browser reports something unhelpful.
+
+# And a page on HTTPS cannot open an insecure socket:
+# browsers refuse it, so the socket needs TLS too.`,
       },
       keyTakeaways: [
-        "<b>A task that takes longer than its interval overlaps with itself</b>, and each run makes the next slower.",
-        "<b>`withoutOverlapping()` skips a run while one is already going</b>, which most real work needs.",
-        "<b>Set the lock expiry from the work</b>, because a killed task can leave the lock and silently stop running.",
-        "<b>Several servers each run the scheduler</b>, so a daily email is sent once per server.",
-        "<b>`onOneServer()` lets the first server to take a shared lock run it</b>, and the others skip.",
-        "<b>It requires a shared cache</b>: with a per-server cache, all of them still run and nothing warns you.",
-        "<b>`withoutOverlapping()` and `onOneServer()` answer different questions</b>, and both are needed on several servers.",
-        "<b>`schedule:run` checks once; `schedule:work` keeps checking</b>, and cron calls the first every minute.",
-        "<b>`schedule:list` is the first thing to run when a task did not happen</b>, showing four of the five usual causes.",
-        "<b>The fifth is a missing cron entry</b>, which on a fresh server is the answer more often than the code.",
-        "The scheduler runs as a user, which must be able to write your logs and read your `.env`.",
+        "<b>PHP answers a request and exits</b>, so it cannot hold thousands of connections open.",
+        "<b>Real-time Laravel needs a second server</b> whose only job is holding connections and delivering broadcasts.",
+        "<b>Reverb is Laravel's own WebSocket server</b>, run by you, and it never touches your application code or database.",
+        "<b>Pusher and Ably do the same job as a managed service</b>, priced per connection and message.",
+        "<b>Neither is right by default</b>: it depends on traffic, cost at your volume, and your appetite for operations.",
+        "<b>Switching between them is a configuration change</b>, so starting managed and moving later is a real plan.",
+        "<b>Reverb is another long-running process</b> needing a process manager, restarts on deploy, and monitoring.",
+        "<b>Its failure mode is quiet</b>: the page works and nothing updates live, with no error anywhere.",
+        "<b>It needs its own port, reachable through your proxy</b>, which must allow the WebSocket upgrade.",
+        "<b>A page on HTTPS cannot open an insecure socket</b>, so TLS applies to the socket too.",
       ],
       commonMistakes: [
-        "<b>Scheduling a long task hourly with no overlap guard.</b> Three copies compete and each makes the next slower.",
-        "<b>Setting no lock expiry.</b> A killed task leaves the lock and the schedule silently stops for a day.",
-        "<b>Deploying to several servers without `onOneServer()`.</b> Every customer email is sent once per server.",
-        "<b>Using `onOneServer()` with a file cache.</b> Each server takes its own lock, so all of them run.",
-        "<b>Debugging a missing task in the code first.</b> Check `schedule:list`, then check the crontab.",
+        "<b>Expecting the web server to hold WebSocket connections.</b> That is a separate long-running process.",
+        "<b>Running Reverb by hand.</b> When it dies, real time stops silently and nothing reports it.",
+        "<b>Forgetting the proxy's upgrade headers.</b> The connection is refused with an unhelpful browser error.",
+        "<b>Serving the page over HTTPS and the socket over plain WebSocket.</b> Browsers refuse the mixed connection.",
+        "<b>Debugging broadcast code when real time stops.</b> Check whether the WebSocket server is running first.",
       ],
       quiz: [
         {
-          question: "What does `withoutOverlapping()` prevent?",
+          question: "Why does broadcasting need a separate server?",
           options: [
-            "Two servers running the task",
-            "A new run starting while a previous run of the same task is still going",
-            "The task failing",
-            "The task running at the wrong time",
+            "For security",
+            "PHP answers a request and exits, so it cannot hold connections open",
+            "To reduce database load",
+            "Laravel requires it",
           ],
           correctIndex: 1,
-          explanation: "Essential for anything of unpredictable duration.",
+          explanation: "The WebSocket server's job is holding connections and delivering broadcasts.",
         },
         {
-          question: "What does `onOneServer()` require to work?",
+          question: "What is the difference between Reverb and Pusher?",
           options: [
-            "A queue worker",
-            "A cache shared between the servers, such as Redis",
-            "A database lock table",
-            "Nothing",
+            "Reverb supports more channels",
+            "You run Reverb yourself; Pusher is managed and priced per connection and message",
+            "Pusher is faster",
+            "Reverb only works locally",
           ],
           correctIndex: 1,
-          explanation: "With a per-server cache, each takes its own lock and all still run.",
+          explanation: "And switching between them is a configuration change.",
         },
         {
-          question: "What is the difference between `schedule:run` and `schedule:work`?",
+          question: "What happens when the WebSocket server dies?",
           options: [
-            "None",
-            "`run` checks once and exits; `work` keeps checking continuously",
-            "`work` is for production",
-            "`run` only lists tasks",
+            "The site returns a 500",
+            "The page still works and nothing updates live, with no error anywhere",
+            "Requests queue up",
+            "Laravel restarts it",
           ],
           correctIndex: 1,
-          explanation: "Cron calls `schedule:run` every minute.",
+          explanation: "Which is why it needs a process manager and monitoring.",
         },
         {
-          question: "A scheduled task did not run. What should you check first?",
+          question: "Why must the WebSocket use TLS in production?",
           options: [
-            "The queue workers",
-            "`schedule:list`, then whether the cron entry exists at all",
-            "The database",
-            "The job class",
+            "For performance",
+            "A page served over HTTPS cannot open an insecure WebSocket; browsers refuse it",
+            "Reverb requires it",
+            "To allow authentication",
           ],
           correctIndex: 1,
-          explanation: "It shows registration, frequency, timezone and environment constraints in one look.",
+          explanation: "The certificate story applies to the socket as well as the site.",
         },
       ],
     },
     {
-      id: "mail",
-      title: "Mail — mailables, Markdown & attachments",
-      durationMinutes: 11,
-      explanation: "Sending email, and the parts of it that are not obvious.\n\n---\n\n### 1. Basic — a mailable\n\n```text\napplication → Mailable → transport → provider → recipient\n```\n\n```bash\nphp artisan make:mail WelcomeEmail\n```\n\n<b>A mailable is a class representing one email:</b>\n\n```text\nsubject · content · view · data · attachments\n```\n\n```php\nMail::to($user)->send(new WelcomeEmail($user));\n```\n\nWhich reads well, and hides something worth knowing: <b>that line talks to an SMTP server during your request.</b> A slow mail provider is a slow page, and a mail provider that is down is a failed request for something that had nothing to do with mail.\n\n```php\nclass WelcomeEmail extends Mailable implements ShouldQueue\n{\n}\n```\n\n<b>Almost every mailable should be queued.</b> The exception is one the user is explicitly waiting for confirmation of, and even then the queue is usually right.\n\n---\n\n### 2. Intermediate — Markdown mail\n\nEmail HTML is not web HTML. Clients strip stylesheets, ignore flexbox, and require tables for layout, and the result has to survive Outlook, Gmail and a phone.\n\n<b>Markdown mailables give you components that already handle that:</b>\n\n```text\nMailable → Markdown → HTML email\n```\n\n```blade\n<x-mail::message>\n# Welcome, {{ $user->name }}\n\nThanks for joining.\n\n<x-mail::button :url=\"$url\">\nGet started\n</x-mail::button>\n</x-mail::message>\n```\n\n```text\nbutton · panel · table · subcopy\n```\n\n<b>Which is the difference between writing an email and writing email HTML.</b> The components are publishable if you need to restyle them, and the fallback plain-text version is generated for you.\n\nOne detail: <b>a mailable can define a plain-text version</b>, and some clients and filters prefer one. Markdown gives you it automatically; a hand-written HTML mailable does not.\n\n---\n\n### 3. Advanced — attachments, and their limits\n\n```text\nInvoice → PDF → attachment\n```\n\n```php\npublic function attachments(): array\n{\n    return [\n        Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)\n            ->as('invoice.pdf')\n            ->withMime('application/pdf'),\n    ];\n}\n```\n\n<b>And attachments are where email gets awkward.</b>\n\n```text\nsize      most providers reject over ~10–25 MB\nencoding  base64 adds about a third to the size\nspam      attachments raise the odds of being filtered\nmemory    the file is read into the message\n```\n\nSo the honest guidance: <b>attach small things, and link to large ones.</b> A signed temporary URL from Day 22 is better than a 20 MB attachment in every way, including that you can revoke it and see whether it was downloaded.\n\n<b>Inline images</b> are the other kind:\n\n```blade\n<img src=\"{{ $message->embed($pathToLogo) }}\">\n```\n\nWhich embeds the image in the message rather than linking to it. That matters because <b>most clients block remote images by default</b>, so a linked logo is an empty box until the reader clicks \"show images\". Embedding it costs message size and gains a header that renders.\n\nTwo last practical notes.\n\n<b>A queued mailable serialises its constructor</b>, exactly like a job. Passing a model passes an id, and the mail is rendered against the state when it sends.\n\n<b>And `Mail::to()` accepts anything with an email</b>: a user, a collection of users, or a bare address. Sending to a collection sends one message per recipient, which is what you want; putting fifty addresses in one `to()` shows all fifty to each of them.\n\nQueueing can also be decided at the call site rather than on the class:\n\n```php\nMail::to($user)->queue(new WelcomeEmail($user));\nMail::to($user)->later(now()->addHours(3), new OnboardingTip($user));\n```\n\n<b>`later()` is the one worth remembering</b>, because delayed mail is a whole category of feature: the tip three hours after signup, the reminder the day before the due date, the nudge a week after an abandoned draft. `ShouldQueue` on the class cannot express any of those.",
-      diagram: `A mailable
+      id: "broadcasting-events",
+      title: "ShouldBroadcast & shaping the payload",
+      durationMinutes: 12,
+      explanation: "Yesterday's events, with one interface added.\n\n---\n\n### 1. Basic — an event that leaves the server\n\n```php\nclass OrderShipped implements ShouldBroadcast\n{\n}\n```\n\n```text\nsomething happens\n      ↓\nShouldBroadcast\n      ↓\nbroadcast\n      ↓\nWebSocket\n      ↓\nsubscribed clients\n```\n\n<b>That is genuinely the whole change.</b> Yesterday's `OrderShipped` had listeners inside your application; adding the interface means it also leaves the building.\n\nWhich is a nice piece of design: <b>the same event can have server-side listeners and browser subscribers</b>, and neither knows about the other. A `PaymentReceived` event can send a receipt, write an audit row, and update somebody's screen, from one dispatch.\n\n<b>`ShouldBroadcast` queues the broadcast</b>, so the request does not wait for the WebSocket server. Which means a queue worker must be running, and \"my events are not arriving\" is very often that.\n\n---\n\n### 2. Intermediate — `ShouldBroadcastNow`\n\n```php\nclass OrderShipped implements ShouldBroadcastNow\n{\n}\n```\n\n```text\nShouldBroadcast      → queue → broadcast\nShouldBroadcastNow   → broadcast, in the request\n```\n\n<b>Do not reach for this by default.</b> It sends during the request, so the user waits for the WebSocket server, and an unavailable one becomes a failed request for whatever they were actually doing.\n\nIt earns its place in two cases: a chat message, where a queue round trip is a visible delay in a conversation, and a local setup with no worker running, where it is a debugging convenience rather than a design choice.\n\n<b>For everything else, the queue is right</b>, and a hundred milliseconds later is real time enough.\n\n---\n\n### 3. Advanced — what actually goes over the wire\n\nBy default, <b>the event's public properties are serialised and sent.</b> Which is where this goes wrong:\n\n```php\nclass NotificationCreated implements ShouldBroadcast\n{\n    public function __construct(public User $user, public Notification $notification) {}\n}\n```\n\nThat sends the whole user model to the browser: the email, the internal flags, the columns added by a migration last week. <b>Anybody who can subscribe to that channel can read all of it</b>, and unlike an API response, nobody reviewed it.\n\n```php\npublic function broadcastWith(): array\n{\n    return [\n        'id'      => $this->notification->id,\n        'message' => $this->notification->message,\n    ];\n}\n```\n\n<b>This is Day 16's API Resource argument, in a place people forget to apply it.</b> A broadcast is a public interface: send what the client needs and nothing else.\n\n```text\n❌ the User model                ✓ { \"id\": 123,\n     id · email · internal        \"message\": \"...\" }\n     flags · everything else\n```\n\nThree more details worth knowing.\n\n<b>The event name on the wire is the class name</b>, which is what the client listens for. `broadcastAs()` renames it, and is worth using so that renaming a PHP class does not break a deployed frontend.\n\n<b>`broadcastWhen()` can cancel a broadcast</b>, which is useful when the same event is dispatched in cases that should not always reach the browser.\n\n<b>And the broadcaster does not include the sender by default.</b> `toOthers()` excludes the connection that caused the event, which is what stops the person who sent a chat message seeing it twice: once from their own optimistic update, once from the socket.\n\nAnd since `ShouldBroadcast` puts the broadcast on a queue, it can be given its own:\n\n```php\npublic function broadcastQueue(): string\n{\n    return 'broadcasts';\n}\n```\n\n<b>Worth doing, because real time behind a slow queue is not real time.</b> A broadcast waiting behind a batch of PDF generation arrives a minute late, which is indistinguishable from broken.",
+      diagram: `An event that leaves the server
 
-  application → Mailable → transport → provider → recipient
+    class OrderShipped implements ShouldBroadcast
 
-    php artisan make:mail WelcomeEmail
+    something happens → ShouldBroadcast → broadcast
+                      → WebSocket → subscribed clients
 
-    subject · content · view · data · attachments
+  That is the whole change. Yesterday's event had
+  listeners inside the application; the interface means
+  it also leaves the building.
 
-    Mail::to(\$user)->send(new WelcomeEmail(\$user));
+  Which is nice design: the SAME event can have
+  server-side listeners AND browser subscribers, and
+  neither knows about the other.
 
-  ⚠️  That line talks to an SMTP server DURING your
-      request. A slow provider is a slow page; a provider
-      that is down is a failed request for something
-      unrelated to mail.
+    PaymentReceived → sends a receipt
+                    → writes an audit row
+                    → updates somebody's screen
 
-    class WelcomeEmail extends Mailable implements ShouldQueue
+  from one dispatch.
 
-  Almost every mailable should be queued.
-
-
-Markdown mail
-
-  Email HTML is not web HTML. Clients strip stylesheets,
-  ignore flexbox, and want tables for layout — and the
-  result has to survive Outlook, Gmail and a phone.
-
-    Mailable → Markdown → HTML email
-
-    <x-mail::message>
-    # Welcome
-    <x-mail::button :url="\$url">Get started</x-mail::button>
-    </x-mail::message>
-
-    button · panel · table · subcopy
-
-  The difference between writing an EMAIL and writing
-  email HTML. The components are publishable, and the
-  plain-text version is generated for you — which a
-  hand-written HTML mailable does not give you, and
-  some clients and filters prefer.
+  ⚠️  ShouldBroadcast QUEUES the broadcast, so a worker
+      must be running. "My events are not arriving" is
+      very often that.
 
 
-Attachments
+ShouldBroadcastNow
 
-    Invoice → PDF → attachment
+    ShouldBroadcast      → queue → broadcast
+    ShouldBroadcastNow   → broadcast, in the request
 
-    Attachment::fromStorageDisk('s3', \$path)->as('invoice.pdf')
+  Do not reach for it by default. It sends during the
+  request, so the user waits for the WebSocket server —
+  and an unavailable one becomes a failed request for
+  whatever they were actually doing.
 
-  Where email gets awkward:
+  It earns its place twice:
 
-    size      most providers reject over ~10–25 MB
-    encoding  base64 adds about a third
-    spam      attachments raise filtering odds
-    memory    the file is read into the message
+    a chat message, where a queue round trip is a
+      visible delay in a conversation
+    a local setup with no worker, as a debugging
+      convenience
 
-  So: attach small things, LINK to large ones.
-
-  A signed temporary URL from Day 22 beats a 20 MB
-  attachment in every way — including that you can
-  revoke it and see whether it was downloaded.
-
-
-Inline images
-
-    <img src="{{ \$message->embed(\$pathToLogo) }}">
-
-  Embeds the image rather than linking it.
-
-  ⚠️  Most clients BLOCK remote images by default, so a
-      linked logo is an empty box until the reader clicks
-      "show images". Embedding costs size and gains a
-      header that renders.
+  Otherwise the queue is right, and a hundred
+  milliseconds later is real time enough.
 
 
-Two last notes
+What goes over the wire
 
-  A queued mailable serialises its constructor, exactly
-  like a job. A model becomes an id, and the mail is
-  rendered against the state when it SENDS.
+  By default, the event's PUBLIC PROPERTIES are
+  serialised and sent.
 
-  Mail::to() accepts a user, a collection, or a bare
-  address. A collection sends one message PER recipient
-  — which is what you want. Fifty addresses in one to()
-  shows all fifty to each of them.`,
-      codeExample: {
-        title: "A queued, Markdown mailable with an attachment",
-        code: `<?php
-// php artisan make:mail InvoicePaid --markdown=mail.invoices.paid
+    public function __construct(
+        public User \$user,
+        public Notification \$notification,
+    ) {}
 
-namespace App\\Mail;
+  That sends the whole user model to the browser: the
+  email, the internal flags, the columns added by a
+  migration last week.
 
-use App\\Models\\Invoice;
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Mail\\Mailable;
-use Illuminate\\Mail\\Mailables\\Attachment;
-use Illuminate\\Mail\\Mailables\\Content;
-use Illuminate\\Mail\\Mailables\\Envelope;
+  ⚠️  Anybody who can subscribe to that channel reads all
+      of it — and unlike an API response, nobody reviewed
+      it.
 
-// Queued: this otherwise talks to an SMTP server during
-// the request.
-class InvoicePaid extends Mailable implements ShouldQueue
-{
-    use Queueable, SerializesModels;
-
-    // Serialised like a job: the invoice becomes an id,
-    // and the mail renders against the state when it sends.
-    public function __construct(public Invoice $invoice) {}
-
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: "Invoice {$this->invoice->number} paid",
-
-            // Defaults to MAIL_FROM_ADDRESS / MAIL_FROM_NAME.
-            // Override per mailable when one message should
-            // come from somewhere else — billing, support:
-            from: new Address('billing@example.com', 'InvoiceHub Billing'),
-
-            replyTo: [config('mail.support')],
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'mail.invoices.paid',
-            with: ['invoice' => $this->invoice],
-        );
-    }
-
-    public function attachments(): array
+    public function broadcastWith(): array
     {
         return [
-            Attachment::fromStorageDisk('s3', $this->invoice->pdf_path)
-                ->as("invoice-{$this->invoice->number}.pdf")
-                ->withMime('application/pdf'),
+            'id'      => \$this->notification->id,
+            'message' => \$this->notification->message,
         ];
+    }
+
+  Day 16's API Resource argument, in a place people
+  forget to apply it. A broadcast is a PUBLIC INTERFACE.
+
+    ❌ the User model            ✓ { "id": 123,
+       id · email · internal        "message": "..." }
+       flags · everything else
+
+
+Three details
+
+  The event name on the wire is the CLASS NAME, which is
+  what the client listens for. broadcastAs() renames it,
+  so renaming a PHP class does not break a deployed
+  frontend.
+
+  broadcastWhen() can cancel a broadcast, for an event
+  dispatched in cases that should not always reach the
+  browser.
+
+  toOthers() excludes the connection that caused the
+  event — which stops the person who sent a chat message
+  seeing it twice: once optimistically, once from the
+  socket.`,
+      codeExample: {
+        title: "Broadcasting an event, carefully",
+        code: `<?php
+
+namespace App\\Events;
+
+use App\\Models\\Notification;
+use Illuminate\\Broadcasting\\PrivateChannel;
+use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
+use Illuminate\\Foundation\\Events\\Dispatchable;
+
+class NotificationCreated implements ShouldBroadcast
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public function __construct(public Notification $notification) {}
+
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('user.' . $this->notification->user_id)];
+    }
+
+    // The name the client listens for. Without this it is
+    // the fully qualified class name, so renaming the PHP
+    // class breaks a deployed frontend.
+    public function broadcastAs(): string
+    {
+        return 'notification.created';
+    }
+
+    // What actually crosses the wire. Without this, every
+    // public property is serialised and sent.
+    public function broadcastWith(): array
+    {
+        return [
+            'id'         => $this->notification->id,
+            'message'    => $this->notification->message,
+            'created_at' => $this->notification->created_at->toIso8601String(),
+        ];
+    }
+
+    // Not every dispatch needs to reach the browser.
+    public function broadcastWhen(): bool
+    {
+        return $this->notification->is_visible;
+    }
+}
+
+
+<?php
+// ---------- What happens without broadcastWith() ----------
+
+// ❌ The whole user model goes to the browser: the email,
+//    the internal flags, and the columns a migration
+//    added last week.
+class NotificationCreated implements ShouldBroadcast
+{
+    public function __construct(
+        public User $user,
+        public Notification $notification,
+    ) {}
+}
+
+// Anybody who can subscribe to that channel reads all of
+// it, and unlike an API response nobody reviewed it.
+//
+// This is Day 16's resource argument, in the place people
+// forget to apply it.
+
+
+<?php
+// ---------- Queued, or now ----------
+
+// ✓ The default. The request does not wait for the
+//   WebSocket server.
+class OrderShipped implements ShouldBroadcast {}
+
+// A worker must be running. "My events are not arriving"
+// is very often that.
+
+// Occasionally right: a chat message, where a queue round
+// trip is a visible delay in a conversation.
+class MessageSent implements ShouldBroadcastNow {}
+
+// ❌ Everything else. The user waits for the WebSocket
+//    server, and an outage there fails a request about
+//    something else.
+
+
+<?php
+// ---------- One dispatch, two audiences ----------
+
+PaymentReceived::dispatch($payment);
+
+// Server side, from yesterday:
+//   SendReceipt (queued listener)
+//   RecordAuditEntry (inline listener)
+//
+// Browser side, from today:
+//   ShouldBroadcast → the customer's screen updates
+//
+// Neither knows about the other.
+
+
+<?php
+// ---------- toOthers ----------
+
+// The sender already updated their own UI optimistically.
+// Without this they see the message twice.
+broadcast(new MessageSent($message))->toOthers();
+
+// Requires the client to send its socket id with the
+// request, which Echo does automatically.`,
+      },
+      keyTakeaways: [
+        "<b>`ShouldBroadcast` on an event sends it out over the WebSocket</b>, and that is the whole change.",
+        "<b>The same event can have server-side listeners and browser subscribers</b>, and neither knows about the other.",
+        "<b>`ShouldBroadcast` queues the broadcast</b>, so a worker must be running for events to arrive.",
+        "<b>`ShouldBroadcastNow` broadcasts during the request</b>, so an unavailable WebSocket server fails the request.",
+        "It suits a chat message, and local debugging, and not much else.",
+        "<b>By default every public property of the event is serialised and sent to the browser.</b>",
+        "<b>`broadcastWith()` shapes the payload</b>, which is Day 16's resource argument applied to a public interface.",
+        "<b>`broadcastAs()` names the event on the wire</b>, so renaming a PHP class does not break a deployed frontend.",
+        "<b>`broadcastWhen()` cancels a broadcast</b> for dispatches that should not reach the browser.",
+        "<b>`toOthers()` excludes the connection that caused the event</b>, which stops the sender seeing their own message twice.",
+      ],
+      commonMistakes: [
+        "<b>Broadcasting an event with a model as a public property.</b> The entire record goes to the browser unreviewed.",
+        "<b>Using `ShouldBroadcastNow` by default.</b> The user waits for the WebSocket server on every request.",
+        "<b>Forgetting the queue worker.</b> `ShouldBroadcast` queues, so nothing arrives until something processes it.",
+        "<b>Relying on the class name as the wire name.</b> A rename or a namespace move breaks the deployed frontend.",
+        "<b>Omitting `toOthers()` on a chat message.</b> The sender sees their own message twice.",
+      ],
+      quiz: [
+        {
+          question: "What does adding `ShouldBroadcast` to an event do?",
+          options: [
+            "Replaces its listeners",
+            "Sends it over the WebSocket as well as running its listeners",
+            "Queues its listeners",
+            "Makes it synchronous",
+          ],
+          correctIndex: 1,
+          explanation: "The same event can have server-side listeners and browser subscribers.",
+        },
+        {
+          question: "What is sent to the browser without `broadcastWith()`?",
+          options: [
+            "Nothing",
+            "Every public property of the event, serialised in full",
+            "Only the event name",
+            "The model's id",
+          ],
+          correctIndex: 1,
+          explanation: "Which sends a whole user model, including columns nobody reviewed.",
+        },
+        {
+          question: "When is `ShouldBroadcastNow` appropriate?",
+          options: [
+            "Always, for lower latency",
+            "For a chat message where a queue round trip is a visible delay, and for local debugging",
+            "When no queue exists in production",
+            "For large payloads",
+          ],
+          correctIndex: 1,
+          explanation: "Otherwise the user waits for the WebSocket server during their request.",
+        },
+        {
+          question: "What does `toOthers()` prevent?",
+          options: [
+            "Unauthorized subscribers",
+            "The connection that caused the event receiving it back",
+            "Duplicate broadcasts",
+            "Queued delivery",
+          ],
+          correctIndex: 1,
+          explanation: "The sender already updated their own UI optimistically.",
+        },
+      ],
+    },
+    {
+      id: "channels",
+      title: "Channels — public, private & presence",
+      durationMinutes: 12,
+      explanation: "A broadcast has to go somewhere. Channels are where.\n\n---\n\n### 1. Basic — three kinds\n\n```text\nPublic     anyone may subscribe\nPrivate    authorized users only\nPresence   authorized users, and everybody knows who is there\n```\n\n<b>The channel is the addressing</b>: an event broadcast on `user.42` reaches whoever is subscribed to `user.42`, and nobody else.\n\n<b>Public channels</b> require nothing:\n\n```text\nBrowser A ─┐\nBrowser B ─┼→  announcements\nBrowser C ─┘\n```\n\nWhich suits information anybody could see anyway: a public status page, a live scoreboard, a site-wide announcement.\n\n<b>And the rule that follows is absolute: nothing user-specific goes on a public channel.</b> Not \"unlikely to be guessed\", not \"they would need the id\". A public channel is readable by anybody who knows its name, and names are not secrets.\n\n---\n\n### 2. Intermediate — private channels\n\n```text\nprivate-user.123\n```\n\nSubscribing to one asks your application for permission:\n\n```text\nBrowser\n   ↓ subscribe to private-user.123\nLaravel authorization\n   ↓ allowed?\nthe connection joins the channel\n```\n\n<b>This is the one you will use most</b>, because most real-time updates belong to somebody: their notifications, their orders, their invoices.\n\nThe naming convention that follows from that:\n\n```text\nprivate-user.{id}       one person's own events\nprivate-team.{id}       everybody on a team\nprivate-order.{id}      everybody watching one order\npresence-chat.{id}      a room, and who is in it\n```\n\n<b>The channel name is a scope</b>, and choosing it is a design decision rather than a naming one. `private-user.42` and `private-team.7` deliver different things to different sets of people, and getting that wrong is how somebody sees an update they should not.\n\n---\n\n### 3. Advanced — presence channels\n\n<b>A presence channel is a private channel that also tracks who is connected:</b>\n\n```text\nchat.room.123\n\n🟢 Rajan\n🟢 Alice\n🟢 Bob\n```\n\nWhen you join, you learn who is already there. When somebody else joins or leaves, you are told.\n\n```text\nyou join      →  here:    the current members\nsomeone joins →  joining: that member\nsomeone leaves→  leaving: that member\n```\n\nWhich is what builds an online-users list, a collaborative cursor display, or a \"three people are viewing this\" indicator, without any of it being stored anywhere.\n\nThree things worth knowing before relying on it.\n\n<b>Presence data is whatever your authorization callback returns</b>, and it is visible to every other member. Returning the whole user model puts their email in front of everybody in the room. Return a name and an id.\n\n<b>Presence is connection state, not truth.</b> A closed laptop lid, a dropped connection or a tab in the background can all mean somebody appears present when they are not, and appears absent when they are. Treat it as a hint, not a fact, and never as authorization for anything.\n\n<b>And one person can be several members.</b> Two tabs is two connections, so a naive count shows Rajan twice. Deduplicating by user id is on you.\n\nSo the choice, in one place:\n\n```text\nis the information public anyway?     →  a public channel\nis it somebody's, or a group's?       →  a private channel\ndo the members need to know who\n  else is here?                        →  a presence channel\n```",
+      diagram: `Three kinds
+
+  Public     anyone may subscribe
+  Private    authorized users only
+  Presence   authorized users, and everybody knows
+             who is there
+
+  The channel is the ADDRESSING: an event broadcast on
+  user.42 reaches whoever subscribed to user.42.
+
+
+Public
+
+    Browser A ─┐
+    Browser B ─┼→  announcements
+    Browser C ─┘
+
+  Suits information anybody could see anyway: a public
+  status page, a live scoreboard, a site-wide notice.
+
+  ⚠️  And the rule is absolute: NOTHING user-specific on
+      a public channel. Not "unlikely to be guessed",
+      not "they would need the id".
+
+      A public channel is readable by anybody who knows
+      its name, and names are not secrets.
+
+
+Private
+
+    private-user.123
+
+    Browser
+       ↓ subscribe to private-user.123
+    Laravel authorization
+       ↓ allowed?
+    the connection joins the channel
+
+  The one you will use most, because most real-time
+  updates belong to somebody.
+
+    private-user.{id}     one person's own events
+    private-team.{id}     everybody on a team
+    private-order.{id}    everybody watching one order
+    presence-chat.{id}    a room, and who is in it
+
+  The channel name is a SCOPE, and choosing it is a
+  design decision rather than a naming one.
+  private-user.42 and private-team.7 deliver different
+  things to different people, and getting it wrong is
+  how somebody sees an update they should not.
+
+
+Presence
+
+    chat.room.123
+
+    🟢 Rajan
+    🟢 Alice
+    🟢 Bob
+
+    you join       →  here:    the current members
+    someone joins  →  joining: that member
+    someone leaves →  leaving: that member
+
+  Builds an online list, collaborative cursors, or
+  "three people are viewing this" — none of it stored.
+
+
+  Three things before relying on it:
+
+    Presence data is whatever your authorization
+    callback RETURNS, and every other member sees it.
+    Returning the user model puts their email in front
+    of the room. Return a name and an id.
+
+    Presence is CONNECTION STATE, not truth. A closed
+    laptop, a dropped connection or a background tab can
+    all make somebody appear present when they are not.
+    A hint, never authorization.
+
+    One person can be several members. Two tabs is two
+    connections, so a naive count shows Rajan twice.
+    Deduplicating by user id is on you.
+
+
+The choice
+
+  public anyway?                   →  public channel
+  somebody's, or a group's?        →  private channel
+  do members need to know who
+    else is here?                   →  presence channel`,
+      codeExample: {
+        title: "Choosing a channel",
+        code: `<?php
+
+use Illuminate\\Broadcasting\\Channel;
+use Illuminate\\Broadcasting\\PresenceChannel;
+use Illuminate\\Broadcasting\\PrivateChannel;
+
+// ---------- Public: information anybody could see ----------
+
+class SiteStatusChanged implements ShouldBroadcast
+{
+    public function broadcastOn(): array
+    {
+        return [new Channel('status')];
+    }
+
+    public function broadcastWith(): array
+    {
+        return ['status' => $this->status];   // nothing personal
+    }
+}
+
+// ❌ Never this. A public channel is readable by anybody
+//    who knows its name, and names are not secrets.
+class NotificationCreated implements ShouldBroadcast
+{
+    public function broadcastOn(): array
+    {
+        return [new Channel('user.' . $this->userId)];
+    }
+}
+
+
+<?php
+// ---------- Private: the one you will use most ----------
+
+class NotificationCreated implements ShouldBroadcast
+{
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('user.' . $this->notification->user_id)];
+    }
+}
+
+// The channel name is a scope, and choosing it is a
+// design decision:
+
+class InvoicePaid implements ShouldBroadcast
+{
+    public function broadcastOn(): array
+    {
+        return [
+            // The customer sees their own invoice.
+            new PrivateChannel('user.' . $this->invoice->customer_id),
+
+            // The finance team sees every invoice.
+            new PrivateChannel('team.finance'),
+        ];
+    }
+}
+
+
+<?php
+// ---------- Presence: private, plus who is here ----------
+
+class MessageSent implements ShouldBroadcast
+{
+    public function broadcastOn(): array
+    {
+        return [new PresenceChannel('chat.room.' . $this->message->room_id)];
+    }
+}
+
+// The client gets here / joining / leaving for free,
+// which is what builds an online-users list without
+// storing anything.
+
+
+<?php
+// ---------- What presence exposes ----------
+
+// routes/channels.php
+
+// ❌ Every member of the room now sees this user's email,
+//    and whatever else the model carries.
+Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
+    return $user->rooms->contains($roomId) ? $user : false;
+});
+
+// ✓ A name and an id.
+Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
+    if (! $user->rooms->contains($roomId)) {
+        return false;
+    }
+
+    return ['id' => $user->id, 'name' => $user->name];
+});
+
+
+// ---------- One person, several connections ----------
+
+// Two tabs is two members. A naive count shows Rajan twice.
+
+const online = members.filter(
+    (m, i, all) => all.findIndex((x) => x.id === m.id) === i
+);
+
+// And presence is connection state, not truth: a closed
+// laptop or a background tab makes somebody look absent
+// when they are not. A hint, never authorization.`,
+      },
+      keyTakeaways: [
+        "<b>A channel is the addressing</b>: a broadcast reaches whoever subscribed to that channel name.",
+        "<b>Public channels require no authorization</b>, and suit information anybody could see anyway.",
+        "<b>Nothing user-specific ever goes on a public channel</b>, because names are not secrets.",
+        "<b>Private channels ask your application for permission before a connection joins.</b>",
+        "They are what most real-time updates need, because most updates belong to somebody.",
+        "<b>The channel name is a scope</b>, so `private-user.42` and `private-team.7` are a design decision.",
+        "<b>A presence channel is a private channel that also tracks who is connected</b>, with here, joining and leaving.",
+        "<b>Presence data is whatever the authorization callback returns</b>, and every member sees it: return a name and an id.",
+        "<b>Presence is connection state, not truth</b>, so treat it as a hint and never as authorization.",
+        "<b>One person with two tabs is two members</b>, so deduplicating by user id is your job.",
+      ],
+      commonMistakes: [
+        "<b>Putting a user's notifications on a public channel.</b> Anybody who guesses the name reads them.",
+        "<b>Returning the user model from a presence authorization callback.</b> Their email goes to everybody in the room.",
+        "<b>Trusting presence as a fact.</b> A closed laptop or a background tab makes it wrong in both directions.",
+        "<b>Counting presence members without deduplicating.</b> Two tabs shows the same person twice.",
+        "<b>Choosing a channel name without thinking about scope.</b> A team channel delivers to more people than you meant.",
+      ],
+      quiz: [
+        {
+          question: "What may go on a public broadcast channel?",
+          options: [
+            "Anything, since the name is hard to guess",
+            "Only information anybody could see anyway",
+            "User notifications with an id in the name",
+            "Anything encrypted",
+          ],
+          correctIndex: 1,
+          explanation: "A public channel is readable by anybody who knows its name.",
+        },
+        {
+          question: "What does a private channel add?",
+          options: [
+            "Encryption",
+            "An authorization check before a connection may join",
+            "A member list",
+            "Queued delivery",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why most real-time updates use one.",
+        },
+        {
+          question: "What does a presence channel add over a private one?",
+          options: [
+            "Encryption",
+            "Knowledge of who is connected, with here, joining and leaving events",
+            "Guaranteed delivery",
+            "Message history",
+          ],
+          correctIndex: 1,
+          explanation: "Which builds an online-users list without storing anything.",
+        },
+        {
+          question: "Why should a presence authorization callback not return the user model?",
+          options: [
+            "It is slower",
+            "Whatever it returns is visible to every other member of the channel",
+            "It breaks serialisation",
+            "Laravel rejects it",
+          ],
+          correctIndex: 1,
+          explanation: "Return a name and an id, not an email and every other column.",
+        },
+      ],
+    },
+    {
+      id: "channel-authorization",
+      title: "Channel authorization",
+      durationMinutes: 11,
+      explanation: "The security boundary that only exists in real-time applications.\n\n---\n\n### 1. Basic — a third question\n\nDay 18 and Day 19 gave you two:\n\n```text\nAuthentication          who are you?\nAuthorization           may you do this?\n```\n\nBroadcasting adds a third:\n\n```text\nChannel authorization   may you LISTEN to this?\n```\n\nAnd it is genuinely separate. <b>Being logged in says nothing about which channels you may join</b>, exactly as being logged in said nothing about which invoices you may read.\n\nThe rules live in `routes/channels.php`:\n\n```php\nBroadcast::channel('user.{userId}', function ($user, $userId) {\n    return $user->id === (int) $userId;\n});\n```\n\n```text\nUser 123\n   ↓ subscribe to user.123\nis the authenticated user 123?\n   ↓\nyes → allow      no → deny\n```\n\n<b>Return `true` to allow and `false` to deny</b>, and the callback receives the authenticated user plus whatever the channel name captured.\n\n---\n\n### 2. Intermediate — the cast that matters\n\n```php\nreturn $user->id === (int) $userId;\n```\n\n<b>That cast is not decoration.</b> The channel segment arrives as a string, so `$user->id === $userId` compares an integer to a string and is always false, and every subscription silently fails.\n\nWhich produces the most confusing symptom in this topic: <b>everything is configured correctly and no events ever arrive.</b> No error, no log line, just nothing, because the subscription was refused and the browser did not tell you.\n\nUse `(int)` and a strict comparison, or `==` deliberately, and know which you chose.\n\nAnd the authorization itself should reuse what you already have:\n\n```php\nBroadcast::channel('order.{order}', function ($user, Order $order) {\n    return $user->can('view', $order);\n});\n```\n\n<b>Model binding works here</b>, and so do the policies from Day 19. A channel authorizing differently from the page showing the same data is a bug waiting to be found by somebody who should not have seen an update.\n\n---\n\n### 3. Advanced — what this actually protects\n\nIt is worth being concrete about the attack, because it is easy to treat channel names as obscure enough.\n\nA logged-in user opens the browser console and subscribes to:\n\n```text\nprivate-user.456\nprivate-team.99\nprivate-admin\n```\n\n<b>Nothing stops them trying.</b> The channel name is in the JavaScript, the pattern is obvious, and changing a number is not a skill. Without an authorization callback, they now receive every event you broadcast to those channels, live, and nothing in your logs looks unusual.\n\nSo three rules.\n\n<b>Every private and presence channel needs a callback.</b> A channel with no matching rule is denied by default, which is the right default and also means a typo in the pattern silently blocks a legitimate channel. Check both directions.\n\n<b>Authorize the thing, not the shape.</b> `user.{id}` matching the current user is easy; `team.{id}` needs \"is this user in that team\", and `order.{id}` needs the policy. The pattern matching is not the check.\n\n<b>And remember the payload is the other half.</b> A correctly authorized channel carrying an over-broad payload leaks anyway, which is the previous lesson's point arriving from a different direction. <b>Authorization decides who listens; `broadcastWith()` decides what they hear.</b> Both have to be right.",
+      diagram: `A third question
+
+    Authentication          who are you?           Day 18
+    Authorization           may you do this?       Day 19
+    Channel authorization   may you LISTEN?        today
+
+  Genuinely separate. Being logged in says nothing about
+  which channels you may join — exactly as it said
+  nothing about which invoices you may read.
+
+    // routes/channels.php
+    Broadcast::channel('user.{userId}', function (\$user, \$userId) {
+        return \$user->id === (int) \$userId;
+    });
+
+    User 123 → subscribe to user.123
+             → is the authenticated user 123?
+             → yes: allow    no: deny
+
+
+The cast that matters
+
+    return \$user->id === (int) \$userId;
+
+  ⚠️  Not decoration. The segment arrives as a STRING, so
+
+        \$user->id === \$userId
+
+      compares an integer to a string, is always false,
+      and every subscription silently fails.
+
+  Which is the most confusing symptom in this topic:
+  everything is configured correctly and no events ever
+  arrive. No error, no log line, just nothing.
+
+
+Reuse what you have
+
+    Broadcast::channel('order.{order}', function (\$user, Order \$order) {
+        return \$user->can('view', \$order);
+    });
+
+  Model binding works here, and so do Day 19's policies.
+
+  A channel authorizing differently from the page showing
+  the same data is a bug waiting to be found by somebody
+  who should not have seen an update.
+
+
+What this actually protects
+
+  A logged-in user opens the console and subscribes to:
+
+    private-user.456
+    private-team.99
+    private-admin
+
+  Nothing stops them trying. The channel name is in the
+  JavaScript, the pattern is obvious, and changing a
+  number is not a skill.
+
+  Without a callback they receive every event you
+  broadcast there, live, and nothing in your logs looks
+  unusual.
+
+
+Three rules
+
+  Every private and presence channel needs a callback.
+  A channel with no matching rule is denied — the right
+  default, and also why a typo in the pattern silently
+  blocks a legitimate channel. Check both directions.
+
+  Authorize the THING, not the shape. user.{id} matching
+  the current user is easy; team.{id} needs "is this user
+  in that team"; order.{id} needs the policy. Pattern
+  matching is not the check.
+
+  The payload is the other half. A correctly authorized
+  channel carrying an over-broad payload leaks anyway.
+
+    authorization  →  WHO listens
+    broadcastWith  →  WHAT they hear
+
+  Both have to be right.`,
+      codeExample: {
+        title: "routes/channels.php, done properly",
+        code: `<?php
+// routes/channels.php
+
+use App\\Models\\Order;
+use App\\Models\\Team;
+use Illuminate\\Support\\Facades\\Broadcast;
+
+// ---------- The simplest one, and its trap ----------
+
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    // ⚠️ The cast is essential. The segment is a STRING,
+    //    so without it this is always false and every
+    //    subscription silently fails.
+    return $user->id === (int) $userId;
+});
+
+
+// ---------- Reuse the policies ----------
+
+Broadcast::channel('order.{order}', function ($user, Order $order) {
+    // Model binding works here. So does Day 19.
+    return $user->can('view', $order);
+});
+
+// A channel authorizing differently from the page showing
+// the same data is how somebody sees an update they
+// should not have.
+
+
+// ---------- Authorize the thing, not the shape ----------
+
+// ❌ Any logged-in user can join any team's channel.
+Broadcast::channel('team.{teamId}', function ($user, $teamId) {
+    return true;
+});
+
+// ✓
+Broadcast::channel('team.{teamId}', function ($user, $teamId) {
+    return $user->teams()->whereKey($teamId)->exists();
+});
+
+
+// ---------- Presence: return only what the room should see ----------
+
+Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
+    if (! $user->rooms()->whereKey($roomId)->exists()) {
+        return false;
+    }
+
+    // Every other member sees this.
+    return ['id' => $user->id, 'name' => $user->name];
+});
+
+
+<?php
+// ---------- What it prevents ----------
+
+// A logged-in user, in the browser console:
+//
+//   Echo.private('user.456').listen(...)
+//   Echo.private('team.99').listen(...)
+//   Echo.private('admin').listen(...)
+//
+// The channel names are in the JavaScript and the
+// pattern is obvious. Changing a number is not a skill.
+//
+// Without a callback they receive every event broadcast
+// there, live, and nothing in your logs looks unusual.
+
+
+<?php
+// ---------- Both halves ----------
+
+// Authorization decides WHO listens:
+Broadcast::channel('order.{order}', fn ($user, Order $order) =>
+    $user->can('view', $order));
+
+// broadcastWith() decides WHAT they hear:
+public function broadcastWith(): array
+{
+    return [
+        'id'     => $this->order->id,
+        'status' => $this->order->status,
+        // not the customer's address, not the internal notes
+    ];
+}
+
+// A correctly authorized channel with an over-broad
+// payload still leaks.
+
+
+# ---------- When nothing arrives ----------
+
+# 1. Is the WebSocket server running?
+# 2. Is a queue worker running?      (ShouldBroadcast queues)
+# 3. Does the channel have a callback in routes/channels.php?
+# 4. Does that callback return true?  (check the cast)
+# 5. Does the channel name in Echo match broadcastOn()?
+#
+# Four and five are silent failures. Nothing logs them.`,
+      },
+      keyTakeaways: [
+        "<b>Channel authorization is a third question</b>, after authentication and authorization: may you listen to this?",
+        "<b>Being logged in says nothing about which channels you may join.</b>",
+        "Rules live in `routes/channels.php`, returning `true` to allow and `false` to deny.",
+        "<b>The channel segment arrives as a string</b>, so a strict comparison without a cast is always false.",
+        "<b>That produces the topic's most confusing symptom</b>: everything looks right and no events ever arrive.",
+        "<b>Model binding and Day 19's policies work in channel callbacks</b>, and should be reused.",
+        "A channel authorizing differently from the page showing the same data is a leak waiting to happen.",
+        "<b>A logged-in user can try any channel name from the console</b>, and the names are in your JavaScript.",
+        "<b>A channel with no callback is denied</b>, which is right, and means a typo silently blocks a real channel.",
+        "<b>Authorization decides who listens; `broadcastWith()` decides what they hear.</b> Both have to be right.",
+      ],
+      commonMistakes: [
+        "<b>Comparing `$user->id === $userId` without a cast.</b> Every subscription fails silently.",
+        "<b>Returning `true` from a channel callback to make it work.</b> Any logged-in user now joins any channel.",
+        "<b>Authorizing the pattern rather than the thing.</b> Matching `team.{id}` is not checking membership.",
+        "<b>Authorizing the channel differently from the page.</b> Somebody sees live what they cannot see on load.",
+        "<b>Getting authorization right and the payload wrong.</b> The channel is correct and it still leaks.",
+      ],
+      quiz: [
+        {
+          question: "What does channel authorization answer?",
+          options: [
+            "Who are you?",
+            "May you listen to this channel?",
+            "May you edit this record?",
+            "Is the connection secure?",
+          ],
+          correctIndex: 1,
+          explanation: "A separate question from both authentication and authorization.",
+        },
+        {
+          question: "Why does `$user->id === $userId` fail in a channel callback?",
+          options: [
+            "The user is not loaded",
+            "The channel segment is a string, so a strict comparison with an integer is always false",
+            "The callback runs too early",
+            "It does not fail",
+          ],
+          correctIndex: 1,
+          explanation: "And the symptom is silent: no events ever arrive, with no error.",
+        },
+        {
+          question: "What happens to a private channel with no callback?",
+          options: [
+            "Anybody may join",
+            "The subscription is denied",
+            "Only admins may join",
+            "It falls back to public",
+          ],
+          correctIndex: 1,
+          explanation: "The right default, and also why a typo in the pattern silently blocks a real channel.",
+        },
+        {
+          question: "Is correct channel authorization enough?",
+          options: [
+            "Yes",
+            "No; the payload still has to be shaped, or an authorized listener hears too much",
+            "Yes, if the channel is private",
+            "Only with presence channels",
+          ],
+          correctIndex: 1,
+          explanation: "Authorization decides who listens; `broadcastWith()` decides what they hear.",
+        },
+      ],
+    },
+    {
+      id: "echo",
+      title: "Laravel Echo & the complete flow",
+      durationMinutes: 12,
+      explanation: "The server can broadcast. Something in the browser has to listen.\n\n---\n\n### 1. Basic — the client half\n\n<b>Laravel Echo</b> is the JavaScript library that connects, subscribes and hands you events:\n\n```text\nLaravel → Reverb → WebSocket → Echo → React / Vue / Livewire\n```\n\n```js\nEcho.private('user.' + userId)\n    .listen('.notification.created', (event) => {\n        // update the UI\n    });\n```\n\n<b>Echo handles the parts you would otherwise write badly:</b> opening the connection, authenticating private channels against your application, reconnecting when the network drops, and resubscribing afterwards.\n\nThat last one matters more than it sounds. Connections drop constantly: a phone changing network, a laptop waking up, a proxy timing out. <b>Reconnection is not an edge case, it is Tuesday</b>, and Echo doing it means you do not.\n\n---\n\n### 2. Intermediate — the whole flow\n\nWorth memorising, because debugging means finding which step failed:\n\n```text\n1. something happens\n        ↓\n2. a Laravel event is created\n        ↓\n3. it implements ShouldBroadcast\n        ↓\n4. Laravel queues the broadcast\n        ↓\n5. a worker sends it to Reverb\n        ↓\n6. Reverb delivers it over the WebSocket\n        ↓\n7. Echo receives it\n        ↓\n8. JavaScript updates the UI\n```\n\n<b>Eight steps, and any one of them can be the reason nothing happens.</b> Which is why the checklist matters: is the server running, is a worker running, is the channel authorized, does the event name match.\n\nThat last one catches everybody. <b>The dot prefix in `.notification.created` means \"this is the exact name\"</b>; without it, Echo prepends your application namespace and listens for something else. A `broadcastAs()` name needs the dot; a bare class name does not.\n\n---\n\n### 3. Advanced — the two frontends\n\n<b>Livewire can listen without you writing JavaScript:</b>\n\n```php\n#[On('echo-private:user.{userId},.notification.created')]\npublic function onNotification(array $event): void\n{\n    $this->unread++;\n}\n```\n\n```text\nbroadcast → Livewire component → state changes → the UI re-renders\n```\n\nWhich fits Day 23's model exactly: the state lives on the server, so a broadcast updating it re-renders the component. <b>For a notification bell in a Livewire application, that is the whole feature.</b>\n\n<b>In React or Vue, the listener updates your own state:</b>\n\n```text\nWebSocket event → Echo listener → setState → re-render\n```\n\nAnd there the details matter more, because you own the lifecycle:\n\n<b>Leave the channel when the component unmounts.</b> Otherwise you accumulate subscriptions, and a listener holding a stale closure updates state that no longer exists.\n\n<b>Update from the previous state, not a captured one.</b> `setUnread(n => n + 1)` is correct where `setUnread(unread + 1)` uses whatever `unread` was when the listener was created.\n\n<b>And reconcile after a reconnect.</b> Messages sent while disconnected never arrive, so the UI is quietly missing things until a reload. Refetching on reconnect is what stops that, and it is the practical form of \"broadcasting is delivery, not truth\".\n\nThe install line, since Echo is not bundled:\n\n```bash\nnpm install --save-dev laravel-echo pusher-js\n```\n\n<b>`pusher-js` is needed even for Reverb</b>, because Reverb speaks the Pusher protocol. That surprises people who assumed a self-hosted server needs no Pusher package.\n\nAnd one convention worth knowing before you wire up a bell. <b>Broadcast notifications go out on a channel Laravel names for you</b>, derived from the model class:\n\n```text\nApp.Models.User.{id}\n```\n\nSo listening on your own `user.{id}` receives nothing, and everything looks broken while both halves are individually correct. Notifications also have their own listener:\n\n```js\nEcho.private(`App.Models.User.${userId}`)\n    .notification((notification) => {\n        bell.increment(notification.type);\n    });\n```\n\n<b>`.notification()` fires for any notification broadcast to that user</b>, rather than for one named event, which is exactly what a notification bell wants.",
+      diagram: `The client half
+
+    Laravel → Reverb → WebSocket → Echo
+            → React / Vue / Livewire
+
+    Echo.private('user.' + userId)
+        .listen('.notification.created', (event) => { ... });
+
+  Echo handles what you would otherwise write badly:
+  opening the connection, authenticating private channels
+  against your application, reconnecting when the network
+  drops, and resubscribing afterwards.
+
+  ⚠️  That last one matters. Connections drop constantly:
+      a phone changing network, a laptop waking, a proxy
+      timing out.
+
+      Reconnection is not an edge case. It is Tuesday.
+
+
+The whole flow
+
+    1. something happens
+            ↓
+    2. a Laravel event is created
+            ↓
+    3. it implements ShouldBroadcast
+            ↓
+    4. Laravel queues the broadcast
+            ↓
+    5. a worker sends it to Reverb
+            ↓
+    6. Reverb delivers it over the WebSocket
+            ↓
+    7. Echo receives it
+            ↓
+    8. JavaScript updates the UI
+
+  Eight steps, and any one can be why nothing happens.
+
+    is the server running?
+    is a worker running?
+    is the channel authorized?
+    does the event NAME match?
+
+  ⚠️  The dot prefix in '.notification.created' means
+      "this is the exact name". Without it, Echo prepends
+      your application namespace and listens for
+      something else.
+
+      A broadcastAs() name needs the dot.
+      A bare class name does not.
+
+
+Two frontends
+
+  Livewire, with no JavaScript of yours:
+
+    #[On('echo-private:user.{userId},.notification.created')]
+    public function onNotification(array \$event): void
+    {
+        \$this->unread++;
+    }
+
+    broadcast → component → state changes → re-render
+
+  Day 23's model exactly: the state lives on the server,
+  so a broadcast updating it re-renders the component.
+  For a notification bell, that is the whole feature.
+
+
+  React or Vue, where you own the lifecycle:
+
+    WebSocket event → Echo listener → setState → re-render
+
+    Leave the channel on unmount. Otherwise subscriptions
+    accumulate and a stale closure updates state that no
+    longer exists.
+
+    Update from the PREVIOUS state:
+      setUnread(n => n + 1)      ✓
+      setUnread(unread + 1)      ✗ captured at subscribe time
+
+    Reconcile after a reconnect. Messages sent while
+    disconnected never arrive, so the UI is quietly
+    missing things until a reload.
+
+    That is the practical form of "broadcasting is
+    delivery, not truth".`,
+      codeExample: {
+        title: "Listening, in Livewire and in React",
+        code: `// resources/js/echo.js
+
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT,
+    forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
+
+
+// ---------- Listening ----------
+
+Echo.private('user.' + userId)
+    .listen('.notification.created', (event) => {
+        console.log(event.id, event.message);
+    });
+
+// The dot prefix says "this is the exact name". Without
+// it, Echo prepends your application namespace and
+// listens for something that never arrives.
+//
+//   broadcastAs('notification.created')  →  '.notification.created'
+//   no broadcastAs()                     →  'NotificationCreated'
+
+
+<?php
+// ---------- Livewire: no JavaScript of yours ----------
+
+namespace App\\Livewire;
+
+use Livewire\\Attributes\\On;
+use Livewire\\Component;
+
+class NotificationBell extends Component
+{
+    public int $unread = 0;
+
+    public function mount(): void
+    {
+        // The state is loaded over HTTP, and the socket
+        // keeps it current.
+        $this->unread = auth()->user()->unreadNotifications()->count();
+    }
+
+    #[On('echo-private:user.{userId},.notification.created')]
+    public function onNotification(array $event): void
+    {
+        $this->unread++;
+    }
+
+    public function render()
+    {
+        return view('livewire.notification-bell');
     }
 }
 ?>
 
-{{-- resources/views/mail/invoices/paid.blade.php --}}
-
-<x-mail::message>
-# Invoice {{ $invoice->number }} paid
-
-Thank you. We received {{ $invoice->total->format() }} on
-{{ $invoice->paid_at->format('j F Y') }}.
-
-<x-mail::panel>
-The PDF is attached for your records.
-</x-mail::panel>
-
-<x-mail::button :url="route('invoices.show', $invoice)">
-View invoice
-</x-mail::button>
-
-<x-mail::subcopy>
-Questions? Just reply to this email.
-</x-mail::subcopy>
-</x-mail::message>
-
-{{-- Components that already survive Outlook, Gmail and a
-     phone — and a plain-text version generated for you. --}}
+{{-- 🔔 {{ $unread }} --}}
 
 
-<?php
-// ---------- Sending ----------
+// ---------- React: you own the lifecycle ----------
 
-Mail::to($invoice->customer)->send(new InvoicePaid($invoice));
+import { useEffect, useState } from 'react';
 
-Mail::to($user)
-    ->cc($accountant)
-    ->bcc(config('mail.archive'))
-    ->send(new InvoicePaid($invoice));
+export function NotificationBell({ userId, initialUnread }) {
+    const [unread, setUnread] = useState(initialUnread);
 
-// ✓ One message per recipient.
-Mail::to($team->members)->send(new WeeklyDigest());
+    useEffect(() => {
+        const channel = window.Echo.private('user.' + userId);
 
-// ❌ Every recipient sees all fifty addresses.
-Mail::to($fiftyAddresses)->send(new Announcement());
+        channel.listen('.notification.created', () => {
+            // ✓ From the previous state. Using unread + 1
+            //   would use whatever it was when this
+            //   listener was created.
+            setUnread((n) => n + 1);
+        });
 
+        // Reconnecting means messages were missed, so
+        // refetch rather than assuming the count is right.
+        const refetch = async () => {
+            const res = await fetch('/api/notifications/unread-count');
+            const { count } = await res.json();
+            setUnread(count);
+        };
 
-<?php
-// ---------- Attach small, link large ----------
+        window.Echo.connector.pusher.connection.bind('connected', refetch);
 
-// ❌ 20 MB: likely rejected, likely filtered, and base64
-//    makes it about 27 MB on the wire.
-Attachment::fromStorageDisk('s3', $export->path);
-Attachment::fromPath(storage_path('app/terms.pdf'));   // a local path
-Attachment::fromData(fn () => $pdfBytes, 'invoice.pdf'); // generated in memory
+        // ✓ Leave on unmount, or subscriptions accumulate
+        //   and stale closures update state that is gone.
+        return () => {
+            window.Echo.leave('user.' + userId);
+        };
+    }, [userId]);
 
-// ✓ A signed temporary URL from Day 22. Revocable, and
-//   you can see whether it was downloaded.
-'downloadUrl' => Storage::disk('s3')->temporaryUrl(
-    $export->path,
-    now()->addDays(7),
-),
-
-
-{{-- ---------- Inline images ---------- --}}
-
-{{-- Most clients block remote images, so a linked logo
-     is an empty box until "show images" is clicked. --}}
-<img src="{{ $message->embed(public_path('logo.png')) }}"
-     alt="InvoiceHub" width="120">`,
-      },
-      keyTakeaways: [
-        "<b>A mailable is a class representing one email</b>, holding its subject, content, data and attachments.",
-        "<b>`Mail::send()` talks to an SMTP server during the request</b>, so a slow provider is a slow page.",
-        "<b>Almost every mailable should implement `ShouldQueue`.</b>",
-        "<b>Email HTML is not web HTML</b>: clients strip stylesheets and want tables, across Outlook, Gmail and phones.",
-        "<b>Markdown mailables give you components that already survive that</b>, plus a generated plain-text version.",
-        "<b>Attachments are limited by size, encoding, spam filtering and memory</b>, so attach small things and link to large ones.",
-        "<b>A signed temporary URL beats a large attachment</b>, and can be revoked and tracked.",
-        "<b>Most clients block remote images</b>, so a logo should be embedded rather than linked.",
-        "<b>A queued mailable serialises its constructor</b>, so a model becomes an id and renders against later state.",
-        "<b>`Mail::to()` on a collection sends one message per recipient</b>, where fifty addresses in one `to()` exposes them all.",
-      ],
-      commonMistakes: [
-        "<b>Sending mail synchronously in a request.</b> A slow or failing provider breaks a page about something else.",
-        "<b>Hand-writing email HTML.</b> Markdown components already handle the clients you have to support.",
-        "<b>Attaching a large export.</b> It may be rejected, filtered, or read entirely into memory.",
-        "<b>Linking to a logo.</b> Most clients block remote images and the reader sees an empty box.",
-        "<b>Putting many addresses in one `to()`.</b> Every recipient sees the full list.",
-      ],
-      quiz: [
-        {
-          question: "Why should most mailables implement `ShouldQueue`?",
-          options: [
-            "For retries only",
-            "Otherwise the request talks to an SMTP server, so a slow provider is a slow page",
-            "Laravel requires it",
-            "To attach files",
-          ],
-          correctIndex: 1,
-          explanation: "A provider outage otherwise fails a request about something else.",
-        },
-        {
-          question: "What do Markdown mailables give you?",
-          options: [
-            "Faster sending",
-            "Components that survive real email clients, plus a generated plain-text version",
-            "Automatic attachments",
-            "Localisation",
-          ],
-          correctIndex: 1,
-          explanation: "Email HTML is not web HTML, and the components already handle that.",
-        },
-        {
-          question: "What should you do with a large export?",
-          options: [
-            "Attach it",
-            "Link to it with a signed temporary URL",
-            "Split it across several emails",
-            "Compress and attach it",
-          ],
-          correctIndex: 1,
-          explanation: "It is revocable, trackable, and will not be rejected or filtered.",
-        },
-        {
-          question: "Why embed a logo rather than linking it?",
-          options: [
-            "It loads faster",
-            "Most email clients block remote images, so a linked logo is an empty box",
-            "Links are stripped",
-            "It reduces message size",
-          ],
-          correctIndex: 1,
-          explanation: "Embedding costs size and gains a header that actually renders.",
-        },
-      ],
-    },
-    {
-      id: "mail-drivers-and-testing",
-      title: "Mail drivers, previewing & testing",
-      durationMinutes: 11,
-      explanation: "Where mail actually goes, and how to see it before a customer does.\n\n---\n\n### 1. Basic — transports\n\n```text\nLaravel Mail\n     ↓\ntransport abstraction\n     ↓\nSMTP · SES · Postmark · Resend · log\n```\n\n<b>Your application code does not change when the provider does</b>, which is the same abstraction argument as the filesystem on Day 22. `Mail::to($user)->send(...)` is the same line whichever transport is configured.\n\nAnd the one that matters most while you work:\n\n```text\nMail → log\n```\n\n<b>The `log` driver writes the email to your log file instead of sending it.</b> Which means you can build and re-run a registration flow forty times without emailing anybody, and read exactly what would have gone out.\n\nThere is a better local option than the log too: a local mail catcher that gives you an inbox in the browser, so you see the rendered HTML rather than a wall of it in a log file.\n\nLaravel 13 also adds SES tenant support, for multi-tenant systems that need per-tenant sending configuration and isolation.\n\n---\n\n### 2. Intermediate — previewing\n\nEmail is the one part of an application you cannot see while building it, which is why it is the part most often broken.\n\n<b>A mailable can be returned from a route</b>, and Laravel renders it in the browser:\n\n```php\nRoute::get('/preview/invoice', fn () => new InvoicePaid(Invoice::first()));\n```\n\n```text\nbuild → preview → check the HTML\n      → check it on a phone → test → production\n```\n\nWhich takes ten seconds and catches the things that are otherwise found by a customer: a broken layout, a variable that renders as nothing, a link pointing at `localhost`.\n\n<b>That last one is worth naming.</b> A mailable built with `route()` uses `APP_URL`, so an email sent from a queue worker with the wrong `APP_URL` contains links nobody outside your machine can open. It is invisible locally, because your links work.\n\n---\n\n### 3. Advanced — testing\n\nA test that actually sends email is slow, flaky, costs money, and eventually emails a real person from a seeded address.\n\n```php\nMail::fake();\n```\n\n```text\nMail::fake() → run the code → assert what was sent\n```\n\nAnd the assertions are the point:\n\n```php\nMail::assertSent(InvoicePaid::class);\n\nMail::assertSent(InvoicePaid::class, fn ($mail) =>\n    $mail->hasTo($customer->email) && $mail->invoice->is($invoice));\n\nMail::assertNotSent(InvoicePaid::class);\nMail::assertSentCount(1);\nMail::assertQueued(WelcomeEmail::class);\n```\n\n<b>`assertNotSent()` is the underrated one.</b> \"A draft invoice does not email the customer\" is a rule worth a test, and it is exactly the kind that breaks quietly when somebody moves a dispatch.\n\nTwo details.\n\n<b>A queued mailable is asserted with `assertQueued()`, not `assertSent()`</b>, and getting that wrong produces a passing-looking failure that says nothing was sent when it was queued perfectly.\n\n<b>And `Mail::fake()` stops mail actually being sent</b>, which means anything the mailable would have done — rendering, attaching, hitting storage — does not happen. A mailable that throws while rendering passes a faked test and fails in production. <b>Rendering it in a test is what catches that:</b>\n\n```php\n(new InvoicePaid($invoice))->render();\n```\n\nOne assertion that the email can be built at all, which is the failure mode a fake cannot see.",
-      diagram: `Transports
-
-    Laravel Mail
-         ↓
-    transport abstraction
-         ↓
-    SMTP · SES · Postmark · Resend · log
-
-  Your code does not change when the provider does —
-  the same argument as the filesystem on Day 22.
-
-  And the one that matters while you work:
-
-    Mail → log
-
-  The log driver writes the email to your log file
-  instead of sending it. Build and re-run a registration
-  flow forty times without emailing anybody, and read
-  exactly what would have gone out.
-
-  Better still locally: a mail catcher, giving you an
-  inbox in the browser so you see the rendered HTML
-  rather than a wall of it in a log.
-
-  Laravel 13 adds SES tenant support, for multi-tenant
-  systems needing per-tenant sending configuration.
-
-
-Previewing
-
-  Email is the one part of an application you cannot see
-  while building it — which is why it is the part most
-  often broken.
-
-    Route::get('/preview/invoice',
-        fn () => new InvoicePaid(Invoice::first()));
-
-    build → preview → check the HTML
-          → check it on a phone → test → production
-
-  Ten seconds, and it catches what a customer otherwise
-  finds: a broken layout, a variable rendering as
-  nothing, a link pointing at localhost.
-
-  ⚠️  That last one. A mailable built with route() uses
-      APP_URL, so mail sent from a worker with the wrong
-      APP_URL contains links nobody outside your machine
-      can open — and it is invisible locally, because
-      your links work.
-
-
-Testing
-
-  A test that really sends email is slow, flaky, costs
-  money, and eventually emails a real person from a
-  seeded address.
-
-    Mail::fake() → run the code → assert what was sent
-
-    Mail::assertSent(InvoicePaid::class)
-    Mail::assertSent(InvoicePaid::class, fn (\$mail) =>
-        \$mail->hasTo(\$customer->email))
-    Mail::assertNotSent(...)
-    Mail::assertSentCount(1)
-    Mail::assertQueued(...)
-
-  assertNotSent() is the underrated one. "A draft invoice
-  does not email the customer" is a rule worth a test,
-  and exactly the kind that breaks quietly when somebody
-  moves a dispatch.
-
-
-Two details
-
-  A QUEUED mailable is asserted with assertQueued(), not
-  assertSent(). Getting that wrong produces a failure
-  saying nothing was sent, when it was queued perfectly.
-
-  ⚠️  Mail::fake() stops the mail being BUILT as well as
-      sent. Rendering, attachments, storage access —
-      none of it happens.
-
-      A mailable that throws while rendering passes a
-      faked test and fails in production.
-
-      (new InvoicePaid(\$invoice))->render();
-
-      One assertion that the email can be built at all,
-      which is the failure a fake cannot see.`,
-      codeExample: {
-        title: "Local mail, previews and tests",
-        code: `# ---------- Local: do not send anything ----------
-
-# .env
-MAIL_MAILER=log
-
-# The email is written to storage/logs/laravel.log.
-# Build a registration flow forty times without emailing
-# anybody.
-
-# Better: Mailpit, a local catcher with an inbox in the
-# browser. Laravel Sail ships it; otherwise brew/docker.
-MAIL_MAILER=smtp
-MAIL_HOST=localhost
-MAIL_PORT=1025
-
-
-# ---------- Production SMTP ----------
-
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.postmarkapp.com
-MAIL_PORT=587
-MAIL_USERNAME=your-token
-MAIL_PASSWORD=your-token
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=hello@example.com
-MAIL_FROM_NAME="InvoiceHub"
-
-# ⚠️ Gmail will not accept your account password here.
-#    It needs an app password, with 2FA enabled on the
-#    account — and Gmail is a poor choice for
-#    transactional mail anyway: low limits, and your
-#    deliverability is somebody else's reputation.
-
-
-<?php
-// config/mail.php
-
-'mailers' => [
-    'smtp'     => ['transport' => 'smtp',     /* ... */],
-    'ses'      => ['transport' => 'ses'],
-    'postmark' => ['transport' => 'postmark'],
-    'resend'   => ['transport' => 'resend'],
-    'log'      => ['transport' => 'log'],
-    'array'    => ['transport' => 'array'],   // tests
-],
-
-// The same Mail::to(...)->send(...) line, whichever is
-// configured.
-
-
-<?php
-// ---------- Previewing ----------
-
-// routes/web.php
-
-if (! app()->isProduction()) {
-    Route::get('/preview/invoice-paid', function () {
-        return new InvoicePaid(Invoice::latest()->first());
-    });
-
-    Route::get('/preview/welcome', function () {
-        return new WelcomeEmail(User::latest()->first());
-    });
+    return <span>🔔 {unread}</span>;
 }
 
-// Ten seconds in a browser, and it catches a broken
-// layout, a variable rendering as nothing, and a link
-// pointing at localhost.
+
+// ---------- Presence ----------
+
+window.Echo.join('chat.room.' + roomId)
+    .here((members) => setOnline(members))
+    .joining((member) => setOnline((m) => [...m, member]))
+    .leaving((member) => setOnline((m) => m.filter((x) => x.id !== member.id)))
+    .listen('.message.sent', (event) => appendMessage(event));
 
 
-# ---------- The links-to-localhost one ----------
+// ---------- When nothing arrives, in order ----------
 
-# A mailable built with route() uses APP_URL. A worker
-# with the wrong APP_URL sends links nobody can open,
-# and it is invisible locally because yours work.
-
-APP_URL=https://invoicehub.example.com
-
-
-<?php
-// ---------- Testing ----------
-
-use Illuminate\\Support\\Facades\\Mail;
-
-it('emails the customer when an invoice is paid', function () {
-    Mail::fake();
-
-    $invoice = Invoice::factory()->create();
-
-    $this->post("/invoices/{$invoice->id}/pay", ['amount' => 100]);
-
-    Mail::assertSent(InvoicePaid::class, function ($mail) use ($invoice) {
-        return $mail->hasTo($invoice->customer->email)
-            && $mail->invoice->is($invoice);
-    });
-});
-
-it('does not email the customer for a draft invoice', function () {
-    Mail::fake();
-
-    $invoice = Invoice::factory()->draft()->create();
-
-    $this->post("/invoices/{$invoice->id}/send");
-
-    // The underrated assertion. This rule breaks quietly
-    // when somebody moves a dispatch.
-    Mail::assertNotSent(InvoicePaid::class);
-});
-
-
-<?php
-// ---------- Queued mailables ----------
-
-// ❌ Reports that nothing was sent, when it was queued
-//    perfectly.
-Mail::assertSent(WelcomeEmail::class);
-
-// ✓
-Mail::assertQueued(WelcomeEmail::class);
-
-
-<?php
-// ---------- What a fake cannot catch ----------
-
-// Mail::fake() stops the mailable being BUILT: no
-// rendering, no attachments, no storage access.
+// 1. Is Reverb running?
+// 2. Is a queue worker running?
+// 3. Does routes/channels.php authorize this channel?
+// 4. Does the callback return true?  (the (int) cast)
+// 5. Does the listened name match broadcastAs()?  (the dot)
 //
-// A mailable that throws while rendering passes this
-// test and fails in production.
-
-it('renders', function () {
-    $invoice = Invoice::factory()->create();
-
-    // No fake. Actually build it.
-    expect((new InvoicePaid($invoice))->render())
-        ->toContain($invoice->number);
-});
-
-// One assertion that the email can be built at all.`,
+// Steps 3, 4 and 5 fail silently.`,
       },
       keyTakeaways: [
-        "<b>Laravel abstracts the mail transport</b>, so switching provider does not change your code.",
-        "<b>The `log` driver writes the email to your log instead of sending it</b>, which is what local development wants.",
-        "A local mail catcher is better still, because you see the rendered HTML rather than a log dump.",
-        "<b>Email is the part of an application you cannot see while building it</b>, and therefore the part most often broken.",
-        "<b>Returning a mailable from a route renders it in the browser</b>, which catches layout and data problems in seconds.",
-        "<b>A wrong `APP_URL` produces emails full of links nobody can open</b>, and it is invisible locally.",
-        "<b>`Mail::fake()` makes tests fast, deterministic and free</b>, and stops a seeded address emailing a real person.",
-        "<b>`assertNotSent()` is the underrated assertion</b>, because \"this must not send\" breaks quietly.",
-        "<b>A queued mailable is asserted with `assertQueued()`</b>, and using `assertSent()` reports a failure that is not one.",
-        "<b>A fake stops the mailable being built</b>, so render it in one test to catch a mailable that throws.",
+        "<b>Laravel Echo is the client library</b> that connects, subscribes, authenticates and hands you events.",
+        "<b>It handles reconnection and resubscription</b>, which matters because connections drop constantly.",
+        "<b>The flow has eight steps</b>, and debugging means working out which one failed.",
+        "The checklist is: server running, worker running, channel authorized, callback true, event name matching.",
+        "<b>A leading dot means the exact event name</b>; without it Echo prepends your application namespace.",
+        "<b>Livewire can listen with an `#[On]` attribute</b>, updating server-side state and re-rendering.",
+        "That fits Day 23's model exactly, and is the whole feature for a notification bell.",
+        "<b>In React you own the lifecycle</b>: leave the channel on unmount or subscriptions accumulate.",
+        "<b>Update from the previous state</b>, because a listener captures whatever the value was when it was created.",
+        "<b>Refetch after a reconnect</b>, because messages sent while disconnected never arrive.",
       ],
       commonMistakes: [
-        "<b>Testing against a real mail provider.</b> Slow, flaky, and eventually a real person receives a test email.",
-        "<b>Never previewing an email.</b> The broken layout is found by a customer.",
-        "<b>Deploying with the wrong `APP_URL`.</b> Every link in every email points somewhere unreachable.",
-        "<b>Using `assertSent()` on a queued mailable.</b> The test fails despite the code being correct.",
-        "<b>Only ever faking mail.</b> A mailable that throws while rendering passes every test.",
+        "<b>Omitting the leading dot with `broadcastAs()`.</b> Echo listens for a namespaced name that never arrives.",
+        "<b>Not leaving the channel on unmount.</b> Subscriptions accumulate and stale closures update dead state.",
+        "<b>Using the captured value in a state update.</b> The count is wrong after the second event.",
+        "<b>Ignoring reconnection.</b> The UI silently misses everything sent while the socket was down.",
+        "<b>Debugging the JavaScript first.</b> Check the server, the worker and the channel callback before the client.",
       ],
       quiz: [
         {
-          question: "What does the `log` mail driver do?",
+          question: "What does Echo handle for you?",
           options: [
-            "Sends the email and logs it",
-            "Writes the email to the log instead of sending it",
-            "Queues the email",
-            "Sends only to admins",
+            "Broadcasting events",
+            "Connecting, authenticating private channels, reconnecting and resubscribing",
+            "Channel authorization rules",
+            "Queueing broadcasts",
           ],
           correctIndex: 1,
-          explanation: "Which is what lets you re-run a flow without emailing anybody.",
+          explanation: "Reconnection especially, because connections drop constantly.",
         },
         {
-          question: "Why does a wrong `APP_URL` matter for email?",
+          question: "What does a leading dot in `.notification.created` mean?",
           options: [
-            "Mail fails to send",
-            "Links built with `route()` point somewhere nobody outside your machine can open",
-            "The subject is wrong",
-            "Attachments break",
+            "A private channel",
+            "The exact event name, with no application namespace prepended",
+            "A presence channel",
+            "A wildcard",
           ],
           correctIndex: 1,
-          explanation: "And it is invisible locally, because your own links work.",
+          explanation: "A `broadcastAs()` name needs it; a bare class name does not.",
         },
         {
-          question: "How do you assert a queued mailable was sent?",
+          question: "Why leave the channel when a React component unmounts?",
           options: [
-            "`Mail::assertSent()`",
-            "`Mail::assertQueued()`",
-            "`Queue::assertPushed()` only",
-            "You cannot",
+            "To free the WebSocket",
+            "Otherwise subscriptions accumulate and stale closures update state that no longer exists",
+            "Echo requires it",
+            "To trigger a reconnect",
           ],
           correctIndex: 1,
-          explanation: "`assertSent()` reports a failure that is not one.",
+          explanation: "In Livewire the component's lifecycle handles it for you.",
         },
         {
-          question: "What can `Mail::fake()` not catch?",
+          question: "Why refetch after a reconnect?",
           options: [
-            "The wrong recipient",
-            "A mailable that throws while rendering, because a fake never builds it",
-            "The wrong subject",
-            "A missing attachment name",
+            "To re-authenticate",
+            "Messages sent while disconnected never arrive, so the UI is quietly out of date",
+            "Echo clears its state",
+            "To reset the counter",
           ],
           correctIndex: 1,
-          explanation: "One test that actually calls `render()` covers it.",
+          explanation: "The practical form of \"broadcasting is delivery, not truth\".",
         },
       ],
     },
     {
-      id: "notifications",
-      title: "Notifications & the whole architecture",
-      durationMinutes: 13,
-      explanation: "Mail is one way of telling somebody something. Notifications are the general case.\n\n---\n\n### 1. Basic — one message, several channels\n\n```text\n                Notification\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n       Mail       Database      Slack\n```\n\n```text\nMailable        one thing: email\nNotification    the message, and how it reaches somebody\n```\n\nWhich matters as soon as a message has more than one destination:\n\n```text\nInvoicePaid\n ├── email\n ├── the in-app bell\n └── the finance Slack channel\n```\n\nWith mailables that is three pieces of code that must agree. With a notification it is one class with a `via()` and three formatting methods.\n\n```php\npublic function via(object $notifiable): array\n{\n    return ['mail', 'database', 'slack'];\n}\n```\n\nTwo pieces of setup make that work, and both are easy to miss because the default `User` already has one of them. <b>The `Notifiable` trait</b> is what puts `notify()` and the notification relations on a model, so a `Team` or a `Client` needs it added. And <b>the database channel needs a table</b>:\n\n```bash\nphp artisan make:notifications-table\nphp artisan migrate\n```\n\nBeyond mail, database, Slack and broadcast, there is a `vonage` channel for SMS, and community packages for most things you would want.\n\n<b>And `via()` can decide per recipient</b>, which is the real payoff: a user's notification preferences become one method rather than conditionals everywhere.\n\n---\n\n### 2. Intermediate — the channels\n\n<b>Database notifications</b> are stored, not sent:\n\n```text\nnotifications\n ├── \"Your invoice was paid\"\n ├── \"New comment\"\n └── \"Your report is ready\"\n```\n\n```text\n🔔 3\n```\n\nWhich is what gives an application a bell with a count, a read state and a history. Nothing is delivered anywhere; the frontend queries them.\n\nReading them back:\n\n```php\n$user->unreadNotifications;      // and $user->readNotifications\n$notification->data['message'];  // whatever toDatabase() returned\n$notification->markAsRead();\n```\n\n<b>If `toDatabase()` is absent the channel falls back to `toArray()`</b>, which is worth knowing because it means one method can serve both.\n\nAnd they are ordinary rows, which means <b>something has to delete them</b>. A notifications table nobody prunes is a table that grows for the life of the application.\n\n<b>Broadcast notifications</b> push to the browser over a websocket:\n\n```text\nLaravel → broadcast → WebSocket → the UI updates\n```\n\nSo the bell increments without a refresh, and that is tomorrow's topic.\n\n<b>On-demand notifications</b> are for when there is no user:\n\n```php\nNotification::route('mail', 'ops@example.com')->notify(new BackupFailed());\n```\n\nUseful for administrators, alerting, and anywhere the recipient is an address rather than a model.\n\nAnd when the recipient <i>is</i> a model but the address is not where the channel expects, the model says so:\n\n```php\npublic function routeNotificationForMail(): string\n{\n    return $this->billing_contact_email;\n}\n```\n\n<b>Each channel looks for a `routeNotificationFor{Channel}` method</b> before falling back to its default, which is what lets a `Team` receive mail at a billing address that has nothing to do with any user.\n\n<b>Queued notifications</b> work exactly as queued mail:\n\n```text\nrequest → queue the notifications → response → workers send them\n```\n\nWhich matters more here, because a notification with three channels is three external calls.\n\n<b>And localization</b> connects straight back to Day 25:\n\n```php\n$user->notify((new InvoicePaid($invoice))->locale($user->locale));\n```\n\n```text\nUser A → en → English\nUser B → ja → Japanese\n```\n\nA notification sent from a queue worker has no request locale, so <b>if you do not set it, everybody gets the application default</b>. That is the bug where translations work perfectly on screen and every email is in English.\n\n---\n\n### 3. Advanced — the whole picture\n\nThree days now fit together:\n\n```text\n                 business action\n                       │\n                       ▼\n                     Event\n                       │\n           ┌───────────┼───────────┐\n           ▼           ▼           ▼\n       Listener    Listener    Listener\n           │           │           │\n           ▼           ▼           ▼\n         Queue       Queue       Queue\n           │           │           │\n           ▼           ▼           ▼\n         Mail    Notification   other work\n```\n\nand separately:\n\n```text\nScheduler → dispatch a job → Queue → Worker\n```\n\n<b>Both end in the same place and start from completely different reasons</b>, and that difference is the thing to take from today.\n\nSo the question is not \"how do I send an email\". It is:\n\n> <b>Should this happen during the request, through a queued listener, as a notification, or from a scheduled job?</b>\n\n```text\nsomething happened, and several things\n  should follow                          →  an event\n\nthe user should not wait for it          →  a queued listener\n\none message, several destinations,\n  per-user preferences                   →  a notification\n\nit happens because of the time,\n  not because of an action                →  the scheduler\n\nthe caller needs the result               →  none of these.\n                                             call the method.\n```\n\nA welcome email and a nightly summary both end as mail. <b>One is event-driven and one is time-driven, and building the second as the first is how a report ends up being sent whenever somebody logs in.</b>\n\nThe broadcast channel has a method like the others:\n\n```php\npublic function toBroadcast(object $notifiable): BroadcastMessage\n{\n    return new BroadcastMessage([\n        'invoice_id' => $this->invoice->id,\n        'message'    => \"Invoice {$this->invoice->number} was paid\",\n    ]);\n}\n```\n\n<b>Add `'broadcast'` to `via()` and the same notification that wrote a database row also pushes it to the browser</b>, so the bell increments without a refresh. It goes out on a channel Laravel names for you, `App.Models.User.{id}`, which is the detail that makes a hand-written channel name receive nothing.",
-      diagram: `One message, several channels
+      id: "presence-whispers-and-models",
+      title: "Presence in practice, whispers & model broadcasting",
+      durationMinutes: 11,
+      explanation: "Three features that look similar and answer different questions.\n\n---\n\n### 1. Basic — who is online\n\nA presence channel gives the client three things:\n\n```text\nyou join       →  here:     everybody currently connected\nsomeone joins  →  joining:  that member\nsomeone leaves →  leaving:  that member\n```\n\n```text\nChat Room #123\n\n🟢 Rajan\n🟢 Alice\n🟢 Bob\n```\n\n<b>Which is the entire online-users feature</b>, with nothing stored, nothing polled and no `last_seen_at` column that is always slightly wrong.\n\nAnd that comparison is worth making. The database version needs a heartbeat, a threshold, a cleanup job, and a decision about what \"online\" means. The presence version knows, because the connection either exists or it does not.\n\nThe cost is what the last lesson said: <b>connection state is not truth</b>, so treat presence as \"probably here\" rather than a fact.\n\n---\n\n### 2. Intermediate — whispers\n\n\"Alice is typing\" does not need your server:\n\n```text\n❌ Alice → Laravel → database → broadcast → Bob\n✓ Alice ──────── WebSocket ────────→ Bob\n```\n\n<b>A <i>client event</i>, or whisper, goes browser to browser through the WebSocket server</b>, without touching PHP at all:\n\n```js\nchannel.whisper('typing', { name: user.name });\nchannel.listenForWhisper('typing', (e) => showTyping(e.name));\n```\n\nWhich matters because a typing indicator fires on every keystroke. Routing that through Laravel is a request per character, and the information is worthless one second later.\n\n```text\nwhispers suit          whispers do not suit\n─────────────          ────────────────────\ntyping indicators      anything you store\ncursor positions       anything you authorize\nlive selections        anything that must be true\ntemporary UI state     anything another user acts on\n```\n\n<b>The rule: a whisper never becomes a fact.</b> It is unvalidated data from one browser to another, and your server never saw it. A chat message sent as a whisper is a message that does not exist anywhere, arrives only for people currently connected, and can say anything the sender's console types.\n\n---\n\n### 3. Advanced — model broadcasting\n\nLaravel can broadcast Eloquent changes automatically:\n\n```text\nPost updated → model broadcasting → WebSocket → clients\n```\n\nWhich is genuinely convenient for a real-time CRUD screen, and worth being careful with.\n\n<b>The problem is that it broadcasts changes, not meaning.</b> Yesterday's distinction again: `updated` fires for a title edit, a view-count increment, a nightly backfill and a migration script. All of them reach the browser, and the client has to work out which mattered.\n\n<b>And every column goes.</b> A model broadcast carries the model, so the internal fields, the flags and whatever a migration added last week are on the wire, exactly as the payload lesson warned.\n\nSo the judgement:\n\n```text\nmodel broadcasting suits        a domain event suits\n────────────────────────        ────────────────────\nan internal admin screen        anything user-facing\na prototype                     anything meaningful\na table that mirrors rows       anything you shape\n                                anything an import might touch\n```\n\n<b>The question to ask is the same one as yesterday: what does the client actually need to know?</b>\n\nA browser rarely needs \"a row changed\". It needs \"this order shipped\", which is a different sentence, fires in fewer cases, and carries three fields instead of thirty.",
+      diagram: `Who is online
 
-                  Notification
-                       │
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-         Mail       Database      Slack
+    you join       →  here:     everybody connected
+    someone joins  →  joining:  that member
+    someone leaves →  leaving:  that member
 
-    Mailable       one thing: email
-    Notification   the message, and how it reaches somebody
+    Chat Room #123
+    🟢 Rajan  🟢 Alice  🟢 Bob
 
-  Which matters as soon as there is more than one
-  destination:
+  The entire online-users feature, with nothing stored,
+  nothing polled, and no last_seen_at column that is
+  always slightly wrong.
 
-    InvoicePaid
-     ├── email
-     ├── the in-app bell
-     └── the finance Slack channel
+  The database version needs a heartbeat, a threshold, a
+  cleanup job, and a decision about what "online" means.
+  The presence version knows: the connection exists or
+  it does not.
 
-  Three mailables must agree. One notification has a
-  via() and three formatting methods.
-
-  And via() can decide PER RECIPIENT — so a user's
-  notification preferences become one method rather
-  than conditionals everywhere.
+  ⚠️  And connection state is not truth. "Probably here",
+      not a fact.
 
 
-The channels
+Whispers
 
-  database    stored, not sent
+  "Alice is typing" does not need your server.
 
-    notifications
-     ├── "Your invoice was paid"
-     ├── "New comment"
-     └── "Your report is ready"
+    ❌ Alice → Laravel → database → broadcast → Bob
+    ✓ Alice ──────── WebSocket ────────→ Bob
 
-    🔔 3
+    channel.whisper('typing', { name: user.name })
+    channel.listenForWhisper('typing', (e) => ...)
 
-    A bell with a count, a read state and a history.
-    Nothing is delivered; the frontend queries them.
+  Which matters because a typing indicator fires on every
+  keystroke. Routing that through Laravel is a request
+  per character, for information worthless one second
+  later.
 
-  broadcast   Laravel → WebSocket → the UI updates
-              The bell increments with no refresh.
-              Tomorrow's topic.
+  suit                     do not suit
+  ────                     ───────────
+  typing indicators        anything you store
+  cursor positions         anything you authorize
+  live selections          anything that must be true
+  temporary UI state       anything another user acts on
 
-  on-demand   when there is no user
+  ⚠️  A whisper never becomes a FACT. It is unvalidated
+      data from one browser to another, and your server
+      never saw it.
 
-    Notification::route('mail', 'ops@example.com')
-        ->notify(new BackupFailed());
-
-  queued      request → queue them → response
-                      → workers send them
-
-    Matters more here: three channels is three
-    external calls.
-
-  localised   Day 25, connected
-
-    \$user->notify((new InvoicePaid(\$i))->locale(\$user->locale))
-
-      User A → en → English
-      User B → ja → Japanese
-
-    ⚠️  A notification sent from a WORKER has no request
-        locale. Without setting it, everybody gets the
-        application default — the bug where the screen
-        translates perfectly and every email is English.
+      A chat message sent as a whisper exists nowhere,
+      arrives only for people currently connected, and
+      can say whatever the sender's console types.
 
 
-The whole picture
+Model broadcasting
 
-                   business action
-                         │
-                         ▼
-                       Event
-                         │
-             ┌───────────┼───────────┐
-             ▼           ▼           ▼
-         Listener    Listener    Listener
-             │           │           │
-             ▼           ▼           ▼
-           Queue       Queue       Queue
-             │           │           │
-             ▼           ▼           ▼
-           Mail    Notification   other work
+    Post updated → model broadcasting → WebSocket → clients
 
-  and separately:
+  Convenient for a real-time CRUD screen, and worth care.
 
-    Scheduler → dispatch a job → Queue → Worker
+  ⚠️  It broadcasts CHANGES, not MEANING.
 
-  Both end in the same place, from completely different
-  reasons. That difference is the thing to take away.
+      updated fires for a title edit, a view-count
+      increment, a nightly backfill and a migration
+      script. All of them reach the browser, and the
+      client works out which mattered.
+
+  ⚠️  And every column goes. The model is the payload, so
+      internal fields and whatever a migration added last
+      week are on the wire.
 
 
-The question
-
-  Not "how do I send an email", but:
-
-    something happened, and several things
-      should follow                        →  an event
-
-    the user should not wait                →  a queued listener
-
-    one message, several destinations,
-      per-user preferences                  →  a notification
-
-    it happens because of the TIME,
-      not because of an action               →  the scheduler
-
-    the caller needs the result              →  none of these.
-                                                call the method.
+  model broadcasting suits    a domain event suits
+  ────────────────────────    ────────────────────
+  an internal admin screen    anything user-facing
+  a prototype                 anything meaningful
+  a table mirroring rows      anything you shape
+                              anything an import touches
 
 
-  A welcome email and a nightly summary both end as mail.
-  One is event-driven and one is time-driven, and
-  building the second as the first is how a report ends
-  up being sent whenever somebody logs in.`,
+  The question is yesterday's:
+
+    what does the client actually need to KNOW?
+
+  A browser rarely needs "a row changed". It needs
+  "this order shipped" — a different sentence, firing
+  in fewer cases, carrying three fields instead of
+  thirty.`,
       codeExample: {
-        title: "One notification, three channels",
-        code: `<?php
-// ---------- Two things that must exist first ----------
+        title: "Presence, whispers, and what not to automate",
+        code: `// ---------- Presence: the whole online feature ----------
 
-// 1. The trait. It is what puts notify() and the
-//    notification relations on the model — and it is on
-//    the default User, which is why nobody notices it
-//    until they add notifications to a Team or a Client.
-use Illuminate\\Notifications\\Notifiable;
+const channel = window.Echo.join('chat.room.' + roomId);
 
-class User extends Authenticatable
-{
-    use Notifiable;
-}
+channel
+    .here((members) => setOnline(members))
+    .joining((member) => setOnline((m) => [...m, member]))
+    .leaving((member) => setOnline((m) => m.filter((x) => x.id !== member.id)));
 
-// 2. The table the database channel writes to:
-//    php artisan make:notifications-table
-//    php artisan migrate
+// Nothing stored. No heartbeat. No last_seen_at column
+// that is always slightly wrong, and no cleanup job.
+//
+// The database version needs all four, plus a decision
+// about what "online" means.
+
+
+// ---------- Whispers: browser to browser ----------
+
+// ❌ A request per keystroke, for information that is
+//    worthless one second later.
+input.addEventListener('input', () => {
+    fetch('/api/typing', { method: 'POST' });
+});
+
+// ✓ Straight through the WebSocket. PHP never sees it.
+input.addEventListener('input', () => {
+    channel.whisper('typing', { id: user.id, name: user.name });
+});
+
+channel.listenForWhisper('typing', (e) => {
+    showTypingIndicator(e.name);
+    clearAfter(2000);
+});
+
+
+// ---------- What a whisper must never be ----------
+
+// ❌ This message exists nowhere. It arrives only for
+//    people currently connected, and it can say whatever
+//    the sender's console types.
+channel.whisper('message', { body: text });
+
+// ✓ A message is a fact. It goes through the server,
+//   which validates it, stores it, and broadcasts it.
+await fetch('/api/messages', {
+    method: 'POST',
+    body: JSON.stringify({ room_id: roomId, body: text }),
+});
 
 
 <?php
-// php artisan make:notification InvoicePaid
+// ---------- Model broadcasting ----------
 
-namespace App\\Notifications;
+use Illuminate\\Database\\Eloquent\\BroadcastsEvents;
 
-use Illuminate\\Bus\\Queueable;
-use Illuminate\\Contracts\\Queue\\ShouldQueue;
-use Illuminate\\Notifications\\Messages\\MailMessage;
-use Illuminate\\Notifications\\Notification;
-
-class InvoicePaid extends Notification implements ShouldQueue
+class Post extends Model
 {
-    use Queueable;
+    use BroadcastsEvents;
 
-    public function __construct(public Invoice $invoice) {}
-
-    // Per recipient: preferences become one method rather
-    // than conditionals everywhere.
-    public function via(object $notifiable): array
+    public function broadcastOn(string $event): array
     {
-        return array_filter([
-            'database',
-            $notifiable->wants_email ? 'mail' : null,
-            $notifiable->slack_webhook ? 'slack' : null,
-        ]);
+        return [new PrivateChannel('team.' . $this->team_id)];
+    }
+}
+
+// Convenient. And it broadcasts CHANGES, not meaning:
+//
+//   a title edit                   → broadcast
+//   a view-count increment         → broadcast
+//   a nightly backfill of 50,000   → 50,000 broadcasts
+//   a migration script             → broadcast
+//
+// All of them reach the browser, carrying every column.
+
+
+<?php
+// ---------- The alternative ----------
+
+// A sentence rather than a row change.
+class OrderShipped implements ShouldBroadcast
+{
+    public function __construct(public Order $order) {}
+
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('user.' . $this->order->user_id)];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function broadcastAs(): string
     {
-        return (new MailMessage)
-            ->subject("Invoice {$this->invoice->number} paid")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("We received {$this->invoice->total->format()}.")
-            ->action('View invoice', route('invoices.show', $this->invoice));
+        return 'order.shipped';
     }
 
-    // Stored, not sent. This is what the bell reads.
-    // Omit it and the database channel falls back to
-    // toArray(), which is fine when both want the same
-    // payload — define toArray() and skip this one.
-    public function toDatabase(object $notifiable): array
+    // Three fields, not thirty.
+    public function broadcastWith(): array
     {
         return [
-            'invoice_id' => $this->invoice->id,
-            'message'    => "Invoice {$this->invoice->number} was paid",
+            'id'          => $this->order->id,
+            'status'      => $this->order->status,
+            'shipped_at'  => $this->order->shipped_at->toIso8601String(),
         ];
     }
-
-    public function toSlack(object $notifiable): SlackMessage
-    {
-        return (new SlackMessage)
-            ->text("Invoice {$this->invoice->number} paid");
-    }
 }
 
-
-<?php
-// ---------- Sending ----------
-
-$user->notify(new InvoicePaid($invoice));
-
-Notification::send($team->members, new InvoicePaid($invoice));
-
-// No user: an address, a webhook, a phone number.
-Notification::route('mail', 'ops@example.com')
-    ->route('slack', config('services.slack.ops'))
-    ->notify(new BackupFailed());
+// Fires when an order actually ships, and not when a
+// backfill touches the row.
 
 
 <?php
-// ---------- Localisation ----------
+// ---------- Deduplicating presence ----------
 
-// ⚠️ A queued notification has no request locale, so
-//    without this everybody gets the application default:
-//    the screen translates and every email is English.
-$user->notify(
-    (new InvoicePaid($invoice))->locale($user->locale)
-);
-
-// Or, once, for the whole notification class:
-public function __construct(public Invoice $invoice)
-{
-    $this->locale = $invoice->customer->locale;
-}
-
-
-<?php
-// ---------- The bell ----------
-
-// The database channel writes to the notifications table.
-
-$user->unreadNotifications->count();     // 🔔 3
-
-$user->notifications()->latest()->take(10)->get();
-$user->readNotifications;                // the other half
-
-foreach ($user->unreadNotifications as $notification) {
-    // The array you returned from toDatabase()/toArray()
-    echo $notification->data['message'];
-    echo $notification->created_at->diffForHumans();
-}
-
-$notification->markAsRead();
-$user->unreadNotifications->markAsRead();
-
-// And they are ordinary rows, so they delete like rows.
-// Something has to, or this table grows forever:
-$user->notifications()->where('created_at', '<', now()->subMonths(3))->delete();
-
-
-<?php
-// ---------- When the address is not on the model ----------
-
-class Team extends Model
-{
-    use Notifiable;
-
-    // The mail channel looks for an email column. When
-    // there is not one, say where to send instead:
-    public function routeNotificationForMail(): string
-    {
-        return $this->billing_contact_email;
-    }
-
-    public function routeNotificationForVonage(): string
-    {
-        return $this->owner->phone;
-    }
-}
-
-$user->unreadNotifications->markAsRead();
-
-// Nothing is delivered anywhere. The frontend queries it,
-// which is what gives you a count, a read state and a
-// history.
-
-
-<?php
-// ---------- Where each belongs ----------
-
-// Something happened, and several things should follow.
-UserRegistered::dispatch($user);
-
-// The user should not wait.
-class SendWelcomeEmail implements ShouldQueue {}
-
-// One message, several destinations, per-user preferences.
-$user->notify(new InvoicePaid($invoice));
-
-// It happens because of the time.
-Schedule::job(SendDailySummary::class)->dailyAt('02:00');
-
-// The caller needs the result: none of the above.
-$total = $this->calculator->total($invoice);
-
-
-// A welcome email and a nightly summary both end as mail.
-// One is event-driven, one is time-driven, and building
-// the second as the first is how a report gets sent
-// whenever somebody logs in.`,
+// Two tabs is two members. A naive count shows Rajan twice.
+// And presence is connection state: a closed laptop makes
+// somebody look absent when they are not.
+//
+// A hint. Never authorization.`,
       },
       keyTakeaways: [
-        "<b>A mailable is one thing: email. A notification is a message plus how it reaches somebody.</b>",
-        "<b>One notification can go to mail, the database, Slack and broadcast</b>, from one class with a `via()`.",
-        "<b>`via()` can decide per recipient</b>, which turns user notification preferences into one method.",
-        "<b>Database notifications are stored rather than sent</b>, giving you a bell with a count, a read state and history.",
-        "<b>Broadcast notifications push to the browser</b> so the bell updates without a refresh.",
-        "<b>On-demand notifications go to an address or webhook</b> when there is no user model.",
-        "<b>The `Notifiable` trait is what gives a model `notify()`</b>, and a `Team` or `Client` needs it added explicitly.",
-        "<b>The database channel needs its table</b>: `make:notifications-table` then `migrate`.",
-        "<b>`toArray()` is the database channel's fallback</b> when `toDatabase()` is absent, so one method can serve both.",
-        "<b>`routeNotificationForMail()` overrides where a channel sends</b>, for models with no `email` column.",
-        "<b>Read them back with `unreadNotifications`, `readNotifications` and `$notification->data`</b>, and prune them, or the table grows forever.",
-        "<b>Queued notifications matter more than queued mail</b>, because three channels is three external calls.",
-        "<b>A notification sent from a worker has no request locale</b>, so it must be set explicitly.",
-        "<b>Events, queues, notifications and the scheduler all end in the same place for different reasons.</b>",
-        "<b>Ask whether something is event-driven, time-driven, multi-channel, or simply a method call.</b>",
-        "<b>Building a time-driven task as an event-driven one</b> is how a nightly report gets sent whenever somebody logs in.",
+        "<b>A presence channel gives you here, joining and leaving</b>, which is the whole online-users feature.",
+        "<b>Nothing is stored</b>: no heartbeat, no threshold, no cleanup job, no `last_seen_at` that is always slightly wrong.",
+        "<b>A whisper goes browser to browser through the WebSocket server</b>, without touching PHP at all.",
+        "It suits typing indicators, cursors and live selections, where a request per keystroke would be absurd.",
+        "<b>A whisper never becomes a fact</b>: it is unvalidated, unstored, and only reaches people currently connected.",
+        "<b>A chat message sent as a whisper exists nowhere</b> and can say whatever the sender's console types.",
+        "<b>Model broadcasting sends Eloquent changes automatically</b>, which suits an internal screen or a prototype.",
+        "<b>It broadcasts changes, not meaning</b>: a backfill of fifty thousand rows is fifty thousand broadcasts.",
+        "<b>And it carries every column</b>, so internal fields go over the wire.",
+        "<b>Ask what the client needs to know</b>: \"this order shipped\" beats \"a row changed\" in every dimension.",
       ],
       commonMistakes: [
-        "<b>Adding notifications to a model without `Notifiable`.</b> `notify()` simply does not exist on it.",
-        "<b>Never pruning the notifications table.</b> It grows for the life of the application.",
-        "<b>Writing three mailables for one message with three destinations.</b> They drift, and only one gets updated.",
-        "<b>Sending notifications synchronously.</b> Three channels is three external calls in the request.",
-        "<b>Forgetting `->locale()` on a queued notification.</b> The interface translates and every email is in English.",
-        "<b>Using a notification when only email is involved and always will be.</b> A mailable says it more directly.",
-        "<b>Triggering time-based work from an event.</b> The nightly summary now depends on somebody logging in.",
+        "<b>Building online status with a `last_seen_at` column and a cleanup job.</b> A presence channel already knows.",
+        "<b>Sending a typing indicator through the server.</b> That is a request per keystroke for disposable information.",
+        "<b>Sending a chat message as a whisper.</b> It is unvalidated, unstored, and invisible to anybody who reconnects.",
+        "<b>Enabling model broadcasting on a table an import touches.</b> A backfill becomes tens of thousands of broadcasts.",
+        "<b>Broadcasting the model instead of a shaped payload.</b> Every column reaches the browser.",
       ],
       quiz: [
         {
-          question: "What is the difference between a mailable and a notification?",
+          question: "What does a presence channel replace?",
+          options: [
+            "A queue",
+            "A `last_seen_at` column with a heartbeat, a threshold and a cleanup job",
+            "Channel authorization",
+            "Polling for messages",
+          ],
+          correctIndex: 1,
+          explanation: "The connection either exists or it does not.",
+        },
+        {
+          question: "What is a whisper?",
+          options: [
+            "A queued broadcast",
+            "A client event sent browser to browser through the WebSocket, never reaching PHP",
+            "A private channel message",
+            "A presence update",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why a typing indicator does not cost a request per keystroke.",
+        },
+        {
+          question: "Why must a chat message not be sent as a whisper?",
+          options: [
+            "Whispers are slower",
+            "It is unvalidated, unstored, and only reaches people currently connected",
+            "Whispers cannot carry text",
+            "It would be duplicated",
+          ],
+          correctIndex: 1,
+          explanation: "A whisper never becomes a fact.",
+        },
+        {
+          question: "What is the risk of model broadcasting?",
+          options: [
+            "It is slow",
+            "It broadcasts every change and every column, including backfills and internal fields",
+            "It cannot use private channels",
+            "It bypasses authorization",
+          ],
+          correctIndex: 1,
+          explanation: "A domain event says what happened, in fewer cases, with fewer fields.",
+        },
+      ],
+    },
+    {
+      id: "scaling-security-and-choosing",
+      title: "Scaling, security & what belongs in real time",
+      durationMinutes: 13,
+      explanation: "The operational and architectural half, and the question the day exists to answer.\n\n---\n\n### 1. Basic — broadcasting is not queueing\n\nTwo things that both involve \"later\" and answer different questions:\n\n```text\nQueue           when should the SERVER do this work?\n                  Job → Queue → Worker\n\nBroadcasting    how should the server tell a CLIENT?\n                  Event → WebSocket → Browser\n```\n\n<b>A queue moves work off the request. Broadcasting moves information to a browser.</b> Neither substitutes for the other, and they usually appear together:\n\n```text\nbusiness event → queued broadcast → Reverb → browser\n```\n\nAnd the comparison with polling, stated once:\n\n```text\npolling                    broadcasting\n───────                    ────────────\nmany requests, mostly      one connection, held open\n  returning nothing\nup to N seconds late       immediate\nno extra infrastructure    a WebSocket server to run\ncosts requests             costs connections\n```\n\n---\n\n### 2. Intermediate — scaling\n\nOne server is simple:\n\n```text\n         Reverb\n        /  |  \\\n   Browser Browser Browser\n```\n\nA hundred thousand connections is not:\n\n```text\n            Load Balancer\n           /      |      \\\n     Reverb 1  Reverb 2  Reverb 3\n           \\      |      /\n           shared infrastructure\n```\n\nAnd that last line is the whole problem. <b>A user connected to Reverb 2 must receive an event broadcast to Reverb 1</b>, which means the instances need something between them. Without it, half your users silently miss half the events, and which half depends on load balancing.\n\nThe things to think about are different from scaling PHP:\n\n```text\nconnection count      each one costs memory, permanently\nnetwork bandwidth     not requests per second\nevent throughput      fan-out multiplies: one event to\n                        10,000 subscribers is 10,000 sends\nsticky sessions       a reconnect must be able to land\n                        anywhere\nfailure recovery      when an instance dies, its\n                        connections reconnect at once\n```\n\n<b>WebSocket systems are not \"add another PHP server\".</b> A web server is stateless and interchangeable; a WebSocket server holds state that matters, and losing it is visible to users.\n\n---\n\n### 3. Advanced — security, and the question\n\nThe security point, restated because it is the one that goes wrong:\n\n```text\nauthenticated  ≠  authorized for every channel\n```\n\nUser 123 must not be able to subscribe to `private-user.456`, `private-admin` or `private-company.999`, and the only thing stopping them is your callback.\n\nFour things to control:\n\n```text\nchannel authorization   who may listen\nbroadcast payloads      what they hear\npresence data           what members see about each other\nclient events           what browsers may send each other\n```\n\n<b>All four, because getting three right still leaks.</b>\n\n---\n\n### The question this day exists for\n\nNot \"how do I use Echo\". It is:\n\n> <b>What should be an HTTP response, what should be a queued job, what should be a domain event, and what genuinely needs pushing to a browser?</b>\n\n```text\nthe user asked for it and can wait\n                                    →  an HTTP response\n\nthe user should not wait for it     →  a queued job\n\nsomething happened, and several\n  things should follow               →  a domain event\n\nsomebody else's screen must change\n  without them asking                →  broadcasting\n\nit is transient and nobody stores it →  a whisper\n\na five-second delay is acceptable    →  a poll, and no\n                                          infrastructure\n```\n\nAnd the shape they combine into:\n\n```text\nuser creates a notification\n        ↓\ndomain event\n        ↓\nqueue\n        ↓\nbroadcast\n        ↓\nReverb\n        ↓\nEcho\n        ↓\nthe bell updates\n```\n\n<b>Six steps, five of which are days you have already done.</b> Broadcasting is the last one, and it only earns its place when somebody else's screen has to change without them asking for it.\n\nOne concrete detail on that shared infrastructure, because it is the actionable part: <b>the layer between Reverb nodes is Redis pub/sub.</b> Each node subscribes, so an event published on node A reaches the connections held by node B. Without it, two Reverb processes are two separate applications, and which one a user reaches decides what they see.",
+      diagram: `Broadcasting is not queueing
+
+  Queue         when should the SERVER do this work?
+                  Job → Queue → Worker
+
+  Broadcasting  how should the server tell a CLIENT?
+                  Event → WebSocket → Browser
+
+  Neither substitutes for the other, and they usually
+  appear together:
+
+    business event → queued broadcast → Reverb → browser
+
+
+  polling                   broadcasting
+  ───────                   ────────────
+  many requests, mostly     one connection, held open
+    returning nothing
+  up to N seconds late      immediate
+  no extra infrastructure   a WebSocket server to run
+  costs requests            costs connections
+
+
+Scaling
+
+  One server:
+
+             Reverb
+            /  |  \\
+       Browser Browser Browser
+
+  A hundred thousand connections:
+
+              Load Balancer
+             /      |      \\
+       Reverb 1  Reverb 2  Reverb 3
+             \\      |      /
+             shared infrastructure
+
+  ⚠️  That last line is the whole problem. A user on
+      Reverb 2 must receive an event broadcast to
+      Reverb 1.
+
+      Without something between the instances, half your
+      users silently miss half the events — and which
+      half depends on load balancing.
+
+  Different from scaling PHP:
+
+    connection count    each costs memory, permanently
+    bandwidth           not requests per second
+    event throughput    fan-out multiplies: one event to
+                          10,000 subscribers is 10,000 sends
+    sticky sessions     a reconnect must land somewhere valid
+    failure recovery    when an instance dies, its
+                          connections all reconnect at once
+
+  A web server is stateless and interchangeable. A
+  WebSocket server holds state that matters, and losing
+  it is visible to users.
+
+
+Security
+
+    authenticated  ≠  authorized for every channel
+
+  User 123 must not reach private-user.456,
+  private-admin, or private-company.999 — and the only
+  thing stopping them is your callback.
+
+  Four things to control:
+
+    channel authorization   who may listen
+    broadcast payloads      what they hear
+    presence data           what members see about each other
+    client events           what browsers may send each other
+
+  All four. Getting three right still leaks.
+
+
+The question this day exists for
+
+  Not "how do I use Echo", but:
+
+    the user asked and can wait        →  an HTTP response
+    the user should not wait           →  a queued job
+    something happened, and several
+      things should follow              →  a domain event
+    somebody ELSE's screen must
+      change without them asking        →  broadcasting
+    transient, nobody stores it        →  a whisper
+    a five-second delay is fine        →  a poll, and no
+                                            infrastructure
+
+
+  And the shape they combine into:
+
+    user creates a notification
+            ↓
+    domain event          Day 26
+            ↓
+    queue                 Day 25
+            ↓
+    broadcast             today
+            ↓
+    Reverb
+            ↓
+    Echo
+            ↓
+    the bell updates
+
+  Six steps, five of which are days you have done.
+
+  Broadcasting is the last one, and it earns its place
+  only when somebody else's screen must change without
+  them asking.`,
+      codeExample: {
+        title: "The whole flow, and where each piece belongs",
+        code: `<?php
+// ---------- The combination, in order ----------
+
+// 1. The business action.
+public function store(Request $request)
+{
+    $notification = Notification::create($request->validated());
+
+    // 2. A domain event: Day 26.
+    NotificationCreated::dispatch($notification);
+
+    return response()->noContent();
+}
+
+
+// 3. The event broadcasts, on a queue: Day 25 and today.
+class NotificationCreated implements ShouldBroadcast
+{
+    public function __construct(public Notification $notification) {}
+
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('user.' . $this->notification->user_id)];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'notification.created';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'id'      => $this->notification->id,
+            'message' => $this->notification->message,
+        ];
+    }
+}
+
+// 4. routes/channels.php decides who may listen.
+Broadcast::channel('user.{userId}', fn ($user, $userId) =>
+    $user->id === (int) $userId);
+
+// 5, 6, 7, 8. Reverb, the socket, Echo, the bell.
+
+
+<?php
+// ---------- Queue or broadcast? ----------
+
+// A queue answers: when should the SERVER do this work?
+SendWelcomeEmail::dispatch($user);
+
+// Broadcasting answers: how should the server tell a CLIENT?
+NotificationCreated::dispatch($notification);   // ShouldBroadcast
+
+// Neither replaces the other. Most real features use both.
+
+
+<?php
+// ---------- Choosing, per feature ----------
+
+// The user asked, and can wait: an HTTP response.
+return response()->json($invoice);
+
+// The user should not wait: a queued job.
+GenerateInvoicePdf::dispatch($invoice);
+
+// Several things should follow: a domain event.
+InvoicePaid::dispatch($invoice);
+
+// Somebody ELSE's screen must change: broadcasting.
+class InvoicePaid implements ShouldBroadcast {}
+
+// Transient, and nobody stores it: a whisper.
+// channel.whisper('typing', { name });
+
+// A five-second delay is acceptable: a poll, and no
+// infrastructure at all.
+// setInterval(fetchStats, 30000);
+
+
+<?php
+// ---------- Security: all four, not three ----------
+
+// 1. Who may listen.
+Broadcast::channel('team.{teamId}', fn ($user, $teamId) =>
+    $user->teams()->whereKey($teamId)->exists());
+
+// 2. What they hear.
+public function broadcastWith(): array
+{
+    return ['id' => $this->order->id, 'status' => $this->order->status];
+}
+
+// 3. What presence members see about each other.
+Broadcast::channel('chat.{room}', fn ($user, $room) =>
+    ['id' => $user->id, 'name' => $user->name]);
+
+// 4. What browsers may whisper to each other: nothing
+//    that another user acts on as if it were true.
+
+
+# ---------- Scaling: the line that matters ----------
+
+#             Load Balancer
+#            /      |      \\
+#      Reverb 1  Reverb 2  Reverb 3
+#            \\      |      /
+#            shared infrastructure
+#
+# A user on Reverb 2 must receive an event broadcast to
+# Reverb 1. Without something between them, half your
+# users miss half the events, silently.
+#
+# And the numbers to watch are not requests per second:
+#   connections held · bandwidth · fan-out
+#   reconnection storms when an instance dies`,
+      },
+      keyTakeaways: [
+        "<b>A queue decides when the server does work; broadcasting decides how the server tells a client.</b>",
+        "Neither replaces the other, and a real feature usually uses both.",
+        "<b>Polling costs requests and is late; broadcasting costs connections and infrastructure.</b>",
+        "<b>Several WebSocket servers need shared infrastructure between them</b>, or users miss events depending on which they hit.",
+        "<b>The numbers to watch are connections, bandwidth and fan-out</b>, not requests per second.",
+        "<b>One event to ten thousand subscribers is ten thousand sends</b>, which is a different shape of load.",
+        "<b>A WebSocket server holds state that matters</b>, so it is not interchangeable the way a web server is.",
+        "<b>Authenticated does not mean authorized for every channel</b>, and only your callback stops a user trying.",
+        "<b>Control all four: authorization, payloads, presence data and client events.</b> Three out of four still leaks.",
+        "<b>Ask what should be a response, a job, an event, or a push</b>, rather than how to use Echo.",
+        "<b>Broadcasting earns its place when somebody else's screen must change without them asking.</b>",
+      ],
+      commonMistakes: [
+        "<b>Treating broadcasting as an alternative to queues.</b> They answer different questions and usually appear together.",
+        "<b>Running several WebSocket servers with nothing between them.</b> Events reach only the instance that received them.",
+        "<b>Planning capacity in requests per second.</b> Connections and fan-out are what actually limit you.",
+        "<b>Securing the channel and not the payload.</b> An authorized listener still hears too much.",
+        "<b>Reaching for real time when a thirty-second poll would do.</b> That is a server to run for a delay nobody notices.",
+      ],
+      quiz: [
+        {
+          question: "What is the difference between a queue and broadcasting?",
           options: [
             "None",
-            "A mailable is email; a notification is a message plus the channels it reaches somebody through",
-            "Notifications cannot be queued",
-            "Mailables support more formatting",
+            "A queue decides when the server does work; broadcasting decides how it tells a client",
+            "Broadcasting is faster",
+            "Queues are for background work only",
           ],
           correctIndex: 1,
-          explanation: "Which matters as soon as a message has more than one destination.",
+          explanation: "Most real features use both, in sequence.",
         },
         {
-          question: "What does the database notification channel do?",
+          question: "Why do several WebSocket servers need shared infrastructure?",
           options: [
-            "Emails and logs it",
-            "Stores the notification so the application can show a bell with a count and read state",
-            "Broadcasts it",
-            "Queues it",
+            "For authentication",
+            "A user connected to one must receive events broadcast to another",
+            "To balance load",
+            "For TLS termination",
           ],
           correctIndex: 1,
-          explanation: "Nothing is delivered; the frontend queries the table.",
+          explanation: "Without it, users silently miss events depending on where they landed.",
         },
         {
-          question: "Why does a queued notification need `->locale()` set?",
+          question: "What limits a WebSocket system?",
           options: [
-            "For formatting",
-            "A worker has no request locale, so everybody would get the application default",
-            "It is required by the mail driver",
-            "It is not needed",
+            "Requests per second",
+            "Connections held, bandwidth, and fan-out per event",
+            "Database queries",
+            "PHP workers",
           ],
           correctIndex: 1,
-          explanation: "The bug where the interface translates and every email is English.",
+          explanation: "One event to ten thousand subscribers is ten thousand sends.",
         },
         {
-          question: "A nightly summary email. Which mechanism?",
+          question: "When does broadcasting earn its place?",
           options: [
-            "An event with a queued listener",
-            "The scheduler dispatching a job",
-            "A notification on login",
-            "A direct call in a controller",
+            "Whenever data changes",
+            "When somebody else's screen must change without them asking",
+            "For any slow work",
+            "For anything a user waits on",
           ],
           correctIndex: 1,
-          explanation: "It happens because of the time, not because of an action.",
+          explanation: "Otherwise a response, a job, or a poll is the right answer.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What is the difference between a command and an event?",
+      question: "Why can a normal HTTP page not learn about a later change?",
       options: [
-        "None",
-        "A command says \"do this\" and has one handler; an event says \"this happened\" and can have many",
-        "Commands are queued",
-        "Events return values",
+        "The browser caches it",
+        "The request and response completed, so nothing connects the two any more",
+        "Sessions expire",
+        "It can",
       ],
       correctIndex: 1,
-      explanation: "Which is why events are named as facts, in the past tense.",
+      explanation: "Which is why polling exists, and why it asks repeatedly.",
     },
     {
-      question: "When is an event the wrong tool?",
+      question: "What does broadcasting cost that polling does not?",
       options: [
-        "When there are several consequences",
-        "When the caller needs the result of the work",
-        "When consequences change over time",
-        "When the listener is slow",
-      ],
-      correctIndex: 1,
-      explanation: "A listener's return value goes nowhere; that is a method call.",
-    },
-    {
-      question: "Do listeners run asynchronously by default?",
-      options: [
-        "Yes",
-        "No; they run inline unless the listener implements `ShouldQueue`",
-        "Only in production",
-        "Only when a worker is running",
-      ],
-      correctIndex: 1,
-      explanation: "An event decouples; the queue is what defers.",
-    },
-    {
-      question: "Why can a queued listener fail to find a model that was just created?",
-      options: [
-        "The queue is slow",
-        "The event fired inside a transaction that had not committed yet",
-        "The model was not serialised",
-        "The worker cached it",
-      ],
-      correctIndex: 1,
-      explanation: "`ShouldQueueAfterCommit` waits for the commit.",
-    },
-    {
-      question: "Why not send a welcome email from Eloquent's `created` event?",
-      options: [
-        "It is slower",
-        "Rows are also created by imports, seeders and factories, and `created` cannot tell them apart",
-        "Model events cannot send mail",
-        "It fires twice",
-      ],
-      correctIndex: 1,
-      explanation: "Registration is a business fact; row creation is not.",
-    },
-    {
-      question: "Why schedule a job rather than doing the work in the schedule?",
-      options: [
-        "Jobs are faster",
-        "A long-running task blocks the scheduler, so nothing else runs on time",
-        "Closures cannot be scheduled",
-        "For retries",
-      ],
-      correctIndex: 1,
-      explanation: "The scheduler decides when; a worker does the work.",
-    },
-    {
-      question: "What does `withoutOverlapping()` prevent?",
-      options: [
-        "Two servers running the task",
-        "A new run starting while a previous run of the same task is still going",
-        "The task failing",
-        "Timezone problems",
-      ],
-      correctIndex: 1,
-      explanation: "`onOneServer()` is the one that handles several servers.",
-    },
-    {
-      question: "What does `onOneServer()` require?",
-      options: [
-        "A queue worker",
-        "A cache shared between the servers, such as Redis",
-        "A lock table",
+        "More requests",
+        "Open connections held in memory, one per connected user",
+        "More database queries",
         "Nothing",
       ],
       correctIndex: 1,
-      explanation: "With a per-server cache each takes its own lock and all of them still run.",
+      explanation: "A different scaling problem, not an absent one.",
     },
     {
-      question: "A scheduled task did not run. What do you check first?",
+      question: "Why does broadcasting need a separate server?",
       options: [
-        "The job class",
-        "`schedule:list`, then whether the cron entry exists at all",
-        "The queue",
-        "The database",
-      ],
-      correctIndex: 1,
-      explanation: "It shows registration, frequency, timezone and environment constraints at a glance.",
-    },
-    {
-      question: "Why should most mailables be queued?",
-      options: [
-        "For retries",
-        "Otherwise the request talks to an SMTP server, so a slow provider is a slow page",
+        "For security",
+        "PHP answers a request and exits, so it cannot hold connections open",
+        "To reduce load",
         "Laravel requires it",
-        "To allow attachments",
       ],
       correctIndex: 1,
-      explanation: "A provider outage otherwise fails a request about something else.",
+      explanation: "Reverb, Pusher or Ably do that job.",
     },
     {
-      question: "What should you do with a large export rather than attaching it?",
+      question: "What is sent to the browser without `broadcastWith()`?",
       options: [
-        "Compress it",
-        "Link to it with a signed temporary URL",
-        "Split it across emails",
-        "Send it as plain text",
+        "Nothing",
+        "Every public property of the event, serialised in full",
+        "Only the event name",
+        "The model id",
       ],
       correctIndex: 1,
-      explanation: "Revocable, trackable, and it will not be rejected or filtered.",
+      explanation: "Which sends a whole user model, including columns nobody reviewed.",
     },
     {
-      question: "What can `Mail::fake()` not catch?",
+      question: "When is `ShouldBroadcastNow` appropriate?",
       options: [
-        "The wrong recipient",
-        "A mailable that throws while rendering, because a fake never builds it",
-        "The wrong subject",
-        "A missing attachment",
+        "Always",
+        "A chat message where a queue round trip is a visible delay, and local debugging",
+        "Whenever the payload is small",
+        "In production only",
       ],
       correctIndex: 1,
-      explanation: "One test that calls `render()` covers it.",
+      explanation: "Otherwise the user waits for the WebSocket server during their request.",
     },
     {
-      question: "What is the difference between a mailable and a notification?",
+      question: "What may go on a public channel?",
       options: [
-        "None",
-        "A mailable is email; a notification is a message plus the channels it reaches somebody through",
-        "Notifications cannot be queued",
-        "Mailables cannot be localised",
+        "Anything with an unguessable name",
+        "Only information anybody could see anyway",
+        "User notifications",
+        "Anything, if the payload is small",
       ],
       correctIndex: 1,
-      explanation: "One class with a `via()` instead of three that must agree.",
+      explanation: "A public channel is readable by anybody who knows its name.",
     },
     {
-      question: "A nightly summary email. Which mechanism?",
+      question: "Why does `$user->id === $userId` fail in a channel callback?",
       options: [
-        "An event with a queued listener",
-        "The scheduler dispatching a job",
-        "A notification triggered on login",
-        "A direct call in a controller",
+        "The user is not loaded",
+        "The channel segment is a string, so the strict comparison is always false",
+        "The callback runs too early",
+        "It does not fail",
       ],
       correctIndex: 1,
-      explanation: "It happens because of the time, not because of an action.",
+      explanation: "And it fails silently: no events arrive, with no error anywhere.",
+    },
+    {
+      question: "What does a presence channel add over a private one?",
+      options: [
+        "Encryption",
+        "Knowledge of who is connected, with here, joining and leaving",
+        "Guaranteed delivery",
+        "Message history",
+      ],
+      correctIndex: 1,
+      explanation: "Which builds an online-users list without storing anything.",
+    },
+    {
+      question: "Why should a presence callback not return the user model?",
+      options: [
+        "It is slow",
+        "Whatever it returns is visible to every other member of the channel",
+        "It cannot be serialised",
+        "Laravel rejects it",
+      ],
+      correctIndex: 1,
+      explanation: "Return a name and an id.",
+    },
+    {
+      question: "What does a leading dot mean in `.order.shipped`?",
+      options: [
+        "A private channel",
+        "The exact event name, with no application namespace prepended",
+        "A presence channel",
+        "A wildcard",
+      ],
+      correctIndex: 1,
+      explanation: "A `broadcastAs()` name needs it; a bare class name does not.",
+    },
+    {
+      question: "Why must a real-time UI refetch after reconnecting?",
+      options: [
+        "To re-authenticate",
+        "Messages sent while disconnected never arrive, so the UI is quietly out of date",
+        "Echo clears its state",
+        "It does not need to",
+      ],
+      correctIndex: 1,
+      explanation: "Broadcasting is delivery, not truth.",
+    },
+    {
+      question: "Why must a chat message not be sent as a whisper?",
+      options: [
+        "Whispers are slower",
+        "It is unvalidated, unstored, and reaches only people currently connected",
+        "Whispers cannot carry text",
+        "It would arrive twice",
+      ],
+      correctIndex: 1,
+      explanation: "A whisper never becomes a fact.",
+    },
+    {
+      question: "What is the risk of model broadcasting?",
+      options: [
+        "It is slow",
+        "It broadcasts every change and every column, including backfills and internal fields",
+        "It bypasses authorization",
+        "It cannot use private channels",
+      ],
+      correctIndex: 1,
+      explanation: "A domain event says what happened, in fewer cases, with fewer fields.",
+    },
+    {
+      question: "Why do several WebSocket servers need shared infrastructure?",
+      options: [
+        "For TLS",
+        "A user connected to one must receive events broadcast to another",
+        "To authenticate channels",
+        "For load balancing only",
+      ],
+      correctIndex: 1,
+      explanation: "Without it, users miss events depending on which instance they hit.",
+    },
+    {
+      question: "When does broadcasting earn its place?",
+      options: [
+        "Whenever data changes",
+        "When somebody else's screen must change without them asking",
+        "For any slow work",
+        "For anything a user is waiting on",
+      ],
+      correctIndex: 1,
+      explanation: "Otherwise a response, a job, or a poll is the right answer.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Decouple InvoiceHub's side effects into events and listeners, then add a nightly summary that can never overlap or double-send.",
-    brief: "InvoiceHub's controllers do everything. Marking an invoice paid updates the record, sends an email, writes an audit row, posts to Slack and refreshes a cache, all in one method that nobody wants to touch.\n\nToday that becomes an event and four listeners. And the point is not that events are tidier: <b>it is that adding a fifth consequence should not require opening the controller.</b> You will prove that at the end by adding one.\n\nThe second half is the nightly summary, and its acceptance criteria are the interesting ones. It must not overlap with itself, must not run twice if you had two servers, must not email real customers from staging, and must tell somebody when it fails. Every one of those is a line, and every one of them is a real incident when it is missing.\n\nRun a queue worker throughout. Several things today only behave correctly when something is actually processing the queue.",
+    goal: "Make InvoiceHub's notification bell update without a refresh, then break it in the five ways it breaks in production and be able to name each one.",
+    brief: "Yesterday's notification bell needs a page reload to change. Today it updates the moment something happens, and the interesting part is not getting that working.\n\n<b>It is knowing why it stops.</b> Real time fails quietly: no error, no log line, no broken page, just nothing arriving. So this day is built around deliberately causing each of the five failures and recognising the symptom, because in production you will only ever see the symptom.\n\nYou will need four things running at once: the application, a queue worker, Reverb, and Vite. Anything that stops working, check those four first.\n\nAnd one rule for the whole day: <b>the page must still be correct after a reload for somebody who was disconnected.</b> If the bell is only right because the socket was connected the whole time, it is not finished.",
     steps: [
-      "Find the fattest controller method in InvoiceHub, copy it into `NOTES.md` untouched, and list every side effect it performs.",
-      "Create an `InvoicePaid` event carrying the invoice. Name it as a fact and write one sentence explaining why it is not called `SendInvoicePaidEmail`.",
-      "Move each side effect into its own listener. Confirm the controller is down to the state change and one dispatch.",
-      "Queue the slow listeners and leave the instant ones inline. Write down which is which and why.",
-      "Dispatch the event inside a transaction, with a queued listener that reads the invoice. Under a worker, try to make it fail by committing late, then fix it with `ShouldQueueAfterCommit`.",
-      "Run `php artisan event:list` and check that everything you expect is registered. Then decide whether this event should use manual registration instead, and justify the answer.",
-      "Add a fifth consequence, such as a webhook to a partner, without opening the controller. That is the acceptance test for the first half.",
-      "Convert `InvoicePaid` from a mailable into a notification with `mail`, `database` and one more channel. Add a `via()` that respects a per-user preference column.",
-      "Build a notification bell that reads `unreadNotifications` and shows a count. Mark one read and confirm the count changes.",
-      "Send the notification to a user whose locale is not English and confirm the email is in their language. Then remove the `->locale()` call and confirm what happens.",
-      "Preview the invoice email by returning the mailable from a route. Check it in a browser and on a narrow window, and fix whatever is broken.",
-      "Deliberately set `APP_URL` wrongly, queue the email, and look at the links in the log. Then fix it, and write down why this is invisible locally.",
-      "Write three mail tests: it sends on payment, it does not send for a draft, and the mailable renders. Note which of the three a `Mail::fake()` alone could not have caught.",
-      "Now the scheduler. Create `SendDailySummary` as a queued job and schedule it at 02:00 with an explicit timezone.",
-      "Add `withoutOverlapping()` with an expiry set from the work. Then make the job sleep for longer than its interval and observe what happens with and without it.",
-      "Add `onOneServer()` and `environments(['production'])`. Explain in a comment what each one prevents, with the specific incident in mind.",
-      "Add an `onFailure()` hook that alerts somebody. Then make the job throw and confirm the alert fires.",
-      "Run `php artisan schedule:list` and check the next run time is what you expect in your timezone. Then run `schedule:run` and watch the job reach the queue and the worker.",
-      "Finally, list every email InvoiceHub sends and classify each one: event-driven, time-driven, or a direct call. Anything in the wrong category, move it.",
+      "Install broadcasting and Reverb, start it, and confirm from the browser's network tab that a WebSocket connection is open before writing any application code.",
+      "Make `NotificationCreated` implement `ShouldBroadcast`, broadcasting on a private channel scoped to the recipient. Add `broadcastAs()` and explain in a comment why the class name is a bad wire name.",
+      "Look at what the browser receives with no `broadcastWith()`. Write down every field that arrived, then add `broadcastWith()` and compare.",
+      "Add the channel authorization callback. Deliberately omit the `(int)` cast first, watch nothing arrive, and write down what the browser and the logs told you. Which was nothing.",
+      "Wire up Echo and update the bell. Get it incrementing without a refresh, in whichever of Livewire or React your application uses.",
+      "From the browser console, subscribe to another user's private channel. Confirm you are refused, then temporarily make the callback return `true` and confirm you now receive their notifications. Put it back.",
+      "Now break it five ways, one at a time, and record the symptom for each: stop Reverb; stop the queue worker; remove the channel callback; misspell the event name in Echo; drop the `(int)` cast.",
+      "For each of those five, write the one-line diagnostic you would use to identify it in production. That list is the deliverable.",
+      "Reload the page with the socket disconnected and confirm the bell still shows the right count, because the page loads its state over HTTP.",
+      "Now disconnect, create three notifications from another session, reconnect, and see what the bell shows. Then add a refetch on reconnect and try again.",
+      "Add a presence channel to an invoice detail page so viewers can see who else is looking at it. Return only a name and an id from the callback, and check what a second browser sees.",
+      "Open the same invoice in two tabs as the same user and count the presence members. Fix the duplicate.",
+      "Add a whisper for \"someone is editing this invoice\", firing on input. Confirm in the network tab that no HTTP request is made per keystroke.",
+      "Try sending something through a whisper that should be a fact, such as a comment, then write down three reasons it is wrong.",
+      "Finally, list every real-time feature you built and answer for each: could this have been a poll, and what would that have cost? Anything where the honest answer is yes, say so.",
     ],
     acceptance: [
-      "The controller does the state change and dispatches one event, and `NOTES.md` holds the original for comparison.",
-      "Each side effect is its own listener, with slow ones queued and instant ones inline, and you can justify the split.",
-      "A queued listener dispatched inside a transaction reliably finds the record, and you saw it fail before you fixed it.",
-      "A fifth consequence was added without touching the controller.",
-      "`InvoicePaid` is one notification reaching mail, the database and one more channel, respecting a per-user preference.",
-      "The bell shows an unread count that changes when a notification is marked read.",
-      "A non-English user receives the email in their language, and you saw what happens without `->locale()`.",
-      "The invoice email was previewed in a browser before any test was written.",
-      "You reproduced the wrong-`APP_URL` bug and can explain why it is invisible locally.",
-      "Three mail tests pass, and you know which one a fake could not have replaced.",
-      "The nightly summary is scheduled at 02:00 in an explicit timezone, dispatching a queued job rather than doing the work.",
-      "A long-running summary does not overlap itself, and you observed the overlap before adding the guard.",
-      "`onOneServer()`, `environments()` and `onFailure()` are all present, each with a comment naming what it prevents.",
-      "`schedule:list` shows the task with the next run time you expect.",
-      "Every email InvoiceHub sends is classified as event-driven, time-driven or direct, and anything miscategorised has been moved.",
+      "The notification bell increments without a page refresh.",
+      "The broadcast payload contains only the fields the UI uses, and you recorded what it contained before you shaped it.",
+      "A second user cannot subscribe to another user's channel, and you demonstrated both the refusal and what happens without it.",
+      "You have five recorded symptoms and five one-line diagnostics for the five ways real time breaks.",
+      "Reloading with the socket disconnected shows the correct count, because the page loads its state over HTTP.",
+      "Reconnecting after missing three notifications produces the correct count, not a stale one.",
+      "The presence list shows other viewers, exposes only a name and an id, and counts one person once across two tabs.",
+      "The editing indicator makes no HTTP request per keystroke, confirmed in the network tab.",
+      "You can state three reasons a whisper must not carry something that needs to be true.",
+      "Every real-time feature is listed with an honest answer about whether a poll would have done.",
     ],
     stretch: [
-      "Group the invoice listeners into a subscriber and write down what you gained and what you gave up.",
-      "Add a debounced listener for something recalculated on every edit, and demonstrate three rapid changes producing one run.",
-      "Add an on-demand notification alerting an operations address when the nightly summary fails, and test it by making the job throw.",
+      "Add a live invoice status that updates for everybody watching, and decide between a domain event and model broadcasting with a written reason.",
+      "Simulate a Reverb restart while three browsers are connected, and observe the reconnect. Note what a thousand simultaneous reconnects would mean.",
+      "Add a Slack notification alongside the broadcast on the same event, so one dispatch reaches a screen, an inbox and a channel.",
     ],
   },
 };

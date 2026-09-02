@@ -2,2389 +2,2531 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_25_LESSONS: LessonDay = {
   day: 25,
-  title: "Localization, collections & helpers",
-  totalMinutes: 89,
+  title: "Queues & jobs — batching, retries, failures & Horizon",
+  totalMinutes: 92,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "localization",
-      title: "Localization — language files & __()",
+      id: "why-queues",
+      title: "Why queues exist, and what a job is",
       durationMinutes: 11,
-      explanation: "Three things today, and one idea underneath all of them:\n\n```text\nLocalization   →  multiple languages\nCollections    →  transform data\nStrings        →  clean manipulation\nHelpers        →  common operations\nConcurrency    →  parallel work\n```\n\n<b>The goal is not to use every abstraction everywhere.</b> It is to know when Laravel's version makes the code clearer, and when plain PHP already did.\n\n---\n\n### 1. Basic — text that is not in the code\n\nA hard-coded string works until somebody wants a second language:\n\n```text\nEnglish   \"Welcome\"\nJapanese  \"ようこそ\"\nNepali    \"स्वागत छ\"\n```\n\nThe answer is not conditionals scattered through your views. It is to <b>take the text out of the code and look it up by key:</b>\n\n```text\nlang/\n├── en/messages.php\n├── ja/messages.php\n└── ne/messages.php\n```\n\n```php\n// lang/en/messages.php\nreturn ['welcome' => 'Welcome'];\n\n// lang/ja/messages.php\nreturn ['welcome' => 'ようこそ'];\n```\n\n```php\n__('messages.welcome');\n```\n\n```blade\n{{ __('messages.welcome') }}\n```\n\n```text\nmessages.welcome\n       ↓\nthe current locale\n       ↓\nthe translation\n```\n\n<b>Your code never asks which language it is.</b> That `if ($language === 'ja')` is the thing localization exists to delete.\n\n---\n\n### 2. Intermediate — parameters\n\nText with a value in it cannot be split up, because word order differs between languages:\n\n```php\n// ❌ 'Welcome, ' . $name\n```\n\nWhich is fine in English and wrong in a language that puts the name first. <b>Put the placeholder in the translation:</b>\n\n```php\n'welcome' => 'Welcome, :name',\n```\n\n```php\n__('messages.welcome', ['name' => $user->name]);\n```\n\n```text\nWelcome, Rajan\n```\n\nNow each translation owns its own word order, and the code passes values rather than sentence fragments.\n\n<b>That rule generalises: a translation is a whole sentence.</b> Concatenating two translated pieces produces something that reads correctly in the language you tested and awkwardly in the rest.\n\n---\n\n### 3. Advanced — the two file formats\n\nAlongside PHP files keyed by short names, Laravel supports JSON files keyed by the English text:\n\n```text\nlang/ja.json\n```\n\n```json\n{\n    \"Welcome\": \"ようこそ\",\n    \"Dashboard\": \"ダッシュボード\"\n}\n```\n\n```php\n__('Welcome');\n```\n\nSo the choice is what your keys are:\n\n```text\nPHP files                    JSON files\n─────────                    ──────────\n__('messages.welcome')       __('Welcome')\na key, in a namespace        the English text is the key\n\ngrouping and structure       nothing to invent\na missing translation is     a missing translation shows\n  visible as a raw key         readable English\nrenaming a key touches       changing the English text\n  every usage                  changes the key everywhere\n```\n\n<b>Neither is wrong.</b> JSON suits an application whose interface text is written in English and translated afterwards; PHP files suit one where the text is long, grouped or edited by people who are not developers.\n\nPick one per project. Using both is legal and makes \"where is this string\" a two-place question forever.\n\nOne practical note that catches everyone: <b>Blade escapes translated output</b>, exactly as it escapes everything else. A translation containing markup needs `{!! !!}` and therefore the Day 21 judgement about whether that content is trusted, which for a file in your own repository it usually is.",
-      diagram: `Three things, one idea
+      explanation: "One idea, and everything today follows from it:\n\n> <b>Do not make the user wait for work that does not need to happen during the request.</b>\n\n---\n\n### 1. Basic — the problem\n\nSomebody uploads a podcast. Without a queue:\n\n```text\nupload\n  ↓\nprocess the audio\n  ↓\ngenerate a waveform\n  ↓\ngenerate a transcript\n  ↓\nsend a notification\n  ↓\nHTTP response\n```\n\nThirty seconds of staring at a spinner, and a PHP worker occupied for all of it. Ten uploads at once and the site is unresponsive for everybody.\n\nWith a queue:\n\n```text\nupload\n  ↓\nsave the podcast\ndispatch a job\n  ↓\nHTTP response          ← immediately\n```\n\nand separately:\n\n```text\nQueue → Worker → process → waveform → transcript → notify\n```\n\n<b>The request does the minimum that must be true before answering</b>, and everything else happens after.\n\nThat framing is the useful one. The question is not \"is this slow\", it is <b>does the user need this to have finished before they get a response?</b>\n\n---\n\n### 2. Intermediate — a job\n\n<b>A <i>job</i></b> is a unit of work Laravel can run later:\n\n```text\nProcessPodcast · SendInvoice · ResizeImage\nSendWelcomeEmail · GenerateReport · SyncCustomer\n```\n\nIt is two things:\n\n```text\nthe data it needs\n       +\na handle() method\n```\n\n```bash\nphp artisan make:job ProcessPodcast\n```\n\n```php\nclass ProcessPodcast implements ShouldQueue\n{\n    public function __construct(public Podcast $podcast) {}\n\n    public function handle(): void\n    {\n        $this->podcast->process();\n    }\n}\n```\n\n<b>`ShouldQueue` is what makes it a queued job</b> rather than something dispatched and run immediately.\n\nAnd the distinction to hold on to:\n\n```text\ndispatch()   put the job in the queue\nhandle()     actually do the work, later, elsewhere\n```\n\n---\n\n### 3. Advanced — the constructor is the wire\n\n```php\nProcessPodcast::dispatch($podcast);\n```\n\n```text\napplication → dispatch() → the queue → a worker → handle()\n```\n\nAnd here is the thing that explains most job bugs. <b>Everything in the constructor is serialised, stored, and deserialised later, in a different process.</b>\n\nThree consequences.\n\n<b>Models are stored as an id, not as data.</b> Laravel re-fetches the model when the job runs, which is usually what you want and occasionally not: if the row was deleted in the meantime, the job fails to find it.\n\n<b>The job runs against the state at execution time, not at dispatch time.</b> Dispatch a job to email an invoice, edit the invoice, and the email contains the edit. Sometimes correct, sometimes a surprise, and always worth knowing which you meant.\n\n<b>And whatever you pass must be serialisable.</b> A closure, a request, or an open file handle cannot cross that boundary. Pass ids and simple values, and look up the rest inside `handle()`.\n\nOne more, which the rest of the day expands on: <b>a job can run more than once.</b> A retry, a duplicate dispatch or a worker restart can all cause it, so `handle()` should be safe to repeat. That property is called idempotency, and it is the difference between a queue that works and one that sends the same invoice twice.",
+      diagram: `The idea
 
-  Localization  →  multiple languages
-  Collections   →  transform data
-  Strings       →  clean manipulation
-  Helpers       →  common operations
-  Concurrency   →  parallel work
-
-  The goal is not to use every abstraction everywhere.
-  It is knowing when Laravel's version is clearer, and
-  when plain PHP already was.
+  > Do not make the user wait for work that does not
+    need to happen during the request.
 
 
-Text that is not in the code
+  Without a queue:
 
-  English   "Welcome"
-  Japanese  "ようこそ"
-  Nepali    "स्वागत छ"
+    upload → process audio → waveform → transcript
+           → notify → HTTP response
 
-  Not conditionals scattered through views. Take the
-  text OUT of the code and look it up by key:
-
-    lang/
-    ├── en/messages.php
-    ├── ja/messages.php
-    └── ne/messages.php
-
-    __('messages.welcome')
-    {{ __('messages.welcome') }}
-
-      messages.welcome → the current locale → the text
-
-  Your code never asks which language it is. That
-  if (\$language === 'ja') is what localization deletes.
+  Thirty seconds of spinner, and a PHP worker occupied
+  for all of it. Ten uploads at once and the site is
+  unresponsive for everybody.
 
 
-Parameters
+  With a queue:
 
-  ❌ 'Welcome, ' . \$name
+    upload → save, dispatch a job → HTTP response
+                                    (immediately)
 
-  Fine in English. Wrong in a language that puts the
-  name first.
+    Queue → Worker → process → waveform → transcript
+                   → notify
 
-    'welcome' => 'Welcome, :name',
-    __('messages.welcome', ['name' => \$user->name])
+  The request does the minimum that must be true before
+  answering.
 
-  Each translation owns its own word order, and the code
-  passes VALUES rather than sentence fragments.
-
-  A translation is a WHOLE SENTENCE. Concatenating two
-  translated pieces reads correctly in the language you
-  tested and awkwardly in the rest.
+  The question is not "is this slow". It is:
+    does the user need this FINISHED before they get
+    a response?
 
 
-Two file formats
+A job
 
-  PHP files                   JSON files
-  ─────────                   ──────────
-  __('messages.welcome')      __('Welcome')
-  a key, in a namespace       the English text IS the key
+  ProcessPodcast · SendInvoice · ResizeImage
+  SendWelcomeEmail · GenerateReport
 
-  grouping and structure      nothing to invent
-  a missing translation       a missing translation
-    shows a raw key             shows readable English
-  renaming a key touches      changing the English text
-    every usage                 changes the key everywhere
+  Two things:
 
-  Neither is wrong.
+    the data it needs
+           +
+    a handle() method
 
-    JSON  an interface written in English, translated after
-    PHP   long text, grouped, or edited by non-developers
+  php artisan make:job ProcessPodcast
 
-  Pick one per project. Both is legal and makes "where
-  is this string" a two-place question forever.
+  implements ShouldQueue    ← what makes it QUEUED
+
+    dispatch()   put it in the queue
+    handle()     do the work, later, elsewhere
 
 
-  Blade ESCAPES translated output, like everything else.
-  A translation containing markup needs {!! !!} and the
-  Day 21 judgement about trust — which for a file in
-  your own repository it usually passes.`,
+The constructor is the wire
+
+  ProcessPodcast::dispatch(\$podcast)
+
+    application → dispatch() → queue → worker → handle()
+
+  ⚠️  Everything in the constructor is SERIALISED,
+      stored, and deserialised later, in a different
+      process.
+
+  Three consequences:
+
+    Models are stored as an ID, not as data.
+      Laravel re-fetches when the job runs — usually
+      right, and a failure if the row was deleted.
+
+    The job runs against the state at EXECUTION time.
+      Dispatch, then edit the invoice, and the email
+      contains the edit. Sometimes correct, sometimes
+      a surprise. Know which you meant.
+
+    Whatever you pass must be serialisable.
+      Not a closure, a request or a file handle.
+      Pass ids and simple values; look the rest up
+      inside handle().
+
+
+  And one the whole day expands on:
+
+    A job can run MORE THAN ONCE.
+
+  A retry, a duplicate dispatch or a worker restart can
+  each cause it. handle() should be safe to repeat. That
+  property is idempotency, and it is the difference
+  between a queue that works and one that sends the same
+  invoice twice.`,
       codeExample: {
-        title: "Language files and lookups",
+        title: "A job, and what crosses the wire",
         code: `<?php
-// lang/en/messages.php
+// php artisan make:job ProcessPodcast
 
-return [
-    'welcome'  => 'Welcome',
-    'greeting' => 'Welcome, :name',
+namespace App\\Jobs;
 
-    'invoice' => [
-        'created'  => 'Invoice :number created.',
-        'overdue'  => 'Invoice :number is overdue.',
-    ],
-];
+use App\\Models\\Podcast;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Foundation\\Queue\\Queueable;
 
+class ProcessPodcast implements ShouldQueue
+{
+    use Queueable;
 
-<?php
-// lang/ja/messages.php
+    // Serialised at dispatch, deserialised in the worker.
+    public function __construct(public Podcast $podcast) {}
 
-return [
-    'welcome'  => 'ようこそ',
-    'greeting' => ':name さん、ようこそ',
+    public function handle(): void
+    {
+        $this->podcast->process();
+        $this->podcast->generateWaveform();
+        $this->podcast->generateTranscript();
 
-    'invoice' => [
-        'created'  => '請求書 :number を作成しました。',
-        'overdue'  => '請求書 :number は期限切れです。',
-    ],
-];
+        $this->podcast->user->notify(new PodcastReady($this->podcast));
+    }
+}
 
-// Notice the greeting: Japanese puts the name first.
-// That is exactly why the placeholder lives in the
-// translation rather than in a concatenation.
+// ShouldQueue is what makes it queued. Without it,
+// dispatch() runs it immediately.
 
 
 <?php
-// ---------- Using them ----------
+// ---------- The controller ----------
 
-__('messages.welcome');
+public function store(Request $request)
+{
+    $podcast = Podcast::create([
+        'user_id' => $request->user()->id,
+        'path'    => $request->file('audio')->store('podcasts', 's3'),
+    ]);
 
-__('messages.greeting', ['name' => $user->name]);
+    // The minimum that must be true before answering.
+    ProcessPodcast::dispatch($podcast);
 
-// Nested keys use dots all the way down.
-__('messages.invoice.created', ['number' => $invoice->number]);
-?>
+    return redirect()->route('podcasts.show', $podcast);
+}
 
-{{-- In Blade --}}
-<h1>{{ __('messages.welcome') }}</h1>
-<p>{{ __('messages.greeting', ['name' => $user->name]) }}</p>
-
-{{-- Escaped, like everything else. A translation with
-     markup needs {!! !!} and the Day 21 judgement. --}}
-<p>{!! __('messages.terms_html') !!}</p>
-
-
-<?php
-// ---------- JSON translations ----------
-
-// lang/ja.json
-// {
-//     "Welcome": "ようこそ",
-//     "Dashboard": "ダッシュボード",
-//     "Welcome, :name": ":name さん、ようこそ"
-// }
-
-__('Welcome');
-__('Welcome, :name', ['name' => $user->name]);
-
-// The English text is the key. A missing translation
-// shows readable English rather than "messages.welcome".
+// The response goes out now. The thirty seconds of work
+// happens in a worker.
 
 
 <?php
-// ---------- The rule that matters ----------
+// ---------- What can and cannot cross the wire ----------
 
-// ❌ Two translated fragments. Reads correctly in the
-//    language you tested and awkwardly in the rest.
-echo __('messages.you_have') . ' ' . $count . ' ' . __('messages.invoices');
+// ✓ A model: stored as an id, re-fetched when the job runs.
+new ProcessPodcast($podcast);
 
-// ✓ One sentence, with a placeholder.
-echo __('messages.you_have_invoices', ['count' => $count]);
+// ✓ Ids and simple values.
+new GenerateReport($user->id, $from->toDateString(), $to->toDateString());
 
-// A translation is a whole sentence. Word order is not
-// yours to decide once there is a second language.`,
+// ❌ Not serialisable.
+new ProcessPodcast(fn () => $podcast->process());
+new ProcessUpload($request);
+new ProcessFile(fopen($path, 'r'));
+
+// ❌ A whole collection is serialised in full, and may
+//    be stale by the time it runs.
+new NotifyUsers(User::all());
+
+// ✓ Pass the ids, look them up in handle().
+new NotifyUsers(User::pluck('id')->all());
+
+
+<?php
+// ---------- State at execution time, not dispatch time ----------
+
+$invoice->update(['total' => 100]);
+
+SendInvoice::dispatch($invoice);       // stored as an id
+
+$invoice->update(['total' => 200]);    // a second later
+
+// The email contains 200, because the job re-fetched the
+// invoice when it ran. Sometimes correct. Always worth
+// knowing which you meant.
+
+
+<?php
+// ---------- A job can run twice ----------
+
+// ❌ Charged twice if this job is retried.
+public function handle(): void
+{
+    $this->gateway->charge($this->invoice->total);
+
+    $this->invoice->update(['status' => 'paid']);
+}
+
+// ✓ Safe to repeat.
+public function handle(): void
+{
+    if ($this->invoice->status === 'paid') {
+        return;
+    }
+
+    $this->gateway->charge(
+        $this->invoice->total,
+        idempotencyKey: $this->invoice->uuid,
+    );
+
+    $this->invoice->update(['status' => 'paid']);
+}`,
       },
       keyTakeaways: [
-        "<b>Localization takes the text out of the code and looks it up by key</b>, so the code never asks which language it is.",
-        "Language files live under `lang/{locale}/`, returning an array of keys and translations.",
-        "<b>`__('messages.welcome')` resolves the key against the current locale</b>, and works the same in Blade.",
-        "<b>Placeholders belong in the translation</b>, as `:name`, so each language owns its own word order.",
-        "<b>A translation is a whole sentence</b>; concatenating translated fragments breaks in other languages.",
-        "<b>JSON files key translations by the English text itself</b>, so `__('Welcome')` needs no key invented.",
-        "<b>PHP files give grouping and structure; JSON gives readable fallback text</b> when a translation is missing.",
-        "Pick one format per project, because using both makes finding a string a two-place question.",
-        "<b>Blade escapes translated output</b>, so a translation containing markup needs `{!! !!}` and a trust judgement.",
+        "<b>A queue exists so the user does not wait for work that need not finish during the request.</b>",
+        "The question is not whether something is slow, but whether the response depends on it being done.",
+        "<b>A job is the data it needs plus a `handle()` method</b>, and `ShouldQueue` is what makes it queued.",
+        "<b>`dispatch()` puts the job in the queue; `handle()` does the work later, in a different process.</b>",
+        "<b>Everything in the constructor is serialised and deserialised elsewhere</b>, which explains most job bugs.",
+        "<b>Models are stored as an id and re-fetched</b>, so a deleted row makes the job fail.",
+        "<b>A job runs against the state at execution time</b>, not the state at dispatch.",
+        "Closures, requests and file handles cannot cross that boundary; pass ids and look things up inside.",
+        "<b>A job can run more than once</b>, through a retry, a duplicate dispatch or a worker restart.",
+        "<b>`handle()` should therefore be safe to repeat</b>, which is idempotency and the theme of the day.",
       ],
       commonMistakes: [
-        "<b>Branching on the language in your views.</b> That conditional is what localization exists to remove.",
-        "<b>Concatenating a translated string with a value.</b> Word order differs, so the placeholder goes in the translation.",
-        "<b>Joining two translated fragments into a sentence.</b> It reads correctly only in the language you tested.",
-        "<b>Mixing PHP and JSON translations in one project.</b> Every string is then in one of two places.",
-        "<b>Putting markup in a translation and forgetting it is escaped.</b> The tags appear as text.",
+        "<b>Doing slow work in the request because it is \"only a few seconds\".</b> Ten concurrent uploads is a stalled site.",
+        "<b>Passing a closure or a request into a job.</b> Neither can be serialised across the boundary.",
+        "<b>Passing a whole collection.</b> It is serialised in full and is stale by the time the job runs.",
+        "<b>Assuming the job sees the data as it was at dispatch.</b> The model is re-fetched when it runs.",
+        "<b>Writing a `handle()` that cannot be repeated.</b> One retry and the customer is charged twice.",
       ],
       quiz: [
         {
-          question: "What does `__('messages.welcome')` do?",
+          question: "What question decides whether work belongs in a queue?",
           options: [
-            "Returns the English text",
-            "Looks the key up in the current locale's language file",
-            "Sets the locale",
-            "Escapes the string",
+            "Is it slow?",
+            "Does the user need it finished before they get a response?",
+            "Does it use the database?",
+            "Is it called often?",
           ],
           correctIndex: 1,
-          explanation: "Which is why the code never has to know which language is active.",
+          explanation: "The request does the minimum that must be true before answering.",
         },
         {
-          question: "Why should a placeholder live in the translation rather than in a concatenation?",
+          question: "How is a model stored when passed to a job?",
           options: [
-            "It is shorter",
-            "Word order differs between languages, so each translation must own it",
-            "Concatenation is slower",
-            "Blade cannot concatenate",
+            "As a full serialised copy",
+            "As an id, and re-fetched when the job runs",
+            "As JSON",
+            "It cannot be passed",
           ],
           correctIndex: 1,
-          explanation: "Japanese puts the name before the greeting; English does not.",
+          explanation: "Which is why a deleted row makes the job fail, and why it sees later edits.",
         },
         {
-          question: "What is the practical difference between PHP and JSON translation files?",
+          question: "What makes a class a queued job?",
           options: [
-            "JSON is faster",
-            "JSON uses the English text as the key, so a missing translation shows readable English",
-            "PHP files cannot take parameters",
-            "JSON supports more languages",
+            "The `Job` suffix",
+            "Implementing `ShouldQueue`",
+            "Being in `app/Jobs`",
+            "Having a `handle()` method",
           ],
           correctIndex: 1,
-          explanation: "PHP files give grouping and structure instead.",
+          explanation: "Without it, `dispatch()` runs the work immediately.",
         },
         {
-          question: "What happens to a translation containing HTML in `{{ __('...') }}`?",
+          question: "Why must `handle()` be safe to run twice?",
           options: [
-            "It renders as HTML",
-            "It is escaped and the tags appear as text",
-            "Blade strips the tags",
-            "It throws",
+            "Laravel always runs jobs twice",
+            "A retry, a duplicate dispatch or a worker restart can each cause it",
+            "For performance",
+            "It does not need to be",
           ],
           correctIndex: 1,
-          explanation: "Blade escapes translated output like any other output.",
+          explanation: "That property is idempotency, and it is the theme of the day.",
         },
       ],
     },
     {
-      id: "pluralization-and-locale",
-      title: "Pluralization, setting & detecting the locale",
-      durationMinutes: 11,
-      explanation: "Counting things in more than one language, and deciding which language you are in.\n\n---\n\n### 1. Basic — plurals\n\n```text\n1 post\n5 posts\n```\n\nThe obvious version:\n\n```php\nif ($count === 1) { echo 'post'; } else { echo 'posts'; }\n```\n\nwhich works in English and stops working immediately. <b>Plural rules are a property of the language</b>, and they differ: some languages have one form, some have two, several have three or more, and the rules are not \"is it 1\".\n\nSo the count belongs in the translation:\n\n```php\n'posts' => '{0} No posts|{1} One post|[2,*] :count posts',\n```\n\n```php\ntrans_choice('messages.posts', $count, ['count' => $count]);\n```\n\n```text\n0  →  No posts\n1  →  One post\n5  →  5 posts\n```\n\n<b>The pipe separates forms and the prefix selects one</b>: exact values in braces, ranges in brackets. A translator for another language writes however many forms that language needs, without your code changing.\n\n`trans_choice()` is what you will see in existing applications, and worth recognising for that reason alone.\n\n---\n\n### 2. Intermediate — setting the locale\n\n```php\nApp::setLocale('ja');\n```\n\n```text\nsetLocale('ja')\n      ↓\ncurrent locale = ja\n      ↓\n__('messages.welcome')\n      ↓\nようこそ\n```\n\nIt applies to the current request only, which is exactly right: the locale is a property of who is asking, not of the application.\n\n<b>Which means it has to be set on every request</b>, and the natural place is middleware, before anything renders.\n\n---\n\n### 3. Advanced — deciding which locale\n\nSeveral sources, and they disagree:\n\n```text\nthe user's saved preference\nthe URL\nthe session\nthe Accept-Language header\nthe default\n```\n\n<b>The order matters more than the mechanism:</b>\n\n```text\n1. what the user explicitly chose\n2. the URL or an application setting\n3. the browser's preference\n4. the fallback\n```\n\nAnd the rule underneath: <b>an explicit choice beats a detected one.</b> Somebody who switched your site to English on a Japanese laptop chose English, and re-detecting Japanese on the next page is the application overruling them. It is a small thing that feels broken.\n\n<b>A fallback locale</b> catches what is missing:\n\n```text\nja\n ↓\nno translation for this key\n ↓\nen\n ↓\nthe English text\n```\n\nWithout it, an incomplete translation file shows raw keys, so a half-translated page reads `messages.invoice.overdue` where a sentence should be. With it, that line is in English and the page still makes sense.\n\nThree practical notes.\n\n<b>Putting the locale in the URL is worth it</b> if pages should be linkable and indexable per language. `/ja/invoices` can be shared and cached; a session-only locale cannot.\n\n<b>Locale is not only text.</b> Dates, numbers and currency have formats too, and a translated interface showing `09/01/2026` to a reader who expects `2026-09-01` is only half-localised.\n\n<b>And translation keys need finding.</b> `php artisan lang:missing`-style tooling, or a test that loads every key referenced in your views, is what stops a language file drifting behind the interface.",
-      diagram: `Plurals
+      id: "dispatch-variants-and-drivers",
+      title: "Dispatch variants & queue drivers",
+      durationMinutes: 12,
+      explanation: "Three ways to dispatch, and where the pending jobs actually live.\n\n---\n\n### 1. Basic — the three dispatches\n\n```php\nProcessPodcast::dispatch($podcast);              // queued\nProcessPodcast::dispatchSync($podcast);          // now, in this process\nProcessPodcast::dispatchAfterResponse($podcast); // after the response\n```\n\n<b>`dispatchSync()` runs the job immediately</b>, in the current request, and returns when it is done. No worker involved.\n\nWhich is useful for a job that is genuinely synchronous, and in tests where you want the work to have happened by the assertion. <b>And it is a trap when used because the queue is not configured</b>: the code looks queued, reviews as queued, and blocks the request like it never was.\n\n<b>`dispatchAfterResponse()` sits between the two:</b>\n\n```text\nHTTP request\n    ↓\nLaravel\n    ↓\nsend the response      ← the user is done waiting\n    ↓\nrun the work\n```\n\nThe user is not waiting, and no worker is needed. But <b>the PHP process is still busy</b>, so it is holding a slot that cannot serve another request, and a failure has nowhere to be recorded.\n\n```text\ndispatchAfterResponse   small, quick, and losing it is survivable\na real queue            heavy work, retries, failure tracking\n```\n\nA thirty-second podcast job is not an after-response task.\n\n---\n\n### 2. Intermediate — drivers\n\n<b>A driver is where pending jobs are stored:</b>\n\n```text\nsync · database · redis · sqs · beanstalkd\n```\n\n<b>`sync` does not queue at all.</b> Dispatch runs the job immediately, which makes local development simple and hides every queue-related behaviour: no retries, no failures table, no concurrency. Code that works on `sync` and breaks on `redis` is a common first surprise.\n\n<b>`database` puts jobs in a table:</b>\n\n```text\nLaravel → jobs table → worker\n```\n\nSimple, inspectable with SQL, and no extra infrastructure. The cost is that every worker polls the database, so a busy queue adds real load to the thing your application also needs for everything else.\n\n<b>`redis` is the usual production answer:</b>\n\n```text\nLaravel → Redis → worker\n```\n\nFast, built for this, and the only driver Horizon supports. If you expect meaningful queue traffic, this is where you end up.\n\n<b>`sqs`</b> is Amazon's managed queue: no server to run, and worth it when you are already on AWS. It has its own constraints, notably a maximum message size and at-least-once delivery, which is the same idempotency point from the last lesson made formal.\n\n---\n\n### 3. Advanced — choosing, and one thing to know about each\n\n```text\nsync        local development, and tests that need it done\ndatabase    small applications, low volume, no extra services\nredis       anything with real queue traffic, and Horizon\nsqs         AWS, managed, no infrastructure to operate\n```\n\n<b>The important thing is to run the same driver in staging that you run in production.</b> Queue bugs are timing bugs, and `sync` in development means every one of them waits to appear until it matters.\n\nThree practical notes.\n\n<b>The database driver needs its tables.</b> `php artisan queue:table` and a migration, and the same for `failed_jobs` and `job_batches`. A driver switch that forgets those fails at the first dispatch.\n\n<b>Redis persistence is a decision.</b> Redis configured without persistence loses every pending job on restart, and \"where did the queue go\" is a question you only ask once.\n\n<b>And the driver is per connection, not global.</b> `config/queue.php` can define several, so a high-volume queue can use Redis while something rare uses the database. That is what the routing in a later lesson builds on.",
+      diagram: `Three dispatches
 
-  1 post · 5 posts
+  ProcessPodcast::dispatch(\$podcast)              queued
+  ProcessPodcast::dispatchSync(\$podcast)          now, this process
+  ProcessPodcast::dispatchAfterResponse(\$podcast) after the response
 
-  ❌ if (\$count === 1) 'post' else 'posts'
+  dispatchSync
+    runs immediately, in the request, no worker.
+    Useful for genuinely synchronous work and in tests.
 
-  Works in English. Stops working immediately.
+    ⚠️  A trap when used because the queue is not
+        configured: the code LOOKS queued, REVIEWS as
+        queued, and blocks the request like it never was.
 
-  Plural rules are a property of the LANGUAGE: some have
-  one form, some two, several three or more, and the
-  rule is not "is it 1".
+  dispatchAfterResponse
 
-    'posts' => '{0} No posts|{1} One post|[2,*] :count posts'
+    HTTP request → Laravel → send the response
+                           → run the work
 
-    trans_choice('messages.posts', \$count, ['count' => \$count])
+    The user is not waiting, and no worker is needed.
+    But the PHP process is still busy — holding a slot
+    that cannot serve another request — and a failure
+    has nowhere to be recorded.
 
-      0 → No posts
-      1 → One post
-      5 → 5 posts
+      after-response   small, quick, losing it survivable
+      a real queue     heavy work, retries, failure tracking
 
-  The pipe separates forms; the prefix selects one.
-  Exact values in braces, ranges in brackets.
-
-  A translator writes however many forms their language
-  needs, with no change to your code.
-
-
-Setting the locale
-
-    App::setLocale('ja')
-          ↓
-    current locale = ja
-          ↓
-    __('messages.welcome')  →  ようこそ
-
-  It applies to the CURRENT REQUEST, which is right:
-  the locale belongs to who is asking, not to the
-  application.
-
-  So it must be set on every request — middleware,
-  before anything renders.
+    A thirty-second podcast job is not an after-response
+    task.
 
 
-Deciding which locale
+Drivers: where pending jobs live
 
-  Sources, and they disagree:
+  sync · database · redis · sqs · beanstalkd
 
-    the user's saved preference
-    the URL
-    the session
-    the Accept-Language header
-    the default
+  sync       does not queue at all. Dispatch runs it.
+             Simple locally, and hides every queue
+             behaviour: no retries, no failures table,
+             no concurrency. Works on sync, breaks on
+             redis is a common first surprise.
 
-  Order matters more than mechanism:
+  database   Laravel → jobs table → worker
+             Simple, inspectable with SQL, no extra
+             infrastructure. Every worker POLLS the
+             database, so a busy queue loads the thing
+             your application needs for everything else.
 
-    1. what the user explicitly CHOSE
-    2. the URL or an application setting
-    3. the browser's preference
-    4. the fallback
+  redis      Laravel → Redis → worker
+             Fast, built for this, and the only driver
+             Horizon supports.
 
-  An explicit choice beats a detected one. Somebody who
-  switched to English on a Japanese laptop chose English.
-  Re-detecting Japanese on the next page is the
-  application overruling them, and it feels broken.
+  sqs        Amazon's managed queue. No server to run.
+             Max message size, and at-least-once
+             delivery — the idempotency point from the
+             last lesson, made formal.
 
 
-Fallback
+Choosing
 
-    ja
-     ↓
-    no translation for this key
-     ↓
-    en
-     ↓
-    the English text
+  sync        local development, tests that need it done
+  database    small apps, low volume, no extra services
+  redis       real queue traffic, and Horizon
+  sqs         AWS, managed, nothing to operate
 
-  Without it, an incomplete file shows raw keys, so a
-  half-translated page reads messages.invoice.overdue
-  where a sentence should be.
+  ⚠️  Run the SAME driver in staging as in production.
+      Queue bugs are timing bugs, and sync in
+      development means every one waits until it matters.
 
 
 Three practical notes
 
-  The locale in the URL is worth it if pages should be
-  linkable and indexable per language. /ja/invoices can
-  be shared and cached; a session-only locale cannot.
+  The database driver needs its tables: queue:table,
+  plus failed_jobs and job_batches. A driver switch
+  that forgets them fails at the first dispatch.
 
-  Locale is not only TEXT. Dates, numbers and currency
-  have formats too. A translated page showing 09/01/2026
-  to someone expecting 2026-09-01 is half-localised.
+  Redis persistence is a decision. Without it, a restart
+  loses every pending job. "Where did the queue go" is
+  a question you ask once.
 
-  Translation keys need finding. Tooling, or a test that
-  loads every key your views reference, is what stops a
-  language file drifting behind the interface.`,
+  The driver is per CONNECTION, not global. config/queue
+  can define several, so a high-volume queue uses Redis
+  while something rare uses the database — which the
+  routing lesson builds on.`,
       codeExample: {
-        title: "Plurals, and choosing a locale per request",
+        title: "Dispatching, and configuring where jobs live",
         code: `<?php
-// ---------- Plurals ----------
 
-// lang/en/messages.php
-return [
-    'posts'    => '{0} No posts|{1} One post|[2,*] :count posts',
-    'invoices' => '{0} No invoices|{1} 1 invoice|[2,*] :count invoices',
-];
+// ---------- The three dispatches ----------
 
-// lang/ja/messages.php
-return [
-    // Japanese has one form. The translator decides that,
-    // not your code.
-    'posts' => ':count 件の投稿',
-];
+// Queued: a worker picks it up.
+ProcessPodcast::dispatch($podcast);
+
+// Now, in this process. No worker.
+ProcessPodcast::dispatchSync($podcast);
+
+// After the response is sent, still in this process.
+ProcessPodcast::dispatchAfterResponse($podcast);
+
+
+// ---------- Where each belongs ----------
+
+// ✓ Heavy, needs retries and a failure record.
+ProcessPodcast::dispatch($podcast);
+
+// ✓ Small, quick, and losing it is survivable.
+RecordPageView::dispatchAfterResponse($request->path());
+
+// ❌ Thirty seconds of work holding a PHP process that
+//    cannot serve another request, with no failure record.
+ProcessPodcast::dispatchAfterResponse($podcast);
+
+// ❌ Used because the queue is not configured. The code
+//    reads as queued and blocks the request.
+ProcessPodcast::dispatchSync($podcast);
 
 
 <?php
-trans_choice('messages.posts', 0);   // No posts
-trans_choice('messages.posts', 1);   // One post
-trans_choice('messages.posts', 5, ['count' => 5]);   // 5 posts
+// ---------- Conditional dispatch ----------
 
-// The pipe separates forms.
-// {0} {1}   exact values
-// [2,*]     a range
+ProcessPodcast::dispatchIf($podcast->needsProcessing(), $podcast);
+ProcessPodcast::dispatchUnless($podcast->isProcessed(), $podcast);
 
 
 <?php
-// ---------- Setting it, per request ----------
+// ---------- config/queue.php ----------
 
-// app/Http/Middleware/SetLocale.php
+return [
+    'default' => env('QUEUE_CONNECTION', 'database'),
 
-namespace App\\Http\\Middleware;
+    'connections' => [
 
-use Closure;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\App;
+        // Does not queue. Runs immediately.
+        'sync' => ['driver' => 'sync'],
 
-class SetLocale
+        // A table. Simple, inspectable, polls the database.
+        'database' => [
+            'driver' => 'database',
+            'table'  => 'jobs',
+            'retry_after' => 90,
+        ],
+
+        // The usual production answer, and the only one
+        // Horizon supports.
+        'redis' => [
+            'driver'      => 'redis',
+            'connection'  => 'default',
+            'queue'       => env('REDIS_QUEUE', 'default'),
+            'retry_after' => 90,
+        ],
+
+        // Managed. Nothing to operate.
+        'sqs' => [
+            'driver' => 'sqs',
+            'queue'  => env('SQS_QUEUE'),
+        ],
+
+    ],
+];
+
+// Several connections can coexist: a high-volume queue
+// on Redis, something rare on the database.
+
+
+<?php
+// ---------- Choosing per dispatch ----------
+
+ProcessPodcast::dispatch($podcast)->onConnection('redis');
+GenerateReport::dispatch($user)->onQueue('reports');
+
+
+# ---------- The tables the database driver needs ----------
+
+php artisan queue:table
+php artisan queue:failed-table
+php artisan queue:batches-table
+php artisan migrate
+
+# A driver switch that forgets these fails at the first
+# dispatch.
+
+
+# ---------- And the rule worth following ----------
+
+# .env, locally
+QUEUE_CONNECTION=redis
+
+# Not sync. Queue bugs are timing bugs, and sync hides
+# every one of them until production.`,
+      },
+      keyTakeaways: [
+        "<b>`dispatch()` queues, `dispatchSync()` runs immediately, and `dispatchAfterResponse()` runs after the response.</b>",
+        "<b>`dispatchSync()` used because the queue is unconfigured is a trap</b>: the code reads as queued and blocks the request.",
+        "<b>`dispatchAfterResponse()` frees the user but not the PHP process</b>, and offers no retries or failure record.",
+        "It suits small, quick work whose loss is survivable, and not a thirty-second job.",
+        "<b>A driver is where pending jobs are stored</b>: `sync`, `database`, `redis`, `sqs`.",
+        "<b>`sync` does not queue at all</b>, hiding retries, failures and concurrency until production.",
+        "<b>`database` is simple and inspectable</b>, at the cost of every worker polling your main database.",
+        "<b>`redis` is the usual production choice</b>, and the only driver Horizon supports.",
+        "<b>Run the same driver in staging as in production</b>, because queue bugs are timing bugs.",
+        "The database driver needs its tables, Redis needs persistence configured, and drivers are per connection.",
+      ],
+      commonMistakes: [
+        "<b>Using `dispatchSync()` to work around a broken queue.</b> The request blocks and the code hides it.",
+        "<b>Putting heavy work in `dispatchAfterResponse()`.</b> The PHP process stays busy and failures vanish.",
+        "<b>Developing on `sync` and deploying on `redis`.</b> Every timing bug appears for the first time in production.",
+        "<b>Switching to the database driver without running the migrations.</b> The first dispatch fails.",
+        "<b>Running Redis without persistence.</b> A restart empties the queue with no record of what was in it.",
+      ],
+      quiz: [
+        {
+          question: "What does `dispatchAfterResponse()` free up?",
+          options: [
+            "The PHP process",
+            "The user's wait, but not the PHP process",
+            "Both",
+            "Neither",
+          ],
+          correctIndex: 1,
+          explanation: "The process stays busy, and a failure has nowhere to be recorded.",
+        },
+        {
+          question: "What does the `sync` driver do?",
+          options: [
+            "Queues jobs and runs them in order",
+            "Runs the job immediately, so no queue behaviour exists",
+            "Stores jobs in the database",
+            "Runs jobs after the response",
+          ],
+          correctIndex: 1,
+          explanation: "Which hides retries, failures and concurrency until production.",
+        },
+        {
+          question: "What is the cost of the database queue driver?",
+          options: [
+            "It cannot retry",
+            "Every worker polls your main database, adding load to what the application also needs",
+            "It loses jobs on restart",
+            "It has a message size limit",
+          ],
+          correctIndex: 1,
+          explanation: "Simple and inspectable, at that price.",
+        },
+        {
+          question: "Why run the same queue driver locally as in production?",
+          options: [
+            "For speed",
+            "Queue bugs are timing bugs, and `sync` hides all of them until it matters",
+            "Laravel requires it",
+            "To use Horizon",
+          ],
+          correctIndex: 1,
+          explanation: "Code that works on `sync` and breaks on `redis` is a common first surprise.",
+        },
+      ],
+    },
+    {
+      id: "workers",
+      title: "Workers, queue:work & delayed dispatch",
+      durationMinutes: 11,
+      explanation: "Dispatching puts a job somewhere. Something has to come and get it.\n\n---\n\n### 1. Basic — what a worker does\n\n```text\nWorker\n  ↓\nget a job\n  ↓\nrun it\n  ↓\nget the next job\n  ↓\n...\n```\n\n```bash\nphp artisan queue:work\n```\n\n<b>It is a long-running process</b>, which is the whole difference from everything else in Laravel. A web request boots the framework, answers, and exits. A worker boots once and then loops, potentially for days.\n\nThat single fact causes most worker confusion:\n\n<b>Code changes do not take effect.</b> The worker booted with the old code and is still running it. Deploying without restarting workers means new jobs running old logic, which produces bugs that make no sense against the code in front of you.\n\n```bash\nphp artisan queue:restart\n```\n\ntells workers to finish the current job and exit, so the process manager starts them fresh. <b>That command belongs in every deploy script.</b>\n\n<b>And memory accumulates.</b> A process alive for days holds whatever leaks, which is why workers are given limits and restarted regularly rather than trusted to run forever.\n\n---\n\n### 2. Intermediate — `work` versus `listen`\n\n```bash\nphp artisan queue:listen\n```\n\nreboots the framework for every job:\n\n```text\nboot Laravel → job → reload → job → reload → ...\n```\n\nSo code changes apply immediately, and every job pays the boot cost.\n\n```text\nqueue:work      boots once, fast, needs a restart to pick up changes\nqueue:listen    boots per job, slow, always current\n```\n\n<b>`work` in production, `listen` occasionally while developing</b> if restarting is annoying you. Most people use `work` everywhere and get used to `queue:restart`.\n\nThe options worth knowing:\n\n```text\n--queue=high,default    process these queues, in this order\n--tries=3               attempts before failing\n--timeout=60            seconds before killing a job\n--max-jobs=1000         exit after this many\n--max-time=3600         exit after this long\n--sleep=3               seconds to wait when the queue is empty\n--stop-when-empty       exit when there is nothing left\n```\n\n<b>`--max-jobs` and `--max-time` are the memory answer:</b> exit deliberately, and let the process manager start a fresh one.\n\n---\n\n### 3. Advanced — delay, and what \"later\" means\n\n```php\nProcessPodcast::dispatch($podcast)->delay(now()->addMinutes(10));\n```\n\n```text\ndispatch → waiting → 10 minutes → a worker runs it\n```\n\nUseful for:\n\n```text\nreminders · scheduled notifications\nfollow-ups · delayed cleanup\n```\n\nAnd a useful pattern with it: <b>a delay is how you wait for something you cannot control.</b> A webhook that says a file is being processed, checked again in thirty seconds, is a delayed job re-dispatching itself until the answer arrives.\n\nThree things about delays that surprise people.\n\n<b>The delay is a minimum, not a promise.</b> The job becomes available at that time; a busy queue runs it later. If the exact time matters, a delay is the wrong tool and the scheduler is the right one.\n\n<b>SQS caps delays at fifteen minutes.</b> Longer delays on that driver silently need a different approach.\n\n<b>And a delayed job still holds its data.</b> Dispatching ten thousand jobs delayed by a day means ten thousand rows sitting in your queue for a day, which is fine on Redis and noticeable on a database driver.\n\nOne last practical note: <b>a worker only processes the queues you tell it to.</b> A job dispatched to `reports` with no worker listening to `reports` sits there forever, and looks exactly like a job that is broken. The first thing to check when a job never runs is whether anything is watching that queue.\n\nOne more limit alongside those: <b>`--memory=128` restarts a worker once it exceeds that many megabytes.</b>\n\n```bash\nphp artisan queue:work --memory=128 --max-time=3600\n```\n\nWhich matters because <b>memory is usually what actually kills a worker</b>, not time or job count. A job loading a large collection leaves the process bigger than it found it, and without a ceiling that grows until the OS intervenes at whatever moment is least convenient.",
+      diagram: `What a worker does
+
+    Worker → get a job → run it → get the next → ...
+
+    php artisan queue:work
+
+  It is a LONG-RUNNING process, which is the whole
+  difference. A web request boots, answers and exits.
+  A worker boots once and loops, potentially for days.
+
+  Which causes most worker confusion:
+
+    ⚠️  Code changes do not take effect.
+        The worker booted with the old code and is still
+        running it. Deploying without restarting workers
+        means new jobs running old logic — bugs that make
+        no sense against the code in front of you.
+
+        php artisan queue:restart
+
+        finishes the current job and exits, so the
+        process manager starts them fresh.
+        This belongs in every deploy script.
+
+    ⚠️  Memory accumulates.
+        A process alive for days holds whatever leaks,
+        which is why workers get limits rather than
+        being trusted to run forever.
+
+
+work versus listen
+
+  queue:listen reboots the framework per job:
+
+    boot → job → reload → job → reload → ...
+
+    queue:work     boots once, fast, needs a restart
+                   to pick up changes
+    queue:listen   boots per job, slow, always current
+
+  work in production. listen occasionally while
+  developing. Most people use work everywhere and get
+  used to queue:restart.
+
+
+  Options worth knowing:
+
+    --queue=high,default   these queues, in this order
+    --tries=3              attempts before failing
+    --timeout=60           seconds before killing a job
+    --max-jobs=1000        exit after this many
+    --max-time=3600        exit after this long
+    --sleep=3              wait when the queue is empty
+    --stop-when-empty      exit when nothing is left
+
+  --max-jobs and --max-time are the memory answer: exit
+  deliberately, and let the process manager start a
+  fresh one.
+
+
+Delay
+
+    ->delay(now()->addMinutes(10))
+
+    dispatch → waiting → 10 minutes → a worker runs it
+
+  reminders · scheduled notifications
+  follow-ups · delayed cleanup
+
+  And: a delay is how you wait for something you cannot
+  control. A job that checks again in thirty seconds,
+  re-dispatching itself until the answer arrives.
+
+
+  Three surprises:
+
+    The delay is a MINIMUM, not a promise. A busy queue
+    runs it later. If the exact time matters, the
+    scheduler is the right tool.
+
+    SQS caps delays at fifteen minutes.
+
+    A delayed job still holds its data. Ten thousand
+    jobs delayed by a day is ten thousand rows sitting
+    there for a day — fine on Redis, noticeable on a
+    database driver.
+
+
+  ⚠️  A worker only processes the queues you tell it to.
+      A job on 'reports' with nothing listening to
+      'reports' sits there forever, and looks exactly
+      like a broken job.
+
+      First thing to check when a job never runs.`,
+      codeExample: {
+        title: "Running workers, and delaying work",
+        code: `# ---------- The worker ----------
+
+php artisan queue:work
+
+# Long-running. Boots once, then loops.
+
+
+# Options that matter in production:
+
+php artisan queue:work redis \\
+    --queue=high,default,low \\
+    --tries=3 \\
+    --timeout=60 \\
+    --max-jobs=1000 \\
+    --max-time=3600 \\
+    --sleep=3
+
+# --queue     processed in that order: high first
+# --max-jobs  exit after 1000, and let the process
+# --max-time  manager start a fresh process. This is
+#             the answer to a long-lived process
+#             accumulating memory.
+
+
+# ---------- After every deploy ----------
+
+php artisan queue:restart
+
+# Workers finish the current job and exit. Without this,
+# they keep running the code they booted with, and new
+# jobs execute old logic.
+
+
+# ---------- While developing ----------
+
+php artisan queue:listen
+
+# Reboots per job, so code changes apply immediately.
+# Slower, and fine locally.
+
+php artisan queue:work --stop-when-empty
+# Useful in a test or a one-off script.
+
+
+<?php
+// ---------- Delay ----------
+
+ProcessPodcast::dispatch($podcast)->delay(now()->addMinutes(10));
+
+SendReminder::dispatch($invoice)->delay(
+    $invoice->due_at->subDays(3)
+);
+
+// A job that waits for something outside your control,
+// by re-dispatching itself:
+class CheckTranscodingStatus implements ShouldQueue
 {
-    public function handle(Request $request, Closure $next)
+    public function __construct(public Video $video, public int $attempt = 1) {}
+
+    public function handle(): void
     {
-        App::setLocale($this->resolve($request));
+        $status = $this->transcoder->status($this->video->external_id);
 
-        return $next($request);
-    }
+        if ($status === 'processing' && $this->attempt < 20) {
+            self::dispatch($this->video, $this->attempt + 1)
+                ->delay(now()->addSeconds(30));
 
-    protected function resolve(Request $request): string
-    {
-        $supported = ['en', 'ja', 'ne'];
-
-        // 1. What the user explicitly chose. An explicit
-        //    choice beats a detected one, always.
-        if ($locale = $request->user()?->locale) {
-            return $locale;
+            return;
         }
 
-        // 2. The URL, or a session set by a language switcher.
-        if (in_array($request->segment(1), $supported, true)) {
-            return $request->segment(1);
-        }
-
-        if ($locale = $request->session()->get('locale')) {
-            return $locale;
-        }
-
-        // 3. The browser's preference, whitelisted.
-        if ($locale = $request->getPreferredLanguage($supported)) {
-            return $locale;
-        }
-
-        // 4. The fallback.
-        return config('app.fallback_locale');
+        $this->video->update(['status' => $status]);
     }
 }
 
 
 <?php
-// config/app.php
+// ---------- Delay is a minimum, not a promise ----------
 
-'locale'          => 'en',
-'fallback_locale' => 'en',
+// Available in 10 minutes. Run in 10 minutes, or later,
+// depending on how busy the queue is.
+SendReminder::dispatch($invoice)->delay(now()->addMinutes(10));
 
-// Without a fallback, a half-translated page shows
-// "messages.invoice.overdue" where a sentence should be.
-
-
-<?php
-// ---------- The language switcher ----------
-
-Route::post('/locale', function (Request $request) {
-    $request->validate([
-        'locale' => ['required', 'in:en,ja,ne'],
-    ]);
-
-    // Save it against the user when there is one, so the
-    // choice survives the next device.
-    $request->user()?->update(['locale' => $request->locale]);
-
-    $request->session()->put('locale', $request->locale);
-
-    return back();
-});
+// If the exact time matters, this is the scheduler's job:
+// routes/console.php
+Schedule::command('invoices:remind')->dailyAt('09:00');
 
 
 <?php
-// ---------- Locale is not only text ----------
+// ---------- Choosing a queue ----------
 
-// A translated page showing dates in the wrong format is
-// only half localised.
-$invoice->created_at
-    ->locale(app()->getLocale())
-    ->isoFormat('LL');
+GenerateReport::dispatch($user)->onQueue('reports');
 
-Number::currency($invoice->total, in: 'JPY', locale: app()->getLocale());`,
+// ⚠️ And something must be listening to it:
+//    php artisan queue:work --queue=high,default,reports
+//
+// A job on a queue no worker watches sits there forever,
+// and looks exactly like a broken job. First thing to
+// check when a job never runs.`,
       },
       keyTakeaways: [
-        "<b>Plural rules are a property of the language</b>, and \"is it 1\" is only the English rule.",
-        "<b>The count belongs in the translation</b>, with forms separated by pipes and selected by `{0}`, `{1}` or `[2,*]`.",
-        "`trans_choice()` picks the right form, and appears throughout existing Laravel applications.",
-        "<b>`App::setLocale()` applies to the current request</b>, because the locale belongs to who is asking.",
-        "<b>It has to be set on every request</b>, which means middleware, before anything renders.",
-        "<b>An explicit user choice beats a detected one</b>, always: re-detecting overrules somebody who already chose.",
-        "The usual order is saved preference, then URL or session, then the browser, then the fallback.",
-        "<b>A fallback locale stops a half-translated page showing raw keys</b>, which is what missing translations do.",
-        "<b>Putting the locale in the URL makes pages linkable and cacheable per language.</b>",
-        "<b>Locale is not only text</b>: dates, numbers and currency have formats too.",
+        "<b>A worker is a long-running process</b> that loops over jobs, unlike a request that boots, answers and exits.",
+        "<b>A worker keeps running the code it booted with</b>, so a deploy without a restart runs old logic.",
+        "<b>`php artisan queue:restart` belongs in every deploy script.</b>",
+        "<b>Long-lived processes accumulate memory</b>, which `--max-jobs` and `--max-time` address by exiting deliberately.",
+        "<b>`queue:work` boots once and is fast; `queue:listen` reboots per job and is always current.</b>",
+        "Use `work` in production, and `listen` locally if restarting becomes annoying.",
+        "`--queue=high,default` sets the order queues are drained in, and `--timeout` kills a job that hangs.",
+        "<b>`->delay()` makes a job available later</b>, which suits reminders, follow-ups and delayed cleanup.",
+        "<b>A delay is a minimum, not a promise</b>; when the exact time matters, use the scheduler.",
+        "<b>A worker only processes the queues it is told to</b>, so a job on an unwatched queue waits forever.",
       ],
       commonMistakes: [
-        "<b>Branching on the count in PHP.</b> That encodes the English plural rule into your application.",
-        "<b>Detecting the locale on every request and ignoring a saved preference.</b> The user's choice is silently overruled.",
-        "<b>Trusting `Accept-Language` without a whitelist.</b> A header value should not select an arbitrary file.",
-        "<b>Leaving the fallback locale unset.</b> A missing key renders as a raw key in the interface.",
-        "<b>Translating the text and leaving dates in one format.</b> The page is half localised and looks it.",
+        "<b>Deploying without `queue:restart`.</b> Workers run the old code and produce bugs that match no source you can see.",
+        "<b>Running a worker with no memory or job limit.</b> It grows until something kills it at an inconvenient moment.",
+        "<b>Using `queue:listen` in production.</b> Every job pays a full framework boot.",
+        "<b>Dispatching to a named queue nothing is listening to.</b> The job waits forever and looks broken.",
+        "<b>Relying on `->delay()` for an exact time.</b> It is the earliest the job may run, not when it will.",
       ],
       quiz: [
         {
-          question: "Why not write `if ($count === 1)` for pluralization?",
+          question: "Why does a code change not affect a running worker?",
           options: [
-            "It is slower",
-            "Plural rules differ by language, and \"is it 1\" is only the English rule",
-            "Laravel forbids it",
-            "It cannot be translated",
+            "The cache needs clearing",
+            "The worker is a long-running process still executing the code it booted with",
+            "Jobs are compiled",
+            "It does affect it",
           ],
           correctIndex: 1,
-          explanation: "Several languages have three or more forms.",
+          explanation: "`queue:restart` is what makes workers pick up new code.",
         },
         {
-          question: "Where should the locale be set?",
-          options: [
-            "In `config/app.php` only",
-            "Per request, usually in middleware, because it belongs to who is asking",
-            "In the model",
-            "At deploy time",
-          ],
-          correctIndex: 1,
-          explanation: "`App::setLocale()` applies to the current request.",
-        },
-        {
-          question: "Which source of locale should win?",
-          options: [
-            "The `Accept-Language` header",
-            "The user's explicit choice",
-            "The server default",
-            "Whichever is checked first",
-          ],
-          correctIndex: 1,
-          explanation: "Re-detecting overrules somebody who already told you.",
-        },
-        {
-          question: "What does a fallback locale prevent?",
-          options: [
-            "A 500 error",
-            "Missing translations rendering as raw keys in the interface",
-            "The wrong date format",
-            "An invalid locale being set",
-          ],
-          correctIndex: 1,
-          explanation: "A half-translated page then reads in English rather than in keys.",
-        },
-      ],
-    },
-    {
-      id: "collections-core",
-      title: "Collections — map, filter, reduce & pluck",
-      durationMinutes: 12,
-      explanation: "You have used collections since Day 14. This is the part that changes how code reads.\n\n---\n\n### 1. Basic — a pipeline instead of a loop\n\n```php\n$users\n    ->filter(...)\n    ->map(...)\n    ->sortBy(...);\n```\n\n```text\nCollection → transform → filter → group → sort → result\n```\n\nEach step does one thing and hands the result to the next, so the shape of the transformation is visible without reading any bodies.\n\n<b>`map()` transforms every item:</b>\n\n```php\n$names = $users->map(fn ($user) => $user->name);\n```\n\n```text\nA → f(A)\nB → f(B)\nC → f(C)\n```\n\nSame number of items, different contents.\n\n<b>`filter()` keeps the ones that pass:</b>\n\n```php\n$active = $users->filter(fn ($user) => $user->active);\n```\n\n```text\nA ✓    A\nB ✗ →  C\nC ✓\nD ✗\n```\n\nFewer items, unchanged contents.\n\n<b>Those two together are most of what you will write</b>, and knowing which one you want is the entire skill: are you changing each item, or removing some?\n\n---\n\n### 2. Intermediate — reduce and pluck\n\n<b>`reduce()` collapses many values into one:</b>\n\n```php\n$total = $orders->reduce(fn ($total, $order) => $total + $order->amount, 0);\n```\n\n```text\n100 + 200 + 300  →  600\n```\n\nThe second argument is the starting value, and forgetting it is the usual bug: without it the first call receives `null`.\n\nFor a plain sum there is a shorter way, and it is clearer:\n\n```php\n$orders->sum('amount');\n```\n\n<b>Reach for `reduce()` when the result is not a number</b>: building a keyed structure, or folding items into an object.\n\n<b>`pluck()` extracts one field:</b>\n\n```php\n$names = $users->pluck('name');\n```\n\nagainst the version everybody writes first:\n\n```php\n$names = [];\nforeach ($users as $user) { $names[] = $user->name; }\n```\n\nSame output, and the first one says what it is doing. `pluck('name', 'id')` keys the result, which is how you build a lookup table in one line.\n\n---\n\n### 3. Advanced — the trap that matters\n\n<b>A collection method runs in PHP; a query method runs in the database.</b> Day 16 said this, and it is worth repeating because collections make it so easy to get wrong:\n\n```text\nUser::where('active', true)->get()      the database filters, 240 rows\nUser::all()->filter(...)               900 rows fetched, PHP discards 660\n```\n\nBoth give the same answer. <b>If the condition can be a `WHERE` clause, it belongs in the query.</b>\n\nThe same applies to `sum()`, `count()` and `groupBy()`: `withSum()` in the query beats summing a loaded collection every time.\n\nThree more things worth knowing.\n\n<b>Collections are immutable.</b> `filter()` returns a new collection and leaves the original alone, which is why a chain is safe and why forgetting to assign the result produces \"nothing happened\".\n\n<b>`filter()` preserves keys.</b> After filtering, the keys are `0, 2, 5`, and `json_encode` turns that into an object rather than an array. `->values()` is the fix, and the symptom is an API returning `{\"0\": …}` instead of `[…]`.\n\n<b>And a chain is not free.</b> Each step iterates the whole collection, so five steps over ten thousand items is fifty thousand iterations. Fine almost always, and worth knowing when it is not.",
-      diagram: `A pipeline instead of a loop
-
-  \$users->filter(...)->map(...)->sortBy(...)
-
-    Collection → transform → filter → group → sort → result
-
-  Each step does one thing and hands on the result, so
-  the shape of the transformation is visible without
-  reading any bodies.
-
-
-  map()      transform every item
-
-    A → f(A)          same number of items
-    B → f(B)          different contents
-    C → f(C)
-
-  filter()   keep the ones that pass
-
-    A ✓        A       fewer items
-    B ✗   →    C       unchanged contents
-    C ✓
-    D ✗
-
-  Those two are most of what you write, and the whole
-  skill is knowing which you want: are you CHANGING each
-  item, or REMOVING some?
-
-
-reduce and pluck
-
-  \$orders->reduce(fn (\$total, \$o) => \$total + \$o->amount, 0)
-
-    100 + 200 + 300  →  600
-
-  The second argument is the starting value. Forgetting
-  it is the usual bug: the first call gets null.
-
-  For a plain sum, ->sum('amount') is shorter and clearer.
-  Reach for reduce() when the result is NOT a number:
-  a keyed structure, or folding into an object.
-
-  \$users->pluck('name')
-
-    against the version everybody writes first:
-
-      \$names = [];
-      foreach (\$users as \$user) { \$names[] = \$user->name; }
-
-  Same output. One of them says what it is doing.
-  pluck('name', 'id') keys the result — a lookup table
-  in one line.
-
-
-The trap that matters
-
-  A collection method runs in PHP.
-  A query method runs in the DATABASE.
-
-    User::where('active', true)->get()
-        the database filters, 240 rows come back
-
-    User::all()->filter(...)
-        900 rows fetched, PHP discards 660
-
-  Same answer. If the condition can be a WHERE clause,
-  it belongs in the query. Same for sum, count and
-  groupBy — withSum() beats summing a loaded collection.
-
-
-Three more things
-
-  Collections are IMMUTABLE. filter() returns a new one
-  and leaves the original alone — which is why chains
-  are safe, and why forgetting to assign the result
-  looks like "nothing happened".
-
-  filter() PRESERVES KEYS. Afterwards they are 0, 2, 5,
-  and json_encode turns that into an object. ->values()
-  is the fix. The symptom is an API returning
-  {"0": …} instead of […].
-
-  A chain is not free. Each step iterates the whole
-  collection: five steps over ten thousand items is
-  fifty thousand iterations. Fine almost always.`,
-      codeExample: {
-        title: "The four you will use most",
-        code: `<?php
-
-// ---------- map: change every item ----------
-
-$names = $users->map(fn ($user) => $user->name);
-
-$rows = $invoices->map(fn ($invoice) => [
-    'number' => $invoice->number,
-    'total'  => $invoice->total->format(),
-]);
-
-
-// ---------- filter: keep some ----------
-
-$active = $users->filter(fn ($user) => $user->active);
-
-// ⚠️ Keys are preserved: 0, 2, 5. json_encode makes that
-//    an object. ->values() reindexes.
-$active = $users->filter(fn ($user) => $user->active)->values();
-
-// The higher-order form, when the test is a property:
-$active = $users->filter->active;
-
-
-// ---------- reduce: many into one ----------
-
-$total = $orders->reduce(
-    fn ($carry, $order) => $carry + $order->amount,
-    0,          // ⚠️ without this, the first call gets null
-);
-
-// For a plain sum, this is shorter and clearer:
-$total = $orders->sum('amount');
-
-// reduce() earns its place when the result is not a number:
-$byStatus = $invoices->reduce(function (array $carry, $invoice) {
-    $carry[$invoice->status] ??= 0;
-    $carry[$invoice->status] += $invoice->total;
-
-    return $carry;
-}, []);
-
-
-// ---------- pluck: one field ----------
-
-$names = $users->pluck('name');
-
-// Keyed: a lookup table in one line.
-$namesById = $users->pluck('name', 'id');
-// [1 => 'Rajan', 2 => 'Alice']
-
-// Nested with dots.
-$countries = $users->pluck('profile.country');
-
-
-<?php
-// ---------- The trap ----------
-
-// ❌ 900 rows fetched, and PHP throws 660 away.
-User::all()->filter(fn ($user) => $user->active);
-
-// ✓ The database filters. 240 rows come back.
-User::where('active', true)->get();
-
-// ❌ Every invoice loaded to add up one column.
-Invoice::all()->sum('total');
-
-// ✓ One query, one number.
-Invoice::sum('total');
-
-// ✓ And per customer, without loading any invoices:
-Customer::withSum('invoices', 'total')->get();
-
-
-<?php
-// ---------- Immutability ----------
-
-$users->filter(fn ($user) => $user->active);
-
-// $users is unchanged. This line did nothing.
-
-$active = $users->filter(fn ($user) => $user->active);
-
-// Which is also why a chain is safe: no step mutates
-// what came before it.`,
-      },
-      keyTakeaways: [
-        "<b>A collection chain shows the shape of a transformation</b> without you reading the bodies.",
-        "<b>`map()` changes every item and keeps the count; `filter()` keeps some and leaves them unchanged.</b>",
-        "Knowing which of those two you want is most of the skill.",
-        "<b>`reduce()` collapses many values into one</b>, and its second argument is the starting value.",
-        "For a plain sum, `sum()` is shorter and clearer; `reduce()` earns its place when the result is a structure.",
-        "<b>`pluck()` extracts one field</b>, and `pluck('name', 'id')` builds a keyed lookup in a line.",
-        "<b>A collection method runs in PHP; a query method runs in the database.</b>",
-        "<b>If a condition can be a `WHERE` clause, it belongs in the query</b>, and the same goes for sums and counts.",
-        "<b>Collections are immutable</b>, so forgetting to assign the result looks like nothing happened.",
-        "<b>`filter()` preserves keys</b>, which turns a JSON array into an object; `values()` is the fix.",
-      ],
-      commonMistakes: [
-        "<b>Calling `all()` and filtering in PHP.</b> Every row is fetched and most are discarded.",
-        "<b>Omitting `reduce()`'s initial value.</b> The first iteration receives `null` and the arithmetic breaks.",
-        "<b>Forgetting `values()` after `filter()`.</b> The JSON response becomes an object keyed by index.",
-        "<b>Not assigning the result of a chain.</b> Collections are immutable, so the original is untouched.",
-        "<b>Using `reduce()` for a sum.</b> `sum()` says the same thing in one word.",
-      ],
-      quiz: [
-        {
-          question: "What is the difference between `map()` and `filter()`?",
+          question: "What is the difference between `queue:work` and `queue:listen`?",
           options: [
             "None",
-            "`map()` changes every item; `filter()` removes some and leaves the rest unchanged",
-            "`filter()` is faster",
-            "`map()` returns an array",
+            "`work` boots once and is fast; `listen` reboots per job and always has current code",
+            "`listen` is for Redis only",
+            "`work` cannot retry",
           ],
           correctIndex: 1,
-          explanation: "Changing each item, or removing some: that is the question.",
+          explanation: "`work` in production, and a restart after each deploy.",
         },
         {
-          question: "What is wrong with `User::all()->filter(fn ($u) => $u->active)`?",
+          question: "Why give a worker `--max-jobs` or `--max-time`?",
           options: [
-            "Nothing",
-            "Every row is fetched and PHP discards most of them; the database should filter",
-            "`filter()` does not work on models",
-            "It returns an array",
+            "To limit database load",
+            "So it exits deliberately and a fresh process starts, rather than accumulating memory for days",
+            "To retry failed jobs",
+            "To prioritise queues",
           ],
           correctIndex: 1,
-          explanation: "If the condition can be a `WHERE` clause, it belongs in the query.",
+          explanation: "A long-lived process holds whatever leaks.",
         },
         {
-          question: "Why does a filtered collection sometimes serialise as a JSON object?",
+          question: "A job never runs. What is the first thing to check?",
           options: [
-            "A cast is missing",
-            "`filter()` preserves keys, so the indexes are no longer sequential",
-            "Collections always serialise as objects",
-            "It is a bug",
+            "The database connection",
+            "Whether any worker is listening to the queue it was dispatched to",
+            "The job's constructor",
+            "The cache driver",
           ],
           correctIndex: 1,
-          explanation: "`->values()` reindexes and restores the array shape.",
-        },
-        {
-          question: "What does `reduce()`'s second argument do?",
-          options: [
-            "Sets the key",
-            "Provides the starting value, without which the first call receives `null`",
-            "Limits the iterations",
-            "Chooses the field",
-          ],
-          correctIndex: 1,
-          explanation: "Forgetting it is the usual `reduce()` bug.",
+          explanation: "A job on an unwatched queue waits forever and looks broken.",
         },
       ],
     },
     {
-      id: "grouping-and-higher-order",
-      title: "groupBy, sortBy, each, when & higher-order messages",
-      durationMinutes: 11,
-      explanation: "The methods that turn a list into a report, and the syntax that makes short chains readable.\n\n---\n\n### 1. Basic — grouping and sorting\n\n<b>`groupBy()` turns a flat list into a keyed structure:</b>\n\n```php\n$groups = $users->groupBy('department');\n```\n\n```text\nengineering\n ├── User A\n └── User C\n\nsales\n └── User B\n```\n\nWhich is the shape every report wants: totals per customer, invoices per month, orders per status. And it takes a closure when the key is derived rather than a column:\n\n```php\n$users->groupBy(fn ($user) => $user->created_at->format('Y-m'));\n```\n\n<b>`sortBy()` sorts by a field or a computed value:</b>\n\n```php\n$users->sortBy('name');\n$users->sortBy(fn ($user) => $user->created_at);\n$users->sortByDesc('created_at');\n```\n\nAnd the reminder from the last lesson: <b>sorting and grouping in the database is usually better</b>, because `orderBy()` uses an index and `sortBy()` reads every row first. Sort in PHP when the value is not a column, and in the query when it is.\n\n---\n\n### 2. Intermediate — `each()` and `when()`\n\n```php\n$users->each(fn ($user) => $user->notify(...));\n```\n\n<b>`each()` is for side effects</b>, and that is the whole distinction:\n\n```text\nmap()   transform data, return something new\neach()  do something, return nothing useful\n```\n\nUsing `each()` to build a result, by pushing into an outer array, is a `map()` written the long way. And using `map()` for a side effect works and misleads the reader, because a `map()` implies its result is the point.\n\n<b>`when()` applies part of a chain conditionally:</b>\n\n```php\n$posts->when($search, fn ($posts) => $posts->filter(...));\n```\n\n```text\ncondition?\n ├── true  → run the callback\n └── false → carry on unchanged\n```\n\nThe same shape as Day 13's query `when()`, and for the same reason: it keeps an optional step inside the chain rather than breaking it with an `if`.\n\n---\n\n### 3. Advanced — higher-order messages\n\n```php\n$users->each->notify();\n```\n\ninstead of:\n\n```php\n$users->each(fn ($user) => $user->notify());\n```\n\n<b>The collection forwards the call to every item.</b> It works on `each`, `map`, `filter`, `sum`, `sortBy` and several others:\n\n```text\n$users->filter->active\n$invoices->sum->total\n$posts->map->title\n$users->each->notify()\n```\n\nAnd `$users->filter->active` is the line worth looking at, because of what it says:\n\n```text\nforeach ($users as $user) {\n    if ($user->active) { ... }\n}\n```\n\ndescribes the mechanism. `$users->filter->active` describes the intention: <b>give me the active users.</b>\n\nThat is the actual point of this whole lesson. <b>Code that says what you want beats code that says how to get it</b>, and the closure version sits in between.\n\nTwo cautions, because this is easy to overdo.\n\n<b>It only works for a bare property or a no-argument method.</b> Anything else needs the closure, and half a chain in higher-order form with the rest in closures reads worse than either.\n\n<b>And a chain is not automatically clearer than a loop.</b> A five-step chain with three closures spanning twenty lines is harder to follow than the `foreach` it replaced. Use a chain when the pipeline is the point, and a loop when the control flow is.",
-      diagram: `Grouping and sorting
+      id: "chains-and-batches",
+      title: "Chains & batches",
+      durationMinutes: 12,
+      explanation: "One job is easy. The interesting problems start when there are many.\n\n---\n\n### 1. Basic — chains, for order\n\nSome work has to happen in sequence:\n\n```text\nDownloadPodcast\n      ↓\nProcessPodcast\n      ↓\nGenerateTranscript\n      ↓\nNotifyUser\n```\n\n<b>A <i>chain</i></b> runs jobs one after another, each starting only when the last succeeded:\n\n```php\nBus::chain([\n    new DownloadPodcast($podcast),\n    new ProcessPodcast($podcast),\n    new GenerateTranscript($podcast),\n    new NotifyUser($podcast),\n])->dispatch();\n```\n\n```text\nA → success → B → success → C → success → D\n```\n\n<b>If one fails, the chain stops.</b> Nothing after it runs, which is exactly right: transcribing a podcast that was never processed produces nothing useful.\n\n`->catch()` gives you somewhere to react when it breaks.\n\n---\n\n### 2. Intermediate — batches, for volume\n\nA hundred podcasts to process is a different shape: they do not depend on each other, and you want them all done.\n\n```text\nChain                 Batch\n─────                 ─────\nA → B → C → D                ┌→ A\n                             ├→ B\norder matters        Batch ──┼→ C\none failure stops            ├→ D\n  the rest                   └→ E\n\n                     independent, and\n                     parallel across workers\n```\n\n```php\nBus::batch($jobs)->dispatch();\n```\n\n<b>Laravel tracks the batch as a whole:</b>\n\n```text\ntotal jobs · pending · failed · processed · progress\n```\n\nWhich is what a batch is really for. Dispatching a hundred jobs individually gives you a hundred unrelated jobs; a batch gives you one thing to ask \"is it done?\" about, and a progress bar you can show somebody.\n\nAnd because the jobs are independent, <b>four workers process the batch four times faster.</b> A chain cannot do that, by definition.\n\n---\n\n### 3. Advanced — callbacks, and choosing\n\nA batch has lifecycle hooks:\n\n```php\nBus::batch($jobs)\n    ->before(fn (Batch $batch) => ...)   // created, not yet running\n    ->progress(fn (Batch $batch) => ...) // after each job\n    ->then(fn (Batch $batch) => ...)     // all succeeded\n    ->catch(fn (Batch $batch, $e) => ...)// the first failure\n    ->finally(fn (Batch $batch) => ...)  // finished either way\n    ->dispatch();\n```\n\n<b>`then()` is the one that makes batches worth using</b>: \"when all hundred are done, generate the summary and email it\". Without it, that is a polling loop you write yourself.\n\nTwo behaviours to know.\n\n<b>By default one failure cancels the batch.</b> Remaining jobs are not run. `->allowFailures()` changes that, and it is usually what you want for something like a bulk import where one bad row should not stop the other ninety-nine.\n\n<b>And callbacks are serialised too</b>, so `$this` is not available inside them. That is the same wire from lesson one: pass what the callback needs, or reference a static.\n\nThe two can combine, and that is often the real shape:\n\n```php\nBus::batch([\n    [new DownloadPodcast($a), new ProcessPodcast($a)],\n    [new DownloadPodcast($b), new ProcessPodcast($b)],\n])->dispatch();\n```\n\nA batch of chains: each podcast's steps in order, and the podcasts in parallel.\n\nWhich makes the choice a question about the work rather than the API:\n\n```text\ndoes step two need step one's result?     →  a chain\nare they independent, and you want to\n  know when they are all done?            →  a batch\nboth, at different levels?                →  a batch of chains\n```",
+      diagram: `Chains, for order
 
-  \$users->groupBy('department')
+    DownloadPodcast → ProcessPodcast
+                    → GenerateTranscript → NotifyUser
 
-    engineering            The shape every report wants:
-     ├── User A            totals per customer, invoices
-     └── User C            per month, orders per status
-    sales
-     └── User B
+    Bus::chain([...])->dispatch()
 
-  With a closure, when the key is derived:
+    A → success → B → success → C → success → D
 
-    groupBy(fn (\$u) => \$u->created_at->format('Y-m'))
+  If one fails, the chain STOPS. Nothing after it runs,
+  which is right: transcribing a podcast that was never
+  processed produces nothing.
 
-  \$users->sortBy('name')
-  \$users->sortBy(fn (\$u) => \$u->created_at)
-  \$users->sortByDesc('created_at')
-
-  ⚠️  Sorting and grouping in the DATABASE is usually
-      better: orderBy() uses an index, sortBy() reads
-      every row first.
-
-      Sort in PHP when the value is not a column.
+  ->catch() gives you somewhere to react.
 
 
-each() and when()
+Batches, for volume
 
-  \$users->each(fn (\$user) => \$user->notify(...))
+  Chain                  Batch
+  ─────                  ─────
+  A → B → C → D                 ┌→ A
+                                ├→ B
+  order matters         Batch ──┼→ C
+  one failure stops             ├→ D
+    the rest                    └→ E
 
-    map()   transform data, return something new
-    each()  do something, return nothing useful
+                        independent, and parallel
+                        across workers
 
-  Using each() to build a result by pushing into an
-  outer array is a map() written the long way.
-  Using map() for a side effect works and misleads:
-  a map() implies its result is the point.
+    Bus::batch(\$jobs)->dispatch()
 
-  \$posts->when(\$search, fn (\$posts) => \$posts->filter(...))
+  Laravel tracks it as a whole:
 
-    condition?
-     ├── true  → run the callback
-     └── false → carry on unchanged
+    total · pending · failed · processed · progress
 
-  Same shape as Day 13's query when(), for the same
-  reason: an optional step stays inside the chain.
+  Which is the point. A hundred individual dispatches is
+  a hundred unrelated jobs. A batch is ONE thing to ask
+  "is it done?" about, and a progress bar you can show.
 
-
-Higher-order messages
-
-  \$users->each->notify()
-
-  instead of
-
-  \$users->each(fn (\$user) => \$user->notify())
-
-  The collection forwards the call to every item:
-
-    \$users->filter->active
-    \$invoices->sum->total
-    \$posts->map->title
-    \$users->each->notify()
+  And because the jobs are independent, four workers
+  process a batch four times faster. A chain cannot,
+  by definition.
 
 
-  And this is the line worth looking at:
+Callbacks
 
-    foreach (\$users as \$user) {
-        if (\$user->active) { ... }
-    }
-        describes the MECHANISM
+    ->before()    created, not yet running
+    ->progress()  after each job
+    ->then()      all succeeded
+    ->catch()     the first failure
+    ->finally()   finished either way
 
-    \$users->filter->active
-        describes the INTENTION: give me the active users
+  then() is what makes batches worth using: "when all
+  hundred are done, generate the summary and email it".
+  Without it, that is a polling loop you write yourself.
 
-  Which is the point of the whole lesson. Code that says
-  what you WANT beats code that says how to get it. The
-  closure version sits in between.
+  Two behaviours:
+
+    By default ONE FAILURE CANCELS the batch. Remaining
+    jobs do not run. ->allowFailures() changes that, and
+    is usually right for a bulk import where one bad row
+    should not stop the other ninety-nine.
+
+    Callbacks are SERIALISED too, so \$this is not
+    available inside them. Same wire as lesson one.
 
 
-Two cautions
+They combine
 
-  It only works for a bare property or a no-argument
-  method. Anything else needs the closure, and half a
-  chain in each style reads worse than either.
+    Bus::batch([
+        [new DownloadPodcast(\$a), new ProcessPodcast(\$a)],
+        [new DownloadPodcast(\$b), new ProcessPodcast(\$b)],
+    ])->dispatch();
 
-  A chain is not automatically clearer than a loop. Five
-  steps with three closures over twenty lines is harder
-  to follow than the foreach it replaced.
+  A batch of chains: each podcast's steps in order, and
+  the podcasts in parallel.
 
-    the pipeline is the point   → a chain
-    the control flow is         → a loop`,
+
+  Which makes it a question about the WORK:
+
+    does step two need step one's result?   →  a chain
+    independent, and you want to know when
+      they are all done?                    →  a batch
+    both, at different levels?              →  a batch
+                                               of chains`,
       codeExample: {
-        title: "Reports, conditionals and intention",
+        title: "Ordered work, and a lot of work",
         code: `<?php
 
-// ---------- Grouping: the shape of a report ----------
+use Illuminate\\Bus\\Batch;
+use Illuminate\\Support\\Facades\\Bus;
+use Throwable;
 
-$byDepartment = $users->groupBy('department');
+// ---------- A chain: order matters ----------
 
-// engineering => [User A, User C]
-// sales       => [User B]
+Bus::chain([
+    new DownloadPodcast($podcast),
+    new ProcessPodcast($podcast),
+    new GenerateTranscript($podcast),
+    new NotifyUser($podcast),
+])->catch(function (Throwable $e) use ($podcast) {
+    $podcast->update(['status' => 'failed']);
+})->dispatch();
 
-// A derived key.
-$byMonth = $invoices->groupBy(
-    fn ($invoice) => $invoice->created_at->format('Y-m')
-);
+// Each step starts only when the last succeeded. If
+// ProcessPodcast fails, the transcript is never attempted,
+// which is correct: it would have nothing to transcribe.
 
-// Grouped, then summarised.
-$totals = $invoices
-    ->groupBy('customer_id')
-    ->map(fn ($group) => $group->sum('total'));
-
-
-// ---------- Sorting ----------
-
-$users->sortBy('name');
-$users->sortByDesc('created_at');
-$users->sortBy(fn ($user) => $user->invoices->count());
-
-// ⚠️ The last one loads every user's invoices. In the
-//    query it is one line and no N+1:
-User::withCount('invoices')->orderByDesc('invoices_count')->get();
-
-
-// ---------- each: for side effects ----------
-
-$users->each(fn ($user) => $user->notify(new InvoiceOverdue()));
-
-// ❌ each() building a result is a map() written long.
-$names = [];
-$users->each(function ($user) use (&$names) {
-    $names[] = $user->name;
-});
-
-// ✓
-$names = $users->map(fn ($user) => $user->name);
-
-
-// ---------- when: an optional step in the chain ----------
-
-$results = $posts
-    ->when($search, fn ($posts) => $posts->filter(
-        fn ($post) => str_contains($post->title, $search)
-    ))
-    ->when($status, fn ($posts) => $posts->where('status', $status))
-    ->sortByDesc('created_at')
-    ->values();
-
-// Without when(), that is three ifs and a broken chain.
+// From inside a job, to continue the chain:
+$this->chain([new GenerateTranscript($this->podcast)]);
 
 
 <?php
-// ---------- Higher-order messages ----------
+// ---------- A batch: many independent jobs ----------
 
-$users->filter->active;          // filter(fn ($u) => $u->active)
-$invoices->sum->total;           // sum(fn ($i) => $i->total)
-$posts->map->title;              // map(fn ($p) => $p->title)
-$users->each->notify();          // each(fn ($u) => $u->notify())
+$jobs = Podcast::where('status', 'pending')
+    ->pluck('id')
+    ->map(fn ($id) => new ProcessPodcast($id))
+    ->all();
 
-// The comparison worth keeping:
+$batch = Bus::batch($jobs)
+    ->name('Process pending podcasts')
 
-foreach ($users as $user) {
-    if ($user->active) {
-        // ...
-    }
-}
-// says HOW
+    // One failure should not stop the other ninety-nine.
+    ->allowFailures()
 
-$users->filter->active;
-// says WHAT: give me the active users
-
-
-// ⚠️ Only for a bare property or a no-argument method.
-//    Anything else needs the closure:
-$users->filter(fn ($user) => $user->created_at->isToday());
-
-
-<?php
-// ---------- When a loop is better ----------
-
-// ❌ A chain that is not a pipeline.
-$results = $rows
-    ->map(function ($row) use (&$errors, $importer) {
-        try {
-            return $importer->parse($row);
-        } catch (ParseException $e) {
-            $errors[] = $e->getMessage();
-            return null;
-        }
+    ->progress(function (Batch $batch) {
+        // After each job. Useful for a progress bar.
+        Cache::put("batch:{$batch->id}:progress", $batch->progress());
     })
-    ->filter()
-    ->values();
 
-// ✓ Control flow, side effects and early exits: a loop
-//   says this more clearly, and there is no prize for
-//   fewer lines.
-foreach ($rows as $row) {
-    try {
-        $parsed[] = $importer->parse($row);
-    } catch (ParseException $e) {
-        $errors[] = $e->getMessage();
-        continue;
+    ->then(function (Batch $batch) {
+        // All of them succeeded. This is what a batch
+        // is for: one place to react when it is done.
+        Notification::route('mail', 'ops@example.com')
+            ->notify(new BatchFinished($batch->id));
+    })
+
+    ->catch(function (Batch $batch, Throwable $e) {
+        Log::error('Batch failed', ['batch' => $batch->id]);
+    })
+
+    ->finally(function (Batch $batch) {
+        Cache::forget("batch:{$batch->id}:progress");
+    })
+
+    ->dispatch();
+
+// One thing to ask about:
+$batch->id;
+$batch->totalJobs;
+$batch->pendingJobs;
+$batch->failedJobs;
+$batch->progress();      // a percentage
+$batch->finished();
+
+
+<?php
+// ---------- Checking on it later ----------
+
+$batch = Bus::findBatch($batchId);
+
+return [
+    'progress' => $batch->progress(),
+    'pending'  => $batch->pendingJobs,
+    'failed'   => $batch->failedJobs,
+];
+
+$batch->cancel();     // stop the remaining jobs
+
+
+<?php
+// ---------- A batch of chains ----------
+
+// Each podcast's steps in order; the podcasts in parallel.
+Bus::batch(
+    $podcasts->map(fn ($podcast) => [
+        new DownloadPodcast($podcast),
+        new ProcessPodcast($podcast),
+        new GenerateTranscript($podcast),
+    ])->all()
+)->dispatch();
+
+
+<?php
+// ---------- Callbacks are serialised too ----------
+
+// ❌ $this is not available inside the callback.
+Bus::batch($jobs)->then(function (Batch $batch) {
+    $this->notify();
+})->dispatch();
+
+// ✓ Pass what it needs.
+$userId = $request->user()->id;
+
+Bus::batch($jobs)->then(function (Batch $batch) use ($userId) {
+    User::find($userId)->notify(new BatchFinished($batch->id));
+})->dispatch();
+
+
+<?php
+// ---------- Making the job batch-aware ----------
+
+class ProcessPodcast implements ShouldQueue
+{
+    use Batchable, Queueable;
+
+    public function handle(): void
+    {
+        // Stop early if the batch was cancelled.
+        if ($this->batch()?->cancelled()) {
+            return;
+        }
+
+        // ...
     }
 }`,
       },
       keyTakeaways: [
-        "<b>`groupBy()` turns a flat list into the keyed shape every report wants</b>, and takes a closure for derived keys.",
-        "<b>`sortBy()` sorts by a field or a computed value</b>, and `sortByDesc()` reverses it.",
-        "<b>Sorting and grouping in the query is usually better</b>, because the database has indexes and reads fewer rows.",
-        "<b>`each()` is for side effects and `map()` is for transformation</b>, and using one for the other misleads the reader.",
-        "Building a result by pushing into an outer array from `each()` is a `map()` written the long way.",
-        "<b>`when()` applies part of a chain conditionally</b>, keeping an optional step inside the pipeline.",
-        "<b>Higher-order messages forward a call to every item</b>: `$users->filter->active`, `$invoices->sum->total`.",
-        "<b>`$users->filter->active` states the intention where a `foreach` states the mechanism.</b>",
-        "They only work for a bare property or a no-argument method; anything else needs a closure.",
-        "<b>A chain is not automatically clearer than a loop</b>: use a chain when the pipeline is the point.",
+        "<b>A chain runs jobs in sequence</b>, each starting only when the previous one succeeded.",
+        "<b>A failure stops the chain</b>, which is correct when later steps depend on earlier ones.",
+        "<b>A batch runs independent jobs and tracks them as one unit</b>: total, pending, failed, progress.",
+        "That tracking is the point: a hundred dispatches is a hundred unrelated jobs, a batch is one thing to ask about.",
+        "<b>Batched jobs run in parallel across workers</b>, which a chain cannot do by definition.",
+        "<b>`then()` runs when every job succeeded</b>, which replaces a polling loop you would otherwise write.",
+        "`before()`, `progress()`, `catch()` and `finally()` cover the rest of the lifecycle.",
+        "<b>One failure cancels a batch by default</b>, and `allowFailures()` is usually right for a bulk import.",
+        "<b>Batch callbacks are serialised</b>, so `$this` is unavailable and values must be passed in.",
+        "<b>A batch of chains does both</b>: ordered steps per item, items in parallel.",
       ],
       commonMistakes: [
-        "<b>Sorting a loaded collection when the database could order it.</b> Every row is read before sorting.",
-        "<b>Using `each()` with a reference to build an array.</b> That is `map()`, spelled awkwardly.",
-        "<b>Using `map()` purely for a side effect.</b> The reader expects the result to matter.",
-        "<b>Mixing higher-order and closure forms in one chain.</b> It reads worse than either style alone.",
-        "<b>Forcing complex control flow into a chain.</b> Early exits and error collection belong in a loop.",
+        "<b>Using a batch where order matters.</b> The jobs run in parallel and the second may finish first.",
+        "<b>Using a chain for a hundred independent jobs.</b> They run one at a time, however many workers you have.",
+        "<b>Forgetting `allowFailures()` on an import.</b> One bad row cancels the remaining ninety-nine.",
+        "<b>Referring to `$this` in a batch callback.</b> It is serialised separately and has no instance.",
+        "<b>Polling to find out when a batch is done.</b> `then()` exists for exactly that.",
       ],
       quiz: [
         {
-          question: "What is the difference between `map()` and `each()`?",
+          question: "What happens when a job in a chain fails?",
           options: [
-            "None",
-            "`map()` transforms and returns a new collection; `each()` performs a side effect",
-            "`each()` is faster",
-            "`map()` cannot use closures",
+            "The chain continues",
+            "The chain stops, and nothing after it runs",
+            "The chain restarts",
+            "Only that job is retried",
           ],
           correctIndex: 1,
-          explanation: "Using one for the other works and misleads the next reader.",
+          explanation: "Which is correct when later steps depend on earlier ones.",
         },
         {
-          question: "What does `$users->filter->active` do?",
+          question: "What does a batch give you that a hundred individual dispatches do not?",
           options: [
-            "Sorts by the active field",
-            "Filters to items whose `active` property is truthy",
-            "Sets `active` on each user",
-            "Counts the active users",
+            "Faster execution",
+            "One unit to track: total, pending, failed and progress, and a `then()` when all are done",
+            "Automatic retries",
+            "Ordering",
           ],
           correctIndex: 1,
-          explanation: "A higher-order message: the collection forwards the property access.",
+          explanation: "Otherwise, knowing when everything finished is a polling loop.",
         },
         {
-          question: "Why is `$users->sortBy(fn ($u) => $u->invoices->count())` risky?",
+          question: "What does `allowFailures()` change?",
           options: [
-            "`sortBy` cannot take a closure",
-            "It loads every user's invoices, which is an N+1 the query could avoid",
-            "It returns an array",
-            "It mutates the collection",
+            "Failed jobs are retried",
+            "One failure no longer cancels the remaining jobs in the batch",
+            "Failures are not recorded",
+            "The batch never completes",
           ],
           correctIndex: 1,
-          explanation: "`withCount()` and `orderByDesc()` do it in one query.",
+          explanation: "Usually what a bulk import wants.",
         },
         {
-          question: "When is a `foreach` better than a collection chain?",
+          question: "Why is `$this` unavailable inside a batch callback?",
           options: [
-            "Never",
-            "When there is real control flow: early exits, error collection, several side effects",
-            "When the collection is large",
-            "When the items are models",
+            "It is a static context",
+            "The callback is serialised and stored separately, like the jobs themselves",
+            "Laravel forbids it",
+            "It is available",
           ],
           correctIndex: 1,
-          explanation: "There is no prize for fewer lines; readable code wins.",
+          explanation: "Pass in what it needs with `use`.",
         },
       ],
     },
     {
-      id: "lazy-collections-and-macros",
-      title: "Lazy collections, reduceInto & macros",
-      durationMinutes: 11,
-      explanation: "Collections when the data does not fit, and collections you extend yourself.\n\n---\n\n### 1. Basic — the memory problem\n\nA collection holds every item:\n\n```text\n10 million rows\n       ↓\nCollection\n       ↓\nRAM 💥\n```\n\n<b>A <i>lazy collection</i></b> produces values one at a time instead:\n\n```text\nDatabase\n ↓\nrow 1 → process\nrow 2 → process\nrow 3 → process\n...\n```\n\nWhich is Day 13's `cursor()` and `lazy()`, and the same rule: <b>memory use should not depend on the number of rows.</b>\n\n```php\nUser::lazy()->each(fn ($user) => $user->recalculate());\n\nLazyCollection::make(function () {\n    // yield values\n});\n```\n\nAnd the chain still works:\n\n```php\n->map(...)->filter(...)->each(...)\n```\n\nThe difference is that nothing runs until something asks for a value, and then only enough of it to produce that value.\n\nWhat it is for:\n\n```text\nlarge imports · exports · log files\ndata migrations · ETL jobs\n```\n\nAnything where the input is bigger than memory, or where you do not know how big it is.\n\n---\n\n### 2. Intermediate — `reduceInto()`\n\n`reduce()` carries a value along. When the accumulator is an object you are building up, <b>`reduceInto()` makes that explicit:</b>\n\n```php\n$report = $items->reduceInto(new Report(), function ($report, $item) {\n    $report->add($item);\n\n    return $report;\n});\n```\n\n```text\nitems\n ↓\nReport object\n ↓\nmutate the accumulator\n ↓\nReport object\n```\n\nThe initial value comes first, which reads better when it is a real object with a name, and it makes the type of the result obvious.\n\nUseful when the output is a structure rather than a number:\n\n```text\nDTOs · reports · aggregated objects\ncustom result structures\n```\n\nWhen the result is a total, `sum()` still wins.\n\n---\n\n### 3. Advanced — macros\n\nYou can add your own collection methods:\n\n```php\nCollection::macro('active', function () {\n    return $this->filter(fn ($item) => $item->active);\n});\n```\n\n```php\n$users->active();\n```\n\n<b>You have extended the collection API for the whole application</b>, which is genuinely powerful and genuinely easy to misuse.\n\nThe test is whether the name means something in your domain:\n\n```text\na good macro                  a bad macro\n────────────                  ───────────\na reusable domain concept     a shortcut nobody knows\n\n->overdue()                   ->firstTwoUppercased()\n->totalExcludingTax()         ->doTheThing()\n->activeThisMonth()\n```\n\n<b>The cost of a macro is discoverability.</b> Every Laravel developer knows what `filter()` does; nobody knows what `->flatten2()` does, and it is defined in a service provider they have no reason to open. A macro that saves one line and costs a search is a bad trade.\n\nSo the guidance:\n\n```text\nused in several places, and named after\nsomething your domain actually calls it      →  a macro\n\nused once, or a mechanical shortcut          →  leave it inline\n```\n\nAnd the alternative worth remembering from Day 16: <b>a custom collection class</b> gives the same methods to one model's collections only, which is often what you actually wanted. `Invoice::all()->totalOutstanding()` is discoverable, because it lives on `InvoiceCollection`; a global macro is not.\n\nRegister macros in a service provider, and only ever from your own code: a macro defined in a package that collides with a Laravel method is a debugging afternoon nobody enjoys.",
-      diagram: `The memory problem
+      id: "routing-and-attributes",
+      title: "Queue routing & job attributes",
+      durationMinutes: 10,
+      explanation: "Two Laravel 13 additions that move configuration to where it belongs.\n\n---\n\n### 1. Basic — separating queues\n\nOne queue with everything in it has a problem you meet the first busy day:\n\n```text\n10,000 podcast jobs\n        +\n1 password reset email\n        ↓\nthe email is behind ten thousand podcasts\n```\n\nThe fix is separate queues:\n\n```text\nredis\n ├── podcasts\n ├── emails\n ├── reports\n └── imports\n```\n\nand workers that specialise. Two workers on `emails` are never blocked by the import queue, whatever is in it.\n\n<b>Laravel 13's queue routing declares where a job goes, once:</b>\n\n```php\nQueue::route(ProcessPodcast::class, connection: 'redis', queue: 'podcasts');\n```\n\n```text\nProcessPodcast\n      ├── connection → redis\n      └── queue      → podcasts\n```\n\nWhich is a real improvement over the alternatives. Setting `$queue` inside every job scatters routing across your job classes; calling `->onQueue('podcasts')` at each dispatch site means one caller eventually forgets. <b>One file that says where every kind of work goes is something you can read and audit.</b>\n\n---\n\n### 2. Intermediate — attributes\n\nJob configuration used to be properties:\n\n```php\npublic $tries = 3;\npublic $backoff = 10;\npublic $timeout = 120;\n```\n\nLaravel 13 expresses it as attributes on the class:\n\n```php\n#[Tries(3)]\n#[Backoff(10)]\n#[Timeout(120)]\nclass ProcessPodcast implements ShouldQueue\n{\n}\n```\n\n```text\n#[Tries]     maximum attempts\n#[Backoff]   delay between attempts\n#[Timeout]   maximum execution time\n```\n\nAnd `#[FailOnTimeout]`, which says a timeout should fail the job rather than be treated as something to retry.\n\n<b>The gain is that the configuration is visible above the class</b>, next to its name, rather than mixed in with its properties. Reading `ProcessPodcast`, you see how it behaves before you see what it does.\n\nThe properties still work, and you will see both. The next lesson is about choosing the values.\n\n---\n\n### 3. Advanced — priorities in practice\n\nSeparate queues are only useful if workers respect the difference:\n\n```php\nphp artisan queue:work --queue=high,default,low\n```\n\n<b>The order is a priority order</b>: the worker drains `high` completely before looking at `default`. Which is the behaviour you want, and also the failure mode to know about: <b>a permanently busy `high` queue starves everything below it.</b>\n\nThe usual split:\n\n```text\nhigh      payments · password resets · anything a\n          person is waiting for\n\ndefault   email · notifications · normal work\n\nlow       analytics · cleanup · reports · imports\n```\n\n<b>The question that sorts a job is not how important the work is</b>, it is who is waiting. A password reset email is trivial work that somebody is staring at an inbox for. A monthly report is important work nobody is watching.\n\nTwo practical notes.\n\n<b>Dedicated workers beat priorities for anything that must not be delayed.</b> One worker on `--queue=high` alone can never be blocked by anything else, where a shared worker with a priority list can be busy with a long job when the urgent one arrives.\n\n<b>And connection matters as much as queue.</b> Routing a rare, slow job to the database connection while everything else uses Redis keeps ten thousand rows out of your fast path, and is exactly what per-job routing makes easy to express.\n\nAnd in a test, the queue a job landed on is assertable too:\n\n```php\nQueue::assertPushedOn('emails', SendInvoiceEmail::class);\n```\n\n<b>Which is what proves the routing actually works</b>, rather than that the job was dispatched somewhere.",
+      diagram: `Separating queues
 
-    10 million rows → Collection → RAM 💥
+  One queue with everything in it:
 
-  A lazy collection produces values one at a time:
+    10,000 podcast jobs
+            +
+    1 password reset email
+            ↓
+    the email is behind ten thousand podcasts
 
-    Database
-     ↓
-    row 1 → process
-    row 2 → process
-    row 3 → process
-    ...
+  Separate them:
 
-  Which is Day 13's cursor() and lazy(), and the same
-  rule: memory use should not depend on the number
-  of rows.
+    redis
+     ├── podcasts
+     ├── emails
+     ├── reports
+     └── imports
 
-    User::lazy()->each(...)
-    LazyCollection::make(function () { /* yield */ })
-
-  The chain still works. The difference is that nothing
-  runs until something asks for a value, and then only
-  enough to produce it.
-
-  For: large imports · exports · log files
-       data migrations · ETL jobs
-
-  Anything bigger than memory, or of unknown size.
+  and workers specialise. Two workers on emails are
+  never blocked by the import queue.
 
 
-reduceInto
+  Laravel 13 declares routing once:
 
-  reduce() carries a value along. When the accumulator
-  is an object you are building, reduceInto() makes
-  that explicit:
+    Queue::route(ProcessPodcast::class,
+        connection: 'redis', queue: 'podcasts');
 
-    \$items->reduceInto(new Report(), function (\$report, \$item) {
-        \$report->add(\$item);
-        return \$report;
-    });
+      ProcessPodcast
+            ├── connection → redis
+            └── queue      → podcasts
 
-    items → Report object → mutate → Report object
+  Better than the alternatives: \$queue inside every job
+  scatters routing across your job classes, and
+  ->onQueue() at each dispatch site means one caller
+  eventually forgets.
 
-  The initial value comes FIRST, which reads better when
-  it is a real object with a name, and makes the result
-  type obvious.
-
-  For: DTOs · reports · aggregated objects
-       custom result structures
-
-  When the result is a total, sum() still wins.
+  One file saying where every kind of work goes is
+  something you can read and audit.
 
 
-Macros
+Attributes
 
-  Collection::macro('active', function () {
-      return \$this->filter(fn (\$item) => \$item->active);
-  });
+  Before:                    Laravel 13:
 
-  \$users->active();
+    public \$tries = 3;         #[Tries(3)]
+    public \$backoff = 10;      #[Backoff(10)]
+    public \$timeout = 120;     #[Timeout(120)]
 
-  You have extended the collection API for the whole
-  application. Powerful, and easy to misuse.
+    #[Tries]     maximum attempts
+    #[Backoff]   delay between attempts
+    #[Timeout]   maximum execution time
+    #[FailOnTimeout]  a timeout FAILS the job rather
+                      than being retried
 
-  a good macro                  a bad macro
-  ────────────                  ───────────
-  a reusable DOMAIN concept     a shortcut nobody knows
-
-  ->overdue()                   ->firstTwoUppercased()
-  ->totalExcludingTax()         ->doTheThing()
-  ->activeThisMonth()
-
-  The cost is DISCOVERABILITY. Every Laravel developer
-  knows filter(). Nobody knows ->flatten2(), and it is
-  defined in a service provider they have no reason to
-  open. Saving one line and costing a search is a bad
-  trade.
-
-    several places, named after something your
-    domain actually calls it        →  a macro
-    used once, or mechanical        →  leave it inline
+  The configuration sits above the class, next to its
+  name, rather than mixed in with its properties.
+  Reading the job, you see how it BEHAVES before you
+  see what it does.
 
 
-  And the alternative from Day 16: a CUSTOM COLLECTION
-  CLASS gives those methods to one model only, which is
-  often what you wanted.
+Priorities in practice
 
-    Invoice::all()->totalOutstanding()
+    queue:work --queue=high,default,low
 
-  is discoverable — it lives on InvoiceCollection.
-  A global macro is not.
+  The order is a PRIORITY order: high is drained
+  completely before default is looked at.
 
-  Register macros in a service provider, from your own
-  code only. A package macro colliding with a Laravel
-  method is a debugging afternoon.`,
+  ⚠️  Which is also the failure mode: a permanently busy
+      high queue starves everything below it.
+
+  The usual split:
+
+    high      payments · password resets · anything a
+              person is waiting for
+    default   email · notifications · normal work
+    low       analytics · cleanup · reports · imports
+
+  And the sorting question is not how IMPORTANT the work
+  is. It is WHO IS WAITING.
+
+    a password reset   trivial work, somebody staring
+                       at an inbox
+    a monthly report   important work nobody is watching
+
+
+  Two notes:
+
+    Dedicated workers beat priorities for anything that
+    must not be delayed. A worker on --queue=high alone
+    can never be blocked; a shared worker with a priority
+    list can be mid-way through a long job.
+
+    Connection matters as much as queue. Routing a rare,
+    slow job to the database while everything else uses
+    Redis keeps ten thousand rows out of your fast path.`,
       codeExample: {
-        title: "Streaming, folding and extending",
+        title: "Routing jobs, and declaring their behaviour",
         code: `<?php
+// In a test, the queue itself is assertable:
+// Queue::assertPushedOn('emails', SendInvoiceEmail::class);
 
-use Illuminate\\Support\\Collection;
-use Illuminate\\Support\\LazyCollection;
-
-// ---------- Lazy: memory does not grow with the rows ----------
-
-// ❌ Ten million models in memory.
-User::all()->each(fn ($user) => $user->recalculate());
-
-// ✓ One at a time.
-User::lazy()->each(fn ($user) => $user->recalculate());
-
-// And the chain still reads the same.
-User::lazy()
-    ->filter(fn ($user) => $user->needs_sync)
-    ->map(fn ($user) => $user->toSyncPayload())
-    ->each(fn ($payload) => $this->push($payload));
-
-// Nothing runs until something asks for a value, and
-// then only enough to produce it.
-
-
-// ---------- A lazy collection from anything ----------
-
-// A log file of unknown size, read line by line.
-$lines = LazyCollection::make(function () {
-    $handle = fopen(storage_path('logs/laravel.log'), 'r');
-
-    while (($line = fgets($handle)) !== false) {
-        yield $line;
-    }
-
-    fclose($handle);
-});
-
-$errors = $lines
-    ->filter(fn ($line) => str_contains($line, 'ERROR'))
-    ->take(100)          // stops reading after 100
-    ->values();
-
-// take() is where lazy pays off: the file is not read
-// past the hundredth error.
-
-
-<?php
-// ---------- reduceInto: the accumulator is an object ----------
-
-$report = $invoices->reduceInto(
-    new MonthlyReport(),
-    function (MonthlyReport $report, Invoice $invoice) {
-        $report->add($invoice);
-
-        return $report;
-    },
-);
-
-// The initial value first, so the result's type is
-// obvious at a glance.
-
-// For a plain total, this still wins:
-$total = $invoices->sum('total');
-
-
-<?php
-// ---------- Macros ----------
+// ---------- Routing, in one place ----------
 
 // app/Providers/AppServiceProvider.php
 
+use Illuminate\\Support\\Facades\\Queue;
+
 public function boot(): void
 {
-    // ✓ A domain concept, used in several places.
-    Collection::macro('overdue', function () {
-        return $this->filter(fn ($invoice) => $invoice->isOverdue());
-    });
+    // Heavy, and nobody is waiting.
+    Queue::route(ProcessPodcast::class, connection: 'redis', queue: 'podcasts');
+    Queue::route(ImportCustomers::class, connection: 'redis', queue: 'imports');
 
-    // ❌ A mechanical shortcut nobody will find.
-    Collection::macro('f2u', function () {
-        return $this->take(2)->map(fn ($s) => strtoupper($s));
-    });
+    // Somebody is staring at an inbox.
+    Queue::route(SendPasswordReset::class, connection: 'redis', queue: 'high');
+    Queue::route(ChargeCard::class, connection: 'redis', queue: 'high');
+
+    // Rare and slow: keep it off the fast path entirely.
+    Queue::route(GenerateAnnualReport::class, connection: 'database', queue: 'reports');
 }
 
-$invoices->overdue();
+// One file that says where every kind of work goes.
+// The alternatives scatter it across job classes or
+// across dispatch sites, and one of those eventually
+// forgets.
 
 
 <?php
-// ---------- Often better: a custom collection class ----------
+// ---------- Attributes ----------
 
-// Day 16: the methods belong to one model's collections,
-// and live somewhere a reader can find them.
+namespace App\\Jobs;
 
-namespace App\\Models;
+use Illuminate\\Queue\\Attributes\\Backoff;
+use Illuminate\\Queue\\Attributes\\FailOnTimeout;
+use Illuminate\\Queue\\Attributes\\Timeout;
+use Illuminate\\Queue\\Attributes\\Tries;
 
-use Illuminate\\Database\\Eloquent\\Collection;
-
-class InvoiceCollection extends Collection
+#[Tries(3)]
+#[Backoff(10)]
+#[Timeout(120)]
+class ProcessPodcast implements ShouldQueue
 {
-    public function overdue(): static
+    public function handle(): void
     {
-        return $this->filter(fn ($invoice) => $invoice->isOverdue());
-    }
-
-    public function totalOutstanding(): int
-    {
-        return $this->reject->is_paid->sum('total');
+        // ...
     }
 }
 
-class Invoice extends Model
+// A job talking to a flaky API: more attempts, growing
+// delay, and a timeout means give up rather than retry.
+#[Tries(5)]
+#[Backoff([10, 30, 60, 120])]
+#[Timeout(30)]
+#[FailOnTimeout]
+class SyncWithProvider implements ShouldQueue
 {
-    public function newCollection(array $models = []): InvoiceCollection
-    {
-        return new InvoiceCollection($models);
-    }
 }
 
-// Invoice::all()->totalOutstanding()
-//
-// Discoverable: it is on InvoiceCollection, next to the
-// model. A global macro is not.`,
+
+<?php
+// ---------- The older form, which still works ----------
+
+class ProcessPodcast implements ShouldQueue
+{
+    public int $tries = 3;
+    public int $backoff = 10;
+    public int $timeout = 120;
+}
+
+// You will see both. The attributes put the behaviour
+// above the class, where it reads before the code does.
+
+
+# ---------- Workers that respect the split ----------
+
+# A priority order: high is drained before default.
+php artisan queue:work redis --queue=high,default,low
+
+# A dedicated worker for anything that must not wait.
+# It cannot be blocked by a long job on another queue.
+php artisan queue:work redis --queue=high
+
+# The heavy queue, with more workers and a longer timeout.
+php artisan queue:work redis --queue=podcasts --timeout=300
+
+
+<?php
+// ---------- Per-dispatch, when it is genuinely one-off ----------
+
+GenerateReport::dispatch($user)->onQueue('reports');
+
+ProcessPodcast::dispatch($podcast)
+    ->onConnection('redis')
+    ->onQueue('podcasts');
+
+// Fine for an exception. As the default mechanism, it
+// puts routing in every caller.`,
       },
       keyTakeaways: [
-        "<b>A collection holds every item, so a large result set exhausts memory.</b>",
-        "<b>A lazy collection produces values one at a time</b>, so memory does not grow with the number of rows.",
-        "`User::lazy()` and `LazyCollection::make()` both work with the normal chain methods.",
-        "<b>Nothing runs until a value is asked for</b>, which is why `take()` can stop the work early.",
-        "It suits large imports, exports, log files, migrations and anything of unknown size.",
-        "<b>`reduceInto()` puts the accumulator first</b>, which reads better when it is an object you are building.",
-        "Use it for reports, DTOs and structures; for a total, `sum()` still wins.",
-        "<b>A macro adds a method to every collection in the application.</b>",
-        "<b>The cost of a macro is discoverability</b>: nobody knows it exists, and it lives in a provider they will not open.",
-        "<b>Write a macro for a named domain concept used in several places</b>, and leave a mechanical shortcut inline.",
-        "<b>A custom collection class is often what you wanted</b>, because the methods live next to the model that uses them.",
+        "<b>One queue for everything means urgent work waits behind bulk work.</b>",
+        "<b>Separate queues let workers specialise</b>, so an email queue is never blocked by an import.",
+        "<b>`Queue::route()` declares a job's connection and queue in one place</b>, rather than in every job or every caller.",
+        "Setting `$queue` per job scatters routing; setting it per dispatch means a caller eventually forgets.",
+        "<b>`#[Tries]`, `#[Backoff]`, `#[Timeout]` and `#[FailOnTimeout]` put job behaviour above the class.</b>",
+        "The equivalent properties still work, and you will see both forms.",
+        "<b>`--queue=high,default,low` is a priority order</b>, draining each queue before the next.",
+        "<b>A permanently busy high queue starves the ones below it</b>, which is the failure mode of priorities.",
+        "<b>What sorts a job is who is waiting, not how important the work is.</b>",
+        "<b>A dedicated worker beats a priority list</b> for anything that must never be delayed.",
       ],
       commonMistakes: [
-        "<b>Loading a huge table into a collection.</b> Memory scales with rows, and `lazy()` is one word away.",
-        "<b>Chaining after `get()` on a large query.</b> The rows are already in memory; `lazy()` had to come first.",
-        "<b>Writing a macro for a one-line shortcut.</b> It saves a line and costs the next reader a search.",
-        "<b>Defining macros for another team's convenience.</b> Undiscoverable methods are worse than repeated code.",
-        "<b>Using `reduceInto()` for a sum.</b> `sum()` says it in one word.",
+        "<b>Putting every job on one queue.</b> A password reset waits behind ten thousand imports.",
+        "<b>Routing at each dispatch site.</b> One caller forgets, and that job lands on the default queue.",
+        "<b>Sorting queues by importance rather than by who is waiting.</b> A monthly report is important and nobody is watching.",
+        "<b>Relying on a priority list for urgent work.</b> The worker may be mid-way through a long job when it arrives.",
+        "<b>Creating queues nothing is listening to.</b> The job waits forever, exactly as in the last lesson.",
       ],
       quiz: [
         {
-          question: "What problem does a lazy collection solve?",
+          question: "What problem do separate queues solve?",
           options: [
-            "Slow queries",
-            "Holding every item in memory, which fails on a large result set",
-            "Missing eager loads",
-            "Duplicate values",
+            "Slow jobs",
+            "Urgent work waiting behind bulk work on a single shared queue",
+            "Failed jobs",
+            "Memory use",
           ],
           correctIndex: 1,
-          explanation: "Values are produced one at a time, so memory does not grow with the rows.",
+          explanation: "Workers can then specialise per queue.",
         },
         {
-          question: "Why can `take(100)` on a lazy collection stop early?",
+          question: "What does `Queue::route()` improve on?",
           options: [
-            "It caches",
-            "Nothing runs until a value is asked for, so the source stops being read",
-            "It runs a LIMIT query",
-            "It cannot stop early",
+            "Dispatch performance",
+            "Routing scattered across job classes or across every dispatch site",
+            "Retry behaviour",
+            "Failure handling",
           ],
           correctIndex: 1,
-          explanation: "Which is what makes it work on a file of unknown size.",
+          explanation: "One file you can read and audit.",
         },
         {
-          question: "What does `reduceInto()` make clearer than `reduce()`?",
+          question: "What does `--queue=high,default,low` mean?",
           options: [
-            "The iteration order",
-            "That the accumulator is a specific object, because it comes first",
-            "The performance",
-            "The item type",
+            "Three separate workers",
+            "A priority order: `high` is drained before `default` is looked at",
+            "Round-robin between them",
+            "Only `high` is processed",
           ],
           correctIndex: 1,
-          explanation: "Useful when the result is a report or a DTO rather than a number.",
+          explanation: "Which also means a busy `high` queue can starve the rest.",
         },
         {
-          question: "What is the main cost of a collection macro?",
+          question: "What decides which queue a job belongs on?",
           options: [
-            "Performance",
-            "Discoverability: nobody knows it exists, and it is defined in a provider they will not open",
-            "Memory",
-            "It breaks type hints",
+            "How long it takes",
+            "Who is waiting for it",
+            "How often it runs",
+            "Which model it touches",
           ],
           correctIndex: 1,
-          explanation: "A custom collection class keeps the methods next to the model.",
+          explanation: "A password reset is trivial work somebody is watching; a report is not.",
         },
       ],
     },
     {
-      id: "strings",
-      title: "Strings — Str and Str::of()",
-      durationMinutes: 9,
-      explanation: "PHP's string functions are a museum of inconsistent argument orders. `Str` is the tidy layer over them.\n\n---\n\n### 1. Basic — the operations you keep needing\n\n```php\nStr::slug('Laravel Eloquent');   // laravel-eloquent\n```\n\nAnd the rest of the set:\n\n```text\nStr::limit()        truncate, with an ellipsis\nStr::contains()     is this in there?\nStr::startsWith()   Str::endsWith()\nStr::replace()\nStr::before()       Str::after()\nStr::headline()     Str::title()\nStr::camel()        Str::snake()      Str::studly()\nStr::random()       Str::uuid()\nStr::mask()\n```\n\n<b>The value is not that these are impossible in plain PHP.</b> It is that `Str::before($email, '@')` says what it does, where `substr($email, 0, strpos($email, '@'))` says how, and gets the argument order wrong once in every codebase.\n\nTwo worth knowing specifically. <b>`Str::slug()` is what turns a title into a URL segment</b>, handling accents and punctuation you would otherwise discover one bug at a time. And <b>`Str::mask()` is for showing a card number or an email partially</b>, which otherwise becomes a hand-written `substr` with an off-by-one.\n\n---\n\n### 2. Intermediate — the fluent form\n\nNested calls read inside out:\n\n```php\nStr::lower(Str::slug($title));\n```\n\nYou read `Str::lower`, then have to find the innermost call to know what happens first. <b>`Str::of()` reverses that:</b>\n\n```php\nStr::of($title)->trim()->lower()->slug();\n```\n\n```text\ninput → trim → lower → slug → result\n```\n\nTop to bottom, in the order it happens. On two operations it barely matters; on five it is the difference between reading it and decoding it.\n\nAnd it ends in whatever you need:\n\n```php\nStr::of($name)->trim()->title()->toString();\n$slug = (string) Str::of($title)->slug();\n```\n\n---\n\n### 3. Advanced — where this fits, and where it does not\n\n<b>`Str` is a convenience, not a validator.</b> `Str::contains($url, 'example.com')` is true for `evil.com/?x=example.com`, and using it as a security check is how a filter gets bypassed. Day 21's rule stands: parse the thing properly, or whitelist.\n\nThe fluent form is also useful in a chain of transformations you might otherwise scatter:\n\n```php\n$reference = Str::of($customer->name)\n    ->ascii()\n    ->upper()\n    ->replaceMatches('/[^A-Z]/', '')\n    ->limit(3, '')\n    ->append('-', $invoice->id);\n```\n\nAll of which could be four statements and three temporary variables. <b>The chain is worth it when the steps have no meaning individually</b>, which is the same test as a collection pipeline.\n\nThree practical notes.\n\n<b>`Str::of()` returns a `Stringable`, not a string.</b> Most places accept it because it casts, and a strict type hint will not. Call `->toString()` when the boundary is strict.\n\n<b>Multibyte is handled.</b> `Str::limit()` and `Str::upper()` do not cut a character in half the way `substr()` and `strtoupper()` can, which matters the first time a Japanese or Nepali name goes through them, and connects directly to the localization at the start of today.\n\n<b>And `Str::random()` is not for anything secret.</b> For a token or a password reset value, use the framework's cryptographic helpers rather than a random string, exactly as Day 19 described.",
-      diagram: `The operations you keep needing
-
-  Str::slug('Laravel Eloquent')   →  laravel-eloquent
-
-    Str::limit()       truncate, with an ellipsis
-    Str::contains()    startsWith()   endsWith()
-    Str::replace()     before()       after()
-    Str::headline()    title()
-    Str::camel()       snake()        studly()
-    Str::random()      uuid()         mask()
-
-  The value is not that these are impossible in PHP.
-  It is that
-
-    Str::before(\$email, '@')
-
-  says WHAT it does, where
-
-    substr(\$email, 0, strpos(\$email, '@'))
-
-  says HOW, and gets the argument order wrong once in
-  every codebase.
-
-  Two specifically: slug() turns a title into a URL
-  segment, handling accents and punctuation you would
-  otherwise find one bug at a time. mask() shows a card
-  number or an email partially, without a hand-written
-  substr and an off-by-one.
-
-
-The fluent form
-
-  Str::lower(Str::slug(\$title))
-
-  reads inside out: you read lower, then hunt for the
-  innermost call to know what happens first.
-
-  Str::of(\$title)->trim()->lower()->slug()
-
-    input → trim → lower → slug → result
-
-  Top to bottom, in the order it happens. On two
-  operations it barely matters. On five it is the
-  difference between reading and decoding.
-
-  Ends in what you need:
-    ->toString()      or      (string) Str::of(...)
-
-
-Where it fits, and where it does not
-
-  ⚠️  Str is a CONVENIENCE, not a validator.
-
-      Str::contains(\$url, 'example.com')
-
-      is true for evil.com/?x=example.com. Using it as
-      a security check is how a filter gets bypassed.
-      Parse it properly, or whitelist. Day 21 stands.
-
-  The chain is worth it when the steps have no meaning
-  individually — the same test as a collection pipeline.
-  Four statements and three temporary variables, or one
-  chain that reads in order.
-
-
-Three practical notes
-
-  Str::of() returns a Stringable, not a string. Most
-  places accept it because it casts; a strict type hint
-  will not. ->toString() at a strict boundary.
-
-  Multibyte is handled. limit() and upper() do not cut
-  a character in half the way substr() and strtoupper()
-  can — which matters the first time a Japanese or
-  Nepali name goes through, and connects straight back
-  to this morning's localization.
-
-  Str::random() is not for anything secret. Tokens and
-  reset values use the framework's cryptographic
-  helpers, exactly as Day 19 described.`,
-      codeExample: {
-        title: "Str, and when to chain",
-        code: `<?php
-
-use Illuminate\\Support\\Str;
-
-// ---------- The set you will actually use ----------
-
-Str::slug('Laravel Eloquent');              // laravel-eloquent
-Str::limit($post->body, 150);               // truncated with …
-Str::before($email, '@');                   // the local part
-Str::after($path, 'invoices/');
-Str::contains($title, 'Laravel');
-Str::startsWith($path, 'admin/');
-Str::headline('invoice_line_items');        // Invoice Line Items
-Str::snake('invoiceLineItems');             // invoice_line_items
-Str::camel('invoice_line_items');           // invoiceLineItems
-Str::mask($card, '*', 0, -4);               // ************4242
-Str::uuid();
-
-// Says what it does:
-Str::before($email, '@');
-
-// Says how, and has the argument order wrong somewhere
-// in every codebase:
-substr($email, 0, strpos($email, '@'));
-
-
-// ---------- The fluent form ----------
-
-// ❌ Reads inside out.
-$slug = Str::lower(Str::slug(trim($title)));
-
-// ✓ Reads in the order it happens.
-$slug = Str::of($title)->trim()->lower()->slug();
-
-// input → trim → lower → slug → result
-
-
-// A chain earns its place when the steps mean nothing
-// on their own:
-$reference = Str::of($customer->name)
-    ->ascii()
-    ->upper()
-    ->replaceMatches('/[^A-Z]/', '')
-    ->limit(3, '')
-    ->append('-' . $invoice->id)
-    ->toString();
-
-// RAJ-1042
-//
-// The alternative is four statements and three
-// temporary variables that each need a name.
-
-
-<?php
-// ---------- Stringable, not string ----------
-
-$value = Str::of($title)->trim()->lower();   // a Stringable
-
-// Casts almost everywhere:
-echo $value;
-$post->slug = $value;
-
-// A strict type hint will not:
-function save(string $slug) { }
-
-save($value);                 // ❌ TypeError
-save($value->toString());     // ✓
-save((string) $value);        // ✓
-
-
-<?php
-// ---------- Where Str is the wrong tool ----------
-
-// ❌ True for evil.com/?redirect=example.com
-if (Str::contains($url, 'example.com')) {
-    return redirect($url);
-}
-
-// ✓ Parse it, and check the host.
-$host = parse_url($url, PHP_URL_HOST);
-
-if ($host === 'example.com' || Str::endsWith($host, '.example.com')) {
-    return redirect($url);
-}
-
-
-// ❌ Not for anything secret.
-$token = Str::random(40);
-
-// ✓ Day 19's helpers, for a credential.
-$token = $user->createToken('api')->plainTextToken;
-
-
-<?php
-// ---------- Multibyte ----------
-
-// substr() and strtoupper() can cut a character in half.
-// Str::limit() and Str::upper() do not.
-
-Str::limit('ラーメンとカレー', 5);     // safe
-substr('ラーメンとカレー', 0, 5);       // broken bytes
-
-// Which matters the first time a Japanese or Nepali name
-// goes through your string handling.`,
-      },
-      keyTakeaways: [
-        "<b>`Str` is a consistent layer over PHP's string functions</b>, which have inconsistent argument orders.",
-        "<b>`Str::before($email, '@')` says what it does</b> where the `substr` and `strpos` version says how.",
-        "`slug()`, `limit()`, `mask()`, `headline()` and the case converters cover most of what you need.",
-        "<b>Nested `Str::` calls read inside out; `Str::of()` reads in the order things happen.</b>",
-        "<b>A chain is worth it when the steps have no meaning individually</b>, the same test as a collection pipeline.",
-        "<b>`Str::of()` returns a `Stringable`</b>, which casts almost everywhere but not into a strict `string` type hint.",
-        "<b>`Str` is a convenience, not a validator</b>: `contains()` on a URL is not a security check.",
-        "<b>`Str` handles multibyte text</b>, where `substr()` and `strtoupper()` can cut a character in half.",
-        "<b>`Str::random()` is not for anything secret</b>; credentials use the framework's cryptographic helpers.",
-      ],
-      commonMistakes: [
-        "<b>Using `Str::contains()` to validate a URL or a host.</b> A substring match is trivially bypassed.",
-        "<b>Passing a `Stringable` into a strict `string` parameter.</b> Call `toString()` at the boundary.",
-        "<b>Using `substr()` on user-supplied text.</b> A multibyte character can be cut in half.",
-        "<b>Generating a token with `Str::random()`.</b> Use the framework's cryptographic helpers instead.",
-        "<b>Chaining two operations that were already clear.</b> The fluent form pays off at four or five steps.",
-      ],
-      quiz: [
-        {
-          question: "Why prefer `Str::before($email, '@')` to the `substr`/`strpos` version?",
-          options: [
-            "It is faster",
-            "It states the intent, and does not depend on an argument order people get wrong",
-            "It handles null",
-            "It is required by Laravel",
-          ],
-          correctIndex: 1,
-          explanation: "The value is expressiveness, not capability.",
-        },
-        {
-          question: "What does `Str::of()` change?",
-          options: [
-            "It makes strings immutable",
-            "The operations read in the order they happen, rather than inside out",
-            "It handles multibyte",
-            "It validates the string",
-          ],
-          correctIndex: 1,
-          explanation: "Which matters most on a chain of four or five steps.",
-        },
-        {
-          question: "Is `Str::contains($url, 'example.com')` a safe host check?",
-          options: [
-            "Yes",
-            "No; `evil.com/?x=example.com` passes it",
-            "Only with `startsWith`",
-            "Only over HTTPS",
-          ],
-          correctIndex: 1,
-          explanation: "Parse the URL and check the host, or whitelist.",
-        },
-        {
-          question: "What does `Str::of($title)->slug()` return?",
-          options: [
-            "A string",
-            "A `Stringable`, which casts in most places but not into a strict `string` type hint",
-            "A collection",
-            "An array of segments",
-          ],
-          correctIndex: 1,
-          explanation: "`->toString()` at a strict boundary.",
-        },
-      ],
-    },
-    {
-      id: "helpers",
-      title: "Helpers — data_get, tap, retry & friends",
+      id: "retries-backoff-timeouts",
+      title: "Retries, backoff, timeouts & permanent failures",
       durationMinutes: 12,
-      explanation: "Small functions that replace patterns you would otherwise write out.\n\n---\n\n### 1. Basic — reaching into nested data\n\n```php\n$data = ['user' => ['profile' => ['name' => 'Rajan']]];\n```\n\n```php\n$data['user']['profile']['name'];\n```\n\nwhich works, and throws the moment any level is missing. <b>`data_get()` walks the path safely:</b>\n\n```php\ndata_get($data, 'user.profile.name');          // Rajan\ndata_get($data, 'user.profile.age', 0);        // 0, the default\n```\n\nIt works on arrays and objects alike, and supports `*` to reach across a list:\n\n```php\ndata_get($response, 'data.*.id');\n```\n\nWhich is why it belongs anywhere you handle a JSON response from somebody else: <b>you did not write that structure, so you cannot assume it.</b>\n\n`data_set()` is the other direction, creating the missing levels as it goes:\n\n```php\ndata_set($data, 'user.profile.age', 30);\n```\n\n---\n\n### 2. Intermediate — nulls, retries and guards\n\n<b>`optional()` exists for the days before PHP had a nullsafe operator:</b>\n\n```php\noptional($user->profile)->avatar;\n$user->profile?->avatar;          // prefer this\n```\n\n<b>Use the native operator in new code.</b> `optional()` is worth recognising in existing applications and worth not spreading further. It also has a closure form that occasionally earns its place, but the rule stands.\n\n<b>`retry()` retries an operation:</b>\n\n```php\nretry(3, fn () => callExternalService(), 100);\n```\n\n```text\nattempt 1 → fail → wait → attempt 2 → fail → wait → attempt 3\n```\n\nDay 22's caution applies exactly: <b>retry transient failures, and never a non-idempotent write.</b> A network blip is worth retrying; a validation error is not, and a payment without an idempotency key definitely is not.\n\n<b>`throw_if()` compresses a guard:</b>\n\n```php\nthrow_if($user->is_banned, BannedException::class, 'User is banned.');\n```\n\nagainst the three-line `if`. Useful for a run of guards at the top of a method; less useful for one, where a plain `if` reads better and the debugger stops somewhere sensible.\n\n---\n\n### 3. Advanced — `tap()` and `value()`\n\n<b>`tap()` runs a callback and returns the original value:</b>\n\n```php\n$user = tap(User::find($id), fn ($user) => $user->update(['active' => true]));\n```\n\n```text\nvalue\n ↓\nthe callback receives it\n ↓\nthe ORIGINAL value is returned\n```\n\nWhich matters because `update()` returns a boolean. Without `tap()`, that line is three statements and a variable that exists only to be returned:\n\n```php\n$user = User::find($id);\n$user->update(['active' => true]);\nreturn $user;\n```\n\n<b>`tap()` is at its best when a method returns the wrong thing and you want the subject back.</b>\n\n<b>`value()` resolves a value or calls a closure:</b>\n\n```php\nvalue('x');                     // 'x'\nvalue(fn () => expensive());    // the result\n```\n\nWhich looks pointless until you write an API that accepts either. <b>Every Laravel method taking \"a value or a closure\" uses this internally</b>, and it is the reason `when()`, `data_get()` defaults and cache callbacks all accept both without you thinking about it.\n\nAnd the closing judgement for the whole lesson. These helpers are worth using where they say something:\n\n```text\ndata_get     the structure is not yours to trust\ntap          you want the subject back\nretry        the failure is transient\nvalue        the API accepts either\n```\n\nAnd not worth using where they only save characters. <b>`throw_if()` around one condition, or `tap()` where a variable was fine, makes code shorter and slower to read</b>, which is the trade this whole day is about noticing.",
-      diagram: `Reaching into nested data
+      explanation: "A job that always works needs none of this. Everything here is about the other kind.\n\n---\n\n### 1. Basic — retries\n\n```text\ncall an API\n     ↓\nnetwork error\n     ↓\nretry\n```\n\nA worker can attempt a job several times before giving up:\n\n```php\n#[Tries(3)]\n```\n\nAnd the important question is not how many, it is <b>why did it fail?</b>\n\n```text\na temporary network failure    retrying works\nan invalid database record     retrying changes nothing\na programming bug              retrying changes nothing,\n                                 three times\n```\n\n<b>Retrying a permanent failure is not harmless.</b> It occupies a worker three times, delays every other job, and buries the real error under three identical stack traces.\n\nDay 21 made the same point about HTTP retries, and it has the same answer: retry transient failures, and fail fast on everything else.\n\n---\n\n### 2. Intermediate — backoff and timeouts\n\nRetrying immediately is worse than not retrying:\n\n```text\nfail → retry → fail → retry → fail\n```\n\nThat is three requests in a hundred milliseconds at a service that is already struggling, which is how a slow dependency becomes a dead one.\n\n<b>Backoff waits, and waits longer each time:</b>\n\n```text\nfail → wait 10s → retry → wait 30s → retry → wait 60s → retry\n```\n\n```php\n#[Backoff([10, 30, 60])]\n```\n\nThe growing delay is the point: it gives whatever broke time to recover, and it stops your workers being the reason it cannot.\n\n<b>A timeout stops a job hanging forever:</b>\n\n```text\njob starts\n   ↓\nan HTTP call that never answers\n   ↓\nthe worker is stuck\n```\n\n```php\n#[Timeout(120)]\n```\n\nWithout one, a single hung job holds a worker indefinitely. Enough of those and every worker is stuck on nothing.\n\n<b>Set it from the work, not from fear.</b> A ninety-second job with a one-hour timeout means an hour before anybody notices it hung. And <b>the worker's `--timeout` must be shorter than the driver's `retry_after`</b>, or the queue hands the job to a second worker while the first is still running it.\n\n---\n\n### 3. Advanced — telling the two kinds apart\n\nSome failures should stop immediately:\n\n```text\ninvalid input\npermission denied\na permanent business rule violation\na record that no longer exists\n```\n\n<b>Retrying those is three attempts at the same wrong answer.</b>\n\n```text\ntransient failure  →  retry\npermanent failure  →  fail immediately\n```\n\nLaravel gives you several ways to say which is which:\n\n```php\npublic function failOnException(): array\n{\n    return [InvalidInputException::class];\n}\n```\n\nor `$this->fail($e)` inside `handle()`, or `release()` to put a job back deliberately.\n\nAnd two more limits worth knowing.\n\n<b>`retryUntil()` sets a deadline instead of a count</b>, which is often what you actually mean: \"keep trying for an hour\" rather than \"try five times\", because five attempts with growing backoff could be four minutes or four hours.\n\n<b>`maxExceptions` limits failures separately from attempts</b>, which matters for a long-running job that releases itself.\n\nThe judgement that ties it together, and it is the one that separates a queue that works from one that hurts:\n\n```text\nWill retrying this produce a different result?\n\n  yes  →  retry, with backoff\n  no   →  fail now, loudly, with the real error visible\n```\n\nAnd the second half of that: <b>a retried job must be safe to run twice.</b> If attempt one charged a card and then timed out, attempt two charges it again. Idempotency is not a separate topic from retries; it is the thing that makes retries safe.",
+      diagram: `Retries
 
-  \$data['user']['profile']['name']
+    call an API → network error → retry
 
-  Works, and throws the moment a level is missing.
+    #[Tries(3)]
 
-    data_get(\$data, 'user.profile.name')       Rajan
-    data_get(\$data, 'user.profile.age', 0)     0, the default
+  The question is not how many. It is WHY did it fail?
 
-  Arrays and objects alike, and * across a list:
+    a temporary network failure   retrying works
+    an invalid database record    retrying changes nothing
+    a programming bug             retrying changes nothing,
+                                    three times
 
-    data_get(\$response, 'data.*.id')
-
-  Which is why it belongs anywhere you handle somebody
-  else's JSON: you did not write that structure, so you
-  cannot assume it.
-
-    data_set(\$data, 'user.profile.age', 30)
-
-  creates the missing levels as it goes.
+  ⚠️  Retrying a permanent failure is not harmless. It
+      occupies a worker three times, delays every other
+      job, and buries the real error under three
+      identical stack traces.
 
 
-Nulls, retries, guards
+Backoff
 
-  optional(\$user->profile)->avatar      the old way
-  \$user->profile?->avatar               prefer this
+  Retrying immediately is worse than not retrying:
 
-  optional() is worth RECOGNISING in existing code and
-  worth not spreading further.
+    fail → retry → fail → retry → fail
 
-  retry(3, fn () => callExternalService(), 100)
+  Three requests in a hundred milliseconds, at a service
+  already struggling. That is how a slow dependency
+  becomes a dead one.
 
-    attempt 1 → fail → wait → attempt 2 → fail → wait
-              → attempt 3
+    fail → wait 10s → retry → wait 30s → retry
+         → wait 60s → retry
 
-  Day 22 applies exactly: retry TRANSIENT failures, and
-  never a non-idempotent write. A network blip, yes.
-  A validation error, no. A payment without an
-  idempotency key, definitely not.
+    #[Backoff([10, 30, 60])]
 
-  throw_if(\$user->is_banned, BannedException::class, '...')
-
-  Good for a run of guards at the top of a method.
-  Less good for one, where a plain if reads better and
-  the debugger stops somewhere sensible.
+  The growing delay gives whatever broke time to
+  recover, and stops your workers being the reason it
+  cannot.
 
 
-tap() and value()
+Timeouts
 
-  \$user = tap(User::find(\$id), fn (\$u) => \$u->update([...]))
+    job starts → an HTTP call that never answers
+               → the worker is stuck
 
-    value
-     ↓
-    the callback receives it
-     ↓
-    the ORIGINAL value is returned
+    #[Timeout(120)]
 
-  Which matters because update() returns a boolean.
-  Without tap(), that is three statements and a variable
-  that exists only to be returned.
+  Without one, a single hung job holds a worker
+  indefinitely. Enough of those and every worker is
+  stuck on nothing.
 
-  tap() is at its best when a method returns the wrong
-  thing and you want the subject back.
+  Set it from the WORK, not from fear. A ninety-second
+  job with a one-hour timeout means an hour before
+  anybody notices it hung.
+
+  ⚠️  The worker's --timeout must be SHORTER than the
+      driver's retry_after, or the queue hands the job
+      to a second worker while the first is still
+      running it.
 
 
-  value('x')                   'x'
-  value(fn () => expensive())  the result
+Telling the two kinds apart
 
-  Pointless until you write an API accepting either.
-  Every Laravel method taking "a value or a closure"
-  uses this — which is why when(), data_get() defaults
-  and cache callbacks all accept both.
+    invalid input · permission denied
+    a permanent rule violation · a record that is gone
+
+  Retrying those is three attempts at the same wrong
+  answer.
+
+    transient  →  retry
+    permanent  →  fail immediately
+
+    failOnException()   these exceptions stop the job
+    \$this->fail(\$e)     stop, from inside handle()
+    release()           put it back, deliberately
+
+  retryUntil()    a DEADLINE instead of a count, which
+                  is often what you meant: "keep trying
+                  for an hour" rather than "five times",
+                  because five attempts with backoff
+                  could be four minutes or four hours
+
+  maxExceptions   limits failures separately from
+                  attempts, for a job that releases
+                  itself
 
 
 The judgement
 
-  Worth it where they SAY something:
+    Will retrying this produce a different result?
 
-    data_get   the structure is not yours to trust
-    tap        you want the subject back
-    retry      the failure is transient
-    value      the API accepts either
+      yes  →  retry, with backoff
+      no   →  fail now, loudly, with the real error visible
 
-  Not worth it where they only save characters.
 
-  throw_if() around one condition, or tap() where a
-  variable was fine, makes code shorter and slower to
-  read — which is the trade this whole day is about
-  noticing.`,
+  And the second half:
+
+    A retried job must be SAFE TO RUN TWICE.
+
+  If attempt one charged a card and then timed out,
+  attempt two charges it again.
+
+  Idempotency is not a separate topic from retries.
+  It is what makes retries safe.`,
       codeExample: {
-        title: "The helpers worth reaching for",
+        title: "Failing well",
         code: `<?php
 
-// ---------- data_get / data_set ----------
+namespace App\\Jobs;
 
-$response = Http::get('https://api.example.com/invoices')->json();
+use App\\Exceptions\\InvalidPodcastException;
+use Illuminate\\Http\\Client\\ConnectionException;
+use Illuminate\\Queue\\Attributes\\Backoff;
+use Illuminate\\Queue\\Attributes\\Timeout;
+use Illuminate\\Queue\\Attributes\\Tries;
 
-// ❌ Throws the moment the API changes shape.
-$id = $response['data'][0]['customer']['id'];
+#[Tries(5)]
+#[Backoff([10, 30, 60, 120])]   // growing, not fixed
+#[Timeout(120)]                  // from the work, not from fear
+class SyncWithProvider implements ShouldQueue
+{
+    use Queueable;
 
-// ✓ You did not write this structure.
-$id = data_get($response, 'data.0.customer.id');
+    public function __construct(public Customer $customer) {}
 
-$ids = data_get($response, 'data.*.id');          // across a list
+    // Retrying these produces the same wrong answer.
+    public function failOnException(): array
+    {
+        return [
+            InvalidPodcastException::class,
+            AuthorizationException::class,
+        ];
+    }
 
-$page = data_get($response, 'meta.current_page', 1);   // a default
+    // Often what you actually meant: keep trying for an
+    // hour, rather than five times.
+    public function retryUntil(): DateTime
+    {
+        return now()->addHour();
+    }
 
-// The other direction, creating levels as it goes.
-data_set($settings, 'notifications.email.invoices', true);
+    public function handle(): void
+    {
+        // Safe to run twice: attempt one may have
+        // succeeded and then timed out.
+        if ($this->customer->synced_at?->isAfter(now()->subHour())) {
+            return;
+        }
 
+        $response = Http::timeout(30)
+            ->withToken(config('services.provider.token'))
+            ->post('/customers', $this->customer->toSyncPayload());
 
-<?php
-// ---------- Nulls ----------
+        // Permanent: stop now, with the real error visible.
+        if ($response->status() === 422) {
+            $this->fail(new InvalidPodcastException($response->body()));
 
-optional($user->profile)->avatar;    // the old way
-$user->profile?->avatar;             // prefer this in new code
+            return;
+        }
 
-// Worth recognising in an existing codebase, and worth
-// not spreading further.
+        // Transient: back off and try again later.
+        if ($response->status() === 429) {
+            $this->release(60);
 
+            return;
+        }
 
-<?php
-// ---------- retry ----------
+        $response->throw();
 
-$response = retry(3, fn () => Http::get($url)->throw(), 100);
+        $this->customer->update(['synced_at' => now()]);
+    }
 
-// With a growing delay and a condition:
-retry(3,
-    fn () => $this->sync(),
-    fn (int $attempt) => $attempt * 200,
-    fn ($e) => $e instanceof ConnectionException,
-);
-
-// ❌ Day 22: the first attempt may have succeeded and
-//    its response been lost.
-retry(3, fn () => Http::post('/charge', ['amount' => 5000]));
-
-// ✓ Idempotency key, or do not retry the write.
-
-
-<?php
-// ---------- throw_if ----------
-
-// A run of guards, where the compression pays.
-throw_if($user->is_banned, BannedException::class, 'User is banned.');
-throw_if(! $user->hasVerifiedEmail(), UnverifiedException::class);
-throw_unless($invoice->isDraft(), NotDraftException::class);
-
-// For a single condition, this reads better and the
-// debugger stops somewhere useful:
-if ($user->is_banned) {
-    throw new BannedException('User is banned.');
+    public function failed(\\Throwable $e): void
+    {
+        // Runs after the final attempt.
+        $this->customer->update(['sync_error' => $e->getMessage()]);
+    }
 }
 
 
 <?php
-// ---------- tap ----------
+// ---------- Why the failure kind matters ----------
 
-// update() returns a boolean, so without tap() this is
-// three statements and a variable that exists only to
-// be returned.
-$user = User::find($id);
-$user->update(['active' => true]);
-return $user;
+// ❌ A validation error, retried five times with backoff.
+//    Four minutes of worker time, five identical stack
+//    traces, and the real error buried.
 
-// ✓
-return tap(User::findOrFail($id), fn ($user) =>
-    $user->update(['active' => true])
-);
-
-// Also useful for a side effect inside an expression:
-return tap($invoice->lines()->create($data), function ($line) use ($invoice) {
-    $invoice->recalculateTotal();
-});
-
-// ❌ Where a variable was perfectly clear:
-return tap($user, fn ($u) => null);
+// ✓ failOnException() stops at the first attempt, and
+//    the error is the first thing in the log.
 
 
 <?php
-// ---------- value ----------
+// ---------- Backoff shapes ----------
 
-value('x');                        // 'x'
-value(fn () => expensiveThing());  // the result
+#[Backoff(10)]                    // 10s each time
+#[Backoff([10, 30, 60])]          // growing, then 60s
+                                   // for the rest
 
-// Which is how every Laravel API that takes "a value or
-// a closure" works:
+// Growing is almost always right: a fixed delay still
+// hammers a struggling service, just more slowly.
 
-Cache::remember('key', 3600, fn () => $this->report());
-data_get($data, 'missing', fn () => $this->default());
-$query->when($search, fn ($q) => $q->where(...));
 
-// Writing your own:
-public function setDefault(mixed $default): static
+# ---------- The timeout relationship ----------
+
+# The worker's timeout must be SHORTER than the driver's
+# retry_after, or the queue reassigns a job that is
+# still running.
+
+# config/queue.php
+#   'redis' => ['retry_after' => 90]
+
+php artisan queue:work --timeout=60      # ✓ 60 < 90
+php artisan queue:work --timeout=120     # ❌ the job runs twice
+
+
+<?php
+// ---------- Idempotency is what makes retries safe ----------
+
+// ❌ Attempt one charged the card, then the response was
+//    lost and the job timed out. Attempt two charges again.
+public function handle(): void
 {
-    $this->default = value($default);
+    $this->gateway->charge($this->invoice->total);
+    $this->invoice->update(['status' => 'paid']);
+}
 
-    return $this;
+// ✓
+public function handle(): void
+{
+    if ($this->invoice->status === 'paid') {
+        return;
+    }
+
+    $this->gateway->charge(
+        $this->invoice->total,
+        idempotencyKey: $this->invoice->uuid,   // Day 21
+    );
+
+    $this->invoice->update(['status' => 'paid']);
 }`,
       },
       keyTakeaways: [
-        "<b>`data_get()` walks a nested path safely</b>, on arrays or objects, with a default and `*` across lists.",
-        "<b>It belongs anywhere you handle somebody else's JSON</b>, because you cannot assume a structure you did not write.",
-        "`data_set()` writes into a nested path, creating the missing levels.",
-        "<b>Prefer PHP's `?->` over `optional()` in new code</b>, and recognise `optional()` in existing applications.",
-        "<b>`retry()` retries transient failures</b>, with the Day 22 caution: never a non-idempotent write.",
-        "<b>`throw_if()` compresses a guard</b>, and pays off for a run of them rather than a single condition.",
-        "<b>`tap()` runs a callback and returns the original value</b>, which is what you want when a method returns a boolean.",
-        "Without it, that line is three statements and a variable that exists only to be returned.",
-        "<b>`value()` resolves a value or calls a closure</b>, which is how every \"value or closure\" API in Laravel works.",
-        "<b>Use a helper where it says something, not where it only saves characters.</b>",
+        "<b>The question is not how many retries, but whether retrying will produce a different result.</b>",
+        "<b>Retrying a permanent failure occupies a worker repeatedly</b> and buries the real error under identical traces.",
+        "<b>Backoff waits between attempts, and a growing delay lets a struggling dependency recover.</b>",
+        "Retrying immediately is worse than not retrying, because it adds load to something already failing.",
+        "<b>A timeout stops one hung job from holding a worker indefinitely.</b>",
+        "<b>Set the timeout from the work</b>, because an hour-long timeout on a ninety-second job hides a hang for an hour.",
+        "<b>The worker's `--timeout` must be shorter than the driver's `retry_after`</b>, or the job runs twice at once.",
+        "<b>`failOnException()` and `$this->fail()` stop a job that cannot succeed</b>, and `release()` puts one back deliberately.",
+        "<b>`retryUntil()` sets a deadline rather than a count</b>, which is often what you actually meant.",
+        "<b>A retried job must be safe to run twice</b>: idempotency is what makes retries safe, not a separate topic.",
       ],
       commonMistakes: [
-        "<b>Indexing into an external API response directly.</b> A changed shape becomes an undefined-index error.",
-        "<b>Spreading `optional()` through new code.</b> `?->` is native, clearer and shorter.",
-        "<b>Retrying a write with no idempotency key.</b> The first attempt may have succeeded silently.",
-        "<b>Wrapping a single `if` in `throw_if()`.</b> It is shorter and slower to read, and the debugger stops elsewhere.",
-        "<b>Using `tap()` where a plain variable was clear.</b> The helper should earn its place.",
+        "<b>Retrying every failure.</b> A validation error retried five times is four minutes of worker time and a buried error.",
+        "<b>Retrying with no backoff.</b> Three requests in a hundred milliseconds finishes off a struggling service.",
+        "<b>Running jobs with no timeout.</b> One hung HTTP call occupies a worker forever.",
+        "<b>Setting the worker timeout above `retry_after`.</b> The queue hands the job to a second worker mid-run.",
+        "<b>Enabling retries on a job that is not idempotent.</b> The first attempt charged the card; the second charges it again.",
       ],
       quiz: [
         {
-          question: "Why use `data_get()` on an external API response?",
+          question: "What decides whether a job should be retried?",
           options: [
-            "It is faster",
-            "You did not write that structure, so a missing level should be a default rather than an error",
-            "It caches the result",
-            "It validates the response",
+            "How long it takes",
+            "Whether retrying could produce a different result",
+            "How many workers are free",
+            "Which queue it is on",
           ],
           correctIndex: 1,
-          explanation: "It also supports `*` to reach across a list.",
+          explanation: "A permanent failure retried is the same wrong answer, three times.",
         },
         {
-          question: "What should new code use instead of `optional($user->profile)`?",
+          question: "Why does backoff grow between attempts?",
           options: [
-            "`data_get()`",
-            "PHP's nullsafe operator, `$user->profile?->avatar`",
-            "`tap()`",
-            "An if statement",
+            "To reduce database load",
+            "To give a struggling dependency time to recover instead of adding load",
+            "Laravel requires it",
+            "To spread jobs across workers",
           ],
           correctIndex: 1,
-          explanation: "`optional()` is worth recognising, not spreading.",
+          explanation: "Retrying immediately is how a slow service becomes a dead one.",
         },
         {
-          question: "What does `tap()` return?",
+          question: "Why must a worker's `--timeout` be shorter than `retry_after`?",
           options: [
-            "The callback's return value",
-            "The original value passed to it",
-            "A boolean",
-            "Null",
+            "For memory",
+            "Otherwise the queue reassigns the job while the first worker is still running it",
+            "It is a config requirement",
+            "To allow backoff",
           ],
           correctIndex: 1,
-          explanation: "Which is why it suits a method like `update()` that returns a boolean.",
+          explanation: "The job then runs twice, concurrently.",
         },
         {
-          question: "What is `value()` for?",
+          question: "What makes retries safe?",
           options: [
-            "Caching a computed result",
-            "Accepting either a plain value or a closure, and resolving whichever it is",
-            "Validating a value",
-            "Extracting a field",
+            "Backoff",
+            "The job being idempotent, so running it twice has the same effect as once",
+            "A short timeout",
+            "A high `tries` value",
           ],
           correctIndex: 1,
-          explanation: "It is how every \"value or closure\" API in Laravel works internally.",
+          explanation: "Otherwise attempt two charges the card attempt one already charged.",
         },
       ],
     },
     {
-      id: "concurrency-and-contracts",
-      title: "Concurrency, contracts & expressing intent",
-      durationMinutes: 12,
-      explanation: "Two more abstractions, and then the judgement the whole day has been building towards.\n\n---\n\n### 1. Basic — concurrency\n\nThree independent pieces of work, done in turn:\n\n```text\nprofile  →  orders  →  notifications\n```\n\n```text\nProfile API       200ms\nOrders API        300ms\nNotifications     150ms\n            ────────────\nsequential        650ms\n```\n\nLaravel's `Concurrency` facade runs them together:\n\n```text\n          ┌→ profile\nRequest ──┼→ orders\n          └→ notifications\n```\n\n```text\nconcurrent   ≈ max(200, 300, 150)  ≈ 300ms\n```\n\nThe same idea as Day 22's `Http::pool()`, generalised: <b>independent work that spends its time waiting can wait at the same time.</b>\n\nAnd the condition is doing the work in that sentence.\n\n---\n\n### 2. Intermediate — when it does not help\n\n<b>Dependent work cannot be parallelised:</b>\n\n```text\ncreate the user\n      ↓\ncreate their profile\n```\n\nThe second needs the first's id. No amount of concurrency changes that; only a design change would.\n\nAnd the other half: <b>concurrency helps work that waits, not work that computes.</b>\n\n```text\nhelps                       does not help\n─────                       ─────────────\nexternal API calls          a tight PHP loop\nseveral independent         one query the database\n  queries                     runs sequentially anyway\nreading several files       work that is already fast\n```\n\nThree independent HTTP calls overlap because each is mostly waiting. Three heavy calculations do not, because they need the same processor.\n\n<b>And it is not free.</b> Each concurrent task has setup cost, so parallelising three things that take five milliseconds each makes the operation slower. Measure before and after; if you cannot state the improvement in milliseconds, you have added complexity for nothing.\n\n---\n\n### 3. Advanced — contracts\n\n<b>A <i>contract</i></b> is an interface Laravel defines for a capability:\n\n```php\nIlluminate\\Contracts\\Cache\\Repository\n```\n\n```text\nContract\n   │ interface\n   ▼\nimplementation\n```\n\nType-hint the contract rather than a concrete class:\n\n```php\npublic function __construct(private CacheRepository $cache) {}\n```\n\n```text\nyour class\n    ↓\nthe contract\n    ↓\nthe container\n    ↓\nRedis, or a file cache, or an array in a test\n```\n\n<b>Your class stops knowing which one it got</b>, which is what makes it replaceable and testable. Swapping Redis for something else, or using an array cache in tests, changes configuration rather than code.\n\nAnd then the caution, which matters more than the technique:\n\n```text\n❌ UserServiceInterface + UserService\n   UserRepositoryInterface + UserRepository\n   UserManagerInterface + UserManager\n```\n\n<b>An interface with exactly one implementation, that will only ever have one, is a file that adds indirection and nothing else.</b> Every reader now opens two files to follow one call.\n\nUse an abstraction when it buys something real:\n\n```text\nseveral implementations exist, or will\nan external boundary you want to fake in tests\nan architectural seam you have deliberately chosen\na framework capability, where the contract already exists\n```\n\nAnd not because interfaces sound senior.\n\n---\n\n### The judgement this day was about\n\nEvery abstraction today has the same shape: it is worth using when it <b>expresses intent</b>, and not worth using when it only saves characters.\n\n```text\nforeach ($users as $user) {\n    if ($user->active) { ... }\n}\n```\n\nsays what to do. \n\n```php\n$users->filter->active\n```\n\nsays <i>give me the active users</i>.\n\nBut a five-step chain with three closures spanning twenty lines says less than the loop it replaced, and that is the same judgement in the other direction.\n\n```text\nuse a collection chain when          a foreach is better when\n───────────────────────────          ───────────────────────\ntransforming, filtering,             the control flow is complex\ngrouping, mapping, aggregating       there are several side effects\nthe pipeline is the point            there are early exits\n                                     the state is complicated\n```\n\n<b>A collection is not better because it is shorter.</b> Readable code wins, and knowing which tool makes this particular code readable is the skill the whole day was for.",
-      diagram: `Concurrency
+      id: "unique-and-rate-limited",
+      title: "Unique jobs & rate limiting",
+      durationMinutes: 10,
+      explanation: "Two ways of controlling how much work reaches the queue, and how fast it leaves.\n\n---\n\n### 1. Basic — the duplicate problem\n\n```php\nGenerateReport::dispatch($user);\n```\n\nFive requests arrive at once. Five identical jobs:\n\n```text\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\nGenerateReport 123\n```\n\nFive workers building the same report, four of them for nothing. And if the job writes, they may write over each other.\n\n<b>A <i>unique job</i></b> refuses to queue while one with the same key is already pending:\n\n```php\nclass GenerateReport implements ShouldQueue, ShouldBeUnique\n{\n    public function uniqueId(): string\n    {\n        return $this->user->id;\n    }\n}\n```\n\nNow the second dispatch is silently ignored. <b>Silently is the word to notice</b>: nothing errors, and nothing tells the caller their dispatch did nothing.\n\nWhat it suits:\n\n```text\nimports · report generation\nsynchronisation · recalculating something derived\n```\n\nAnything where doing it once is the same as doing it five times, and doing it five times is a waste.\n\n---\n\n### 2. Intermediate — the details that matter\n\n<b>Uniqueness is held by a lock, and a lock needs a lifetime:</b>\n\n```php\npublic int $uniqueFor = 3600;\n```\n\nWithout one, a job that dies in a way that skips its cleanup can leave a lock behind, and then <i>nothing</i> queues until it expires. Which is a hard failure to diagnose, because nothing is failing: dispatches simply do nothing.\n\n<b>The lock is released when the job starts by default</b>, so a second dispatch while the first is running is allowed. `ShouldBeUniqueUntilProcessing` is the explicit version of that, and plain `ShouldBeUnique` holds it until the job finishes.\n\n```text\nShouldBeUnique                   until it finishes\nShouldBeUniqueUntilProcessing    until it starts\n```\n\nWhich you want depends on whether a change during processing should produce another run.\n\n<b>And uniqueness needs a cache the workers share.</b> On the `array` driver it does nothing, and with several servers each has its own lock unless the cache is shared, exactly as with rate limiting on Day 20.\n\n---\n\n### 3. Advanced — rate limiting\n\nAn API says:\n\n```text\n100 requests per minute\n```\n\nAnd your queue has five thousand jobs, each making one call. Four workers will happily send them as fast as they can:\n\n```text\nWorker → rate limiter → API\n```\n\n<b>Without a limit, you get throttled, and then every one of those jobs fails and retries</b>, which sends even more requests. A rate limit is not politeness, it is what stops a queue turning a limit into an outage.\n\n```php\nRateLimiter::for('provider-api', fn () => Limit::perMinute(100));\n```\n\n```php\npublic function middleware(): array\n{\n    return [new RateLimited('provider-api')];\n}\n```\n\n<b>A rate-limited job that cannot run right now is released back to the queue</b>, not failed. So it waits and tries again, which is why the delay matters more than it looks: released too eagerly and the job bounces between the queue and the limiter thousands of times.\n\nThe other middleware worth knowing:\n\n```text\nRateLimited            fewer than N per period\nWithoutOverlapping     one at a time, per key\nSkipIfBatchCancelled   stop when the batch was cancelled\n```\n\n<b>`WithoutOverlapping` is the one people need and do not know exists.</b> Two jobs recalculating the same invoice concurrently is a race, and a key of `invoice-{id}` makes them queue behind each other rather than fight.\n\nWhich gives the pair a clean split:\n\n```text\nunique             do not queue the same work twice\nWithoutOverlapping do not RUN the same work twice at once\nRateLimited        do not run it faster than something else can take\n```",
+      diagram: `The duplicate problem
 
-  Three independent pieces of work, in turn:
+    GenerateReport::dispatch(\$user)   × 5 requests
 
-    profile → orders → notifications
+    GenerateReport 123
+    GenerateReport 123
+    GenerateReport 123     five workers, one report,
+    GenerateReport 123     four of them for nothing
+    GenerateReport 123
 
-    Profile API      200ms
-    Orders API       300ms
-    Notifications    150ms
-                ────────────
-    sequential       650ms
+  And if the job writes, they may write over each other.
 
-  Together:
+    implements ShouldBeUnique
+    public function uniqueId(): string
 
-            ┌→ profile
-  Request ──┼→ orders
-            └→ notifications
+  The second dispatch is silently ignored.
 
-    concurrent ≈ max(200, 300, 150) ≈ 300ms
+  ⚠️  SILENTLY. Nothing errors, and nothing tells the
+      caller their dispatch did nothing.
 
-  Day 22's Http::pool(), generalised: independent work
-  that spends its time WAITING can wait at the same time.
-
-
-When it does not help
-
-  Dependent work cannot be parallelised:
-
-    create the user → create their profile
-
-  The second needs the first's id. Only a design change
-  helps, not concurrency.
-
-  helps                      does not help
-  ─────                      ─────────────
-  external API calls         a tight PHP loop
-  several independent        one query the database
-    queries                    runs sequentially anyway
-  reading several files      work that is already fast
-
-  Three HTTP calls overlap because each is mostly
-  waiting. Three heavy calculations do not: they need
-  the same processor.
-
-  ⚠️  It is not free. Each task has setup cost, so
-      parallelising three five-millisecond operations
-      makes them slower. Measure. If you cannot state
-      the improvement in milliseconds, you added
-      complexity for nothing.
+  Suits: imports · report generation · synchronisation
+         recalculating something derived
 
 
-Contracts
+Details that matter
 
-  Illuminate\\Contracts\\Cache\\Repository
+  Uniqueness is a LOCK, and a lock needs a lifetime:
 
-    Contract → interface → implementation
+    public int \$uniqueFor = 3600;
 
-  __construct(private CacheRepository \$cache)
+  ⚠️  Without one, a job that dies in a way that skips
+      cleanup leaves the lock behind — and then NOTHING
+      queues until it expires. A hard failure to
+      diagnose, because nothing is failing: dispatches
+      simply do nothing.
 
-    your class → the contract → the container
-               → Redis, a file cache, or an array in a test
+  ShouldBeUnique                 until it FINISHES
+  ShouldBeUniqueUntilProcessing  until it STARTS
 
-  Your class stops knowing which one it got, which is
-  what makes it replaceable and testable. Swapping the
-  implementation is configuration, not code.
+  Which you want depends on whether a change during
+  processing should produce another run.
 
-
-  ⚠️  And then the caution:
-
-    ❌ UserServiceInterface + UserService
-       UserRepositoryInterface + UserRepository
-       UserManagerInterface + UserManager
-
-  An interface with exactly one implementation, that
-  will only ever have one, is a file that adds
-  indirection and nothing else. Every reader now opens
-  two files to follow one call.
-
-  Use an abstraction when it buys something:
-
-    several implementations exist, or will
-    an external boundary you want to fake in tests
-    an architectural seam you deliberately chose
-    a framework capability, where the contract exists
-
-  Not because interfaces sound senior.
+  And it needs a cache the workers SHARE. On the array
+  driver it does nothing; across several servers each
+  has its own lock unless the cache is shared — the
+  same point as rate limiting on Day 20.
 
 
-The judgement this day was about
+Rate limiting
 
-  Every abstraction today has the same shape: worth it
-  when it EXPRESSES INTENT, not when it saves characters.
+  An API says 100 requests per minute.
+  Your queue has 5,000 jobs, each making one call.
+  Four workers send them as fast as they can.
 
-    foreach (\$users as \$user) {
-        if (\$user->active) { ... }
+    Worker → rate limiter → API
+
+  ⚠️  Without a limit you get throttled, and then every
+      one of those jobs FAILS AND RETRIES — which sends
+      even more requests.
+
+      A rate limit is not politeness. It is what stops a
+      queue turning a limit into an outage.
+
+    RateLimiter::for('provider-api',
+        fn () => Limit::perMinute(100));
+
+    public function middleware(): array
+    {
+        return [new RateLimited('provider-api')];
     }
-        says what to DO
 
-    \$users->filter->active
-        says give me the active users
+  A limited job that cannot run is RELEASED back to the
+  queue, not failed. Which is why the delay matters:
+  released too eagerly, it bounces between the queue and
+  the limiter thousands of times.
 
-  But a five-step chain with three closures over twenty
-  lines says LESS than the loop it replaced. Same
-  judgement, other direction.
 
-  a chain, when                    a foreach, when
-  ─────────────                    ───────────────
-  transforming, filtering,         the control flow is complex
-  grouping, aggregating            several side effects
-  the pipeline is the point        early exits
-                                   complicated state
+  The middleware worth knowing:
 
-  A collection is not better because it is shorter.
-  Readable code wins.`,
+    RateLimited           fewer than N per period
+    WithoutOverlapping    one at a time, per key
+    SkipIfBatchCancelled  stop when the batch was cancelled
+
+  WithoutOverlapping is the one people need and do not
+  know exists. Two jobs recalculating the same invoice
+  concurrently is a race; a key of invoice-{id} makes
+  them queue behind each other rather than fight.
+
+
+The split
+
+  unique               do not QUEUE the same work twice
+  WithoutOverlapping   do not RUN it twice at once
+  RateLimited          do not run it faster than
+                       something else can take`,
       codeExample: {
-        title: "Concurrency, contracts, and the judgement",
+        title: "Not queueing, not overlapping, not overwhelming",
         code: `<?php
 
-use Illuminate\\Support\\Facades\\Concurrency;
+namespace App\\Jobs;
 
-// ---------- Concurrency: independent, waiting work ----------
+use Illuminate\\Contracts\\Queue\\ShouldBeUnique;
+use Illuminate\\Contracts\\Queue\\ShouldQueue;
+use Illuminate\\Queue\\Middleware\\RateLimited;
+use Illuminate\\Queue\\Middleware\\WithoutOverlapping;
 
-// ❌ 200 + 300 + 150 = 650ms
-$profile       = $this->loadProfile($user);
-$orders        = $this->loadOrders($user);
-$notifications = $this->loadNotifications($user);
+// ---------- Unique: do not queue it twice ----------
 
-// ✓ ≈ max(200, 300, 150) ≈ 300ms
-[$profile, $orders, $notifications] = Concurrency::run([
-    fn () => $this->loadProfile($user),
-    fn () => $this->loadOrders($user),
-    fn () => $this->loadNotifications($user),
-]);
-
-// Fire and forget, when nothing needs the result:
-Concurrency::defer([
-    fn () => $this->warmCache(),
-    fn () => $this->pingWebhook(),
-]);
-
-
-// ---------- When it does not help ----------
-
-// ❌ The second needs the first's id.
-$user    = User::create($data);
-$profile = $user->profile()->create($profileData);
-
-// ❌ Three heavy calculations need the same processor.
-Concurrency::run([
-    fn () => $this->computeA(),
-    fn () => $this->computeB(),
-]);
-
-// ❌ Three five-millisecond operations. Setup costs more
-//    than the saving.
-Concurrency::run([
-    fn () => Cache::get('a'),
-    fn () => Cache::get('b'),
-]);
-
-// Measure. If you cannot state the improvement in
-// milliseconds, you added complexity for nothing.
-
-
-<?php
-// ---------- Contracts ----------
-
-namespace App\\Services;
-
-use Illuminate\\Contracts\\Cache\\Repository as CacheRepository;
-
-class ReportService
+class GenerateReport implements ShouldQueue, ShouldBeUnique
 {
-    // ❌ Tied to one implementation.
-    // public function __construct(private RedisStore $cache) {}
+    use Queueable;
 
-    // ✓ The container decides which one.
-    public function __construct(private CacheRepository $cache) {}
+    public function __construct(public User $user) {}
 
-    public function monthly(): array
+    public function uniqueId(): string
     {
-        return $this->cache->remember('reports.monthly', 3600,
-            fn () => $this->build());
+        return "report:{$this->user->id}";
+    }
+
+    // ⚠️ Without this, a job that dies badly leaves the
+    //    lock behind and NOTHING queues until somebody
+    //    notices. Dispatches simply do nothing.
+    public int $uniqueFor = 3600;
+
+    public function handle(): void
+    {
+        // ...
     }
 }
 
-// Redis in production, an array cache in tests, and this
-// class never knew the difference. That is configuration
-// rather than code.
+// Five simultaneous dispatches, one job. The other four
+// are ignored — silently, which is worth knowing when
+// a caller expects a confirmation.
 
 
 <?php
-// ---------- Where an interface is NOT worth it ----------
+// ---------- Unique until it starts, or until it finishes ----------
 
-// ❌ One implementation, and there will never be another.
-interface UserServiceInterface { public function create(array $data): User; }
-class UserService implements UserServiceInterface { }
+use Illuminate\\Contracts\\Queue\\ShouldBeUniqueUntilProcessing;
 
-// Every reader now opens two files to follow one call.
-
-// ✓ An interface where there is a real boundary:
-interface PaymentGateway
+// The lock is released when the job STARTS, so a change
+// during processing queues another run.
+class SyncCustomer implements ShouldQueue, ShouldBeUniqueUntilProcessing
 {
-    public function charge(Money $amount, string $token): Payment;
+    public function uniqueId(): string
+    {
+        return "sync:{$this->customer->id}";
+    }
 }
-
-class StripeGateway implements PaymentGateway { }
-class FakeGateway implements PaymentGateway { }   // for tests
-
-// Two implementations, an external boundary, and a
-// reason to fake it. That interface earns its file.
 
 
 <?php
-// ---------- The judgement ----------
+// ---------- Rate limiting ----------
 
-// ✓ A pipeline: the chain IS the description.
-$result = collect($users)
-    ->filter->active
-    ->flatMap(fn ($user) => $user->orders
-        ->filter(fn ($o) => $o->status === 'paid' && $o->amount > 100)
-        ->map(fn ($o) => ['user' => $user->name, 'amount' => $o->amount]))
-    ->values();
-
-//   users → active only → their paid orders over 100
-//         → shaped → result
+// AppServiceProvider
+RateLimiter::for('provider-api', function () {
+    return Limit::perMinute(100);
+});
 
 
-// ✓ A loop: the control flow IS the point.
-foreach ($rows as $index => $row) {
-    if (! $this->valid($row)) {
-        $errors[$index] = 'Invalid row';
-        continue;
-    }
-
-    try {
-        $imported[] = $this->import($row);
-    } catch (DuplicateException $e) {
-        $skipped++;
-        continue;
-    }
-
-    if (count($imported) >= 1000) {
-        break;
+// The job opts in.
+class SyncWithProvider implements ShouldQueue
+{
+    public function middleware(): array
+    {
+        return [
+            // Released back to the queue when the limit
+            // is reached, with a delay so it does not
+            // bounce thousands of times.
+            (new RateLimited('provider-api'))->releaseAfter(30),
+        ];
     }
 }
 
-// Early exits, several side effects, a counter and a
-// break. A chain would be shorter and say less.
+// Without this: 5,000 jobs, four workers, and an API
+// that allows 100 a minute. You get throttled, every
+// job fails and retries, and the retries send more
+// requests than the original run did.
+
+
+<?php
+// ---------- WithoutOverlapping: the one people miss ----------
+
+class RecalculateInvoice implements ShouldQueue
+{
+    public function __construct(public Invoice $invoice) {}
+
+    public function middleware(): array
+    {
+        return [
+            // Two of these on the same invoice would race.
+            (new WithoutOverlapping("invoice:{$this->invoice->id}"))
+                ->releaseAfter(10)      // try again shortly
+                ->expireAfter(180),     // and never hold the lock forever
+        ];
+    }
+}
+
+// Different invoices still run in parallel. Only the
+// same one queues behind itself.
+
+
+<?php
+// ---------- The split ----------
+
+// unique              do not QUEUE the same work twice
+// WithoutOverlapping  do not RUN it twice at once
+// RateLimited         do not run it faster than
+//                     something else can take
 //
-// A collection is not better because it is shorter.`,
+// They solve different problems and combine freely:
+
+class SyncCustomer implements ShouldQueue, ShouldBeUnique
+{
+    public function uniqueId(): string
+    {
+        return "sync:{$this->customer->id}";
+    }
+
+    public function middleware(): array
+    {
+        return [
+            new WithoutOverlapping("sync:{$this->customer->id}"),
+            new RateLimited('provider-api'),
+        ];
+    }
+}`,
       },
       keyTakeaways: [
-        "<b>`Concurrency::run()` executes independent tasks together</b>, so the total is the slowest rather than the sum.",
-        "It is Day 22's `Http::pool()` generalised to any independent work.",
-        "<b>Dependent work cannot be parallelised</b>: the second step needing the first's result is a design fact.",
-        "<b>Concurrency helps work that waits, not work that computes</b>, because calculations share one processor.",
-        "<b>It is not free</b>, so parallelising several fast operations makes them slower; measure both ways.",
-        "<b>A contract is an interface for a capability</b>, and type-hinting it lets the container choose the implementation.",
-        "<b>Your class stops knowing which implementation it got</b>, which is what makes it replaceable and testable.",
-        "<b>An interface with exactly one implementation adds indirection and nothing else.</b>",
-        "Use an abstraction for several implementations, an external boundary, or a seam you deliberately chose.",
-        "<b>Every abstraction today is worth it when it expresses intent and not when it only saves characters.</b>",
-        "<b>Use a chain when the pipeline is the point and a loop when the control flow is.</b> Readable code wins.",
+        "<b>Several simultaneous dispatches create several identical jobs</b>, most of them wasted and possibly racing.",
+        "<b>A unique job refuses to queue while one with the same key is pending</b>, and the refusal is silent.",
+        "It suits imports, report generation and synchronisation, where once is the same as five times.",
+        "<b>Uniqueness is a lock, so `$uniqueFor` is essential</b>: a stuck lock means dispatches quietly do nothing.",
+        "<b>`ShouldBeUnique` holds the lock until the job finishes; `ShouldBeUniqueUntilProcessing` until it starts.</b>",
+        "It needs a cache the workers share, or each server keeps its own lock.",
+        "<b>Without a rate limit, hitting a third-party limit makes every job fail and retry</b>, sending more requests than before.",
+        "<b>A rate-limited job is released back to the queue rather than failed</b>, so the release delay matters.",
+        "<b>`WithoutOverlapping` stops the same work running twice concurrently</b>, keyed per record.",
+        "<b>Unique stops it queueing twice, `WithoutOverlapping` stops it running twice, `RateLimited` stops it going too fast.</b>",
       ],
       commonMistakes: [
-        "<b>Parallelising dependent steps.</b> The second needs the first's result, so nothing overlaps.",
-        "<b>Using concurrency for CPU-bound work.</b> It helps waiting, not computing.",
-        "<b>Adding concurrency without measuring.</b> On fast operations the setup cost makes it slower.",
-        "<b>Creating an interface per class.</b> Two files to follow one call, for no benefit.",
-        "<b>Replacing every loop with a chain.</b> A chain with complex control flow says less than the loop did.",
+        "<b>Omitting `$uniqueFor`.</b> A stuck lock blocks every future dispatch, and nothing reports an error.",
+        "<b>Expecting a duplicate dispatch to complain.</b> It is silently discarded.",
+        "<b>Relying on uniqueness with an array cache or unshared cache across servers.</b> Each worker keeps its own lock.",
+        "<b>Not rate limiting a queue that calls a limited API.</b> The throttling causes retries, which cause more throttling.",
+        "<b>Using unique when you needed `WithoutOverlapping`.</b> One prevents queueing, the other prevents concurrent execution.",
       ],
       quiz: [
         {
-          question: "When does concurrency help?",
+          question: "What does a unique job prevent?",
           options: [
-            "Any slow code",
-            "Independent work that spends its time waiting, such as several API calls",
-            "Tight PHP loops",
-            "Database writes",
+            "The job failing",
+            "A second job with the same key being queued while one is pending",
+            "Concurrent execution",
+            "Retries",
           ],
           correctIndex: 1,
-          explanation: "Calculations share a processor; waiting can overlap.",
+          explanation: "And the second dispatch is discarded silently.",
         },
         {
-          question: "Why can creating a user and their profile not be parallelised?",
+          question: "Why does `$uniqueFor` matter?",
           options: [
-            "Laravel forbids it",
-            "The second needs the first's id, so it is dependent work",
-            "Both write to the database",
-            "It can be",
+            "It sets the retry delay",
+            "A lock left behind blocks every future dispatch until it expires",
+            "It limits the queue size",
+            "It sets the timeout",
           ],
           correctIndex: 1,
-          explanation: "Only a design change would help, not concurrency.",
+          explanation: "And the symptom is dispatches quietly doing nothing.",
         },
         {
-          question: "What does type-hinting a contract buy you?",
+          question: "What happens without a rate limit on jobs calling a limited API?",
           options: [
-            "Better performance",
-            "The container chooses the implementation, so it can be swapped or faked in tests",
-            "Automatic validation",
-            "Shorter code",
+            "Jobs run slower",
+            "You get throttled, those jobs fail and retry, and the retries send even more requests",
+            "The API queues them",
+            "Nothing",
           ],
           correctIndex: 1,
-          explanation: "Redis in production and an array cache in tests, with no code change.",
+          explanation: "A rate limit is what stops a queue turning a limit into an outage.",
         },
         {
-          question: "When is a `foreach` better than a collection chain?",
+          question: "What does `WithoutOverlapping` do that unique does not?",
           options: [
-            "Never",
-            "When the control flow is the point: early exits, several side effects, complicated state",
-            "When the collection is small",
-            "When the items are arrays",
+            "Nothing",
+            "It stops the same work running twice concurrently, rather than being queued twice",
+            "It retries the job",
+            "It rate limits the job",
           ],
           correctIndex: 1,
-          explanation: "A collection is not better because it is shorter.",
+          explanation: "Two jobs recalculating one invoice at once is a race.",
+        },
+      ],
+    },
+    {
+      id: "failures-supervisor-horizon",
+      title: "Failed jobs, Supervisor & Horizon",
+      durationMinutes: 14,
+      explanation: "Everything so far was about writing jobs. This is about running them somewhere real.\n\n---\n\n### 1. Basic — failed jobs\n\nWhen a job exhausts its attempts, Laravel records it:\n\n```text\njob → attempts → failure → failed_jobs\n```\n\n```bash\nphp artisan queue:failed\n```\n\n```text\nid · connection · queue · exception · failed_at\n```\n\n<b>This is the first command to learn for production queues</b>, because it is the answer to \"the email never arrived\" that does not involve guessing.\n\nAnd the payload is stored with it, which is what makes the next command possible:\n\n```bash\nphp artisan queue:retry 9f2b...\nphp artisan queue:retry all\nphp artisan queue:retry --queue=emails\n```\n\n<b>Retrying one failed job, rather than replaying a run</b>, is the point. Ninety-nine succeeded and one failed; you want the one.\n\n```bash\nphp artisan queue:flush\n```\n\nremoves the records. <b>That is cleanup, not recovery.</b> Flushing loses the payloads, so those jobs can never be retried, and loses the history of what went wrong. Read before you flush.\n\nA `failed()` method on the job runs after the last attempt, which is where a status update or an alert belongs.\n\n---\n\n### 2. Intermediate — keeping workers alive\n\nA worker started by hand is not a production system:\n\n```text\nthe worker crashes\nthe server restarts\nPHP runs out of memory\n```\n\nand nothing is processing anything, silently, until somebody notices.\n\n<b>A process manager restarts them.</b> Supervisor is the usual one:\n\n```text\nSupervisor\n    ├── worker 1\n    ├── worker 2\n    ├── worker 3\n    └── worker 4\n```\n\n```text\na worker dies → Supervisor notices → it starts another\n```\n\nWhich is also what makes `--max-jobs` and `--max-time` from the workers lesson safe: <b>a worker exiting on purpose is only a good idea if something starts a new one.</b>\n\nAnd more workers is how a queue scales:\n\n```text\n1 worker    job → job → job → ...\n\n4 workers   Worker 1 ─┐\n            Worker 2 ─┼→ Queue\n            Worker 3 ─┤\n            Worker 4 ─┘\n```\n\nFour workers, four jobs at once, which is the moment idempotency stops being theoretical: <b>two workers can now genuinely process related jobs at the same time.</b>\n\nAnd the priorities from the routing lesson, applied here:\n\n```text\nhigh      payments · password resets\ndefault   email · notifications\nlow       analytics · cleanup · imports\n```\n\n---\n\n### 3. Advanced — Horizon\n\nOn Redis, <b>Horizon is the answer to \"why are our jobs slow?\"</b>\n\n```text\nRedis\n  ↓\nHorizon\n  ├── jobs\n  ├── throughput\n  ├── runtime\n  ├── wait time\n  ├── failures\n  ├── workers\n  └── balancing\n```\n\nWithout it, a queue is a black box: jobs go in, something happens, and your only evidence is that a customer says they did not get an email.\n\n<b>Wait time is the metric that matters most</b>, and it is the one nobody thinks to look at. A job that runs in 200ms but sits in the queue for eleven minutes is a slow feature, and neither the code nor the logs say so.\n\nHorizon also balances workers by workload:\n\n```text\nbefore                     after balancing\n\npodcasts  ███████████      podcasts → many workers\nemails    ██               emails   → few workers\n```\n\nRather than a fixed split that leaves workers idle on an empty queue while another has ten thousand jobs waiting.\n\n---\n\n### Pausing, and the whole picture\n\n```bash\nphp artisan queue:pause --all\n```\n\n<b>Pausing is not deleting.</b> Jobs stay queued; workers stop taking new ones. Which is what you want during a deploy, a migration, a dependency outage, or an incident where you would rather nothing ran than everything failed.\n\n```text\n                       Laravel\n                          │\n                     dispatch()\n                          ↓\n                        Queue\n            ┌─────────────┼─────────────┐\n            ↓             ↓             ↓\n         Redis           SQS         Database\n            ↓\n      Queue workers\n            ↓\n        handle()\n            ↓\n  external service · database · storage\n\nSupervisor  keeps workers alive\nHorizon     shows you what they are doing\n```\n\nAnd the question this day exists to answer. Not \"how do I dispatch a job\", but:\n\n> <b>What happens if this job runs twice, fails halfway through, takes ten minutes, is retried five times, the external API is down, or a hundred thousand of them arrive at once?</b>\n\n<b>A job you can answer that about is production code.</b> One you cannot is a function you moved off the request and hoped about.\n\nTwo housekeeping commands that nobody adds until the table is enormous:\n\n```bash\nphp artisan queue:prune-failed --hours=168\nphp artisan queue:prune-batches --hours=48\n```\n\n<b>`failed_jobs` and `job_batches` grow forever otherwise</b>, and a failed job from eight months ago helps nobody. Schedule both weekly.\n\nAnd one deploy detail: <b>under Horizon, `queue:restart` is not the command.</b> Use `php artisan horizon:terminate`, which lets Horizon shut its workers down gracefully and start them again on the new code. Putting the wrong one in a deploy script gives you workers that keep running the old release, which is Day 33's warning with a Horizon-shaped edge.\n\nThree Horizon details worth having.\n\n<b>Its commands are its own.</b> Just as `queue:restart` is wrong under Horizon, so are the pause commands:\n\n```bash\nphp artisan horizon:pause      # not queue:pause\nphp artisan horizon:continue\nphp artisan horizon:status\n```\n\n<b>The memory ceiling has a config key too</b>, alongside `tries` and `timeout`:\n\n```php\n'supervisor-1' => [\n    'balance'      => 'auto',\n    'minProcesses' => 1,\n    'maxProcesses' => 10,\n    'memory'       => 128,\n],\n```\n\n<b>And on picking the number of workers:</b> start at roughly one per CPU core, then watch queue wait time and add more while it stays high. Memory is normally the constraint before CPU is, so the honest ceiling is how many workers fit in RAM rather than how many the processor could run.\n\nLastly, a dashboard is not alerting, which is Day 29's point arriving here. Horizon can notify you when a queue's wait time crosses a threshold:\n\n```php\nHorizon::routeMailNotificationsTo('ops@example.com');\n\n// config/horizon.php\n'waits' => ['redis:default' => 60],\n```\n\n<b>Without it, a backed-up queue waits to be noticed</b>, and the person who notices is usually a customer.",
+      diagram: `Failed jobs
+
+    job → attempts → failure → failed_jobs
+
+    php artisan queue:failed
+
+      id · connection · queue · exception · failed_at
+
+  The first command to learn for production queues: the
+  answer to "the email never arrived" that does not
+  involve guessing.
+
+  The payload is stored too, which is what makes this
+  possible:
+
+    php artisan queue:retry 9f2b...
+    php artisan queue:retry all
+    php artisan queue:retry --queue=emails
+
+  Retrying ONE failed job rather than replaying a run.
+  Ninety-nine succeeded; you want the one.
+
+    php artisan queue:flush
+
+  ⚠️  Cleanup, not recovery. Flushing loses the payloads
+      — those jobs can never be retried — and loses the
+      history of what went wrong. Read before you flush.
+
+  A failed() method on the job runs after the last
+  attempt: a status update, or an alert.
+
+
+Keeping workers alive
+
+  A worker started by hand is not a production system:
+
+    the worker crashes · the server restarts
+    PHP runs out of memory
+
+  and nothing is processing anything, silently.
+
+    Supervisor
+        ├── worker 1
+        ├── worker 2
+        ├── worker 3
+        └── worker 4
+
+    a worker dies → Supervisor notices → starts another
+
+  Which is what makes --max-jobs safe: a worker exiting
+  on purpose is a good idea only if something starts a
+  new one.
+
+  And more workers is how a queue scales:
+
+    1 worker    job → job → job → ...
+
+    4 workers   Worker 1 ─┐
+                Worker 2 ─┼→ Queue
+                Worker 3 ─┤
+                Worker 4 ─┘
+
+  Four jobs at once — the moment idempotency stops being
+  theoretical.
+
+
+Horizon
+
+    Redis → Horizon
+              ├── jobs        ├── failures
+              ├── throughput  ├── workers
+              ├── runtime     └── balancing
+              └── WAIT TIME
+
+  Without it a queue is a black box: jobs go in,
+  something happens, and your evidence is a customer
+  saying they got no email.
+
+  ⚠️  Wait time is the metric that matters most and the
+      one nobody looks at. A job that RUNS in 200ms and
+      WAITS eleven minutes is a slow feature, and
+      neither the code nor the logs say so.
+
+  Balancing:
+
+    before                  after
+
+    podcasts ███████████    podcasts → many workers
+    emails   ██             emails   → few workers
+
+  Rather than a fixed split leaving workers idle while
+  another queue has ten thousand jobs waiting.
+
+
+Pausing, and the whole picture
+
+    php artisan queue:pause --all
+
+  Pausing is NOT deleting. Jobs stay queued; workers
+  stop taking new ones. For a deploy, a migration, a
+  dependency outage, or an incident where you would
+  rather nothing ran than everything failed.
+
+
+                       Laravel
+                          │
+                     dispatch()
+                          ↓
+                        Queue
+            ┌─────────────┼─────────────┐
+            ↓             ↓             ↓
+         Redis           SQS         Database
+            ↓
+      Queue workers
+            ↓
+        handle()
+            ↓
+  external service · database · storage
+
+  Supervisor  keeps workers alive
+  Horizon     shows you what they are doing
+
+
+The question this day exists for
+
+  Not "how do I dispatch a job", but:
+
+    What happens if this job runs twice, fails halfway
+    through, takes ten minutes, is retried five times,
+    the external API is down, or a hundred thousand of
+    them arrive at once?
+
+  A job you can answer that about is production code.
+  One you cannot is a function you moved off the
+  request and hoped about.`,
+      codeExample: {
+        title: "Operating a queue",
+        code: `# ---------- Failed jobs ----------
+
+php artisan queue:failed
+
+# id                                    queue    exception
+# 9f2b1c3d-...                          emails   ConnectionException
+
+php artisan queue:failed --json | jq '.[0].exception'
+
+# And the housekeeping nobody adds until the table is huge:
+php artisan queue:prune-failed --hours=168     # a week
+php artisan queue:prune-batches --hours=48
+
+# routes/console.php
+Schedule::command('queue:prune-failed --hours=168')->weekly();
+Schedule::command('queue:prune-batches --hours=48')->daily();
+
+
+# ---------- Deploying, under Horizon ----------
+
+# ❌ Not the command when Horizon is managing the workers
+php artisan queue:restart
+
+# ✅
+php artisan horizon:terminate
+
+# Horizon shuts its workers down gracefully and starts
+# them again on the new code. The wrong one leaves
+# workers running the old release.
+
+
+# Retry the one that failed, not the ninety-nine that worked.
+php artisan queue:retry 9f2b1c3d-...
+php artisan queue:retry all
+php artisan queue:retry --queue=emails
+
+php artisan queue:forget 9f2b1c3d-...     # drop one
+
+# ⚠️ Cleanup, not recovery. The payloads go with it.
+php artisan queue:flush
+
+
+<?php
+// ---------- The last-attempt hook ----------
+
+class SyncWithProvider implements ShouldQueue
+{
+    public function failed(\\Throwable $e): void
+    {
+        // After the final attempt. A status, or an alert.
+        $this->customer->update([
+            'sync_status' => 'failed',
+            'sync_error'  => $e->getMessage(),
+        ]);
+
+        Notification::route('slack', config('services.slack.ops'))
+            ->notify(new SyncFailed($this->customer, $e));
+    }
+}
+
+
+# ---------- Supervisor ----------
+
+# /etc/supervisor/conf.d/worker.conf
+
+[program:invoicehub-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/artisan queue:work redis --queue=high,default,low --tries=3 --timeout=60 --max-time=3600
+autostart=true
+autorestart=true
+stopwaitsecs=3600
+numprocs=4
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/log/worker.log
+
+# autorestart      a crashed worker comes back
+# numprocs=4       four jobs at once
+# stopwaitsecs     let a running job finish on shutdown
+# --max-time       exit deliberately; Supervisor restarts
+
+# A dedicated worker for anything that must not wait:
+# command=php /var/www/artisan queue:work redis --queue=high
+
+
+# ---------- In the deploy script ----------
+
+php artisan queue:restart
+
+# Otherwise workers keep running the code they booted with.
+
+
+# ---------- Pausing ----------
+
+php artisan queue:pause --all
+# Jobs stay queued. Workers stop taking new ones.
+# For a deploy, a migration, or a dependency outage.
+
+php artisan queue:resume --all
+
+
+<?php
+// ---------- Horizon ----------
+
+// composer require laravel/horizon
+// php artisan horizon:install
+
+// config/horizon.php
+'environments' => [
+    'production' => [
+        'supervisor-urgent' => [
+            'connection'   => 'redis',
+            'queue'        => ['high'],
+            'balance'      => 'simple',
+            'processes'    => 2,     // never blocked by anything else
+            'tries'        => 3,
+        ],
+
+        'supervisor-default' => [
+            'connection'   => 'redis',
+            'queue'        => ['default', 'podcasts', 'imports'],
+
+            // Workers follow the workload rather than a
+            // fixed split.
+            'balance'      => 'auto',
+            'minProcesses' => 1,
+            'maxProcesses' => 10,
+            'tries'        => 3,
+            'timeout'      => 60,
+        ],
+    ],
+],
+
+// Horizon replaces the queue:work lines in Supervisor,
+// and Supervisor then keeps horizon itself alive:
+//   command=php /var/www/artisan horizon
+
+
+# ---------- What to look at first ----------
+
+# Throughput   how many jobs a minute
+# Runtime      how long each takes
+# WAIT TIME    how long they sit before starting  ← this one
+# Failures     what is breaking, and how often
+#
+# A job that runs in 200ms and waits eleven minutes is a
+# slow feature, and nothing in the code or the logs
+# says so.`,
+      },
+      keyTakeaways: [
+        "<b>`queue:prune-failed` and `queue:prune-batches` keep those tables from growing forever.</b>",
+        "<b>Under Horizon the deploy command is `horizon:terminate`, not `queue:restart`.</b>",
+        "<b>A job that exhausts its attempts is recorded in `failed_jobs`</b>, with its payload and its exception.",
+        "<b>`queue:failed` is the first command to learn</b>, because it answers \"it never arrived\" without guessing.",
+        "<b>`queue:retry` replays one failed job</b> rather than a whole run, which is the point of storing the payload.",
+        "<b>`queue:flush` is cleanup, not recovery</b>: it discards the payloads and the history of what broke.",
+        "A `failed()` method on the job runs after the final attempt, for a status update or an alert.",
+        "<b>A worker started by hand is not a production system</b>, because a crash means nothing runs and nothing says so.",
+        "<b>Supervisor restarts workers</b>, which is what makes `--max-jobs` and `--max-time` a safe strategy.",
+        "<b>More workers means more jobs at once</b>, which is where idempotency stops being theoretical.",
+        "<b>Horizon shows throughput, runtime, wait time, failures and worker activity</b> for Redis queues.",
+        "<b>Wait time is the metric nobody checks</b>: a fast job that queues for eleven minutes is a slow feature.",
+        "<b>Horizon balances workers by workload</b> rather than a fixed split that leaves some idle.",
+        "<b>Pausing stops workers taking new jobs without deleting anything</b>, which is what a deploy or an outage needs.",
+        "<b>The question is what happens on a retry, a timeout, an outage or a hundred thousand jobs</b>, not how to dispatch one.",
+      ],
+      commonMistakes: [
+        "<b>Running `queue:flush` before reading the failures.</b> The payloads are gone and nothing can be retried.",
+        "<b>Retrying everything when one job failed.</b> The ninety-nine that succeeded run again.",
+        "<b>Running workers without a process manager.</b> A crash means nothing is processed, silently.",
+        "<b>Never looking at wait time.</b> The job is fast and the feature is slow, and nothing in the logs explains it.",
+        "<b>Assuming a paused queue has lost its jobs.</b> Pausing stops processing; it does not delete.",
+      ],
+      quiz: [
+        {
+          question: "What does `queue:flush` do?",
+          options: [
+            "Retries every failed job",
+            "Deletes the failed-job records, including their payloads, so they can never be retried",
+            "Clears the pending queue",
+            "Restarts the workers",
+          ],
+          correctIndex: 1,
+          explanation: "Cleanup, not recovery. Read before you flush.",
+        },
+        {
+          question: "Why does a production queue need a process manager?",
+          options: [
+            "For performance",
+            "A crashed or exited worker means nothing is processed, and nothing reports it",
+            "To run migrations",
+            "To pause the queue",
+          ],
+          correctIndex: 1,
+          explanation: "It is also what makes `--max-time` a safe strategy.",
+        },
+        {
+          question: "Which Horizon metric is most often ignored and most revealing?",
+          options: ["Throughput", "Runtime", "Wait time", "Failures"],
+          correctIndex: 2,
+          explanation: "A 200ms job that queues for eleven minutes is a slow feature.",
+        },
+        {
+          question: "What does `queue:pause` do to queued jobs?",
+          options: [
+            "Deletes them",
+            "Nothing; they stay queued while workers stop taking new ones",
+            "Retries them",
+            "Moves them to failed_jobs",
+          ],
+          correctIndex: 1,
+          explanation: "Which is what a deploy or a dependency outage needs.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "Why should a placeholder live inside a translation rather than in a concatenation?",
+      question: "What question decides whether work belongs in a queue?",
       options: [
-        "It is shorter",
-        "Word order differs between languages, so each translation must own it",
-        "Concatenation is slower",
-        "Blade cannot concatenate",
+        "Is it slow?",
+        "Does the user need it finished before they get a response?",
+        "Does it touch the database?",
+        "Is it called often?",
       ],
       correctIndex: 1,
-      explanation: "A translation is a whole sentence, not a fragment.",
+      explanation: "The request does the minimum that must be true before answering.",
     },
     {
-      question: "What is the practical difference between PHP and JSON translation files?",
+      question: "How is a model stored when passed into a job?",
       options: [
-        "JSON is faster",
-        "JSON uses the English text as the key, so a missing translation shows readable English",
-        "PHP files cannot take parameters",
-        "JSON supports plurals only",
+        "As a serialised copy",
+        "As an id, and re-fetched when the job runs",
+        "As JSON",
+        "It cannot be passed",
       ],
       correctIndex: 1,
-      explanation: "PHP files give grouping and structure instead.",
+      explanation: "Which is why the job sees edits made after dispatch.",
     },
     {
-      question: "Why not write `if ($count === 1)` for pluralization?",
-      options: [
-        "It is slower",
-        "Plural rules differ by language, and several have more than two forms",
-        "Laravel forbids it",
-        "It cannot be cached",
-      ],
-      correctIndex: 1,
-      explanation: "`trans_choice()` lets each translation define its own forms.",
-    },
-    {
-      question: "Which locale source should win?",
-      options: [
-        "The `Accept-Language` header",
-        "The user's explicit choice",
-        "The server default",
-        "Whichever is checked first",
-      ],
-      correctIndex: 1,
-      explanation: "Re-detecting overrules somebody who already told you.",
-    },
-    {
-      question: "What is the difference between `map()` and `filter()`?",
-      options: [
-        "None",
-        "`map()` changes every item; `filter()` removes some and leaves the rest unchanged",
-        "`filter()` is faster",
-        "`map()` returns an array",
-      ],
-      correctIndex: 1,
-      explanation: "Knowing which you want is most of the skill.",
-    },
-    {
-      question: "What is wrong with `User::all()->filter(fn ($u) => $u->active)`?",
+      question: "What is wrong with using `dispatchSync()` because the queue is not configured?",
       options: [
         "Nothing",
-        "Every row is fetched and PHP discards most of them; the database should filter",
-        "`filter()` does not work on models",
-        "It returns an array",
+        "The code reads and reviews as queued while blocking the request",
+        "It fails silently",
+        "It cannot be tested",
       ],
       correctIndex: 1,
-      explanation: "If the condition can be a `WHERE` clause, it belongs in the query.",
+      explanation: "`dispatchAfterResponse()` frees the user but still holds the PHP process.",
     },
     {
-      question: "Why does a filtered collection sometimes serialise as a JSON object?",
+      question: "Why does a code change not affect a running worker?",
       options: [
-        "A cast is missing",
-        "`filter()` preserves keys, so the indexes are no longer sequential",
-        "Collections always serialise as objects",
-        "It is a bug",
+        "The config is cached",
+        "A worker is a long-running process still executing the code it booted with",
+        "Jobs are compiled",
+        "It does",
       ],
       correctIndex: 1,
-      explanation: "`->values()` reindexes and restores the array shape.",
+      explanation: "`queue:restart` belongs in every deploy script.",
     },
     {
-      question: "What does a lazy collection solve?",
+      question: "When should you use a chain rather than a batch?",
       options: [
-        "Slow queries",
-        "Holding every item in memory, which fails on a large result set",
-        "Missing eager loads",
-        "Duplicate values",
+        "When there are many jobs",
+        "When each job depends on the previous one succeeding",
+        "When the jobs are slow",
+        "When failures are likely",
       ],
       correctIndex: 1,
-      explanation: "Values are produced one at a time, so memory does not grow with the rows.",
+      explanation: "A batch is for independent jobs you want to track as one unit.",
     },
     {
-      question: "What is the main cost of a collection macro?",
+      question: "What does a batch give you that individual dispatches do not?",
       options: [
-        "Performance",
-        "Discoverability: nobody knows it exists, and it lives in a provider they will not open",
-        "Memory",
-        "It breaks type hints",
+        "Faster execution",
+        "One unit to track, with progress and a `then()` when everything succeeded",
+        "Automatic retries",
+        "Ordering",
       ],
       correctIndex: 1,
-      explanation: "A custom collection class keeps the methods next to the model.",
+      explanation: "Otherwise, knowing when a hundred jobs finished is a polling loop.",
     },
     {
-      question: "Is `Str::contains($url, 'example.com')` a safe host check?",
+      question: "What decides which queue a job belongs on?",
       options: [
-        "Yes",
-        "No; `evil.com/?x=example.com` passes it",
-        "Only with `startsWith`",
-        "Only over HTTPS",
+        "How long it takes",
+        "Who is waiting for it",
+        "How often it runs",
+        "Which model it touches",
       ],
       correctIndex: 1,
-      explanation: "Parse the URL and check the host, or whitelist.",
+      explanation: "A password reset is trivial work somebody is watching.",
     },
     {
-      question: "What does `tap()` return?",
+      question: "What decides whether a failed job should be retried?",
       options: [
-        "The callback's return value",
-        "The original value passed to it",
-        "A boolean",
-        "Null",
+        "How many attempts are left",
+        "Whether retrying could produce a different result",
+        "The queue it is on",
+        "How long it ran",
       ],
       correctIndex: 1,
-      explanation: "Which is why it suits a method like `update()` that returns a boolean.",
+      explanation: "A permanent failure retried is the same wrong answer, three times.",
     },
     {
-      question: "When does concurrency help?",
+      question: "Why must a worker's `--timeout` be shorter than the driver's `retry_after`?",
       options: [
-        "Any slow code",
-        "Independent work that spends its time waiting, such as several API calls",
-        "Tight PHP loops",
-        "Database writes",
+        "For memory",
+        "Otherwise the queue reassigns the job while the first worker is still running it",
+        "It is a config requirement",
+        "To enable backoff",
       ],
       correctIndex: 1,
-      explanation: "Calculations share a processor; waiting can overlap.",
+      explanation: "The job then runs twice, at the same time.",
     },
     {
-      question: "When is an interface worth creating?",
+      question: "What makes retries safe?",
       options: [
-        "For every service class",
-        "When there are several implementations, an external boundary, or a seam you deliberately chose",
-        "Whenever the class has dependencies",
-        "Never",
+        "Backoff",
+        "The job being idempotent, so a second run has the same effect as the first",
+        "A short timeout",
+        "A low `tries` value",
       ],
       correctIndex: 1,
-      explanation: "One implementation that will only ever be one is indirection and nothing else.",
+      explanation: "Otherwise attempt two charges the card attempt one already charged.",
     },
     {
-      question: "When is a `foreach` better than a collection chain?",
+      question: "What happens without `$uniqueFor` on a unique job?",
       options: [
-        "Never",
-        "When the control flow is the point: early exits, several side effects, complicated state",
-        "When the collection is small",
-        "When the items are arrays",
+        "Nothing",
+        "A lock left behind blocks every future dispatch until it expires, silently",
+        "The job runs twice",
+        "The queue fills up",
       ],
       correctIndex: 1,
-      explanation: "A collection is not better because it is shorter.",
+      explanation: "The symptom is dispatches quietly doing nothing.",
+    },
+    {
+      question: "What does `WithoutOverlapping` prevent that a unique job does not?",
+      options: [
+        "Nothing",
+        "The same work running twice concurrently, rather than being queued twice",
+        "Rate limiting",
+        "Failures",
+      ],
+      correctIndex: 1,
+      explanation: "Two jobs recalculating one invoice at once is a race.",
+    },
+    {
+      question: "What does `queue:flush` do?",
+      options: [
+        "Retries the failed jobs",
+        "Deletes the failed-job records and their payloads, so they can never be retried",
+        "Clears the pending queue",
+        "Restarts workers",
+      ],
+      correctIndex: 1,
+      explanation: "Cleanup, not recovery.",
+    },
+    {
+      question: "Which Horizon metric most often explains a slow feature?",
+      options: ["Throughput", "Runtime", "Wait time", "Memory"],
+      correctIndex: 2,
+      explanation: "A 200ms job that sits in the queue for eleven minutes.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Localize InvoiceHub into three languages and rewrite its ugliest reporting code, keeping only the rewrites that made it clearer.",
-    brief: "InvoiceHub speaks English in hard-coded strings, and somewhere in it is a report built from four nested loops that nobody wants to touch.\n\nToday fixes both, and the second half comes with a rule: <b>every rewrite has to be justified out loud.</b> Turning a loop into a chain because it is shorter is not a reason. Turning it into a chain because the transformation becomes visible is. You will rewrite several pieces of code today and you should deliberately keep at least one of them as a loop, because that judgement is the actual skill.\n\nFor the localization half, the test is not that the strings are translated. It is that somebody could add a fourth language by adding one file, with no code change anywhere.",
+    goal: "Move InvoiceHub's slow work off the request, then break it on purpose: fail one job in a hundred, retry only that one, and prove nothing ran twice.",
+    brief: "InvoiceHub does everything during the request. Generating a PDF, sending the email, syncing to the accounting provider: all of it happens while somebody watches a spinner.\n\nToday it moves to a queue, and the interesting half is not the moving. <b>It is what happens when things go wrong.</b> A queue that works when everything works is not a queue you can run; the day is about the retry, the timeout, the duplicate and the failure.\n\nSo the centrepiece is deliberate: dispatch a hundred jobs, make one of them fail, and end with a hundred completed without the ninety-nine having run twice. If you cannot prove that last part, the exercise is not finished.\n\nRun a real driver from the start. Set `QUEUE_CONNECTION=redis` or `database` before you write a line, because `sync` will hide every behaviour this day is about.",
     steps: [
-      "Find every hard-coded user-facing string in InvoiceHub. Write down how many there are before you start; the number is usually a surprise.",
-      "Set up `lang/en`, `lang/ja` and `lang/ne`, and decide between PHP and JSON files. Write one sentence explaining the choice, then stick to it.",
-      "Move the invoice screens' strings into language files and replace them with `__()`. Confirm nothing in the codebase branches on a language any more.",
-      "Find a string built by concatenating a value, such as a greeting or a status line, and convert it to a placeholder. Then check whether the Japanese word order is actually the same, and note what you found.",
-      "Add plurals for a count that appears in the interface, such as \"3 invoices\". Use `trans_choice()` and give the Japanese file a single form.",
-      "Write a `SetLocale` middleware with the priority order: user preference, then URL or session, then `Accept-Language` whitelisted, then the fallback. Set a fallback locale in config.",
-      "Log in, switch to Japanese, then load a page in a browser sending `Accept-Language: en`. Confirm your choice wins, and say why that matters.",
-      "Remove one key from the Japanese file and load that page. Note what appears with and without a fallback locale configured.",
-      "Format one date and one currency amount for the active locale. Look at the Japanese page and note anything still obviously English.",
-      "Now the reporting half. Find the worst nested loop in the codebase, copy it into `NOTES.md` untouched, and write one sentence describing what it produces.",
-      "Rewrite it as a collection pipeline. Put both versions side by side and decide honestly which one communicates the intention better.",
-      "Check the rewrite for the two traps: is anything filtered in PHP that the database could filter, and does the result need `values()` before it becomes JSON?",
-      "Find a second loop with real control flow, such as an importer with error collection and an early exit. Attempt a chain, then keep the loop, and write down why.",
-      "Find one place that does something to every item and one that builds a result from every item. Make them `each()` and `map()` respectively, and note whether either was previously the wrong one.",
-      "Replace one repeated filter with a higher-order message, and one with a custom collection method on the model. Say which is more discoverable and why.",
-      "Take one report that loads a whole table into memory and rewrite it with `lazy()`. Measure peak memory before and after with `memory_get_peak_usage()`.",
-      "Find a place that indexes into an external API response directly and replace it with `data_get()`. Then break the response shape deliberately and confirm the failure is now a default rather than an error.",
-      "Find three or more independent calls in one request. Time them sequentially, then with `Concurrency::run()`, and record both numbers. If it is not faster, revert it and say so.",
-      "Finally, list every rewrite you made and whether it made the code clearer or only shorter. Revert anything in the second category.",
+      "Set `QUEUE_CONNECTION` to a real driver and run the migrations for jobs, failed jobs and batches. Confirm a dispatched job appears in the store before any worker runs.",
+      "Create `GenerateInvoicePdf` and move the PDF generation out of the controller. Time the request before and after, and record both numbers.",
+      "Dispatch it, then edit the invoice before the worker picks it up. Look at the generated PDF and write down which version of the data it used, and why.",
+      "Chain `GenerateInvoicePdf` then `SendInvoiceEmail`. Make the PDF job fail and confirm no email was sent.",
+      "Add a `failed()` method that marks the invoice as failed, and check the record after a failure.",
+      "Now the centrepiece: seed 100 invoices and dispatch a batch of `GenerateInvoicePdf`. Make invoice 50 throw. Use `allowFailures()` so the other 99 continue.",
+      "Add `then()` and `catch()` callbacks that log the outcome, and a `progress()` callback that writes the percentage somewhere you can watch.",
+      "Run the batch. Record how many completed and how many failed, then find the failure with `queue:failed`.",
+      "Fix the cause, retry only that job with `queue:retry <id>`, and prove from your logs or a counter that the other 99 did not run again. This is the acceptance criterion for the whole day.",
+      "Add a `SyncToAccounting` job calling an external API. Give it `#[Tries]`, growing `#[Backoff]` and a `#[Timeout]` set from how long the call actually takes.",
+      "Point it at a URL that returns 500 and watch the attempts and the delays. Then point it at one returning 422 and add `failOnException()` so it stops at the first attempt. Compare the two logs.",
+      "Make the job idempotent: run it twice against the same invoice and confirm the provider was called once. Then remove the guard, run it twice, and confirm it was called twice.",
+      "Set the worker's `--timeout` higher than the driver's `retry_after` deliberately, run a slow job, and observe what happens. Then fix it and write down what you saw.",
+      "Make `SyncToAccounting` unique per invoice with a `$uniqueFor`. Dispatch it five times in a loop and confirm only one job was queued.",
+      "Add a rate limiter for the accounting API and apply it as job middleware. Dispatch 200 jobs and confirm from the timestamps that they are spread rather than sent at once.",
+      "Split the queues: `high` for anything a person is waiting for, `default`, and `low` for bulk PDF generation. Route the jobs with `Queue::route()` in one place.",
+      "Run one worker on `--queue=high` alone and another on the rest. Fill the low queue with 500 jobs, then dispatch a password reset and time how long it waits.",
+      "Write a Supervisor config with four workers, `autorestart`, and `--max-time`. Kill a worker and confirm it comes back.",
+      "Add `queue:restart` to your deploy notes. Then change a job's code without restarting, dispatch it, and confirm the old code ran.",
+      "If you are on Redis, install Horizon and watch a batch run. Record the throughput, the runtime and the wait time, and say which of the three would have told you about a problem first.",
+      "Finally, pick your most important job and answer in writing: what happens if it runs twice, fails halfway, takes ten minutes, is retried five times, the API is down, or a hundred thousand arrive at once.",
     ],
     acceptance: [
-      "Every user-facing string in the invoice screens comes from a language file, and no code branches on the language.",
-      "Adding a fourth language requires adding files and nothing else.",
-      "A count in the interface pluralises correctly in English and reads correctly in Japanese.",
-      "A logged-in user's chosen locale beats their browser's, and you can explain why.",
-      "A missing translation falls back to English rather than showing a raw key.",
-      "Dates and currency are formatted for the active locale.",
-      "The rewritten report produces the same output as the original, and the original is preserved in `NOTES.md`.",
-      "Nothing is filtered, summed or sorted in PHP that the database could have done.",
-      "At least one loop was deliberately kept, with a written reason.",
-      "The lazy rewrite shows a measurable drop in peak memory, with both numbers recorded.",
-      "External API access uses `data_get()` and degrades to a default when the shape changes.",
-      "The concurrency change is either measurably faster, with numbers, or reverted.",
-      "Every rewrite is listed as \"clearer\" or \"only shorter\", and the second list is empty because you reverted them.",
+      "The invoice request no longer generates a PDF, and you recorded the timing before and after.",
+      "A chain stops after a failure, and no email is sent when the PDF job fails.",
+      "A batch of 100 completes 99 and records 1 failure, with progress visible while it runs.",
+      "Retrying the single failed job brings the total to 100, and you can prove the other 99 did not run again.",
+      "A 500 from the API produces retries with growing delays; a 422 fails on the first attempt.",
+      "`SyncToAccounting` run twice calls the provider once, and you demonstrated the unguarded version calling it twice.",
+      "You observed what a `--timeout` longer than `retry_after` does, and fixed it.",
+      "Five dispatches of the unique job queue one job.",
+      "200 rate-limited jobs are spread over time rather than sent at once, shown by their timestamps.",
+      "A password reset dispatched behind 500 low-priority jobs is processed promptly, because of a dedicated worker.",
+      "A killed worker is restarted by Supervisor.",
+      "You demonstrated a job running old code before a `queue:restart`.",
+      "You have written answers for your most important job about running twice, failing halfway, timing out, being retried, the API being down, and arriving in bulk.",
     ],
     stretch: [
-      "Write a test that loads every translation key referenced in your Blade views and fails when one is missing from a language file.",
-      "Add an `InvoiceCollection` with `overdue()` and `totalOutstanding()`, and compare its discoverability with the equivalent global macros.",
-      "Put the locale in the URL as `/ja/invoices`, and write down what that makes possible that a session-only locale does not.",
+      "Build a batch of chains: each invoice's PDF then email, with the invoices processed in parallel, and show the batch progress while it runs.",
+      "Add `WithoutOverlapping` to a recalculation job and demonstrate the race it prevents by removing it and running two workers.",
+      "Pause the queue during a simulated deploy, dispatch jobs while paused, resume, and confirm nothing was lost.",
     ],
   },
 };

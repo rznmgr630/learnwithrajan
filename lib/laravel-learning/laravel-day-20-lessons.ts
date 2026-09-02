@@ -2,2177 +2,2132 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_20_LESSONS: LessonDay = {
   day: 20,
-  title: "Authorization — Gates, Policies & the #[Authorize] attribute",
+  title: "Application security — CSRF, XSS, rate limiting & headers",
   totalMinutes: 89,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "gates",
-      title: "Gates — the simplest authorization rule",
-      durationMinutes: 11,
-      explanation: "Yesterday answered <i>who are you</i>. Today answers the other question, and it is the one that actually protects your data.\n\n```text\nAuthentication   Who is this user?\nAuthorization    What is this user allowed to do?\n```\n\nThe `auth` middleware from yesterday lets any logged-in user through. Nothing so far stops one customer opening another customer's invoice, and that is what today fixes.\n\n```text\nAuthenticated User\n        │\n        ▼\n   Authorization\n        │\n   ┌────┴────┐\n   ▼         ▼\n Gates     Policies\n   │         │\n simple    model / resource\n checks     permissions\n```\n\n---\n\n### 1. Basic — defining and checking a gate\n\n<b>A <i>gate</i></b> (a named authorization rule, defined as a closure) is the simplest form:\n\n```php\nuse Illuminate\\Support\\Facades\\Gate;\n\nGate::define('access-admin', function (User $user) {\n    return $user->is_admin;\n});\n```\n\nDefine them in `AppServiceProvider::boot()`, and check them anywhere:\n\n```php\nif (Gate::allows('access-admin')) {\n    // allowed\n}\n```\n\n<b>The authenticated user is passed in for you.</b> You never write `Gate::allows('access-admin', $user)`; the first closure parameter is always the current user.\n\nWhich means a guest cannot pass a gate at all. `Gate::allows()` returns `false` for a guest without running your closure, so a gate never has to worry about `$user` being null.\n\n---\n\n### 2. Intermediate — gates that take a model\n\nA gate can receive more:\n\n```php\nGate::define('update-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id;\n});\n```\n\n```php\nGate::allows('update-post', $post);\n```\n\n```text\nUser  +  Post\n      ↓\n  can update?\n```\n\nThat works, and it is also the moment to notice something. As soon as a gate takes a model, you will want `view-post`, `delete-post`, `restore-post` and `publish-post` too, and `AppServiceProvider` fills with closures.\n\n<b>That is what policies are for</b>, two lessons from now. Gates stay useful for the checks that are <i>not</i> about a particular model:\n\n```text\naccess the admin dashboard\nview analytics\nrun an import\nimpersonate a user\n```\n\nNone of those has an obvious model to hang off.\n\n---\n\n### 3. Advanced — the three ways to ask\n\n```php\nGate::allows('access-admin');       // true when allowed\nGate::denies('access-admin');       // the inverse, reads better in a guard clause\nGate::any(['update', 'delete'], $post);    // any of these\nGate::none(['update', 'delete'], $post);   // none of these\n```\n\nAnd the one that does not return a boolean:\n\n```php\nGate::authorize('update-post', $post);\n```\n\n<b>`authorize()` throws when denied</b>, which Laravel turns into a 403. It is the right choice in a controller, where a denial should end the request rather than be handled with an `if`.\n\n```text\nallows() / denies()   →  a boolean, for branching\nauthorize()           →  throws, for stopping the request\n```\n\nA gate can also be a class method rather than a closure, which keeps a complex rule testable:\n\n```php\nGate::define('access-admin', [AdminPolicy::class, 'access']);\n```\n\nOne caution before the next lesson. <b>A gate is invisible from the outside.</b> Nothing in a controller says which rules exist, and a rule nobody checks protects nothing. The habit that saves you is to write the check first, at the top of the action, before the code that does the work.",
-      diagram: `Two questions
+      id: "csrf",
+      title: "CSRF — cross-site request forgery",
+      durationMinutes: 12,
+      explanation: "Two days on who somebody is and what they may do. Today is about everything else that can go wrong, and it starts from one idea:\n\n> <b>Every piece of data arriving at your application is untrusted until you have explicitly validated or constrained it.</b>\n\n```text\nIncoming Request\n      │\n      ├── CSRF protection\n      ├── Input validation\n      ├── XSS protection\n      ├── SQL injection protection\n      ├── Mass assignment protection\n      ├── Rate limiting\n      ├── Security headers\n      └── HTTPS + secrets\n               ↓\n          Application\n```\n\n---\n\n### 1. Basic — the attack\n\n<b>CSRF</b> is <i>cross-site request forgery</i>: making somebody's browser send a request they did not intend.\n\nYou are logged into your bank. Your browser holds a valid session cookie. An attacker gets you to open their page, which contains a form or a bit of JavaScript pointed at your bank:\n\n```http\nPOST https://bank.com/transfer\n```\n\nAnd here is the part that surprises people: <b>the browser attaches your bank cookies to that request</b>, because cookies are sent based on where the request is <i>going</i>, not where it came from.\n\n```text\nevil.com's page\n      ↓\nPOST to bank.com\n      ↓\nbrowser attaches bank.com's cookies\n      ↓\nbank.com sees an authenticated request\n```\n\nAuthentication does not help. The request <i>is</i> authenticated; it just was not asked for. So the server needs a different question:\n\n> Did this request actually originate from my application?\n\n---\n\n### 2. Intermediate — how Laravel answers it\n\nA <b>CSRF token</b> is a value your application generates, ties to the session, and embeds in its own pages. A form submitted from your site carries it; a form on `evil.com` cannot, <i>because the attacker cannot read your pages</i>.\n\nIn Blade:\n\n```blade\n<form method=\"POST\" action=\"/profile\">\n    @csrf\n    ...\n</form>\n```\n\n```html\n<input type=\"hidden\" name=\"_token\" value=\"...\">\n```\n\n```text\nform → token → request → middleware → valid?\n```\n\nLaravel 13's middleware is `PreventRequestForgery`, and the change worth understanding is conceptual: <b>it checks the request's origin as well as its token.</b>\n\n```text\nRequest\n  │\n  ├── CSRF token\n  └── request origin\n         ↓\n   is this legitimate?\n```\n\nThinking of CSRF as \"a hidden field\" makes it feel like paperwork. Thinking of it as \"prove this came from my application\" explains why a token alone was never the whole answer, and why the browser telling you the origin is useful.\n\nFor JavaScript, expose the token and send it as a header:\n\n```blade\n<meta name=\"csrf-token\" content=\"{{ csrf_token() }}\">\n```\n\n```js\nheaders: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').content }\n```\n\nAxios and Laravel's own bundled setup do this for you; the point is not the header name but that <b>the token has to reach the server somehow</b>.\n\n---\n\n### 3. Advanced — the details that matter\n\n<b>Only state-changing requests are protected.</b> `GET` is not, which is exactly why a `GET` route must never change anything. A `GET /posts/1/delete` is a CSRF hole by construction, and no middleware can save it.\n\n<b>Some routes legitimately cannot carry a token.</b> A webhook from a payment provider is not using anybody's browser session:\n\n```text\nStripe  →  your webhook endpoint\n```\n\nSo it is excluded from CSRF verification, and <b>it must then be protected some other way</b>: the provider's signature header, verified before you trust the body. Excluding a route without adding that check is not a fix, it is an unauthenticated endpoint.\n\nThe temptation worth naming: a CSRF failure looks like a bug, and the fastest way to make it go away is to exclude the route. <b>That converts a confusing error into a silent vulnerability</b>, and it is the single most common self-inflicted security wound in a Laravel application.\n\nThe usual real causes:\n\n```text\na missing @csrf in a form\na cached page with an expired token      (419 after leaving a tab open)\nJavaScript not sending the header\nSPA and API on different origins\n```\n\nAnd one that is not a bug at all: <b>a token-authenticated API does not need CSRF.</b> CSRF exists because browsers attach cookies automatically. A request authenticated by an `Authorization` header carries nothing automatically, so there is nothing to forge. Sanctum's stateful browser sessions do need it; a pure token API does not.\n\nOne function to know while you are here: when you compare a signature yourself, <b>use `hash_equals()`</b>:\n\n```php\nif (! hash_equals($expected, $request->header('X-Signature'))) {\n    abort(403);\n}\n```\n\n<b>`===` on a secret leaks how much of it you got right</b>, because it returns as soon as two characters differ, and the difference is measurable across enough requests. `hash_equals()` takes the same time whatever the input. Same reasoning as `Hash::check()` on Day 18.",
+      diagram: `The day, in one picture
 
-  Authentication   Who is this user?          ← yesterday
-  Authorization    What may they do?          ← today
+  Incoming Request
+        │
+        ├── CSRF protection
+        ├── Input validation
+        ├── XSS protection
+        ├── SQL injection protection
+        ├── Mass assignment protection
+        ├── Rate limiting
+        ├── Security headers
+        └── HTTPS + secrets
+                 ↓
+            Application
 
-  The auth middleware lets ANY logged-in user through.
-  Nothing yet stops one customer opening another
-  customer's invoice.
-
-
-  Authenticated User
-          │
-          ▼
-     Authorization
-          │
-     ┌────┴────┐
-     ▼         ▼
-   Gates     Policies
-     │         │
-   simple    model / resource
-   checks     permissions
+  Everything arriving is untrusted until you
+  explicitly validate or constrain it.
 
 
-Defining a gate
+The CSRF attack
 
-  Gate::define('access-admin', function (User \$user) {
-      return \$user->is_admin;
-  });
+  You are logged into bank.com. An attacker gets you
+  to open evil.com, which posts to bank.com.
 
-  Gate::allows('access-admin')
+    evil.com's page
+          ↓
+    POST to bank.com
+          ↓
+    the browser attaches bank.com's cookies
+          ↓
+    bank.com sees an AUTHENTICATED request
 
-  The authenticated user is passed in for you. You never
-  pass it yourself, and a guest fails without your closure
-  ever running.
+  Cookies are sent based on where the request is GOING,
+  not where it came from. Authentication does not help:
+  the request is authenticated, it was just not asked for.
 
-
-Gates with a model
-
-  Gate::define('update-post', function (User \$user, Post \$post) {
-      return \$user->id === \$post->user_id;
-  });
-
-  Gate::allows('update-post', \$post)
-
-  ...and then you want view-post, delete-post,
-  restore-post, publish-post, and AppServiceProvider
-  fills with closures.
-
-  That is what policies are for.
-
-  Gates stay right for checks with no model:
-    access the admin dashboard
-    view analytics
-    run an import
-    impersonate a user
+  So the server needs a different question:
+    did this request originate from MY application?
 
 
-Three ways to ask
+How Laravel answers it
 
-  Gate::allows('x')            true when allowed
-  Gate::denies('x')            the inverse, reads better in a guard
-  Gate::any(['a','b'], \$post)  any of these
-  Gate::authorize('x', \$post)  THROWS when denied → 403
+  A token your app generates, ties to the session, and
+  embeds in its own pages. evil.com cannot read your
+  pages, so it cannot include it.
 
-  allows / denies   →  a boolean, for branching
-  authorize         →  stops the request
+    @csrf  →  <input type="hidden" name="_token" ...>
+
+    form → token → request → middleware → valid?
+
+  Laravel 13: PreventRequestForgery checks the request
+  ORIGIN as well as the token.
+
+    Request
+      ├── CSRF token
+      └── request origin
+             ↓
+       is this legitimate?
+
+  JavaScript: expose it in a meta tag, send it as
+  X-CSRF-TOKEN. The header name is not the point;
+  the token reaching the server is.
 
 
-  ⚠️  A gate is invisible from the outside. Nothing in a
-      controller says which rules exist, and a rule nobody
-      checks protects nothing. Write the check FIRST, at
-      the top of the action.`,
+Details that matter
+
+  Only state-changing requests are protected. GET is not,
+  which is why a GET route must never change anything.
+  GET /posts/1/delete is a CSRF hole by construction.
+
+  Webhooks legitimately cannot carry a token:
+
+    Stripe  →  your webhook endpoint
+
+  So exclude it, and protect it with the provider's
+  SIGNATURE instead. Excluding without that is not a
+  fix, it is an unauthenticated endpoint.
+
+  ⚠️  A CSRF failure looks like a bug, and the fastest
+      way to make it go away is to exclude the route.
+      That turns a confusing error into a silent hole.
+
+  Usual real causes:
+    a missing @csrf
+    a cached page with an expired token  (the 419)
+    JavaScript not sending the header
+    SPA and API on different origins
+
+  And not a bug: a TOKEN-authenticated API needs no CSRF.
+  CSRF exists because browsers attach cookies
+  automatically. An Authorization header is not automatic,
+  so there is nothing to forge.`,
       codeExample: {
-        title: "Defining gates and checking them",
-        code: `<?php
-// app/Providers/AppServiceProvider.php
+        title: "Tokens in forms, in JavaScript, and the webhook exception",
+        code: `{{-- resources/views/profile/edit.blade.php --}}
 
-namespace App\\Providers;
+<form method="POST" action="/profile">
+    @csrf
+    @method('PUT')
 
-use App\\Models\\Post;
-use App\\Models\\User;
-use Illuminate\\Support\\Facades\\Gate;
-use Illuminate\\Support\\ServiceProvider;
+    <input name="name" value="{{ old('name', $user->name) }}">
+    <button>Save</button>
+</form>
 
-class AppServiceProvider extends ServiceProvider
+{{-- @csrf renders: --}}
+{{-- <input type="hidden" name="_token" value="..."> --}}
+
+
+{{-- In the layout, for JavaScript --}}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+
+<script>
+// The token has to reach the server somehow. Axios and
+// Laravel's bundled setup do this for you.
+fetch('/profile', {
+    method: 'POST',
+    headers: {
+        'X-CSRF-TOKEN': document
+            .querySelector('meta[name="csrf-token"]')
+            .content,
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name: 'Rajan' }),
+});
+</script>
+
+
+<?php
+// ---------- The webhook exception ----------
+
+// bootstrap/app.php
+
+->withMiddleware(function (Middleware $middleware) {
+    // Stripe is not using anybody's browser session and
+    // cannot have your token.
+    $middleware->validateCsrfTokens(except: [
+        'webhooks/stripe',
+    ]);
+})
+
+
+<?php
+// ---------- ...which means it needs its own check ----------
+
+class StripeWebhookController extends Controller
 {
-    public function boot(): void
+    public function __invoke(Request $request)
     {
-        // No model: a system-level ability.
-        Gate::define('access-admin', function (User $user) {
-            return $user->is_admin;
-        });
+        // Excluding from CSRF without this is not a fix.
+        // It is an unauthenticated endpoint.
+        $signature = $request->header('Stripe-Signature');
 
-        Gate::define('view-analytics', function (User $user) {
-            return $user->is_admin || $user->role === 'analyst';
-        });
+        try {
+            $event = Webhook::constructEvent(
+                $request->getContent(),
+                $signature,
+                config('services.stripe.webhook_secret'),
+            );
+        } catch (SignatureVerificationException $e) {
+            abort(400);
+        }
 
-        // With a model. This shape is what policies replace.
-        Gate::define('update-post', function (User $user, Post $post) {
-            return $user->id === $post->user_id;
-        });
-
-        // A class method, when the rule is worth testing on its own.
-        Gate::define('impersonate', [AdminGate::class, 'impersonate']);
+        // Only now is the body trustworthy.
     }
 }
 
 
 <?php
-// ---------- Checking ----------
+// ---------- The rule GET routes must follow ----------
 
-use Illuminate\\Support\\Facades\\Gate;
+// ❌ A CSRF hole by construction: GET is not protected,
+//    so any page anywhere can trigger it with an <img>.
+Route::get('/posts/{post}/delete', [PostController::class, 'destroy']);
 
-if (Gate::allows('access-admin')) {
-    // allowed
-}
-
-if (Gate::denies('access-admin')) {
-    abort(403);
-}
-
-Gate::allows('update-post', $post);
-
-Gate::any(['update-post', 'delete-post'], $post);
-Gate::none(['update-post', 'delete-post'], $post);
-
-// The authenticated user is passed for you. Never this:
-Gate::allows('access-admin', $user);
-
-// A guest returns false without your closure running,
-// so a gate never has to handle a null user.
-
-
-<?php
-// ---------- In a controller ----------
-
-class AdminController extends Controller
-{
-    public function index()
-    {
-        // Throws, and Laravel turns it into a 403.
-        Gate::authorize('access-admin');
-
-        return view('admin.dashboard');
-    }
-}
-
-// Compare:
-//   allows() / denies()  →  a boolean, for branching
-//   authorize()          →  ends the request when denied
-
-
-<?php
-// ---------- Another user, when you need it ----------
-
-// Occasionally you are checking on behalf of someone else,
-// such as an admin previewing what a customer can see.
-Gate::forUser($otherUser)->allows('update-post', $post);`,
+// ✓ State changes use a verb that CSRF protection covers.
+Route::delete('/posts/{post}', [PostController::class, 'destroy']);`,
       },
       keyTakeaways: [
-        "<b>Authentication asks who you are; authorization asks what you may do.</b>",
-        "The `auth` middleware lets every logged-in user through, so ownership checks are a separate job.",
-        "<b>A gate is a named authorization rule defined as a closure</b>, usually in `AppServiceProvider::boot()`.",
-        "<b>The authenticated user is passed in as the first argument</b>, so you never supply it yourself.",
-        "A guest fails a gate without your closure running, so gates never handle a null user.",
-        "<b>A gate can take a model as a second argument</b>, but that shape is what policies exist for.",
-        "<b>Gates are right for abilities with no model</b>: the admin dashboard, analytics, running an import.",
-        "<b>`allows()` and `denies()` return booleans; `authorize()` throws and becomes a 403.</b>",
-        "`Gate::any()` and `Gate::none()` check several abilities at once, and `Gate::forUser()` checks on behalf of someone else.",
-        "<b>A rule nobody checks protects nothing</b>, so write the check at the top of the action.",
+        "<b>Treat everything arriving at your application as untrusted until you validate or constrain it.</b>",
+        "<b>CSRF is making somebody's browser send a request they did not intend</b>, using the session it already has.",
+        "<b>Browsers attach cookies based on where a request is going</b>, so the forged request is genuinely authenticated.",
+        "<b>A CSRF token proves the request came from your own pages</b>, which an attacker's site cannot read.",
+        "`@csrf` renders the hidden field; a `csrf-token` meta tag plus a header covers JavaScript.",
+        "<b>Laravel 13's `PreventRequestForgery` checks the request origin as well as the token.</b>",
+        "<b>`GET` requests are not protected</b>, which is why a `GET` route must never change anything.",
+        "<b>A webhook cannot carry your token</b>, so it is excluded and protected by the provider's signature instead.",
+        "<b>Excluding a route to make a CSRF error go away turns a visible bug into a silent hole.</b>",
+        "<b>A token-authenticated API needs no CSRF</b>, because nothing is attached automatically.",
       ],
       commonMistakes: [
-        "<b>Passing the user to `Gate::allows()`.</b> The authenticated user is already the first argument.",
-        "<b>Relying on `auth` middleware for ownership.</b> It only says somebody is logged in.",
-        "<b>Defining a gate and never checking it.</b> The rule exists and protects nothing.",
-        "<b>Filling `AppServiceProvider` with model gates.</b> Four abilities per model is what policies are for.",
-        "<b>Using `allows()` in a controller and forgetting the `abort(403)`.</b> `authorize()` does both.",
+        "<b>Excluding a route because CSRF was failing.</b> The failure was the signal, and now there is none.",
+        "<b>Excluding a webhook without verifying its signature.</b> Anybody can now post to it.",
+        "<b>Using a `GET` route for a delete.</b> CSRF protection does not cover it, and an `<img>` tag can trigger it.",
+        "<b>Forgetting `@csrf` in a form.</b> The 419 that follows is the protection working.",
+        "<b>Adding CSRF to a pure token API.</b> There are no automatic cookies, so there is nothing to forge.",
       ],
       quiz: [
         {
-          question: "What does authorization decide?",
+          question: "Why does authentication not prevent CSRF?",
           options: [
-            "Whether someone is logged in",
-            "What the authenticated user is allowed to do",
-            "Which guard is used",
-            "Whether the password is correct",
+            "Sessions expire too slowly",
+            "The forged request genuinely carries the user's cookies, so it is authenticated",
+            "CSRF happens before authentication",
+            "It does prevent it",
           ],
           correctIndex: 1,
-          explanation: "Authentication is the other question, and it was yesterday.",
+          explanation: "Browsers attach cookies based on the destination, not the origin.",
         },
         {
-          question: "Where does the user come from in `Gate::define('x', function (User $user) {...})`?",
+          question: "Why can an attacker's site not include your CSRF token?",
           options: [
-            "You pass it to `Gate::allows()`",
-            "Laravel passes the authenticated user in automatically",
-            "It is resolved from the route",
-            "From the session manually",
+            "The token is encrypted",
+            "It cannot read your pages, which is where the token lives",
+            "Tokens are IP-bound",
+            "Browsers block it",
           ],
           correctIndex: 1,
-          explanation: "A guest fails before your closure ever runs.",
+          explanation: "That is exactly what makes the token proof of origin.",
         },
         {
-          question: "What is the difference between `Gate::allows()` and `Gate::authorize()`?",
+          question: "A webhook endpoint is excluded from CSRF. What must it have instead?",
+          options: [
+            "Nothing; webhooks are safe",
+            "The provider's signature, verified before the body is trusted",
+            "Rate limiting only",
+            "An API token in the URL",
+          ],
+          correctIndex: 1,
+          explanation: "Excluding without a replacement leaves an unauthenticated endpoint.",
+        },
+        {
+          question: "Why must a `GET` route never change state?",
+          options: [
+            "It is slower",
+            "`GET` is not CSRF protected, so any page can trigger it",
+            "Laravel forbids it",
+            "It cannot be cached",
+          ],
+          correctIndex: 1,
+          explanation: "An `<img src=\"...\">` on any site would fire it.",
+        },
+      ],
+    },
+    {
+      id: "xss",
+      title: "XSS — escaping output",
+      durationMinutes: 11,
+      explanation: "CSRF was about requests you did not mean to send. This is about scripts you did not mean to run.\n\n---\n\n### 1. Basic — the attack\n\n<b>XSS</b> is <i>cross-site scripting</i>: getting your application to render an attacker's JavaScript so it runs in somebody else's browser.\n\nA user submits a comment:\n\n```html\n<script>alert('Hacked')</script>\n```\n\nIf your page renders that as HTML, every visitor runs it. And an alert is the harmless demonstration. Real payloads read the session cookie, submit forms as the victim, or rewrite the page to ask for a password.\n\n<b>The damage is that the script runs as your site.</b> It has whatever access the visitor has, which on a logged-in page is everything.\n\n---\n\n### 2. Intermediate — Blade escapes by default\n\n```blade\n{{ $name }}\n```\n\nEscapes HTML. `<script>` becomes `&lt;script&gt;`, which the browser prints instead of running.\n\n```blade\n{!! $html !!}\n```\n\nDoes not. The string goes into the page as markup.\n\n```text\n{{ $content }}      →  escaped, printed as text\n{!! $content !!}    →  raw HTML, executed\n```\n\nSo the default is safe and you have to opt out of it. <b>Which makes `{!! !!}` worth treating as a small alarm</b>: every one in a codebase is a place somebody decided the content was trustworthy, and that decision needs to still be true.\n\nThe legitimate uses are narrow:\n\n```text\nmarkup you generated yourself\ncontent already sanitised by a library\nrich text from an editor, sanitised on the way in\n```\n\nAnd the illegitimate one is the common one: a field a user typed, rendered raw because it needed one `<br>`.\n\n---\n\n### 3. Advanced — escaping is context-dependent\n\nHere is the part that catches people who think escaping is one thing.\n\n<b>`{{ }}` escapes for HTML.</b> Inside a `<script>` block or an HTML attribute, HTML escaping is not the right escaping:\n\n```blade\n<script>\n    let name = \"{{ $name }}\";     // wrong context\n</script>\n```\n\nHTML-escaping does not neutralise a quote and a closing brace in JavaScript. The fix is to hand data to JavaScript as data, not as text spliced into a script:\n\n```blade\n<script>\n    const user = @json($user);\n</script>\n```\n\nor an attribute the script reads:\n\n```blade\n<div data-user=\"{{ json_encode($user) }}\">\n```\n\nThe same applies to attributes generally. An unquoted attribute value can be escaped from without any angle brackets at all, so <b>quote your attributes</b>, always.\n\nAnd one that gets missed:\n\n```blade\n<a href=\"{{ $url }}\">Link</a>\n```\n\nHTML-escaped, and still dangerous, because `javascript:alert(1)` contains nothing to escape. <b>A URL from a user needs validating as a URL</b>, with a scheme you allow, before it reaches an `href`.\n\nTwo defences that work alongside all this rather than instead of it:\n\n<b>Validate on the way in.</b> If a display name cannot contain `<`, an XSS payload never reaches the database, and every place that renders it is safe rather than one of them being lucky.\n\n<b>And a Content Security Policy limits the damage</b> when something does slip through, by refusing to run inline scripts at all. That is later today, and it is the reason CSP is worth the effort: it is the layer that assumes your escaping will one day be wrong.\n\nAnd since \"use a real purifier\" is advice you cannot act on without a name: <b>HTMLPurifier</b> is the one:\n\n```bash\ncomposer require ezyang/htmlpurifier\n```\n\n```php\n$config   = HTMLPurifier_Config::createDefault();\n$config->set('HTML.Allowed', 'p,b,i,a[href],ul,ol,li');\n\n$clean = (new HTMLPurifier($config))->purify($request->input('bio'));\n```\n\n<b>It parses the HTML properly and rebuilds it from an allowlist</b>, which is why it survives the encodings and malformed tags that defeat a regex or `strip_tags()`.",
+      diagram: `The attack
+
+  A user submits:
+
+    <script>alert('Hacked')</script>
+
+  If your page renders that as HTML, every visitor
+  runs it. The alert is the harmless demo. Real
+  payloads read the session cookie, submit forms as
+  the victim, or ask for a password.
+
+  The script runs AS YOUR SITE. It has whatever
+  access the visitor has.
+
+
+Blade escapes by default
+
+  {{ \$content }}      escaped, printed as text
+  {!! \$content !!}    raw HTML, executed
+
+  Safe by default, and you opt out.
+
+  So treat every {!! !!} as a small alarm: somebody
+  decided that content was trustworthy, and that
+  decision has to still be true.
+
+  Legitimate:
+    markup you generated yourself
+    content already sanitised by a library
+    rich text sanitised on the way IN
+
+  The common illegitimate one: a user-typed field
+  rendered raw because it needed one <br>.
+
+
+Escaping is CONTEXT-dependent
+
+  {{ }} escapes for HTML. Inside a script block,
+  HTML escaping is the wrong escaping:
+
+    <script>
+        let name = "{{ \$name }}";      ← wrong context
+    </script>
+
+  Hand data to JavaScript as DATA:
+
+    <script>
+        const user = @json(\$user);
+    </script>
+
+    <div data-user="{{ json_encode(\$user) }}">
+
+  And quote your attributes, always. An unquoted
+  attribute value can be escaped from with no angle
+  brackets at all.
+
+
+The one that gets missed
+
+  <a href="{{ \$url }}">Link</a>
+
+  HTML-escaped, and still dangerous:
+
+    javascript:alert(1)
+
+  contains nothing to escape. A URL from a user needs
+  validating as a URL, with an allowed scheme, before
+  it reaches an href.
+
+
+Two layers alongside
+
+  Validate on the way IN.
+    If a display name cannot contain <, the payload
+    never reaches the database, and every renderer is
+    safe rather than one of them being lucky.
+
+  A Content Security Policy limits the damage when
+  something slips through, by refusing inline scripts.
+  It is the layer that assumes your escaping will one
+  day be wrong.`,
+      codeExample: {
+        title: "Escaping, and the contexts where it is not enough",
+        code: `{{-- ---------- The default: safe ---------- --}}
+
+{{ $comment->body }}
+
+{{-- <script>alert(1)</script> is printed, not run. --}}
+
+
+{{-- ---------- Opting out: an alarm, not a tool ---------- --}}
+
+{!! $post->rendered_html !!}
+
+{{-- Only when the content is genuinely trusted:
+       markup you generated
+       output of a sanitiser
+       rich text sanitised on the way in --}}
+
+
+{{-- ---------- Wrong context: HTML escaping inside a script --}}
+
+<script>
+    // ❌ {{ }} escapes for HTML, not for JavaScript.
+    let name = "{{ $user->name }}";
+</script>
+
+<script>
+    // ✓ Hand it over as data.
+    const user = @json($user);
+</script>
+
+{{-- Or via an attribute the script reads --}}
+<div id="app" data-user="{{ json_encode($user) }}"></div>
+
+
+{{-- ---------- Attributes: always quote them ---------- --}}
+
+{{-- ❌ An unquoted value can be escaped from with no
+       angle brackets at all. --}}
+<div class={{ $class }}>
+
+{{-- ✓ --}}
+<div class="{{ $class }}">
+
+
+{{-- ---------- The one that gets missed ---------- --}}
+
+{{-- ❌ HTML-escaped, and still dangerous:
+       javascript:alert(1) contains nothing to escape. --}}
+<a href="{{ $user->website }}">Website</a>
+
+
+<?php
+// ✓ Validate it as a URL, with a scheme you allow.
+
+$request->validate([
+    'website' => ['nullable', 'url:http,https'],
+]);
+
+// Or check before rendering:
+$safe = filter_var($url, FILTER_VALIDATE_URL)
+    && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true);
+
+
+<?php
+// ---------- Stop it at the door ----------
+
+// If a display name cannot contain markup, the payload
+// never reaches the database, and every place that
+// renders it is safe rather than one of them being lucky.
+
+$request->validate([
+    'name' => ['required', 'string', 'max:255', 'regex:/^[\\pL\\pN\\s.\\-]+$/u'],
+]);
+
+
+// ---------- And when rich text really is needed ----------
+
+// Sanitise on the way IN with a library that understands
+// HTML, then the stored value is safe for every renderer.
+// Never write your own tag stripper: the edge cases are
+// the entire problem.`,
+      },
+      keyTakeaways: [
+        "<b>XSS is getting your application to render an attacker's JavaScript so it runs in another user's browser.</b>",
+        "The script runs as your site, with whatever access the visitor has.",
+        "<b>`{{ }}` escapes HTML; `{!! !!}` does not.</b> The default is safe and you have to opt out.",
+        "<b>Treat every `{!! !!}` as an alarm</b>: somebody decided that content was trustworthy.",
+        "<b>Escaping is context-dependent</b>: HTML escaping is not the right escaping inside a `<script>` block.",
+        "Hand data to JavaScript with `@json()` or a data attribute, rather than splicing it into a script.",
+        "<b>Always quote HTML attributes</b>, because an unquoted value can be escaped from without angle brackets.",
+        "<b>A user-supplied URL in an `href` is still dangerous after escaping</b>, because `javascript:` contains nothing to escape.",
+        "<b>Validating on the way in</b> means the payload never reaches the database, so every renderer is safe.",
+        "<b>A Content Security Policy limits the damage when escaping is wrong</b>, which is why it is worth the effort.",
+      ],
+      commonMistakes: [
+        "<b>Using `{!! !!}` on user input to allow one tag.</b> It allows every tag.",
+        "<b>Putting `{{ $value }}` inside a `<script>` block.</b> That is HTML escaping in a JavaScript context.",
+        "<b>Leaving an attribute unquoted.</b> The value can break out without any angle brackets.",
+        "<b>Trusting an escaped URL in an `href`.</b> `javascript:` needs no characters that escaping would touch.",
+        "<b>Writing your own HTML sanitiser.</b> The edge cases are the entire problem; use a library.",
+      ],
+      quiz: [
+        {
+          question: "What is the difference between `{{ $x }}` and `{!! $x !!}`?",
           options: [
             "None",
-            "`allows()` returns a boolean; `authorize()` throws when denied, which becomes a 403",
-            "`authorize()` is for policies only",
-            "`allows()` also logs the check",
+            "`{{ }}` escapes HTML; `{!! !!}` outputs it raw",
+            "`{!! !!}` is faster",
+            "`{{ }}` only works on strings",
           ],
           correctIndex: 1,
-          explanation: "Booleans for branching, `authorize()` for ending the request.",
+          explanation: "Safe by default, and you have to opt out deliberately.",
         },
         {
-          question: "Which is a good fit for a gate rather than a policy?",
+          question: "Why is `let name = \"{{ $name }}\";` inside a `<script>` block unsafe?",
           options: [
-            "Can this user update this post?",
-            "Can this user delete this invoice?",
-            "Can this user access the admin dashboard?",
-            "Can this user view this project?",
+            "Blade cannot run inside script tags",
+            "`{{ }}` escapes for HTML, which is not the right escaping for a JavaScript string",
+            "It is safe",
+            "The quotes are wrong",
           ],
-          correctIndex: 2,
-          explanation: "There is no particular model behind it.",
+          correctIndex: 1,
+          explanation: "Hand the data over with `@json()` instead.",
+        },
+        {
+          question: "Why is `<a href=\"{{ $url }}\">` still risky?",
+          options: [
+            "The URL is not escaped",
+            "`javascript:alert(1)` contains nothing that HTML escaping would change",
+            "Links cannot be escaped",
+            "It is not risky",
+          ],
+          correctIndex: 1,
+          explanation: "A user-supplied URL needs validating as a URL with an allowed scheme.",
+        },
+        {
+          question: "What does validating input on the way in buy you?",
+          options: [
+            "Faster rendering",
+            "The payload never reaches the database, so every place that renders it is safe",
+            "It replaces escaping",
+            "Nothing; escaping is enough",
+          ],
+          correctIndex: 1,
+          explanation: "Layers: validate in, escape out, and CSP for when one of those is wrong.",
         },
       ],
     },
     {
-      id: "before-after-and-responses",
-      title: "before, after & gate responses",
-      durationMinutes: 11,
-      explanation: "Three features that turn a set of yes-or-no checks into something you can operate.\n\n---\n\n### 1. Basic — `before()`, the override\n\nEvery application eventually wants somebody who can do everything:\n\n```text\nSuper admin\n     ↓\neverything allowed\n```\n\nWritten into each rule, that is `$user->is_super_admin ||` repeated forty times, and the fortieth is the one somebody forgets.\n\n<b>`Gate::before()` runs ahead of every check:</b>\n\n```php\nGate::before(function (User $user, string $ability) {\n    if ($user->is_super_admin) {\n        return true;\n    }\n});\n```\n\n```text\nauthorization request\n        ↓\n     before()\n        │\n    ┌───┴────┐\n   true     null\n    │        │\n allowed   the normal check runs\n```\n\n<b>Returning `null` is what lets the normal check happen</b>, and it is the detail that trips people. Return `false` and you have denied everything for everybody, because a `before` hook that returns anything non-null is the final answer.\n\nSo: return `true` to grant, and nothing at all otherwise.\n\n---\n\n### 2. Intermediate — `after()`, the observer\n\n```php\nGate::after(function (User $user, string $ability, ?bool $result, $arguments) {\n    // the decision has been made\n});\n```\n\n```text\nbefore()   runs before the decision, and can make it\nafter()    runs after the decision, and can see it\n```\n\nIt is mostly for the things you want around authorization rather than in it:\n\n```text\nauditing        who was denied what\nlogging         a denial that keeps recurring is a bug or an attack\nmetrics\ndebugging       why is this user getting a 403?\n```\n\n`after()` can also grant, by returning `true` when the result was null, but that is rare and easy to misuse. <b>Treat it as read-only and you will not surprise anybody.</b>\n\nThe auditing case is worth taking seriously. A log line for every denial tells you when a permission model is wrong, because users hitting 403s on things they should be able to do is a support ticket you can see coming.\n\n---\n\n### 3. Advanced — responses with a reason\n\nA gate returning `false` gives the user \"This action is unauthorized.\" and nothing else. Sometimes the reason matters:\n\n```php\nuse Illuminate\\Auth\\Access\\Response;\n\nGate::define('update-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id\n        ? Response::allow()\n        : Response::deny('You do not own this post.');\n});\n```\n\nNow the denial carries a message, and `authorize()` uses it in the 403.\n\nYou can inspect it directly:\n\n```php\n$response = Gate::inspect('update-post', $post);\n\n$response->allowed();\n$response->message();\n```\n\n<b>This is where authorization messages belong.</b> The alternative is a controller full of `abort(403, 'You do not own this post.')`, with the rule in one place and the explanation in another, drifting apart.\n\nA response can also set its own status:\n\n```php\nResponse::denyWithStatus(404);\nResponse::denyAsNotFound();\n```\n\nWhich exists for a real reason. <b>A 403 confirms the thing exists</b>, so on a private resource, replying 404 tells a stranger nothing at all. If your invoice ids are sequential, a 403 on `/invoices/91` is confirmation that invoice 91 belongs to somebody.\n\nSo the judgement:\n\n```text\nthe user knows the resource exists   →  403 with a helpful reason\nthe user should not know it exists   →  404\n```\n\nAnd one thing to keep in mind about messages: they are shown to somebody who was just refused. <b>Say what is wrong, not why your system said no</b>: \"You do not own this post\" is fine, \"role_id 3 lacks posts.update\" is an information leak dressed as helpfulness.",
-      diagram: `before(): the override
-
-  Every app eventually wants somebody who can do everything.
-
-  Written into each rule, that is
-    \$user->is_super_admin ||
-  repeated forty times, and the fortieth is forgotten.
-
-  Gate::before(function (User \$user, string \$ability) {
-      if (\$user->is_super_admin) return true;
-  });
-
-  authorization request
-          ↓
-       before()
-          │
-      ┌───┴────┐
-     true     null
-      │        │
-   allowed   the normal check runs
-
-  ⚠️  Returning NULL is what lets the normal check happen.
-      Return false and you have denied everything, for
-      everybody. Anything non-null is the final answer.
-
-
-after(): the observer
-
-  before()   runs before the decision, and can MAKE it
-  after()    runs after the decision, and can SEE it
-
-  auditing    who was denied what
-  logging     a recurring denial is a bug or an attack
-  metrics
-  debugging   why is this user getting a 403?
-
-  It can grant, by returning true on a null result.
-  Treat it as read-only and you will surprise nobody.
-
-
-Responses with a reason
-
-  return \$user->id === \$post->user_id
-      ? Response::allow()
-      : Response::deny('You do not own this post.');
-
-  Gate::inspect('update-post', \$post)
-      ->allowed()
-      ->message()
-
-  This is where authorization messages belong. The
-  alternative is abort(403, '...') scattered through
-  controllers, with the rule and the explanation in
-  different files, drifting apart.
-
-
-403 or 404?
-
-  Response::denyAsNotFound()
-
-  A 403 CONFIRMS the thing exists. On sequential ids,
-  a 403 on /invoices/91 tells a stranger invoice 91
-  belongs to somebody.
-
-  user knows it exists      →  403 with a helpful reason
-  user should not know      →  404
-
-
-  And the message is shown to someone just refused.
-  Say what is wrong, not why your system said no.
-
-    ✓ "You do not own this post."
-    ✗ "role_id 3 lacks posts.update"`,
-      codeExample: {
-        title: "Overrides, auditing and reasons",
-        code: `<?php
-// app/Providers/AppServiceProvider.php
-
-use App\\Models\\User;
-use Illuminate\\Auth\\Access\\Response;
-use Illuminate\\Support\\Facades\\Gate;
-use Illuminate\\Support\\Facades\\Log;
-
-public function boot(): void
-{
-    // ---------- before: grant, or say nothing ----------
-
-    Gate::before(function (User $user, string $ability) {
-        if ($user->is_super_admin) {
-            return true;
-        }
-
-        // Returning nothing (null) lets the normal check run.
-        // ❌ return false;  would deny everything, for everybody.
-    });
-
-
-    // ---------- after: watch, do not decide ----------
-
-    Gate::after(function (User $user, string $ability, ?bool $result, $arguments) {
-        if ($result === false) {
-            Log::info('Authorization denied', [
-                'user_id' => $user->id,
-                'ability' => $ability,
-            ]);
-        }
-    });
-
-    // Recurring denials are either a wrong permission model
-    // or somebody probing. Both are worth seeing.
-
-
-    // ---------- Responses that carry a reason ----------
-
-    Gate::define('update-post', function (User $user, Post $post) {
-        return $user->id === $post->user_id
-            ? Response::allow()
-            : Response::deny('You do not own this post.');
-    });
-
-    Gate::define('publish-post', function (User $user, Post $post) {
-        if ($user->id !== $post->user_id) {
-            return Response::deny('You do not own this post.');
-        }
-
-        if (! $user->hasVerifiedEmail()) {
-            return Response::deny('Verify your email before publishing.');
-        }
-
-        return Response::allow();
-    });
-
-    // A private resource: do not confirm that it exists.
-    Gate::define('view-invoice', function (User $user, Invoice $invoice) {
-        return $user->id === $invoice->user_id
-            ? Response::allow()
-            : Response::denyAsNotFound();
-    });
-}
-
-
-<?php
-// ---------- Reading the response ----------
-
-$response = Gate::inspect('update-post', $post);
-
-if ($response->allowed()) {
-    // ...
-} else {
-    return back()->withErrors(['post' => $response->message()]);
-}
-
-// And authorize() uses the message in the 403 automatically:
-Gate::authorize('update-post', $post);
-
-
-<?php
-// ---------- Where messages should NOT live ----------
-
-// ❌ The rule is in one file and the explanation in another.
-if (! Gate::allows('update-post', $post)) {
-    abort(403, 'You do not own this post.');
-}
-
-// ✓ Both in the gate.
-Gate::authorize('update-post', $post);`,
-      },
-      keyTakeaways: [
-        "<b>`Gate::before()` runs ahead of every check</b>, which is how a super admin bypasses everything in one place.",
-        "<b>Return `true` to grant and nothing at all otherwise</b>: any non-null return is the final answer.",
-        "<b>Returning `false` from a `before` hook denies everything for everybody.</b>",
-        "<b>`Gate::after()` runs once the decision is made</b>, and is for auditing, logging, metrics and debugging.",
-        "Treat `after()` as read-only, even though it can grant, so nothing surprising happens.",
-        "<b>Logging denials shows you a wrong permission model before the support tickets do.</b>",
-        "<b>`Response::allow()` and `Response::deny('reason')` attach a message to the decision.</b>",
-        "`Gate::inspect()` returns the response so you can read `allowed()` and `message()`.",
-        "<b>A 403 confirms the resource exists</b>, so `denyAsNotFound()` is right when it should stay secret.",
-        "<b>Denial messages say what is wrong, not why your system said no</b>, which would leak your permission model.",
-      ],
-      commonMistakes: [
-        "<b>Returning `false` from `Gate::before()`.</b> Every check for every user now fails.",
-        "<b>Repeating a super-admin check in every rule.</b> One of them will be forgotten.",
-        "<b>Granting from `after()`.</b> It works, and nobody reading the gate expects it.",
-        "<b>Putting the denial message in the controller.</b> The rule and the reason then drift apart.",
-        "<b>Returning 403 for a resource the user should not know exists.</b> The status itself is the leak.",
-      ],
-      quiz: [
-        {
-          question: "What should `Gate::before()` return when it has no opinion?",
-          options: ["`false`", "`true`", "Nothing, so it returns null", "An empty array"],
-          correctIndex: 2,
-          explanation: "Any non-null return is the final answer, so `false` would deny everything.",
-        },
-        {
-          question: "What is `Gate::after()` mainly for?",
-          options: [
-            "Granting access to admins",
-            "Auditing, logging, metrics and debugging, after the decision is made",
-            "Defining new gates",
-            "Caching results",
-          ],
-          correctIndex: 1,
-          explanation: "It can grant, but treating it as read-only avoids surprises.",
-        },
-        {
-          question: "What does `Response::deny('You do not own this post.')` add?",
-          options: [
-            "A redirect",
-            "A message that travels with the denial and is used in the 403",
-            "A log entry",
-            "A retry",
-          ],
-          correctIndex: 1,
-          explanation: "So the reason lives with the rule, not scattered in controllers.",
-        },
-        {
-          question: "Why would a policy return 404 rather than 403?",
-          options: [
-            "404 is faster",
-            "A 403 confirms the resource exists, which can be a leak on a private resource",
-            "403 is deprecated",
-            "It avoids logging",
-          ],
-          correctIndex: 1,
-          explanation: "On sequential ids, a 403 tells a stranger that record belongs to somebody.",
-        },
-      ],
-    },
-    {
-      id: "policies",
-      title: "Policies & the seven methods",
-      durationMinutes: 12,
-      explanation: "Gates scale badly for models, and this is the fix.\n\n---\n\n### 1. Basic — one class per model\n\nFour abilities on one model, written as gates:\n\n```text\nGate\n ├── view-post\n ├── update-post\n ├── delete-post\n └── restore-post\n```\n\nMultiply by eight models and `AppServiceProvider` is four hundred lines of closures that nothing groups.\n\n<b>A <i>policy</i></b> (a class holding the authorization rules for one model) gathers them:\n\n```text\nPostPolicy\n ├── view\n ├── create\n ├── update\n ├── delete\n └── restore\n```\n\n```bash\nphp artisan make:policy PostPolicy --model=Post\n```\n\n```text\napp/Policies/PostPolicy.php\n```\n\nThe `--model` flag stubs out the conventional methods, which saves you looking them up.\n\n```php\nclass PostPolicy\n{\n    public function view(User $user, Post $post): bool\n    {\n        return $post->published || $user->id === $post->user_id;\n    }\n\n    public function update(User $user, Post $post): bool\n    {\n        return $user->id === $post->user_id;\n    }\n\n    public function delete(User $user, Post $post): bool\n    {\n        return $user->id === $post->user_id;\n    }\n}\n```\n\n<b>The rules now live next to the resource they protect</b>, which means somebody wondering who can delete a post has one file to open.\n\n---\n\n### 2. Intermediate — the seven conventional methods\n\nLaravel's resource controllers and its authorization share a vocabulary:\n\n```text\nviewAny       the collection: may they see the list at all?\nview          one model\ncreate        a new one\nupdate        an existing one\ndelete        remove it\nrestore       bring back a soft-deleted one\nforceDelete   remove it permanently\n```\n\nThe signatures split into two groups, and the split is the thing to notice:\n\n```php\npublic function viewAny(User $user): bool          // no model yet\npublic function create(User $user): bool           // no model yet\n\npublic function view(User $user, Post $post): bool\npublic function update(User $user, Post $post): bool\npublic function delete(User $user, Post $post): bool\npublic function restore(User $user, Post $post): bool\npublic function forceDelete(User $user, Post $post): bool\n```\n\n<b>`viewAny` and `create` take no model, because there is not one yet.</b> You cannot ask \"may they create this post\" about a post that does not exist, so the rule can only be about the user.\n\nImplement only what you need. A missing method means that ability is denied, which is the safe default and occasionally a confusing one: <b>a check against a method you never wrote fails silently rather than erroring.</b>\n\n---\n\n### 3. Advanced — what belongs in a policy\n\nA policy is not a dumping ground for validation, and the boundary is worth getting right:\n\n```text\nPolicy                        Validation\n──────                        ──────────\nmay this user do this?        is this input acceptable?\nabout identity and            about the request body\n  ownership\n403                           422\n```\n\n\"Is the title under 255 characters\" is validation. \"Does this user own the post\" is authorization. A rule that would be the same for every user is almost always validation.\n\nA policy can take extra arguments after the model:\n\n```php\npublic function update(User $user, Post $post, bool $force = false): bool\n```\n\nand it can use a guest-friendly signature when a resource is publicly viewable:\n\n```php\npublic function view(?User $user, Post $post): bool\n{\n    return $post->published || $user?->id === $post->user_id;\n}\n```\n\n<b>Making `$user` nullable is what lets a guest pass a policy at all.</b> Without the `?`, Laravel denies guests before your method runs, which is right for `update` and wrong for `view` on a public blog.\n\nOne more habit worth forming now. <b>Keep policies free of queries where you can.</b> A policy method runs once per model, so a `$post->comments()->count()` inside `view()` is a query per row on any list page. If a rule needs related data, load it in the controller and let the policy read what is already there.",
-      diagram: `Why policies exist
-
-  Four abilities on one model, as gates:
-
-    Gate
-     ├── view-post
-     ├── update-post
-     ├── delete-post
-     └── restore-post
-
-  × eight models = 400 lines of closures with
-  nothing grouping them.
-
-  A policy gathers them:
-
-    PostPolicy
-     ├── view
-     ├── create
-     ├── update
-     ├── delete
-     └── restore
-
-  php artisan make:policy PostPolicy --model=Post
-
-  The rules now live next to the resource they protect.
-
-
-The seven conventional methods
-
-  viewAny       the collection: may they see the list?
-  view          one model
-  create        a new one
-  update        an existing one
-  delete        remove it
-  restore       bring back a soft-deleted one
-  forceDelete   remove it permanently
-
-
-  And the split that matters:
-
-    viewAny(User \$user)              no model yet
-    create(User \$user)               no model yet
-
-    view(User \$user, Post \$post)
-    update(User \$user, Post \$post)
-    delete(User \$user, Post \$post)
-    restore(User \$user, Post \$post)
-    forceDelete(User \$user, Post \$post)
-
-  You cannot ask "may they create THIS post" about a post
-  that does not exist, so the rule is only about the user.
-
-  ⚠️  A missing method DENIES. Safe, and occasionally
-      confusing: a check against a method you never wrote
-      fails silently rather than erroring.
-
-
-Policy or validation?
-
-  Policy                      Validation
-  ──────                      ──────────
-  may this user do this?      is this input acceptable?
-  identity and ownership      the request body
-  403                         422
-
-  A rule that would be the same for every user is
-  almost always validation.
-
-
-Guests
-
-  public function view(?User \$user, Post \$post): bool
-  {
-      return \$post->published || \$user?->id === \$post->user_id;
-  }
-
-  The ? is what lets a guest pass at all. Without it,
-  Laravel denies guests before your method runs — right
-  for update, wrong for view on a public blog.
-
-
-  Keep queries out of policies. A policy method runs once
-  per model, so a query inside view() is a query per row
-  on every list page.`,
-      codeExample: {
-        title: "A complete policy",
-        code: `<?php
-// php artisan make:policy PostPolicy --model=Post
-
-namespace App\\Policies;
-
-use App\\Models\\Post;
-use App\\Models\\User;
-use Illuminate\\Auth\\Access\\Response;
-
-class PostPolicy
-{
-    // ---------- No model yet ----------
-
-    public function viewAny(User $user): bool
-    {
-        // May they see the list at all?
-        return true;
-    }
-
-    public function create(User $user): bool
-    {
-        // Cannot be about a post: it does not exist yet.
-        return $user->hasVerifiedEmail();
-    }
-
-    // ---------- With a model ----------
-
-    // Nullable user, so guests can view a published post.
-    public function view(?User $user, Post $post): bool
-    {
-        return $post->published || $user?->id === $post->user_id;
-    }
-
-    public function update(User $user, Post $post): Response
-    {
-        return $user->id === $post->user_id
-            ? Response::allow()
-            : Response::deny('You do not own this post.');
-    }
-
-    public function delete(User $user, Post $post): bool
-    {
-        return $user->id === $post->user_id;
-    }
-
-    public function restore(User $user, Post $post): bool
-    {
-        return $user->id === $post->user_id;
-    }
-
-    public function forceDelete(User $user, Post $post): bool
-    {
-        // Permanent deletion, deliberately narrower.
-        return $user->is_admin;
-    }
-}
-
-
-<?php
-// ---------- Policy or validation? ----------
-
-class PostPolicy
-{
-    public function update(User $user, Post $post): bool
-    {
-        // ✓ Authorization: about who is asking.
-        return $user->id === $post->user_id;
-
-        // ❌ Validation: the same answer for every user,
-        //    and it belongs in a form request, as a 422.
-        // return strlen($post->title) < 255;
-    }
-}
-
-
-<?php
-// ---------- Keep queries out ----------
-
-// ❌ One query per post on every list page.
-public function view(User $user, Post $post): bool
-{
-    return $post->comments()->count() > 0 || $user->id === $post->user_id;
-}
-
-// ✓ Read what the controller already loaded.
-public function view(User $user, Post $post): bool
-{
-    return $post->comments_count > 0 || $user->id === $post->user_id;
-}
-
-// Controller:
-Post::withCount('comments')->paginate(20);
-
-
-<?php
-// ---------- Extra arguments ----------
-
-public function update(User $user, Post $post, bool $ignoreLock = false): bool
-{
-    if ($post->is_locked && ! $ignoreLock) {
-        return false;
-    }
-
-    return $user->id === $post->user_id;
-}
-
-// $user->can('update', [$post, true]);`,
-      },
-      keyTakeaways: [
-        "<b>A policy is a class holding the authorization rules for one model.</b>",
-        "It replaces four or five gates per model, so the rules live next to the resource they protect.",
-        "`php artisan make:policy PostPolicy --model=Post` stubs out the conventional methods.",
-        "<b>The seven conventional methods are `viewAny`, `view`, `create`, `update`, `delete`, `restore` and `forceDelete`.</b>",
-        "<b>`viewAny` and `create` take no model</b>, because there is not one yet, so the rule is only about the user.",
-        "<b>A missing policy method denies</b>, which is safe and silent, so a typo looks like a failing rule.",
-        "<b>A policy answers \"may this user\"; validation answers \"is this input acceptable\"</b>, and they are 403 and 422.",
-        "A rule with the same answer for every user is almost always validation.",
-        "<b>Make `$user` nullable to let guests pass a policy</b>, which is what a public blog's `view` needs.",
-        "<b>Keep queries out of policies</b>, because a policy method runs once per model on every list page.",
-      ],
-      commonMistakes: [
-        "<b>Giving `viewAny` or `create` a model parameter.</b> There is no model at that point.",
-        "<b>Misspelling a method name.</b> The ability is silently denied rather than erroring.",
-        "<b>Putting validation in a policy.</b> Input rules belong in a form request, as a 422.",
-        "<b>Forgetting the `?` on `$user` for a publicly viewable resource.</b> Guests are denied before your method runs.",
-        "<b>Querying inside a policy method.</b> On a list of fifty, that is fifty extra queries.",
-      ],
-      quiz: [
-        {
-          question: "Why does `create()` take no model?",
-          options: [
-            "Laravel does not support it",
-            "The model does not exist yet, so the rule can only be about the user",
-            "Creation is always allowed",
-            "It takes the request instead",
-          ],
-          correctIndex: 1,
-          explanation: "The same is true of `viewAny`.",
-        },
-        {
-          question: "What happens if you check an ability whose policy method does not exist?",
-          options: [
-            "It is allowed",
-            "It is denied, silently",
-            "An exception is thrown",
-            "It falls back to a gate of the same name",
-          ],
-          correctIndex: 1,
-          explanation: "Safe, and it makes a typo look like a failing rule.",
-        },
-        {
-          question: "Which of these belongs in validation rather than a policy?",
-          options: [
-            "Does this user own the post?",
-            "Is the title under 255 characters?",
-            "Is this user an admin?",
-            "Has this user verified their email?",
-          ],
-          correctIndex: 1,
-          explanation: "The answer is the same for every user, so it is not authorization.",
-        },
-        {
-          question: "How do you let a guest pass a policy method?",
-          options: [
-            "Register it as a gate instead",
-            "Make the `$user` parameter nullable with `?User $user`",
-            "Return true by default",
-            "Guests can never pass a policy",
-          ],
-          correctIndex: 1,
-          explanation: "Without the `?`, Laravel denies guests before your method runs.",
-        },
-      ],
-    },
-    {
-      id: "discovery-and-checking",
-      title: "Policy discovery & the ways to check",
-      durationMinutes: 11,
-      explanation: "You wrote a policy. Nothing yet connects it to the model, and nothing yet calls it.\n\n---\n\n### 1. Basic — Laravel finds it for you\n\n```text\napp/Models/Post.php\n        ↓\napp/Policies/PostPolicy.php\n```\n\n<b>Auto-discovery</b> matches a model to a policy by name and location: the model's name plus `Policy`, in the `Policies` directory alongside `Models`. Follow the convention and there is nothing to register.\n\nWhen the convention does not fit, say so explicitly:\n\n```php\nGate::policy(Post::class, PostPolicy::class);\n```\n\nor with an attribute on the model, which is more visible:\n\n```php\n#[UsePolicy(PostPolicy::class)]\nclass Post extends Model\n{\n}\n```\n\nReach for registration when your models live somewhere unusual, when a package's model needs your policy, or when one policy covers several models. <b>Otherwise leave it: an unnecessary registration is a line that can go stale.</b>\n\nThe symptom of discovery not working is worth recognising, because it looks like a broken rule: every check returns denied, because Laravel found no policy and defaults to no.\n\n---\n\n### 2. Intermediate — the same check, three ways\n\nOnce discovered, a policy is reached through the same API as a gate:\n\n```php\nGate::allows('update', $post);\n```\n\n```text\nGate::allows('update', $post)\n        ↓\nthe argument is a Post\n        ↓\nPostPolicy\n        ↓\nupdate($user, $post)\n```\n\n<b>The model argument is what tells Laravel to look for a policy.</b> `Gate::allows('update')` with no model looks for a gate named `update`; with a `Post`, it looks for `PostPolicy::update()`.\n\nThe user object can be asked directly, which usually reads better:\n\n```php\nif ($user->can('update', $post)) { }\nif ($user->cannot('update', $post)) { }\n\n$request->user()->can('update', $post);\n```\n\n```text\n\"Can this user update this post?\"\n$user->can('update', $post)\n```\n\nFor abilities with no model, name the class:\n\n```php\n$user->can('create', Post::class);\n$user->can('viewAny', Post::class);\n```\n\n<b>That is the one people forget.</b> `$user->can('create')` finds nothing, because without an argument Laravel has no idea which policy you meant.\n\n---\n\n### 3. Advanced — choosing between them\n\n```text\nGate::allows('update', $post)     a boolean, from anywhere\n$user->can('update', $post)       a boolean, reads as a sentence\nGate::authorize('update', $post)  throws, so the request ends\n$this->authorize('update', $post) the same, inside a controller\n```\n\nThe first two are identical in effect. Prefer `$user->can()` when you have the user, because the code says what it means; use `Gate::` when you do not, such as in a service with no request.\n\nAnd the rule that decides between boolean and throwing:\n\n```text\ndeciding what to render     →  a boolean\nguarding an action          →  authorize()\n```\n\nA sidebar link is a boolean. A `PUT /posts/1` is `authorize()`, because there is nothing sensible to do with `false` except stop.\n\nOne last piece of vocabulary. `Gate::forUser($other)->can(...)` checks on somebody else's behalf, which is what an admin previewing a customer's view needs.\n\nAnd the thing worth stating plainly, because it is the whole point of the day: <b>a check in Blade is not authorization.</b> Hiding the edit button stops nobody from sending the request. The template check is politeness; the controller check is security. You need both, and only one of them protects anything.",
-      diagram: `Discovery
-
-  app/Models/Post.php
-          ↓
-  app/Policies/PostPolicy.php
-
-  Model name + Policy, in Policies alongside Models.
-  Follow the convention and there is nothing to register.
-
-  When it does not fit:
-
-    Gate::policy(Post::class, PostPolicy::class);
-
-    #[UsePolicy(PostPolicy::class)]
-    class Post extends Model {}
-
-  Register when models live somewhere unusual, when a
-  package's model needs your policy, or when one policy
-  covers several models. Otherwise leave it.
-
-  ⚠️  Discovery failing looks like a broken rule: every
-      check is denied, because no policy was found and
-      the default is no.
-
-
-The model argument is the routing
-
-  Gate::allows('update', \$post)
-          ↓
-  the argument is a Post
-          ↓
-  PostPolicy::update(\$user, \$post)
-
-  Gate::allows('update')          → looks for a GATE
-  Gate::allows('update', \$post)   → looks for a POLICY
-
-  For abilities with no model, name the class:
-
-    \$user->can('create', Post::class)
-    \$user->can('viewAny', Post::class)
-
-  \$user->can('create') finds nothing. Laravel has no
-  idea which policy you meant.
-
-
-Four ways, two behaviours
-
-  Gate::allows('update', \$post)      boolean, from anywhere
-  \$user->can('update', \$post)        boolean, reads as a sentence
-  Gate::authorize('update', \$post)   THROWS → 403
-  \$this->authorize('update', \$post)  the same, in a controller
-
-  deciding what to RENDER   →  a boolean
-  guarding an ACTION        →  authorize()
-
-  A sidebar link is a boolean. A PUT /posts/1 is
-  authorize(), because there is nothing to do with
-  false except stop.
-
-  Gate::forUser(\$other)->can(...)   on somebody else's behalf
-
-
-  And the point of the whole day:
-
-    A check in Blade is NOT authorization.
-
-  Hiding the edit button stops nobody from sending the
-  request. The template check is politeness. The
-  controller check is security. You need both, and only
-  one of them protects anything.`,
-      codeExample: {
-        title: "Connecting the policy, and calling it",
-        code: `<?php
-// ---------- Discovery: nothing to do ----------
-
-// app/Models/Post.php      →  app/Policies/PostPolicy.php
-// Laravel finds it by name and location.
-
-
-// ---------- Registration, when the convention does not fit ----------
-
-// app/Providers/AppServiceProvider.php
-use Illuminate\\Support\\Facades\\Gate;
-
-public function boot(): void
-{
-    Gate::policy(Post::class, PostPolicy::class);
-}
-
-// Or on the model, which is more visible:
-use Illuminate\\Database\\Eloquent\\Attributes\\UsePolicy;
-
-#[UsePolicy(PostPolicy::class)]
-class Post extends Model
-{
-}
-
-
-<?php
-// ---------- Checking ----------
-
-use Illuminate\\Support\\Facades\\Gate;
-
-// The model argument is what sends this to a policy.
-Gate::allows('update', $post);      // PostPolicy::update()
-Gate::allows('access-admin');       // a gate, no model
-
-// Reads better when you have the user:
-$user->can('update', $post);
-$user->cannot('update', $post);
-$request->user()->can('delete', $post);
-
-// Abilities with no model: name the class.
-$user->can('create', Post::class);
-$user->can('viewAny', Post::class);
-
-// ❌ Finds nothing: Laravel cannot tell which policy.
-$user->can('create');
-
-// On somebody else's behalf.
-Gate::forUser($customer)->can('view', $invoice);
-
-
-<?php
-// ---------- In a controller ----------
-
-class PostController extends Controller
-{
-    public function index(Request $request)
-    {
-        Gate::authorize('viewAny', Post::class);
-
-        // A boolean, because this decides what to render.
-        return view('posts.index', [
-            'posts'     => Post::paginate(20),
-            'canCreate' => $request->user()->can('create', Post::class),
-        ]);
-    }
-
-    public function update(Request $request, Post $post)
-    {
-        // Throws when denied. There is nothing else to do here.
-        Gate::authorize('update', $post);
-
-        $post->update($request->validated());
-
-        return redirect()->route('posts.show', $post);
-    }
-}
-
-
-<?php
-// ---------- The point of the day ----------
-
-// In a view: politeness. It hides a button.
-// @can('update', $post) ... @endcan
-
-// In the controller: security. It stops the request.
-Gate::authorize('update', $post);
-
-// Without the second one, anybody can send
-// PUT /posts/1 with curl and it works.`,
-      },
-      keyTakeaways: [
-        "<b>Laravel discovers a policy by name and location</b>: `Post` finds `PostPolicy` in `app/Policies`.",
-        "<b>Register manually with `Gate::policy()` or `#[UsePolicy]`</b> when the convention does not fit.",
-        "<b>Discovery failing looks like a broken rule</b>, because a missing policy means every check is denied.",
-        "<b>The model argument is what sends a check to a policy</b> rather than to a gate of the same name.",
-        "<b>Abilities with no model need the class name</b>, as in `$user->can('create', Post::class)`.",
-        "`$user->can()` and `Gate::allows()` are the same check, and `can()` usually reads better.",
-        "<b>Use a boolean when deciding what to render, and `authorize()` when guarding an action.</b>",
-        "`Gate::forUser($other)` checks on somebody else's behalf.",
-        "<b>A check in Blade is not authorization.</b> Hiding a button stops nobody from sending the request.",
-        "<b>The template check is politeness; the controller check is security.</b> You need both.",
-      ],
-      commonMistakes: [
-        "<b>Only checking in the view.</b> The route still accepts the request from anyone who sends it.",
-        "<b>Calling `$user->can('create')` with no class.</b> Laravel cannot tell which policy you meant.",
-        "<b>Putting a policy somewhere discovery cannot find it.</b> Every check silently denies.",
-        "<b>Registering a policy that discovery already handles.</b> One more line that can go stale.",
-        "<b>Using `allows()` in a controller and forgetting to abort.</b> The check runs and nothing happens.",
-      ],
-      quiz: [
-        {
-          question: "How does Laravel find `PostPolicy` for the `Post` model?",
-          options: [
-            "It must be registered in a provider",
-            "By convention: the model name plus `Policy`, in `app/Policies`",
-            "From a config file",
-            "From the database",
-          ],
-          correctIndex: 1,
-          explanation: "Register manually only when the convention does not fit.",
-        },
-        {
-          question: "What sends `Gate::allows('update', $post)` to a policy rather than a gate?",
-          options: [
-            "The ability name",
-            "The model passed as an argument",
-            "A config setting",
-            "The controller it is called from",
-          ],
-          correctIndex: 1,
-          explanation: "With no argument, Laravel looks for a gate named `update`.",
-        },
-        {
-          question: "How do you check an ability that has no model, such as `create`?",
-          options: [
-            "`$user->can('create')`",
-            "`$user->can('create', Post::class)`",
-            "`Gate::define('create')`",
-            "You cannot",
-          ],
-          correctIndex: 1,
-          explanation: "The class name tells Laravel which policy to use.",
-        },
-        {
-          question: "Is `@can('update', $post)` in a view enough to protect the update route?",
-          options: [
-            "Yes",
-            "No; it only hides the button, and the request can still be sent directly",
-            "Yes, if the route is named",
-            "Only for authenticated users",
-          ],
-          correctIndex: 1,
-          explanation: "The template check is politeness; the controller check is security.",
-        },
-      ],
-    },
-    {
-      id: "authorize-and-the-attribute",
-      title: "authorize(), and the #[Authorize] attribute",
-      durationMinutes: 11,
-      explanation: "The same rule, expressed three ways, each one further from the code that does the work.\n\n---\n\n### 1. Basic — `authorize()` in the controller\n\n```php\npublic function update(Request $request, Post $post)\n{\n    $this->authorize('update', $post);\n\n    $post->update($request->validated());\n}\n```\n\n```text\nallowed  →  continue\ndenied   →  AuthorizationException  →  403\n```\n\nCompare it with the version people write first:\n\n```php\nif (! $request->user()->can('update', $post)) {\n    abort(403);\n}\n```\n\nSame behaviour, more line noise, and one more place to get the negation backwards. In a controller, <b>`authorize()` is the default choice</b>, because a denial there has no sensible handling except stopping.\n\nIt is also available as a helper anywhere:\n\n```php\nGate::authorize('update', $post);\n```\n\nWhich matters in a route closure, a job, or an action class that has no controller around it.\n\n---\n\n### 2. Intermediate — the three styles, side by side\n\n```php\nGate::allows('update', $post);        // boolean\n$user->can('update', $post);          // boolean\n$this->authorize('update', $post);    // throws\n```\n\nThe rule stays identical in all three. What changes is what happens when the answer is no:\n\n```text\nboolean       you decide what to do next\nauthorize()   the request ends with a 403\n```\n\nWhich is why the choice follows the situation rather than taste:\n\n```text\nrendering a menu item        →  can()\nfiltering a list             →  can()\nreturning JSON about state   →  can()\nguarding a write             →  authorize()\nguarding a read of one       →  authorize()\n  private record\n```\n\nFor a resource controller there is a shortcut that wires all seven policy methods to the seven actions at once:\n\n```php\npublic function __construct()\n{\n    $this->authorizeResource(Post::class, 'post');\n}\n```\n\n<b>`index` checks `viewAny`, `show` checks `view`, `store` checks `create`, and so on.</b> One line instead of seven, and impossible to forget one.\n\n---\n\n### 3. Advanced — moving it out of the method\n\nLaravel 13 adds an attribute, so authorization becomes part of the method's declaration rather than its first statement:\n\n```php\n#[Authorize('update', 'post')]\npublic function update(Request $request, Post $post)\n{\n    $post->update($request->validated());\n}\n```\n\n```text\nHTTP request\n     ↓\n#[Authorize(...)]\n     ↓\nPostPolicy::update()\n     ↓\nallowed → the method runs\ndenied  → 403, the method never runs\n```\n\nThe second argument names the route parameter to authorize against, matching your route's binding.\n\nWhat this buys you is not fewer characters. <b>It is that the method body contains only the operation.</b> Reading `update()`, you see an update. The authorization is stated where the signature is, alongside the route model binding it depends on, and it cannot be lost in a refactor that rewrites the body.\n\nAnd the point the exercise at the end of this day makes:\n\n```text\nVERSION 1   Gate         →  update-post  →  the rule\nVERSION 2   Policy       →  PostPolicy::update()  →  the rule\nVERSION 3   #[Authorize] →  PostPolicy::update()  →  the rule\n```\n\n<b>The rule never changed.</b> `$user->id === $post->user_id` is the same line in all three. What moved is where it is declared and how it is invoked.\n\nThat is worth holding onto, because it is the difference between learning five Laravel APIs and understanding one system with several doors into it. When you meet middleware and Blade directives in the next lesson, they are two more doors, not two more concepts.",
-      diagram: `authorize() in a controller
-
-  \$this->authorize('update', \$post);
-
-    allowed  →  continue
-    denied   →  AuthorizationException  →  403
-
-  versus the version people write first:
-
-    if (! \$request->user()->can('update', \$post)) {
-        abort(403);
-    }
-
-  Same behaviour, more noise, one more place to get
-  the negation backwards.
-
-  Gate::authorize(...) works outside controllers too:
-  route closures, jobs, action classes.
-
-
-The three styles
-
-  Gate::allows('update', \$post)       boolean
-  \$user->can('update', \$post)         boolean
-  \$this->authorize('update', \$post)   throws
-
-  The RULE is identical. Only the failure differs.
-
-    boolean       you decide what to do next
-    authorize()   the request ends with a 403
-
-  rendering a menu item       →  can()
-  filtering a list            →  can()
-  guarding a write            →  authorize()
-  reading one private record  →  authorize()
-
-
-A resource controller, in one line
-
-  \$this->authorizeResource(Post::class, 'post');
-
-    index   → viewAny
-    show    → view
-    create  → create
-    store   → create
-    edit    → update
-    update  → update
-    destroy → delete
-
-  Seven checks, impossible to forget one.
-
-
-Laravel 13: out of the method entirely
-
-  #[Authorize('update', 'post')]
-  public function update(Request \$request, Post \$post)
-  {
-      \$post->update(\$request->validated());
-  }
-
-  HTTP request
-       ↓
-  #[Authorize(...)]
-       ↓
-  PostPolicy::update()
-       ↓
-  allowed → the method runs
-  denied  → 403, the method never runs
-
-  Not fewer characters. The method body now contains
-  only the operation, and the authorization sits with
-  the signature where a refactor cannot lose it.
-
-
-The lesson of all three
-
-  VERSION 1   Gate          →  update-post           →  the rule
-  VERSION 2   Policy        →  PostPolicy::update()  →  the rule
-  VERSION 3   #[Authorize]  →  PostPolicy::update()  →  the rule
-
-  \$user->id === \$post->user_id is the same line in all
-  three. Only where it is declared changed.
-
-  Five APIs, or one system with several doors into it.`,
-      codeExample: {
-        title: "The same rule, three ways",
-        code: `<?php
-// ---------- Version 1: a gate ----------
-
-// AppServiceProvider
-Gate::define('update-post', function (User $user, Post $post) {
-    return $user->id === $post->user_id;
-});
-
-// Controller
-public function update(Request $request, Post $post)
-{
-    Gate::authorize('update-post', $post);
-
-    $post->update($request->validated());
-}
-
-
-<?php
-// ---------- Version 2: a policy ----------
-
-// app/Policies/PostPolicy.php
-public function update(User $user, Post $post): bool
-{
-    return $user->id === $post->user_id;   // the same line
-}
-
-// Controller
-public function update(Request $request, Post $post)
-{
-    $this->authorize('update', $post);
-
-    $post->update($request->validated());
-}
-
-
-<?php
-// ---------- Version 3: the attribute ----------
-
-use Illuminate\\Auth\\Access\\Attributes\\Authorize;
-
-#[Authorize('update', 'post')]
-public function update(Request $request, Post $post)
-{
-    // Only the operation. Nothing else.
-    $post->update($request->validated());
-}
-
-// The rule never changed. Only where it is declared.
-
-
-<?php
-// ---------- A whole resource controller ----------
-
-class PostController extends Controller
-{
-    public function __construct()
-    {
-        // Wires all seven policy methods to the seven actions.
-        $this->authorizeResource(Post::class, 'post');
-    }
-
-    public function index()   { /* viewAny */ }
-    public function create()  { /* create  */ }
-    public function store()   { /* create  */ }
-    public function show(Post $post)    { /* view   */ }
-    public function edit(Post $post)    { /* update */ }
-    public function update(Post $post)  { /* update */ }
-    public function destroy(Post $post) { /* delete */ }
-}
-
-
-<?php
-// ---------- Choosing between boolean and throwing ----------
-
-public function index(Request $request)
-{
-    Gate::authorize('viewAny', Post::class);   // guard the action
-
-    return view('posts.index', [
-        'posts' => Post::paginate(20),
-
-        // Booleans, because these decide what to render.
-        'canCreate' => $request->user()->can('create', Post::class),
-    ]);
-}
-
-// Outside a controller, where $this->authorize() does not exist:
-Route::delete('/posts/{post}', function (Post $post) {
-    Gate::authorize('delete', $post);
-
-    $post->delete();
-});`,
-      },
-      keyTakeaways: [
-        "<b>`$this->authorize('update', $post)` throws when denied</b>, which Laravel turns into a 403.",
-        "It replaces `if (! $user->can(...)) abort(403)` with one line and no negation to get wrong.",
-        "<b>`Gate::authorize()` works outside controllers</b>, in route closures, jobs and action classes.",
-        "<b>The three styles share one rule and differ only in what happens on failure.</b>",
-        "<b>Use a boolean for rendering decisions and `authorize()` for guarding actions.</b>",
-        "<b>`authorizeResource(Post::class, 'post')` wires all seven policy methods to a resource controller</b> in one line.",
-        "<b>Laravel 13's `#[Authorize]` attribute moves the check out of the method body</b> and onto its declaration.",
-        "The gain is that the method contains only the operation, and a refactor cannot lose the check.",
-        "<b>Across gate, policy and attribute, the rule itself never changes</b>: only where it is declared and how it is invoked.",
-        "<b>These are doors into one authorization system, not separate features.</b>",
-      ],
-      commonMistakes: [
-        "<b>Writing `if (! $user->can(...)) abort(403)` everywhere.</b> `authorize()` says the same thing once.",
-        "<b>Calling `$this->authorize()` outside a controller.</b> Use `Gate::authorize()` there.",
-        "<b>Using a boolean check to guard a write.</b> There is nothing sensible to do with `false` except stop.",
-        "<b>Writing seven `authorize()` calls in a resource controller.</b> `authorizeResource()` does it in one, and cannot miss one.",
-        "<b>Naming the wrong route parameter in `#[Authorize]`.</b> It has to match the binding in the route.",
-      ],
-      quiz: [
-        {
-          question: "What does `$this->authorize('update', $post)` do when denied?",
-          options: [
-            "Returns false",
-            "Throws `AuthorizationException`, which Laravel turns into a 403",
-            "Redirects to login",
-            "Logs a warning",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why it needs no `if` and no `abort()`.",
-        },
-        {
-          question: "What does `authorizeResource(Post::class, 'post')` do?",
-          options: [
-            "Registers the policy",
-            "Wires each resource controller action to its matching policy method",
-            "Creates the policy file",
-            "Adds middleware to the routes",
-          ],
-          correctIndex: 1,
-          explanation: "`index` to `viewAny`, `show` to `view`, and so on.",
-        },
-        {
-          question: "What does `#[Authorize('update', 'post')]` change?",
-          options: [
-            "The authorization rule",
-            "Where the check is declared: on the method rather than inside it",
-            "The policy used",
-            "The HTTP status returned",
-          ],
-          correctIndex: 1,
-          explanation: "The method body is left with only the operation.",
-        },
-        {
-          question: "Moving from a gate to a policy to the attribute, what changed?",
-          options: [
-            "The rule became stricter",
-            "Nothing about the rule; only where it is declared and how it is invoked",
-            "The user object",
-            "The HTTP status",
-          ],
-          correctIndex: 1,
-          explanation: "Several doors into one system, not several systems.",
-        },
-      ],
-    },
-    {
-      id: "blade-and-middleware",
-      title: "Blade directives & the can middleware",
-      durationMinutes: 11,
-      explanation: "Two more doors into the same system: one for what the user sees, one for what the request reaches.\n\n---\n\n### 1. Basic — Blade\n\n```blade\n@can('update', $post)\n    <a href=\"/posts/{{ $post->id }}/edit\">Edit</a>\n@endcan\n\n@cannot('update', $post)\n    <p>You cannot edit this post.</p>\n@endcannot\n\n@canany(['update', 'delete'], $post)\n    <div class=\"actions\">...</div>\n@endcanany\n```\n\n`@canany` means <i>any</i> of the listed abilities, which is what an actions menu needs: show the container if there is at least one thing to put in it.\n\n`@can` also takes an else branch, which saves writing the check twice, inverted:\n\n```blade\n@can('update', $post)\n    <a href=\"...\">Edit</a>\n@elsecan('view', $post)\n    <a href=\"...\">View</a>\n@endcan\n```\n\nThey run the same policies as everything else, so a `@can` and an `authorize()` cannot disagree.\n\n<b>And the warning from the last lesson, because this is where it bites.</b> These directives decide what is <i>rendered</i>. They do not protect anything. A user who never sees the edit button can still send `PUT /posts/1`, and if the controller does not check, it works.\n\n```text\n@can          the button is hidden\nauthorize()   the request is refused\n```\n\nOne is a courtesy, the other is the lock. Write both, and never let the template be the only one.\n\n---\n\n### 2. Intermediate — the `can` middleware\n\nSometimes the check should happen before the controller runs at all:\n\n```php\nRoute::put('/posts/{post}', [PostController::class, 'update'])\n    ->middleware('can:update,post');\n```\n\n```text\nPUT /posts/123\n       ↓\ncan:update,post\n       ↓\nresolve the route parameter {post}  →  Post #123\n       ↓\nPostPolicy::update($user, $post)\n       ↓\n403, or on to the controller\n```\n\n<b>The second argument is the route parameter name, not a variable.</b> `can:update,post` means \"the `{post}` in the URL\", which Laravel resolves through route model binding before running the check.\n\nFor abilities with no model, pass the class:\n\n```php\n->middleware('can:create,App\\Models\\Post');\n```\n\nThere is a fluent version that reads better and avoids the string:\n\n```php\nRoute::put('/posts/{post}', ...)->can('update', 'post');\n```\n\nAnd it works on a group, which is where it earns its place:\n\n```php\nRoute::middleware('can:access-admin')->prefix('admin')->group(function () {\n    // every route inside\n});\n```\n\n---\n\n### 3. Advanced — choosing the door\n\nFour ways to reach the same policy method:\n\n```text\n@can              hide UI                    not security\ncan: middleware   before the controller      whole routes, groups\nauthorize()       inside the controller      needs data first\n#[Authorize]      on the method              the modern default\n```\n\nThe question that decides it: <b>does the check need anything the controller has to work out?</b>\n\n```text\nno   →  middleware or the attribute\nyes  →  authorize() inside the method\n```\n\nA route protected by \"can this user update this post\" needs only the model, which route binding already gives you, so it belongs on the route. A check that depends on the request body, such as \"can this user move the post into <i>that</i> category\", needs the request read first, so it belongs in the method.\n\nTwo practical notes.\n\n<b>Middleware runs before validation.</b> An unauthorized request with an invalid body gets a 403 rather than a 422, which is the right order: there is no point telling somebody their input is malformed when they were never allowed to send it.\n\n<b>And a group-level `can:` is worth more than it looks.</b> Twenty admin routes each carrying their own check is twenty chances to miss one; one check on the group is a single place to read and a single place to be wrong.\n\nThe pattern most applications settle on is: a coarse check on the group, a precise check per action, and Blade directives so the interface never offers something that will be refused.",
-      diagram: `Blade
-
-  @can('update', \$post)      ... @endcan
-  @cannot('update', \$post)   ... @endcannot
-  @canany(['update','delete'], \$post) ... @endcanany
-  @can(...) ... @elsecan(...) ... @endcan
-
-  canany = ANY of these, which is what an actions
-  menu needs: show the container if there is at least
-  one thing to put in it.
-
-  Same policies as everywhere else, so a @can and an
-  authorize() cannot disagree.
-
-  ⚠️  @can          the button is hidden
-      authorize()   the request is REFUSED
-
-      A user who never sees the button can still send
-      PUT /posts/1. One is a courtesy, the other is
-      the lock.
-
-
-The can middleware
-
-  ->middleware('can:update,post')
-
-  PUT /posts/123
-         ↓
-  can:update,post
-         ↓
-  resolve {post} via route binding → Post #123
-         ↓
-  PostPolicy::update(\$user, \$post)
-         ↓
-  403, or on to the controller
-
-  The second argument is the ROUTE PARAMETER NAME,
-  not a variable.
-
-  No model:  'can:create,App\\Models\\Post'
-  Fluent:    ->can('update', 'post')
-  On a group: Route::middleware('can:access-admin')->group(...)
-
-
-Choosing the door
-
-  @can              hide UI                 NOT security
-  can: middleware   before the controller   whole routes, groups
-  authorize()       inside the controller   needs data first
-  #[Authorize]      on the method           the modern default
-
-  Does the check need something the controller
-  must work out first?
-
-    no   →  middleware or the attribute
-    yes  →  authorize() inside the method
-
-  "Can this user update this post" needs only the model,
-  which route binding gives you → put it on the route.
-
-  "Can this user move it into THAT category" needs the
-  request body → put it in the method.
-
-
-  Middleware runs BEFORE validation, so an unauthorized
-  request with a bad body gets 403, not 422. Right order:
-  no point critiquing input they were never allowed to send.
-
-  A group-level can: is worth more than it looks. Twenty
-  admin routes each carrying their own check is twenty
-  chances to miss one.
-
-  Most applications settle on: a coarse check on the
-  group, a precise check per action, and Blade directives
-  so the UI never offers what will be refused.`,
-      codeExample: {
-        title: "Blade, middleware, and where each belongs",
-        code: `{{-- resources/views/posts/show.blade.php --}}
-
-<article>
-    <h1>{{ $post->title }}</h1>
-    <p>{{ $post->body }}</p>
-</article>
-
-@can('update', $post)
-    <a href="{{ route('posts.edit', $post) }}">Edit</a>
-@endcan
-
-@cannot('update', $post)
-    <p class="muted">You cannot edit this post.</p>
-@endcannot
-
-{{-- Show the actions box if there is at least one action --}}
-@can('update', $post)
-    <a href="/posts/{{ $post->id }}/edit">Edit</a>
-@elsecan('view', $post)
-    <a href="/posts/{{ $post->id }}">View</a>
-@endcan
-
-@canany(['update', 'delete'], $post)
-    <div class="actions">
-        @can('update', $post)
-            <a href="{{ route('posts.edit', $post) }}">Edit</a>
-        @endcan
-
-        @can('delete', $post)
-            <form method="POST" action="{{ route('posts.destroy', $post) }}">
-                @csrf @method('DELETE')
-                <button>Delete</button>
-            </form>
-        @endcan
-    </div>
-@endcanany
-
-{{-- An ability with no model --}}
-@can('create', App\Models\Post::class)
-    <a href="{{ route('posts.create') }}">New post</a>
-@endcan
-
-
-<?php
-// ---------- routes/web.php ----------
-
-use App\\Http\\Controllers\\PostController;
-use Illuminate\\Support\\Facades\\Route;
-
-// The second argument is the ROUTE PARAMETER name.
-Route::put('/posts/{post}', [PostController::class, 'update'])
-    ->middleware('can:update,post');
-
-// The fluent version, without the string.
-Route::delete('/posts/{post}', [PostController::class, 'destroy'])
-    ->can('delete', 'post');
-
-// No model: pass the class.
-Route::post('/posts', [PostController::class, 'store'])
-    ->middleware('can:create,App\\Models\\Post');
-
-// A coarse check on a whole group: one place to read,
-// one place to be wrong.
-Route::middleware(['auth', 'can:access-admin'])
-    ->prefix('admin')
-    ->group(function () {
-        Route::get('/users', [AdminUserController::class, 'index']);
-        Route::get('/reports', [ReportController::class, 'index']);
-    });
-
-
-<?php
-// ---------- When the check needs the request ----------
-
-class PostController extends Controller
-{
-    // Only the model is needed, so it goes on the route.
-    #[Authorize('update', 'post')]
-    public function update(Request $request, Post $post)
-    {
-        $post->update($request->validated());
-    }
-
-    // This one depends on the request body, so it has to
-    // happen after the controller has read it.
-    public function move(Request $request, Post $post)
-    {
-        $this->authorize('update', $post);
-
-        $category = Category::findOrFail($request->category_id);
-
-        // Not knowable from the route alone.
-        $this->authorize('addPost', $category);
-
-        $post->update(['category_id' => $category->id]);
-    }
-}
-
-
-{{-- And the thing to remember --}}
-{{-- @can hides the button. It does not stop the request. --}}
-{{-- Every guarded action needs a check on the server too. --}}`,
-      },
-      keyTakeaways: [
-        "<b>`@can`, `@cannot` and `@canany` run the same policies as the rest of the system.</b>",
-        "`@canany` passes when any listed ability is allowed, which suits an actions menu.",
-        "<b>Blade directives decide what is rendered, not what is permitted.</b>",
-        "A user who never sees the edit button can still send the request, so the server must check too.",
-        "<b>`can:update,post` middleware runs the policy before the controller</b>, resolving the route parameter first.",
-        "<b>The second argument is the route parameter name</b>, not a variable, and a class name is used for model-less abilities.",
-        "`->can('update', 'post')` is the fluent form, and `can:` works on a whole route group.",
-        "<b>Put the check on the route when it needs only the model, and in the method when it needs the request.</b>",
-        "<b>Middleware runs before validation</b>, so an unauthorized request gets a 403 rather than a 422.",
-        "<b>A group-level check is one place to read and one place to be wrong</b>, instead of twenty chances to forget.",
-      ],
-      commonMistakes: [
-        "<b>Treating `@can` as protection.</b> It hides the button and nothing else.",
-        "<b>Passing a variable to `can:` middleware.</b> It expects the route parameter's name.",
-        "<b>Forgetting the class for a model-less ability.</b> `can:create` alone has no policy to reach.",
-        "<b>Putting a request-dependent check on the route.</b> The body has not been read yet.",
-        "<b>Repeating the same coarse check on twenty routes.</b> Put it on the group instead.",
-      ],
-      quiz: [
-        {
-          question: "What does `@can('update', $post)` protect?",
-          options: [
-            "The update route",
-            "Nothing; it only decides whether the markup is rendered",
-            "The model from being changed",
-            "The form submission",
-          ],
-          correctIndex: 1,
-          explanation: "The request can still be sent directly, so the server must check too.",
-        },
-        {
-          question: "In `can:update,post`, what is `post`?",
-          options: [
-            "A variable in the controller",
-            "The name of the route parameter, resolved by route model binding",
-            "The policy class",
-            "The table name",
-          ],
-          correctIndex: 1,
-          explanation: "Laravel resolves `{post}` to the model before checking.",
-        },
-        {
-          question: "When should a check live inside the controller method rather than on the route?",
-          options: [
-            "Always",
-            "When it depends on something the controller must read first, such as the request body",
-            "When the model is soft-deletable",
-            "When the route is a GET",
-          ],
-          correctIndex: 1,
-          explanation: "Route-level checks only have the bound model.",
-        },
-        {
-          question: "Why does an unauthorized request with an invalid body return 403 rather than 422?",
-          options: [
-            "Validation is disabled",
-            "Middleware runs before validation, and there is no point critiquing input they were never allowed to send",
-            "422 is only for APIs",
-            "Laravel merges the two",
-          ],
-          correctIndex: 1,
-          explanation: "Authorization first, then the shape of the input.",
-        },
-      ],
-    },
-    {
-      id: "filtering-and-performance",
-      title: "Filtering collections & authorization performance",
+      id: "sql-injection",
+      title: "SQL injection & parameter binding",
       durationMinutes: 10,
-      explanation: "Authorization is application code, so it has the same performance problems as application code. This is the one nobody warns you about.\n\n---\n\n### 1. Basic — filtering by policy\n\nA page listing everything the user can act on:\n\n```php\n$posts = Post::all();\n\n$editable = $posts->filter(\n    fn (Post $post) => $request->user()->can('update', $post)\n);\n```\n\n```text\nall posts\n    ↓\npolicy check, per post\n    ↓\nonly the authorized ones\n```\n\nWhich is genuinely useful for admin dashboards, action lists and bulk-operation screens, where you cannot express the rule as a query.\n\nAnd immediately worth being careful about, because <b>you are now running your authorization logic once per row.</b>\n\n---\n\n### 2. Intermediate — the N+1 hiding in a policy\n\nHere is the trap:\n\n```php\n$posts = Post::all();\n\n$posts->filter(fn ($post) => $post->author->id === auth()->id());\n```\n\n`$post->author` is a lazy relationship. Day 15's N+1, except it is inside authorization code, where nobody looks for it.\n\n```text\n1 query    the posts\n100 queries  one author per post\n```\n\nThe fix is the same as it was then:\n\n```php\n$posts = Post::with('author')->get();\n```\n\nBut the reason it is worth restating is that <b>the query is in a policy, and the fix is in a controller.</b> Somebody profiling the page sees a hundred queries and no loop that explains them, because the loop is a `filter()` calling a method in another file.\n\nSo two habits:\n\n<b>Keep relationship access out of policies where you can.</b> Compare `$post->user_id` rather than `$post->author->id`: the foreign key is already on the row, and no query happens at all.\n\n<b>And when a policy does need a relationship, eager load it at the call site.</b> `Model::preventLazyLoading()` from Day 15 will tell you loudly if you forget.\n\n---\n\n### 3. Advanced — filter in the database instead\n\nStep back and the real answer is often that you should not be filtering in PHP.\n\n```text\nfilter in PHP                  filter in the query\n─────────────                  ───────────────────\nfetch every row                fetch only what matters\nrun the policy per row         one WHERE clause\npaginate afterwards, wrongly   paginate correctly\n```\n\nThat last line is the one that bites. <b>Paginate then filter and your pages have different sizes</b>, because you fetched twenty and threw eleven away. The count is wrong, the page links are wrong, and there is no way to fix it without asking the database the right question in the first place:\n\n```php\nPost::where('user_id', $request->user()->id)->paginate(20);\n```\n\nSame rule, expressed as a query. Twenty rows, correct pagination, no policy calls at all.\n\nWhich leaves a real question: the rule now exists twice, in the policy and in the query. A common answer is a scope that mirrors it:\n\n```php\npublic function scopeVisibleTo($query, User $user)\n{\n    return $query->where('user_id', $user->id)->orWhere('published', true);\n}\n```\n\nand a policy that reads the same way. <b>They can still drift, and a test that checks they agree is worth more than either of them.</b>\n\nSo the guidance, in order:\n\n```text\nCan the rule be a WHERE clause?      →  put it in the query\nNeeds per-model logic on a small     →  filter with the policy\n  set?\nA large list?                        →  the rule has to be a query\n```\n\nPolicies protect individual actions extremely well. They are not a filter for a list of ten thousand rows, and reaching for them there is how a page ends up loading the whole table.",
-      diagram: `Filtering by policy
+      explanation: "You met this on Day 13 as a rule to follow. Here is why the rule works, because understanding it is what lets you recognise the cases the rule does not cover.\n\n---\n\n### 1. Basic — the attack\n\nAn attacker types this into a login form:\n\n```text\n' OR 1=1 --\n```\n\nAnd your code builds SQL by gluing strings together:\n\n```php\nDB::select(\"SELECT * FROM users WHERE email = '$email'\");\n```\n\nThe database receives:\n\n```sql\nSELECT * FROM users WHERE email = '' OR 1=1 --'\n```\n\n`OR 1=1` is true for every row, and `--` comments out the rest. Every user comes back, and the first one is usually an administrator.\n\n<b>The root cause is that the value became part of the command.</b> The database has no way to tell which characters you meant as SQL and which arrived from a form, because by the time it sees the query they are the same string.\n\n---\n\n### 2. Intermediate — why binding fixes it\n\n```php\nDB::table('users')->where('email', $email)->first();\n\nDB::select('SELECT * FROM users WHERE email = ?', [$email]);\n```\n\nBoth send the query and the value <i>separately</i>:\n\n```text\nSQL structure   +   parameter        →  database\n     (fixed)        (just a value)\n```\n\nrather than:\n\n```text\nSQL + user input  →  database reads all of it as SQL\n```\n\nThe database parses the statement first, with `?` as a placeholder, and only then receives the value. <b>At that point the shape of the query is already decided</b>, so nothing in the value can change it. `' OR 1=1 --` becomes an email address nobody has.\n\nThat is why the query builder is safe by construction. You are not remembering to escape anything; there is nothing to escape, because the value never travels as SQL.\n\n---\n\n### 3. Advanced — what binding does not cover\n\nHere is the part worth knowing, and the reason \"just use the query builder\" is slightly too simple.\n\n<b>Only values can be bound.</b> Table names, column names and sort directions are part of the query's structure, so they cannot be placeholders:\n\n```php\n// ❌ $column is structure, and it came from a request\nDB::table('users')->orderBy(request('sort'))->get();\n\nDB::select(\"SELECT * FROM users ORDER BY $column\");\n```\n\nNo binding will help. <b>Structure from user input needs a whitelist:</b>\n\n```php\n$sort = in_array(request('sort'), ['name', 'created_at'], true)\n    ? request('sort')\n    : 'created_at';\n```\n\nThe same applies to a direction (`asc` or `desc`), a table name, or anything else that decides the query's shape.\n\n<b>And raw expressions are not automatically dangerous.</b> `DB::raw('SUM(amount) as total')` is fine, because you wrote every character. It becomes dangerous the moment a request value is interpolated into it. The line is not raw versus not raw:\n\n```text\nDoes user input reach the SQL TEXT?\n\n  yes  →  a problem, whatever method you used\n  no   →  fine, including raw\n```\n\nTwo more places worth checking in an existing codebase:\n\n<b>`whereRaw`, `havingRaw`, `orderByRaw` and `selectRaw`</b> all take bindings as a second argument. Use them:\n\n```php\n->whereRaw('price > ?', [$min])\n```\n\n<b>And a `LIKE` value still needs binding</b>, even though the wildcards are yours:\n\n```php\n->where('name', 'like', \"%{$search}%\")   // bound, safe\n```\n\nThe builder binds the whole string including your `%`, which is exactly right.",
+      diagram: `The attack
 
-  \$posts->filter(fn (\$post) => \$user->can('update', \$post))
+  A user types:   ' OR 1=1 --
 
-    all posts
-        ↓
-    policy check, per post
-        ↓
-    only the authorized ones
+  Your code:      "SELECT * FROM users WHERE email = '\$email'"
 
-  Useful for admin dashboards, action lists and bulk
-  screens. And you are now running authorization once
-  per row.
+  The database receives:
 
+    SELECT * FROM users WHERE email = '' OR 1=1 --'
 
-The N+1 hiding in a policy
+  OR 1=1 is true for every row. -- comments out the rest.
+  Every user comes back, and the first is usually an admin.
 
-  \$posts = Post::all();
-  \$posts->filter(fn (\$post) => \$post->author->id === auth()->id());
-
-    1 query      the posts
-    100 queries  one author per post
-
-  Day 15's N+1, inside authorization code, where nobody
-  looks for it. Someone profiling sees a hundred queries
-  and no loop, because the loop is a filter() calling a
-  method in another file.
-
-  Two habits:
-
-    Compare \$post->user_id, not \$post->author->id.
-      The foreign key is already on the row.
-
-    When a policy does need a relationship, eager load
-      it at the call site. preventLazyLoading() will
-      tell you loudly if you forget.
+  Root cause: the VALUE became part of the COMMAND. By the
+  time the database sees it, your SQL and their input are
+  the same string.
 
 
-The real answer: filter in the database
+Why binding fixes it
 
-  filter in PHP                 filter in the query
-  ─────────────                 ───────────────────
-  fetch every row               fetch only what matters
-  policy per row                one WHERE clause
-  pagination BREAKS             pagination is correct
+  ->where('email', \$email)
+  DB::select('... WHERE email = ?', [\$email])
 
-  ⚠️  Paginate then filter and your pages have different
-      sizes: you fetched 20 and threw 11 away. The count
-      is wrong, the links are wrong, and there is no fix
-      except asking the database the right question.
+    SQL structure  +  parameter      →  database
+       (fixed)        (just a value)
 
-    Post::where('user_id', \$user->id)->paginate(20)
+  instead of
 
-  Same rule. Twenty rows. No policy calls.
+    SQL + user input                 →  all read as SQL
 
+  The database parses the statement FIRST, with ? as a
+  placeholder, and receives the value afterwards. The
+  shape is already decided, so nothing in the value can
+  change it.
 
-  The rule now exists twice: in the policy and in the
-  query. A scope can mirror it:
-
-    scopeVisibleTo(\$query, User \$user)
-
-  They can still drift, and a test that checks they
-  agree is worth more than either of them.
+  ' OR 1=1 -- becomes an email address nobody has.
 
 
-In order
+What binding does NOT cover
 
-  Can the rule be a WHERE clause?   →  put it in the query
-  Per-model logic, small set?       →  filter with the policy
-  A large list?                     →  it has to be a query
+  Only VALUES can be bound. Table names, column names
+  and sort directions are STRUCTURE.
 
-  Policies protect individual actions extremely well.
-  They are not a filter for ten thousand rows.`,
+    ❌ ->orderBy(request('sort'))
+    ❌ "SELECT * FROM users ORDER BY \$column"
+
+  No binding helps. Structure from user input needs
+  a whitelist:
+
+    \$sort = in_array(request('sort'),
+        ['name', 'created_at'], true)
+            ? request('sort')
+            : 'created_at';
+
+
+  And raw is not automatically dangerous:
+
+    Does user input reach the SQL TEXT?
+
+      yes  →  a problem, whatever method you used
+      no   →  fine, including DB::raw()
+
+
+  Worth grepping for in an existing codebase:
+
+    whereRaw  havingRaw  orderByRaw  selectRaw
+       all take bindings as a second argument. Use them.
+
+       ->whereRaw('price > ?', [\$min])
+
+    LIKE values still need binding, even though the
+    wildcards are yours:
+
+       ->where('name', 'like', "%{\$search}%")   bound, safe`,
       codeExample: {
-        title: "Filtering, and the two ways it goes wrong",
+        title: "Values, structure, and the line between them",
         code: `<?php
 
-use App\\Models\\Post;
+use Illuminate\\Support\\Facades\\DB;
 
-// ---------- Filtering by policy: fine on a small set ----------
+// ---------- The attack ----------
 
-$posts = Post::all();
+// $email = "' OR 1=1 --"
+//
+// ❌ Returns every user in the table.
+DB::select("SELECT * FROM users WHERE email = '$email'");
 
-$editable = $posts->filter(
-    fn (Post $post) => $request->user()->can('update', $post)
+
+// ---------- Bound: safe by construction ----------
+
+DB::table('users')->where('email', $email)->first();
+
+DB::select('SELECT * FROM users WHERE email = ?', [$email]);
+
+DB::select(
+    'SELECT * FROM users WHERE email = :email AND active = :active',
+    ['email' => $email, 'active' => true],
 );
 
-// Genuinely useful for admin dashboards and bulk-action
-// screens, where the rule is not expressible as a query.
+// The statement is parsed first, with ? as a placeholder.
+// The value arrives after the shape is decided.
 
 
-// ---------- The N+1 inside the policy ----------
+// ---------- What binding cannot do ----------
 
-// ❌ $post->author is lazy. 1 query for posts, 100 for authors.
-public function update(User $user, Post $post): bool
-{
-    return $post->author->id === $user->id;
-}
+// Column names, table names and sort directions are
+// STRUCTURE. There is no placeholder for them.
 
-// ✓ The foreign key is already on the row. No query at all.
-public function update(User $user, Post $post): bool
-{
-    return $post->user_id === $user->id;
-}
+// ❌ Both of these, however you write them.
+DB::table('users')->orderBy(request('sort'))->get();
+DB::select("SELECT * FROM users ORDER BY $column");
 
-// And when a relationship really is needed, load it at
-// the call site:
-$posts = Post::with('author')->get();
+// ✓ Whitelist anything that shapes the query.
+$sort = in_array(request('sort'), ['name', 'created_at', 'email'], true)
+    ? request('sort')
+    : 'created_at';
 
-// Model::preventLazyLoading() from Day 15 turns the
-// mistake into an exception in development.
+$direction = request('dir') === 'asc' ? 'asc' : 'desc';
+
+DB::table('users')->orderBy($sort, $direction)->get();
 
 
-<?php
-// ---------- The one that breaks pagination ----------
+// ---------- Raw is not the problem; input is ----------
 
-// ❌ Fetch 20, throw 11 away. Pages have different sizes,
-//    the total is wrong, and the links are wrong.
-$posts = Post::paginate(20)
-    ->filter(fn ($post) => $request->user()->can('update', $post));
+// ✓ You wrote every character.
+DB::table('orders')->selectRaw('SUM(amount) as total')->get();
 
-// ✓ Ask the database the right question.
-$posts = Post::where('user_id', $request->user()->id)->paginate(20);
+// ❌ A request value in the SQL text.
+DB::table('orders')->selectRaw("SUM($column) as total")->get();
 
-// Twenty rows, correct pagination, no policy calls.
-
-
-<?php
-// ---------- Keeping the query and the policy in step ----------
-
-// app/Models/Post.php
-public function scopeVisibleTo($query, User $user)
-{
-    return $query->where(function ($q) use ($user) {
-        $q->where('published', true)
-          ->orWhere('user_id', $user->id);
-    });
-}
-
-// app/Policies/PostPolicy.php
-public function view(User $user, Post $post): bool
-{
-    return $post->published || $post->user_id === $user->id;
-}
-
-// The same rule, twice. They can drift, so test that
-// they agree:
-
-// test:
-//   $visible = Post::visibleTo($user)->pluck('id');
-//   $allowed = Post::all()->filter(fn ($p) => $user->can('view', $p))
-//                          ->pluck('id');
-//   expect($visible->sort()->values())
-//       ->toEqual($allowed->sort()->values());
+// ✓ Raw methods take bindings. Use them.
+DB::table('orders')
+    ->whereRaw('amount > ?', [$min])
+    ->havingRaw('COUNT(*) > ?', [$count])
+    ->orderByRaw('FIELD(status, ?, ?)', ['overdue', 'unpaid'])
+    ->get();
 
 
-<?php
-// ---------- The order to think in ----------
+// ---------- LIKE ----------
 
-// 1. Can the rule be a WHERE clause?      → the query
-$posts = Post::visibleTo($user)->paginate(20);
+// The wildcards are yours; the value is still bound.
+DB::table('users')
+    ->where('name', 'like', "%{$search}%")
+    ->get();
 
-// 2. Per-model logic on a small set?      → filter with the policy
-$actions = $selected->filter(fn ($p) => $user->can('delete', $p));
+// ❌ Not this.
+DB::select("SELECT * FROM users WHERE name LIKE '%$search%'");
 
-// 3. A large list?                        → it has to be a query`,
+
+// ---------- What to grep for in an existing codebase ----------
+
+//   DB::select("      with a variable inside
+//   whereRaw(         without a bindings argument
+//   selectRaw(        with interpolation
+//   orderBy(request   or any request value as a column`,
       },
       keyTakeaways: [
-        "<b>Filtering a collection with `can()` runs your authorization logic once per row.</b>",
-        "It suits admin dashboards and bulk-action screens where the rule is not expressible as a query.",
-        "<b>A policy that reads a relationship creates an N+1</b>, hidden inside authorization code.",
-        "<b>Compare `$post->user_id` rather than `$post->author->id`</b>: the foreign key is already on the row.",
-        "When a policy genuinely needs a relationship, eager load it at the call site.",
-        "`Model::preventLazyLoading()` turns the mistake into an exception in development.",
-        "<b>Paginating and then filtering breaks pagination</b>: page sizes vary and the totals and links are wrong.",
-        "<b>Express the rule as a query instead</b>, so the database returns exactly the rows the user may see.",
-        "<b>A scope mirroring the policy keeps them aligned</b>, and a test that they agree is worth more than either.",
-        "<b>Policies protect individual actions well; they are not a filter for a large list.</b>",
+        "<b>SQL injection happens when a value becomes part of the command</b>, because both arrive as one string.",
+        "`' OR 1=1 --` makes the condition true for every row and comments out the rest of the query.",
+        "<b>Parameter binding sends the statement and the value separately</b>, so the database parses the shape first.",
+        "<b>Once the shape is decided, nothing in the value can change it</b>, which is why the query builder is safe by construction.",
+        "<b>Only values can be bound.</b> Table names, column names and sort directions are structure.",
+        "<b>Structure from user input needs a whitelist</b>, and no amount of escaping substitutes for one.",
+        "<b>Raw SQL is not automatically dangerous</b>: the question is whether user input reaches the SQL text.",
+        "`whereRaw`, `havingRaw`, `orderByRaw` and `selectRaw` all accept bindings, so use them.",
+        "<b>A `LIKE` value still needs binding</b>, and the builder binds the wildcards along with it.",
       ],
       commonMistakes: [
-        "<b>Loading every row to filter by policy.</b> On a large table the page loads the whole table.",
-        "<b>Reading a relationship inside a policy method.</b> One query per row, in a file nobody profiles.",
-        "<b>Calling `paginate()` and then `filter()`.</b> Page sizes, totals and links all become wrong.",
-        "<b>Duplicating the rule in a query without testing that they agree.</b> They drift, and one of them is wrong.",
-        "<b>Using policies as the list filter on ten thousand rows.</b> The rule needs to be a `WHERE` clause.",
+        "<b>Interpolating a value into a raw query.</b> That is the injection, whatever the value looks like.",
+        "<b>Passing a request value to `orderBy()`.</b> A column name cannot be bound; it needs a whitelist.",
+        "<b>Using `whereRaw()` without the bindings argument.</b> The second parameter exists for exactly this.",
+        "<b>Casting to an integer and calling it safe.</b> Bind the value and stop reasoning about it.",
+        "<b>Building a `LIKE` pattern inside a raw string.</b> Bind the whole pattern, wildcards included.",
       ],
       quiz: [
         {
-          question: "What is the risk of `$posts->filter(fn ($p) => $user->can('update', $p))`?",
+          question: "Why does parameter binding prevent SQL injection?",
           options: [
-            "It bypasses the policy",
-            "Authorization runs once per row, and any relationship the policy reads becomes an N+1",
-            "It returns an array",
-            "It ignores gates",
+            "It escapes dangerous characters",
+            "The statement is parsed before the value arrives, so the value cannot change the query's shape",
+            "It encrypts the value",
+            "It validates the input",
           ],
           correctIndex: 1,
-          explanation: "The loop is in a `filter()` calling a method in another file, so it is easy to miss.",
+          explanation: "Structure and data travel separately.",
         },
         {
-          question: "How do you avoid a query inside a policy that checks ownership?",
+          question: "Can a column name be bound as a parameter?",
           options: [
-            "Cache the policy result",
-            "Compare `$post->user_id` instead of `$post->author->id`",
-            "Use a gate instead",
-            "Eager load inside the policy",
+            "Yes, the same way as a value",
+            "No; it is part of the query's structure, so it needs a whitelist",
+            "Only in raw queries",
+            "Only on MySQL",
           ],
           correctIndex: 1,
-          explanation: "The foreign key is already on the row, so no query happens.",
+          explanation: "Placeholders exist for values, not for structure.",
         },
         {
-          question: "What breaks when you paginate and then filter?",
+          question: "Is `DB::raw('SUM(amount) as total')` dangerous?",
           options: [
-            "Nothing",
-            "Page sizes vary and the totals and links are wrong, because rows were fetched then discarded",
-            "The policy stops running",
-            "The order changes",
+            "Yes, all raw SQL is dangerous",
+            "No; you wrote every character, and no user input reaches the SQL text",
+            "Only in production",
+            "Only with joins",
           ],
           correctIndex: 1,
-          explanation: "The database has to be asked the right question in the first place.",
+          explanation: "The line is whether user input reaches the SQL, not raw versus not raw.",
         },
         {
-          question: "For a list of ten thousand rows, where should the visibility rule live?",
+          question: "How should a `LIKE` search value be handled?",
           options: [
-            "In the policy, applied with `filter()`",
-            "In the query, as a `WHERE` clause, usually via a scope",
-            "In Blade",
-            "In middleware",
+            "Interpolated into a raw query",
+            "Passed as a bound value, wildcards included",
+            "Escaped manually",
+            "Validated only",
           ],
           correctIndex: 1,
-          explanation: "Policies protect actions; they are not a list filter.",
+          explanation: "`->where('name', 'like', \"%{$search}%\")` binds the whole pattern.",
         },
       ],
     },
     {
-      id: "roles-permissions-and-choosing",
-      title: "Roles, permissions & choosing the right tool",
-      durationMinutes: 12,
-      explanation: "Everything so far answers \"does this user own this thing\". Larger applications need something else.\n\n---\n\n### 1. Basic — roles and permissions\n\n```text\nUser\n ↓\nRole\n ↓\nPermissions\n```\n\n```text\nAdmin              Editor\n ├── users.view     ├── posts.view\n ├── users.create   ├── posts.create\n ├── users.update   └── posts.update\n └── users.delete\n```\n\n<b>A <i>role</i></b> is a named bundle of permissions; <b>a <i>permission</i></b> is a single named ability. The indirection is the point: promote somebody by changing their role, and every rule follows, without touching any code.\n\nThe distinction from ownership is worth stating:\n\n```text\nownership       does this user own this post?          the model decides\npermission      may this user update posts at all?     the role decides\n```\n\nMost real policies use both:\n\n```php\npublic function update(User $user, Post $post): bool\n{\n    return $user->hasPermission('posts.update')\n        && ($user->id === $post->user_id || $user->hasPermission('posts.update.any'));\n}\n```\n\n<b>Roles and policies are not alternatives.</b> The role says what kind of thing you may do; the policy says whether you may do it to <i>this</i> record.\n\n---\n\n### 2. Intermediate — building it yourself\n\nThe schema is Day 15's many-to-many, twice:\n\n```text\nusers    roles    permissions    role_user    permission_role\n```\n\n```text\nUser ──belongsToMany──> Role ──belongsToMany──> Permission\n```\n\nWhich is a morning's work. What follows is not:\n\n```text\nrole assignment UI\npermission checks that are fast\ncaching, because every request asks\nmiddleware integration\npolicy integration\nseeding and migrations for new permissions\ntesting all of it\n```\n\n<b>The performance one is the trap.</b> `$user->hasPermission('posts.update')` naively written is two joins on every check, and a page checking twelve abilities runs twelve of them. The fix is to load a user's permissions once per request and cache them, which is straightforward once you know to do it and invisible until the page is slow.\n\nBuild it yourself when the model is genuinely simple: a fixed set of roles, checked with `$user->role === 'admin'`, needs no tables at all and often no more than an enum.\n\n---\n\n### 3. Advanced — the actual decision\n\nThe question is not whether packages are good.\n\n```text\nSimple authorization?\n       ↓\nGates + Policies, and maybe a role column\n\nComplex RBAC?\n       ↓\nconsider a mature package\n```\n\nReach for a package when you need:\n\n```text\nmultiple roles per user\nmany permissions, changing over time\nteams or tenants\npermissions editable by admins at runtime\nrole management UI\n```\n\nAnd do not when you need \"the owner can edit their own posts\", which is four lines of policy and no dependency.\n\nIn the Laravel ecosystem that package is <b>`spatie/laravel-permission`</b>, which is the de facto standard and worth knowing by name:\n\n```bash\ncomposer require spatie/laravel-permission\n```\n\n```php\n$user->assignRole('editor');\n$user->givePermissionTo('posts.publish');\n\n$user->hasRole('editor');\n$user->can('posts.publish');      // the same can() your policies use\n```\n\n<b>Notice that last line.</b> The package registers its permissions as gates, so `$user->can()`, `@can` and `authorize()` keep working unchanged. You are not replacing Laravel's authorization, you are giving it a database-backed source of abilities.\n\n<b>The cost of a package is not the code, it is that permissions become data.</b> A rule in a policy is in version control, reviewed and testable. A rule in a permissions table can be changed in production by somebody in an admin screen, and your tests will never know. That is exactly what you want for a product where customers configure their own roles, and exactly what you do not want for a rule that must always hold.\n\nAnd the summary of the whole day:\n\n```text\nSystem-level ability          →  Gate\n  access the admin dashboard\n\nModel or resource ability     →  Policy\n  update THIS post\n\nWhat kind of user is this     →  roles and permissions\n  editors may publish\n```\n\n```text\nHTTP Request\n     ↓\nAuthentication\n     ↓\nAuthenticated User\n     ↓\nAuthorization\n     │\n ┌───┴────────────┐\n ▼                ▼\nGate           Policy\n │                │\n └───────┬────────┘\n         ▼\n   allowed / 403\n```\n\nOne last piece of advice, and it is the one that matters most. <b>Authorization is the code most likely to be wrong and least likely to be noticed</b>, because the happy path works perfectly whether or not the rules do. Test the denials: log in as the wrong user and confirm the 403. Nothing else tells you the lock is fitted.",
-      diagram: `Roles and permissions
+      id: "mass-assignment",
+      title: "Mass assignment & trusting the request",
+      durationMinutes: 10,
+      explanation: "Day 14 introduced `$fillable`. This is the same feature seen from the attacker's side, plus the wider habit it belongs to.\n\n---\n\n### 1. Basic — the attack\n\nYour `users` table has a column your form does not:\n\n```text\nname\nemail\nis_admin\n```\n\nAnd your controller does the convenient thing:\n\n```php\nUser::create($request->all());\n```\n\nThe attacker adds a key:\n\n```json\n{\n    \"name\": \"Rajan\",\n    \"email\": \"rajan@example.com\",\n    \"is_admin\": true\n}\n```\n\n<b>The form never had that field, and it did not need one.</b> A request body is whatever the sender chooses to send, and a form is a suggestion. `curl` ignores suggestions.\n\nThat is <b>mass assignment</b>: setting many attributes at once from an array you did not check.\n\n---\n\n### 2. Intermediate — the two lists\n\n```php\nprotected $fillable = ['name', 'email', 'password'];\n```\n\n```text\nname       ✓\nemail      ✓\npassword   ✓\nis_admin   ✗   silently dropped\n```\n\nAn allow list. Or the inverse:\n\n```php\nprotected $guarded = ['is_admin'];\n```\n\n```text\n$fillable   only these may be mass assigned\n$guarded    everything except these\n```\n\nThe security argument for `$fillable` is about what happens next month, when somebody adds a column:\n\n```text\n$fillable   not assignable until listed\n            → the field does not save\n            → you notice immediately\n\n$guarded    assignable the moment it exists\n            → the field saves when it should not\n            → you notice when it matters\n```\n\n<b>Both are reasonable; only one fails loudly.</b> And `$guarded = []` is not a middle ground, it is the protection switched off.\n\nOne detail worth repeating from Day 14: <b>mass assignment is about arrays.</b> `$user->is_admin = true; $user->save();` is unaffected, because you wrote that line deliberately.\n\n---\n\n### 3. Advanced — the habit underneath\n\n`$fillable` is a safety net. The habit is not to need it:\n\n```php\n// ❌ whatever they sent\nUser::create($request->all());\n\n// ✓ what you asked for\nUser::create($request->validate([\n    'name'  => ['required', 'string', 'max:255'],\n    'email' => ['required', 'email', 'unique:users'],\n]));\n```\n\n<b>`validate()` returns only the validated keys</b>, so an extra field is gone before the model ever sees it. Two independent locks, and neither is a reason to skip the other:\n\n```text\nvalidation   what the request is allowed to contain\n$fillable    what the model is allowed to accept\n```\n\nThe same shape appears elsewhere, and recognising it is the useful part:\n\n<b>A hidden form field is a request field.</b> A `<select>` of five options accepts a sixth, so validate with `in:` or `exists:`. A price in a hidden input is a price the customer chose; look it up on the server instead.\n\n<b>And route model binding is not authorization.</b> `PUT /invoices/91` resolves invoice 91 whoever asks, which is exactly what yesterday's policies are for.\n\nThe common thread across today: <b>every one of these attacks is somebody sending something your interface did not offer.</b> The interface is a convenience for honest users. The server is the only thing that decides.",
+      diagram: `The attack
 
-  User  →  Role  →  Permissions
+  users:  name  email  is_admin
 
-  Admin              Editor
-   ├── users.view     ├── posts.view
-   ├── users.create   ├── posts.create
-   ├── users.update   └── posts.update
-   └── users.delete
+  User::create(\$request->all());
 
-  A role is a named bundle. Promote somebody by changing
-  their role, and every rule follows, with no code change.
+  {
+      "name": "Rajan",
+      "email": "rajan@example.com",
+      "is_admin": true          ← the form never had this field
+  }
 
-
-  ownership     does this user own THIS post?      the model decides
-  permission    may they update posts at all?      the role decides
-
-  Most real policies use both, and they are not
-  alternatives:
-
-    return \$user->hasPermission('posts.update')
-        && (\$user->id === \$post->user_id
-            || \$user->hasPermission('posts.update.any'));
+  A request body is whatever the SENDER chooses to send.
+  A form is a suggestion, and curl ignores suggestions.
 
 
-Building it yourself
+The two lists
 
-  users  roles  permissions  role_user  permission_role
+  protected \$fillable = ['name', 'email', 'password'];
 
-  User ─belongsToMany→ Role ─belongsToMany→ Permission
+    name ✓   email ✓   password ✓   is_admin ✗ dropped
 
-  The schema is a morning. What follows is not:
+  protected \$guarded = ['is_admin'];
 
-    role assignment UI
-    permission checks that are fast
-    caching, because every request asks
-    middleware integration
-    policy integration
-    seeding for new permissions
-    testing all of it
-
-  ⚠️  hasPermission() naively written is two joins per
-      check, and a page checking twelve abilities runs
-      twelve of them. Load once per request and cache.
-
-  A fixed set of roles checked with \$user->role === 'admin'
-  needs no tables at all. Often an enum is the answer.
+    everything EXCEPT these
 
 
-The decision
+  Next month, somebody adds a column:
 
-  Simple?        →  Gates + Policies, maybe a role column
-  Complex RBAC?  →  consider a mature package
+    \$fillable   not assignable until listed
+                → the field does not save
+                → you notice immediately
 
-  Reach for a package when you need:
-    multiple roles per user
-    many permissions, changing over time
-    teams or tenants
-    permissions editable by admins at runtime
-    a role management UI
+    \$guarded    assignable the moment it exists
+                → the field saves when it should not
+                → you notice when it matters
 
-  Do not, for "the owner can edit their own posts".
+  Both reasonable. Only one fails loudly.
 
+  \$guarded = [] is not a middle ground.
+  It is the protection switched off.
 
-The package: spatie/laravel-permission
-
-    composer require spatie/laravel-permission
-
-    \$user->assignRole('editor');
-    \$user->givePermissionTo('posts.publish');
-    \$user->hasRole('editor');
-    \$user->can('posts.publish');    ← the same can()
-
-  It registers permissions as GATES, so can(), @can
-  and authorize() keep working unchanged.
-
-  You are not replacing Laravel's authorization. You
-  are giving it a database-backed source of abilities.
+  And mass assignment is about ARRAYS. Writing
+  \$user->is_admin = true is unaffected: you meant it.
 
 
-  The real cost of a package: permissions become DATA.
+The habit underneath
 
-    a rule in a policy      in version control,
-                            reviewed, testable
-    a rule in a table       changeable in production by
-                            somebody in an admin screen,
-                            and your tests never know
+  ❌ User::create(\$request->all())        whatever they sent
+  ✓ User::create(\$request->validate([...]))  what you asked for
 
-  Right for a product where customers configure roles.
-  Wrong for a rule that must always hold.
+  validate() returns only the validated keys, so an extra
+  field is gone before the model sees it.
 
+    validation   what the REQUEST may contain
+    \$fillable    what the MODEL may accept
 
-The whole day
-
-  System-level ability       →  Gate
-  Model or resource ability  →  Policy
-  What kind of user is this  →  roles and permissions
-
-  HTTP Request → Authentication → Authenticated User
-                                        ↓
-                                  Authorization
-                                        │
-                                  ┌─────┴─────┐
-                                  ▼           ▼
-                                Gate       Policy
-                                  └─────┬─────┘
-                                        ▼
-                                 allowed / 403
+  Two locks. Neither is a reason to skip the other.
 
 
-  Authorization is the code most likely to be wrong and
-  least likely to be noticed: the happy path works
-  perfectly whether or not the rules do.
+The same shape elsewhere
 
-  Test the DENIALS.`,
+  A hidden form field is a request field.
+  A <select> of five options accepts a sixth  → in: / exists:
+  A price in a hidden input is the customer's price
+      → look it up on the server
+  Route model binding is not authorization
+      → PUT /invoices/91 resolves it for whoever asks
+
+
+  The thread through today: every one of these attacks is
+  somebody sending something your interface did not offer.
+  The interface is a convenience. The server decides.`,
       codeExample: {
-        title: "Roles, permissions, and where policies fit",
+        title: "Closing the gap between the form and the request",
         code: `<?php
-// ---------- The simplest thing that works ----------
+// ---------- The vulnerability ----------
 
-// A fixed set of roles needs no tables at all.
-enum Role: string
+// users: name, email, is_admin
+class User extends Authenticatable
 {
-    case Admin  = 'admin';
-    case Editor = 'editor';
-    case Reader = 'reader';
+    // No $fillable and no $guarded.
 }
+
+// ❌ The attacker adds "is_admin": true and becomes an admin.
+User::create($request->all());
+
+
+<?php
+// ---------- Lock one: the model ----------
 
 class User extends Authenticatable
 {
-    protected function casts(): array
-    {
-        return ['role' => Role::class];
-    }
+    // Allow list. A new column is not assignable until listed,
+    // so the mistake is a field that does not save.
+    protected $fillable = ['name', 'email', 'password'];
 
-    public function isEditor(): bool
-    {
-        return in_array($this->role, [Role::Admin, Role::Editor], true);
-    }
-}
+    // The inverse. A new column is assignable immediately,
+    // so the mistake is a field that saves when it should not.
+    // protected $guarded = ['is_admin'];
 
-// PostPolicy
-public function create(User $user): bool
-{
-    return $user->isEditor();
+    // ❌ Not a middle ground. This is protection off.
+    // protected $guarded = [];
 }
 
 
 <?php
-// ---------- Roles and permissions as tables ----------
+// ---------- Lock two: the request ----------
 
-// users  roles  permissions  role_user  permission_role
-
-class User extends Authenticatable
+public function store(Request $request)
 {
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class);
-    }
+    // validate() returns ONLY the validated keys, so
+    // is_admin is gone before the model sees it.
+    $data = $request->validate([
+        'name'  => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'unique:users'],
+        'password' => ['required', 'confirmed', Password::defaults()],
+    ]);
 
-    public function hasPermission(string $name): bool
-    {
-        // ❌ Two joins on EVERY check. A page checking twelve
-        //    abilities runs twelve of these.
-        // return $this->roles()
-        //     ->whereHas('permissions', fn ($q) => $q->where('name', $name))
-        //     ->exists();
+    $user = User::create($data);
 
-        // ✓ Load once per request, then check in memory.
-        return $this->permissionNames()->contains($name);
-    }
-
-    protected function permissionNames(): Collection
-    {
-        return once(fn () => $this->roles
-            ->loadMissing('permissions')
-            ->flatMap->permissions
-            ->pluck('name')
-            ->unique());
-    }
+    return redirect()->route('users.show', $user);
 }
 
 
 <?php
-// ---------- Permissions and ownership, together ----------
+// ---------- The same shape, elsewhere ----------
 
-class PostPolicy
+// A <select> of five options accepts a sixth.
+$request->validate([
+    'status'      => ['required', 'in:draft,sent,paid'],
+    'customer_id' => ['required', 'exists:customers,id'],
+]);
+
+// ❌ The price came from a hidden input the customer controls.
+Order::create([
+    'product_id' => $request->product_id,
+    'price'      => $request->price,
+]);
+
+// ✓ Look it up on the server.
+$product = Product::findOrFail($request->product_id);
+
+Order::create([
+    'product_id' => $product->id,
+    'price'      => $product->price,
+]);
+
+
+// ❌ Route model binding resolves invoice 91 for whoever asks.
+public function update(Request $request, Invoice $invoice)
 {
-    public function update(User $user, Post $post): bool
-    {
-        // The role says what kind of thing you may do.
-        if (! $user->hasPermission('posts.update')) {
-            return false;
-        }
-
-        // The policy says whether you may do it to THIS one.
-        return $post->user_id === $user->id
-            || $user->hasPermission('posts.update.any');
-    }
+    $invoice->update($request->validated());
 }
 
-// Roles and policies are not alternatives.
-
-
-<?php
-// ---------- Test the denials ----------
-
-it('lets an owner update their post', function () {
-    $user = User::factory()->create();
-    $post = Post::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->put("/posts/{$post->id}", ['title' => 'New'])
-        ->assertRedirect();
-});
-
-it('stops another user updating it', function () {
-    $post    = Post::factory()->create();
-    $someone = User::factory()->create();
-
-    // This is the test that proves the lock is fitted.
-    $this->actingAs($someone)
-        ->put("/posts/{$post->id}", ['title' => 'New'])
-        ->assertForbidden();
-});
-
-it('stops a guest updating it', function () {
-    $post = Post::factory()->create();
-
-    $this->put("/posts/{$post->id}", ['title' => 'New'])
-        ->assertRedirect('/login');
-});`,
+// ✓ Yesterday's policy decides whether they may.
+#[Authorize('update', 'invoice')]
+public function update(Request $request, Invoice $invoice)
+{
+    $invoice->update($request->validated());
+}`,
       },
       keyTakeaways: [
-        "<b>A role is a named bundle of permissions</b>, so promoting somebody changes what they may do with no code change.",
-        "<b>Ownership asks whether this user owns this record; a permission asks what kind of thing they may do at all.</b>",
-        "<b>Roles and policies are not alternatives</b>: most real policies check a permission and then ownership.",
-        "Rolling your own is a many-to-many schema plus assignment, caching, middleware, seeding and tests.",
-        "<b>A naive `hasPermission()` runs two joins per check</b>, so load a user's permissions once per request.",
-        "<b>A fixed set of roles needs no tables</b>, and an enum plus a policy is often the whole answer.",
-        "<b>Reach for a package when permissions must change at runtime</b>, or you need teams, many roles, or a management UI.",
-        "<b>`spatie/laravel-permission` is the de facto package</b>: `assignRole()`, `givePermissionTo()`, `hasRole()`.",
-        "<b>It registers permissions as gates</b>, so `can()`, `@can` and `authorize()` keep working unchanged.",
-        "<b>`@elsecan` gives `@can` an else branch</b>, so you do not write the same check twice, inverted.",
-        "<b>The real cost of a package is that permissions become data</b>, changeable in production and invisible to your tests.",
-        "That is right when customers configure their own roles, and wrong for a rule that must always hold.",
-        "<b>Gates for system-level abilities, policies for model abilities, roles for what kind of user somebody is.</b>",
-        "<b>Authorization is the code most likely to be wrong and least likely to be noticed</b>, so test the denials.",
+        "<b>Mass assignment is setting many attributes at once from an array you did not check.</b>",
+        "<b>A request body is whatever the sender chooses to send</b>, so a form field list is not a limit.",
+        "<b>`$fillable` is an allow list</b> and anything not on it is silently dropped.",
+        "<b>`$guarded` is a block list</b>, and `$guarded = []` is the protection switched off.",
+        "<b>A new column is unassignable under `$fillable` and assignable under `$guarded`</b>, so one fails loudly and one quietly.",
+        "Mass assignment concerns arrays; a deliberate `$user->is_admin = true` is unaffected.",
+        "<b>`validate()` returns only the validated keys</b>, so an extra field never reaches the model.",
+        "<b>Validation limits what the request may contain; `$fillable` limits what the model may accept.</b>",
+        "<b>A `<select>` accepts values it never offered</b>, so constrain it with `in:` or `exists:`.",
+        "<b>Every attack today is somebody sending something the interface did not offer.</b> The server decides, not the form.",
       ],
       commonMistakes: [
-        "<b>Replacing policies with roles.</b> A role cannot know whether this particular record belongs to you.",
-        "<b>Querying permissions on every check.</b> Twelve abilities on a page means twelve round trips.",
-        "<b>Reaching for a package for \"owners can edit their own posts\".</b> That is four lines and no dependency.",
-        "<b>Putting a rule that must always hold into an editable permissions table.</b> It can be switched off in production.",
-        "<b>Only testing the happy path.</b> The application behaves identically whether or not the rules work.",
+        "<b>Passing `$request->all()` to `create()` or `update()`.</b> Every column becomes writable by the sender.",
+        "<b>Setting `$guarded = []` to make an error go away.</b> That removes the protection entirely.",
+        "<b>Assuming validation makes `$fillable` unnecessary.</b> They guard different doors, and one may be forgotten.",
+        "<b>Trusting a price or an id from a hidden field.</b> Look it up on the server instead.",
+        "<b>Trusting a `<select>` to limit its own values.</b> Any value can be posted; validate with `in:`.",
       ],
       quiz: [
         {
-          question: "What is the difference between a permission check and an ownership check?",
+          question: "Why can a request contain a field your form never rendered?",
           options: [
-            "None",
-            "A permission says what kind of thing you may do; ownership says whether you may do it to this record",
-            "Permissions are for admins only",
-            "Ownership is checked by middleware",
+            "Laravel adds defaults",
+            "A request body is whatever the sender chooses to send; the form is only a suggestion",
+            "The browser adds hidden fields",
+            "It cannot",
           ],
           correctIndex: 1,
-          explanation: "Most real policies use both.",
+          explanation: "`curl` and the developer tools ignore your markup entirely.",
         },
         {
-          question: "What is the performance trap in a hand-rolled permission system?",
+          question: "What is the security argument for `$fillable` over `$guarded`?",
           options: [
-            "Too many roles",
-            "Checking a permission queries the database every time, so a page runs one query per ability",
-            "Policies cannot be cached",
-            "Migrations are slow",
+            "It is faster",
+            "A newly added column is not assignable until listed, so the mistake fails loudly",
+            "`$guarded` does not work with `create()`",
+            "There is none",
           ],
           correctIndex: 1,
-          explanation: "Load a user's permissions once per request and check in memory.",
+          explanation: "Under `$guarded`, a new column becomes writable the moment it exists.",
         },
         {
-          question: "When is a roles-and-permissions package worth it?",
+          question: "What does `$request->validate()` return?",
           options: [
-            "Always",
-            "When permissions change at runtime, or you need many roles, teams or a management UI",
-            "For any application with an admin",
-            "Never; policies are enough",
+            "The whole request",
+            "Only the keys that were validated",
+            "A boolean",
+            "The model",
           ],
           correctIndex: 1,
-          explanation: "For \"owners edit their own posts\", a policy is four lines.",
+          explanation: "So an extra field is gone before the model sees it.",
         },
         {
-          question: "Why test the denials rather than only the happy path?",
+          question: "A price arrives in a hidden input. What should the server do?",
           options: [
-            "Denials are faster to test",
-            "The application behaves identically whether or not the rules work, so only a denial proves the lock is fitted",
+            "Validate it as numeric",
+            "Look the price up from the product on the server",
+            "Encrypt the field",
+            "Trust it; the form set it",
+          ],
+          correctIndex: 1,
+          explanation: "Anything the client can edit is a value the client chose.",
+        },
+      ],
+    },
+    {
+      id: "rate-limiting",
+      title: "Rate limiting & named limiters",
+      durationMinutes: 11,
+      explanation: "The attacks so far were about one crafted request. This one is about a great many ordinary ones.\n\n---\n\n### 1. Basic — what it protects\n\nWithout a limit, an endpoint answers as fast as your server can:\n\n```text\nattacker\n   ↓\n10,000 requests\n   ↓\nyour application\n```\n\nWhich turns several things from impractical into routine:\n\n```text\nlogin           guessing passwords\npassword reset  emailing somebody a thousand times\nsearch          expensive queries, repeated\nAPI             scraping your data\nsignup          creating accounts in bulk\n```\n\n<b>Yesterday's password hashing is what makes login rate limiting work.</b> A slow hash makes each guess expensive; a rate limit makes the number of guesses small. Either alone is much weaker than both.\n\n```text\nattacker → 5 requests → blocked\n```\n\n---\n\n### 2. Intermediate — named limiters\n\nA limiter is defined once and referenced by name:\n\n```php\nRateLimiter::for('login', function (Request $request) {\n    return Limit::perMinute(5)->by($request->ip());\n});\n```\n\n```text\nlogin limiter\n      ↓\n5 requests per minute\n      ↓\nper IP\n```\n\nand applied as middleware:\n\n```php\nRoute::post('/login', ...)->middleware('throttle:login');\n```\n\n```text\nPOST /login\n     ↓\nthrottle:login\n     ↓\nRateLimiter\n     ↓\nallowed?  →  yes: continue\n          →  no:  429\n```\n\nThe name matters more than it looks. <b>A named limiter is a security rule with a home</b>, so \"how many login attempts do we allow\" has one answer that somebody can find, change and review, rather than a number in a middleware string on one route.\n\nAn API limiter usually keys on the user when there is one:\n\n```php\nRateLimiter::for('api', function (Request $request) {\n    return Limit::perMinute(60)->by($request->user()?->id ?? $request->ip());\n});\n```\n\n---\n\n### 3. Advanced — the part people get wrong\n\n<b>Failed attempts must count.</b>\n\nThis sounds obvious and is easy to get backwards, because a limiter applied after a successful login, or one that resets on failure, protects nothing. The whole point is the attempts that <i>do not</i> work:\n\n```text\nrequest 1  →  401\nrequest 2  →  401\nrequest 3  →  401\nrequest 4  →  401\nrequest 5  →  401\nrequest 6  →  429      ← this is the feature\n```\n\nIf failures were free, an attacker gets unlimited guesses and the limit is decoration.\n\n<b>And the limit belongs on the endpoint, not on the outcome.</b> Middleware runs before your controller, so every request counts whatever happens inside.\n\nTwo more things worth deciding deliberately.\n\n<b>What to key on.</b> IP is the only option for an unauthenticated endpoint, and it is imperfect: an office shares one address, and an attacker can rotate through many. It raises the cost rather than removing the attack, which is usually enough.\n\n<b>What the limit protects against.</b> A five-per-minute login limit is aimed at guessing one account's password. It does nothing about the same password tried against a thousand accounts, because each account sees one attempt. That needs a different key, and knowing which attack a limit stops is the difference between security and a number.\n\nLaravel's own login also limits by email plus IP together, which covers both directions better than either alone.\n\nTwo small additions. `Limit::perHour()` and `Limit::perDay()` exist alongside `perMinute()`, and are the natural shape for an export or upload quota rather than a login form.\n\nAnd a boundary worth naming: <b>application rate limiting cannot absorb an attack aimed at your bandwidth.</b> Laravel counting requests still requires PHP to boot for each one. A WAF or edge network in front of the application, Cloudflare or AWS WAF, drops that traffic before it reaches you. <b>They solve different problems</b>: throttling is for abuse of your logic, the edge is for volume.",
+      diagram: `What it protects
+
+  Without a limit, an endpoint answers as fast as
+  your server can.
+
+    attacker → 10,000 requests → your application
+
+  Which makes routine:
+
+    login           guessing passwords
+    password reset  emailing somebody a thousand times
+    search          expensive queries, repeated
+    API             scraping your data
+    signup          accounts in bulk
+
+  Yesterday's slow password hash makes each guess
+  EXPENSIVE. A rate limit makes the number of guesses
+  SMALL. Either alone is much weaker than both.
+
+
+Named limiters
+
+  RateLimiter::for('login', function (Request \$request) {
+      return Limit::perMinute(5)->by(\$request->ip());
+  });
+
+    login limiter → 5 per minute → per IP
+
+  Route::post('/login', ...)->middleware('throttle:login')
+
+    POST /login
+         ↓
+    throttle:login
+         ↓
+    RateLimiter
+         ↓
+    allowed?  → yes: continue
+              → no:  429
+
+  The NAME matters. "How many login attempts do we allow"
+  now has one answer somebody can find, change and review,
+  instead of a number in a string on one route.
+
+
+The part people get wrong
+
+  FAILED attempts must count.
+
+    request 1 → 401
+    request 2 → 401
+    request 3 → 401
+    request 4 → 401
+    request 5 → 401
+    request 6 → 429      ← this is the feature
+
+  A limiter that only counts successes protects nothing.
+  If failures are free, guesses are unlimited.
+
+  Middleware runs before the controller, so every request
+  counts whatever happens inside. The limit is on the
+  ENDPOINT, not on the outcome.
+
+
+Two things to decide deliberately
+
+  What to key on
+    IP is the only option when unauthenticated, and it
+    is imperfect: an office shares one, an attacker
+    rotates many. It raises the cost rather than
+    removing the attack. Usually enough.
+
+  Which attack it stops
+    5/minute per IP stops guessing ONE account's password.
+    It does nothing about one password tried against a
+    thousand accounts: each account sees one attempt.
+
+    Knowing which attack a limit stops is the difference
+    between security and a number.
+
+  Laravel's own login limits by email AND IP together.`,
+      codeExample: {
+        title: "Defining and applying limiters",
+        code: `<?php
+// app/Providers/AppServiceProvider.php
+
+use Illuminate\\Cache\\RateLimiting\\Limit;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\RateLimiter;
+
+public function boot(): void
+{
+    // Unauthenticated: IP is all there is.
+    RateLimiter::for('login', function (Request $request) {
+        return Limit::perMinute(5)->by($request->ip());
+    });
+
+    // Authenticated where possible, IP otherwise.
+    RateLimiter::for('api', function (Request $request) {
+        return Limit::perMinute(60)
+            ->by($request->user()?->id ?? $request->ip());
+    });
+
+    // Expensive, so tighter.
+    RateLimiter::for('reports', function (Request $request) {
+        return Limit::perMinute(3)->by($request->user()->id);
+    });
+
+    // Sending email on somebody else's behalf: tighter still.
+    RateLimiter::for('password-reset', function (Request $request) {
+        return Limit::perMinutes(15, 3)->by($request->ip());
+    });
+}
+
+
+<?php
+// ---------- Applying them ----------
+
+Route::post('/login', [LoginController::class, 'store'])
+    ->middleware('throttle:login');
+
+Route::post('/forgot-password', [PasswordResetController::class, 'send'])
+    ->middleware('throttle:password-reset');
+
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::apiResource('invoices', InvoiceController::class);
+});
+
+// An inline limit, without a named limiter:
+Route::get('/search', SearchController::class)->middleware('throttle:30,1');
+
+
+<?php
+// ---------- Why failed attempts must count ----------
+
+// The limiter is middleware, so it runs BEFORE the
+// controller. Every request counts, whether the login
+// succeeded, failed, or threw.
+
+//   request 1 → 401
+//   ...
+//   request 5 → 401
+//   request 6 → 429     ← the point of the feature
+
+// ❌ Counting only successes protects nothing: an
+//    attacker gets unlimited failed guesses.
+
+
+<?php
+// ---------- Which attack does this stop? ----------
+
+// Stops guessing ONE account's password.
+Limit::perMinute(5)->by($request->ip());
+
+// Does NOT stop one password tried against a thousand
+// accounts: each account sees a single attempt.
+
+// Laravel's own login keys on both directions:
+RateLimiter::for('login', function (Request $request) {
+    $key = Str::lower($request->input('email')) . '|' . $request->ip();
+
+    return Limit::perMinute(5)->by($key);
+});`,
+      },
+      keyTakeaways: [
+        "<b>Without a limit, an endpoint answers as fast as your server can</b>, which makes guessing and scraping routine.",
+        "<b>A slow password hash makes each guess expensive; a rate limit makes the guesses few.</b> Both together is the defence.",
+        "<b>`RateLimiter::for('name', ...)` defines a limiter once</b>, applied with `throttle:name` middleware.",
+        "<b>A named limiter gives a security rule a home</b>, so the number can be found, changed and reviewed.",
+        "An API limiter usually keys on the user id when there is one and the IP otherwise.",
+        "<b>Failed attempts must count</b>, because the attempts that fail are exactly what you are limiting.",
+        "<b>The limiter is middleware, so it runs before the controller</b> and counts every request regardless of outcome.",
+        "<b>IP keying is imperfect</b>: offices share one and attackers rotate many, so it raises cost rather than removing the attack.",
+        "<b>A per-IP login limit does not stop one password tried against many accounts</b>, because each account sees one attempt.",
+        "<b>Knowing which attack a limit stops is the difference between security and a number.</b>",
+      ],
+      commonMistakes: [
+        "<b>Counting only successful logins.</b> The failures are the attack, and they stay free.",
+        "<b>Applying the limit inside the controller.</b> Middleware runs first and counts every request.",
+        "<b>Leaving password reset unthrottled.</b> It becomes a way to email somebody a thousand times.",
+        "<b>Assuming a per-IP limit stops credential stuffing.</b> Spread across accounts, each sees one attempt.",
+        "<b>Writing the number inline on every route.</b> A named limiter is one place to read and change.",
+      ],
+      quiz: [
+        {
+          question: "Why must failed login attempts count towards the limit?",
+          options: [
+            "For accurate metrics",
+            "The failures are the attack; if they are free, guesses are unlimited",
             "Laravel requires it",
-            "To measure performance",
+            "They do not need to",
           ],
           correctIndex: 1,
-          explanation: "Authorization is the code most likely to be wrong and least likely to be noticed.",
+          explanation: "A limiter that only counts successes protects nothing.",
+        },
+        {
+          question: "What does `RateLimiter::for('login', ...)` give you over an inline limit?",
+          options: [
+            "Better performance",
+            "A named rule with one home, which can be found, changed and reviewed",
+            "Automatic IP detection",
+            "A different status code",
+          ],
+          correctIndex: 1,
+          explanation: "The number stops being buried in a middleware string on one route.",
+        },
+        {
+          question: "Why is a per-IP limit imperfect?",
+          options: [
+            "IPs are unavailable behind a proxy",
+            "Offices share one address and attackers can rotate many",
+            "Laravel cannot read them",
+            "It is not imperfect",
+          ],
+          correctIndex: 1,
+          explanation: "It raises the cost of an attack rather than removing it.",
+        },
+        {
+          question: "What does a 5-per-minute per-IP login limit not stop?",
+          options: [
+            "Guessing one account's password",
+            "One password tried against a thousand different accounts",
+            "Repeated logins from one browser",
+            "Automated form submission",
+          ],
+          correctIndex: 1,
+          explanation: "Each account sees a single attempt, so keying on email plus IP covers both.",
+        },
+      ],
+    },
+    {
+      id: "limit-keys-and-responses",
+      title: "Keys, multiple limits & the 429 response",
+      durationMinutes: 12,
+      explanation: "A limiter is two decisions: how many, and <i>per what</i>. The second one is where the thinking is.\n\n---\n\n### 1. Basic — choosing the key\n\n<b>The key is what the counter is kept against.</b> One counter per key.\n\n```php\nLimit::perMinute(5)->by($request->ip());\n```\n\n```text\nIP 1  →  5 per minute\nIP 2  →  5 per minute\nIP 3  →  5 per minute\n```\n\nUse the IP when there is no user yet: login, registration, password reset, a public API.\n\n```php\nLimit::perMinute(60)->by($request->user()->id);\n```\n\n```text\nUser 1  →  60 per minute\nUser 2  →  60 per minute\n```\n\nUse the user id once somebody is authenticated. It follows them across devices and networks, which an IP does not.\n\nAnd the combination, when you want both to matter:\n\n```php\n->by($request->user()?->id . '|' . $request->ip())\n```\n\n```text\n123|192.168.1.20\n```\n\n<b>Getting the key wrong is the whole bug.</b> A login limiter keyed on the user id cannot work, because there is no user until the login succeeds. A limiter with no `by()` at all counts every request from everybody into one bucket, so one busy user locks out the world.\n\n---\n\n### 2. Intermediate — more than one limit\n\nA limiter can return an array, and all of them apply:\n\n```php\nRateLimiter::for('api', function (Request $request) {\n    return [\n        Limit::perMinute(100)->by($request->user()->id),\n        Limit::perMinute(20)->by($request->ip()),\n    ];\n});\n```\n\n```text\n100 per minute per user\n        +\n 20 per minute per IP\n```\n\nWhich covers two different abuses at once: one account hammering the API, and one machine driving many accounts.\n\nA limiter can also decide per request:\n\n```php\nreturn $request->user()->onPremiumPlan()\n    ? Limit::none()\n    : Limit::perMinute(10)->by($request->user()->id);\n```\n\n<b>`Limit::none()` exempts</b>, which is how a paid tier or an internal service gets past the limit without a second route.\n\n---\n\n### 3. Advanced — the response, and what it tells people\n\nExceeding a limit is <b>429 Too Many Requests</b>. Not 403, not 400: a specific status that means <i>slow down</i>, and clients know how to handle it.\n\nLaravel sends headers with it:\n\n```text\nX-RateLimit-Limit       the ceiling\nX-RateLimit-Remaining   what is left\nRetry-After             seconds until it resets\n```\n\n<b>`Retry-After` is the useful one.</b> A well-written client waits that long instead of retrying immediately, which is the difference between a limit that protects you and one that produces a retry storm.\n\nA custom response, when the default is not friendly enough:\n\n```php\nLimit::perMinute(5)\n    ->by($request->ip())\n    ->response(function (Request $request, array $headers) {\n        return response()->json([\n            'message' => 'Too many login attempts. Please try again later.',\n        ], 429, $headers);\n    });\n```\n\n<b>Pass the `$headers` through.</b> Dropping them removes `Retry-After`, and the client has nothing to work with.\n\nOne judgement about the wording. A rate limit response is shown to somebody who may be an attacker or may be a customer having a bad day:\n\n```text\n✓ \"Too many attempts. Try again in a minute.\"\n✗ \"Too many attempts for user 4192 from 10.0.0.7\"\n```\n\nSay enough to help, and nothing that confirms what they were probing for.\n\nAnd one operational note. <b>Counters live in the cache.</b> On the `array` driver they vanish on restart, and across several servers each keeps its own unless the cache is shared. A five-per-minute limit across four web servers is twenty per minute in practice, which is worth knowing before you rely on the number.",
+      diagram: `The key is what the counter is kept against
+
+  ->by(\$request->ip())
+
+    IP 1 → 5/min    IP 2 → 5/min    IP 3 → 5/min
+
+  Use the IP when there is no user yet:
+    login, registration, password reset, public API
+
+  ->by(\$request->user()->id)
+
+    User 1 → 60/min    User 2 → 60/min
+
+  Use the user id once authenticated. It follows them
+  across devices and networks; an IP does not.
+
+  ->by(\$request->user()?->id . '|' . \$request->ip())
+
+    123|192.168.1.20
+
+
+  ⚠️  Getting the key wrong IS the bug.
+
+      A login limiter keyed on the user id cannot work:
+      there is no user until the login succeeds.
+
+      No by() at all counts everybody into one bucket,
+      so one busy user locks out the world.
+
+
+Several limits at once
+
+  return [
+      Limit::perMinute(100)->by(\$request->user()->id),
+      Limit::perMinute(20)->by(\$request->ip()),
+  ];
+
+    100/min per user   +   20/min per IP
+
+  Covers two abuses: one account hammering the API,
+  and one machine driving many accounts.
+
+  Limit::none()   exempts, for a paid tier or an
+                  internal service, with no second route
+
+
+The response
+
+  429 Too Many Requests
+
+  Not 403, not 400. A specific status meaning SLOW DOWN,
+  which clients know how to handle.
+
+    X-RateLimit-Limit       the ceiling
+    X-RateLimit-Remaining   what is left
+    Retry-After             seconds until it resets
+
+  Retry-After is the useful one: a good client waits
+  that long instead of retrying immediately. That is
+  the difference between a limit that protects you and
+  one that produces a retry storm.
+
+  A custom response must PASS THE HEADERS THROUGH.
+  Dropping them removes Retry-After.
+
+
+  Wording: the reader may be an attacker or a customer
+  having a bad day.
+
+    ✓ "Too many attempts. Try again in a minute."
+    ✗ "Too many attempts for user 4192 from 10.0.0.7"
+
+
+  Counters live in the CACHE. On the array driver they
+  vanish on restart, and across four web servers each
+  keeps its own — so 5/minute is really 20/minute
+  unless the cache is shared.`,
+      codeExample: {
+        title: "Keys, stacked limits and a custom 429",
+        code: `<?php
+
+use Illuminate\\Cache\\RateLimiting\\Limit;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\RateLimiter;
+
+// ---------- Choosing the key ----------
+
+// No user yet, so the IP is all there is.
+RateLimiter::for('login', function (Request $request) {
+    return Limit::perMinute(5)->by($request->ip());
+});
+
+// Authenticated: follows them across devices and networks.
+RateLimiter::for('reports', function (Request $request) {
+    return Limit::perMinute(3)->by($request->user()->id);
+});
+
+// Both, when both should matter.
+RateLimiter::for('uploads', function (Request $request) {
+    return Limit::perMinute(10)
+        ->by($request->user()?->id . '|' . $request->ip());
+});
+
+// ❌ There is no user until the login succeeds.
+RateLimiter::for('login', fn (Request $r) => Limit::perMinute(5)->by($r->user()->id));
+
+// ❌ No by(): everybody shares one counter, so one busy
+//    user locks out the world.
+RateLimiter::for('search', fn () => Limit::perMinute(30));
+
+
+<?php
+// ---------- Several limits at once ----------
+
+RateLimiter::for('api', function (Request $request) {
+    return [
+        // One account hammering the API.
+        Limit::perMinute(100)->by($request->user()->id),
+
+        // One machine driving many accounts.
+        Limit::perMinute(20)->by($request->ip()),
+    ];
+});
+
+
+// ---------- Deciding per request ----------
+
+RateLimiter::for('exports', function (Request $request) {
+    return $request->user()->onPremiumPlan()
+        ? Limit::none()
+        : Limit::perMinute(2)->by($request->user()->id);
+});
+
+
+<?php
+// ---------- The response ----------
+
+RateLimiter::for('login', function (Request $request) {
+    return Limit::perMinute(5)
+        ->by($request->ip())
+        ->response(function (Request $request, array $headers) {
+            return response()->json([
+                'message' => 'Too many login attempts. Please try again later.',
+            ], 429, $headers);   // pass the headers through
+        });
+});
+
+// Dropping $headers removes Retry-After, and the client
+// has nothing to wait for.
+
+// Sent with a 429:
+//   X-RateLimit-Limit: 5
+//   X-RateLimit-Remaining: 0
+//   Retry-After: 47
+
+
+<?php
+// ---------- Reading a limiter yourself ----------
+
+// Outside middleware, such as in a job or a command:
+if (RateLimiter::tooManyAttempts('send-invoice:' . $user->id, 3)) {
+    return;
+}
+
+RateLimiter::hit('send-invoice:' . $user->id, 3600);
+
+// And clearing it, such as after a successful login:
+RateLimiter::clear('login:' . $request->ip());`,
+      },
+      keyTakeaways: [
+        "<b>The key decides what the counter is kept against</b>, and one counter exists per key.",
+        "<b>Use the IP when there is no user yet</b>: login, registration, password reset, a public API.",
+        "<b>Use the user id once authenticated</b>, because it follows them across devices and networks.",
+        "<b>A login limiter keyed on the user id cannot work</b>, since there is no user until login succeeds.",
+        "<b>A limiter with no `by()` counts everybody into one bucket</b>, so one busy user locks out the world.",
+        "<b>Returning an array applies several limits at once</b>, covering per-user and per-IP abuse together.",
+        "`Limit::none()` exempts a request, which is how a paid tier bypasses a limit with no second route.",
+        "<b>Exceeding a limit is 429 Too Many Requests</b>, with `X-RateLimit-*` and `Retry-After` headers.",
+        "<b>A custom response must pass the headers through</b>, or the client loses `Retry-After`.",
+        "<b>Counters live in the cache</b>, so an unshared cache across four servers quadruples your limit in practice.",
+      ],
+      commonMistakes: [
+        "<b>Keying a login limiter on the user.</b> There is no user until the credentials check out.",
+        "<b>Omitting `by()`.</b> Everybody shares one counter, and one user can lock out the rest.",
+        "<b>Dropping `$headers` from a custom response.</b> Clients lose `Retry-After` and retry immediately.",
+        "<b>Returning 403 instead of 429.</b> Clients cannot tell a refusal from a slow-down.",
+        "<b>Assuming the limit holds across servers.</b> Each keeps its own counter unless the cache is shared.",
+      ],
+      quiz: [
+        {
+          question: "Why can a login limiter not key on the user id?",
+          options: [
+            "User ids are not unique",
+            "There is no authenticated user until the login succeeds",
+            "It would be too slow",
+            "It can",
+          ],
+          correctIndex: 1,
+          explanation: "The IP, or the email plus IP, is what is available at that point.",
+        },
+        {
+          question: "What happens if a limiter has no `by()`?",
+          options: [
+            "It applies per route",
+            "Every request shares one counter, so one busy user locks out everyone",
+            "It is disabled",
+            "It defaults to the IP",
+          ],
+          correctIndex: 1,
+          explanation: "The key is what makes the counter per-anything.",
+        },
+        {
+          question: "What status is returned when a rate limit is exceeded?",
+          options: ["403", "400", "429", "503"],
+          correctIndex: 2,
+          explanation: "429 Too Many Requests, with `Retry-After` telling the client how long to wait.",
+        },
+        {
+          question: "Why must a custom 429 response include the `$headers` argument?",
+          options: [
+            "For CORS",
+            "It carries `Retry-After` and the rate-limit headers the client needs",
+            "Laravel requires it",
+            "It sets the status code",
+          ],
+          correctIndex: 1,
+          explanation: "Without it, clients retry immediately and make things worse.",
+        },
+      ],
+    },
+    {
+      id: "headers-and-https",
+      title: "Security headers & HTTPS",
+      durationMinutes: 12,
+      explanation: "Everything so far happened inside your application. This is what you tell the browser to do, and what happens on the wire.\n\n---\n\n### 1. Basic — headers are instructions to the browser\n\nThree that matter:\n\n```text\nContent-Security-Policy     what the page may load and run\nStrict-Transport-Security   always use HTTPS for this site\nX-Frame-Options             who may put this page in a frame\n```\n\n<b>None of them fixes insecure code.</b> They are a second layer that limits the damage when the first one is wrong:\n\n```text\nsecure code\n     +\nsecure browser policies\n     +\nsecure transport\n```\n\nThat framing matters, because headers are easy to add and easy to over-trust. A CSP does not make unescaped output safe; it means that when your escaping is wrong once, the payload may not run.\n\n---\n\n### 2. Intermediate — the three headers\n\n<b>Content-Security-Policy</b> lists which sources the browser may load scripts, styles, images and fonts from.\n\n```http\nContent-Security-Policy: default-src 'self'\n```\n\n\"Only load things from this origin.\" An injected `<script src=\"//evil.com/x.js\">` is refused, and with a strict policy an inline `<script>` is refused too, which is what most XSS payloads are.\n\nThe catch is that real applications load from real places:\n\n```text\nyour JavaScript\na CDN\nGoogle Fonts\nanalytics\nan API on another domain\n```\n\nSo <b>a CSP has to be built from what your application actually does</b>, not copied from an article. Copy a strict one and half your page stops working; write a loose one and it stops being worth much. Start in report-only mode, watch what breaks, then enforce.\n\n<b>Strict-Transport-Security</b> tells the browser to use HTTPS for this site from now on:\n\n```text\nhttp://example.com\n       ↓\nthe browser remembers\n       ↓\nhttps://example.com\n```\n\nSo even a typed `http://` never leaves the machine unencrypted. <b>Be careful with `includeSubDomains` and `preload`</b>: they are hard to undo, and a subdomain without a certificate becomes unreachable rather than insecure.\n\n<b>X-Frame-Options: DENY</b> stops your page being embedded in a frame, which is what clickjacking needs: your real page, invisible, over the attacker's decoy button. CSP's `frame-ancestors` does the same with more nuance and is where new policies go, though sending both is common.\n\n---\n\n### 3. Advanced — HTTPS, and the limits of `forceScheme`\n\nWithout HTTPS, everything today is decoration. Session cookies, passwords and CSRF tokens all cross the network in the clear, and anybody on the same network reads them.\n\nLaravel can generate `https://` URLs:\n\n```php\nURL::forceScheme('https');\n```\n\n<b>And that is all it does.</b> It changes the links your application writes. It does not:\n\n```text\nobtain a certificate\nconfigure the web server\nredirect http to https\nterminate TLS\n```\n\n<b>HTTPS is infrastructure.</b> The certificate, the redirect and the TLS termination live in your web server, load balancer or platform, and `forceScheme` is the small part that stops your own links pointing back at `http://`.\n\nTwo related settings that people miss.\n\n<b>Cookies should be marked secure and http-only.</b> `secure` means the browser never sends them over plain HTTP; `http-only` means JavaScript cannot read them, which limits what an XSS payload can steal. Laravel's session config has both, and `SESSION_SECURE_COOKIE=true` belongs in production.\n\n<b>And behind a proxy, trust it deliberately.</b> A load balancer terminates TLS and forwards plain HTTP, so your application sees an insecure request unless it trusts the `X-Forwarded-Proto` header. Get that wrong and you see redirect loops, `http://` links and an IP address that is the balancer's rather than the visitor's, which quietly breaks the rate limiting from the last lesson.\n\nOne header worth adding to that middleware, because it costs a line and closes a whole category:\n\n```text\nPermissions-Policy: geolocation=(), camera=(), microphone=(), payment=()\n```\n\n<b>It tells the browser which device features the page may use</b>, and the empty parentheses mean \"nobody, including me\". An injected script or a compromised third-party embed then cannot ask for the camera, because the browser refuses before the permission prompt appears.",
+      diagram: `Headers are instructions to the browser
+
+  Content-Security-Policy     what the page may load and run
+  Strict-Transport-Security   always use HTTPS for this site
+  X-Frame-Options             who may frame this page
+
+  None of them fixes insecure code.
+
+    secure code  +  secure browser policies  +  secure transport
+
+  A CSP does not make unescaped output safe. It means
+  that when your escaping is wrong ONCE, the payload
+  may not run.
+
+
+Content-Security-Policy
+
+  default-src 'self'      only load things from this origin
+
+  An injected <script src="//evil.com/x.js"> is refused,
+  and a strict policy refuses inline <script> too — which
+  is what most XSS payloads are.
+
+  The catch: real applications load from real places.
+
+    your JavaScript · a CDN · Google Fonts
+    analytics · an API on another domain
+
+  So build it from what your app actually does. Copy a
+  strict one and half the page breaks; write a loose one
+  and it is not worth much.
+
+  Start in report-only, watch what breaks, then enforce.
+
+
+Strict-Transport-Security
+
+    http://example.com
+           ↓
+    the browser remembers
+           ↓
+    https://example.com
+
+  Even a typed http:// never leaves the machine
+  unencrypted.
+
+  ⚠️  includeSubDomains and preload are hard to undo.
+      A subdomain without a certificate becomes
+      unreachable, not merely insecure.
+
+
+X-Frame-Options: DENY
+
+  Stops your page being embedded in a frame, which is
+  what clickjacking needs: your real page, invisible,
+  over the attacker's decoy button.
+
+  CSP's frame-ancestors does the same with more nuance.
+  Sending both is common.
+
+
+HTTPS, and what forceScheme does not do
+
+  Without HTTPS, everything today is decoration: session
+  cookies, passwords and CSRF tokens all cross the network
+  in the clear.
+
+  URL::forceScheme('https')
+
+  ...changes the links your application WRITES. That is all.
+
+  It does NOT:
+    obtain a certificate
+    configure the web server
+    redirect http to https
+    terminate TLS
+
+  HTTPS is infrastructure. forceScheme is the small part
+  that stops your own links pointing back at http://.
+
+
+Two settings people miss
+
+  Cookies: secure + http-only
+    secure     never sent over plain HTTP
+    http-only  JavaScript cannot read them, which limits
+               what an XSS payload can steal
+    SESSION_SECURE_COOKIE=true in production
+
+  Behind a proxy: trust it deliberately
+    The balancer terminates TLS and forwards plain HTTP,
+    so your app sees an insecure request unless it trusts
+    X-Forwarded-Proto.
+
+    Get it wrong and you get redirect loops, http:// links,
+    and the BALANCER's IP instead of the visitor's — which
+    quietly breaks your rate limiting.`,
+      codeExample: {
+        title: "Headers, cookies and proxies",
+        code: `<?php
+// ---------- A middleware that adds headers ----------
+
+namespace App\\Http\\Middleware;
+
+use Closure;
+use Illuminate\\Http\\Request;
+
+class SecurityHeaders
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $response = $next($request);
+
+        // Built from what this application actually loads.
+        $response->headers->set('Content-Security-Policy', implode('; ', [
+            "default-src 'self'",
+            "script-src 'self' https://cdn.example.com",
+            "style-src 'self' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com",
+            "img-src 'self' data:",
+            "frame-ancestors 'none'",
+        ]));
+
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+        if ($request->secure()) {
+            $response->headers->set(
+                'Strict-Transport-Security',
+                'max-age=31536000',
+            );
+        }
+
+        return $response;
+    }
+}
+
+// Start with Content-Security-Policy-Report-Only, watch the
+// console, then switch to enforcing.
+
+
+<?php
+// ---------- HTTPS ----------
+
+// app/Providers/AppServiceProvider.php
+
+use Illuminate\\Support\\Facades\\URL;
+
+public function boot(): void
+{
+    if ($this->app->isProduction()) {
+        // Changes the links this application WRITES.
+        URL::forceScheme('https');
+    }
+}
+
+// It does not obtain a certificate, configure the web
+// server, redirect http to https, or terminate TLS.
+// That is infrastructure.
+
+
+# ---------- Cookies ----------
+
+# .env, in production
+SESSION_SECURE_COOKIE=true
+
+<?php
+// config/session.php
+'secure'    => env('SESSION_SECURE_COOKIE', false),  // HTTPS only
+'http_only' => true,       // JavaScript cannot read it
+'same_site' => 'lax',      // helps against CSRF too
+
+// http_only is what stops an XSS payload reading the
+// session cookie, which limits the damage of the one
+// escaping mistake that gets through.
+
+
+<?php
+// ---------- Behind a load balancer ----------
+
+// bootstrap/app.php
+
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->trustProxies(at: '*');
+})
+
+// Without this, the balancer terminates TLS and forwards
+// plain HTTP, so:
+//   $request->secure() is false      → redirect loops
+//   generated URLs are http://
+//   $request->ip() is the balancer's → your rate limiter
+//                                      counts everybody
+//                                      into one bucket`,
+      },
+      keyTakeaways: [
+        "<b>Security headers are instructions to the browser</b>, and none of them fixes insecure code.",
+        "They are a second layer that limits damage when the first one is wrong.",
+        "<b>A Content-Security-Policy lists which sources may be loaded</b>, and a strict one refuses inline scripts.",
+        "<b>A CSP has to be built from what your application actually loads</b>, so start in report-only mode.",
+        "<b>HSTS tells the browser to always use HTTPS</b>, so even a typed `http://` never leaves the machine in the clear.",
+        "<b>`includeSubDomains` and `preload` are hard to undo</b>, and can make an uncertificated subdomain unreachable.",
+        "<b>`X-Frame-Options: DENY` prevents clickjacking</b>, and CSP's `frame-ancestors` is the modern equivalent.",
+        "<b>Without HTTPS everything else is decoration</b>, because cookies and passwords cross the network readable.",
+        "<b>`URL::forceScheme('https')` only changes the links you generate</b>; certificates and redirects are infrastructure.",
+        "<b>Session cookies should be `secure` and `http_only`</b>, which is what stops an XSS payload reading them.",
+        "<b>Behind a proxy, trust it deliberately</b>, or `$request->ip()` is the balancer's and your rate limiting breaks.",
+      ],
+      commonMistakes: [
+        "<b>Copying a strict CSP from an article.</b> Half the page stops loading, and the policy gets removed rather than fixed.",
+        "<b>Treating a CSP as a substitute for escaping.</b> It limits damage; it does not prevent the injection.",
+        "<b>Enabling HSTS `preload` early.</b> It is very hard to undo, and it applies to subdomains you forgot about.",
+        "<b>Thinking `forceScheme('https')` gives you HTTPS.</b> It only rewrites the URLs you generate.",
+        "<b>Not trusting the proxy.</b> Redirect loops, `http://` links, and every visitor sharing the balancer's rate limit.",
+      ],
+      quiz: [
+        {
+          question: "What does a Content-Security-Policy do?",
+          options: [
+            "Escapes output",
+            "Tells the browser which sources it may load and run, limiting the damage of an injection",
+            "Encrypts the response",
+            "Blocks SQL injection",
+          ],
+          correctIndex: 1,
+          explanation: "A layer that assumes your escaping will one day be wrong.",
+        },
+        {
+          question: "What does HSTS tell the browser?",
+          options: [
+            "To cache the page",
+            "To use HTTPS for this site from now on, even if the user types http://",
+            "Not to frame the page",
+            "To send the CSRF token",
+          ],
+          correctIndex: 1,
+          explanation: "`includeSubDomains` and `preload` are hard to reverse, so enable them deliberately.",
+        },
+        {
+          question: "What does `URL::forceScheme('https')` do?",
+          options: [
+            "Redirects http to https",
+            "Makes the URLs your application generates use https, and nothing more",
+            "Obtains a certificate",
+            "Terminates TLS",
+          ],
+          correctIndex: 1,
+          explanation: "The certificate, redirect and TLS termination are infrastructure.",
+        },
+        {
+          question: "Why does `http_only` on the session cookie matter?",
+          options: [
+            "It speeds up requests",
+            "JavaScript cannot read it, so an XSS payload cannot steal the session",
+            "It encrypts the cookie",
+            "It prevents CSRF",
+          ],
+          correctIndex: 1,
+          explanation: "It limits the damage of the one escaping mistake that gets through.",
+        },
+      ],
+    },
+    {
+      id: "secrets-and-dependencies",
+      title: "Secrets, dependencies & the security mindset",
+      durationMinutes: 11,
+      explanation: "Two attack surfaces that are nothing to do with your code, and then the way of thinking that ties the day together.\n\n---\n\n### 1. Basic — secrets\n\n<b>Never commit `.env`.</b> Laravel gitignores it, and the mistake is usually adding it deliberately to make a deploy work.\n\nWhat is in there:\n\n```text\nAPP_KEY\ndatabase passwords\nAPI keys\nAWS credentials\nOAuth secrets\npayment provider secrets\n```\n\n```text\n.env\n  ↓\n.gitignore\n  ↓\nsecret management / the deployment environment\n```\n\nYour code holds `config('services.stripe.secret')`. The value lives wherever you deploy.\n\n<b>And a committed secret is not fixed by deleting it.</b> Git keeps history, so the commit still holds it and anybody who cloned the repository has it. The only fix is to rotate the secret: issue a new key, revoke the old one. Removing the line makes it invisible, not safe.\n\nWhich is worth knowing before it happens, because the instinct is to quietly delete and move on.\n\n---\n\n### 2. Intermediate — `APP_KEY`\n\nIt deserves its own paragraph, because Day 18 showed why:\n\n```text\nencryption of database columns\nsigned URLs\nsession cookies\n```\n\nAll of it depends on that one value.\n\n<b>A leaked production `APP_KEY` is an incident</b>, not a chore. Anything encrypted with it can be read, and signed URLs can be forged.\n\n<b>And regenerating it casually is a different kind of incident.</b> `php artisan key:generate` on a running production application makes every encrypted column unreadable and logs everybody out. Day 18's `APP_PREVIOUS_KEYS` is what makes a planned rotation possible; there is no undo for an unplanned one.\n\nSo, two rules: keep it out of the repository, and never regenerate it in production without knowing what is encrypted with it.\n\n---\n\n### 3. Advanced — dependencies, automation, and the question\n\nYour application is your code plus Laravel plus a hundred packages, and a vulnerability in any of them is a vulnerability in your application.\n\n```bash\ncomposer audit\n```\n\nchecks what you have installed against known advisories.\n\n```text\nyour code  +  Laravel  +  packages\n                ↓\n         composer audit\n```\n\n<b>Run it in CI, not from memory.</b> A check you have to remember is a check that happens twice a year:\n\n```text\npush\n ↓\ntests\n ↓\nstatic analysis\n ↓\ncomposer audit\n ↓\nbuild\n ↓\ndeploy\n```\n\nSecurity that depends on somebody remembering is not a control, it is a hope.\n\nAnd now the thing worth taking away from the whole day. These are not nine features to memorise:\n\n```text\nCSRF · XSS · SQL injection · mass assignment\nrate limiting · headers · HTTPS · secrets · dependencies\n```\n\nThey are <b>different attack surfaces</b>, each one a place where something outside your application crosses into it:\n\n```text\nHTTP Request\n     │\n ┌───┼───────────┐\n ▼   ▼           ▼\nCSRF XSS       SQLi\n │    │          │\nrequest output database\nforgery injection injection\n     │\n     ▼\nmass assignment  →  Eloquent\n     │\n     ▼\nrate limiting    →  abuse\n     │\n ┌───┴────┐\n ▼        ▼\nheaders  HTTPS\n │        │\nbrowser  transport\n     │\n     ▼\nsecrets + dependencies\n```\n\nWhich turns the skill into one question you can ask about any feature you build:\n\n> <b>What can an attacker control here, what trust boundary are they crossing, and what mechanism stops them?</b>\n\nA search box: they control the query, it crosses into SQL, and binding stops them. A profile page: they control the name, it crosses into HTML, and escaping stops them. An upload: they control the filename and the contents, and neither of those has come up today, which is precisely why the question is more useful than the list.\n\nOne more tool alongside `composer audit`, aimed at your configuration rather than your dependencies:\n\n```bash\ncomposer require enlightn/enlightn --dev\nphp artisan enlightn\n```\n\n<b>It scans for the misconfigurations that cause real incidents</b>: debug mode left on, a wildcard CORS origin, an exposed `.env`, missing security headers, unindexed foreign keys. Worth running once now and once in CI, because every item it finds is something nobody would have noticed until it mattered.\n\nAnd a five-minute audit that needs no tool: `php artisan route:list` and read down the middleware column. <b>Every route without `auth` is public</b>, and seeing that list in one place is how you find the one you forgot.",
+      diagram: `Secrets
+
+  Never commit .env. Laravel gitignores it, and the
+  mistake is usually adding it deliberately to make
+  a deploy work.
+
+    APP_KEY · database passwords · API keys
+    AWS credentials · OAuth secrets · payment secrets
+
+    .env  →  .gitignore  →  the deployment environment
+
+  Your code holds config('services.stripe.secret').
+  The value lives where you deploy.
+
+
+  ⚠️  A committed secret is not fixed by deleting it.
+
+      Git keeps history. The commit still holds it, and
+      anybody who cloned the repo has it.
+
+      The only fix is to ROTATE: new key, revoke the old.
+      Deleting the line makes it invisible, not safe.
+
+
+APP_KEY
+
+  encryption of database columns
+  signed URLs
+  session cookies
+
+  All of it depends on one value.
+
+  Leaked in production   → an incident. Encrypted data
+                           can be read, signed URLs forged.
+
+  Regenerated casually   → a different incident. Every
+                           encrypted column becomes
+                           unreadable and everybody is
+                           logged out. There is no undo.
+
+  APP_PREVIOUS_KEYS is what makes a PLANNED rotation work.
+
+
+Dependencies
+
+  your code  +  Laravel  +  a hundred packages
+
+  A vulnerability in any of them is a vulnerability in
+  your application.
+
+    composer audit
+
+  Run it in CI, not from memory:
+
+    push → tests → static analysis → composer audit
+         → build → deploy
+
+  Security that depends on somebody remembering is not
+  a control. It is a hope.
+
+
+The day, as attack surfaces
+
+  These are not nine features to memorise. They are
+  places where something outside your application
+  crosses into it.
+
+                   HTTP Request
+                        │
+        ┌───────────────┼────────────────┐
+        ▼               ▼                ▼
+      CSRF             XSS             SQLi
+        │               │                │
+     request          output          database
+     forgery         injection        injection
+                        │
+                        ▼
+                 mass assignment  →  Eloquent
+                        │
+                        ▼
+                  rate limiting   →  abuse
+                        │
+             ┌──────────┴──────────┐
+             ▼                     ▼
+          headers               HTTPS
+             │                     │
+          browser              transport
+                        │
+                        ▼
+             secrets + dependencies
+
+
+The question that replaces the list
+
+  What can an attacker control here, what trust
+  boundary are they crossing, and what mechanism
+  stops them?
+
+    a search box  → they control the query
+                  → it crosses into SQL
+                  → binding stops them
+
+    a profile     → they control the name
+                  → it crosses into HTML
+                  → escaping stops them
+
+    an upload     → they control the filename AND the
+                    contents, and neither came up today
+
+  Which is exactly why the question beats the list.`,
+      codeExample: {
+        title: "Secrets, audits, and a pipeline",
+        code: `# ---------- .gitignore ----------
+
+.env
+.env.backup
+.env.production
+
+# .env.example IS committed: the keys, never the values.
+
+
+# .env.example
+APP_KEY=
+DB_PASSWORD=
+STRIPE_SECRET=
+
+
+<?php
+// ---------- Code references config, never the value ----------
+
+// ❌ Committed to the repository forever.
+$stripe = new StripeClient('sk_live_51H...');
+
+// ✓
+$stripe = new StripeClient(config('services.stripe.secret'));
+
+// config/services.php
+'stripe' => [
+    'secret' => env('STRIPE_SECRET'),
+],
+
+// And never call env() outside a config file: cached
+// config returns null for it in production.
+
+
+# ---------- If a secret is committed ----------
+
+# Deleting the line does NOT fix it. Git keeps history,
+# and anybody who cloned the repo has it.
+#
+#   1. rotate the secret at the provider
+#   2. revoke the old one
+#   3. deploy the new value
+#   4. then, optionally, purge the history
+#
+# Steps 1 and 2 are the fix. Step 4 is tidying.
+
+
+# ---------- APP_KEY ----------
+
+# Leaked in production → an incident: encrypted columns
+# can be read and signed URLs forged.
+#
+# Regenerated in production → a different incident:
+# every encrypted column becomes unreadable and everybody
+# is logged out.
+
+# A planned rotation, from Day 18:
+APP_KEY=base64:newkey...
+APP_PREVIOUS_KEYS=base64:oldkey...
+
+
+# ---------- Dependencies ----------
+
+composer audit
+
+# Checks installed packages against known advisories.
+# Your application is your code + Laravel + everything
+# you installed.
+
+
+# ---------- In CI, not from memory ----------
+
+# .github/workflows/ci.yml
+
+name: CI
+on: [push, pull_request]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Tests
+        run: php artisan test
+
+      - name: Static analysis
+        run: ./vendor/bin/phpstan analyse
+
+      - name: Security advisories
+        run: composer audit
+
+# A check you have to remember is a check that happens
+# twice a year.`,
+      },
+      keyTakeaways: [
+        "<b>Never commit `.env`.</b> Commit `.env.example` with the keys and none of the values.",
+        "Code references `config(...)`; the value lives in the deployment environment.",
+        "<b>Deleting a committed secret does not fix it</b>, because Git keeps history and clones already have it.",
+        "<b>The only fix for a leaked secret is to rotate it</b>: issue a new one and revoke the old.",
+        "<b>`APP_KEY` underpins encryption, signed URLs and session cookies</b>, so a leak is an incident.",
+        "<b>Regenerating `APP_KEY` in production makes encrypted columns unreadable</b> and logs everybody out.",
+        "<b>Your application is your code plus Laravel plus every package</b>, and a vulnerability in any of them is yours.",
+        "<b>`composer audit` checks installed packages against known advisories</b>, and belongs in CI.",
+        "<b>Security that depends on somebody remembering is a hope, not a control.</b>",
+        "<b>These are attack surfaces, not features</b>: places where something outside your application crosses into it.",
+        "<b>Ask of any feature: what can an attacker control, what boundary are they crossing, and what stops them?</b>",
+      ],
+      commonMistakes: [
+        "<b>Committing `.env` to make a deploy work.</b> Every secret in it is now permanent history.",
+        "<b>Deleting a leaked key and considering it handled.</b> It is still in the history and in every clone.",
+        "<b>Running `key:generate` on production.</b> Encrypted data becomes unreadable with no way back.",
+        "<b>Calling `env()` outside a config file.</b> Cached config returns null in production.",
+        "<b>Running `composer audit` by hand occasionally.</b> Put it in the pipeline where it cannot be skipped.",
+      ],
+      quiz: [
+        {
+          question: "A secret was committed and you deleted the line. Is it safe?",
+          options: [
+            "Yes",
+            "No; Git keeps the history and clones already have it, so the secret must be rotated",
+            "Yes, after a force push",
+            "Only if the repo is private",
+          ],
+          correctIndex: 1,
+          explanation: "Rotate and revoke. Purging history is tidying, not the fix.",
+        },
+        {
+          question: "What happens if you run `key:generate` on a live production application?",
+          options: [
+            "Nothing noticeable",
+            "Encrypted columns become unreadable and every session is invalidated",
+            "Laravel migrates the data",
+            "Only new data is affected",
+          ],
+          correctIndex: 1,
+          explanation: "A planned rotation uses `APP_PREVIOUS_KEYS`; an unplanned one has no undo.",
+        },
+        {
+          question: "What does `composer audit` do?",
+          options: [
+            "Runs your tests",
+            "Checks installed packages against known security advisories",
+            "Updates dependencies",
+            "Scans your code for vulnerabilities",
+          ],
+          correctIndex: 1,
+          explanation: "Your application is your code plus everything you installed.",
+        },
+        {
+          question: "What question replaces memorising the list of attacks?",
+          options: [
+            "Which Laravel version am I on?",
+            "What can an attacker control here, what boundary are they crossing, and what stops them?",
+            "Is this route authenticated?",
+            "Have I added the security headers?",
+          ],
+          correctIndex: 1,
+          explanation: "It covers the surfaces the list never mentioned, such as uploads.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What is the difference between authentication and authorization?",
+      question: "What problem does CSRF protection solve?",
       options: [
-        "None",
-        "Authentication asks who you are; authorization asks what you may do",
-        "Authorization runs first",
-        "Authentication is for APIs only",
+        "Stolen passwords",
+        "A request the user's browser was tricked into sending, carrying their cookies",
+        "Injected SQL",
+        "Scraping",
       ],
       correctIndex: 1,
-      explanation: "The `auth` middleware answers the first and nothing about the second.",
+      explanation: "The request is genuinely authenticated; it was just never asked for.",
     },
     {
-      question: "When should you use a gate rather than a policy?",
+      question: "Why is a CSRF token needed even though authentication uses cookies?",
       options: [
-        "When the model is soft-deletable",
-        "When the ability is not about a particular model, such as accessing the admin dashboard",
-        "When there are more than three abilities",
-        "Gates are always preferable",
+        "Cookies can be forged",
+        "Cookies are attached based on where the request is going, so an attacker's page gets them too",
+        "Tokens replace cookies",
+        "Cookies are not encrypted",
       ],
       correctIndex: 1,
-      explanation: "Model abilities belong in a policy, gathered in one class.",
+      explanation: "The token proves the request came from your own pages.",
     },
     {
-      question: "What should `Gate::before()` return when it has no opinion?",
-      options: ["`false`", "`true`", "Nothing, so it returns null", "An empty response"],
+      question: "Why is `{{ }}` safer than `{!! !!}` for untrusted content?",
+      options: [
+        "It is faster",
+        "It escapes HTML, so a script tag is printed rather than executed",
+        "It validates the value",
+        "It strips tags",
+      ],
+      correctIndex: 1,
+      explanation: "`{!! !!}` puts the string into the page as markup.",
+    },
+    {
+      question: "How does parameter binding prevent SQL injection?",
+      options: [
+        "It escapes quotes",
+        "The statement is parsed before the value arrives, so the value cannot change the query's shape",
+        "It validates the input",
+        "It encrypts the value",
+      ],
+      correctIndex: 1,
+      explanation: "Structure and data travel separately.",
+    },
+    {
+      question: "Why is `User::create($request->all())` dangerous?",
+      options: [
+        "It is slow",
+        "The request can contain any field, including ones your form never rendered",
+        "It bypasses validation rules",
+        "It ignores casts",
+      ],
+      correctIndex: 1,
+      explanation: "A form is a suggestion; the request body is whatever the sender chooses.",
+    },
+    {
+      question: "Why must login rate limiting count failed attempts?",
+      options: [
+        "For accurate metrics",
+        "The failures are the attack, so if they are free the number of guesses is unlimited",
+        "Successes are harder to count",
+        "It does not need to",
+      ],
+      correctIndex: 1,
+      explanation: "A limiter that only counts successes protects nothing.",
+    },
+    {
+      question: "What status should a rate-limited request receive?",
+      options: ["403", "400", "429", "503"],
       correctIndex: 2,
-      explanation: "Any non-null return is the final answer, so `false` denies everything.",
+      explanation: "429 Too Many Requests, with `Retry-After` telling the client how long to wait.",
     },
     {
-      question: "What are the seven conventional policy methods?",
+      question: "What is the purpose of a Content-Security-Policy?",
       options: [
-        "index, show, create, store, edit, update, destroy",
-        "viewAny, view, create, update, delete, restore, forceDelete",
-        "read, write, delete, restore, publish, archive, share",
-        "can, cannot, allow, deny, before, after, inspect",
+        "To escape output",
+        "To tell the browser which sources it may load and run, limiting the damage of an injection",
+        "To force HTTPS",
+        "To block SQL injection",
       ],
       correctIndex: 1,
-      explanation: "`viewAny` and `create` take no model, because there is not one yet.",
+      explanation: "It is the layer that assumes your escaping will one day be wrong.",
     },
     {
-      question: "How does Laravel discover a policy automatically?",
+      question: "Why does `URL::forceScheme('https')` not replace HTTPS infrastructure?",
       options: [
-        "From a config array",
-        "By convention: the model name plus `Policy`, in `app/Policies`",
-        "By scanning for the `Policy` interface",
-        "It does not; policies must be registered",
+        "It only works in development",
+        "It only changes the URLs your application generates; certificates, redirects and TLS live elsewhere",
+        "It requires a package",
+        "It does replace it",
       ],
       correctIndex: 1,
-      explanation: "A policy discovery cannot find means every check is silently denied.",
+      explanation: "The web server, load balancer or platform terminates TLS.",
     },
     {
-      question: "What is the difference between `$user->can()` and `authorize()`?",
+      question: "A secret was committed and the line has been deleted. What now?",
       options: [
-        "None",
-        "`can()` returns a boolean; `authorize()` throws when denied, which becomes a 403",
-        "`authorize()` only works with gates",
-        "`can()` also checks authentication",
+        "Nothing; it is removed",
+        "Rotate the secret and revoke the old one, because the history and every clone still hold it",
+        "Make the repository private",
+        "Add it to .gitignore",
       ],
       correctIndex: 1,
-      explanation: "Booleans for rendering decisions, `authorize()` for guarding actions.",
+      explanation: "Deleting makes it invisible, not safe.",
     },
     {
-      question: "What does `#[Authorize]` change about a controller method?",
+      question: "What does `composer audit` protect against?",
       options: [
-        "The authorization rule itself",
-        "Where the check is declared: on the method rather than as its first statement",
-        "The policy that runs",
-        "The status code returned",
+        "Bugs in your own code",
+        "Installed packages with known published vulnerabilities",
+        "Outdated PHP versions",
+        "Insecure configuration",
       ],
       correctIndex: 1,
-      explanation: "The body is left with only the operation.",
-    },
-    {
-      question: "Is `@can('update', $post)` enough to protect the update route?",
-      options: [
-        "Yes",
-        "No; it only hides the markup, and the request can still be sent directly",
-        "Yes, with route model binding",
-        "Only for guests",
-      ],
-      correctIndex: 1,
-      explanation: "The template check is politeness; the controller check is security.",
-    },
-    {
-      question: "In `can:update,post` middleware, what is `post`?",
-      options: [
-        "A controller property",
-        "The route parameter name, resolved by route model binding",
-        "The policy class",
-        "The database table",
-      ],
-      correctIndex: 1,
-      explanation: "Laravel resolves `{post}` before running the policy.",
-    },
-    {
-      question: "How can filtering a collection with policies cause N+1 queries?",
-      options: [
-        "It runs the query twice",
-        "The policy runs per row, so any relationship it reads is fetched once per model",
-        "Collections cannot be filtered",
-        "It reloads the user each time",
-      ],
-      correctIndex: 1,
-      explanation: "The loop is a `filter()` calling a method in another file, so nobody spots it.",
-    },
-    {
-      question: "When should you use a roles-and-permissions package rather than policies alone?",
-      options: [
-        "For any application with an admin user",
-        "When permissions must change at runtime, or you need many roles, teams or a management UI",
-        "Whenever there is more than one role",
-        "Never",
-      ],
-      correctIndex: 1,
-      explanation: "For \"owners can edit their own posts\", a policy is four lines.",
+      explanation: "Your application is your code plus Laravel plus everything you installed.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Lock InvoiceHub down: nobody sees or touches an invoice that is not theirs, expressed as a policy and enforced everywhere a request can arrive.",
-    brief: "Yesterday gave InvoiceHub accounts. It did not give it any protection: every signed-in user can still open every invoice, because `auth` middleware only says somebody is logged in.\n\nToday closes that, and the interesting part is that the rule is trivial. `$invoice->user_id === $user->id` is the whole thing. What takes the day is making sure that one line is consulted on every path into an invoice: the list, the detail page, the edit form, the update, the delete, the PDF, the API, and whatever else you built.\n\nSo the discipline for the day is the opposite of usual: <b>write the failing case first.</b> For every route, log in as the wrong user and confirm you get a 403 before you write the check that produces it. A test that has never failed proves nothing.\n\nYou will also do the same rule three times, as a gate, then a policy, then an attribute. That is deliberate. Feeling the rule stay identical while the plumbing changes is the point of the exercise.",
+    goal: "Attack InvoiceHub yourself, one surface at a time, and close what you find: CSRF, XSS, injection, mass assignment, rate limiting, headers and secrets.",
+    brief: "InvoiceHub has accounts and it has policies. It has never been attacked.\n\nToday you attack it. Every step is the same shape: try the exploit first, confirm it works, then fix it and confirm it stops. That order matters more than it sounds. <b>A defence you have never seen fail is a defence you cannot be sure exists</b>, and half of the security code in the world protects against nothing because nobody ever checked.\n\nYou will need `curl` or the browser's developer tools, because most of these attacks involve sending something the interface does not offer. That is the point: the form is a convenience for honest users, and the server is the only thing that decides.\n\nWork through the surfaces in order. Each one ends with a note in a file called `SECURITY.md`: what you tried, what happened, and what stops it now.",
     steps: [
-      "Log in as user A, create an invoice, note its id. Log in as user B and open that invoice's URL. Write down everything B can currently see and do.",
-      "Start with a gate: `Gate::define('update-invoice', ...)` comparing `user_id`. Call `Gate::authorize()` in the update action and confirm B now gets a 403.",
-      "Move it into an `InvoicePolicy` with `php artisan make:policy InvoicePolicy --model=Invoice`, and switch the controller to `$this->authorize('update', $invoice)`. Confirm the test still passes without touching the rule.",
-      "Move it once more onto the method with `#[Authorize('update', 'invoice')]`. Write down what changed between the three versions and what did not.",
-      "Fill in the rest of the policy: `viewAny`, `view`, `create`, `update`, `delete`, and `forceDelete` restricted to admins. Note which two take no model and why.",
-      "Add `$this->authorizeResource(Invoice::class, 'invoice')` to the controller and delete the individual calls. Confirm every action is still protected by testing each one as the wrong user.",
-      "Fix the list page. It currently shows every invoice; make the query return only the signed-in user's, and confirm the policy and the query agree.",
-      "Deliberately do it the wrong way first: `Invoice::paginate(20)->filter(...)`. Look at the page sizes and the total, write down what broke, then revert to the query.",
-      "Add `@can` and `@canany` in the views so the edit and delete buttons only appear for the owner. Then send the delete request with curl as the wrong user and confirm it is still refused.",
-      "Add an `access-admin` gate and put the admin routes behind `can:access-admin` at the group level rather than per route. Explain in a comment why the group is the better place.",
-      "Add a `Gate::before()` for a super admin, then deliberately return `false` from it instead of null, and see what breaks. Put it back.",
-      "Give the view policy a denial reason with `Response::deny()`, then change it to `denyAsNotFound()` and note which one you would ship for invoices, and why.",
-      "Add a `Gate::after()` that logs every denial with the user id and ability. Browse as the wrong user for a minute and read the log.",
-      "Check the policy for hidden queries: if anything reads a relationship, replace it with the foreign key or eager load at the call site. Confirm the invoice list runs the same number of queries with 5 invoices as with 200.",
-      "Add a role: `admin` may view any invoice, `user` may view only their own. Put the permission check and the ownership check in the same policy method and note which part each answers.",
-      "Write the denial tests: guest on each route, wrong user on each route, owner on each route, admin on each route. Include the API endpoints if you built any.",
-      "Finally, list every path into an invoice in your application and tick off the check protecting each one. Anything without a tick is the bug this day exists to find.",
+      "Create `SECURITY.md`. For every step below, record the attack, the result before, and the result after. This file is the deliverable as much as the code is.",
+      "CSRF: build a tiny HTML file on your machine that posts to InvoiceHub's invoice-delete route, open it while logged in, and see what happens. Then check whether `@csrf` is on every form in the application.",
+      "Find any `GET` route that changes state. If there is one, rewrite it as a `DELETE` or `POST` and note why a `GET` could never be protected.",
+      "XSS: put `<script>alert(1)</script>` into a customer name, then view the invoice list. If it runs, find the `{!! !!}` and decide whether the content is genuinely trusted.",
+      "Try the same payload in a field rendered inside an attribute or a script block. Note whether escaping alone was enough there.",
+      "Add a `website` field to a customer and try `javascript:alert(1)` in it. Confirm the link is dangerous even though the value was escaped, then validate the scheme.",
+      "SQL injection: find every raw query in the project. Try `' OR 1=1 --` in any input that reaches one. Then grep for `whereRaw`, `selectRaw` and `orderByRaw` without a bindings argument.",
+      "Add a sortable column to the invoice list driven by `request('sort')`, do it the unsafe way first, and see what a column name from a request can do. Then whitelist it.",
+      "Mass assignment: add an `is_admin` column to users, remove `$fillable` temporarily, and register with `is_admin=true` in the body. Confirm it works, then put `$fillable` back and confirm it does not.",
+      "Find every `create()` and `update()` that receives `$request->all()` and replace it with `$request->validate()`. Note which fields were reachable that should not have been.",
+      "Rate limiting: define a `login` limiter of five per minute per IP with a custom 429 response. Fail the login six times and confirm the sixth is refused, then wait for the window and confirm it opens again.",
+      "Check that failed attempts count. Write down what would happen if the limiter only counted successful logins.",
+      "Add a `password-reset` limiter and confirm you cannot use the form to send somebody twenty emails.",
+      "Headers: add a middleware setting `Content-Security-Policy-Report-Only`, browse the whole application, and collect what the console reports. Build the real policy from that, then switch to enforcing.",
+      "Add `X-Frame-Options: DENY`, then build a local HTML file that tries to iframe InvoiceHub and confirm it refuses.",
+      "Set `SESSION_SECURE_COOKIE` and `http_only`, then try to read `document.cookie` from the console and confirm the session cookie is not there.",
+      "Secrets: run `git log -p -- .env` and confirm it has never been committed. Then grep the codebase for anything that looks like a key or a password hard-coded in a file.",
+      "Run `composer audit` and record the result. Add it to your CI pipeline alongside the tests, so it runs on every push rather than when you remember.",
+      "Finally, pick one feature you have not touched today, such as file upload or PDF generation, and answer the question for it: what can an attacker control, what boundary does it cross, and what stops them?",
     ],
     acceptance: [
-      "User B gets a 403 or 404 on every route belonging to user A's invoice: view, edit, update, delete and any API endpoint.",
-      "The invoice list shows only the signed-in user's invoices, filtered in the query rather than in PHP.",
-      "Pagination is correct: every page holds the same number of rows and the total matches.",
-      "The edit and delete buttons are hidden for non-owners, and the requests are still refused when sent directly.",
-      "Every action of the invoice controller is authorized, and you proved it by testing each one as the wrong user.",
-      "Admin routes are protected at the group level, not route by route.",
-      "The policy runs no queries, and the invoice list has the same query count with 5 invoices as with 200.",
-      "The denial log shows the user id and the ability for every refusal.",
-      "There is a test for the guest, the wrong user, the owner and the admin on each route, and the denial tests failed before you wrote the checks.",
-      "You can list every path into an invoice and name the check protecting it.",
+      "`SECURITY.md` records every attack you tried, with the before and after result.",
+      "The local CSRF page fails against every state-changing route, and no route was excluded without a signature check replacing it.",
+      "No `GET` route in the application changes state.",
+      "A script payload in a customer name is printed, not executed, on every page that displays it.",
+      "A `javascript:` URL in a user-supplied link is rejected by validation.",
+      "No raw query contains an interpolated variable, and every `whereRaw` family call passes bindings.",
+      "The sortable column is whitelisted, and an unknown value falls back to a default.",
+      "Registering with `is_admin=true` in the body creates a normal user.",
+      "The sixth login attempt in a minute returns 429 with a `Retry-After` header, and the window resets.",
+      "The CSP is built from what the application actually loads, and no console errors remain after enforcing it.",
+      "The session cookie is not readable from JavaScript.",
+      "`.env` has never appeared in the Git history, and `composer audit` runs in CI.",
     ],
     stretch: [
-      "Write a test asserting that the list query and the `view` policy agree: every invoice the query returns passes the policy, and every one it excludes fails it.",
-      "Add a `shared_with` many-to-many so an invoice can be shared with another user, and extend the policy without breaking any existing test.",
-      "Add `Response::denyAsNotFound()` for invoices and prove from an incognito window that sequential ids reveal nothing about which invoices exist.",
+      "Add a file upload and work out its attack surface: the filename, the size, the MIME type, the contents, and where the file is served from. Write it up in `SECURITY.md`.",
+      "Key the login limiter on email plus IP and demonstrate that it now also slows one password tried against many accounts.",
+      "Set up HSTS locally with a self-signed certificate, then try to reach the site over `http://` and watch the browser refuse before it sends anything.",
     ],
   },
 };

@@ -2,2348 +2,2403 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_23_LESSONS: LessonDay = {
   day: 23,
-  title: "Building a REST API with Sanctum",
-  totalMinutes: 91,
+  title: "Frontend integration — Vite, Livewire & Inertia",
+  totalMinutes: 90,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "api-routes-and-sanctum",
-      title: "API routes, and what makes them different",
+      id: "two-paths",
+      title: "Two paths, and where state lives",
       durationMinutes: 11,
-      explanation: "Everything so far has been a browser talking to Blade. An API is the same application answering a different kind of client.\n\n```text\nClient\n  │  HTTP + JSON\n  ▼\nLaravel API\n  ├── Authentication\n  ├── Authorization\n  ├── Validation\n  ├── Business logic\n  ├── Eloquent\n  └── API Resources\n           ↓\n         JSON\n```\n\nEvery one of those is a day you have already done. <b>Today is about what changes when the caller is a mobile app rather than a browser.</b>\n\n---\n\n### 1. Basic — turning it on\n\n```bash\nphp artisan install:api\n```\n\nWhich creates `routes/api.php`, registers it, and installs Sanctum. API routes are not there by default because plenty of applications never need them.\n\n```text\nroutes/\n├── web.php\n└── api.php\n```\n\nRoutes in `api.php` are prefixed with `/api` automatically:\n\n```http\nGET    /api/posts\nPOST   /api/posts\nGET    /api/posts/123\nPATCH  /api/posts/123\nDELETE /api/posts/123\n```\n\n---\n\n### 2. Intermediate — why two files\n\nThey are not two files for tidiness. <b>They have different middleware, and that is the whole point.</b>\n\n```text\nweb.php                    api.php\n───────                    ───────\nsessions                   no session\ncookies                    no cookies\nCSRF protection            no CSRF\nredirects on failure       JSON on failure\nstateful                   stateless\n```\n\nEach line follows from the client.\n\n<b>No session, because there is nothing to remember between requests.</b> A mobile app sends its credentials every time, so the server keeps nothing.\n\n<b>No CSRF, because there is nothing to forge.</b> Day 21: CSRF exists because browsers attach cookies automatically. A token in an `Authorization` header is attached deliberately, by code, so an attacker's page cannot cause one to be sent.\n\n<b>And failures come back as JSON.</b> A browser gets redirected back to the form with errors in the session; an API client gets a 422 with a body it can read. Same validation, different presentation, decided by which file the route is in.\n\n```text\niOS / Android\n      ↓\n    HTTPS\n      ↓\n  Laravel API\n```\n\nIt never asked for a Blade view, and it cannot follow a redirect to one.\n\n---\n\n### 3. Advanced — what Sanctum is\n\n<b>Sanctum</b> is Laravel's lightweight API authentication, and it does two quite different jobs. Knowing they are different is the thing people get wrong first.\n\n```text\nAPI tokens                 SPA cookies\n──────────                 ───────────\nmobile apps                a first-party SPA on your domain\nCLI tools                  React or Vue you also wrote\nthird-party clients\n\nAuthorization: Bearer …    the session cookie\nstateless                  stateful\nno CSRF                    CSRF still applies\n```\n\nThe token flow, which is most of today:\n\n```text\nclient\n  ↓ log in\nLaravel\n  ↓ issues a token\nclient stores it\n  ↓\nAuthorization: Bearer …  on every request\n```\n\nThe SPA flow is different: your JavaScript and your API are on the same site, the browser holds a normal session cookie, and Sanctum simply lets that count as authentication for `api.php` routes. <b>No token is involved, and CSRF protection comes back</b>, because cookies are automatic again.\n\nThe choice is not about preference:\n\n```text\nyou control the frontend and it runs on your domain  →  SPA cookies\nanything else                                        →  tokens\n```\n\nAnd it is worth being clear about one thing before the next lesson: <b>a token is a credential, not a session.</b> It does not expire when a browser closes, it is stored on the client, and anybody holding it is that user until it is revoked. Everything in the next two lessons follows from that.",
-      diagram: `The same application, a different client
+      explanation: "Yesterday built an API for a client you do not write. Today is the client you do.\n\nLaravel offers two ways, and they are genuinely different:\n\n```text\n                    Laravel\n                       │\n         ┌─────────────┴─────────────┐\n         ▼                           ▼\n   Blade + Livewire          JavaScript + Inertia\n         │                           │\n   server-driven                client-side UI\n         │                           │\n   PHP components          React / Vue / Svelte\n```\n\n<b>The useful skill is knowing when to choose each</b>, not memorising both APIs.\n\n---\n\n### 1. Basic — the two stacks\n\n<b>Livewire</b> keeps you in PHP:\n\n```text\nbrowser  →  Blade  →  Livewire  →  Laravel  →  database\n```\n\nYou write PHP classes and Blade templates. JavaScript is minimal, and often none of your own.\n\n<b>Inertia</b> keeps Laravel and gives the browser a real JavaScript application:\n\n```text\nbrowser  →  React / Vue / Svelte  →  Inertia  →  Laravel  →  database\n```\n\nYour routes, controllers, validation and Eloquent are unchanged. The views become components.\n\n<b>Neither is an API.</b> That is worth stating, because both give you a single-page feel without the thing you built yesterday: no separate client, no tokens, no versioning, no CORS. The frontend and the backend are one deployment that happens to speak to itself.\n\n---\n\n### 2. Intermediate — the one difference that matters\n\nEverything else follows from this: <b>where does the interface's state live?</b>\n\n```text\nLivewire                       Inertia\n────────                       ───────\nbrowser                        browser\n   ↓                              ↓\nLivewire component             React state\n   ↓                              ↓\nPHP state, on the server       Inertia visit\n   ↓                              ↓\nLaravel                        Laravel\n```\n\nIn Livewire, <b>the truth about what is typed in that search box is a PHP property on the server.</b> The browser holds a rendering of it. Type a character and a request goes out; PHP updates and sends back new HTML.\n\nIn Inertia, <b>the truth is JavaScript state in the browser.</b> React owns it, and Laravel is asked for data when the page needs some.\n\nEverything you notice afterwards comes from that. Livewire needs a round trip for interactions and gives you PHP everywhere. Inertia is instant locally and asks you to write and reason about a JavaScript application.\n\n---\n\n### 3. Advanced — choosing\n\nThe honest answer is that it depends on things that are not about Laravel:\n\n```text\nteam skills\napplication complexity\nhow much of the UI is genuinely interactive\nhow much JavaScript you want to own\n```\n\n<b>Livewire fits when Laravel should own the application:</b>\n\n```text\nadmin panels · dashboards · CRUD · forms\ninternal tools · data tables · a CMS\n```\n\nThings that are mostly a database with an interface on it. Writing those in React means rebuilding validation, pagination and state that Laravel already has.\n\n<b>Inertia fits when the interface is the product:</b>\n\n```text\na SaaS dashboard · rich data visualisation\nhighly interactive UI · a large component system\n```\n\nAnd it fits when your team already writes React well, because then Livewire is the unfamiliar thing.\n\nTwo cautions worth carrying.\n\n<b>Livewire's round trip is real.</b> Every interaction is a request, so a component that reacts to each keystroke is a request per keystroke. On a fast connection it is invisible; on a slow one it is not, and the fixes are debouncing and doing less per interaction rather than a different framework.\n\n<b>And Inertia is a JavaScript application.</b> Choosing it means a build step, a component tree, client state and everything else that comes with React, which is a real cost when the page is a table with a filter.\n\n<b>You can also use both</b>, in the same application, on different pages. The admin area in Livewire and the customer-facing dashboard in Inertia is a normal arrangement, because Laravel underneath is identical.",
+      diagram: `Two paths
 
-  Client
-    │  HTTP + JSON
-    ▼
-  Laravel API
-    ├── Authentication      Day 19
-    ├── Authorization       Day 20
-    ├── Validation          Day 9
-    ├── Business logic
-    ├── Eloquent            Days 14–16
-    └── API Resources       Day 16
-             ↓
-           JSON
-
-  Every one is a day you have done. Today is what
-  changes when the caller is not a browser.
+                      Laravel
+                         │
+           ┌─────────────┴─────────────┐
+           ▼                           ▼
+     Blade + Livewire          JavaScript + Inertia
+           │                           │
+     server-driven                client-side UI
+           │                           │
+     PHP components          React / Vue / Svelte
 
 
-Turning it on
+  Livewire   browser → Blade → Livewire → Laravel → db
+  Inertia    browser → React → Inertia  → Laravel → db
 
-  php artisan install:api
-
-  creates routes/api.php, registers it, installs Sanctum.
-  Not there by default, because plenty of apps never
-  need it.
-
-  Routes are prefixed /api automatically.
+  Neither is an API. Both give a single-page feel with
+  no separate client, no tokens, no versioning, no CORS.
+  One deployment, talking to itself.
 
 
-Why two files: different MIDDLEWARE
+The one difference that matters
 
-  web.php                   api.php
-  ───────                   ───────
-  sessions                  no session
-  cookies                   no cookies
-  CSRF protection           no CSRF
-  redirects on failure      JSON on failure
-  stateful                  stateless
+  Where does the interface's STATE live?
 
-  No session: a mobile app sends its credentials every
-  time, so the server remembers nothing.
+  Livewire                    Inertia
+  ────────                    ───────
+  browser                     browser
+     ↓                           ↓
+  Livewire component          React state
+     ↓                           ↓
+  PHP state, ON THE SERVER    Inertia visit
+     ↓                           ↓
+  Laravel                     Laravel
 
-  No CSRF: CSRF exists because browsers attach cookies
-  automatically. A token in an Authorization header is
-  attached deliberately, by code. Nothing to forge.
+  Livewire: the truth about what is in that search box
+  is a PHP property. The browser holds a rendering of
+  it. Type a character → a request → new HTML.
 
-  JSON on failure: a browser is redirected back to the
-  form; an API client gets a 422 with a readable body.
-  Same validation, different presentation, decided by
-  which file the route lives in.
+  Inertia: the truth is JavaScript state in the browser.
+  React owns it; Laravel is asked for data.
 
-
-Sanctum does TWO different jobs
-
-  API tokens                SPA cookies
-  ──────────                ───────────
-  mobile apps               a first-party SPA on your domain
-  CLI tools                 React or Vue you also wrote
-  third-party clients
-
-  Authorization: Bearer …   the session cookie
-  stateless                 stateful
-  no CSRF                   CSRF STILL APPLIES
-
-  The token flow (most of today):
-
-    client → log in → Laravel → issues a token
-                                    ↓
-                         client stores it
-                                    ↓
-                  Authorization: Bearer … every request
-
-  The SPA flow: your JavaScript and your API are on the
-  same site, the browser holds a normal session cookie,
-  and Sanctum lets that authenticate api.php routes.
-  No token, and CSRF is back, because cookies are
-  automatic again.
-
-    you control the frontend, on your domain → SPA cookies
-    anything else                            → tokens
+  Everything else follows. Livewire needs a round trip
+  and gives you PHP everywhere. Inertia is instant
+  locally and asks you to own a JavaScript application.
 
 
-  And before the next lesson:
+Choosing
 
-    A token is a CREDENTIAL, not a session.
+  It depends on things that are not about Laravel:
+    team skills
+    how much of the UI is genuinely interactive
+    how much JavaScript you want to own
 
-  It does not expire when a browser closes, it is stored
-  on the client, and anybody holding it is that user
-  until it is revoked.`,
+  Livewire, when Laravel should own the application:
+    admin panels · dashboards · CRUD · forms
+    internal tools · data tables · a CMS
+
+    Mostly a database with an interface on it. Writing
+    those in React means rebuilding validation,
+    pagination and state Laravel already has.
+
+  Inertia, when the interface IS the product:
+    a SaaS dashboard · rich visualisation
+    highly interactive UI · a large component system
+
+    And when the team already writes React well.
+
+
+Two cautions
+
+  Livewire's round trip is real. Every interaction is a
+  request, so reacting to each keystroke is a request
+  per keystroke. The fixes are debouncing and doing less,
+  not a different framework.
+
+  Inertia IS a JavaScript application: a build step, a
+  component tree, client state. A real cost when the
+  page is a table with a filter.
+
+
+  And you can use BOTH, on different pages of one app.
+  Laravel underneath is identical.`,
       codeExample: {
-        title: "Setting up an API",
-        code: `# Creates routes/api.php, registers it, installs Sanctum.
-php artisan install:api
-
-
-<?php
-// routes/api.php
-//
-// Automatically prefixed with /api and given the api
-// middleware group: no session, no cookies, no CSRF.
-
-use App\\Http\\Controllers\\Api\\PostController;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Route;
-
-Route::post('/login', [AuthController::class, 'login']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', fn (Request $request) => $request->user());
-
-    Route::apiResource('posts', PostController::class);
-});
-
-// GET    /api/posts
-// POST   /api/posts
-// GET    /api/posts/{post}
-// PATCH  /api/posts/{post}
-// DELETE /api/posts/{post}
-
-
-<?php
-// ---------- The same validation, two presentations ----------
-
-// In web.php: a failure redirects back with errors in
-// the session, and the Blade form renders them.
-//
-// In api.php: a failure is a 422 with a JSON body.
-//
-// You write the rules once; the route file decides how
-// a failure is delivered.
-
-$request->validate([
-    'title' => ['required', 'string', 'max:255'],
-]);
-
-// api.php response:
-// 422
-// {
-//   "message": "The title field is required.",
-//   "errors": { "title": ["The title field is required."] }
-// }
-
-
-<?php
-// ---------- Why an API route needs no CSRF ----------
-
-// Day 21: CSRF exists because a browser attaches cookies
-// automatically, so a request from evil.com is genuinely
-// authenticated.
-//
-// A token is attached by code:
-//
-//   Authorization: Bearer 3|abc...
-//
-// An attacker's page cannot cause that header to be sent,
-// so there is nothing to forge.
-//
-// ⚠️ This stops being true for Sanctum SPA authentication,
-//    which uses cookies. CSRF applies there.
-
-
-# ---------- The two Sanctum flows ----------
-
-# Token: a mobile app, a CLI, a third-party client.
-curl https://example.com/api/posts \\
-  -H "Authorization: Bearer 3|abcdef..." \\
-  -H "Accept: application/json"
-
-# SPA: your own React app on your own domain, using the
-# session cookie the browser already holds. No token.
-
-
-# ---------- The SPA flow, wired up ----------
-
-# .env — which domains count as "first party"
-SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.example.com
-SESSION_DOMAIN=.example.com
-
-# The frontend must do this ONCE, before logging in:
-#
-#   GET /sanctum/csrf-cookie
-#
-# It sets the XSRF-TOKEN cookie. Without it, your very
-# first POST /login returns 419 and looks like a broken
-# login rather than a missing setup step.
-
-// resources/js/bootstrap.js
-axios.defaults.withCredentials = true;      // send cookies
-axios.defaults.withXSRFToken  = true;       // echo the CSRF cookie
-
-// And then, in order:
-await axios.get('/sanctum/csrf-cookie');    // 1. get the cookie
-await axios.post('/login', { email, password });   // 2. log in
-await axios.get('/api/user');               // 3. authenticated by session
-
-// No token anywhere. The browser holds a session cookie,
-// exactly as it does for your Blade pages — which is why
-// CSRF still applies here and does not for tokens.`,
-      },
-      keyTakeaways: [
-        "<b>An API is the same application answering a client that is not a browser.</b>",
-        "`php artisan install:api` creates `routes/api.php`, registers it and installs Sanctum.",
-        "<b>`web.php` and `api.php` exist to have different middleware</b>, not for tidiness.",
-        "<b>API routes have no session and no cookies</b>, because the client sends its credentials every time.",
-        "<b>API routes need no CSRF</b>, because a token header is attached by code rather than automatically.",
-        "<b>Failures come back as JSON rather than a redirect</b>, which is the same validation presented differently.",
-        "<b>Sanctum does two different jobs</b>: API tokens, and cookie authentication for a first-party SPA.",
-        "Token authentication is stateless and header-based; SPA authentication uses the session cookie and still needs CSRF.",
-        "<b>SPA mode needs three things wired up</b>: `SANCTUM_STATEFUL_DOMAINS`, `withCredentials` on the client, and a `GET /sanctum/csrf-cookie` before the first login.",
-        "<b>Use SPA cookies when you control the frontend and it runs on your domain</b>, and tokens for everything else.",
-        "<b>A token is a credential, not a session</b>: anybody holding it is that user until it is revoked.",
-      ],
-      commonMistakes: [
-        "<b>Putting API routes in `web.php`.</b> They pick up sessions and CSRF, and failures redirect instead of returning JSON.",
-        "<b>Confusing the two Sanctum flows.</b> SPA authentication uses cookies and does need CSRF.",
-        "<b>Skipping `GET /sanctum/csrf-cookie`.</b> The first login returns 419 and looks like broken credentials.",
-        "<b>Expecting a redirect to work for an API client.</b> It cannot follow one, and would not want the HTML.",
-        "<b>Forgetting the `Accept: application/json` header when testing.</b> Laravel then answers as if you were a browser.",
-        "<b>Treating a token like a session.</b> It survives everything until you revoke it.",
-      ],
-      quiz: [
-        {
-          question: "Why do API routes not need CSRF protection?",
-          options: [
-            "APIs are trusted",
-            "A token header is attached deliberately by code, not automatically like a cookie",
-            "CSRF only applies to GET",
-            "Laravel disables it for performance",
-          ],
-          correctIndex: 1,
-          explanation: "An attacker's page cannot cause an `Authorization` header to be sent.",
-        },
-        {
-          question: "What is the real difference between `web.php` and `api.php`?",
-          options: [
-            "The URL prefix only",
-            "Different middleware: sessions, cookies and CSRF versus stateless JSON",
-            "API routes are faster",
-            "They use different controllers",
-          ],
-          correctIndex: 1,
-          explanation: "Which is also why a failure redirects in one and returns a 422 in the other.",
-        },
-        {
-          question: "Which Sanctum flow still needs CSRF protection?",
-          options: [
-            "Token authentication",
-            "SPA cookie authentication",
-            "Both",
-            "Neither",
-          ],
-          correctIndex: 1,
-          explanation: "It uses the session cookie, which the browser attaches automatically.",
-        },
-        {
-          question: "When should you use Sanctum's SPA cookie authentication rather than tokens?",
-          options: [
-            "For mobile applications",
-            "When you control the frontend and it runs on your own domain",
-            "For third-party clients",
-            "Whenever the API is public",
-          ],
-          correctIndex: 1,
-          explanation: "Anything else, including mobile and CLI clients, uses tokens.",
-        },
-      ],
-    },
-    {
-      id: "tokens",
-      title: "Issuing tokens & protecting routes",
-      durationMinutes: 12,
-      explanation: "How a client gets a credential, and how the server recognises it.\n\n---\n\n### 1. Basic — issuing one\n\nThe model needs Sanctum's trait:\n\n```php\nuse Laravel\\Sanctum\\HasApiTokens;\n\nclass User extends Authenticatable\n{\n    use HasApiTokens;\n}\n```\n\nThen, after checking credentials:\n\n```php\n$token = $user->createToken('mobile-app');\n\nreturn ['token' => $token->plainTextToken];\n```\n\n```text\nuser\n ↓\ncreateToken()\n ↓\na row in personal_access_tokens\n ↓\nthe plain text token, once\n```\n\n<b>`plainTextToken` is available exactly once</b>, on the object you just created. The database stores a hash, exactly as it does for a password, so a leak of that table does not hand over anybody's tokens, and there is no way to look one up later.\n\nWhich means the client stores it, and \"I lost my token\" is answered by issuing a new one, never by retrieving the old one.\n\nThe name (`'mobile-app'`) is for humans: it is what a \"your devices\" screen lists, so the user can see and revoke them individually.\n\n---\n\n### 2. Intermediate — the login endpoint\n\nEverything from Day 19 still applies, minus the session:\n\n```php\n$request->validate([\n    'email'    => ['required', 'email'],\n    'password' => ['required'],\n]);\n\n$user = User::where('email', $request->email)->first();\n\nif (! $user || ! Hash::check($request->password, $user->password)) {\n    throw ValidationException::withMessages([\n        'email' => ['Invalid credentials.'],\n    ]);\n}\n\nreturn ['token' => $user->createToken($request->device_name)->plainTextToken];\n```\n\nNote what is <i>not</i> there. No `Auth::attempt()`, because there is no session to establish, and no `session()->regenerate()`, because there is no session to fix.\n\nWhat is still there: <b>one error message for a wrong password and an unknown email</b>, and <b>rate limiting on this route</b>. An API login is a better target than a web one, because there is no interface slowing anybody down.\n\n---\n\n### 3. Advanced — the request, and the guard\n\nThe client sends:\n\n```http\nAuthorization: Bearer 3|abcdef...\n```\n\n```text\nrequest\n  ↓\nBearer token\n  ↓\nSanctum: hash it, find the row, load the user\n  ↓\n$request->user()\n```\n\nAnd you protect routes with the guard:\n\n```php\nRoute::middleware('auth:sanctum')->group(function () {\n    Route::get('/user', fn (Request $request) => $request->user());\n    Route::apiResource('posts', PostController::class);\n});\n```\n\n```text\nGET /api/posts\n      ↓\nauth:sanctum\n  ┌───┴───┐\nvalid   invalid\n  ↓        ↓\nuser      401\n```\n\n<b>`auth:sanctum` is the guard name from Day 19</b>, doing exactly what that lesson described: the guard decides how identity is established, the provider fetches the user. Here the guard reads a header instead of a session, and the provider is the same one.\n\nInside a controller, `$request->user()` is the authenticated user, as always.\n\nTwo practical notes.\n\n<b>Ask for JSON.</b> Without `Accept: application/json`, an unauthenticated request gets redirected to a login page that does not exist, and you spend twenty minutes debugging a 302 that should have been a 401.\n\n<b>And the token is only as safe as its transport.</b> A bearer token over plain HTTP is readable by anybody on the network, and unlike a session cookie there is no `secure` flag to forget: it is your job to serve the API over HTTPS and nothing else.\n\n<b>One piece of history, because you will meet it in older codebases.</b> Before Sanctum, Laravel shipped a `token` guard backed by a single `api_token` column on `users`:\n\n```php\n// config/auth.php — the old way\n'api' => ['driver' => 'token', 'provider' => 'users'],\n```\n\nOne token per user, stored in plain text, with no scopes, no expiry, no revocation short of overwriting the column, and no record of when it was last used. <b>Every one of those is a reason `personal_access_tokens` exists.</b> Recognise it, and never start a new project with it.\n\n<b>Registration is the same shape as login, one step earlier:</b>\n\n```php\n$user = User::create([...]);\n\nreturn response()->json([\n    'token' => $user->createToken($request->device_name)->plainTextToken,\n], 201);\n```\n\nNote what is missing compared with Day 19's web version: no `Auth::login()`, no `session()->regenerate()`, no redirect. <b>The client gets a credential and goes away</b>, which is the whole difference between an API and a form.\n\nAnd then the question nobody answers until it is a problem: <b>where does the client keep it?</b>\n\n```text\niOS         Keychain\nAndroid     Keystore\nbrowser     an HttpOnly cookie, or use SPA mode instead\n```\n\n<b>Not `localStorage`</b>, which any script on the page can read, and never in a log line. A token in your application logs is a credential in your log aggregator, readable by everyone with access and retained as long as your policy says.\n\nOne practical note for building: <b>Postman and Insomnia both have an Authorization tab</b> where you paste the token as a Bearer credential. Save it as an environment variable and reference it as `{{token}}`, so one login updates every request in the collection.",
-      diagram: `Issuing a token
-
-  use Laravel\\Sanctum\\HasApiTokens;
-
-  \$token = \$user->createToken('mobile-app');
-  \$token->plainTextToken
-
-    user → createToken() → a row in personal_access_tokens
-
-  ⚠️  What it replaced, still in older codebases:
-
-      config/auth.php
-        'api' => ['driver' => 'token', ...]
-
-      one api_token column on users:
-        plain text · one per user · no scopes
-        no expiry · no revocation · no last-used
-
-      Every one of those is why personal_access_tokens
-      exists. Recognise it; never start with it.
-                                 ↓
-                       the plain text token, ONCE
-
-  The database stores a HASH, as it does for a password.
-  A leak of that table hands over nothing, and there is
-  no way to look a token up later.
-
-  "I lost my token" is answered by issuing a new one.
-
-  The name is for humans: it is what a "your devices"
-  screen lists, so tokens can be revoked individually.
-
-
-The login endpoint
-
-  Everything from Day 19, minus the session:
-
-    validate
-    find the user
-    Hash::check
-    createToken()
-
-  NOT there:
-    Auth::attempt()          no session to establish
-    session()->regenerate()  no session to fix
-
-  Still there:
-    one message for a wrong password AND an unknown email
-    rate limiting on this route
-
-  An API login is a better target than a web one:
-  no interface slows anybody down.
-
-
-The request
-
-  Authorization: Bearer 3|abcdef...
-
-    request → Bearer token → Sanctum hashes it, finds
-              the row, loads the user → \$request->user()
-
-
-  Route::middleware('auth:sanctum')
-
-    GET /api/posts
-          ↓
-    auth:sanctum
-      ┌───┴───┐
-    valid   invalid
-      ↓        ↓
-     user     401
-
-  auth:sanctum is the GUARD from Day 19, doing exactly
-  what that lesson described: the guard decides how
-  identity is established, the provider fetches the user.
-  Here the guard reads a header instead of a session.
-
-
-Two practical notes
-
-  Send Accept: application/json.
-    Without it, an unauthenticated request is REDIRECTED
-    to a login page that does not exist, and you debug a
-    302 that should have been a 401.
-
-  A bearer token is only as safe as its transport.
-    Over plain HTTP anybody on the network reads it, and
-    unlike a session cookie there is no secure flag to
-    forget: serving the API over HTTPS is your job.`,
-      codeExample: {
-        title: "A login endpoint and a protected route",
+        title: "The same page, two ways",
         code: `<?php
-// ---------- The model ----------
+// ---------- Livewire: the state is a PHP property ----------
 
-namespace App\\Models;
+// app/Livewire/SearchPosts.php
 
-use Illuminate\\Foundation\\Auth\\User as Authenticatable;
-use Laravel\\Sanctum\\HasApiTokens;
+namespace App\\Livewire;
 
-class User extends Authenticatable
+use App\\Models\\Post;
+use Livewire\\Component;
+
+class SearchPosts extends Component
 {
-    use HasApiTokens;
+    // The truth about what is in the search box.
+    public string $search = '';
 
-    protected $hidden = ['password', 'remember_token'];
-}
-
-
-<?php
-// ---------- The login endpoint ----------
-
-namespace App\\Http\\Controllers\\Api;
-
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Hash;
-use Illuminate\\Validation\\ValidationException;
-
-class AuthController extends Controller
-{
-    public function login(Request $request)
+    public function render()
     {
-        $request->validate([
-            'email'       => ['required', 'email'],
-            'password'    => ['required'],
-            'device_name' => ['required', 'string'],
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        // One message for both cases, exactly as on Day 19.
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
-            ]);
-        }
-
-        // plainTextToken is available exactly once.
-        return response()->json([
-            'token' => $user->createToken($request->device_name)->plainTextToken,
+        return view('livewire.search-posts', [
+            'posts' => Post::where('title', 'like', "%{$this->search}%")
+                ->paginate(10),
         ]);
     }
 }
+?>
 
-// No Auth::attempt() and no session()->regenerate():
-// there is no session here to establish or to fix.
+{{-- resources/views/livewire/search-posts.blade.php --}}
 
+<div>
+    <input wire:model.live="search" placeholder="Search posts">
 
-<?php
-// ---------- routes/api.php ----------
+    @foreach ($posts as $post)
+        <p>{{ $post->title }}</p>
+    @endforeach
 
-// Rate limit it. An API login has no interface slowing
-// anybody down.
-Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('throttle:login');
+    {{ $posts->links() }}
+</div>
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', fn (Request $request) => $request->user());
-
-    Route::apiResource('posts', PostController::class);
-});
-
-
-# ---------- The client ----------
-
-# Log in.
-curl -X POST https://example.com/api/login \\
-  -H "Accept: application/json" \\
-  -d "email=rajan@example.com&password=secret&device_name=iphone"
-
-# { "token": "3|kZ9x..." }
-
-# Every request afterwards.
-curl https://example.com/api/posts \\
-  -H "Authorization: Bearer 3|kZ9x..." \\
-  -H "Accept: application/json"
-
-
-# ⚠️ Without Accept: application/json, an unauthenticated
-#    request is redirected to a login page that does not
-#    exist, and you debug a 302 instead of reading a 401.
+{{-- Type a character → a request → PHP re-renders → new HTML --}}
 
 
 <?php
-// ---------- In a controller ----------
+// ---------- Inertia: the state is React state ----------
+
+// app/Http/Controllers/PostController.php
 
 public function index(Request $request)
 {
-    // The authenticated user, exactly as in web routes.
-    return $request->user()->posts()->paginate(20);
-}
-
-// And the token itself, when you need it:
-$request->user()->currentAccessToken();`,
-      },
-      keyTakeaways: [
-        "<b>The user model needs the `HasApiTokens` trait</b> before it can issue tokens.",
-        "<b>`createToken('name')` creates a token row</b>, and `plainTextToken` gives you the value exactly once.",
-        "<b>The database stores a hash, not the token</b>, so a leak of that table hands over nothing.",
-        "There is no way to retrieve a lost token; you issue a new one.",
-        "<b>The token's name is for humans</b>, and is what a \"your devices\" screen lists for individual revocation.",
-        "<b>An API login has no `Auth::attempt()` and no session regeneration</b>, because there is no session.",
-        "It still needs one error message for both failures, and rate limiting.",
-        "<b>The client sends `Authorization: Bearer …`, and `auth:sanctum` turns it into a user or a 401.</b>",
-        "<b>`auth:sanctum` is a guard</b>: the same Day 19 concept, reading a header instead of a session.",
-        "<b>Send `Accept: application/json`</b>, or an unauthenticated request is redirected rather than answered with a 401.",
-        "<b>A bearer token over plain HTTP is readable by anybody on the network</b>, so the API must be HTTPS only.",
-        "<b>The legacy `token` guard used one plain-text `api_token` column</b>: no scopes, no expiry, no revocation.",
-      ],
-      commonMistakes: [
-        "<b>Trying to read a token back later.</b> Only the hash is stored; issue a new one instead.",
-        "<b>Using `Auth::attempt()` in an API login.</b> It establishes a session the API will never use.",
-        "<b>Omitting `Accept: application/json`.</b> A 401 arrives as a redirect and the debugging goes sideways.",
-        "<b>Leaving the API login unthrottled.</b> There is no interface to slow an attacker down.",
-        "<b>Serving an API over plain HTTP.</b> The token is in a header anybody on the network can read.",
-      ],
-      quiz: [
-        {
-          question: "How many times can you read `plainTextToken`?",
-          options: ["Any number of times", "Once, on the object you just created", "Until it expires", "Only in tests"],
-          correctIndex: 1,
-          explanation: "The database stores a hash, so there is nothing to read back.",
-        },
-        {
-          question: "What does an API login endpoint not need?",
-          options: [
-            "Validation",
-            "Rate limiting",
-            "`Auth::attempt()` and a session regeneration",
-            "A password check",
-          ],
-          correctIndex: 2,
-          explanation: "There is no session to establish or to protect from fixation.",
-        },
-        {
-          question: "What does `auth:sanctum` do?",
-          options: [
-            "Creates a token",
-            "Reads the bearer token, resolves the user, and returns 401 when it cannot",
-            "Checks policies",
-            "Adds CSRF protection",
-          ],
-          correctIndex: 1,
-          explanation: "It is a guard, in the Day 19 sense of the word.",
-        },
-        {
-          question: "Why send `Accept: application/json`?",
-          options: [
-            "It is required by Sanctum",
-            "Without it, an unauthenticated request is redirected instead of returning a 401",
-            "It speeds up the response",
-            "It selects the API version",
-          ],
-          correctIndex: 1,
-          explanation: "Laravel otherwise answers as though you were a browser.",
-        },
-      ],
-    },
-    {
-      id: "abilities",
-      title: "Token abilities & least privilege",
-      durationMinutes: 11,
-      explanation: "A token says who the request is. <b>Abilities say what that token may do</b>, which is not the same question.\n\n---\n\n### 1. Basic — a token with limits\n\n```php\n$token = $user->createToken('mobile', ['orders:read']);\n```\n\nThe second argument is a list of abilities:\n\n```text\norders:read     ✓\norders:delete   ✗\nusers:admin     ✗\n```\n\nCheck one:\n\n```php\nif ($request->user()->tokenCan('orders:read')) {\n    // ...\n}\n```\n\nor on a route:\n\n```php\nRoute::get('/orders', ...)->middleware(['auth:sanctum', 'abilities:orders:read']);\n```\n\n<b>By default a token has `['*']`</b>, meaning every ability, which is why `tokenCan()` returns true for everything until you start naming them.\n\n---\n\n### 2. Intermediate — what abilities are actually for\n\nThis is where it gets misused, so it is worth being precise.\n\n<b>Abilities limit the credential, not the person.</b> Yesterday's policy answers \"may this user delete this invoice\". An ability answers \"may this <i>token</i> be used to delete invoices at all\".\n\n```text\nauthorization    may this USER do this to this record?     a policy\nabilities        may this TOKEN be used for this at all?   the credential\n```\n\nBoth apply, and neither replaces the other:\n\n```text\nthe token allows orders:delete\n            AND\nthe policy says this user owns that order\n            ↓\n         allowed\n```\n\nA token with `orders:delete` held by somebody who does not own the order is still refused, by the policy. And a user who owns the order, using a read-only token, is also refused, by the ability. <b>Two different questions, both of which have to say yes.</b>\n\nWhich makes the useful case clear: <b>a token you issue for one purpose should only do that thing.</b> A deploy script that reads a status endpoint gets a token that can read a status endpoint. If it leaks, that is what the attacker has.\n\n---\n\n### 3. Advanced — least privilege in practice\n\nThe temptation is to give every token `['*']`, because it always works and nothing ever fails confusingly. And that is exactly the cost: <b>a leaked `['*']` token is the user's entire account.</b>\n\n```text\n['*']                     everything the user can do\n['orders:read']           read orders, nothing else\n```\n\nSo the useful habit is to name abilities when you issue a token for a <i>purpose</i>:\n\n```text\na mobile app the user lives in          broad, or ['*']\na CI job posting deployment status      ['deployments:write']\na third-party integration               exactly what it asked for\na CLI tool that only reads              ['*:read']\n```\n\nAnd the naming convention matters more than it looks. `resource:action` reads well, groups well, and lets you add `orders:write` later without renaming anything.\n\nThree things worth knowing before you rely on this.\n\n<b>`tokenCan()` returns true when there is no token at all.</b> On a Sanctum SPA-authenticated request there is no token to limit, so it passes. If a route must be token-only, check for the token, not just the ability.\n\n<b>The `abilities` middleware requires all listed; `ability` requires any.</b> One of those is what you meant.\n\n<b>And abilities are set at creation and do not change.</b> Granting more means issuing a new token, which is a feature: a credential's scope cannot quietly widen after it was handed out.",
-      diagram: `A token with limits
-
-  \$user->createToken('mobile', ['orders:read'])
-
-    orders:read     ✓
-    orders:delete   ✗
-    users:admin     ✗
-
-  \$request->user()->tokenCan('orders:read')
-
-  ->middleware(['auth:sanctum', 'abilities:orders:read'])
-
-  Default is ['*'] — every ability — which is why
-  tokenCan() returns true for everything until you
-  start naming them.
-
-
-What abilities are actually for
-
-  Abilities limit the CREDENTIAL, not the person.
-
-    authorization   may this USER do this to this record?
-                    → a policy
-
-    abilities       may this TOKEN be used for this at all?
-                    → the credential
-
-  Both apply. Neither replaces the other:
-
-    the token allows orders:delete
-                AND
-    the policy says this user owns that order
-                ↓
-             allowed
-
-  A token with orders:delete held by somebody who does
-  not own the order → refused by the POLICY.
-
-  The owner, using a read-only token → refused by the
-  ABILITY.
-
-  Two questions. Both must say yes.
-
-
-Least privilege in practice
-
-  The temptation is ['*'] on everything, because it
-  always works and never fails confusingly. That is
-  exactly the cost:
-
-    a leaked ['*'] token IS the user's whole account
-
-  Name abilities when a token exists for a PURPOSE:
-
-    a mobile app the user lives in     broad, or ['*']
-    a CI job posting deploy status     ['deployments:write']
-    a third-party integration          exactly what it asked
-    a CLI tool that only reads         ['*:read']
-
-  resource:action reads well, groups well, and lets you
-  add orders:write later without renaming anything.
-
-
-Three things before you rely on it
-
-  tokenCan() returns TRUE when there is no token at all.
-    On a Sanctum SPA request there is no token to limit,
-    so it passes. A token-only route must check for the
-    token, not just the ability.
-
-  abilities:  requires ALL listed
-  ability:    requires ANY
-    One of those is what you meant.
-
-  Abilities are set at creation and do not change.
-    Granting more means a new token — which is a feature:
-    a credential's scope cannot quietly widen after it
-    has been handed out.`,
-      codeExample: {
-        title: "Abilities, and where they sit next to policies",
-        code: `<?php
-// ---------- Issuing a scoped token ----------
-
-// Broad: the user's own app.
-$user->createToken('iphone')->plainTextToken;              // ['*']
-
-// Narrow: a token that exists for one purpose.
-$user->createToken('ci-deploy', ['deployments:write']);
-$user->createToken('reporting', ['orders:read', 'invoices:read']);
-$user->createToken('readonly-cli', ['*:read']);
-
-// A leaked ['*'] token is the user's entire account.
-// A leaked ['orders:read'] token can read orders.
-
-
-<?php
-// ---------- Checking ----------
-
-if ($request->user()->tokenCan('orders:delete')) {
-    // ...
-}
-
-// ⚠️ Returns TRUE when there is no token at all, such as
-//    on a Sanctum SPA-authenticated request.
-if ($request->user()->currentAccessToken()
-    && ! $request->user()->tokenCan('orders:delete')) {
-    abort(403);
-}
-
-
-<?php
-// ---------- On routes ----------
-
-// abilities: ALL of them
-Route::delete('/orders/{order}', ...)
-    ->middleware(['auth:sanctum', 'abilities:orders:delete']);
-
-// ability: ANY of them
-Route::get('/reports', ...)
-    ->middleware(['auth:sanctum', 'ability:orders:read,invoices:read']);
-
-
-<?php
-// ---------- Abilities and policies are different questions ----------
-
-class OrderController extends Controller
-{
-    public function destroy(Request $request, Order $order)
-    {
-        // May this TOKEN be used to delete orders at all?
-        if (! $request->user()->tokenCan('orders:delete')) {
-            abort(403, 'This token cannot delete orders.');
-        }
-
-        // May this USER delete THIS order?
-        Gate::authorize('delete', $order);
-
-        $order->delete();
-
-        return response()->noContent();
-    }
-}
-
-// A token with orders:delete, held by somebody who does
-// not own the order → refused by the policy.
-//
-// The owner, using a read-only token → refused by the
-// ability.
-
-
-<?php
-// ---------- Issuing a scoped token for an integration ----------
-
-public function createIntegrationToken(Request $request)
-{
-    $request->validate([
-        'name'        => ['required', 'string', 'max:255'],
-        'abilities'   => ['required', 'array'],
-        'abilities.*' => ['in:orders:read,orders:write,invoices:read'],
+    return Inertia::render('Posts/Index', [
+        'posts'   => PostResource::collection(
+            Post::where('title', 'like', "%{$request->search}%")->paginate(10)
+        ),
+        'filters' => $request->only('search'),
     ]);
+}
+?>
 
-    // Only the abilities that were asked for, whitelisted.
-    $token = $request->user()->createToken(
-        $request->name,
-        $request->abilities,
+// resources/js/pages/Posts/Index.tsx
+
+import { useState } from 'react';
+import { router } from '@inertiajs/react';
+
+export default function Index({ posts, filters }) {
+    // The truth about what is in the search box.
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    return (
+        <div>
+            <input
+                value={search}
+                onChange={(e) => {
+                    setSearch(e.target.value);
+                    router.get('/posts', { search: e.target.value },
+                        { preserveState: true, replace: true });
+                }}
+            />
+
+            {posts.data.map((post) => <p key={post.id}>{post.title}</p>)}
+        </div>
     );
-
-    // Shown once, and never again.
-    return response()->json(['token' => $token->plainTextToken], 201);
 }
 
-// Abilities are fixed at creation. Granting more means a
-// new token, so a credential's scope cannot quietly widen.`,
+// Typing updates React instantly. Laravel is asked for
+// data, not for the interface.
+
+
+<?php
+// ---------- What is identical in both ----------
+
+// routes, controllers, validation, policies, Eloquent,
+// migrations, jobs, mail — every day of this track so far.
+//
+// Only the last step differs: a Blade view driven by
+// Livewire, or a component driven by Inertia.
+//
+// Which is why the two can live in one application,
+// on different pages.`,
       },
       keyTakeaways: [
-        "<b>`createToken('name', ['orders:read'])` limits what a token may be used for.</b>",
-        "<b>A token defaults to `['*']`</b>, so `tokenCan()` passes everything until you name abilities.",
-        "<b>Abilities limit the credential; a policy limits the person.</b> They are different questions.",
-        "<b>Both have to say yes</b>: the right token used by the wrong user is still refused, and the reverse too.",
-        "<b>A leaked `['*']` token is the user's entire account</b>, which is what least privilege avoids.",
-        "Scope a token to its purpose: a CI job gets exactly the ability that job needs.",
-        "<b>`resource:action` naming groups well</b> and lets you add abilities later without renaming.",
-        "<b>`tokenCan()` returns true when there is no token</b>, such as on an SPA-authenticated request.",
-        "<b>`abilities:` requires all listed and `ability:` requires any</b>, so pick the one you meant.",
-        "<b>Abilities are fixed at creation</b>, so widening a credential's scope means issuing a new token.",
+        "<b>Laravel offers two frontend paths: Blade with Livewire, and a JavaScript framework with Inertia.</b>",
+        "<b>Livewire keeps you in PHP</b>, with Blade templates and minimal JavaScript.",
+        "<b>Inertia keeps Laravel's routes, controllers and validation</b>, and replaces the views with components.",
+        "<b>Neither is an API</b>: no separate client, no tokens, no versioning, no CORS.",
+        "<b>The difference that matters is where the interface's state lives.</b>",
+        "<b>In Livewire the state is a PHP property on the server</b>, and the browser holds a rendering of it.",
+        "<b>In Inertia the state is JavaScript state in the browser</b>, and Laravel is asked for data.",
+        "<b>Livewire fits work that is mostly a database with an interface</b>: admin panels, CRUD, internal tools.",
+        "<b>Inertia fits when the interface is the product</b>, or when the team already writes React well.",
+        "<b>Livewire's round trip is real</b>, so per-keystroke interactivity is a request per keystroke.",
+        "<b>Inertia is a JavaScript application</b>, with the build step and client state that implies.",
+        "<b>Both can be used in one application on different pages</b>, because Laravel underneath is identical.",
       ],
       commonMistakes: [
-        "<b>Using abilities instead of policies.</b> An ability cannot know whether this user owns that record.",
-        "<b>Giving every token `['*']`.</b> A leak then hands over the whole account.",
-        "<b>Relying on `tokenCan()` alone on a route an SPA can reach.</b> With no token, it returns true.",
-        "<b>Mixing up `abilities:` and `ability:`.</b> One requires all of them and one requires any.",
-        "<b>Expecting to add an ability to an existing token.</b> Issue a new one; the scope is fixed.",
+        "<b>Treating this as an API decision.</b> Neither approach needs the API you built yesterday.",
+        "<b>Choosing by fashion rather than by team.</b> The unfamiliar option is the expensive one, whichever it is.",
+        "<b>Building an admin CRUD screen in React.</b> You rebuild validation, pagination and state Laravel already has.",
+        "<b>Reaching for Livewire on a highly interactive interface.</b> Every interaction becomes a round trip.",
+        "<b>Assuming you must pick one for the whole application.</b> Different pages can use different approaches.",
       ],
       quiz: [
         {
-          question: "What do token abilities limit?",
+          question: "What is the core difference between Livewire and Inertia?",
           options: [
-            "What the user may do",
-            "What that particular token may be used for",
-            "Which routes exist",
-            "How long the token lasts",
+            "One is faster",
+            "Where the interface's state lives: a PHP property on the server, or JavaScript state in the browser",
+            "Inertia requires an API",
+            "Livewire cannot paginate",
           ],
           correctIndex: 1,
-          explanation: "The policy still decides what the user may do to a given record.",
+          explanation: "Everything else you notice follows from that.",
         },
         {
-          question: "A token has `orders:delete` but the user does not own the order. What happens?",
+          question: "Does Inertia require you to build a REST API?",
           options: [
-            "Allowed, because the token permits it",
-            "Refused by the policy",
-            "Refused by the ability",
-            "A 401",
+            "Yes, it consumes one",
+            "No; Laravel's routes and controllers return pages with props",
+            "Only for forms",
+            "Only in production",
           ],
           correctIndex: 1,
-          explanation: "Both questions must say yes, and this one fails the policy.",
+          explanation: "That is the point of it: a SPA feel without a separate API.",
         },
         {
-          question: "What does a token's default ability list contain?",
-          options: ["Nothing", "`['*']`, meaning everything", "`['read']`", "Whatever the guard defines"],
-          correctIndex: 1,
-          explanation: "Which is why `tokenCan()` passes until you start naming abilities.",
-        },
-        {
-          question: "Why does `tokenCan()` return true on a Sanctum SPA request?",
+          question: "Which kind of application suits Livewire best?",
           options: [
-            "SPAs are trusted",
-            "There is no token, so there is nothing limiting the request",
-            "It is a bug",
-            "SPAs always get `['*']`",
+            "A highly interactive data visualisation tool",
+            "An admin panel or CRUD-heavy internal tool",
+            "A public marketing site",
+            "A mobile application",
           ],
           correctIndex: 1,
-          explanation: "A token-only route should check for the token as well as the ability.",
+          explanation: "Mostly a database with an interface, where Laravel already has the pieces.",
+        },
+        {
+          question: "What is the cost of Livewire's model?",
+          options: [
+            "It cannot validate",
+            "Every interaction is a server round trip",
+            "It requires a build step",
+            "It needs a separate deployment",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why per-keystroke updates need debouncing.",
         },
       ],
     },
     {
-      id: "revocation-and-expiry",
-      title: "Revoking tokens & expiry",
-      durationMinutes: 10,
-      explanation: "A token is a credential that works until something stops it. This is the something.\n\n---\n\n### 1. Basic — logging out\n\nA web logout destroys a session. There is no session here, so <b>logging out means deleting the token</b>:\n\n```php\n$request->user()->currentAccessToken()->delete();\n```\n\nThat is \"log out this device\". The token the request arrived with stops working; every other token the user has carries on.\n\nAnd the other one:\n\n```php\n$request->user()->tokens()->delete();\n```\n\n<b>\"Log out everywhere.\"</b> Every device, every integration, every CLI tool.\n\n```text\ncurrentAccessToken()->delete()   this device\ntokens()->delete()               everywhere\n```\n\nThe second is the one that matters after a security incident. Somebody's phone is stolen, or a token was pasted into a public repository: one call and every credential the account has is dead.\n\nWhich is also a good reason to give tokens meaningful names. A \"your devices\" screen listing `iphone`, `ipad` and `ci-deploy` lets somebody revoke the one that was lost, rather than logging themselves out of everything.\n\n---\n\n### 2. Intermediate — why revocation is not enough\n\nRevocation is manual. It requires somebody to notice.\n\n```text\ntoken leaks\n     ↓\nnobody notices\n     ↓\nit works forever\n```\n\nThat is the real problem with a long-lived credential: not that it can be stolen, but that a stolen one stays useful indefinitely.\n\n<b>Expiry puts a limit on that without anybody noticing anything:</b>\n\n```text\ntoken\n  ↓\nvalid\n  ↓\nexpiration reached\n  ↓\n401\n```\n\nSanctum can expire tokens globally through configuration, or per token when you create one. A stolen credential then has a lifetime, and the question stops being \"will anybody notice\" and becomes \"how much time does this buy an attacker\".\n\n---\n\n### 3. Advanced — the three together\n\nExpiry, revocation and abilities each limit a different dimension, and a serious API uses all three:\n\n```text\nabilities     what a token can do\nexpiry        how long it can do it\nrevocation    stopping it early\n```\n\nWhich turns into a real design question per token, and the answer differs:\n\n```text\na mobile app the user opens daily\n  long expiry, or none, plus revocation from a devices screen\n  a short one means logging in constantly, and people\n  work around friction\n\na CI token\n  narrow abilities, and an expiry matching the project\n\na third-party integration\n  exactly the abilities asked for, and an expiry the\n  customer can see\n\nanything with elevated access\n  short expiry, narrow abilities, and an audit trail\n```\n\n<b>Security that makes an app unusable gets removed</b>, which is why \"expire everything after an hour\" is not automatically the safer answer.\n\nTwo practical notes.\n\n<b>Expired tokens stay in the table.</b> They stop working, and they accumulate. `sanctum:prune-expired` clears them out, and it belongs in the scheduler alongside your other cleanup.\n\n<b>And revocation should follow the events that imply it.</b> A password change, a role change, or an account being suspended are all moments where existing tokens are suspect. Day 19 made that point about sessions; the same applies here, and it has to be deliberate because nothing does it for you.",
-      diagram: `Logging out, when there is no session
+      id: "vite-and-tailwind",
+      title: "Vite, hot reload & asset versioning",
+      durationMinutes: 11,
+      explanation: "Both paths need the same thing underneath: something that turns your CSS and JavaScript into files a browser can use.\n\n---\n\n### 1. Basic — what Vite is for\n\n```text\nresources/\n├── css/app.css\n└── js/app.js\n```\n\nThose are not files a browser should fetch directly. They import other files, they may be TypeScript, and the CSS needs processing. <b>Vite is the build tool that turns them into something servable</b>, and the dev server that makes changes appear instantly.\n\n```text\nJavaScript · CSS · TypeScript · assets\nhot reload · production builds\n```\n\nIn Blade:\n\n```blade\n@vite(['resources/css/app.css', 'resources/js/app.js'])\n```\n\nOne directive, two behaviours:\n\n```text\ndevelopment              production\n───────────              ──────────\npoints at the dev        points at the built,\nserver                   versioned files\nhot updates              cached hard\n```\n\n<b>That is the whole reason `@vite` exists</b> rather than a `<script src>`: the correct answer differs between environments, and the directive knows which one you are in.\n\n---\n\n### 2. Intermediate — hot reload\n\n```bash\nnpm run dev\n```\n\nThen edit a component or a stylesheet:\n\n```text\nbefore                  with Vite\n──────                  ─────────\nedit                    edit\n  ↓                       ↓\nbuild                   Vite detects it\n  ↓                       ↓\nrefresh                 the browser updates\n```\n\nAnd in the good case it updates <i>without</i> a full reload, so the state you had on screen survives. On a form you are halfway through, that is the difference between a two-second loop and a twenty-second one.\n\nTwo things that catch people:\n\n<b>`npm run dev` must be running.</b> Without it, `@vite` points at a dev server that is not there and the page loads with no styles at all. The blank unstyled page is almost always this.\n\n<b>And it is for development only.</b> Production runs `npm run build` once, at deploy time, and serves the output. A server running `npm run dev` in production is a misconfiguration, not a shortcut.\n\n---\n\n### 3. Advanced — why versioned filenames\n\nBrowsers cache aggressively, which is what you want until you deploy.\n\n```text\nyou deploy a fix\n      ↓\nthe browser has app.js cached\n      ↓\nthe user runs yesterday's code\n```\n\nAnd nothing tells either of you. The bug is fixed, the customer still has it, and \"try a hard refresh\" is a support conversation nobody should have to have.\n\n<b>Vite gives every build a filename derived from its contents:</b>\n\n```text\napp.js  →  app-abc123.js\n\ncontent changes\n\napp.js  →  app-def456.js\n```\n\nA different filename is a different URL, so the cache cannot answer it. <b>Change the code and every browser fetches the new file; change nothing and every browser keeps the cached one.</b> Correct in both directions, with no cache headers to tune.\n\nThe manifest maps the names, and `@vite` reads it, which is why you never write a hashed filename yourself.\n\nOne deployment note that follows: <b>`npm run build` has to run before the new code is live</b>, or Blade asks the manifest for a file that is not there yet. That is a real deployment error, and its message is `Unable to locate file in Vite manifest`.\n\n---\n\n### Tailwind\n\nThe styling layer both paths share:\n\n```html\n<button class=\"rounded-lg bg-blue-600 px-4 py-2 text-white\">Search</button>\n```\n\nrather than inventing `.search-button` and a stylesheet to hold it.\n\nThe trade is real and worth naming: <b>the markup gets noisier and the stylesheet stops growing.</b> A CSS file that only ever gets added to is a genuine long-term problem, because nobody can safely delete from it; utility classes make the styling local to the thing it styles, which means deleting a component deletes its styles.\n\nAnd when a pattern repeats, it becomes a component in whichever system you are using: a Blade component, or a React one. <b>The repetition is a signal, not a defect.</b>\n\nThree footnotes.\n\n<b>Vite replaced Laravel Mix</b>, which wrapped webpack and used a `webpack.mix.js`. You will meet it in projects from before 2022; the concepts map across, and there is a migration guide.\n\n<b>The manifest is a real file:</b> `public/build/manifest.json`, mapping `resources/js/app.js` to the hashed filename Vite produced. That is what `@vite` reads, and \"Unable to locate file in Vite manifest\" means it is missing or stale.\n\n<b>And Vite does not type-check.</b> esbuild strips TypeScript types without looking at them, so a type error compiles perfectly and ships:\n\n```bash\nnpx tsc --noEmit\n```\n\nThat has to run separately, in CI. Which matters because the argument for TypeScript here is that renaming a prop becomes a compile error, and that is only true if something actually compiles it.",
+      diagram: `What Vite is for
 
-  \$request->user()->currentAccessToken()->delete()
-      this device
+  resources/
+  ├── css/app.css
+  └── js/app.js
 
-  \$request->user()->tokens()->delete()
-      everywhere
+  Not files a browser should fetch: they import other
+  files, may be TypeScript, and the CSS needs processing.
 
-  The second is the one that matters after an incident:
-  a stolen phone, or a token pasted into a public repo.
-  One call, every credential dead.
+  Vite builds them, and serves them instantly while
+  you work.
 
-  Which is why token NAMES matter. A devices screen
-  listing iphone, ipad, ci-deploy lets somebody revoke
-  the one that was lost, instead of signing out of
-  everything.
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+  development              production
+  ───────────              ──────────
+  points at the dev        points at the built,
+  server                   versioned files
+  hot updates              cached hard
 
-Why revocation is not enough
-
-  Revocation is manual. It needs somebody to notice.
-
-    token leaks → nobody notices → it works forever
-
-  That is the real problem with a long-lived credential:
-  not that it can be stolen, but that a stolen one stays
-  useful indefinitely.
-
-  Expiry puts a limit on it with nobody noticing anything:
-
-    token → valid → expiration reached → 401
-
-  The question stops being "will anybody notice" and
-  becomes "how much time does this buy an attacker".
+  That is why @vite exists rather than a <script src>:
+  the right answer differs per environment, and the
+  directive knows which one you are in.
 
 
-Three dimensions, all three used
+Hot reload
 
-  abilities     WHAT a token can do
-  expiry        HOW LONG it can do it
-  revocation    stopping it EARLY
+  npm run dev
 
-  And the answer differs per token:
+  before                   with Vite
+  ──────                   ─────────
+  edit                     edit
+    ↓                        ↓
+  build                    Vite detects it
+    ↓                        ↓
+  refresh                  the browser updates
 
-    a mobile app the user opens daily
-      long expiry or none, plus a devices screen
-      a short one means logging in constantly, and
-      people work around friction
+  And often without a full reload, so the state on
+  screen survives. Halfway through a form, that is a
+  two-second loop instead of twenty.
 
-    a CI token
-      narrow abilities, expiry matching the project
+  ⚠️  npm run dev must be RUNNING. Without it, @vite
+      points at a server that is not there and the page
+      loads with no styles. The blank unstyled page is
+      almost always this.
 
-    a third-party integration
-      exactly the abilities asked for, and an expiry
-      the customer can see
-
-    anything with elevated access
-      short expiry, narrow abilities, an audit trail
-
-  Security that makes an app unusable gets removed.
-  "Expire everything after an hour" is not automatically
-  the safer answer.
+  ⚠️  It is development only. Production runs npm run
+      build once at deploy time.
 
 
-Two practical notes
+Why versioned filenames
 
-  Expired tokens stay in the table.
-    They stop working and they accumulate.
-    sanctum:prune-expired belongs in the scheduler.
+  you deploy a fix
+        ↓
+  the browser has app.js cached
+        ↓
+  the user runs yesterday's code
 
-  Revocation should follow the events that imply it.
-    A password change, a role change, a suspension —
-    all moments where existing tokens are suspect.
-    Nothing does it for you.`,
+  Nothing tells either of you. The bug is fixed, the
+  customer still has it, and "try a hard refresh" is a
+  support conversation nobody should have.
+
+  Vite names every build from its CONTENTS:
+
+    app.js  →  app-abc123.js
+    content changes
+    app.js  →  app-def456.js
+
+  A different filename is a different URL, so the cache
+  cannot answer it.
+
+    code changed    → every browser fetches the new file
+    nothing changed → every browser keeps the cached one
+
+  Correct both ways, with no cache headers to tune.
+
+  ⚠️  npm run build must run before the new code is live,
+      or Blade asks the manifest for a file that is not
+      there:  "Unable to locate file in Vite manifest".
+
+
+Tailwind
+
+  <button class="rounded-lg bg-blue-600 px-4 py-2 text-white">
+
+  rather than inventing .search-button and a stylesheet
+  to hold it.
+
+  The trade: noisier markup, and a stylesheet that stops
+  growing. A CSS file that is only ever added to is a
+  real long-term problem, because nobody can safely
+  delete from it. Utility classes keep styling local, so
+  deleting a component deletes its styles.
+
+  When a pattern repeats, it becomes a component —
+  Blade or React. The repetition is a signal, not
+  a defect.`,
       codeExample: {
-        title: "Logout, revocation and expiry",
-        code: `<?php
-// ---------- Logout ----------
-
-namespace App\\Http\\Controllers\\Api;
-
-class AuthController extends Controller
-{
-    // This device.
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->noContent();
-    }
-
-    // Everywhere. The one that matters after an incident.
-    public function logoutEverywhere(Request $request)
-    {
-        $request->user()->tokens()->delete();
-
-        return response()->noContent();
-    }
-}
-
-
-<?php
-// ---------- A devices screen ----------
-
-public function devices(Request $request)
-{
-    return $request->user()->tokens()
-        ->select('id', 'name', 'abilities', 'last_used_at', 'created_at')
-        ->latest()
-        ->get();
-}
-
-public function revoke(Request $request, int $tokenId)
-{
-    // Only your own tokens.
-    $request->user()->tokens()->where('id', $tokenId)->delete();
-
-    return response()->noContent();
-}
-
-// Meaningful names are what make this screen useful:
-// iphone, ipad, ci-deploy — revoke the one that was lost
-// rather than signing out of everything.
-
-
-<?php
-// ---------- Expiry ----------
-
-// config/sanctum.php — globally, in minutes.
-'expiration' => 60 * 24 * 30,   // 30 days
-
-// Or per token, which is usually what you want.
-$user->createToken('ci-deploy', ['deployments:write'], now()->addDays(90));
-
-$user->createToken('support-access', ['*'], now()->addHours(2));
-
-
-# Expired tokens stop working and stay in the table.
-php artisan sanctum:prune-expired --hours=24
-
-<?php
-// routes/console.php
-Schedule::command('sanctum:prune-expired --hours=24')->daily();
-
-
-<?php
-// ---------- Revoking on the events that imply it ----------
-
-class User extends Authenticatable
-{
-    protected static function booted(): void
-    {
-        static::updated(function (User $user) {
-            // A password change should not leave old
-            // credentials working. Nothing does this for you.
-            if ($user->wasChanged('password')) {
-                $user->tokens()->delete();
-            }
-
-            if ($user->wasChanged('is_suspended') && $user->is_suspended) {
-                $user->tokens()->delete();
-            }
-        });
-    }
-}
-
-
-<?php
-// ---------- The three dimensions ----------
-
-// abilities   what it can do
-// expiry      how long
-// revocation  stopping it early
-
-$user->createToken(
-    'partner-integration',
-    ['orders:read'],          // narrow
-    now()->addMonths(6),      // limited
-);                            // and revocable from the devices screen`,
-      },
-      keyTakeaways: [
-        "<b>An API logout deletes a token</b>, because there is no session to destroy.",
-        "<b>`currentAccessToken()->delete()` logs out this device; `tokens()->delete()` logs out everywhere.</b>",
-        "The second is what an incident needs: one call and every credential on the account is dead.",
-        "<b>Meaningful token names make a devices screen useful</b>, so one lost device can be revoked alone.",
-        "<b>Revocation is manual and requires somebody to notice</b>, which a leaked token relies on nobody doing.",
-        "<b>Expiry limits a stolen credential's lifetime</b> without anybody noticing anything.",
-        "<b>Abilities, expiry and revocation limit three different dimensions</b>, and a serious API uses all three.",
-        "<b>The right expiry differs per token</b>: a daily-use app is not a CI job is not elevated access.",
-        "<b>Security that makes an app unusable gets removed</b>, so a very short expiry is not automatically safer.",
-        "<b>Expired tokens stay in the table</b>, so schedule `sanctum:prune-expired`.",
-        "<b>Revoke on the events that imply it</b>: a password change, a role change, a suspension.",
-      ],
-      commonMistakes: [
-        "<b>Deleting all tokens on a normal logout.</b> The user is signed out of every other device too.",
-        "<b>Issuing tokens with no expiry and no devices screen.</b> Nothing can ever stop one except a full purge.",
-        "<b>Leaving tokens alive after a password change.</b> The credential the attacker took still works.",
-        "<b>Setting a very short expiry on a consumer app.</b> Constant logins are friction people route around.",
-        "<b>Never pruning.</b> Expired rows accumulate in `personal_access_tokens` indefinitely.",
-      ],
-      quiz: [
-        {
-          question: "What does an API logout do?",
-          options: [
-            "Destroys the session",
-            "Deletes the token the request arrived with",
-            "Expires all tokens",
-            "Clears the cache",
-          ],
-          correctIndex: 1,
-          explanation: "There is no session; the token is the credential.",
-        },
-        {
-          question: "When would you call `$user->tokens()->delete()`?",
-          options: [
-            "On every logout",
-            "After a security incident, or when the user asks to be signed out everywhere",
-            "When a token expires",
-            "When creating a new token",
-          ],
-          correctIndex: 1,
-          explanation: "On a normal logout it also signs them out of every other device.",
-        },
-        {
-          question: "Why is expiry needed when tokens can be revoked?",
-          options: [
-            "Revocation is slow",
-            "Revocation requires somebody to notice; expiry limits a leaked token even when nobody does",
-            "Expired tokens are deleted automatically",
-            "It is not needed",
-          ],
-          correctIndex: 1,
-          explanation: "The question becomes how much time a leak buys, rather than whether anybody notices.",
-        },
-        {
-          question: "Which event should usually revoke a user's tokens?",
-          options: [
-            "Logging in",
-            "A password change",
-            "Viewing their profile",
-            "Creating a post",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise the credential an attacker took still works after the reset.",
-        },
-      ],
-    },
-    {
-      id: "restful-crud",
-      title: "RESTful CRUD & apiResource",
-      durationMinutes: 10,
-      explanation: "REST is a convention, and its value is entirely that other people already know it.\n\n---\n\n### 1. Basic — the five routes\n\nOne resource, five things you can do to it:\n\n```http\nGET    /api/posts           list them\nPOST   /api/posts           create one\nGET    /api/posts/{post}    read one\nPATCH  /api/posts/{post}    update one\nDELETE /api/posts/{post}    delete one\n```\n\nWhich map to five controller methods:\n\n```text\nindex   store   show   update   destroy\n```\n\n<b>The URL names the resource; the verb says what to do with it.</b> That is the whole idea, and it is why a client that has used one REST API can guess yours.\n\nThe symptom of ignoring it:\n\n```text\nPOST /api/getPosts\nPOST /api/deletePost\nPOST /api/updatePostTitle\n```\n\nEverything is a POST, the verb is in the URL, and nothing about it is predictable. Caches cannot cache the reads, and nobody can guess the next endpoint.\n\n---\n\n### 2. Intermediate — generating it\n\n```bash\nphp artisan make:controller Api/PostController --api\n```\n\n`--api` gives you exactly those five methods, without `create` and `edit`, which existed to render forms an API does not have.\n\n```php\nRoute::apiResource('posts', PostController::class);\n```\n\nOne line for all five routes, correctly named:\n\n```text\nposts.index   posts.store   posts.show\nposts.update  posts.destroy\n```\n\n<b>The value is not the typing it saves.</b> It is that the routes cannot drift: nobody adds a sixth verb, misspells a path, or protects four of the five.\n\nWhen you need a subset:\n\n```php\nRoute::apiResource('posts', PostController::class)->only(['index', 'show']);\nRoute::apiResource('posts', PostController::class)->except(['destroy']);\n```\n\nAnd nested, when a resource only exists inside another:\n\n```php\nRoute::apiResource('posts.comments', CommentController::class);\n// GET /api/posts/{post}/comments\n```\n\n---\n\n### 3. Advanced — where the convention runs out\n\nCRUD covers most of an API and not all of it. The question that comes up is what to do with an action that is not create, read, update or delete:\n\n```text\npublish a post\nrefund an order\nresend an invoice\n```\n\nTwo answers, and the second is usually better.\n\n<b>Bend the verb:</b> `POST /api/posts/{post}/publish`. Readable, obvious, and no longer strictly REST.\n\n<b>Or model the thing as a resource:</b> a publication is a thing that exists or does not, so `POST /api/posts/{post}/publication` creates one and `DELETE` removes it. Which sounds like pedantry until you need to know <i>when</i> it was published and <i>by whom</i>, and discover the resource had data all along.\n\nThe honest guidance: <b>use the convention where it fits, and do not contort a domain to keep it.</b> An endpoint everybody understands beats a purist one nobody does.\n\nTwo details worth getting right.\n\n<b>`PATCH` and `PUT` are not the same.</b> `PUT` replaces the resource; `PATCH` updates part of it. Most APIs mean `PATCH`, and most send `PUT`. Accept both if you like, but be clear which one you implemented, because a client sending `PUT` with two fields may expect the rest to be cleared.\n\n<b>And a collection endpoint needs pagination from the start.</b> `GET /api/posts` returning every row works until there are fifty thousand. Day 13's `paginate()` belongs there on the first day, not after the first outage.",
-      diagram: `The five routes
-
-  GET    /api/posts           list them        index
-  POST   /api/posts           create one       store
-  GET    /api/posts/{post}    read one         show
-  PATCH  /api/posts/{post}    update one       update
-  DELETE /api/posts/{post}    delete one       destroy
-
-  The URL names the RESOURCE. The verb says what to do.
-
-  That is the whole idea, and it is why a client that
-  has used one REST API can guess yours.
-
-
-  Ignoring it looks like:
-
-    POST /api/getPosts
-    POST /api/deletePost
-    POST /api/updatePostTitle
-
-  Everything a POST, the verb in the URL, nothing
-  predictable. Caches cannot cache the reads and
-  nobody can guess the next endpoint.
-
-
-Generating it
-
-  php artisan make:controller Api/PostController --api
-
-    exactly those five methods — no create or edit,
-    which existed to render forms an API does not have
-
-  Route::apiResource('posts', PostController::class)
-
-    posts.index  posts.store  posts.show
-    posts.update  posts.destroy
-
-  The value is not the typing. It is that the routes
-  cannot drift: nobody adds a sixth verb, misspells a
-  path, or protects four of the five.
-
-  ->only([...])  ->except([...])
-
-  Route::apiResource('posts.comments', ...)
-    GET /api/posts/{post}/comments
-
-
-Where the convention runs out
-
-  publish a post · refund an order · resend an invoice
-
-  Bend the verb:
-    POST /api/posts/{post}/publish
-    readable, obvious, not strictly REST
-
-  Or model it as a resource:
-    POST   /api/posts/{post}/publication
-    DELETE /api/posts/{post}/publication
-
-  Which sounds like pedantry until you need to know WHEN
-  it was published and BY WHOM, and discover the resource
-  had data all along.
-
-  Use the convention where it fits. Do not contort a
-  domain to keep it. An endpoint everybody understands
-  beats a purist one nobody does.
-
-
-Two details
-
-  PATCH ≠ PUT
-    PUT replaces the resource. PATCH updates part of it.
-    Most APIs mean PATCH and most clients send PUT.
-    Be clear which you implemented: a client sending PUT
-    with two fields may expect the rest to be cleared.
-
-  A collection endpoint needs pagination FROM THE START.
-    GET /api/posts returning every row works until there
-    are fifty thousand. paginate() belongs there on day
-    one, not after the first outage.`,
-      codeExample: {
-        title: "A resource controller, wired in one line",
-        code: `# php artisan make:controller Api/PostController --api --model=Post
-
-<?php
-
-namespace App\\Http\\Controllers\\Api;
-
-use App\\Models\\Post;
-use Illuminate\\Http\\Request;
-
-class PostController extends Controller
-{
-    // GET /api/posts
-    public function index(Request $request)
-    {
-        // Pagination from the first day, not after the
-        // first outage.
-        return PostResource::collection(
-            Post::latest()->paginate(20)
-        );
-    }
-
-    // POST /api/posts
-    public function store(Request $request)
-    {
-        $post = $request->user()->posts()->create(
-            $request->validate([
-                'title' => ['required', 'string', 'max:255'],
-                'body'  => ['required', 'string'],
-            ])
-        );
-
-        return new PostResource($post);
-    }
-
-    // GET /api/posts/{post}
-    public function show(Post $post)
-    {
-        return new PostResource($post);
-    }
-
-    // PATCH /api/posts/{post}
-    public function update(Request $request, Post $post)
-    {
-        $post->update($request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'body'  => ['sometimes', 'string'],
-        ]));
-
-        return new PostResource($post);
-    }
-
-    // DELETE /api/posts/{post}
-    public function destroy(Post $post)
-    {
-        $post->delete();
-
-        return response()->noContent();
-    }
-}
-
-// No create() or edit(): those rendered forms.
-// 'sometimes' in update() is what makes it a PATCH:
-// a field that is absent is left alone, not cleared.
-
-
-<?php
-// ---------- routes/api.php ----------
-
-Route::middleware('auth:sanctum')->group(function () {
-    // Five routes, correctly named, that cannot drift.
-    Route::apiResource('posts', PostController::class);
-
-    // Subsets.
-    Route::apiResource('users', UserController::class)->only(['index', 'show']);
-    Route::apiResource('orders', OrderController::class)->except(['destroy']);
-
-    // Nested, when the child only exists inside the parent.
-    Route::apiResource('posts.comments', CommentController::class);
-    // GET /api/posts/{post}/comments
+        title: "Vite from development to deploy",
+        code: `// vite.config.js
+
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.tsx'],
+            refresh: true,      // reload on Blade and route changes
+        }),
+        react(),
+    ],
 });
 
 
-<?php
-// ---------- Actions that are not CRUD ----------
+{{-- resources/views/layouts/app.blade.php --}}
 
-// Bending the verb: readable, and no longer strictly REST.
-Route::post('/posts/{post}/publish', [PostController::class, 'publish']);
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-// Modelling it as a resource: sounds like pedantry until
-// you need to know when it was published and by whom.
-Route::post('/posts/{post}/publication', [PublicationController::class, 'store']);
-Route::delete('/posts/{post}/publication', [PublicationController::class, 'destroy']);
+    {{-- Points at the dev server locally and at the built,
+         versioned files in production. --}}
+    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+</head>
+<body>
+    {{ $slot }}
+</body>
+</html>
 
 
-# ---------- What ignoring the convention looks like ----------
+# ---------- Development ----------
 
-# POST /api/getPosts
-# POST /api/deletePost
-# POST /api/updatePostTitle
+npm run dev
+
+# Leave it running. Edit a component and the browser
+# updates, often without losing the state on screen.
 #
-# Everything a POST, the verb in the URL, nothing
-# predictable, and no read a cache can cache.`,
+# ⚠️ A page with no styles at all is almost always this
+#    command not running.
+
+
+# ---------- Production ----------
+
+npm run build
+
+# resources/js/app.tsx  →  public/build/assets/app-abc123.js
+# resources/css/app.css →  public/build/assets/app-def456.css
+#
+# The filename comes from the CONTENT, so:
+#
+#   code changed    → new filename → every browser fetches it
+#   nothing changed → same filename → every browser caches it
+#
+# ⚠️ This must run before the new code is live, or:
+#    "Unable to locate file in Vite manifest"
+
+
+# ---------- A deploy script ----------
+
+git pull
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build              # before the code goes live
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+
+
+{{-- ---------- Tailwind ---------- --}}
+
+{{-- Utilities, in the markup that uses them --}}
+<button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+    Search
+</button>
+
+{{-- When it repeats, it becomes a component --}}
+{{-- resources/views/components/button.blade.php --}}
+<button {{ $attributes->merge([
+    'class' => 'rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700',
+]) }}>
+    {{ $slot }}
+</button>
+
+{{-- <x-button>Search</x-button> --}}`,
       },
       keyTakeaways: [
-        "<b>REST puts the resource in the URL and the action in the verb</b>, which is why clients can guess your API.",
-        "The five routes map to `index`, `store`, `show`, `update` and `destroy`.",
-        "<b>`--api` generates a controller without `create` and `edit`</b>, which existed to render forms.",
-        "<b>`Route::apiResource()` registers all five, correctly named</b>, so the routes cannot drift apart.",
-        "`only()` and `except()` take a subset, and dotted names nest a child resource inside its parent.",
-        "<b>Not every action is CRUD</b>, and the two answers are bending the verb or modelling the action as a resource.",
-        "<b>Modelling it as a resource often turns out to have data</b>, such as when and by whom.",
-        "<b>Use the convention where it fits and do not contort the domain to keep it.</b>",
-        "<b>`PUT` replaces and `PATCH` updates part</b>, so be clear which one you implemented.",
-        "<b>A collection endpoint needs pagination from the first day</b>, not after the first outage.",
+        "<b>Vite builds your CSS and JavaScript</b> and serves them instantly while you work.",
+        "<b>`@vite()` points at the dev server locally and at built, versioned files in production.</b>",
+        "That is why it exists rather than a plain `<script src>`: the right answer differs per environment.",
+        "<b>`npm run dev` must be running</b>, and a page with no styles at all is almost always that.",
+        "<b>Hot reload often updates without a full refresh</b>, so the state on screen survives an edit.",
+        "<b>Production runs `npm run build` once at deploy time</b>, and serves the output.",
+        "<b>Browsers cache assets, so a deploy can leave users running yesterday's code.</b>",
+        "<b>Vite names every build from its contents</b>, so a changed file is a new URL the cache cannot answer.",
+        "<b>`npm run build` must run before the new code is live</b>, or Blade cannot find the file in the manifest.",
+        "<b>Tailwind trades noisier markup for a stylesheet that stops growing</b>, and keeps styles local to what they style.",
+        "<b>A repeated utility pattern becomes a component</b>, which is a signal rather than a defect.",
       ],
       commonMistakes: [
-        "<b>Putting the verb in the URL.</b> `POST /getPosts` is unpredictable and uncacheable.",
-        "<b>Writing the five routes by hand.</b> One eventually differs in name, path or middleware.",
-        "<b>Returning every row from an index endpoint.</b> It works until the table grows.",
-        "<b>Treating `PUT` and `PATCH` as the same.</b> A client sending `PUT` may expect absent fields to be cleared.",
-        "<b>Forcing every action into CRUD.</b> An endpoint nobody understands is worse than an unRESTful one.",
+        "<b>Loading the page without `npm run dev` running.</b> Nothing is styled and nothing explains why.",
+        "<b>Running `npm run dev` on a production server.</b> Production serves built files, not a dev server.",
+        "<b>Deploying without `npm run build`.</b> Blade asks the manifest for files that do not exist.",
+        "<b>Writing hashed filenames by hand.</b> The manifest maps them, and `@vite` reads it.",
+        "<b>Adding a `.search-button` class for every component.</b> The stylesheet grows and nobody can safely delete from it.",
       ],
       quiz: [
         {
-          question: "What does `--api` change about a generated controller?",
+          question: "What does `@vite()` do differently in production?",
           options: [
-            "It adds authentication",
-            "It omits `create` and `edit`, which existed to render forms",
-            "It returns JSON automatically",
-            "It adds validation",
+            "Nothing",
+            "It points at the built, versioned files rather than the dev server",
+            "It minifies at request time",
+            "It disables CSS",
           ],
           correctIndex: 1,
-          explanation: "An API has no forms to render.",
+          explanation: "One directive, and it knows which environment it is in.",
         },
         {
-          question: "What is the main value of `Route::apiResource()`?",
+          question: "The page loads with no styles at all. What is the usual cause?",
           options: [
-            "Fewer characters",
-            "All five routes are registered consistently, so they cannot drift in name, path or middleware",
-            "It generates the controller",
-            "It adds pagination",
+            "A missing Tailwind config",
+            "`npm run dev` is not running, so `@vite` points at a dev server that is not there",
+            "The cache needs clearing",
+            "A missing layout",
           ],
           correctIndex: 1,
-          explanation: "Hand-written routes eventually differ in one of those.",
+          explanation: "In production the equivalent cause is a missing `npm run build`.",
         },
         {
-          question: "What is the difference between `PUT` and `PATCH`?",
+          question: "Why does Vite include a hash in built filenames?",
           options: [
+            "To prevent tampering",
+            "A changed file gets a new URL, so caches cannot serve the old one",
+            "For debugging",
+            "To compress them",
+          ],
+          correctIndex: 1,
+          explanation: "And unchanged files keep their name, so they stay cached.",
+        },
+        {
+          question: "What is the trade Tailwind makes?",
+          options: [
+            "Smaller pages for slower rendering",
+            "Noisier markup for a stylesheet that stops growing, with styles local to what they style",
+            "Less flexibility for faster builds",
             "None",
-            "`PUT` replaces the resource; `PATCH` updates part of it",
-            "`PATCH` is for collections",
-            "`PUT` is deprecated",
           ],
           correctIndex: 1,
-          explanation: "Most APIs mean `PATCH`, and most clients send `PUT`.",
-        },
-        {
-          question: "How should a \"publish this post\" action be exposed?",
-          options: [
-            "`POST /api/publishPost`",
-            "As a sub-resource or a bent verb, such as `POST /posts/{post}/publication`",
-            "`GET /api/posts/{post}/publish`",
-            "It cannot be exposed in REST",
-          ],
-          correctIndex: 1,
-          explanation: "Modelling it as a resource often reveals it had data all along.",
+          explanation: "Deleting a component then deletes its styles too.",
         },
       ],
     },
     {
-      id: "resources-and-consistency",
-      title: "API Resources & a consistent shape",
-      durationMinutes: 11,
-      explanation: "Day 16 introduced resources. This is why they matter more for an API than anywhere else.\n\n---\n\n### 1. Basic — the boundary\n\n```php\nreturn $post;\n```\n\nworks, and it publishes your table. Every column, including the ones you did not think about:\n\n```text\nyour table          your API, accidentally\n──────────          ──────────────────────\nid                  id\ntitle               title\nbody                body\nuser_id             user_id\ninternal_status     internal_status\nadmin_notes         admin_notes\n```\n\nA resource is the boundary between the two:\n\n```text\ndatabase model\n      ↓\nAPI Resource\n      ↓\npublic JSON\n```\n\n```bash\nphp artisan make:resource PostResource\n```\n\n```php\nreturn new PostResource($post);\n\nreturn PostResource::collection($posts);\n```\n\n<b>The resource is your API contract, in a file somebody can read.</b> Which is the difference between \"what does this endpoint return\" being answerable and being a question you answer by running it.\n\n---\n\n### 2. Intermediate — why it matters more here\n\nOn a web page, returning too much data is invisible: the Blade template only renders what it renders. <b>On an API, everything you return is published</b>, and clients start depending on it.\n\nThree consequences follow:\n\n```text\nyou add a column         it appears in the API\nyou rename a column      every client breaks\nyou add a sensitive      it leaks until somebody\n  column                   remembers $hidden\n```\n\nAnd the last one is the ugly case: a migration adding `internal_notes` publishes it to every client, silently, on deploy. Nothing fails, nothing warns you, and the data is out.\n\n<b>With a resource, a new column changes nothing until you decide it should.</b> That is the entire argument, and it is why `$hidden` is a safety net rather than a solution: `$hidden` fails open, and a resource fails closed.\n\nThe two conditionals from Day 16 matter here too:\n\n```php\n'email' => $this->when($request->user()->isAdmin(), $this->email),\n'comments' => CommentResource::collection($this->whenLoaded('comments')),\n```\n\n<b>`whenLoaded()` is what keeps an N+1 out of your API</b>, where it would run once per model, on every response, invisibly.\n\n---\n\n### 3. Advanced — consistency\n\nA resource wraps its output:\n\n```json\n{ \"data\": { \"id\": 123, \"title\": \"Laravel\" } }\n```\n\nand a collection:\n\n```json\n{ \"data\": [ { \"id\": 123 }, { \"id\": 124 } ] }\n```\n\n<b>The envelope is a design choice; consistency is not.</b> A client should not have to remember that one endpoint returns `{data: …}`, another a bare object, and a third `{result: …}`. Every deviation is a special case in somebody's code.\n\nPick a shape and hold it, including for the cases people forget:\n\n```text\na single resource     { \"data\": {...} }\na collection          { \"data\": [...] }\na paginated list      { \"data\": [...], \"links\": {...}, \"meta\": {...} }\nan error              { \"message\": \"...\" }\na validation error    { \"message\": \"...\", \"errors\": {...} }\nno content            204, an empty body\n```\n\nLaravel gives you most of that for free: a paginated collection through a resource produces `links` and `meta` without you writing them, and validation failures already have that shape.\n\nTwo things worth deciding once, for the whole API.\n\n<b>Dates.</b> ISO 8601 in UTC, everywhere. A custom format means every client writes a parser, and one gets the timezone wrong.\n\n<b>And ids.</b> Whether they are integers or strings, be the same everywhere. An API that returns `123` in one place and `\"123\"` in another produces a real bug in a typed client.\n\nThe underlying idea, one more time: <b>the model is your database representation and the resource is your API representation.</b> They change for different reasons, at different times, and keeping them apart is what lets your schema evolve without breaking anybody.\n\nTwo notes on pagination. <b>A bare paginator returns its own shape</b>, which is what you get without a resource:\n\n```text\ndata · current_page · last_page · per_page · total\nnext_page_url · prev_page_url · from · to\n```\n\nA resource collection reorganises that into `data`, `links` and `meta`. <b>Either is fine, and mixing them across endpoints is not.</b>\n\nAnd let the client choose the page size, within a limit:\n\n```php\n$perPage = min($request->integer('per_page', 15), 100);\n\nreturn InvoiceResource::collection($query->paginate($perPage));\n```\n\n<b>The `min()` is the part that matters.</b> Without a ceiling, `?per_page=100000` is a denial-of-service request your own API happily serves.",
-      diagram: `The boundary
+      id: "livewire-basics",
+      title: "Livewire — components, properties & wire:model",
+      durationMinutes: 12,
+      explanation: "Interactive interfaces, written in PHP.\n\n---\n\n### 1. Basic — a component is two files\n\n```bash\nphp artisan make:livewire SearchPosts\n```\n\n```text\napp/Livewire/SearchPosts.php               the class: state and actions\nresources/views/livewire/search-posts.blade.php   the template\n```\n\nThe class holds state and behaviour; the Blade file renders it. Which is the same split as a controller and a view, except that <b>the class stays alive across interactions</b> rather than answering one request and disappearing.\n\nA property is state:\n\n```php\nclass SearchPosts extends Component\n{\n    public string $search = '';\n\n    public function render()\n    {\n        return view('livewire.search-posts', [\n            'posts' => Post::where('title', 'like', \"%{$this->search}%\")->get(),\n        ]);\n    }\n}\n```\n\nAnd `render()` runs again after every interaction, which is why the list updates without you writing anything to update it.\n\n---\n\n### 2. Intermediate — `wire:model`\n\n```blade\n<input wire:model=\"search\">\n```\n\n```text\nuser types\n    ↓\nwire:model\n    ↓\n$search on the server\n```\n\n<b>`$this->search` is now what the user typed</b>, in PHP, with no route, no request handling and no JavaScript of your own.\n\nOne detail that decides how the component feels:\n\n```text\nwire:model             updates on blur or submit\nwire:model.live        updates on every keystroke\nwire:model.live.debounce.300ms   after they stop typing\nwire:model.blur        explicitly on blur\n```\n\n<b>The default is deliberate.</b> Livewire waits, because the alternative is a server request per keystroke. `.live` is what you want for a search box, and `.debounce` is what makes `.live` reasonable: one request when they pause, not eight while they type \"laravel\".\n\nThat one modifier is the difference between a component that feels instant and one that feels like a form from 2004, and it is the most common Livewire performance problem.\n\n---\n\n### 3. Advanced — what is actually being sent\n\n<b>Every interaction sends the component's public properties to the server and gets HTML back.</b> Which explains three rules that otherwise look arbitrary.\n\n<b>Public properties must be serialisable.</b> Strings, numbers, arrays, and Eloquent models Livewire can re-resolve. Not a closure, a file handle, or an arbitrary object. Anything the component needs but cannot serialise belongs in `render()` or a computed property, not a public property.\n\n<b>They also travel in both directions</b>, which makes them visible to the browser. A public property is not a place for anything the user should not see.\n\n<b>And they can be modified by the client.</b> A `public int $userId` can be changed before the request comes back, so <b>authorization has to be checked in the action, not assumed from the property.</b> Day 19 applies here exactly as it does in a controller.\n\nTwo things that make components readable.\n\n<b>A computed property</b> for anything derived, so it is not stored and not sent:\n\n```php\n#[Computed]\npublic function posts()\n{\n    return Post::where('title', 'like', \"%{$this->search}%\")->paginate(10);\n}\n```\n\n<b>And `wire:key` in loops</b>, so Livewire can tell rows apart when the list changes. Without it, a filtered list can reuse the wrong DOM element, which produces the bug where a checkbox stays ticked on the wrong row.\n\nOne thing the class and its view do not tell you: <b>how the component gets onto a page.</b>\n\n```blade\n<livewire:search-posts />\n<livewire:search-posts :category=\"$category\" />\n\n@livewire('search-posts')\n```\n\nThe tag syntax is the modern one, and public properties are passed as attributes.\n\nAnd for a component that is expensive to render, `#[Lazy]` defers it until after the page has loaded:\n\n```php\n#[Lazy]\nclass RevenueChart extends Component\n{\n    public function placeholder()\n    {\n        return view('components.skeleton');\n    }\n}\n```\n\n<b>The page arrives immediately with a placeholder</b>, and the component loads in a second request. Same idea as Inertia's deferred props later in the day, from the other direction.",
+      diagram: `A component is two files
 
-  return \$post;   works, and publishes your table
+  php artisan make:livewire SearchPosts
 
-  your table          your API, accidentally
-  ──────────          ──────────────────────
-  id                  id
-  title               title
-  body                body
-  user_id             user_id
-  internal_status     internal_status
-  admin_notes         admin_notes
+    app/Livewire/SearchPosts.php          the class
+    resources/views/livewire/
+        search-posts.blade.php            the template
 
-  A resource sits between:
+  The same split as a controller and a view, except the
+  class STAYS ALIVE across interactions rather than
+  answering one request and disappearing.
 
-    database model → API Resource → public JSON
+    public string \$search = '';
 
-  The resource is your API CONTRACT, in a file somebody
-  can read. Which is the difference between "what does
-  this endpoint return" being answerable and being a
-  question you answer by running it.
+  render() runs again after every interaction, which is
+  why the list updates without you writing anything to
+  update it.
 
 
-Why it matters more on an API
+wire:model
 
-  On a web page, extra data is invisible: the template
-  renders what it renders.
+  <input wire:model="search">
 
-  On an API, everything you return is PUBLISHED, and
-  clients start depending on it.
+    user types → wire:model → \$search on the server
 
-    you add a column       → it appears in the API
-    you rename a column    → every client breaks
-    you add a sensitive    → it leaks until somebody
-      column                 remembers \$hidden
+  \$this->search is what the user typed. In PHP. No route,
+  no request handling, no JavaScript of your own.
 
-  A migration adding internal_notes publishes it to
-  every client, silently, on deploy. Nothing fails and
-  nothing warns you.
+  And the modifier decides how it FEELS:
 
-  With a resource, a new column changes nothing until
-  you decide it should.
+    wire:model                      on blur or submit
+    wire:model.live                 every keystroke
+    wire:model.live.debounce.300ms  when they stop
+    wire:model.blur                 explicitly on blur
 
-    \$hidden    fails OPEN
-    a resource fails CLOSED
+  The default waits on purpose: the alternative is a
+  request per keystroke. .live suits a search box, and
+  .debounce is what makes .live reasonable — one request
+  when they pause, not eight while they type "laravel".
 
-  And whenLoaded() is what keeps an N+1 out of your API,
-  where it would run once per model, on every response,
-  invisibly.
+  That one modifier is the most common Livewire
+  performance problem.
 
 
-Consistency
+What is actually being sent
 
-  { "data": { ... } }        a single resource
-  { "data": [ ... ] }        a collection
+  Every interaction sends the component's PUBLIC
+  PROPERTIES to the server and gets HTML back.
 
-  The envelope is a design choice. Consistency is not.
-  A client should not have to remember that one endpoint
-  returns {data: …}, another a bare object, and a third
-  {result: …}.
+  Which explains three rules:
 
-  Pick a shape and hold it, including the forgotten cases:
+    They must be SERIALISABLE.
+      strings, numbers, arrays, models Livewire can
+      re-resolve — not closures, handles or arbitrary
+      objects. Anything else belongs in render() or a
+      computed property.
 
-    single            { "data": {...} }
-    collection        { "data": [...] }
-    paginated         { "data": [...], "links": {...},
-                        "meta": {...} }
-    error             { "message": "..." }
-    validation error  { "message": "...", "errors": {...} }
-    no content        204, empty body
+    They travel in BOTH directions.
+      A public property is visible to the browser. Not
+      a place for anything the user should not see.
 
-  Laravel gives most of that free: a paginated collection
-  produces links and meta, and validation failures already
-  have that shape.
-
-
-Decide once, for the whole API
-
-  Dates    ISO 8601 in UTC, everywhere. A custom format
-           means every client writes a parser, and one
-           gets the timezone wrong.
-
-  Ids      integers or strings, but the SAME everywhere.
-           123 in one place and "123" in another is a
-           real bug in a typed client.
+    They can be MODIFIED by the client.
+      A public int \$userId can be changed before the
+      request comes back. Authorization is checked in
+      the ACTION, never assumed from the property.
+      Day 19 applies exactly as in a controller.
 
 
-  The model is your DATABASE representation.
-  The resource is your API representation.
-  They change for different reasons.`,
+Two things that make components readable
+
+  #[Computed] for anything derived
+    not stored, not sent
+
+  wire:key in loops
+    so Livewire can tell rows apart when the list
+    changes. Without it, a filtered list reuses the
+    wrong DOM element — the bug where a checkbox
+    stays ticked on the wrong row.`,
       codeExample: {
-        title: "A resource as the contract",
+        title: "A search component",
         code: `<?php
-// php artisan make:resource PostResource
+// php artisan make:livewire SearchPosts
 
-namespace App\\Http\\Resources;
+namespace App\\Livewire;
 
-use Illuminate\\Http\\Request;
-use Illuminate\\Http\\Resources\\Json\\JsonResource;
+use App\\Models\\Post;
+use Livewire\\Attributes\\Computed;
+use Livewire\\Component;
+use Livewire\\WithPagination;
 
-class PostResource extends JsonResource
+class SearchPosts extends Component
 {
-    public function toArray(Request $request): array
+    use WithPagination;
+
+    // State. Sent to the server on every interaction,
+    // and visible to the browser.
+    public string $search = '';
+    public string $status = 'all';
+
+    // Derived: not stored, not sent.
+    #[Computed]
+    public function posts()
+    {
+        return Post::query()
+            ->when($this->search, fn ($q) =>
+                $q->where('title', 'like', "%{$this->search}%"))
+            ->when($this->status !== 'all', fn ($q) =>
+                $q->where('status', $this->status))
+            ->latest()
+            ->paginate(10);
+    }
+
+    public function render()
+    {
+        return view('livewire.search-posts');
+    }
+}
+?>
+
+{{-- resources/views/livewire/search-posts.blade.php --}}
+
+<div>
+    {{-- .live.debounce: one request when they pause,
+         not one per keystroke --}}
+    <input
+        wire:model.live.debounce.300ms="search"
+        placeholder="Search posts"
+        class="rounded border px-3 py-2"
+    >
+
+    <select wire:model.live="status" class="rounded border px-3 py-2">
+        <option value="all">All</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+    </select>
+
+    {{-- Livewire shows this while a request is in flight --}}
+    <div wire:loading class="text-sm text-gray-500">Searching…</div>
+
+    @forelse ($this->posts as $post)
+        {{-- wire:key so rows are not confused when the
+             list changes --}}
+        <div wire:key="post-{{ $post->id }}" class="border-b py-2">
+            <p class="font-medium">{{ $post->title }}</p>
+            <p class="text-sm text-gray-500">{{ $post->status }}</p>
+        </div>
+    @empty
+        <p class="py-8 text-center text-gray-500">No posts found.</p>
+    @endforelse
+
+    {{ $this->posts->links() }}
+</div>
+
+
+<?php
+// ---------- The modifiers, and what they cost ----------
+
+// wire:model                     on blur or submit
+// wire:model.live                every keystroke  ← 8 requests
+//                                   for "laravel"
+// wire:model.live.debounce.300ms one request when they pause
+// wire:model.blur                explicitly on blur
+
+
+<?php
+// ---------- Public properties are client-controlled ----------
+
+class EditPost extends Component
+{
+    public Post $post;
+
+    // ❌ The browser can change $post's id before the
+    //    request returns. This trusts it.
+    public function save()
+    {
+        $this->post->update(['title' => $this->title]);
+    }
+
+    // ✓ Authorize in the action, exactly as in a controller.
+    public function saveSafely()
+    {
+        $this->authorize('update', $this->post);
+
+        $this->post->update(['title' => $this->title]);
+    }
+}
+
+
+<?php
+// ---------- What cannot be a public property ----------
+
+// ❌ Not serialisable, and sent on every interaction.
+public \\Closure $formatter;
+public $fileHandle;
+
+// ✓ Derive it where it is needed.
+#[Computed]
+public function formatter()
+{
+    return fn ($value) => number_format($value, 2);
+}`,
+      },
+      keyTakeaways: [
+        "<b>A Livewire component is a PHP class plus a Blade view</b>, and the class stays alive across interactions.",
+        "<b>Public properties are the component's state</b>, and `render()` runs again after every interaction.",
+        "<b>`wire:model` binds an input to a property</b>, so `$this->search` is what the user typed.",
+        "<b>The default updates on blur</b>, because `.live` means a server request per keystroke.",
+        "<b>`.debounce` is what makes `.live` reasonable</b>: one request when they pause, not one per character.",
+        "<b>Every interaction sends the public properties to the server</b> and receives HTML back.",
+        "<b>Public properties must be serialisable</b>, so closures and handles belong in `render()` or a computed property.",
+        "<b>They are visible to the browser</b>, so nothing secret belongs in one.",
+        "<b>They can be modified by the client</b>, so authorization is checked in the action, never assumed.",
+        "<b>`#[Computed]` derives values without storing or sending them</b>, and `wire:key` keeps rows straight in a loop.",
+      ],
+      commonMistakes: [
+        "<b>Using `wire:model.live` with no debounce on a text input.</b> Every keystroke is a server request.",
+        "<b>Trusting a public property in an action.</b> The client can change it; authorize as you would in a controller.",
+        "<b>Putting a closure or a resource in a public property.</b> It cannot be serialised and is sent every time.",
+        "<b>Omitting `wire:key` in a loop.</b> Filtering reuses the wrong DOM element and state sticks to the wrong row.",
+        "<b>Storing derived data in a public property.</b> It is recomputed anyway, and now it travels both ways.",
+      ],
+      quiz: [
+        {
+          question: "What does a Livewire interaction actually send?",
+          options: [
+            "Only the changed field",
+            "The component's public properties, receiving rendered HTML back",
+            "A JSON API request",
+            "The whole page",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why properties must be serialisable and are visible to the client.",
+        },
+        {
+          question: "Why does `wire:model` default to updating on blur?",
+          options: [
+            "It is easier to implement",
+            "`.live` means a server request per keystroke",
+            "Blur events are more reliable",
+            "For accessibility",
+          ],
+          correctIndex: 1,
+          explanation: "`.debounce` is what makes `.live` reasonable on a text input.",
+        },
+        {
+          question: "Can you trust a public property's value in an action?",
+          options: [
+            "Yes, it comes from the server",
+            "No; the client can modify it, so authorize in the action",
+            "Only if it is typed",
+            "Only for strings",
+          ],
+          correctIndex: 1,
+          explanation: "Day 19's rules apply exactly as they do in a controller.",
+        },
+        {
+          question: "What does `wire:key` prevent in a loop?",
+          options: [
+            "Duplicate database queries",
+            "Livewire reusing the wrong DOM element when the list changes",
+            "Validation errors",
+            "Extra requests",
+          ],
+          correctIndex: 1,
+          explanation: "The classic symptom is a checkbox staying ticked on the wrong row.",
+        },
+      ],
+    },
+    {
+      id: "livewire-actions-and-uploads",
+      title: "Actions, lifecycle hooks, validation & uploads",
+      durationMinutes: 12,
+      explanation: "State was the first half. This is the part that does things.\n\n---\n\n### 1. Basic — actions\n\nA public method is an action:\n\n```php\npublic function searchPosts()\n{\n    // query posts\n}\n```\n\n```blade\n<button wire:click=\"searchPosts\">Search</button>\n```\n\n```text\nclick\n  ↓\nLivewire request\n  ↓\nyour PHP method\n  ↓\ndatabase\n  ↓\nupdated HTML\n  ↓\nbrowser\n```\n\n<b>You never write the AJAX request</b>, and that is the whole appeal: `wire:click` calls a PHP method, and the page updates.\n\nActions take arguments:\n\n```blade\n<button wire:click=\"delete({{ $post->id }})\">Delete</button>\n```\n\nAnd the warning from the last lesson applies with more force here: <b>that id comes from the browser.</b> An action is a route, and it needs the same authorization a route would.\n\nUseful modifiers:\n\n```text\nwire:click.prevent       stop the default\nwire:submit              a form, without a page load\nwire:confirm=\"Sure?\"     a confirmation before it runs\nwire:loading             shown while a request is in flight\nwire:dirty               shown when there are unsaved changes\n```\n\n---\n\n### 2. Intermediate — lifecycle hooks and validation\n\nA hook runs when something changes:\n\n```php\npublic function updatedSearch()\n{\n    $this->resetPage();\n}\n```\n\n```text\n$search changes\n      ↓\nupdatedSearch()\n      ↓\nreset to page 1\n```\n\n<b>That specific example is one you will need.</b> Filter a paginated list while on page 5 and you are looking at page 5 of a shorter list, which is usually empty. Resetting the page on every filter change is the fix, and forgetting it is a bug that looks like \"search is broken\".\n\nOther hooks: `mount()` when the component is created, `updating()` before a change, `updated()` after any of them.\n\n<b>Keep them small.</b> A hook runs on every relevant change, so a heavy one runs constantly, and logic buried in a hook is hard to find when the component misbehaves.\n\nValidation is Laravel's, in the component:\n\n```php\n$this->validate([\n    'title' => ['required', 'string', 'max:255'],\n]);\n```\n\nErrors reach Blade through the same `@error` directive as a normal form:\n\n```text\ninput → Livewire → Laravel validation → errors → Blade\n```\n\n<b>Same rules, same messages, no duplication.</b> Which is the strongest practical argument for Livewire: the validation you already wrote works, unchanged, in an interactive interface.\n\nAnd `#[Validate]` attributes put the rule next to the property, so it also validates live as the user types.\n\n---\n\n### 3. Advanced — file uploads\n\n```blade\n<input type=\"file\" wire:model=\"photo\">\n```\n\n```php\nuse Livewire\\WithFileUploads;\n\npublic $photo;\n```\n\n```text\nbrowser\n  ↓\nLivewire upload\n  ↓\na temporary file\n  ↓\nvalidation\n  ↓\nstorage\n```\n\nThe upload happens immediately, into temporary storage, so you can show a preview before anything is saved. `$this->photo->temporaryUrl()` is what that preview uses.\n\n<b>And every rule from Day 21 still applies</b>, because nothing about Livewire changes what an upload is:\n\n```text\nvalidate the type, with mimes:\nvalidate the size, with max:\nvalidate dimensions on an image\nnever trust the filename\nstore with store(), not storeAs() from the client\n```\n\nTwo things specific to this arrangement.\n\n<b>Temporary files accumulate.</b> An upload that is never submitted still landed on your server, so the temporary directory needs pruning; Livewire's own cleanup handles it if configured.\n\n<b>And validate on upload, not only on submit.</b> `#[Validate('image|max:2048')]` on the property rejects a 40 MB file as it arrives, rather than after it has been transferred and is sitting in temporary storage.\n\n<b>And Livewire ships with Alpine.js</b>, which matters more than it sounds, because it answers \"do I need a round trip for this?\"\n\n```blade\n<div x-data=\"{ open: false }\">\n    <button x-on:click=\"open = !open\">Details</button>\n\n    <div x-show=\"open\">…</div>\n</div>\n```\n\n```text\nAlpine   purely visual state: a dropdown, a modal, a tab\nwire:    anything the server has to know or decide\n```\n\n<b>Opening a modal through Livewire is a network request to toggle a boolean</b>, which is a visible delay for something that should be instant. Alpine handles it in the browser, and the two compose in the same template.\n\nOne more directive worth knowing: `wire:loading.class=\"opacity-50\"` applies a class during a request, alongside the `.attr` and `.remove` variants.\n\nAnd two hooks for state that cannot survive the round trip:\n\n```php\npublic function hydrate(): void   { /* before each request  */ }\npublic function dehydrate(): void { /* after each request   */ }\n```\n\n<b>They exist because properties are serialised between requests</b>, so anything that is not serialisable has to be rebuilt on the way in and cleared on the way out.",
+      diagram: `Actions
+
+  public function searchPosts() { ... }
+
+  <button wire:click="searchPosts">Search</button>
+
+    click → Livewire request → your PHP method
+          → database → updated HTML → browser
+
+  You never write the AJAX request. That is the appeal.
+
+  With arguments:
+
+    wire:click="delete({{ \$post->id }})"
+
+  ⚠️  That id comes from the BROWSER. An action is a
+      route, and needs the authorization a route would.
+
+  Modifiers:
+    wire:click.prevent     stop the default
+    wire:submit            a form, no page load
+    wire:confirm="Sure?"   confirm before running
+    wire:loading           shown during a request
+    wire:dirty             shown when unsaved
+
+
+Lifecycle hooks
+
+    \$search changes → updatedSearch() → resetPage()
+
+  That specific one you will need: filter a paginated
+  list while on page 5 and you are on page 5 of a
+  shorter list, which is usually empty. Forgetting it
+  is a bug that looks like "search is broken".
+
+  Also: mount() on creation, updating() before,
+  updated() after any change.
+
+  Keep them SMALL. A hook runs on every relevant change,
+  so a heavy one runs constantly — and logic buried in
+  a hook is hard to find when the component misbehaves.
+
+
+Validation is Laravel's, in the component
+
+  \$this->validate([
+      'title' => ['required', 'string', 'max:255'],
+  ]);
+
+    input → Livewire → Laravel validation → errors → Blade
+
+  Same rules, same messages, no duplication. Which is
+  the strongest practical argument for Livewire: the
+  validation you already wrote works, unchanged, in an
+  interactive interface.
+
+  #[Validate] puts the rule next to the property, and
+  validates live as the user types.
+
+
+File uploads
+
+  <input type="file" wire:model="photo">
+  use WithFileUploads;
+
+    browser → Livewire upload → a temporary file
+            → validation → storage
+
+  The upload happens immediately, so you can show a
+  preview: \$this->photo->temporaryUrl()
+
+  Every Day 21 rule still applies:
+    validate the type with mimes:
+    validate the size with max:
+    validate dimensions on an image
+    never trust the filename
+    store() rather than storeAs() from the client
+
+  Two things specific here:
+
+    Temporary files accumulate. An upload never
+    submitted still landed on your server.
+
+    Validate ON UPLOAD, not only on submit.
+    #[Validate('image|max:2048')] rejects a 40 MB file
+    as it arrives, rather than after it is transferred.`,
+      codeExample: {
+        title: "Actions, hooks, validation and an upload",
+        code: `<?php
+
+namespace App\\Livewire;
+
+use App\\Models\\Post;
+use Livewire\\Attributes\\Validate;
+use Livewire\\Component;
+use Livewire\\WithFileUploads;
+use Livewire\\WithPagination;
+
+class PostForm extends Component
+{
+    use WithPagination, WithFileUploads;
+
+    // The rule sits next to the property, and validates
+    // live as the user types.
+    #[Validate('required|string|max:255')]
+    public string $title = '';
+
+    #[Validate('required|string')]
+    public string $body = '';
+
+    // Rejected as it arrives, not after transfer.
+    #[Validate('nullable|image|max:2048')]
+    public $photo;
+
+    public string $search = '';
+
+    // ---------- Lifecycle ----------
+
+    public function mount(): void
+    {
+        // Runs once, when the component is created.
+    }
+
+    public function updatedSearch(): void
+    {
+        // Filtering while on page 5 shows page 5 of a
+        // shorter list, which is usually empty.
+        $this->resetPage();
+    }
+
+    // ---------- Actions ----------
+
+    public function save()
+    {
+        // Laravel's validation, unchanged.
+        $this->validate();
+
+        $post = auth()->user()->posts()->create([
+            'title' => $this->title,
+            'body'  => $this->body,
+        ]);
+
+        if ($this->photo) {
+            // Day 21's rules, unchanged: a generated name.
+            $post->update([
+                'photo_path' => $this->photo->store('photos', 's3'),
+            ]);
+        }
+
+        $this->reset(['title', 'body', 'photo']);
+
+        session()->flash('status', 'Post created.');
+    }
+
+    public function delete(int $postId): void
+    {
+        $post = Post::findOrFail($postId);
+
+        // That id came from the browser. An action is a
+        // route, and needs the same authorization.
+        $this->authorize('delete', $post);
+
+        $post->delete();
+    }
+
+    public function render()
+    {
+        return view('livewire.post-form');
+    }
+}
+?>
+
+{{-- resources/views/livewire/post-form.blade.php --}}
+
+<div>
+    <form wire:submit="save">
+        <input wire:model.blur="title" class="rounded border px-3 py-2">
+        @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+        <textarea wire:model.blur="body" class="rounded border px-3 py-2"></textarea>
+        @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+        <input type="file" wire:model="photo">
+
+        {{-- A preview, before anything is saved --}}
+        @if ($photo)
+            <img src="{{ $photo->temporaryUrl() }}" class="h-24 w-24 rounded">
+        @endif
+
+        <button type="submit" wire:loading.attr="disabled">
+            <span wire:loading.remove>Save</span>
+            <span wire:loading>Saving…</span>
+        </button>
+    </form>
+
+    @foreach ($posts as $post)
+        <div wire:key="post-{{ $post->id }}">
+            {{ $post->title }}
+
+            <button
+                wire:click="delete({{ $post->id }})"
+                wire:confirm="Delete this post?"
+            >Delete</button>
+        </div>
+    @endforeach
+</div>
+
+
+<?php
+// ---------- Keep hooks small ----------
+
+// ❌ Runs on every keystroke of every property.
+public function updated($property): void
+{
+    $this->recalculateEverything();
+    $this->syncWithExternalApi();
+}
+
+// ✓ One property, one small job.
+public function updatedSearch(): void
+{
+    $this->resetPage();
+}`,
+      },
+      keyTakeaways: [
+        "<b>A public method is an action</b>, called from Blade with `wire:click` or `wire:submit`.",
+        "<b>You never write the AJAX request</b>: the click calls PHP and the page updates.",
+        "<b>An action's arguments come from the browser</b>, so an action needs the authorization a route would.",
+        "`wire:loading`, `wire:confirm`, `wire:dirty` and `.prevent` cover the common interface needs.",
+        "<b>Lifecycle hooks react to changes</b>, and `updatedSearch()` calling `resetPage()` is one you will need.",
+        "Filtering a paginated list without resetting the page shows an empty page 5, which looks like broken search.",
+        "<b>Keep hooks small</b>, because they run on every relevant change and hide logic when things misbehave.",
+        "<b>Validation is Laravel's, unchanged</b>, and errors reach Blade through the usual `@error` directive.",
+        "<b>`#[Validate]` puts the rule next to the property</b> and validates live as the user types.",
+        "<b>File uploads land in temporary storage immediately</b>, so `temporaryUrl()` can show a preview.",
+        "<b>Every Day 21 upload rule still applies</b>, and validating on upload rejects a huge file as it arrives.",
+      ],
+      commonMistakes: [
+        "<b>Trusting an id passed to an action.</b> It came from the browser, so authorize before acting on it.",
+        "<b>Filtering without `resetPage()`.</b> The user sees an empty page and reports that search is broken.",
+        "<b>Putting heavy work in a lifecycle hook.</b> It runs on every change, and nobody looks there first.",
+        "<b>Re-implementing validation in JavaScript.</b> The rules you already wrote work here unchanged.",
+        "<b>Validating an upload only on submit.</b> The file has already been transferred and stored temporarily.",
+      ],
+      quiz: [
+        {
+          question: "What does `wire:click=\"delete(5)\"` require you to remember?",
+          options: [
+            "To debounce it",
+            "That the argument came from the browser, so the action must authorize",
+            "To wrap it in a form",
+            "To add `wire:key`",
+          ],
+          correctIndex: 1,
+          explanation: "An action is a route, with the same rules.",
+        },
+        {
+          question: "Why does a filter change usually need `resetPage()`?",
+          options: [
+            "To clear the cache",
+            "Otherwise the user stays on page 5 of a now-shorter list, which is usually empty",
+            "To re-run validation",
+            "To reset the sort order",
+          ],
+          correctIndex: 1,
+          explanation: "The symptom looks like search returning nothing.",
+        },
+        {
+          question: "What validation does a Livewire component use?",
+          options: [
+            "A JavaScript library",
+            "Laravel's validator, with the same rules and messages",
+            "Its own rule set",
+            "Browser validation",
+          ],
+          correctIndex: 1,
+          explanation: "Which is the strongest practical argument for Livewire.",
+        },
+        {
+          question: "When does a Livewire file upload reach the server?",
+          options: [
+            "On form submission",
+            "Immediately, into temporary storage, which is what allows a preview",
+            "Only after validation passes",
+            "Never; it stays in the browser",
+          ],
+          correctIndex: 1,
+          explanation: "So validate on upload rather than only on submit.",
+        },
+      ],
+    },
+    {
+      id: "volt-and-flux",
+      title: "Volt & Flux UI",
+      durationMinutes: 9,
+      explanation: "Two things built on Livewire that change how much you write.\n\n---\n\n### 1. Basic — Volt\n\nA Livewire component is two files. For a small one, that is two files for eleven lines of code:\n\n```text\napp/Livewire/SearchPosts.php\nresources/views/livewire/search-posts.blade.php\n```\n\n<b>Volt</b> puts both in one:\n\n```text\nsearch-posts.blade.php\n        │\n        ├── PHP logic\n        └── HTML\n```\n\nThe state, the actions and the markup sit together, which for a small component is genuinely easier to read: you can see everything the thing does without opening a second file.\n\n```text\nVolt              one file, less ceremony\nclass-based       separate concerns, easier to test\n```\n\n<b>The trade-off is real in both directions.</b> A component with three properties and one action reads better in one file. A component with fifteen properties, six actions and validation is easier to navigate, and much easier to unit test, as a class.\n\nThe useful rule: <b>start with Volt for small components, and move to a class when the file stops fitting on a screen.</b> Converting is mechanical.\n\n---\n\n### 2. Intermediate — Flux\n\nEvery application needs the same primitives:\n\n```text\nbutton · modal · dropdown · input\nselect · tabs · table · badge\n```\n\nBuilding them yourself means building focus management, keyboard handling, accessible labelling and consistent styling, per component, and getting each of them right.\n\n<b>Flux</b> is a component library built for Livewire:\n\n```text\nLivewire  +  Flux  →  an interactive Laravel interface\n```\n\nSo a modal is a modal, a dropdown closes on escape, and everything looks like the same product without you designing a design system first.\n\n---\n\n### 3. Advanced — what you are choosing\n\nA component library is a real decision, in both directions.\n\n<b>What you get:</b> consistency without effort, accessibility you would otherwise have to know about, and speed. A form built from ready components is an afternoon rather than a week, and it is a better form.\n\n<b>What you give up:</b> a dependency in your interface layer, someone else's design opinions, and the awkward moment when a design calls for something the library does not do. Fighting a component library is slower than not having one.\n\nThe question worth asking: <b>is your interface a differentiator, or a way to use the application?</b>\n\n```text\nan admin panel, an internal tool,\na back-office system                     →  use a library\n\na product whose interface is the thing\nyou are selling                          →  own more of it\n```\n\nMost applications are the first, and most teams overestimate how much the second applies to them.\n\nOne last note that generalises. <b>The same argument recurs on the Inertia side</b>, where shadcn/ui appears later today with a different answer: it gives you the component code in your own project rather than as a dependency. Different trade, same question, and knowing which one you are making is the point.",
+      diagram: `Volt: one file instead of two
+
+  app/Livewire/SearchPosts.php
+  resources/views/livewire/search-posts.blade.php
+
+  Two files for eleven lines of code.
+
+  Volt:
+
+    search-posts.blade.php
+            │
+            ├── PHP logic
+            └── HTML
+
+  State, actions and markup together, so you can see
+  everything the component does without opening a
+  second file.
+
+    Volt          one file, less ceremony
+    class-based   separate concerns, easier to test
+
+  Three properties and one action → one file reads better.
+  Fifteen properties, six actions and validation →
+  easier to navigate, and much easier to unit test,
+  as a class.
+
+  Start with Volt. Move to a class when the file stops
+  fitting on a screen. Converting is mechanical.
+
+
+Flux: the primitives you always need
+
+  button · modal · dropdown · input
+  select · tabs · table · badge
+
+  Building them yourself means focus management,
+  keyboard handling, accessible labelling and consistent
+  styling — per component, each of them correct.
+
+    Livewire + Flux → an interactive Laravel interface
+
+  A modal is a modal. A dropdown closes on escape.
+  Everything matches, without designing a design system
+  first.
+
+
+What you are actually choosing
+
+  You get
+    consistency without effort
+    accessibility you would otherwise have to know about
+    speed — a form is an afternoon, and a better form
+
+  You give up
+    a dependency in your interface layer
+    somebody else's design opinions
+    the awkward moment when a design needs something
+    the library does not do
+
+  Fighting a component library is slower than not
+  having one.
+
+
+  The question:
+
+    is your interface a DIFFERENTIATOR, or a way to
+    use the application?
+
+      admin panel, internal tool,      → use a library
+      back-office system
+
+      a product whose interface is     → own more of it
+      the thing you are selling
+
+  Most applications are the first, and most teams
+  overestimate how much the second applies to them.
+
+
+  The same argument recurs on the Inertia side, where
+  shadcn/ui answers it differently: the component code
+  lives in your project rather than as a dependency.
+  Different trade, same question.`,
+      codeExample: {
+        title: "Volt, and a Flux-built form",
+        code: `{{-- ---------- A Volt component: one file ---------- --}}
+{{-- resources/views/livewire/search-posts.blade.php --}}
+
+<?php
+
+use App\\Models\\Post;
+use Livewire\\Volt\\Component;
+use Livewire\\WithPagination;
+
+new class extends Component {
+    use WithPagination;
+
+    public string $search = '';
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function with(): array
     {
         return [
-            'id'         => $this->id,
-            'title'      => $this->title,
-            'body'       => $this->body,
-
-            // ISO 8601, in UTC, everywhere in the API.
-            'created_at' => $this->created_at,
-
-            // Only for admins. A false condition omits the key.
-            'internal_status' => $this->when(
-                $request->user()?->isAdmin(),
-                $this->internal_status,
-            ),
-
-            // Only if the controller eager loaded it. Without
-            // this, the resource runs a query per model on
-            // every response.
-            'author' => new UserResource($this->whenLoaded('user')),
-
-            'comment_count' => $this->whenCounted('comments'),
+            'posts' => Post::when($this->search, fn ($q) =>
+                $q->where('title', 'like', "%{$this->search}%"))
+                ->paginate(10),
         ];
     }
-}
+}; ?>
 
-// internal_notes, admin_notes and anything else added by
-// a future migration are not here, and will not appear
-// until somebody decides they should.
+<div>
+    <input wire:model.live.debounce.300ms="search" placeholder="Search">
 
+    @foreach ($posts as $post)
+        <p wire:key="post-{{ $post->id }}">{{ $post->title }}</p>
+    @endforeach
 
-<?php
-// ---------- Using it ----------
+    {{ $posts->links() }}
+</div>
 
-class PostController extends Controller
-{
-    public function index()
-    {
-        // Ask for exactly what the resource may include.
-        $posts = Post::with('user')
-            ->withCount('comments')
-            ->latest()
-            ->paginate(20);
-
-        // links and meta come for free.
-        return PostResource::collection($posts);
-    }
-
-    public function show(Post $post)
-    {
-        $post->load('user')->loadCount('comments');
-
-        return new PostResource($post);
-    }
-}
-
-// {
-//   "data": [ { "id": 123, "title": "Laravel", ... } ],
-//   "links": { "first": "...", "next": "..." },
-//   "meta":  { "current_page": 1, "total": 240 }
-// }
+{{-- Everything the component does, on one screen. --}}
 
 
-<?php
-// ---------- What returning the model does ----------
+{{-- ---------- When it should become a class ---------- --}}
 
-// ❌ Publishes every column, including ones added later.
-public function show(Post $post)
-{
-    return $post;
-}
-
-// A migration adding internal_notes ships it to every
-// client, silently, on deploy.
-//
-// $hidden fails open: a new column is exposed until
-//   somebody remembers to list it.
-// A resource fails closed: a new column is invisible
-//   until somebody adds it.
+{{-- Fifteen properties, six actions and validation is
+     easier to navigate, and much easier to unit test,
+     as app/Livewire/PostManager.php with its own view. --}}
 
 
-<?php
-// ---------- One shape, everywhere ----------
+{{-- ---------- Flux: the primitives ---------- --}}
 
-// single            { "data": {...} }
-return new PostResource($post);
+<flux:input wire:model="email" label="Email" type="email" />
 
-// collection        { "data": [...] }
-return PostResource::collection($posts);
+@error('email')
+    <flux:error>{{ $message }}</flux:error>
+@enderror
 
-// no content        204, empty body
-return response()->noContent();
+<flux:select wire:model.live="status" label="Status">
+    <flux:select.option value="all">All</flux:select.option>
+    <flux:select.option value="published">Published</flux:select.option>
+</flux:select>
 
-// error             { "message": "..." }
-return response()->json(['message' => 'Post not found.'], 404);
+<flux:button wire:click="save" variant="primary">Save</flux:button>
 
-// validation error  { "message": "...", "errors": {...} }
-// Laravel already produces this shape.
+<flux:modal name="confirm-delete">
+    <flux:heading>Delete this post?</flux:heading>
+    <flux:text>This cannot be undone.</flux:text>
 
-// A client should not have to remember which endpoint
-// deviates. Every deviation is a special case in
-// somebody else's code.`,
+    <flux:button wire:click="delete" variant="danger">Delete</flux:button>
+</flux:modal>
+
+{{-- The modal traps focus, closes on escape and is
+     labelled correctly. None of which you wrote. --}}
+
+
+{{-- ---------- What building it yourself involves ---------- --}}
+
+{{-- A modal is not a div with a fixed position:
+
+       focus moves into it, and back out on close
+       escape closes it
+       the background does not scroll
+       screen readers announce it
+       tab does not escape into the page behind
+
+     Each of those is a thing to know, and to get right,
+     for every primitive.
+
+     Which is the argument for a library — and the reason
+     to ask first whether your interface is a
+     differentiator or a way to use the application. --}}`,
       },
       keyTakeaways: [
-        "<b>Returning a model publishes your table</b>, including columns added by future migrations.",
-        "<b>An API Resource is the boundary between your schema and your API contract.</b>",
-        "<b>On a web page extra data is invisible; on an API it is published</b> and clients depend on it.",
-        "<b>A migration adding a column ships it to every client silently</b>, unless a resource stands in the way.",
-        "<b>`$hidden` fails open and a resource fails closed</b>, which is why the resource is the solution.",
-        "`when()` includes a key conditionally, and a false condition omits it entirely.",
-        "<b>`whenLoaded()` keeps an N+1 out of your API</b>, where it would run once per model on every response.",
-        "<b>The envelope is a design choice; consistency is not.</b>",
-        "<b>Hold one shape for single resources, collections, pagination, errors and no content.</b>",
-        "<b>Decide dates and id types once for the whole API</b>: ISO 8601 in UTC, and one type everywhere.",
+        "<b>A Livewire component is normally two files</b>, which is a lot of ceremony for a small one.",
+        "<b>Volt puts the logic and the template in one file</b>, so a small component is readable at a glance.",
+        "<b>A class-based component is easier to navigate and much easier to unit test</b> once it grows.",
+        "<b>Start with Volt and convert when the file stops fitting on a screen</b>; the conversion is mechanical.",
+        "<b>Flux is a component library for Livewire</b>, covering buttons, modals, dropdowns, inputs and tables.",
+        "Building those yourself means focus management, keyboard handling and accessible labelling, each done correctly.",
+        "<b>A library buys consistency, accessibility and speed</b>, and costs a dependency and somebody else's opinions.",
+        "<b>Fighting a component library is slower than not having one</b>, so the fit matters.",
+        "<b>Ask whether your interface is a differentiator or a way to use the application.</b>",
+        "<b>The same question appears on the Inertia side with shadcn/ui</b>, answered differently: you own the code.",
       ],
       commonMistakes: [
-        "<b>Returning Eloquent models from a public API.</b> The next migration is an unannounced API change.",
-        "<b>Relying on `$hidden` instead of a resource.</b> A new sensitive column is exposed until somebody notices.",
-        "<b>Serialising a relationship without `whenLoaded()`.</b> One query per model, per response, invisibly.",
-        "<b>Varying the envelope between endpoints.</b> Every deviation becomes a special case in a client.",
-        "<b>Returning ids as an integer in one place and a string in another.</b> Typed clients break on it.",
+        "<b>Writing every component as a class out of habit.</b> A three-property component is clearer in one file.",
+        "<b>Keeping a Volt file that has grown to hundreds of lines.</b> That is the point to convert.",
+        "<b>Building your own modal.</b> Focus, escape, scroll locking and announcements are all part of it.",
+        "<b>Fighting a component library's design.</b> That is slower than having written the components yourself.",
+        "<b>Assuming your interface is a differentiator.</b> Most applications are an interface onto a database.",
       ],
       quiz: [
         {
-          question: "What is the risk of `return $post;` from an API endpoint?",
+          question: "What does Volt change?",
           options: [
-            "It is slower",
-            "Every column is published, including ones added by future migrations",
-            "It cannot be paginated",
-            "It breaks route model binding",
+            "It replaces Livewire",
+            "It puts a component's logic and template in a single file",
+            "It removes the need for validation",
+            "It compiles components to JavaScript",
           ],
           correctIndex: 1,
-          explanation: "A resource fails closed where `$hidden` fails open.",
+          explanation: "Convenient for a small component; a class scales better.",
         },
         {
-          question: "What does `whenLoaded()` prevent?",
+          question: "When should a Volt component become a class?",
           options: [
-            "Exposing a hidden column",
-            "An N+1 caused by the resource serialising a relationship nobody eager loaded",
-            "A 404",
-            "Duplicate keys",
+            "Immediately",
+            "When it grows enough that navigating and unit testing it in one file becomes awkward",
+            "When it uses validation",
+            "Never",
           ],
           correctIndex: 1,
-          explanation: "It would run once per model, on every response.",
+          explanation: "The conversion is mechanical, so start simple.",
         },
         {
-          question: "What comes for free from returning a paginated query through a resource collection?",
+          question: "What is the strongest argument for a component library like Flux?",
           options: [
-            "Authentication",
-            "`links` and `meta` describing the pagination",
-            "Eager loading",
-            "Caching",
+            "It reduces bundle size",
+            "Accessibility and consistency you would otherwise have to build correctly per primitive",
+            "It removes the need for Tailwind",
+            "It generates the backend",
           ],
           correctIndex: 1,
-          explanation: "Day 13's pagination arriving in the response shape.",
+          explanation: "A modal alone involves focus, escape, scroll locking and announcements.",
         },
         {
-          question: "Why does the response envelope need to be consistent?",
+          question: "What question decides whether to use one?",
           options: [
-            "It is required by REST",
-            "Every deviation becomes a special case in every client's code",
-            "It makes responses smaller",
-            "Laravel enforces it",
+            "How large the team is",
+            "Whether your interface is a differentiator or a way to use the application",
+            "Which framework you chose",
+            "Whether you use TypeScript",
           ],
           correctIndex: 1,
-          explanation: "The specific shape is a choice; varying it is not.",
+          explanation: "Most applications are the second, and most teams assume the first.",
         },
       ],
     },
     {
-      id: "status-codes",
-      title: "Status codes — saying what happened",
-      durationMinutes: 13,
-      explanation: "An API's status code is not decoration. It is the part of the response a client acts on before reading a single byte of the body.\n\n---\n\n### 1. Basic — success\n\n```text\n200 OK          here is the thing        GET, PATCH\n201 Created     it now exists            POST\n204 No Content  done, nothing to say     DELETE\n```\n\nAll three mean success, and they mean different things:\n\n<b>`201` should carry the created resource</b>, so the client does not need a second request to learn its id.\n\n<b>`204` has an empty body</b>, genuinely empty. A `204` with `{\"message\": \"Deleted\"}` in it is a contradiction, and some clients will not read it.\n\n---\n\n### 2. Intermediate — the four failures\n\n```text\n401 Unauthorized   who are you?\n403 Forbidden      I know who you are, and no\n404 Not Found      there is no such thing\n422 Unprocessable  I understood you, and the data is wrong\n```\n\n<b>401 versus 403 is the one people get wrong.</b>\n\n```text\nno token, or a bad one          →  401\na valid token, wrong user       →  403\n```\n\nA user editing somebody else's post is authenticated perfectly well. Returning 401 tells their client to log in again, which it does, successfully, and then fails identically. <b>401 means try again with credentials; 403 means credentials will not help.</b>\n\n<b>404 versus 422</b> is the other pair:\n\n```text\nGET /api/posts/999999      the post does not exist    404\nPOST /api/posts {title:\"\"} the post is invalid        422\n```\n\nRoute model binding gives you the 404 without writing anything, and a failed `validate()` gives you the 422 with a structured body:\n\n```json\n{\n  \"message\": \"The title field is required.\",\n  \"errors\": { \"title\": [\"The title field is required.\"] }\n}\n```\n\n<b>That `errors` object is the useful part</b>, because a frontend can put each message next to its field rather than showing one sentence at the top.\n\nAnd from Day 20, the one nuance: <b>a 403 confirms the resource exists.</b> On sequential ids, a 403 on `/api/invoices/91` tells a stranger invoice 91 belongs to somebody. `Response::denyAsNotFound()` returns 404 instead, when that matters.\n\n---\n\n### 3. Advanced — the pipeline\n\nEvery status code corresponds to a layer, and they run in order:\n\n```text\nPOST /api/v1/posts\n        ↓\nauth:sanctum        authenticated?   no → 401\n        ↓\nvalidation          valid?           no → 422\n        ↓\npolicy              allowed?         no → 403\n        ↓\ncontroller\n        ↓\nEloquent\n        ↓\nPostResource\n        ↓\n201 + JSON\n```\n\n<b>Read that top to bottom and the whole day is in it.</b> Each layer is a separate day of this track, and each one has exactly one status code it produces.\n\nWhich also settles the order questions people argue about. Authentication first, because everything else needs to know who is asking. Then, for a route-level policy, authorization before validation: there is no point telling somebody their input is malformed when they were never allowed to send it. Inside a controller, validation usually runs first simply because the check needs the data.\n\nTwo more worth knowing:\n\n<b>429 Too Many Requests</b>, from Day 21, with `Retry-After`.\n\n<b>500</b> for anything you did not anticipate, and the rule that goes with it: <b>a 500 body must not contain a stack trace.</b> `APP_DEBUG=false` in production, as Day 11 said, and an API leaks internals faster than a web page because the client stores whatever it receives.\n\nAnd the summary worth memorising, because it is what a client's error handling switches on:\n\n```text\n2xx  it worked\n4xx  you did something wrong        do not retry unchanged\n5xx  we did something wrong         retrying may work\n```\n\nOne related piece of wiring, because `Accept: application/json` only helps when you control the client. An unauthenticated API request otherwise redirects to a login route that does not exist:\n\n```php\n// bootstrap/app.php\n->withExceptions(function (Exceptions $exceptions) {\n    $exceptions->render(function (AuthenticationException $e, Request $request) {\n        if ($request->is('api/*')) {\n            return response()->json(['message' => 'Unauthenticated.'], 401);\n        }\n    });\n})\n```\n\n<b>Now the API returns 401 regardless of what headers the caller sent</b>, which is the difference between a documented contract and one that depends on the client behaving.",
-      diagram: `Success
+      id: "inertia-basics",
+      title: "Inertia — pages, props & forms",
+      durationMinutes: 12,
+      explanation: "The other path: a real JavaScript frontend, without the API you built yesterday.\n\n---\n\n### 1. Basic — what Inertia is\n\n> <b>A single-page frontend without turning Laravel into a separate API backend.</b>\n\n```text\nReact\n  ↕\nInertia\n  ↕\nLaravel\n  ↕\nEloquent\n```\n\nLaravel keeps everything it already did:\n\n```text\nroutes · controllers · validation · authorization · database\n```\n\nReact handles what it is good at:\n\n```text\ncomponents · interface state · interactions\n```\n\n<b>The thing worth appreciating is what is absent.</b> No tokens, no CORS, no versioning, no separate deployment, no second set of routes. Yesterday's API exists because a client you do not control needs a contract. Inertia's client is your own code, shipped together, so it does not need one.\n\n---\n\n### 2. Intermediate — pages and props\n\nA controller returns a page instead of a view:\n\n```php\nreturn Inertia::render('Posts/Index', [\n    'posts'   => $posts,\n    'filters' => $filters,\n]);\n```\n\n```text\nresources/js/pages/Posts/Index.tsx\n```\n\nAnd the second argument arrives as props:\n\n```text\nLaravel controller\n      ↓\nprops\n      ↓\nInertia\n      ↓\nReact page\n```\n\n<b>Which makes the mental model simple: a controller is still a controller.</b> It authorizes, queries and returns data. Only the last line changed.\n\nProps travel over the wire, so <b>use API Resources here too</b>, for the same reason as yesterday: without one you serialise the model, and every column reaches the browser and the page source.\n\nTypes make the contract explicit on the other side:\n\n```ts\ntype Props = {\n    posts: Post[];\n    filters: Filters;\n};\n```\n\n<b>An Inertia visit is not a page load.</b> Clicking a link makes a request, receives the new page's props as JSON, and swaps the component. The layout, the JavaScript and the scroll position survive, which is what makes it feel like a single-page application.\n\n---\n\n### 3. Advanced — forms, and why they are the good part\n\nThis is where Inertia earns its place, because it is the part a hand-rolled API makes tedious.\n\n```text\nReact form\n   ↓\nInertia form helper\n   ↓\na normal Laravel route\n   ↓\nvalidation\n   ↓\nredirect, or errors\n   ↓\nReact\n```\n\n```tsx\nconst form = useForm({ title: '', body: '' });\n\nform.post('/posts');\n```\n\nAnd the controller is the one you would have written anyway:\n\n```php\n$request->validate([...]);\n\nPost::create($data);\n\nreturn redirect()->route('posts.index');\n```\n\n<b>A failed validation redirects back, and Inertia puts the errors in `form.errors`</b>, keyed by field. No 422 to parse, no error shape to agree on, no duplicated rules.\n\nThe helper also gives you the things every form needs and nobody enjoys writing:\n\n```text\nform.processing    disable the button\nform.errors        per field\nform.progress      for uploads\nform.reset()\nform.isDirty       warn before leaving\n```\n\nTwo things worth knowing.\n\n<b>A controller redirects, it does not return JSON.</b> That surprises people coming from an API: after a successful `POST`, redirect as you would for a Blade form, and Inertia follows it and renders the next page.\n\n<b>And validation errors are shared automatically</b>, so `form.errors` is populated without the controller doing anything special. Same rules, same messages, one source of truth.\n\nThe wiring underneath all of that, since `Inertia::render()` has to reach a component somehow:\n\n```bash\ncomposer require inertiajs/inertia-laravel\nnpm install @inertiajs/react\n```\n\nA root Blade layout, which is the only Blade file in an Inertia application:\n\n```blade\n<head>\n    @vite('resources/js/app.tsx')\n    @inertiaHead\n</head>\n<body>\n    @inertia\n</body>\n```\n\nAnd the entry point that resolves a page name to a component:\n\n```js\ncreateInertiaApp({\n    resolve: (name) => resolvePageComponent(\n        `./Pages/${name}.tsx`,\n        import.meta.glob('./Pages/**/*.tsx'),\n    ),\n    setup: ({ el, App, props }) => createRoot(el).render(<App {...props} />),\n});\n```\n\n<b>`Inertia::render('Posts/Index')` is a filename lookup</b>, which is why a typo produces a blank page rather than an error you can read.\n\nTwo things every application needs beyond that.\n\n<b>Shared props</b> for what belongs on every page:\n\n```php\n// app/Http/Middleware/HandleInertiaRequests.php\npublic function share(Request $request): array\n{\n    return array_merge(parent::share($request), [\n        'auth'  => ['user' => $request->user()],\n        'flash' => ['success' => fn () => $request->session()->get('success')],\n    ]);\n}\n```\n\n```jsx\nconst { auth, flash } = usePage().props;\n```\n\nThat is where the authenticated user and flash messages come from, and it is also how validation errors reach every page automatically.\n\n<b>And Ziggy</b>, which shares Laravel's named routes with JavaScript:\n\n```jsx\n<Link href={route('posts.show', post.id)}>{post.title}</Link>\n```\n\nWithout it every URL in your frontend is a hardcoded string, and renaming a route breaks them silently. With it, the route name is the contract on both sides.",
+      diagram: `What Inertia is
 
-  200 OK          here is the thing      GET, PATCH
-  201 Created     it now exists          POST
-  204 No Content  done, nothing to say   DELETE
+  > A single-page frontend without turning Laravel into
+    a separate API backend.
 
-  201 should CARRY the created resource, so the client
-  does not need a second request for its id.
+    React
+      ↕
+    Inertia
+      ↕
+    Laravel
+      ↕
+    Eloquent
 
-  204 has a genuinely empty body. A 204 containing
-  {"message": "Deleted"} is a contradiction, and some
-  clients will not read it.
+  Laravel keeps: routes · controllers · validation ·
+                 authorization · database
+  React handles: components · interface state ·
+                 interactions
 
+  What is ABSENT is the point:
 
-The four failures
+    no tokens · no CORS · no versioning
+    no separate deployment · no second set of routes
 
-  401 Unauthorized   who are you?
-  403 Forbidden      I know who you are, and no
-  404 Not Found      there is no such thing
-  422 Unprocessable  I understood you, the data is wrong
-
-
-  401 vs 403 — the one people get wrong
-
-    no token, or a bad one       →  401
-    a valid token, wrong user    →  403
-
-  A user editing somebody else's post is authenticated
-  perfectly well. A 401 tells their client to log in
-  again — which it does, successfully, and then fails
-  identically.
-
-    401  try again with credentials
-    403  credentials will not help
+  Yesterday's API exists because a client you do not
+  control needs a contract. Inertia's client is your
+  own code, shipped together.
 
 
-  404 vs 422
+Pages and props
 
-    GET /posts/999999        does not exist   404
-    POST /posts {title:""}   invalid          422
+  return Inertia::render('Posts/Index', [
+      'posts'   => \$posts,
+      'filters' => \$filters,
+  ]);
 
-  Route model binding gives the 404 for free.
-  A failed validate() gives the 422, with:
+    resources/js/pages/Posts/Index.tsx
 
-    { "message": "...",
-      "errors": { "title": ["..."] } }
+    Laravel controller → props → Inertia → React page
 
-  The errors object is the useful part: a frontend can
-  put each message next to its field.
+  A controller is still a controller: it authorizes,
+  queries and returns data. Only the last line changed.
 
+  Props travel over the wire, so use API Resources here
+  too — without one you serialise the model and every
+  column reaches the browser and the page source.
 
-  And from Day 20: a 403 CONFIRMS the resource exists.
-  On sequential ids, a 403 on /api/invoices/91 tells a
-  stranger invoice 91 belongs to somebody.
-  denyAsNotFound() returns 404 instead.
-
-
-The pipeline
-
-  POST /api/v1/posts
-          ↓
-  auth:sanctum      authenticated?   no → 401
-          ↓
-  validation        valid?           no → 422
-          ↓
-  policy            allowed?         no → 403
-          ↓
-  controller
-          ↓
-  Eloquent
-          ↓
-  PostResource
-          ↓
-  201 + JSON
-
-  Each layer is a separate day of this track, and each
-  produces exactly one status code.
-
-  Authentication first: everything else needs to know
-  who is asking. A route-level policy before validation:
-  no point critiquing input they were never allowed to
-  send. Inside a controller, validation first, because
-  the check needs the data.
+  type Props = { posts: Post[]; filters: Filters };
 
 
-  429  too many requests, with Retry-After   (Day 21)
-  500  anything you did not anticipate
-
-  ⚠️  A 500 body must not contain a stack trace.
-      APP_DEBUG=false in production. An API leaks
-      internals faster than a web page, because the
-      client stores whatever it receives.
+  An Inertia VISIT is not a page load. A link makes a
+  request, receives the next page's props as JSON, and
+  swaps the component. The layout, the JavaScript and
+  the scroll position survive.
 
 
-  2xx  it worked
-  4xx  you did something wrong    do not retry unchanged
-  5xx  we did something wrong     retrying may work`,
+Forms: the part that earns its place
+
+  React form
+     ↓
+  Inertia form helper
+     ↓
+  a NORMAL Laravel route
+     ↓
+  validation
+     ↓
+  redirect, or errors
+     ↓
+  React
+
+    const form = useForm({ title: '', body: '' });
+    form.post('/posts');
+
+  And the controller is the one you would have written:
+
+    \$request->validate([...]);
+    Post::create(\$data);
+    return redirect()->route('posts.index');
+
+  A failed validation redirects back, and Inertia puts
+  the errors in form.errors, keyed by field.
+
+    no 422 to parse
+    no error shape to agree on
+    no duplicated rules
+
+  Plus what every form needs and nobody enjoys writing:
+
+    form.processing   disable the button
+    form.errors       per field
+    form.progress     uploads
+    form.reset()
+    form.isDirty      warn before leaving
+
+
+  Two things:
+
+    A controller REDIRECTS, it does not return JSON.
+    Surprising if you came from an API. Redirect as you
+    would for a Blade form; Inertia follows it.
+
+    Validation errors are shared automatically, so
+    form.errors is populated with no special controller
+    code. One source of truth.`,
       codeExample: {
-        title: "Every status this API can return",
+        title: "A page, its props, and a form",
         code: `<?php
+// ---------- The controller: still a controller ----------
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\\Http\\Controllers;
 
 use App\\Models\\Post;
 use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Gate;
+use Inertia\\Inertia;
 
 class PostController extends Controller
 {
-    // 200 — here is the thing
-    public function index()
+    public function index(Request $request)
     {
-        return PostResource::collection(Post::paginate(20));
+        return Inertia::render('Posts/Index', [
+            // A resource here too: without one, every
+            // column reaches the browser and the page source.
+            'posts' => PostResource::collection(
+                Post::query()
+                    ->when($request->search, fn ($q, $search) =>
+                        $q->where('title', 'like', "%{$search}%"))
+                    ->latest()
+                    ->paginate(10)
+                    ->withQueryString()
+            ),
+            'filters' => $request->only('search', 'status'),
+        ]);
     }
 
-    // 404 — route model binding, with nothing written
-    public function show(Post $post)
-    {
-        Gate::authorize('view', $post);          // 403 if not
-
-        return new PostResource($post);          // 200
-    }
-
-    // 201 — created, carrying the resource
     public function store(Request $request)
     {
-        $data = $request->validate([             // 422 if invalid
+        $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body'  => ['required', 'string'],
         ]);
 
-        $post = $request->user()->posts()->create($data);
+        $request->user()->posts()->create($data);
 
-        // 201, with the resource, so no second request is needed.
-        return (new PostResource($post))
-            ->response()
-            ->setStatusCode(201);
-    }
-
-    // 200 — updated
-    public function update(Request $request, Post $post)
-    {
-        Gate::authorize('update', $post);        // 403
-
-        $post->update($request->validate([       // 422
-            'title' => ['sometimes', 'string', 'max:255'],
-        ]));
-
-        return new PostResource($post);          // 200
-    }
-
-    // 204 — done, nothing to say
-    public function destroy(Post $post)
-    {
-        Gate::authorize('delete', $post);        // 403
-
-        $post->delete();
-
-        // Genuinely empty. A 204 with a body is a contradiction.
-        return response()->noContent();
+        // A redirect, not JSON. Inertia follows it.
+        return redirect()->route('posts.index')
+            ->with('status', 'Post created.');
     }
 }
+?>
 
+// ---------- The page ----------
+// resources/js/pages/Posts/Index.tsx
 
-<?php
-// ---------- 401 vs 403 ----------
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
-// No token, or an invalid one → auth:sanctum returns 401.
-//   "who are you?"
+type Post = { id: number; title: string; status: string };
+type Props = { posts: { data: Post[] }; filters: { search?: string } };
 
-// A valid token, wrong user → the policy returns 403.
-//   "I know who you are, and no."
+export default function Index({ posts, filters }: Props) {
+    const [search, setSearch] = useState(filters.search ?? '');
 
-// ❌ Returning 401 here tells the client to log in again.
-//    It does, successfully, and fails identically.
+    return (
+        <>
+            <Head title="Posts" />
 
+            <input
+                value={search}
+                onChange={(e) => {
+                    setSearch(e.target.value);
+                    router.get('/posts', { search: e.target.value }, {
+                        preserveState: true,
+                        replace: true,
+                    });
+                }}
+            />
 
-<?php
-// ---------- 422, and why the shape matters ----------
-
-// {
-//   "message": "The title field is required.",
-//   "errors": {
-//     "title": ["The title field is required."],
-//     "body":  ["The body field is required."]
-//   }
-// }
-//
-// The errors object lets a frontend put each message next
-// to its field, instead of one sentence at the top.
-
-
-<?php
-// ---------- Not confirming that something exists ----------
-
-// A 403 on /api/invoices/91 tells a stranger that invoice
-// 91 belongs to somebody. On sequential ids that is a leak.
-
-public function view(User $user, Invoice $invoice): Response
-{
-    return $invoice->user_id === $user->id
-        ? Response::allow()
-        : Response::denyAsNotFound();      // 404, not 403
+            {posts.data.map((post) => (
+                <Link key={post.id} href={'/posts/' + post.id}>
+                    {post.title}
+                </Link>
+            ))}
+        </>
+    );
 }
 
+// A Link is an Inertia visit, not a page load: it fetches
+// the next page's props and swaps the component. The
+// layout and the JavaScript survive.
 
-<?php
-// ---------- What a client switches on ----------
 
-// 2xx  it worked
-// 4xx  you did something wrong   → do not retry unchanged
-// 5xx  we did something wrong    → retrying may work
+// ---------- The form ----------
+// resources/js/pages/Posts/Create.tsx
+
+import { useForm } from '@inertiajs/react';
+
+export default function Create() {
+    const form = useForm({ title: '', body: '' });
+
+    function submit(e: React.FormEvent) {
+        e.preventDefault();
+        form.post('/posts');
+    }
+
+    return (
+        <form onSubmit={submit}>
+            <input
+                value={form.data.title}
+                onChange={(e) => form.setData('title', e.target.value)}
+            />
+            {/* Populated from Laravel's validation. No 422 parsing. */}
+            {form.errors.title && <p>{form.errors.title}</p>}
+
+            <textarea
+                value={form.data.body}
+                onChange={(e) => form.setData('body', e.target.value)}
+            />
+            {form.errors.body && <p>{form.errors.body}</p>}
+
+            <button type="submit" disabled={form.processing}>
+                {form.processing ? 'Saving…' : 'Save'}
+            </button>
+        </form>
+    );
+}
+
+// form.processing · form.errors · form.progress
+// form.reset() · form.isDirty
 //
-// Which is exactly the retry rule from Day 22.
-
-// And in production:
-//   APP_DEBUG=false
-// A 500 body must never contain a stack trace. An API
-// leaks internals faster than a web page, because the
-// client stores whatever it receives.`,
+// The things every form needs and nobody enjoys writing.`,
       },
       keyTakeaways: [
-        "<b>`200` returns the thing, `201` means created, `204` means done with an empty body.</b>",
-        "<b>A `201` should carry the created resource</b>, so the client does not need a second request.",
-        "<b>A `204` body is genuinely empty</b>, and putting a message in one is a contradiction.",
-        "<b>`401` means \"who are you\" and `403` means \"credentials will not help\".</b>",
-        "Returning 401 for a wrong user makes the client log in again, succeed, and fail identically.",
-        "<b>`404` means the resource does not exist; `422` means the data is wrong.</b>",
-        "<b>Route model binding produces the 404</b>, and a failed `validate()` produces a structured 422.",
-        "<b>The `errors` object lets a frontend put each message beside its field.</b>",
-        "<b>A 403 confirms the resource exists</b>, so use `denyAsNotFound()` when that itself is a leak.",
-        "<b>Each layer produces one status</b>: guard 401, validation 422, policy 403, controller 200 or 201.",
-        "<b>4xx means do not retry unchanged; 5xx means retrying may work</b>, which is what a client switches on.",
-        "<b>A 500 body must never contain a stack trace</b>, so `APP_DEBUG=false` in production.",
+        "<b>Inertia gives a single-page frontend without a separate API</b>: no tokens, no CORS, no versioning.",
+        "<b>Laravel keeps its routes, controllers, validation, authorization and Eloquent</b>; React takes the views.",
+        "<b>`Inertia::render('Page', [...])` returns a page and its props</b>, so only the controller's last line changed.",
+        "<b>Props travel over the wire, so use API Resources here too</b>, or every column reaches the browser.",
+        "TypeScript types make the prop contract explicit on the frontend side.",
+        "<b>An Inertia visit is not a page load</b>: it fetches props and swaps the component, keeping layout and state.",
+        "<b>The form helper posts to a normal Laravel route</b>, which validates and redirects as it always did.",
+        "<b>Validation errors arrive in `form.errors`, keyed by field</b>, with no 422 to parse and no duplicated rules.",
+        "<b>A controller redirects rather than returning JSON</b>, and Inertia follows the redirect.",
+        "`form.processing`, `form.progress`, `form.reset()` and `form.isDirty` cover what every form needs.",
       ],
       commonMistakes: [
-        "<b>Returning 401 when a user may not touch a record.</b> They are authenticated; that is a 403.",
-        "<b>Returning 200 with an error message in the body.</b> Clients switch on the status, not the text.",
-        "<b>Putting a body in a 204.</b> Some clients will not read it, and the status says there is none.",
-        "<b>Returning 201 without the created resource.</b> The client needs a second request just for the id.",
-        "<b>Leaving `APP_DEBUG=true` in production.</b> A 500 then hands the client a stack trace it will store.",
+        "<b>Returning JSON from an Inertia controller.</b> Redirect as you would for a Blade form.",
+        "<b>Passing models straight into props.</b> Every column is serialised into the page, exactly as on an API.",
+        "<b>Rebuilding validation in React.</b> The rules already exist and their errors arrive automatically.",
+        "<b>Using a plain `<a>` instead of `Link`.</b> That is a full page load, and the SPA feel is gone.",
+        "<b>Thinking Inertia needs the API from yesterday.</b> It replaces the need for one.",
       ],
       quiz: [
         {
-          question: "A valid token, but the user does not own the record. What status?",
-          options: ["401", "403", "404", "422"],
-          correctIndex: 1,
-          explanation: "They are authenticated; logging in again would change nothing.",
-        },
-        {
-          question: "What is the difference between 404 and 422?",
+          question: "What does Inertia let you avoid?",
           options: [
-            "None",
-            "404 means the resource does not exist; 422 means the data sent is invalid",
-            "422 is for authentication",
-            "404 is for collections",
+            "Writing controllers",
+            "Building a separate API with tokens, CORS and versioning",
+            "Using Eloquent",
+            "Validation",
           ],
           correctIndex: 1,
-          explanation: "Route model binding gives the first; validation gives the second.",
+          explanation: "Its client is your own code, shipped with the application.",
         },
         {
-          question: "What should a `201 Created` response contain?",
+          question: "What does an Inertia controller return after a successful POST?",
           options: [
-            "An empty body",
-            "The created resource, so the client does not need a second request",
-            "A redirect",
-            "The list of all resources",
+            "JSON with the created model",
+            "A redirect, which Inertia follows",
+            "A 201 status",
+            "The page component",
           ],
           correctIndex: 1,
-          explanation: "A 204 is the one with an empty body.",
+          explanation: "Exactly as it would for a Blade form.",
         },
         {
-          question: "Why does a 403 sometimes leak information?",
+          question: "How do Laravel validation errors reach a React form?",
           options: [
-            "It includes the policy name",
-            "It confirms the resource exists, which on sequential ids tells a stranger it belongs to somebody",
-            "It logs the request",
-            "It does not",
+            "You parse the 422 body",
+            "Inertia shares them automatically, and they appear in `form.errors` keyed by field",
+            "You duplicate the rules in JavaScript",
+            "Through a separate endpoint",
           ],
           correctIndex: 1,
-          explanation: "`denyAsNotFound()` returns 404 instead when that matters.",
+          explanation: "One source of truth for the rules and the messages.",
+        },
+        {
+          question: "Why use an API Resource for Inertia props?",
+          options: [
+            "Inertia requires it",
+            "Props are serialised into the page, so without one every column reaches the browser",
+            "For pagination",
+            "For TypeScript types",
+          ],
+          correctIndex: 1,
+          explanation: "The same argument as yesterday, for the same reason.",
         },
       ],
     },
     {
-      id: "versioning-cors-and-passport",
-      title: "Versioning, CORS, throttling & choosing Passport",
-      durationMinutes: 13,
-      explanation: "The things that only matter once somebody else depends on your API.\n\n---\n\n### 1. Basic — versioning\n\nAn API with clients you do not control cannot change shape freely. Renaming a field breaks an app in an app store that somebody installed six months ago.\n\n```text\n/api/v1/posts    { \"title\": \"Laravel\" }\n/api/v2/posts    { \"title\": \"Laravel\", \"author\": { \"id\": 123 } }\n```\n\nThree ways to say which version:\n\n```text\nURL           /api/v1/posts\n              obvious, visible in logs, easy to route\n\nheader        Accept: application/vnd.myapp.v2+json\n              keeps the URL stable, invisible in a browser\n\nquery         /api/posts?version=2\n              simple, and easy to forget\n```\n\n<b>URL versioning is the pragmatic default</b>: a client can see it, you can route it, and a support conversation can say \"which version are you calling\" and get an answer.\n\nAnd the point worth understanding: <b>a version is a promise you keep, not a folder you make.</b> `v1` only means something if `v1` keeps working. Two versions means two sets of resources and two sets of tests, and the reason to think before adding one.\n\nAdditive changes need no version. <b>Adding a field is safe; removing or renaming one is not.</b>\n\n---\n\n### 2. Intermediate — CORS and throttling\n\n<b>CORS</b> is the browser refusing a cross-origin request unless the server says it is allowed:\n\n```text\nhttps://app.example.com   your frontend\nhttps://api.example.com   your API\n```\n\nDifferent origins, so the browser asks first and your API answers with which origins, methods and headers it permits.\n\nTwo things to be clear about.\n\n<b>CORS is a browser mechanism, not a security control.</b> `curl` ignores it entirely, and so does every mobile app. It stops one <i>website</i> reading another's responses in a user's browser; it protects nothing else. Authentication and authorization are still the security.\n\n<b>And do not allow everything.</b> `*` for origins is fine for a genuinely public read-only API and wrong for one using cookies, where it undoes the protection the browser was giving you. List the origins you actually have.\n\n<b>Throttling</b> is Day 21, applied per endpoint class:\n\n```text\npublic API           60/min\nauthenticated API   300/min\nlogin                 5/min per IP\nexpensive report      3/min\n```\n\nOne limit for everything is either too tight for the cheap endpoints or too loose for the expensive ones.\n\n---\n\n### 3. Advanced — Sanctum or Passport, and documentation\n\n```text\nSanctum                    Passport\n───────                    ────────\nAPI tokens                 a full OAuth2 server\nSPA cookie auth            authorization grants\nmobile apps                refresh tokens\nfirst-party clients        third-party client registration\n                           delegated authorization\n```\n\nThe question that decides it is not how professional something sounds. It is: <b>does somebody need to authorize your application to act on their behalf in a third party's system, or the reverse?</b>\n\n```text\nyour own mobile app                          Sanctum\nyour own SPA                                 Sanctum\na customer's server calling your API         Sanctum\n\n\"Log in with YourApp\" on somebody else's     Passport\nthird parties registering their own clients  Passport\nthe full grant and refresh flow              Passport\n```\n\n<b>Passport is an OAuth2 authorization server.</b> If you are not building one, it is a great deal of machinery for a token in a header, and Sanctum already does that.\n\n---\n\n### Documentation\n\nAn API that nobody can use is not finished. What a consumer needs:\n\n```text\nendpoints\nauthentication\nrequest body\nresponse body\nstatus codes\nerrors\npagination\nrate limits\nversioning\n```\n\nAt minimum, per endpoint:\n\n```text\nPOST /api/v1/posts\n\nAuthorization: Bearer <token>\n\nBody:      { \"title\": \"Laravel\", \"body\": \"...\" }\nResponses: 201 · 401 · 403 · 422 · 429\n```\n\nFor anything larger, <b>OpenAPI</b>, because a specification is machine-readable: it generates the documentation page, client libraries and a test collection from one file, and it can be checked against the real API so the documentation cannot quietly go stale.\n\nAnd the separation the whole day comes down to:\n\n```text\nwho are you?               Sanctum\nwhat can you do?           policies and abilities\nis this input valid?       the validator\nwhat should they receive?  the API Resource\nwhat happened?             the status code\n```\n\n<b>Five questions, five mechanisms, each answered in one place.</b> That is what makes an API a system rather than a pile of CRUD routes.\n\nOne CORS key worth knowing because its absence is confusing: <b>`exposed_headers`</b>. A browser lets JavaScript read only a handful of response headers by default, so a custom `X-Total-Count` or `X-RateLimit-Remaining` is sent, arrives, and is invisible to the client. Listing it in `exposed_headers` is what makes it readable.",
-      diagram: `Versioning
+      id: "inertia-performance-and-types",
+      title: "Partial reloads, deferred props, TypeScript & Precognition",
+      durationMinutes: 12,
+      explanation: "Making an Inertia page fast, and making its contract hold.\n\n---\n\n### 1. Basic — partial reloads\n\nA dashboard page has several props:\n\n```text\nPosts · Statistics · Notifications · Profile\n```\n\nChange the search filter and, by default, the controller runs again and returns all four. Three of them were fine.\n\n<b>A partial reload asks for a subset:</b>\n\n```tsx\nrouter.get('/dashboard', { search }, { only: ['posts'] });\n```\n\n```text\nrequest\n  ↓\n\"only posts\"\n  ↓\nLaravel\n  ↓\nposts\n  ↓\nReact updates posts\n```\n\nAnd because a prop can be a closure, <b>Laravel does not even run the queries for the props you did not ask for:</b>\n\n```php\n'statistics' => fn () => $this->expensiveStats(),\n```\n\nThat closure is only called when `statistics` is included. Without it, a filter keystroke re-runs the statistics query every time, which is the most common Inertia performance problem and the least visible one.\n\n---\n\n### 2. Intermediate — deferred props\n\nSome data is slow and not needed immediately:\n\n```text\ntitle       immediate\nposts       immediate\nanalytics   takes two seconds\n```\n\nBy default the page waits for all three, so the user sees nothing for two seconds because of a chart below the fold.\n\n<b>A deferred prop lets the page render first:</b>\n\n```php\n'analytics' => Inertia::defer(fn () => $this->analytics()),\n```\n\n```text\npage renders\n     ↓\ndeferred request\n     ↓\nanalytics arrive\n     ↓\nthat part fills in\n```\n\n<b>The total time is the same; the perceived time is not.</b> Something useful is on screen immediately, and the expensive part appears where a placeholder was.\n\nWhich makes the design question explicit: what does the user need first? Usually the thing they came for, and rarely the chart.\n\n---\n\n### 3. Advanced — types, components and duplicated rules\n\n<b>TypeScript</b> makes the prop contract checkable:\n\n```ts\ntype User = { id: number; name: string; email: string };\n```\n\n```text\nLaravel data → Inertia props → TypeScript types → React\n```\n\nWithout it, a renamed field in a resource is a runtime `undefined` somewhere in the interface. With it, it is a compile error, in the right file, before it ships.\n\nThe types are still written by hand, so they can drift; a generator that produces them from your resources removes that, and is worth adding once the number of pages grows.\n\n<b>shadcn/ui</b> is the component-library question from the Volt lesson, answered differently. <b>You copy the component code into your project and own it.</b> No dependency to fight, no upgrade to fear, and no ceiling when a design needs something unusual. The cost is that it is now your code: your bugs, your accessibility, your maintenance.\n\n```text\na library      somebody else's code, somebody else's decisions\nshadcn/ui      your code, from a good starting point\n```\n\n<b>Precognition</b> solves the duplication that Inertia otherwise reintroduces.\n\nLivewire validates on the server as you type, because the state is already there. In React, live validation usually means writing the rules again:\n\n```text\nLaravel                React\n───────                ─────\nemail required         email required\nemail valid            email valid\npassword min 12        password min 12\n```\n\n<b>Two sources of truth, and one of them will fall behind.</b>\n\nPrecognition sends the form to Laravel <i>before</i> submission and asks it to validate without executing:\n\n```text\nuser types\n    ↓\nprecognition request\n    ↓\nLaravel's own rules\n    ↓\nvalidation result\n    ↓\nfrontend shows it\n```\n\nOne set of rules, live feedback, and no chance of the two disagreeing. On a long form, that is the difference between finding out about field three at the end and finding out immediately.",
+      diagram: `Partial reloads
 
-  An API with clients you do not control cannot change
-  shape freely. Renaming a field breaks an app somebody
-  installed six months ago.
+  A dashboard: Posts · Statistics · Notifications · Profile
 
-    /api/v1/posts   { "title": "Laravel" }
-    /api/v2/posts   { "title": "...", "author": {...} }
+  Change the filter and, by default, the controller runs
+  again and returns all four. Three were fine.
 
-  URL      /api/v1/posts
-           obvious, visible in logs, easy to route
-  header   Accept: application/vnd.myapp.v2+json
-           stable URL, invisible in a browser
-  query    /api/posts?version=2
-           simple, easy to forget
+    router.get('/dashboard', { search }, { only: ['posts'] })
 
-  URL versioning is the pragmatic default: the client
-  can see it, you can route it, and support can ask
-  "which version" and get an answer.
+    request → "only posts" → Laravel → posts
+            → React updates posts
 
-  ⚠️  A version is a PROMISE YOU KEEP, not a folder you
-      make. v1 only means something if v1 keeps working.
-      Two versions is two sets of resources and two sets
-      of tests.
+  And because a prop can be a CLOSURE, Laravel does not
+  even run the queries you did not ask for:
 
-  Adding a field is safe. Removing or renaming one is not.
+    'statistics' => fn () => \$this->expensiveStats(),
+
+  Without that, a filter keystroke re-runs the statistics
+  query every time. The most common Inertia performance
+  problem, and the least visible.
 
 
-CORS
+Deferred props
 
-    https://app.example.com   your frontend
-    https://api.example.com   your API
+    title       immediate
+    posts       immediate
+    analytics   takes two seconds
 
-  Different origins, so the browser asks first and your
-  API answers with which origins, methods and headers
-  it permits.
+  By default the page waits for all three, so the user
+  sees nothing for two seconds because of a chart below
+  the fold.
 
-  ⚠️  CORS is a BROWSER mechanism, not a security control.
-      curl ignores it. So does every mobile app. It stops
-      one website reading another's responses in a user's
-      browser, and protects nothing else.
+    'analytics' => Inertia::defer(fn () => ...)
 
-      Authentication and authorization are the security.
+    page renders → deferred request → analytics arrive
+                 → that part fills in
 
-  And do not allow *. Fine for a public read-only API.
-  Wrong for one using cookies, where it undoes what the
-  browser was doing for you.
+  Total time is the same. PERCEIVED time is not.
 
-
-Throttling, per endpoint class
-
-    public API          60/min
-    authenticated API  300/min
-    login                5/min per IP
-    expensive report     3/min
-
-  One limit for everything is too tight for the cheap
-  endpoints or too loose for the expensive ones.
+  Which makes the design question explicit: what does
+  the user need first? Usually the thing they came for,
+  rarely the chart.
 
 
-Sanctum or Passport
+TypeScript
 
-  Sanctum                  Passport
-  ───────                  ────────
-  API tokens               a full OAuth2 server
-  SPA cookie auth          authorization grants
-  mobile apps              refresh tokens
-  first-party clients      third-party client registration
-                           delegated authorization
+    type User = { id: number; name: string; email: string };
 
-  The question is not which sounds professional. It is:
-  does somebody need to authorize your application to
-  act on their behalf in a third party's system, or
-  the reverse?
+    Laravel data → Inertia props → TypeScript types → React
 
-    your own mobile app                     Sanctum
-    your own SPA                            Sanctum
-    a customer's server calling your API    Sanctum
+  Without it, a renamed field in a resource is a runtime
+  undefined somewhere in the interface. With it, it is a
+  compile error, in the right file, before it ships.
 
-    "Log in with YourApp" elsewhere         Passport
-    third parties registering clients       Passport
-    the full grant and refresh flow         Passport
-
-  Passport is an OAuth2 authorization server. If you are
-  not building one, it is a lot of machinery for a token
-  in a header.
+  The types are hand-written and can drift. A generator
+  that produces them from your resources removes that.
 
 
-Documentation
+shadcn/ui: the same question, a different answer
 
-  endpoints · authentication · request body ·
-  response body · status codes · errors ·
-  pagination · rate limits · versioning
+    a library     somebody else's code and decisions
+    shadcn/ui     YOUR code, from a good starting point
 
-    POST /api/v1/posts
-    Authorization: Bearer <token>
-    Body:      { "title": "...", "body": "..." }
-    Responses: 201 · 401 · 403 · 422 · 429
+  You copy the component in and own it. No dependency to
+  fight, no upgrade to fear, no ceiling when a design
+  needs something unusual.
 
-  For anything larger: OpenAPI. A specification is
-  machine-readable, so one file generates the docs page,
-  client libraries and a test collection — and can be
-  checked against the real API so it cannot go stale.
+  The cost: it is now your code. Your bugs, your
+  accessibility, your maintenance.
 
 
-The separation this day comes down to
+Precognition
 
-  who are you?               Sanctum
-  what can you do?           policies and abilities
-  is this input valid?       the validator
-  what should they receive?  the API Resource
-  what happened?             the status code
+  Livewire validates on the server as you type, because
+  the state is already there. In React, live validation
+  usually means writing the rules again:
 
-  Five questions, five mechanisms, each in one place.
-  That is what makes an API a system rather than a
-  pile of CRUD routes.`,
+    Laravel              React
+    ───────              ─────
+    email required       email required
+    email valid          email valid
+    password min 12      password min 12
+
+  Two sources of truth, and one will fall behind.
+
+    user types
+        ↓
+    precognition request
+        ↓
+    Laravel's OWN rules
+        ↓
+    validation result
+        ↓
+    the frontend shows it
+
+  One set of rules, live feedback, no chance of the two
+  disagreeing. On a long form, that is finding out about
+  field three immediately rather than at the end.`,
       codeExample: {
-        title: "Versioning, CORS, limits and the choice",
+        title: "A fast page with one set of rules",
         code: `<?php
-// ---------- URL versioning ----------
+// ---------- Partial reloads and lazy props ----------
 
-// routes/api.php
+class DashboardController extends Controller
+{
+    public function index(Request $request)
+    {
+        return Inertia::render('Dashboard', [
+            // Always sent.
+            'filters' => $request->only('search'),
 
-Route::prefix('v1')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::apiResource('posts', V1\\PostController::class);
+            'posts' => PostResource::collection(
+                Post::where('title', 'like', "%{$request->search}%")
+                    ->paginate(10)
+            ),
+
+            // A closure: only evaluated when this prop is
+            // actually requested. Without it, every filter
+            // keystroke re-runs this query.
+            'statistics' => fn () => $this->expensiveStatistics(),
+
+            // The page renders first; this fills in after.
+            'analytics' => Inertia::defer(fn () => $this->analytics()),
+        ]);
+    }
+}
+?>
+
+// resources/js/pages/Dashboard.tsx
+
+import { router, Deferred } from '@inertiajs/react';
+
+// Ask for one prop, and Laravel runs one query.
+router.get('/dashboard', { search }, {
+    only: ['posts'],
+    preserveState: true,
+    replace: true,
+});
+
+// The deferred prop, with something to show meanwhile.
+<Deferred data="analytics" fallback={<Skeleton />}>
+    <AnalyticsChart />
+</Deferred>
+
+
+// ---------- TypeScript ----------
+
+// resources/js/types/index.d.ts
+
+export type User = {
+    id: number;
+    name: string;
+    email: string;
+};
+
+export type Post = {
+    id: number;
+    title: string;
+    status: 'draft' | 'published';
+    author: User;
+};
+
+// A renamed field in PostResource is now a compile error
+// in the right file, rather than a runtime undefined
+// somewhere in the interface.
+
+export default function Index({ posts }: { posts: Post[] }) {
+    return <>{posts.map((p) => <p key={p.id}>{p.title}</p>)}</>;
+}
+
+
+<?php
+// ---------- Precognition: one set of rules ----------
+
+// The route accepts a precognitive request and runs the
+// same validation without executing the action.
+
+Route::post('/register', [RegisterController::class, 'store'])
+    ->middleware(HandlePrecognitiveRequests::class);
+
+
+class RegisterController extends Controller
+{
+    public function store(Request $request)
+    {
+        // Precognition runs exactly these rules, and stops.
+        $data = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'unique:users'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        User::create($data);
+
+        return redirect()->route('dashboard');
+    }
+}
+?>
+
+// resources/js/pages/Register.tsx
+
+import { useForm } from 'laravel-precognition-react-inertia';
+
+export default function Register() {
+    const form = useForm('post', '/register', {
+        name: '', email: '', password: '',
     });
-});
 
-Route::prefix('v2')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::apiResource('posts', V2\\PostController::class);
-    });
-});
+    return (
+        <form onSubmit={(e) => { e.preventDefault(); form.submit(); }}>
+            <input
+                value={form.data.email}
+                onChange={(e) => form.setData('email', e.target.value)}
+                // Validated by LARAVEL, as they leave the field.
+                onBlur={() => form.validate('email')}
+            />
+            {form.errors.email && <p>{form.errors.email}</p>}
 
-// Two versions is two sets of resources and two sets of
-// tests. v1 only means something if v1 keeps working.
+            <button disabled={form.processing}>Register</button>
+        </form>
+    );
+}
 
-// Adding a field is safe. Removing or renaming one is not.
-
-
-<?php
-// ---------- Separate resources per version ----------
-
-// app/Http/Resources/V1/PostResource.php
-return [
-    'id'    => $this->id,
-    'title' => $this->title,
-];
-
-// app/Http/Resources/V2/PostResource.php
-return [
-    'id'     => $this->id,
-    'title'  => $this->title,
-    'author' => new UserResource($this->whenLoaded('user')),
-];
-
-
-<?php
-// ---------- CORS ----------
-
-// config/cors.php
-
-return [
-    'paths' => ['api/*'],
-
-    // The origins you actually have.
-    'allowed_origins' => [
-        'https://app.example.com',
-        'https://admin.example.com',
-    ],
-
-    'allowed_methods' => ['GET', 'POST', 'PATCH', 'DELETE'],
-    'allowed_headers' => ['Content-Type', 'Authorization', 'Accept'],
-
-    // Only for Sanctum SPA cookie authentication, and it
-    // cannot be combined with an allowed_origins of *.
-    'supports_credentials' => false,
-];
-
-// ⚠️ CORS is a browser mechanism. curl ignores it, and so
-//    does every mobile app. It is not your security.
-
-
-<?php
-// ---------- Throttling, per endpoint class ----------
-
-// AppServiceProvider
-
-RateLimiter::for('api', fn (Request $r) =>
-    Limit::perMinute(300)->by($r->user()?->id ?? $r->ip()));
-
-RateLimiter::for('api-public', fn (Request $r) =>
-    Limit::perMinute(60)->by($r->ip()));
-
-RateLimiter::for('reports', fn (Request $r) =>
-    Limit::perMinute(3)->by($r->user()->id));
-
-
-// routes/api.php
-
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::apiResource('posts', PostController::class);
-
-    Route::get('/reports/revenue', ReportController::class)
-        ->middleware('throttle:reports');
-});
-
-Route::middleware('throttle:api-public')->group(function () {
-    Route::get('/status', StatusController::class);
-});
-
-
-<?php
-// ---------- Sanctum or Passport ----------
-
-// Sanctum: a token in a header, and SPA cookies.
-//   your own mobile app
-//   your own SPA
-//   a customer's server calling your API
-//
-// Passport: an OAuth2 authorization server.
-//   "Log in with YourApp" on somebody else's site
-//   third parties registering their own clients
-//   the full grant and refresh flow
-//
-// If you are not building an authorization server,
-// Passport is a lot of machinery for something Sanctum
-// already does.
-
-
-# ---------- The minimum documentation ----------
-
-# POST /api/v1/posts
-#
-# Authorization: Bearer <token>
-# Accept: application/json
-#
-# Body:
-#   { "title": "Laravel", "body": "..." }
-#
-# Responses:
-#   201  the created post
-#   401  no or invalid token
-#   403  not permitted
-#   422  { "message": "...", "errors": {...} }
-#   429  rate limited, with Retry-After
-#
-# For anything larger: OpenAPI, so one file generates the
-# docs, the client libraries and a test collection — and
-# can be verified against the real API.`,
+// The rules exist once. The frontend cannot disagree
+// with the backend, because it is asking the backend.`,
       },
       keyTakeaways: [
-        "<b>An API with clients you do not control cannot change shape freely</b>, which is what versioning is for.",
-        "<b>URL versioning is the pragmatic default</b>: visible to the client, routable, and answerable in support.",
-        "<b>A version is a promise you keep</b>, so two versions means two sets of resources and two sets of tests.",
-        "<b>Adding a field is safe; removing or renaming one is not.</b>",
-        "<b>CORS is the browser refusing a cross-origin request unless the server permits it.</b>",
-        "<b>CORS is a browser mechanism, not a security control</b>: `curl` and mobile apps ignore it entirely.",
-        "Allowing `*` is fine for a public read-only API and wrong for one using cookies.",
-        "<b>Throttle per endpoint class</b>, because one limit is too tight for cheap endpoints or too loose for expensive ones.",
-        "<b>Sanctum covers tokens and first-party SPAs; Passport is a full OAuth2 authorization server.</b>",
-        "Choose Passport only when third parties register clients or somebody delegates authorization.",
-        "<b>Document endpoints, auth, bodies, statuses, errors, pagination, limits and versions</b>, and use OpenAPI for anything large.",
-        "<b>Five questions, five mechanisms</b>: Sanctum, policies, the validator, the resource, the status code.",
+        "<b>A partial reload requests a subset of props</b>, so a filter change does not rebuild the whole page.",
+        "<b>A prop defined as a closure is only evaluated when requested</b>, so unrequested queries never run.",
+        "Without that, every filter keystroke re-runs the expensive props, which is the common Inertia performance bug.",
+        "<b>A deferred prop lets the page render before slow data arrives</b>, and fills in afterwards.",
+        "<b>The total time is unchanged; the perceived time is not</b>, which makes \"what do they need first\" a real question.",
+        "<b>TypeScript turns a renamed field into a compile error</b> rather than a runtime `undefined` in the interface.",
+        "Hand-written types can drift, so generating them from your resources is worth doing as pages grow.",
+        "<b>shadcn/ui gives you the component code to own</b>, trading a dependency for maintenance you now carry.",
+        "<b>Live validation in React normally duplicates the rules</b>, creating two sources of truth.",
+        "<b>Precognition asks Laravel to validate before submission</b>, using the same rules, so the two cannot disagree.",
       ],
       commonMistakes: [
-        "<b>Creating a `v2` and abandoning `v1`.</b> A version nobody maintains is worse than no version.",
-        "<b>Versioning for an added field.</b> Additive changes do not break clients.",
-        "<b>Treating CORS as security.</b> Anything that is not a browser ignores it completely.",
-        "<b>Allowing `*` origins with credentials.</b> That undoes the protection the browser was providing.",
-        "<b>Choosing Passport because OAuth sounds more professional.</b> It is an authorization server, not a token library.",
+        "<b>Returning every prop on every filter change.</b> Three expensive queries run for a search box.",
+        "<b>Passing an evaluated value where a closure would do.</b> The query runs whether or not the prop is wanted.",
+        "<b>Blocking a page on a slow chart.</b> Defer it and show what the user actually came for.",
+        "<b>Re-implementing validation rules in React.</b> They will fall out of step with the server's.",
+        "<b>Treating hand-written prop types as guaranteed.</b> They are a claim about the backend, not a check of it.",
       ],
       quiz: [
         {
-          question: "Which change requires a new API version?",
+          question: "What does `only: ['posts']` do on an Inertia visit?",
           options: [
-            "Adding a field to a response",
-            "Renaming or removing a field",
-            "Adding a new endpoint",
-            "Adding an optional query parameter",
+            "Filters the posts",
+            "Requests just that prop, so closure props that were not asked for are never evaluated",
+            "Caches the response",
+            "Skips the controller",
           ],
           correctIndex: 1,
-          explanation: "Additive changes do not break existing clients.",
+          explanation: "Which is what stops a filter keystroke re-running every expensive query.",
         },
         {
-          question: "What does CORS actually protect?",
+          question: "What does a deferred prop change?",
           options: [
-            "Your API from any unauthorised client",
-            "One website from reading another's responses in a user's browser",
-            "Tokens in transit",
-            "Against rate limit abuse",
+            "The total load time",
+            "The page renders before that data arrives, and it fills in afterwards",
+            "The prop is cached",
+            "The query runs in a job",
           ],
           correctIndex: 1,
-          explanation: "`curl` and mobile apps ignore it, so it is not your security.",
+          explanation: "Perceived performance, not actual total time.",
         },
         {
-          question: "When should you choose Passport over Sanctum?",
+          question: "What does TypeScript catch in an Inertia application?",
           options: [
-            "For any mobile application",
-            "When third parties register their own clients, or somebody delegates authorization",
-            "Whenever the API is public",
-            "When you need refresh tokens for your own app",
+            "Validation failures",
+            "A renamed or missing prop field, at compile time rather than as a runtime `undefined`",
+            "Missing authorization",
+            "N+1 queries",
           ],
           correctIndex: 1,
-          explanation: "Passport is an OAuth2 authorization server, not a token library.",
+          explanation: "In the right file, before it ships.",
         },
         {
-          question: "Why is a single throttle limit for a whole API a poor fit?",
+          question: "What problem does Precognition solve?",
           options: [
-            "Laravel does not allow it",
-            "It is either too tight for cheap endpoints or too loose for expensive ones",
-            "It cannot key on the user",
-            "It breaks CORS",
+            "Slow queries",
+            "Live validation in the frontend duplicating the server's rules into a second source of truth",
+            "Missing CSRF tokens",
+            "Large bundles",
           ],
           correctIndex: 1,
-          explanation: "A report costing seconds and a status check are not the same endpoint.",
+          explanation: "It asks Laravel to run the real rules before submission.",
+        },
+      ],
+    },
+    {
+      id: "folio-and-choosing",
+      title: "Folio, and choosing between the two",
+      durationMinutes: 11,
+      explanation: "One more routing option, and then the decision this day exists to make.\n\n---\n\n### 1. Basic — Folio\n\nNormal routing names every page:\n\n```php\nRoute::get('/about', [AboutController::class, 'index']);\n```\n\nWhich is right when the page has logic. For a page that is only content, it is a route, a controller and a view for something that is one file's worth of markup.\n\n<b>Folio makes the filesystem the routes:</b>\n\n```text\npages/\n├── index.blade.php      →  /\n├── about.blade.php      →  /about\n└── contact.blade.php    →  /contact\n```\n\nAdd a file, get a URL. If you have written Next.js, this is the arrangement you already know.\n\n<b>It suits pages, not applications.</b> Marketing pages, documentation, a terms page. Anything with authorization, several actions or real logic wants a controller, where that logic has somewhere to live and something to test.\n\nAnd it composes: Folio for the public pages, normal routes for the application, in the same project.\n\n---\n\n### 2. Intermediate — the comparison\n\n```text\n                     Livewire            Inertia\n───────────────────────────────────────────────────────\nmain language        PHP                 JS / TS\nUI                   Blade               React/Vue/Svelte\nserver interaction   Livewire requests   Inertia visits\nbrowser state        Livewire-managed    the JS framework\nJavaScript needed    minimal             significant\nbest for             CRUD, admin         rich frontends\nLaravel integration  very deep           very deep\nSPA-like feel        yes                 yes\nAPI required         no                  no\n```\n\n<b>Read the last two rows together</b>, because they are the point of the day: both give a single-page feel and neither needs the API from yesterday. The choice is not about capability.\n\n---\n\n### 3. Advanced — actually choosing\n\n<b>Livewire, when Laravel should own the application:</b>\n\n```text\nLaravel owns most of it\n        +\nthe UI is not extremely JavaScript-heavy\n        +\nthe team is stronger in PHP\n```\n\n```text\nadmin dashboard · CMS · back-office\nCRUD · internal management system\n```\n\n<b>Inertia, when the frontend is the work:</b>\n\n```text\nthe UI is genuinely rich\n        +\nthe team writes React or Vue well\n        +\nyou still want Laravel's conventions\n```\n\n```text\nSaaS dashboard · complex application\nrich data visualisation · a large component system\n```\n\nAnd the honest tiebreaker: <b>the unfamiliar option is the expensive one.</b> A team that writes React fluently will build a better admin panel in Inertia than in a framework they are learning, whatever the general advice says.\n\n<b>If you already work in React, Inertia plus TypeScript is the shorter path</b>, and Livewire is still worth understanding, because it is what most of the Laravel ecosystem is written against.\n\n---\n\n### What this day was actually about\n\n```text\nLaravel\n ├── routing\n ├── authentication\n ├── authorization\n ├── validation\n ├── Eloquent\n └── business logic\n        │\n        ├───────────────┐\n        ▼               ▼\n   Livewire          Inertia\n        │               │\n      Blade      React / Vue / Svelte\n```\n\n<b>Everything above the split is every day of this track</b>, and it does not change. Days 1 to 23 are the same whichever branch you take.\n\nWhich reframes the whole question. You are not choosing between two frameworks, or learning two systems. <b>You are choosing how the browser drives the same Laravel application</b>, and that is a decision you can revisit per page, per feature, or per team.\n\nAnd it is why the mastery target for today is not \"can you build both\". It is: <b>can you explain why the same Laravel backend supports two completely different frontend models?</b> If the answer is \"because everything that matters happens below the split\", the day has done its job.\n\nOne axis missing from that comparison, and it decides the choice for some projects: <b>search engines.</b>\n\n```text\nBlade      the server sends HTML          fine\nLivewire   the server sends HTML          fine\nInertia    the server sends an empty div  needs SSR\n```\n\nAn Inertia page renders in the browser, so a crawler that does not execute JavaScript sees nothing. The answer is server-side rendering:\n\n```bash\nphp artisan inertia:start-ssr\n```\n\n<b>Which means a Node process running alongside PHP</b>, supervised and deployed like any other, so it is a real operational cost rather than a checkbox. For a dashboard behind a login it does not matter at all; for a public marketing site or a catalogue it decides the stack.\n\nAnd on combining them: <b>Livewire and Inertia work fine on different pages of the same application</b>, and not inside the same view. An admin area in Livewire and a customer-facing app in Inertia is a reasonable split; a Livewire component inside an Inertia page is not supported.",
+      diagram: `Folio: the filesystem is the routes
+
+  Route::get('/about', [AboutController::class, 'index']);
+
+  Right when the page has logic. For a page that is only
+  content, that is a route, a controller and a view for
+  one file's worth of markup.
+
+    pages/
+    ├── index.blade.php     →  /
+    ├── about.blade.php     →  /about
+    └── contact.blade.php   →  /contact
+
+  Add a file, get a URL. If you have written Next.js,
+  you already know this arrangement.
+
+  It suits PAGES, not applications. Marketing pages,
+  documentation, a terms page. Anything with
+  authorization, several actions or real logic wants a
+  controller, where that logic has somewhere to live and
+  something to test.
+
+  And it composes: Folio for public pages, normal routes
+  for the application, in one project.
+
+
+The comparison
+
+                       Livewire            Inertia
+  ─────────────────────────────────────────────────────
+  main language        PHP                 JS / TS
+  UI                   Blade               React/Vue/Svelte
+  server interaction   Livewire requests   Inertia visits
+  browser state        Livewire-managed    the JS framework
+  JavaScript needed    minimal             significant
+  best for             CRUD, admin         rich frontends
+  Laravel integration  very deep           very deep
+  SPA-like feel        yes                 yes
+  API required         no                  no
+
+  Read the last two rows together: both feel like a SPA
+  and neither needs yesterday's API. The choice is not
+  about capability.
+
+
+Choosing
+
+  Livewire, when Laravel should own the application:
+
+    Laravel owns most of it
+          + the UI is not extremely JavaScript-heavy
+          + the team is stronger in PHP
+
+    admin dashboard · CMS · back-office
+    CRUD · internal management system
+
+  Inertia, when the frontend IS the work:
+
+    the UI is genuinely rich
+          + the team writes React or Vue well
+          + you still want Laravel's conventions
+
+    SaaS dashboard · complex application
+    rich visualisation · a large component system
+
+  The honest tiebreaker: the UNFAMILIAR option is the
+  expensive one. A team fluent in React will build a
+  better admin panel in Inertia than in a framework they
+  are learning.
+
+  Already working in React? Inertia plus TypeScript is
+  the shorter path. Livewire is still worth knowing:
+  it is what most of the ecosystem is written against.
+
+
+What this day was about
+
+  Laravel
+   ├── routing
+   ├── authentication
+   ├── authorization
+   ├── validation
+   ├── Eloquent
+   └── business logic
+          │
+          ├───────────────┐
+          ▼               ▼
+     Livewire          Inertia
+          │               │
+        Blade      React / Vue / Svelte
+
+  Everything ABOVE the split is every day of this track,
+  and it does not change. Days 1 to 23 are the same
+  whichever branch you take.
+
+  So you are not choosing between two frameworks, or
+  learning two systems. You are choosing how the browser
+  DRIVES the same Laravel application — a decision you
+  can revisit per page, per feature, or per team.
+
+  Which is why the target today is not "can you build
+  both". It is:
+
+    can you explain why the same Laravel backend
+    supports two completely different frontend models?
+
+  "Because everything that matters happens below the
+  split" is the answer.`,
+      codeExample: {
+        title: "Folio, and the two versions of one page",
+        code: `{{-- ---------- Folio: a page is a file ---------- --}}
+
+{{-- resources/views/pages/about.blade.php  →  /about --}}
+
+<x-layout>
+    <h1>About us</h1>
+    <p>...</p>
+</x-layout>
+
+{{-- resources/views/pages/posts/[Post].blade.php  →  /posts/{post} --}}
+
+<?php
+use function Laravel\\Folio\\{name, middleware};
+
+name('posts.show');
+middleware(['auth']);
+?>
+
+<x-layout>
+    <h1>{{ $post->title }}</h1>
+</x-layout>
+
+{{-- Right for pages. A screen with authorization, several
+     actions and real logic wants a controller, where that
+     logic has somewhere to live and something to test. --}}
+
+
+<?php
+// ---------- The same page, both ways ----------
+
+// Livewire: the state is a PHP property.
+
+class SearchPosts extends Component
+{
+    public string $search = '';
+    public string $status = 'all';
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function posts()
+    {
+        return Post::query()
+            ->when($this->search, fn ($q) =>
+                $q->where('title', 'like', "%{$this->search}%"))
+            ->when($this->status !== 'all', fn ($q) =>
+                $q->where('status', $this->status))
+            ->paginate(10);
+    }
+}
+
+// wire:model.live.debounce → a request → PHP → new HTML
+
+
+// Inertia: the state is React state.
+
+class PostController extends Controller
+{
+    public function index(Request $request)
+    {
+        return Inertia::render('Posts/Index', [
+            'posts' => PostResource::collection(
+                Post::query()
+                    ->when($request->search, fn ($q, $s) =>
+                        $q->where('title', 'like', "%{$s}%"))
+                    ->when($request->status !== 'all', fn ($q) =>
+                        $q->where('status', $request->status))
+                    ->paginate(10)
+                    ->withQueryString()
+            ),
+            'filters' => $request->only('search', 'status'),
+        ]);
+    }
+}
+
+// React state → an Inertia visit → props → React renders
+
+
+<?php
+// ---------- What is identical ----------
+
+// The query. The policy. The validation. The pagination.
+// The model. The migration. The tests for all of it.
+//
+//   Laravel
+//    ├── routing
+//    ├── authentication
+//    ├── authorization
+//    ├── validation
+//    ├── Eloquent
+//    └── business logic
+//           │
+//           ├──────────────┐
+//           ▼              ▼
+//      Livewire         Inertia
+//           │              │
+//         Blade      React / Vue / Svelte
+//
+// Days 1 to 23 sit above the split and do not change.
+// You are choosing how the browser drives the same
+// application — per page, per feature, or per team.`,
+      },
+      keyTakeaways: [
+        "<b>Folio makes the filesystem the routes</b>: add a Blade file under `pages/` and it becomes a URL.",
+        "<b>It suits pages rather than applications</b>: marketing, documentation, a terms page.",
+        "Anything with authorization, several actions or real logic wants a controller it can be tested through.",
+        "<b>Livewire and Inertia both give a single-page feel, and neither needs an API</b>, so the choice is not about capability.",
+        "<b>Livewire fits when Laravel should own the application</b> and the team is stronger in PHP.",
+        "<b>Inertia fits when the interface is rich</b> and the team already writes React or Vue well.",
+        "<b>The unfamiliar option is the expensive one</b>, whatever the general advice says.",
+        "If you already work in React, Inertia plus TypeScript is the shorter path, and Livewire is still worth knowing.",
+        "<b>Everything above the split is every day of this track</b>, unchanged by the choice.",
+        "<b>You are not choosing between two frameworks; you are choosing how the browser drives one application.</b>",
+        "<b>The target is being able to explain why one Laravel backend supports two frontend models</b>, not building both.",
+      ],
+      commonMistakes: [
+        "<b>Using Folio for a screen with real logic.</b> The logic ends up in a template with nowhere to test it.",
+        "<b>Choosing by fashion.</b> The framework your team does not know is the one that costs the most.",
+        "<b>Assuming Inertia needs an API.</b> It exists precisely so you do not build one.",
+        "<b>Committing the whole application to one approach.</b> Different pages can reasonably differ.",
+        "<b>Learning both as unrelated systems.</b> Everything that matters sits above the split and is shared.",
+      ],
+      quiz: [
+        {
+          question: "What does Folio provide?",
+          options: [
+            "A component library",
+            "Page-based routing, where a file under `pages/` becomes a URL",
+            "A build tool",
+            "An API layer",
+          ],
+          correctIndex: 1,
+          explanation: "It suits content pages; screens with logic want a controller.",
+        },
+        {
+          question: "Which row is the same for both Livewire and Inertia?",
+          options: [
+            "Main language",
+            "Whether an API is required, and whether the result feels like a SPA",
+            "Amount of JavaScript",
+            "Where browser state lives",
+          ],
+          correctIndex: 1,
+          explanation: "Neither needs an API, and both feel like a single-page application.",
+        },
+        {
+          question: "What is the honest tiebreaker between them?",
+          options: [
+            "Performance",
+            "Which one the team already knows, because the unfamiliar option is the expensive one",
+            "Which is newer",
+            "Which has more components",
+          ],
+          correctIndex: 1,
+          explanation: "A fluent React team builds a better admin panel in Inertia than in something they are learning.",
+        },
+        {
+          question: "Why can one Laravel backend support two frontend models?",
+          options: [
+            "It runs two applications",
+            "Routing, authentication, authorization, validation and Eloquent sit above the split and do not change",
+            "Both compile to the same output",
+            "Inertia wraps Livewire",
+          ],
+          correctIndex: 1,
+          explanation: "Only the last step differs: a Blade view or a JavaScript component.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "Why does `php artisan install:api` exist rather than API routes being there by default?",
+      question: "What is the core difference between Livewire and Inertia?",
       options: [
-        "It is a licensing requirement",
-        "Plenty of applications never expose an API, so the routes and Sanctum are opt-in",
-        "It configures the database",
-        "It is required for Blade",
+        "One is faster",
+        "Where the interface's state lives: a PHP property on the server, or JavaScript state in the browser",
+        "Inertia requires a REST API",
+        "Livewire cannot paginate",
       ],
       correctIndex: 1,
-      explanation: "It creates `routes/api.php`, registers it and installs Sanctum.",
+      explanation: "Everything else you notice follows from that.",
     },
     {
-      question: "Why do API routes not need CSRF protection?",
+      question: "Does either approach require the API you built yesterday?",
       options: [
-        "APIs are trusted",
-        "A token header is attached by code, not automatically like a cookie, so there is nothing to forge",
-        "CSRF only applies to forms",
-        "Laravel disables it for speed",
+        "Both do",
+        "Neither does; the frontend ships with the application",
+        "Only Inertia",
+        "Only Livewire",
       ],
       correctIndex: 1,
-      explanation: "This stops being true for Sanctum SPA cookie authentication.",
+      explanation: "No tokens, no CORS, no versioning, no second deployment.",
     },
     {
-      question: "How many times can you read a token's plain text value?",
-      options: ["Any number of times", "Once, when it is created", "Until it expires", "Only from the database"],
-      correctIndex: 1,
-      explanation: "The database stores a hash, exactly as it does for a password.",
-    },
-    {
-      question: "What do token abilities limit?",
+      question: "Why does `@vite()` exist rather than a plain `<script src>`?",
       options: [
-        "What the user may do to a record",
-        "What that particular token may be used for",
-        "How many requests a token may make",
-        "Which routes exist",
+        "It minifies at runtime",
+        "It points at the dev server locally and at built, versioned files in production",
+        "It loads Tailwind",
+        "It is required by Blade",
       ],
       correctIndex: 1,
-      explanation: "The policy still decides what the user may do to a given record.",
+      explanation: "One directive that knows which environment it is in.",
     },
     {
-      question: "What does `$user->tokens()->delete()` do?",
+      question: "Why does Vite hash built filenames?",
       options: [
-        "Logs out the current device",
-        "Revokes every token the user has, on every device",
-        "Expires tokens after an hour",
-        "Deletes the user",
+        "For security",
+        "A changed file gets a new URL, so a cached old version cannot be served",
+        "To compress them",
+        "For debugging",
       ],
       correctIndex: 1,
-      explanation: "`currentAccessToken()->delete()` is the one for a normal logout.",
+      explanation: "And unchanged files keep their name, so they stay cached.",
     },
     {
-      question: "Why does expiry matter when tokens can be revoked?",
+      question: "Why does `wire:model` default to updating on blur?",
       options: [
-        "It is faster",
-        "Revocation needs somebody to notice; expiry limits a leaked token even when nobody does",
-        "Expired tokens are removed automatically",
-        "It replaces abilities",
+        "Blur events are more reliable",
+        "`.live` means a server request per keystroke",
+        "It is easier to implement",
+        "For accessibility",
       ],
       correctIndex: 1,
-      explanation: "The question becomes how much time a leak buys, not whether anybody notices.",
+      explanation: "`.debounce` is what makes `.live` reasonable on a text input.",
     },
     {
-      question: "What is the main value of `Route::apiResource()`?",
+      question: "Can you trust a Livewire public property inside an action?",
       options: [
-        "It generates the controller",
-        "All five routes are registered consistently, so they cannot drift in name, path or middleware",
-        "It adds authentication",
-        "It paginates the index",
+        "Yes, it comes from the server",
+        "No; the client can modify it, so authorize in the action as you would in a controller",
+        "Only if it is typed",
+        "Only for models",
       ],
       correctIndex: 1,
-      explanation: "Hand-written routes eventually differ in one of those.",
+      explanation: "Public properties travel in both directions on every interaction.",
     },
     {
-      question: "Why return an API Resource rather than the model?",
+      question: "Why does a filter change usually need `resetPage()`?",
       options: [
-        "It is faster",
-        "The model publishes every column, including ones added by future migrations",
-        "Models cannot be serialised",
-        "Resources add pagination",
+        "To clear the cache",
+        "Otherwise the user stays on page 5 of a now-shorter list, which is usually empty",
+        "To re-run validation",
+        "To reset the sort",
       ],
       correctIndex: 1,
-      explanation: "`$hidden` fails open; a resource fails closed.",
+      explanation: "The symptom looks like search returning nothing.",
     },
     {
-      question: "A valid token, but the user does not own the record. What status?",
-      options: ["401", "403", "404", "422"],
-      correctIndex: 1,
-      explanation: "They are authenticated, so logging in again would change nothing.",
-    },
-    {
-      question: "What is the difference between 404 and 422?",
+      question: "What does an Inertia controller return after a successful POST?",
       options: [
-        "None",
-        "404 means the resource does not exist; 422 means the data sent is invalid",
-        "422 is for missing authentication",
-        "404 is only for collections",
+        "JSON with the created model",
+        "A redirect, which Inertia follows",
+        "A 201 status",
+        "The page component",
       ],
       correctIndex: 1,
-      explanation: "Route model binding gives the first; validation gives the second.",
+      explanation: "Exactly as it would for a Blade form.",
     },
     {
-      question: "What does CORS actually protect?",
+      question: "How do Laravel validation errors reach a React form?",
       options: [
-        "Your API from unauthorised clients",
-        "One website from reading another's responses in a user's browser",
-        "Tokens in transit",
-        "Against rate-limit abuse",
+        "You parse the 422 body",
+        "Inertia shares them automatically into `form.errors`, keyed by field",
+        "You duplicate the rules in JavaScript",
+        "Through a separate endpoint",
       ],
       correctIndex: 1,
-      explanation: "`curl` and mobile apps ignore it entirely, so it is not your security.",
+      explanation: "One source of truth for both rules and messages.",
     },
     {
-      question: "When is Passport the right choice over Sanctum?",
+      question: "What does a partial reload with `only: ['posts']` avoid?",
       options: [
-        "For any mobile application",
-        "When third parties register their own clients or somebody delegates authorization",
-        "Whenever tokens need to expire",
-        "For any public API",
+        "A full page load",
+        "Evaluating and returning the props you did not ask for, including their queries",
+        "Running the controller",
+        "Re-rendering React",
       ],
       correctIndex: 1,
-      explanation: "Passport is an OAuth2 authorization server, not a token library.",
+      explanation: "Closure props are only evaluated when they are requested.",
+    },
+    {
+      question: "What problem does Precognition solve?",
+      options: [
+        "Slow queries",
+        "Live frontend validation otherwise duplicating the server's rules into a second source of truth",
+        "Missing CSRF tokens",
+        "Large bundles",
+      ],
+      correctIndex: 1,
+      explanation: "It asks Laravel to run the real rules before submission.",
+    },
+    {
+      question: "Why can one Laravel backend support two completely different frontend models?",
+      options: [
+        "It runs two applications",
+        "Routing, auth, validation and Eloquent sit above the split and do not change; only the last step differs",
+        "Inertia is built on Livewire",
+        "Both compile to the same output",
+      ],
+      correctIndex: 1,
+      explanation: "You are choosing how the browser drives one application.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Expose InvoiceHub as a token-authenticated REST API that a mobile client could build against, and prove every failure returns the right status.",
-    brief: "InvoiceHub has screens. Today it gets an interface something else can call.\n\nAlmost nothing here is new. The authentication is Day 19, the policies are Day 20, the validation is Day 9, the resources are Day 16, the rate limiting is Day 21. <b>What is new is that all of it now has to be visible in the response.</b> A browser can be redirected and shown a message; a client gets a number and a body, and has to decide what to do from those alone.\n\nSo the day is measured in status codes. For every endpoint, five requests: no token, a valid token from the wrong user, a missing record, invalid data, and a correct request. Each has one right answer, and until all five are right the endpoint is not finished.\n\nWork in `routes/api.php`, keep everything under `/api/v1`, and treat the resource files as the contract: if it is not in a resource, it is not in your API.",
+    goal: "Build the InvoiceHub invoice list twice, once in Livewire and once in Inertia with React, and be able to explain what is different and what is not.",
+    brief: "InvoiceHub's screens are plain Blade forms with full page reloads. Today they get a real interface, and you build it twice.\n\nThat is deliberate, and it is the whole exercise. Building it once teaches you a framework. <b>Building the same screen twice teaches you where the line between Laravel and the frontend actually is</b>, because everything that stays identical is the part that was never a frontend concern.\n\nThe screen is the same in both: search, a status filter, pagination, a loading state, an empty state and validation. Same query, same policy, same rules. Only the last step differs.\n\nWhen both work, do not stop. The questions at the end are the point of the day, and answering them is worth more than either implementation.",
     steps: [
-      "Run `php artisan install:api` and read what it changed. Write down which middleware `api.php` has that `web.php` does not, and what each difference means for a mobile client.",
-      "Add `HasApiTokens` to `User` and build a login endpoint that validates, checks the password, and returns a token. Use one error message for a wrong password and an unknown email.",
-      "Rate limit that endpoint with the `login` limiter from Day 21, then fail it six times and confirm the 429 and its `Retry-After` header.",
-      "Add `GET /api/v1/user` behind `auth:sanctum`. Call it with no token and confirm a 401. Then call it without `Accept: application/json` and note what you get instead, and why.",
-      "Build `InvoiceController` with `--api` and register it with `apiResource` under a `v1` prefix. Confirm all five routes exist with `php artisan route:list`.",
-      "Write `InvoiceResource` and `CustomerResource`. Include the customer with `whenLoaded()` and a line count with `whenCounted()`. Nothing that is not in the resource should appear in a response.",
-      "Add a column to the invoices table, deploy nothing else, and confirm it does not appear in the API. Write down what would have happened if the controller returned the model.",
-      "Make `index` paginated and confirm the response carries `links` and `meta` without you writing them.",
-      "Apply the Day 20 policy to every action, and confirm a second user gets a 403 on show, update and destroy.",
-      "Change the `view` policy to `denyAsNotFound()` and note what a stranger can now learn from a sequential id, compared with before.",
-      "Get the statuses right: 201 with the created invoice on store, 200 on update, 204 with an empty body on destroy. Check the delete response really is empty.",
-      "Trigger a 422 and read the body. Confirm the `errors` object maps messages to fields, and write down how a mobile client would use it.",
-      "Now the five-request test, for every endpoint: no token, wrong user, missing record, invalid data, correct request. Record the status you got for each in a table.",
-      "Issue a second token with `['invoices:read']` and confirm it can list invoices and cannot delete one. Then confirm the delete failure is a 403 and not a 401.",
-      "Build a devices endpoint listing the user's tokens with their names and last use, and a revoke endpoint. Revoke one from a second client and confirm it stops working immediately.",
-      "Add token revocation on password change, then change a password and confirm every other client is signed out.",
-      "Configure CORS for one specific origin, call the API from a page on that origin and from another, and write down which one the browser refused and why `curl` succeeded from both.",
-      "Write the documentation: for each endpoint, the method, path, auth, request body, and every status it can return. Compare it against your table from step 13 and fix whichever is wrong.",
+      "Confirm Vite is running with `npm run dev`, then deliberately stop it and reload a page. Note what breaks and add that symptom to your notes, because you will see it again.",
+      "Run `npm run build`, look at the generated filenames in `public/build`, then change one line of CSS and build again. Write down what changed and why that matters after a deploy.",
+      "Build the Livewire version: a `SearchInvoices` component with `$search` and `$status` properties, a computed `invoices` property, and a Blade view.",
+      "Use `wire:model.live` with no debounce on the search box, open the network tab, and type \"invoice\". Count the requests. Then add `.debounce.300ms` and count again.",
+      "Add `updatedSearch()` calling `resetPage()`. Before adding it, filter while on page 3 and note exactly what the user sees.",
+      "Add `wire:loading` and an empty state. Confirm both appear at the right moments by throttling the network in your browser's dev tools.",
+      "Add a delete button with `wire:click` and `wire:confirm`. Then authorize it in the action, and write down why the id in that call cannot be trusted.",
+      "Now the Inertia version: a controller returning `Inertia::render('Invoices/Index', [...])` with `invoices` and `filters` props, and a React page in TypeScript.",
+      "Type the props properly. Then rename a field in `InvoiceResource` without updating the type, and note where the error appears and when.",
+      "Implement search in React with `router.get(..., { preserveState: true, replace: true })`. Compare what the network tab shows with the Livewire version.",
+      "Add a second expensive prop such as monthly totals. Make it a closure, add `only: ['invoices']` to the search visit, and confirm from your query log that the totals query no longer runs on every keystroke.",
+      "Defer that totals prop instead and note what the user sees first. Decide which of the two versions you would ship.",
+      "Build the invoice create form with `useForm`. Submit it invalid and confirm the errors arrive in `form.errors` without you writing any error handling.",
+      "Add Precognition to that form so validation runs as the user leaves each field. Then change one rule in the controller and confirm the frontend follows without a frontend change.",
+      "Put both versions behind different routes and view them side by side. Time a search on each with the network throttled, and record both numbers.",
+      "Now answer, in writing, for the Livewire version: where does the state live, what request does `wire:model` produce, when does PHP run, and how does validation reach Blade?",
+      "And for the Inertia version: where does the state live, what is a prop, what does a visit actually do, what does a partial reload change, and how does Laravel validation reach React?",
+      "Finally, list everything that was identical between the two implementations. That list is the answer to why one backend supports both.",
     ],
     acceptance: [
-      "Every endpoint lives under `/api/v1` and is registered through `apiResource`.",
-      "No token returns 401, a valid token from the wrong user returns 403, and you can explain why those are different.",
-      "A missing invoice returns 404 and invalid data returns 422 with a field-keyed `errors` object.",
-      "Creating returns 201 with the invoice; deleting returns 204 with a genuinely empty body.",
-      "The API returns only what the resource files list, and a newly added column does not appear.",
-      "The index endpoint is paginated and returns `links` and `meta`.",
-      "A read-only token can list invoices and is refused with a 403 on delete.",
-      "The devices endpoint lists tokens, revoking one takes effect immediately, and a password change signs out every client.",
-      "The login endpoint is rate limited and returns 429 with `Retry-After`.",
-      "CORS permits your frontend origin and refuses another in a browser, and you can explain why `curl` is unaffected.",
-      "Your documentation lists every status each endpoint can return, and matches what the API actually does.",
+      "Both versions of the invoice list work: search, status filter, pagination, loading state, empty state.",
+      "The Livewire search is debounced, and you recorded the request count before and after.",
+      "Filtering resets to page one, and you can describe what happened before you added it.",
+      "The Livewire delete action authorizes, and you can explain why the id it receives is untrusted.",
+      "The Inertia props are typed, and you saw where a renamed resource field surfaced as an error.",
+      "The Inertia search uses a partial reload, and your query log proves the expensive prop does not run on every keystroke.",
+      "The create form shows per-field validation errors with no error-handling code of your own.",
+      "Precognition validates against the controller's rules, and changing a rule changes the frontend behaviour with no frontend change.",
+      "You have timings for both versions under a throttled network.",
+      "You have written answers to the state, request and validation questions for both versions.",
+      "You have a list of everything that was identical, and can explain why that list is the point.",
     ],
     stretch: [
-      "Add `/api/v2` that renames one field, keep `v1` working, and write a test proving both still return the right shape.",
-      "Publish an OpenAPI specification for the API and generate a documentation page from it.",
-      "Add a `POST /api/v1/invoices/{invoice}/payment` sub-resource rather than a `pay` verb, and write down what modelling it as a resource gave you.",
+      "Rewrite the Livewire component as a single-file Volt component and note which one you find easier to read.",
+      "Add a shadcn/ui table and dialog to the Inertia version, and write down what you now own that you did not before.",
+      "Add a Folio-routed public invoice-status page and explain why that page suits Folio and the invoice list does not.",
     ],
   },
 };

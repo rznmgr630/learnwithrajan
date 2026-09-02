@@ -2,2132 +2,2347 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_21_LESSONS: LessonDay = {
   day: 21,
-  title: "Application security — CSRF, XSS, rate limiting & headers",
-  totalMinutes: 89,
+  title: "File storage, the HTTP client & processes",
+  totalMinutes: 92,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "csrf",
-      title: "CSRF — cross-site request forgery",
+      id: "filesystem-disks",
+      title: "Disks — local, public & S3",
       durationMinutes: 12,
-      explanation: "Two days on who somebody is and what they may do. Today is about everything else that can go wrong, and it starts from one idea:\n\n> <b>Every piece of data arriving at your application is untrusted until you have explicitly validated or constrained it.</b>\n\n```text\nIncoming Request\n      │\n      ├── CSRF protection\n      ├── Input validation\n      ├── XSS protection\n      ├── SQL injection protection\n      ├── Mass assignment protection\n      ├── Rate limiting\n      ├── Security headers\n      └── HTTPS + secrets\n               ↓\n          Application\n```\n\n---\n\n### 1. Basic — the attack\n\n<b>CSRF</b> is <i>cross-site request forgery</i>: making somebody's browser send a request they did not intend.\n\nYou are logged into your bank. Your browser holds a valid session cookie. An attacker gets you to open their page, which contains a form or a bit of JavaScript pointed at your bank:\n\n```http\nPOST https://bank.com/transfer\n```\n\nAnd here is the part that surprises people: <b>the browser attaches your bank cookies to that request</b>, because cookies are sent based on where the request is <i>going</i>, not where it came from.\n\n```text\nevil.com's page\n      ↓\nPOST to bank.com\n      ↓\nbrowser attaches bank.com's cookies\n      ↓\nbank.com sees an authenticated request\n```\n\nAuthentication does not help. The request <i>is</i> authenticated; it just was not asked for. So the server needs a different question:\n\n> Did this request actually originate from my application?\n\n---\n\n### 2. Intermediate — how Laravel answers it\n\nA <b>CSRF token</b> is a value your application generates, ties to the session, and embeds in its own pages. A form submitted from your site carries it; a form on `evil.com` cannot, <i>because the attacker cannot read your pages</i>.\n\nIn Blade:\n\n```blade\n<form method=\"POST\" action=\"/profile\">\n    @csrf\n    ...\n</form>\n```\n\n```html\n<input type=\"hidden\" name=\"_token\" value=\"...\">\n```\n\n```text\nform → token → request → middleware → valid?\n```\n\nLaravel 13's middleware is `PreventRequestForgery`, and the change worth understanding is conceptual: <b>it checks the request's origin as well as its token.</b>\n\n```text\nRequest\n  │\n  ├── CSRF token\n  └── request origin\n         ↓\n   is this legitimate?\n```\n\nThinking of CSRF as \"a hidden field\" makes it feel like paperwork. Thinking of it as \"prove this came from my application\" explains why a token alone was never the whole answer, and why the browser telling you the origin is useful.\n\nFor JavaScript, expose the token and send it as a header:\n\n```blade\n<meta name=\"csrf-token\" content=\"{{ csrf_token() }}\">\n```\n\n```js\nheaders: { 'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]').content }\n```\n\nAxios and Laravel's own bundled setup do this for you; the point is not the header name but that <b>the token has to reach the server somehow</b>.\n\n---\n\n### 3. Advanced — the details that matter\n\n<b>Only state-changing requests are protected.</b> `GET` is not, which is exactly why a `GET` route must never change anything. A `GET /posts/1/delete` is a CSRF hole by construction, and no middleware can save it.\n\n<b>Some routes legitimately cannot carry a token.</b> A webhook from a payment provider is not using anybody's browser session:\n\n```text\nStripe  →  your webhook endpoint\n```\n\nSo it is excluded from CSRF verification, and <b>it must then be protected some other way</b>: the provider's signature header, verified before you trust the body. Excluding a route without adding that check is not a fix, it is an unauthenticated endpoint.\n\nThe temptation worth naming: a CSRF failure looks like a bug, and the fastest way to make it go away is to exclude the route. <b>That converts a confusing error into a silent vulnerability</b>, and it is the single most common self-inflicted security wound in a Laravel application.\n\nThe usual real causes:\n\n```text\na missing @csrf in a form\na cached page with an expired token      (419 after leaving a tab open)\nJavaScript not sending the header\nSPA and API on different origins\n```\n\nAnd one that is not a bug at all: <b>a token-authenticated API does not need CSRF.</b> CSRF exists because browsers attach cookies automatically. A request authenticated by an `Authorization` header carries nothing automatically, so there is nothing to forge. Sanctum's stateful browser sessions do need it; a pure token API does not.\n\nOne function to know while you are here: when you compare a signature yourself, <b>use `hash_equals()`</b>:\n\n```php\nif (! hash_equals($expected, $request->header('X-Signature'))) {\n    abort(403);\n}\n```\n\n<b>`===` on a secret leaks how much of it you got right</b>, because it returns as soon as two characters differ, and the difference is measurable across enough requests. `hash_equals()` takes the same time whatever the input. Same reasoning as `Hash::check()` on Day 19.",
-      diagram: `The day, in one picture
+      explanation: "Three things your application talks to that live outside it:\n\n```text\nApplication\n   │\n   ├── Files            →  local / public / S3\n   ├── External APIs    →  HTTP client\n   └── System commands  →  Process\n```\n\nAnd one idea running through all of them:\n\n> <b>Your application should not care where a file physically lives or how an external service is implemented. It should talk to an abstraction.</b>\n\n---\n\n### 1. Basic — what a disk is\n\nInstead of writing paths:\n\n```php\nfile_put_contents('/var/www/app/storage/reports/report.pdf', $contents);\n```\n\nyou write:\n\n```php\nStorage::put('reports/report.pdf', $contents);\n```\n\n<b>A <i>disk</i></b> (a named, configured storage location) is what the second version is talking to. Configured in `config/filesystems.php`, and the three you will meet are:\n\n```text\nlocal     storage/app, not reachable from the web\npublic    storage/app/public, meant to be served\ns3        object storage, not on your server at all\n```\n\n```php\nStorage::disk('s3')->put('reports/report.pdf', $contents);\n```\n\n<b>The gain is that the path is configuration, not code.</b> Moving from the server to S3 changes a `.env` value rather than every method that touches a file.\n\n---\n\n### 2. Intermediate — public, and the link\n\nThe `public` disk is for files users are meant to fetch: avatars, uploaded images, a logo.\n\nBut it writes to `storage/app/public`, and the web server only serves `public/`. Putting a file there does not make it reachable. <b>That is what `storage:link` is for:</b>\n\n```bash\nphp artisan storage:link\n```\n\n```text\nstorage/app/public\n        │\n        │ symbolic link\n        ▼\npublic/storage\n```\n\nNow a file stored as `avatars/user.jpg` is served at `/storage/avatars/user.jpg`.\n\n```text\nupload\n  ↓\npublic disk\n  ↓\nstorage:link\n  ↓\n/storage/avatars/user.jpg\n```\n\nThe symptom of forgetting it is a 404 on every uploaded image, with the file plainly sitting on disk. And it has to be run on every environment, which is why it belongs in your deploy script rather than your memory.\n\n<b>The `local` disk is the opposite</b>: nothing under it is reachable from the web, which is right for anything private. Serving one of those means reading it through a controller that checks authorization first.\n\n---\n\n### 3. Advanced — why object storage\n\nOn one server, the local disk is fine. Add a second and it stops being fine:\n\n```text\nuser uploads → Server 1 → the file is on Server 1\n\nuser reloads → Server 2 → file missing\n```\n\nThe load balancer sent them elsewhere, and the file is not there. <b>The local disk assumes there is one server, forever.</b>\n\n```text\nServer 1 ─┐\nServer 2 ─┼──→  S3\nServer 3 ─┘\n```\n\nOne store, every server. And it survives replacing a server, which a modern deploy does routinely.\n\nThree more reasons it is usually right in production: your files stop counting towards the disk on your application server, backups become somebody else's problem, and large files can be served without passing through PHP at all.\n\nThe practical arrangement most applications land on:\n\n```text\nlocal    temporary files, caches, things you can regenerate\npublic   small public assets, on a single-server app\ns3       anything a user uploaded, in production\n```\n\nAnd because the disk name is configuration, <b>the same code runs against `local` in tests and `s3` in production</b>, which is the reason to use `Storage` even on a one-server application you are sure will never grow.",
+      diagram: `Three things outside your application
 
-  Incoming Request
-        │
-        ├── CSRF protection
-        ├── Input validation
-        ├── XSS protection
-        ├── SQL injection protection
-        ├── Mass assignment protection
-        ├── Rate limiting
-        ├── Security headers
-        └── HTTPS + secrets
-                 ↓
-            Application
+  Application
+     │
+     ├── Files            →  local / public / S3
+     ├── External APIs    →  HTTP client
+     └── System commands  →  Process
 
-  Everything arriving is untrusted until you
-  explicitly validate or constrain it.
+  Your code should say "store this file", not
+  "write to /var/www/...".
 
 
-The CSRF attack
+A disk is a named, configured location
 
-  You are logged into bank.com. An attacker gets you
-  to open evil.com, which posts to bank.com.
+  file_put_contents('/var/www/app/storage/...')   a path in code
+  Storage::put('reports/report.pdf', ...)          a disk
 
-    evil.com's page
-          ↓
-    POST to bank.com
-          ↓
-    the browser attaches bank.com's cookies
-          ↓
-    bank.com sees an AUTHENTICATED request
+  local     storage/app, NOT reachable from the web
+  public    storage/app/public, meant to be served
+  s3        object storage, not on your server at all
 
-  Cookies are sent based on where the request is GOING,
-  not where it came from. Authentication does not help:
-  the request is authenticated, it was just not asked for.
-
-  So the server needs a different question:
-    did this request originate from MY application?
+  The path becomes configuration. Moving to S3 is a
+  .env change, not a rewrite.
 
 
-How Laravel answers it
+public, and the link
 
-  A token your app generates, ties to the session, and
-  embeds in its own pages. evil.com cannot read your
-  pages, so it cannot include it.
+  The public disk writes to storage/app/public.
+  The web server serves public/. Those are different
+  places, so a file there is not reachable.
 
-    @csrf  →  <input type="hidden" name="_token" ...>
+    php artisan storage:link
 
-    form → token → request → middleware → valid?
+    storage/app/public
+            │
+            │ symbolic link
+            ▼
+    public/storage
 
-  Laravel 13: PreventRequestForgery checks the request
-  ORIGIN as well as the token.
+  Stored as avatars/user.jpg → served at
+  /storage/avatars/user.jpg
 
-    Request
-      ├── CSRF token
-      └── request origin
-             ↓
-       is this legitimate?
+  Forgetting it: a 404 on every image, with the file
+  plainly sitting on disk. Run it on every environment,
+  from the deploy script rather than from memory.
 
-  JavaScript: expose it in a meta tag, send it as
-  X-CSRF-TOKEN. The header name is not the point;
-  the token reaching the server is.
+  The local disk is the opposite: nothing under it is
+  web-reachable, which is right for private files. Serve
+  those through a controller that authorizes first.
 
 
-Details that matter
+Why object storage
 
-  Only state-changing requests are protected. GET is not,
-  which is why a GET route must never change anything.
-  GET /posts/1/delete is a CSRF hole by construction.
+  One server: local is fine.
+  Two servers:
 
-  Webhooks legitimately cannot carry a token:
+    user uploads → Server 1 → the file is on Server 1
+    user reloads → Server 2 → file missing
 
-    Stripe  →  your webhook endpoint
+  The local disk assumes one server, forever.
 
-  So exclude it, and protect it with the provider's
-  SIGNATURE instead. Excluding without that is not a
-  fix, it is an unauthenticated endpoint.
+    Server 1 ─┐
+    Server 2 ─┼──→  S3
+    Server 3 ─┘
 
-  ⚠️  A CSRF failure looks like a bug, and the fastest
-      way to make it go away is to exclude the route.
-      That turns a confusing error into a silent hole.
+  One store, every server. And it survives replacing a
+  server, which deploys do routinely.
 
-  Usual real causes:
-    a missing @csrf
-    a cached page with an expired token  (the 419)
-    JavaScript not sending the header
-    SPA and API on different origins
+  Plus: files stop filling your application disk, backups
+  are somebody else's problem, and large files can be
+  served without passing through PHP.
 
-  And not a bug: a TOKEN-authenticated API needs no CSRF.
-  CSRF exists because browsers attach cookies
-  automatically. An Authorization header is not automatic,
-  so there is nothing to forge.`,
+
+Where most applications land
+
+  local    temporary files, caches, regenerable things
+  public   small public assets, single-server apps
+  s3       anything a user uploaded, in production
+
+  And because the disk is configuration, the same code
+  runs against local in tests and s3 in production.
+  That is the reason to use Storage even on an app you
+  are sure will never grow.`,
       codeExample: {
-        title: "Tokens in forms, in JavaScript, and the webhook exception",
-        code: `{{-- resources/views/profile/edit.blade.php --}}
+        title: "Disks, and the link that catches everyone",
+        code: `<?php
+// config/filesystems.php
 
-<form method="POST" action="/profile">
-    @csrf
-    @method('PUT')
+return [
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
-    <input name="name" value="{{ old('name', $user->name) }}">
-    <button>Save</button>
-</form>
+    'disks' => [
 
-{{-- @csrf renders: --}}
-{{-- <input type="hidden" name="_token" value="..."> --}}
+        // Not reachable from the web. Private by default.
+        'local' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/private'),
+        ],
 
+        // Meant to be served, once storage:link exists.
+        'public' => [
+            'driver'     => 'local',
+            'root'       => storage_path('app/public'),
+            'url'        => env('APP_URL') . '/storage',
+            'visibility' => 'public',
+        ],
 
-{{-- In the layout, for JavaScript --}}
-<meta name="csrf-token" content="{{ csrf_token() }}">
+        // Not on your server at all.
+        's3' => [
+            'driver' => 's3',
+            'key'    => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
 
+            // For MinIO, DigitalOcean Spaces and anything
+            // else S3-compatible but not S3 itself:
+            'endpoint'                => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+        ],
 
-<script>
-// The token has to reach the server somehow. Axios and
-// Laravel's bundled setup do this for you.
-fetch('/profile', {
-    method: 'POST',
-    headers: {
-        'X-CSRF-TOKEN': document
-            .querySelector('meta[name="csrf-token"]')
-            .content,
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name: 'Rajan' }),
-});
-</script>
-
-
-<?php
-// ---------- The webhook exception ----------
-
-// bootstrap/app.php
-
-->withMiddleware(function (Middleware $middleware) {
-    // Stripe is not using anybody's browser session and
-    // cannot have your token.
-    $middleware->validateCsrfTokens(except: [
-        'webhooks/stripe',
-    ]);
-})
+    ],
+];
 
 
-<?php
-// ---------- ...which means it needs its own check ----------
+# ---------- The S3 driver is a separate package ----------
 
-class StripeWebhookController extends Controller
-{
-    public function __invoke(Request $request)
-    {
-        // Excluding from CSRF without this is not a fix.
-        // It is an unauthenticated endpoint.
-        $signature = $request->header('Stripe-Signature');
+composer require league/flysystem-aws-s3-v3
 
-        try {
-            $event = Webhook::constructEvent(
-                $request->getContent(),
-                $signature,
-                config('services.stripe.webhook_secret'),
-            );
-        } catch (SignatureVerificationException $e) {
-            abort(400);
-        }
+# Laravel ships the disk configuration; the adapter that
+# talks to S3 is not installed by default.
 
-        // Only now is the body trustworthy.
-    }
-}
+
+# ---------- The link ----------
+
+php artisan storage:link
+
+#   storage/app/public  →  public/storage
+#
+# Put it in your deploy script. Forgetting it on a new
+# environment is a 404 on every uploaded image, with the
+# file sitting plainly on disk.
 
 
 <?php
-// ---------- The rule GET routes must follow ----------
+// ---------- Using them ----------
 
-// ❌ A CSRF hole by construction: GET is not protected,
-//    so any page anywhere can trigger it with an <img>.
-Route::get('/posts/{post}/delete', [PostController::class, 'destroy']);
+use Illuminate\\Support\\Facades\\Storage;
 
-// ✓ State changes use a verb that CSRF protection covers.
-Route::delete('/posts/{post}', [PostController::class, 'destroy']);`,
+// The default disk, from FILESYSTEM_DISK.
+Storage::put('reports/report.pdf', $contents);
+
+// A named disk.
+Storage::disk('public')->put('avatars/user.jpg', $contents);
+Storage::disk('s3')->put('invoices/2026/INV-001.pdf', $contents);
+
+// The same line of application code, wherever the file goes.
+
+
+# ---------- Which is why this works ----------
+
+# .env, locally
+FILESYSTEM_DISK=public
+
+# .env, in production
+FILESYSTEM_DISK=s3
+
+# phpunit.xml, in tests
+# <env name="FILESYSTEM_DISK" value="local"/>
+
+
+<?php
+// ---------- Private files are not served directly ----------
+
+// The local disk is not web-reachable, so this is the
+// only way in, and it can authorize first.
+Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
+    Gate::authorize('view', $invoice);
+
+    return Storage::disk('local')->download($invoice->pdf_path);
+})->middleware('auth');`,
       },
       keyTakeaways: [
-        "<b>Treat everything arriving at your application as untrusted until you validate or constrain it.</b>",
-        "<b>CSRF is making somebody's browser send a request they did not intend</b>, using the session it already has.",
-        "<b>Browsers attach cookies based on where a request is going</b>, so the forged request is genuinely authenticated.",
-        "<b>A CSRF token proves the request came from your own pages</b>, which an attacker's site cannot read.",
-        "`@csrf` renders the hidden field; a `csrf-token` meta tag plus a header covers JavaScript.",
-        "<b>Laravel 13's `PreventRequestForgery` checks the request origin as well as the token.</b>",
-        "<b>`GET` requests are not protected</b>, which is why a `GET` route must never change anything.",
-        "<b>A webhook cannot carry your token</b>, so it is excluded and protected by the provider's signature instead.",
-        "<b>Excluding a route to make a CSRF error go away turns a visible bug into a silent hole.</b>",
-        "<b>A token-authenticated API needs no CSRF</b>, because nothing is attached automatically.",
+        "<b>Your application should say \"store this file\", not name a path on a server.</b>",
+        "<b>A disk is a named, configured storage location</b>, defined in `config/filesystems.php`.",
+        "<b>`local` is not reachable from the web; `public` is meant to be served; `s3` is not on your server.</b>",
+        "Because the disk is configuration, the same code can write locally in tests and to S3 in production.",
+        "<b>The `public` disk writes to `storage/app/public`, which the web server does not serve.</b>",
+        "<b>`php artisan storage:link` creates the symlink</b> that makes those files reachable at `/storage/...`.",
+        "Forgetting the link is a 404 on every image, so run it from your deploy script.",
+        "<b>The local disk assumes there is one server forever</b>, and breaks the moment there are two.",
+        "<b>Object storage gives every server one store</b>, and survives a server being replaced.",
+        "Private files belong on a non-public disk and are served through a controller that authorizes first.",
       ],
       commonMistakes: [
-        "<b>Excluding a route because CSRF was failing.</b> The failure was the signal, and now there is none.",
-        "<b>Excluding a webhook without verifying its signature.</b> Anybody can now post to it.",
-        "<b>Using a `GET` route for a delete.</b> CSRF protection does not cover it, and an `<img>` tag can trigger it.",
-        "<b>Forgetting `@csrf` in a form.</b> The 419 that follows is the protection working.",
-        "<b>Adding CSRF to a pure token API.</b> There are no automatic cookies, so there is nothing to forge.",
+        "<b>Forgetting `storage:link` on a new environment.</b> Every uploaded image 404s while sitting on disk.",
+        "<b>Writing absolute paths instead of using `Storage`.</b> Moving to S3 then means rewriting every call.",
+        "<b>Putting private files on the public disk.</b> The URL is guessable and nothing checks who is asking.",
+        "<b>Using the local disk on a multi-server deployment.</b> Half the requests cannot find the file.",
+        "<b>Assuming `storage:link` is one-time.</b> It is per environment, including every fresh container.",
       ],
       quiz: [
         {
-          question: "Why does authentication not prevent CSRF?",
+          question: "What does `php artisan storage:link` create?",
           options: [
-            "Sessions expire too slowly",
-            "The forged request genuinely carries the user's cookies, so it is authenticated",
-            "CSRF happens before authentication",
-            "It does prevent it",
+            "A new disk",
+            "A symlink from `public/storage` to `storage/app/public`, so those files can be served",
+            "A database record",
+            "An S3 bucket",
           ],
           correctIndex: 1,
-          explanation: "Browsers attach cookies based on the destination, not the origin.",
+          explanation: "Without it, files on the public disk are on disk but not reachable.",
         },
         {
-          question: "Why can an attacker's site not include your CSRF token?",
-          options: [
-            "The token is encrypted",
-            "It cannot read your pages, which is where the token lives",
-            "Tokens are IP-bound",
-            "Browsers block it",
-          ],
-          correctIndex: 1,
-          explanation: "That is exactly what makes the token proof of origin.",
-        },
-        {
-          question: "A webhook endpoint is excluded from CSRF. What must it have instead?",
-          options: [
-            "Nothing; webhooks are safe",
-            "The provider's signature, verified before the body is trusted",
-            "Rate limiting only",
-            "An API token in the URL",
-          ],
-          correctIndex: 1,
-          explanation: "Excluding without a replacement leaves an unauthenticated endpoint.",
-        },
-        {
-          question: "Why must a `GET` route never change state?",
+          question: "Why does the local disk break on a multi-server deployment?",
           options: [
             "It is slower",
-            "`GET` is not CSRF protected, so any page can trigger it",
-            "Laravel forbids it",
-            "It cannot be cached",
+            "The file exists only on the server that received the upload",
+            "Laravel disables it",
+            "It has a size limit",
           ],
           correctIndex: 1,
-          explanation: "An `<img src=\"...\">` on any site would fire it.",
+          explanation: "The next request may be served by a different machine.",
+        },
+        {
+          question: "Where do private user files belong?",
+          options: [
+            "The public disk, with a long random filename",
+            "A non-public disk, served through a controller that authorizes first",
+            "The database",
+            "The public disk, with `.htaccess`",
+          ],
+          correctIndex: 1,
+          explanation: "A guessable URL with nothing checking who is asking is not protection.",
+        },
+        {
+          question: "What is the main benefit of the `Storage` abstraction?",
+          options: [
+            "Faster file access",
+            "The storage location becomes configuration, so the same code runs against local or S3",
+            "Automatic backups",
+            "Built-in image resizing",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why it is worth using even on a one-server application.",
         },
       ],
     },
     {
-      id: "xss",
-      title: "XSS — escaping output",
+      id: "storing-files",
+      title: "Storing files — put, store & the filename question",
       durationMinutes: 11,
-      explanation: "CSRF was about requests you did not mean to send. This is about scripts you did not mean to run.\n\n---\n\n### 1. Basic — the attack\n\n<b>XSS</b> is <i>cross-site scripting</i>: getting your application to render an attacker's JavaScript so it runs in somebody else's browser.\n\nA user submits a comment:\n\n```html\n<script>alert('Hacked')</script>\n```\n\nIf your page renders that as HTML, every visitor runs it. And an alert is the harmless demonstration. Real payloads read the session cookie, submit forms as the victim, or rewrite the page to ask for a password.\n\n<b>The damage is that the script runs as your site.</b> It has whatever access the visitor has, which on a logged-in page is everything.\n\n---\n\n### 2. Intermediate — Blade escapes by default\n\n```blade\n{{ $name }}\n```\n\nEscapes HTML. `<script>` becomes `&lt;script&gt;`, which the browser prints instead of running.\n\n```blade\n{!! $html !!}\n```\n\nDoes not. The string goes into the page as markup.\n\n```text\n{{ $content }}      →  escaped, printed as text\n{!! $content !!}    →  raw HTML, executed\n```\n\nSo the default is safe and you have to opt out of it. <b>Which makes `{!! !!}` worth treating as a small alarm</b>: every one in a codebase is a place somebody decided the content was trustworthy, and that decision needs to still be true.\n\nThe legitimate uses are narrow:\n\n```text\nmarkup you generated yourself\ncontent already sanitised by a library\nrich text from an editor, sanitised on the way in\n```\n\nAnd the illegitimate one is the common one: a field a user typed, rendered raw because it needed one `<br>`.\n\n---\n\n### 3. Advanced — escaping is context-dependent\n\nHere is the part that catches people who think escaping is one thing.\n\n<b>`{{ }}` escapes for HTML.</b> Inside a `<script>` block or an HTML attribute, HTML escaping is not the right escaping:\n\n```blade\n<script>\n    let name = \"{{ $name }}\";     // wrong context\n</script>\n```\n\nHTML-escaping does not neutralise a quote and a closing brace in JavaScript. The fix is to hand data to JavaScript as data, not as text spliced into a script:\n\n```blade\n<script>\n    const user = @json($user);\n</script>\n```\n\nor an attribute the script reads:\n\n```blade\n<div data-user=\"{{ json_encode($user) }}\">\n```\n\nThe same applies to attributes generally. An unquoted attribute value can be escaped from without any angle brackets at all, so <b>quote your attributes</b>, always.\n\nAnd one that gets missed:\n\n```blade\n<a href=\"{{ $url }}\">Link</a>\n```\n\nHTML-escaped, and still dangerous, because `javascript:alert(1)` contains nothing to escape. <b>A URL from a user needs validating as a URL</b>, with a scheme you allow, before it reaches an `href`.\n\nTwo defences that work alongside all this rather than instead of it:\n\n<b>Validate on the way in.</b> If a display name cannot contain `<`, an XSS payload never reaches the database, and every place that renders it is safe rather than one of them being lucky.\n\n<b>And a Content Security Policy limits the damage</b> when something does slip through, by refusing to run inline scripts at all. That is later today, and it is the reason CSP is worth the effort: it is the layer that assumes your escaping will one day be wrong.\n\nAnd since \"use a real purifier\" is advice you cannot act on without a name: <b>HTMLPurifier</b> is the one:\n\n```bash\ncomposer require ezyang/htmlpurifier\n```\n\n```php\n$config   = HTMLPurifier_Config::createDefault();\n$config->set('HTML.Allowed', 'p,b,i,a[href],ul,ol,li');\n\n$clean = (new HTMLPurifier($config))->purify($request->input('bio'));\n```\n\n<b>It parses the HTML properly and rebuilds it from an allowlist</b>, which is why it survives the encodings and malformed tags that defeat a regex or `strip_tags()`.",
-      diagram: `The attack
+      explanation: "Five methods that all write a file, and one decision underneath them.\n\n---\n\n### 1. Basic — contents you already have\n\n```php\nStorage::put('documents/file.txt', $contents);\n\nStorage::disk('s3')->put('documents/file.txt', $contents);\n```\n\n```text\npath + contents  →  Storage\n```\n\nYou name the file, you supply the bytes. That is right for something your application generated: a PDF, an export, a report.\n\n---\n\n### 2. Intermediate — files that arrived from a user\n\nAn upload is different, because you have an `UploadedFile` rather than a string, and <b>you almost certainly do not want the name it came with.</b>\n\nFour methods, and the difference is who chooses the filename and where you call it from:\n\n```text\nStorage::putFile('documents', $file)               Laravel names it\nStorage::putFileAs('documents', $file, 'a.pdf')    you name it\n\n$file->store('documents')                          Laravel names it\n$file->storeAs('documents', 'a.pdf')               you name it\n```\n\nThe `Storage::` pair and the `$file->` pair do the same thing; the second reads better in a controller and takes the disk as a last argument:\n\n```php\n$path = $request->file('avatar')->store('avatars', 'public');\n\n$path = $request->file('avatar')->storeAs('avatars', \"user-{$user->id}.jpg\", 'public');\n```\n\n<b>Every one of them returns the path</b>, and that is what you store on the model. Not the URL, which changes if you move disks or domains, and not the original name.\n\n---\n\n### 3. Advanced — why the generated name is the safe default\n\nA filename from a browser is user input, and it has been the source of several distinct problems:\n\n```text\n../../.env                path traversal\nreport.pdf.php            an executable extension\nCV.pdf uploaded twice     one overwrites the other\nsome very long name…      breaks on some filesystems\nrésumé (1).pdf            encoding, spaces, brackets in URLs\n```\n\n`store()` sidesteps all of it by generating a random name and keeping only the extension. <b>Use `store()` by default and `storeAs()` only when the name genuinely matters</b>, and even then build it from your own data (`user-{id}`, `invoice-{number}`) rather than from theirs.\n\nWhen you do want to show people the original name, keep it as data:\n\n```php\n$invoice->update([\n    'path'          => $request->file('doc')->store('invoices', 's3'),\n    'original_name' => $request->file('doc')->getClientOriginalName(),\n]);\n```\n\nThe path is what the filesystem uses; the original name is a label you render, and later hand to `download()` as the name the browser should save it under.\n\nTwo more things worth doing every time.\n\n<b>Validate before storing.</b> `['required', 'file', 'mimes:pdf', 'max:10240']` checks the actual file, not the claimed content type, and `max` is in kilobytes. Without a size limit, the upload limit is whatever PHP allows.\n\n<b>And never trust the client's `Content-Type`.</b> It is a header the sender wrote. `mimes:` inspects the file itself, which is the difference between a rule and a suggestion.",
+      diagram: `Contents you already have
 
-  A user submits:
+  Storage::put('documents/file.txt', \$contents)
 
-    <script>alert('Hacked')</script>
+    path + contents  →  Storage
 
-  If your page renders that as HTML, every visitor
-  runs it. The alert is the harmless demo. Real
-  payloads read the session cookie, submit forms as
-  the victim, or ask for a password.
-
-  The script runs AS YOUR SITE. It has whatever
-  access the visitor has.
+  Right for something you generated: a PDF, an export.
 
 
-Blade escapes by default
+Files that arrived from a user
 
-  {{ \$content }}      escaped, printed as text
-  {!! \$content !!}    raw HTML, executed
+  You have an UploadedFile, not a string — and almost
+  certainly do not want the name it came with.
 
-  Safe by default, and you opt out.
+  Storage::putFile('documents', \$file)             Laravel names it
+  Storage::putFileAs('documents', \$file, 'a.pdf')  you name it
 
-  So treat every {!! !!} as a small alarm: somebody
-  decided that content was trustworthy, and that
-  decision has to still be true.
+  \$file->store('documents')                        Laravel names it
+  \$file->storeAs('documents', 'a.pdf')             you name it
 
-  Legitimate:
-    markup you generated yourself
-    content already sanitised by a library
-    rich text sanitised on the way IN
+  Same thing. The \$file-> pair reads better in a
+  controller and takes the disk last.
 
-  The common illegitimate one: a user-typed field
-  rendered raw because it needed one <br>.
-
-
-Escaping is CONTEXT-dependent
-
-  {{ }} escapes for HTML. Inside a script block,
-  HTML escaping is the wrong escaping:
-
-    <script>
-        let name = "{{ \$name }}";      ← wrong context
-    </script>
-
-  Hand data to JavaScript as DATA:
-
-    <script>
-        const user = @json(\$user);
-    </script>
-
-    <div data-user="{{ json_encode(\$user) }}">
-
-  And quote your attributes, always. An unquoted
-  attribute value can be escaped from with no angle
-  brackets at all.
+  All of them return the PATH. Store that on the model.
+  Not the URL, which changes with the disk or domain.
+  Not the original name.
 
 
-The one that gets missed
+Why the generated name is the safe default
 
-  <a href="{{ \$url }}">Link</a>
+  A filename from a browser is user input:
 
-  HTML-escaped, and still dangerous:
+    ../../.env              path traversal
+    report.pdf.php          an executable extension
+    CV.pdf, twice           one overwrites the other
+    a very long name…       breaks on some filesystems
+    résumé (1).pdf          encoding, spaces, brackets
 
-    javascript:alert(1)
+  store() sidesteps all of it: a random name, the
+  extension kept.
 
-  contains nothing to escape. A URL from a user needs
-  validating as a URL, with an allowed scheme, before
-  it reaches an href.
+  Use store() by default. Use storeAs() only when the
+  name matters, and build it from YOUR data:
+  user-{id}, invoice-{number}.
+
+  Want to show the original name? Keep it as DATA:
+
+    'path'          => \$file->store('invoices', 's3'),
+    'original_name' => \$file->getClientOriginalName(),
+
+  The path is what the filesystem uses. The original
+  name is a label you render, and later hand to
+  download() as the name the browser saves it under.
 
 
-Two layers alongside
+Every time
 
-  Validate on the way IN.
-    If a display name cannot contain <, the payload
-    never reaches the database, and every renderer is
-    safe rather than one of them being lucky.
+  Validate first
+    ['required', 'file', 'mimes:pdf', 'max:10240']
+    max is in KILOBYTES. Without it, your upload limit
+    is whatever PHP allows.
 
-  A Content Security Policy limits the damage when
-  something slips through, by refusing inline scripts.
-  It is the layer that assumes your escaping will one
-  day be wrong.`,
+  Never trust Content-Type
+    It is a header the sender wrote. mimes: inspects the
+    file itself. That is the difference between a rule
+    and a suggestion.`,
       codeExample: {
-        title: "Escaping, and the contexts where it is not enough",
-        code: `{{-- ---------- The default: safe ---------- --}}
-
-{{ $comment->body }}
-
-{{-- <script>alert(1)</script> is printed, not run. --}}
-
-
-{{-- ---------- Opting out: an alarm, not a tool ---------- --}}
-
-{!! $post->rendered_html !!}
-
-{{-- Only when the content is genuinely trusted:
-       markup you generated
-       output of a sanitiser
-       rich text sanitised on the way in --}}
-
-
-{{-- ---------- Wrong context: HTML escaping inside a script --}}
-
-<script>
-    // ❌ {{ }} escapes for HTML, not for JavaScript.
-    let name = "{{ $user->name }}";
-</script>
-
-<script>
-    // ✓ Hand it over as data.
-    const user = @json($user);
-</script>
-
-{{-- Or via an attribute the script reads --}}
-<div id="app" data-user="{{ json_encode($user) }}"></div>
-
-
-{{-- ---------- Attributes: always quote them ---------- --}}
-
-{{-- ❌ An unquoted value can be escaped from with no
-       angle brackets at all. --}}
-<div class={{ $class }}>
-
-{{-- ✓ --}}
-<div class="{{ $class }}">
-
-
-{{-- ---------- The one that gets missed ---------- --}}
-
-{{-- ❌ HTML-escaped, and still dangerous:
-       javascript:alert(1) contains nothing to escape. --}}
-<a href="{{ $user->website }}">Website</a>
-
-
-<?php
-// ✓ Validate it as a URL, with a scheme you allow.
-
-$request->validate([
-    'website' => ['nullable', 'url:http,https'],
-]);
-
-// Or check before rendering:
-$safe = filter_var($url, FILTER_VALIDATE_URL)
-    && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true);
-
-
-<?php
-// ---------- Stop it at the door ----------
-
-// If a display name cannot contain markup, the payload
-// never reaches the database, and every place that
-// renders it is safe rather than one of them being lucky.
-
-$request->validate([
-    'name' => ['required', 'string', 'max:255', 'regex:/^[\\pL\\pN\\s.\\-]+$/u'],
-]);
-
-
-// ---------- And when rich text really is needed ----------
-
-// Sanitise on the way IN with a library that understands
-// HTML, then the stored value is safe for every renderer.
-// Never write your own tag stripper: the edge cases are
-// the entire problem.`,
-      },
-      keyTakeaways: [
-        "<b>XSS is getting your application to render an attacker's JavaScript so it runs in another user's browser.</b>",
-        "The script runs as your site, with whatever access the visitor has.",
-        "<b>`{{ }}` escapes HTML; `{!! !!}` does not.</b> The default is safe and you have to opt out.",
-        "<b>Treat every `{!! !!}` as an alarm</b>: somebody decided that content was trustworthy.",
-        "<b>Escaping is context-dependent</b>: HTML escaping is not the right escaping inside a `<script>` block.",
-        "Hand data to JavaScript with `@json()` or a data attribute, rather than splicing it into a script.",
-        "<b>Always quote HTML attributes</b>, because an unquoted value can be escaped from without angle brackets.",
-        "<b>A user-supplied URL in an `href` is still dangerous after escaping</b>, because `javascript:` contains nothing to escape.",
-        "<b>Validating on the way in</b> means the payload never reaches the database, so every renderer is safe.",
-        "<b>A Content Security Policy limits the damage when escaping is wrong</b>, which is why it is worth the effort.",
-      ],
-      commonMistakes: [
-        "<b>Using `{!! !!}` on user input to allow one tag.</b> It allows every tag.",
-        "<b>Putting `{{ $value }}` inside a `<script>` block.</b> That is HTML escaping in a JavaScript context.",
-        "<b>Leaving an attribute unquoted.</b> The value can break out without any angle brackets.",
-        "<b>Trusting an escaped URL in an `href`.</b> `javascript:` needs no characters that escaping would touch.",
-        "<b>Writing your own HTML sanitiser.</b> The edge cases are the entire problem; use a library.",
-      ],
-      quiz: [
-        {
-          question: "What is the difference between `{{ $x }}` and `{!! $x !!}`?",
-          options: [
-            "None",
-            "`{{ }}` escapes HTML; `{!! !!}` outputs it raw",
-            "`{!! !!}` is faster",
-            "`{{ }}` only works on strings",
-          ],
-          correctIndex: 1,
-          explanation: "Safe by default, and you have to opt out deliberately.",
-        },
-        {
-          question: "Why is `let name = \"{{ $name }}\";` inside a `<script>` block unsafe?",
-          options: [
-            "Blade cannot run inside script tags",
-            "`{{ }}` escapes for HTML, which is not the right escaping for a JavaScript string",
-            "It is safe",
-            "The quotes are wrong",
-          ],
-          correctIndex: 1,
-          explanation: "Hand the data over with `@json()` instead.",
-        },
-        {
-          question: "Why is `<a href=\"{{ $url }}\">` still risky?",
-          options: [
-            "The URL is not escaped",
-            "`javascript:alert(1)` contains nothing that HTML escaping would change",
-            "Links cannot be escaped",
-            "It is not risky",
-          ],
-          correctIndex: 1,
-          explanation: "A user-supplied URL needs validating as a URL with an allowed scheme.",
-        },
-        {
-          question: "What does validating input on the way in buy you?",
-          options: [
-            "Faster rendering",
-            "The payload never reaches the database, so every place that renders it is safe",
-            "It replaces escaping",
-            "Nothing; escaping is enough",
-          ],
-          correctIndex: 1,
-          explanation: "Layers: validate in, escape out, and CSP for when one of those is wrong.",
-        },
-      ],
-    },
-    {
-      id: "sql-injection",
-      title: "SQL injection & parameter binding",
-      durationMinutes: 10,
-      explanation: "You met this on Day 13 as a rule to follow. Here is why the rule works, because understanding it is what lets you recognise the cases the rule does not cover.\n\n---\n\n### 1. Basic — the attack\n\nAn attacker types this into a login form:\n\n```text\n' OR 1=1 --\n```\n\nAnd your code builds SQL by gluing strings together:\n\n```php\nDB::select(\"SELECT * FROM users WHERE email = '$email'\");\n```\n\nThe database receives:\n\n```sql\nSELECT * FROM users WHERE email = '' OR 1=1 --'\n```\n\n`OR 1=1` is true for every row, and `--` comments out the rest. Every user comes back, and the first one is usually an administrator.\n\n<b>The root cause is that the value became part of the command.</b> The database has no way to tell which characters you meant as SQL and which arrived from a form, because by the time it sees the query they are the same string.\n\n---\n\n### 2. Intermediate — why binding fixes it\n\n```php\nDB::table('users')->where('email', $email)->first();\n\nDB::select('SELECT * FROM users WHERE email = ?', [$email]);\n```\n\nBoth send the query and the value <i>separately</i>:\n\n```text\nSQL structure   +   parameter        →  database\n     (fixed)        (just a value)\n```\n\nrather than:\n\n```text\nSQL + user input  →  database reads all of it as SQL\n```\n\nThe database parses the statement first, with `?` as a placeholder, and only then receives the value. <b>At that point the shape of the query is already decided</b>, so nothing in the value can change it. `' OR 1=1 --` becomes an email address nobody has.\n\nThat is why the query builder is safe by construction. You are not remembering to escape anything; there is nothing to escape, because the value never travels as SQL.\n\n---\n\n### 3. Advanced — what binding does not cover\n\nHere is the part worth knowing, and the reason \"just use the query builder\" is slightly too simple.\n\n<b>Only values can be bound.</b> Table names, column names and sort directions are part of the query's structure, so they cannot be placeholders:\n\n```php\n// ❌ $column is structure, and it came from a request\nDB::table('users')->orderBy(request('sort'))->get();\n\nDB::select(\"SELECT * FROM users ORDER BY $column\");\n```\n\nNo binding will help. <b>Structure from user input needs a whitelist:</b>\n\n```php\n$sort = in_array(request('sort'), ['name', 'created_at'], true)\n    ? request('sort')\n    : 'created_at';\n```\n\nThe same applies to a direction (`asc` or `desc`), a table name, or anything else that decides the query's shape.\n\n<b>And raw expressions are not automatically dangerous.</b> `DB::raw('SUM(amount) as total')` is fine, because you wrote every character. It becomes dangerous the moment a request value is interpolated into it. The line is not raw versus not raw:\n\n```text\nDoes user input reach the SQL TEXT?\n\n  yes  →  a problem, whatever method you used\n  no   →  fine, including raw\n```\n\nTwo more places worth checking in an existing codebase:\n\n<b>`whereRaw`, `havingRaw`, `orderByRaw` and `selectRaw`</b> all take bindings as a second argument. Use them:\n\n```php\n->whereRaw('price > ?', [$min])\n```\n\n<b>And a `LIKE` value still needs binding</b>, even though the wildcards are yours:\n\n```php\n->where('name', 'like', \"%{$search}%\")   // bound, safe\n```\n\nThe builder binds the whole string including your `%`, which is exactly right.",
-      diagram: `The attack
-
-  A user types:   ' OR 1=1 --
-
-  Your code:      "SELECT * FROM users WHERE email = '\$email'"
-
-  The database receives:
-
-    SELECT * FROM users WHERE email = '' OR 1=1 --'
-
-  OR 1=1 is true for every row. -- comments out the rest.
-  Every user comes back, and the first is usually an admin.
-
-  Root cause: the VALUE became part of the COMMAND. By the
-  time the database sees it, your SQL and their input are
-  the same string.
-
-
-Why binding fixes it
-
-  ->where('email', \$email)
-  DB::select('... WHERE email = ?', [\$email])
-
-    SQL structure  +  parameter      →  database
-       (fixed)        (just a value)
-
-  instead of
-
-    SQL + user input                 →  all read as SQL
-
-  The database parses the statement FIRST, with ? as a
-  placeholder, and receives the value afterwards. The
-  shape is already decided, so nothing in the value can
-  change it.
-
-  ' OR 1=1 -- becomes an email address nobody has.
-
-
-What binding does NOT cover
-
-  Only VALUES can be bound. Table names, column names
-  and sort directions are STRUCTURE.
-
-    ❌ ->orderBy(request('sort'))
-    ❌ "SELECT * FROM users ORDER BY \$column"
-
-  No binding helps. Structure from user input needs
-  a whitelist:
-
-    \$sort = in_array(request('sort'),
-        ['name', 'created_at'], true)
-            ? request('sort')
-            : 'created_at';
-
-
-  And raw is not automatically dangerous:
-
-    Does user input reach the SQL TEXT?
-
-      yes  →  a problem, whatever method you used
-      no   →  fine, including DB::raw()
-
-
-  Worth grepping for in an existing codebase:
-
-    whereRaw  havingRaw  orderByRaw  selectRaw
-       all take bindings as a second argument. Use them.
-
-       ->whereRaw('price > ?', [\$min])
-
-    LIKE values still need binding, even though the
-    wildcards are yours:
-
-       ->where('name', 'like', "%{\$search}%")   bound, safe`,
-      codeExample: {
-        title: "Values, structure, and the line between them",
+        title: "Storing an upload safely",
         code: `<?php
 
-use Illuminate\\Support\\Facades\\DB;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Storage;
 
-// ---------- The attack ----------
+// ---------- Contents you generated ----------
 
-// $email = "' OR 1=1 --"
-//
-// ❌ Returns every user in the table.
-DB::select("SELECT * FROM users WHERE email = '$email'");
+Storage::put('reports/2026-09.pdf', $pdfContents);
+Storage::disk('s3')->put('exports/invoices.csv', $csv);
 
 
-// ---------- Bound: safe by construction ----------
-
-DB::table('users')->where('email', $email)->first();
-
-DB::select('SELECT * FROM users WHERE email = ?', [$email]);
-
-DB::select(
-    'SELECT * FROM users WHERE email = :email AND active = :active',
-    ['email' => $email, 'active' => true],
-);
-
-// The statement is parsed first, with ? as a placeholder.
-// The value arrives after the shape is decided.
-
-
-// ---------- What binding cannot do ----------
-
-// Column names, table names and sort directions are
-// STRUCTURE. There is no placeholder for them.
-
-// ❌ Both of these, however you write them.
-DB::table('users')->orderBy(request('sort'))->get();
-DB::select("SELECT * FROM users ORDER BY $column");
-
-// ✓ Whitelist anything that shapes the query.
-$sort = in_array(request('sort'), ['name', 'created_at', 'email'], true)
-    ? request('sort')
-    : 'created_at';
-
-$direction = request('dir') === 'asc' ? 'asc' : 'desc';
-
-DB::table('users')->orderBy($sort, $direction)->get();
-
-
-// ---------- Raw is not the problem; input is ----------
-
-// ✓ You wrote every character.
-DB::table('orders')->selectRaw('SUM(amount) as total')->get();
-
-// ❌ A request value in the SQL text.
-DB::table('orders')->selectRaw("SUM($column) as total")->get();
-
-// ✓ Raw methods take bindings. Use them.
-DB::table('orders')
-    ->whereRaw('amount > ?', [$min])
-    ->havingRaw('COUNT(*) > ?', [$count])
-    ->orderByRaw('FIELD(status, ?, ?)', ['overdue', 'unpaid'])
-    ->get();
-
-
-// ---------- LIKE ----------
-
-// The wildcards are yours; the value is still bound.
-DB::table('users')
-    ->where('name', 'like', "%{$search}%")
-    ->get();
-
-// ❌ Not this.
-DB::select("SELECT * FROM users WHERE name LIKE '%$search%'");
-
-
-// ---------- What to grep for in an existing codebase ----------
-
-//   DB::select("      with a variable inside
-//   whereRaw(         without a bindings argument
-//   selectRaw(        with interpolation
-//   orderBy(request   or any request value as a column`,
-      },
-      keyTakeaways: [
-        "<b>SQL injection happens when a value becomes part of the command</b>, because both arrive as one string.",
-        "`' OR 1=1 --` makes the condition true for every row and comments out the rest of the query.",
-        "<b>Parameter binding sends the statement and the value separately</b>, so the database parses the shape first.",
-        "<b>Once the shape is decided, nothing in the value can change it</b>, which is why the query builder is safe by construction.",
-        "<b>Only values can be bound.</b> Table names, column names and sort directions are structure.",
-        "<b>Structure from user input needs a whitelist</b>, and no amount of escaping substitutes for one.",
-        "<b>Raw SQL is not automatically dangerous</b>: the question is whether user input reaches the SQL text.",
-        "`whereRaw`, `havingRaw`, `orderByRaw` and `selectRaw` all accept bindings, so use them.",
-        "<b>A `LIKE` value still needs binding</b>, and the builder binds the wildcards along with it.",
-      ],
-      commonMistakes: [
-        "<b>Interpolating a value into a raw query.</b> That is the injection, whatever the value looks like.",
-        "<b>Passing a request value to `orderBy()`.</b> A column name cannot be bound; it needs a whitelist.",
-        "<b>Using `whereRaw()` without the bindings argument.</b> The second parameter exists for exactly this.",
-        "<b>Casting to an integer and calling it safe.</b> Bind the value and stop reasoning about it.",
-        "<b>Building a `LIKE` pattern inside a raw string.</b> Bind the whole pattern, wildcards included.",
-      ],
-      quiz: [
-        {
-          question: "Why does parameter binding prevent SQL injection?",
-          options: [
-            "It escapes dangerous characters",
-            "The statement is parsed before the value arrives, so the value cannot change the query's shape",
-            "It encrypts the value",
-            "It validates the input",
-          ],
-          correctIndex: 1,
-          explanation: "Structure and data travel separately.",
-        },
-        {
-          question: "Can a column name be bound as a parameter?",
-          options: [
-            "Yes, the same way as a value",
-            "No; it is part of the query's structure, so it needs a whitelist",
-            "Only in raw queries",
-            "Only on MySQL",
-          ],
-          correctIndex: 1,
-          explanation: "Placeholders exist for values, not for structure.",
-        },
-        {
-          question: "Is `DB::raw('SUM(amount) as total')` dangerous?",
-          options: [
-            "Yes, all raw SQL is dangerous",
-            "No; you wrote every character, and no user input reaches the SQL text",
-            "Only in production",
-            "Only with joins",
-          ],
-          correctIndex: 1,
-          explanation: "The line is whether user input reaches the SQL, not raw versus not raw.",
-        },
-        {
-          question: "How should a `LIKE` search value be handled?",
-          options: [
-            "Interpolated into a raw query",
-            "Passed as a bound value, wildcards included",
-            "Escaped manually",
-            "Validated only",
-          ],
-          correctIndex: 1,
-          explanation: "`->where('name', 'like', \"%{$search}%\")` binds the whole pattern.",
-        },
-      ],
-    },
-    {
-      id: "mass-assignment",
-      title: "Mass assignment & trusting the request",
-      durationMinutes: 10,
-      explanation: "Day 14 introduced `$fillable`. This is the same feature seen from the attacker's side, plus the wider habit it belongs to.\n\n---\n\n### 1. Basic — the attack\n\nYour `users` table has a column your form does not:\n\n```text\nname\nemail\nis_admin\n```\n\nAnd your controller does the convenient thing:\n\n```php\nUser::create($request->all());\n```\n\nThe attacker adds a key:\n\n```json\n{\n    \"name\": \"Rajan\",\n    \"email\": \"rajan@example.com\",\n    \"is_admin\": true\n}\n```\n\n<b>The form never had that field, and it did not need one.</b> A request body is whatever the sender chooses to send, and a form is a suggestion. `curl` ignores suggestions.\n\nThat is <b>mass assignment</b>: setting many attributes at once from an array you did not check.\n\n---\n\n### 2. Intermediate — the two lists\n\n```php\nprotected $fillable = ['name', 'email', 'password'];\n```\n\n```text\nname       ✓\nemail      ✓\npassword   ✓\nis_admin   ✗   silently dropped\n```\n\nAn allow list. Or the inverse:\n\n```php\nprotected $guarded = ['is_admin'];\n```\n\n```text\n$fillable   only these may be mass assigned\n$guarded    everything except these\n```\n\nThe security argument for `$fillable` is about what happens next month, when somebody adds a column:\n\n```text\n$fillable   not assignable until listed\n            → the field does not save\n            → you notice immediately\n\n$guarded    assignable the moment it exists\n            → the field saves when it should not\n            → you notice when it matters\n```\n\n<b>Both are reasonable; only one fails loudly.</b> And `$guarded = []` is not a middle ground, it is the protection switched off.\n\nOne detail worth repeating from Day 14: <b>mass assignment is about arrays.</b> `$user->is_admin = true; $user->save();` is unaffected, because you wrote that line deliberately.\n\n---\n\n### 3. Advanced — the habit underneath\n\n`$fillable` is a safety net. The habit is not to need it:\n\n```php\n// ❌ whatever they sent\nUser::create($request->all());\n\n// ✓ what you asked for\nUser::create($request->validate([\n    'name'  => ['required', 'string', 'max:255'],\n    'email' => ['required', 'email', 'unique:users'],\n]));\n```\n\n<b>`validate()` returns only the validated keys</b>, so an extra field is gone before the model ever sees it. Two independent locks, and neither is a reason to skip the other:\n\n```text\nvalidation   what the request is allowed to contain\n$fillable    what the model is allowed to accept\n```\n\nThe same shape appears elsewhere, and recognising it is the useful part:\n\n<b>A hidden form field is a request field.</b> A `<select>` of five options accepts a sixth, so validate with `in:` or `exists:`. A price in a hidden input is a price the customer chose; look it up on the server instead.\n\n<b>And route model binding is not authorization.</b> `PUT /invoices/91` resolves invoice 91 whoever asks, which is exactly what yesterday's policies are for.\n\nThe common thread across today: <b>every one of these attacks is somebody sending something your interface did not offer.</b> The interface is a convenience for honest users. The server is the only thing that decides.",
-      diagram: `The attack
-
-  users:  name  email  is_admin
-
-  User::create(\$request->all());
-
-  {
-      "name": "Rajan",
-      "email": "rajan@example.com",
-      "is_admin": true          ← the form never had this field
-  }
-
-  A request body is whatever the SENDER chooses to send.
-  A form is a suggestion, and curl ignores suggestions.
-
-
-The two lists
-
-  protected \$fillable = ['name', 'email', 'password'];
-
-    name ✓   email ✓   password ✓   is_admin ✗ dropped
-
-  protected \$guarded = ['is_admin'];
-
-    everything EXCEPT these
-
-
-  Next month, somebody adds a column:
-
-    \$fillable   not assignable until listed
-                → the field does not save
-                → you notice immediately
-
-    \$guarded    assignable the moment it exists
-                → the field saves when it should not
-                → you notice when it matters
-
-  Both reasonable. Only one fails loudly.
-
-  \$guarded = [] is not a middle ground.
-  It is the protection switched off.
-
-  And mass assignment is about ARRAYS. Writing
-  \$user->is_admin = true is unaffected: you meant it.
-
-
-The habit underneath
-
-  ❌ User::create(\$request->all())        whatever they sent
-  ✓ User::create(\$request->validate([...]))  what you asked for
-
-  validate() returns only the validated keys, so an extra
-  field is gone before the model sees it.
-
-    validation   what the REQUEST may contain
-    \$fillable    what the MODEL may accept
-
-  Two locks. Neither is a reason to skip the other.
-
-
-The same shape elsewhere
-
-  A hidden form field is a request field.
-  A <select> of five options accepts a sixth  → in: / exists:
-  A price in a hidden input is the customer's price
-      → look it up on the server
-  Route model binding is not authorization
-      → PUT /invoices/91 resolves it for whoever asks
-
-
-  The thread through today: every one of these attacks is
-  somebody sending something your interface did not offer.
-  The interface is a convenience. The server decides.`,
-      codeExample: {
-        title: "Closing the gap between the form and the request",
-        code: `<?php
-// ---------- The vulnerability ----------
-
-// users: name, email, is_admin
-class User extends Authenticatable
-{
-    // No $fillable and no $guarded.
-}
-
-// ❌ The attacker adds "is_admin": true and becomes an admin.
-User::create($request->all());
-
-
-<?php
-// ---------- Lock one: the model ----------
-
-class User extends Authenticatable
-{
-    // Allow list. A new column is not assignable until listed,
-    // so the mistake is a field that does not save.
-    protected $fillable = ['name', 'email', 'password'];
-
-    // The inverse. A new column is assignable immediately,
-    // so the mistake is a field that saves when it should not.
-    // protected $guarded = ['is_admin'];
-
-    // ❌ Not a middle ground. This is protection off.
-    // protected $guarded = [];
-}
-
-
-<?php
-// ---------- Lock two: the request ----------
+// ---------- An upload ----------
 
 public function store(Request $request)
 {
-    // validate() returns ONLY the validated keys, so
-    // is_admin is gone before the model sees it.
-    $data = $request->validate([
-        'name'  => ['required', 'string', 'max:255'],
-        'email' => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'confirmed', Password::defaults()],
+    // Validate first. mimes: inspects the file, not the
+    // Content-Type header the sender wrote.
+    $request->validate([
+        'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
     ]);
 
-    $user = User::create($data);
+    // Laravel generates a random name and keeps the extension.
+    $path = $request->file('document')->store('documents', 's3');
+    // documents/9f2b1c...pdf
 
-    return redirect()->route('users.show', $user);
+    // Store the PATH on the model, not a URL.
+    $invoice->update([
+        'document_path' => $path,
+
+        // The original name is a label you render later.
+        'document_name' => $request->file('document')->getClientOriginalName(),
+    ]);
+}
+
+
+// ---------- The four ways, side by side ----------
+
+Storage::putFile('documents', $file);                 // Laravel names it
+Storage::putFileAs('documents', $file, 'report.pdf'); // you name it
+
+$file->store('documents', 'public');                  // Laravel names it
+$file->storeAs('documents', 'report.pdf', 'public');  // you name it
+
+// All of them return the path.
+
+
+// ---------- When the name matters ----------
+
+// ❌ The name came from the browser.
+$file->storeAs('documents', $file->getClientOriginalName());
+
+// The generated name on its own, when you want Laravel's
+// name but your own directory or disk:
+$name = $file->hashName();            // 8f3c…d1.pdf
+$file->storeAs('invoices/2026', $name, 's3');
+
+// A filename is user input:
+//   ../../.env          path traversal
+//   report.pdf.php      an executable extension
+//   CV.pdf twice        one overwrites the other
+
+// ✓ Build it from your own data.
+$file->storeAs(
+    'invoices',
+    "invoice-{$invoice->number}.pdf",
+    's3',
+);
+
+
+// ---------- Giving the original name back at download time ----------
+
+return Storage::disk('s3')->download(
+    $invoice->document_path,     // where it actually is
+    $invoice->document_name,     // what the browser saves it as
+);
+
+
+// ---------- Cleaning up ----------
+
+// Replacing a file? Delete the old one, or the bucket
+// grows forever with orphans nothing points at.
+if ($invoice->document_path) {
+    Storage::disk('s3')->delete($invoice->document_path);
+}
+
+$invoice->document_path = $request->file('document')->store('documents', 's3');
+$invoice->save();`,
+      },
+      keyTakeaways: [
+        "<b>`Storage::put()` writes contents you already have</b>, which suits files your application generated.",
+        "<b>An upload gives you an `UploadedFile`</b>, and `store()`, `storeAs()`, `putFile()` and `putFileAs()` handle it.",
+        "<b>`store()` generates a filename; `storeAs()` lets you choose one.</b>",
+        "The `$file->` methods read better in a controller and take the disk as the last argument.",
+        "<b>All of them return the path, and that is what you store on the model</b>, not a URL.",
+        "<b>A filename from a browser is user input</b>, and has caused path traversal, executable extensions and collisions.",
+        "<b>Use `store()` by default</b>, and build any custom name from your own data rather than theirs.",
+        "Keep the original name as a separate column, to render and to pass to `download()`.",
+        "<b>Validate with `mimes:` and `max:` before storing</b>; `max` is in kilobytes.",
+        "<b>Never trust the client's `Content-Type`</b>, because it is a header the sender wrote.",
+      ],
+      commonMistakes: [
+        "<b>Storing the file under its original name.</b> That accepts a path, an extension and a collision from the user.",
+        "<b>Saving a URL on the model instead of the path.</b> It breaks the moment the disk or domain changes.",
+        "<b>Validating on `Content-Type`.</b> The sender chose that value; `mimes:` inspects the file.",
+        "<b>Omitting `max:`.</b> Your upload limit becomes whatever PHP happens to allow.",
+        "<b>Replacing a file without deleting the old one.</b> The bucket fills with orphans nothing points at.",
+      ],
+      quiz: [
+        {
+          question: "What do `store()` and `storeAs()` return?",
+          options: ["A URL", "The stored path", "The UploadedFile", "A boolean"],
+          correctIndex: 1,
+          explanation: "Store the path on the model; a URL breaks when the disk changes.",
+        },
+        {
+          question: "Why not store an upload under its original filename?",
+          options: [
+            "It is slower",
+            "The name is user input, and has caused path traversal, executable extensions and collisions",
+            "Laravel does not allow it",
+            "Filenames must be unique in S3",
+          ],
+          correctIndex: 1,
+          explanation: "`store()` generates a name and keeps only the extension.",
+        },
+        {
+          question: "Why is validating on the client's `Content-Type` not enough?",
+          options: [
+            "It is often missing",
+            "It is a header the sender wrote, so it can say anything",
+            "Laravel ignores it",
+            "It is only for images",
+          ],
+          correctIndex: 1,
+          explanation: "`mimes:` inspects the file itself.",
+        },
+        {
+          question: "How do you show the user their original filename on download?",
+          options: [
+            "Store the file under that name",
+            "Keep it in a separate column and pass it as the second argument to `download()`",
+            "Read it from the path",
+            "It is not possible",
+          ],
+          correctIndex: 1,
+          explanation: "The path is for the filesystem; the original name is data you render.",
+        },
+      ],
+    },
+    {
+      id: "retrieving-and-serving",
+      title: "Reading, downloading & temporary URLs",
+      durationMinutes: 12,
+      explanation: "Getting a file back out, and the security decision hiding in it.\n\n---\n\n### 1. Basic — reading\n\n```php\nStorage::exists('documents/report.pdf');\n\n$contents = Storage::get('documents/report.pdf');\n\n$url = Storage::disk('public')->url('avatars/user.jpg');\n```\n\n`get()` reads the whole file into memory, which is fine for a text file and a bad idea for a video.\n\nAnd `url()` only means something on a disk that has one. On a private disk it will not give you a working address, which is the point of that disk.\n\nTo send a file to the browser as a download:\n\n```php\nreturn Storage::download('documents/report.pdf');\n\nreturn Storage::download('documents/report.pdf', 'my-report.pdf');\n```\n\nThe second argument is what the browser saves it as, which is where the original filename from the last lesson goes. `download()` sets `Content-Disposition: attachment`:\n\n```text\ndon't display this\nsave it\n```\n\n---\n\n### 2. Intermediate — do not read big files into memory\n\n```php\n$contents = Storage::get('videos/video.mp4');   // the whole file, in RAM\n```\n\nA 500 MB video is 500 MB of PHP memory, per concurrent request. Ten of those and the server is gone.\n\n```text\n❌ file → RAM → response\n✓ file → stream → response\n```\n\n```php\nreturn Storage::disk('s3')->response('videos/video.mp4');\n\nreturn Storage::download('videos/video.mp4');     // also streamed\n```\n\nThese send the file in chunks, so memory stays flat whatever the size.\n\n<b>The rule: memory use should not depend on the file's size.</b> Anywhere it does, you have a limit you did not choose, and you find it when somebody uploads something large.\n\nThe files this matters for are predictable: videos, backups, exports, large PDFs.\n\n---\n\n### 3. Advanced — public, private, and temporary URLs\n\n<b>Visibility</b> is whether a stored file is readable by anybody with the address:\n\n```php\nStorage::disk('s3')->put('reports/report.pdf', $contents, 'private');\n```\n\nAnd it is a real decision, not a detail:\n\n```text\npublic     an avatar, a logo, a product photo\nprivate    an invoice, a medical document, an export,\n           anything belonging to one person\n```\n\nA private file has no public URL, which raises the obvious question: how does the owner get it?\n\nOne answer is to stream it through your application, which is the controller from the first lesson: authorize, then `download()`. Correct, and every byte passes through PHP.\n\nThe better answer for object storage is a <b>temporary URL</b>:\n\n```php\n$url = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(10));\n```\n\n```text\nprivate file\n     ↓\nyour application authorizes the user\n     ↓\nsigned URL, valid for ten minutes\n     ↓\nthe browser fetches it from S3 directly\n     ↓\nthe URL expires\n```\n\n<b>Your application makes the decision; S3 does the delivering.</b> The download does not touch your server at all, which for a large file is the difference between a slow page and no load.\n\nThree things to get right.\n\n<b>The expiry is a real trade-off.</b> Long enough to click and download, short enough that a copied link stops working. Ten minutes is a reasonable default; hours are not.\n\n<b>A temporary URL is not authorization.</b> It says \"whoever holds this link, for the next ten minutes\". Your application decides who gets handed one, and that check is the actual protection.\n\n<b>And it needs a private file to be worth anything.</b> Generating a temporary URL for a file on the public disk is theatre: the file is already reachable at a plain, permanent address.",
+      diagram: `Reading
+
+  Storage::exists('documents/report.pdf')
+  Storage::get('documents/report.pdf')        the WHOLE file, in memory
+  Storage::disk('public')->url('avatars/x.jpg')
+
+  url() only means something on a disk that has one.
+  On a private disk it does not give you a working
+  address, which is the point of that disk.
+
+  Storage::download(\$path)
+  Storage::download(\$path, 'my-report.pdf')   what the browser saves it as
+
+    Content-Disposition: attachment
+      → don't display this, save it
+
+
+Do not read big files into memory
+
+  \$contents = Storage::get('videos/video.mp4')
+
+  A 500 MB video is 500 MB of PHP memory, PER concurrent
+  request. Ten of those and the server is gone.
+
+    ❌  file → RAM → response
+    ✓  file → stream → response
+
+  Storage::disk('s3')->response(\$path)
+  Storage::download(\$path)              also streamed
+
+  Rule: memory use should not depend on the file's size.
+  Anywhere it does, you have a limit you did not choose,
+  and you find it when somebody uploads something large.
+
+  Predictable culprits: videos, backups, exports, big PDFs.
+
+
+Visibility is a real decision
+
+  public     an avatar, a logo, a product photo
+  private    an invoice, a medical document, an export,
+             anything belonging to one person
+
+  A private file has no public URL. So how does the
+  owner get it?
+
+  Option 1: stream it through your app
+    authorize, then download()
+    correct, and every byte passes through PHP
+
+  Option 2: a temporary URL
+
+    private file
+         ↓
+    your application authorizes the user
+         ↓
+    signed URL, valid ten minutes
+         ↓
+    the browser fetches from S3 DIRECTLY
+         ↓
+    the URL expires
+
+  Your application decides. S3 delivers. The download
+  never touches your server.
+
+
+Three things to get right
+
+  The expiry is a trade-off
+    long enough to click and download, short enough
+    that a copied link stops working.
+    Ten minutes is reasonable. Hours are not.
+
+  A temporary URL is not authorization
+    it says "whoever holds this link, for ten minutes".
+    Deciding who gets handed one is the real protection.
+
+  It needs a PRIVATE file to mean anything
+    generating one for a file on the public disk is
+    theatre: it is already at a plain permanent address.`,
+      codeExample: {
+        title: "Serving files, publicly and privately",
+        code: `<?php
+
+use Illuminate\\Support\\Facades\\Storage;
+
+// ---------- Reading ----------
+
+Storage::exists('documents/report.pdf');       // true / false
+$contents = Storage::get('documents/report.pdf');
+$size = Storage::size('documents/report.pdf');
+$when = Storage::lastModified('documents/report.pdf');
+$type = Storage::mimeType('documents/report.pdf');   // application/pdf
+
+// The inverse of exists(), which reads better in a guard:
+if (Storage::missing($path)) {
+    abort(404);
+}
+
+// A public URL, on a disk that has one.
+$url = Storage::disk('public')->url('avatars/user.jpg');
+
+
+// ---------- Downloads ----------
+
+return Storage::download('documents/report.pdf');
+
+// The second argument is what the browser saves it as.
+return Storage::download($invoice->path, $invoice->original_name);
+
+
+// ---------- Big files ----------
+
+// ❌ 500 MB of PHP memory, per concurrent request.
+$contents = Storage::get('videos/video.mp4');
+return response($contents);
+
+// ✓ Streamed in chunks. Memory stays flat.
+return Storage::disk('s3')->response('videos/video.mp4');
+
+// Memory use should not depend on the file's size.
+
+
+<?php
+// ---------- Visibility ----------
+
+Storage::disk('s3')->put('avatars/user.jpg', $contents, 'public');
+Storage::disk('s3')->put('invoices/INV-001.pdf', $contents, 'private');
+
+Storage::disk('s3')->setVisibility('invoices/INV-001.pdf', 'private');
+
+
+<?php
+// ---------- Serving a private file: through the app ----------
+
+Route::get('/invoices/{invoice}/download', function (Invoice $invoice) {
+    Gate::authorize('view', $invoice);
+
+    // Correct, and every byte passes through PHP.
+    return Storage::disk('s3')->download(
+        $invoice->path,
+        $invoice->original_name,
+    );
+})->middleware('auth');
+
+
+<?php
+// ---------- Serving a private file: a temporary URL ----------
+
+Route::get('/invoices/{invoice}/link', function (Invoice $invoice) {
+    // Your application decides. This check is the real protection.
+    Gate::authorize('view', $invoice);
+
+    // S3 delivers. The download never touches your server.
+    return redirect(
+        Storage::disk('s3')->temporaryUrl(
+            $invoice->path,
+            now()->addMinutes(10),
+        )
+    );
+})->middleware('auth');
+
+
+// The expiry is a trade-off: long enough to click and
+// download, short enough that a copied link stops working.
+
+// ❌ A day is not a temporary URL.
+Storage::disk('s3')->temporaryUrl($path, now()->addDay());
+
+// ❌ Theatre: the file is already at a plain permanent address.
+Storage::disk('public')->temporaryUrl($path, now()->addMinutes(10));
+
+
+<?php
+// ---------- Temporary upload URLs, for large files ----------
+
+// The same idea in reverse: the browser uploads straight
+// to S3 and never sends the file through your server.
+$upload = Storage::disk('s3')->temporaryUploadUrl(
+    'uploads/' . Str::uuid(),
+    now()->addMinutes(5),
+);`,
+      },
+      keyTakeaways: [
+        "<b>`exists()`, `get()`, `size()` and `url()` read a file and its metadata.</b>",
+        "<b>`get()` loads the whole file into memory</b>, which is fine for text and wrong for a video.",
+        "<b>`download()` sends a file as an attachment</b>, and its second argument is the name the browser saves.",
+        "<b>Memory use should not depend on the file's size</b>, so stream anything large with `response()` or `download()`.",
+        "<b>Visibility decides whether a file is readable by anybody with the address.</b>",
+        "Avatars and logos are public; invoices, exports and anything belonging to one person are private.",
+        "<b>A private file can be streamed through a controller that authorizes first</b>, at the cost of passing every byte through PHP.",
+        "<b>A temporary URL lets your application authorize and object storage deliver</b>, so the download misses your server.",
+        "<b>The expiry is a trade-off</b>: long enough to use, short enough that a copied link dies.",
+        "<b>A temporary URL is not authorization</b>, and on a public file it is theatre.",
+      ],
+      commonMistakes: [
+        "<b>Reading a large file with `get()` before returning it.</b> Memory scales with file size and concurrency.",
+        "<b>Putting private files on the public disk.</b> The address is permanent and nothing checks the requester.",
+        "<b>Generating a temporary URL for a public file.</b> The plain URL still works forever.",
+        "<b>Setting a long expiry.</b> A day-long \"temporary\" link is a permanent link with extra steps.",
+        "<b>Treating the temporary URL as the security.</b> The authorization before you hand it out is the protection.",
+      ],
+      quiz: [
+        {
+          question: "Why not use `Storage::get()` to serve a large video?",
+          options: [
+            "It is not supported on S3",
+            "It loads the whole file into memory, per concurrent request",
+            "It corrupts binary files",
+            "It is slower to write",
+          ],
+          correctIndex: 1,
+          explanation: "Stream it instead, so memory does not depend on the file's size.",
+        },
+        {
+          question: "What does the second argument to `download()` do?",
+          options: [
+            "Picks the disk",
+            "Sets the filename the browser saves the file as",
+            "Sets the content type",
+            "Sets an expiry",
+          ],
+          correctIndex: 1,
+          explanation: "Which is where the stored original filename goes.",
+        },
+        {
+          question: "What does a temporary URL let you do?",
+          options: [
+            "Make a public file private",
+            "Authorize in your application while object storage delivers the file directly",
+            "Compress the file",
+            "Cache the file locally",
+          ],
+          correctIndex: 1,
+          explanation: "The download never passes through your server.",
+        },
+        {
+          question: "Why is a temporary URL for a file on the public disk pointless?",
+          options: [
+            "Laravel throws an error",
+            "The file already has a plain, permanent address",
+            "It expires immediately",
+            "It is not pointless",
+          ],
+          correctIndex: 1,
+          explanation: "Temporary URLs only mean something for private files.",
+        },
+      ],
+    },
+    {
+      id: "managing-and-read-through",
+      title: "Deleting, listing & the read-through driver",
+      durationMinutes: 9,
+      explanation: "Housekeeping, and one Laravel 13 addition worth understanding as an idea rather than a config block.\n\n---\n\n### 1. Basic — deleting and listing\n\n```php\nStorage::delete('documents/report.pdf');\n\nStorage::delete(['a.txt', 'b.txt']);\n\nStorage::disk('s3')->delete($invoice->path);\n\nStorage::deleteDirectory('exports/2025');\n```\n\n```php\n$files = Storage::files('documents');\n$all   = Storage::allFiles('documents');       // recursive\n\n$dirs  = Storage::directories('documents');\n$allDirs = Storage::allDirectories('documents');\n```\n\nUseful for admin tools, cleanup jobs and storage audits.\n\n<b>And `allFiles()` on a large bucket is a lot of requests.</b> On S3 each page is an API call, so listing a bucket with a hundred thousand objects is slow and metered. Fine in a command, wrong in a web request.\n\n---\n\n### 2. Intermediate — the orphan problem\n\nThe thing nobody plans for: files outlive the rows that pointed at them.\n\n```text\ninvoice deleted\n      ↓\nrow gone\n      ↓\nthe PDF is still in the bucket, forever\n```\n\nNothing cleans it up, because nothing knows it exists. A year later the bucket is full of files no record references, and working out which is which means listing everything and comparing.\n\nDay 14's model events are the fix, applied deliberately:\n\n```php\nstatic::deleting(function (Invoice $invoice) {\n    Storage::disk('s3')->delete($invoice->path);\n});\n```\n\nWith two caveats you already know. <b>A mass delete fires no events</b>, so `Invoice::where(...)->delete()` leaves every file behind. And <b>a soft delete is an update</b>, so the file should survive until the record is really gone, which means `forceDeleted` rather than `deleting`.\n\nThe habit worth forming: <b>whenever you write code that stores a file, write the code that removes it in the same sitting.</b> Otherwise it never gets written.\n\n---\n\n### 3. Advanced — the read-through driver\n\nLaravel 13 adds a <b>read-through</b> filesystem driver, and the idea is worth more than the configuration.\n\nThe problem it solves: your canonical storage is remote, and something reads the same files repeatedly. Every read is a network round trip to S3, paid for in latency and requests.\n\n```text\nApplication\n     ↓\nread-through filesystem\n     │\n     ├── is it here locally?\n     │        ↓\n     │       yes → read the local copy\n     │\n     └── no\n          ↓\n      read from the source\n          ↓\n      keep a local copy\n          ↓\n      return it\n```\n\nSo the first read is remote and the rest are local.\n\n> <b>Separate the canonical storage location from the local read cache.</b>\n\nThat sentence is the takeaway. S3 remains the truth; the local disk is a cache, and a cache being empty or stale is never a correctness problem because the source is still there.\n\nWhich also tells you when it fits and when it does not:\n\n```text\nfits              read many times, changes rarely\n                  templates, assets, reference documents\n\ndoes not fit      read once each          nothing to reuse\n                  changes often           the cache is wrong\n                  user uploads            read by their owner, once\n```\n\nAnd it is the same shape as every cache you will meet later in the track: a fast copy in front of a slow source of truth, useful exactly when reads repeat.",
+      diagram: `Deleting and listing
+
+  Storage::delete(\$path)
+  Storage::delete(['a.txt', 'b.txt'])
+  Storage::deleteDirectory('exports/2025')
+
+  Storage::files('documents')            one level
+  Storage::allFiles('documents')         recursive
+  Storage::directories('documents')
+
+  ⚠️  allFiles() on a large bucket is a lot of API calls.
+      On S3 each page is a request: slow and metered.
+      Fine in a command. Wrong in a web request.
+
+
+The orphan problem
+
+  invoice deleted
+        ↓
+  row gone
+        ↓
+  the PDF is still in the bucket, forever
+
+  Nothing cleans it up because nothing knows it exists.
+  A year later the bucket is full of files no record
+  references, and telling them apart means listing
+  everything and comparing.
+
+  Day 14's model events, applied deliberately:
+
+    static::deleting(fn (\$invoice) =>
+        Storage::disk('s3')->delete(\$invoice->path));
+
+  Two caveats you already know:
+
+    a MASS delete fires no events
+      Invoice::where(...)->delete() leaves every file
+
+    a SOFT delete is an update
+      the file should survive until the record really
+      goes → use forceDeleted, not deleting
+
+  Habit: whenever you write code that stores a file,
+  write the code that removes it in the same sitting.
+  Otherwise it never gets written.
+
+
+The read-through driver
+
+  Problem: canonical storage is remote, and something
+  reads the same files repeatedly. Every read is a
+  round trip, paid in latency and requests.
+
+  Application
+       ↓
+  read-through filesystem
+       │
+       ├── is it here locally?
+       │        ↓
+       │       yes → read the local copy
+       │
+       └── no
+            ↓
+        read from the source
+            ↓
+        keep a local copy
+            ↓
+        return it
+
+  First read remote. The rest local.
+
+  > Separate the canonical storage location from the
+    local read cache.
+
+  S3 stays the truth. The local disk is a cache, so an
+  empty or stale cache is never a correctness problem.
+
+
+  fits           read many times, changes rarely
+                 templates, assets, reference documents
+
+  does not fit   read once each      nothing to reuse
+                 changes often       the cache is wrong
+                 user uploads        read by their owner, once
+
+
+  The same shape as every cache later in the track:
+  a fast copy in front of a slow source of truth,
+  useful exactly when reads repeat.`,
+      codeExample: {
+        title: "Cleanup that actually happens",
+        code: `<?php
+
+use Illuminate\\Support\\Facades\\Storage;
+
+// ---------- Copying and moving ----------
+
+Storage::copy('invoices/draft.pdf', 'invoices/archive/draft.pdf');
+Storage::move('invoices/draft.pdf', 'invoices/final.pdf');
+
+// Both stay on the same disk. Across disks, read and write:
+Storage::disk('s3')->put($path, Storage::disk('local')->get($path));
+
+
+// ---------- Appending to a file ----------
+
+Storage::append('logs/import.log', "row {$id} skipped");
+Storage::prepend('logs/import.log', '--- newest first ---');
+
+// Fine for a small audit trail. Not a substitute for a
+// log channel, and not safe with several writers at once.
+
+
+// ---------- Deleting ----------
+
+Storage::delete('documents/report.pdf');
+Storage::delete(['exports/a.csv', 'exports/b.csv']);
+Storage::disk('s3')->delete($invoice->path);
+Storage::deleteDirectory('exports/2025');
+
+
+// ---------- Listing ----------
+
+Storage::files('documents');            // one level
+Storage::allFiles('documents');         // recursive
+Storage::directories('documents');
+Storage::allDirectories('documents');
+
+// ⚠️ On S3 each page is an API call. Listing a bucket
+//    with 100,000 objects belongs in a command, not in
+//    a web request.
+
+
+<?php
+// ---------- The orphan problem ----------
+
+namespace App\\Models;
+
+use Illuminate\\Database\\Eloquent\\Model;
+use Illuminate\\Database\\Eloquent\\SoftDeletes;
+use Illuminate\\Support\\Facades\\Storage;
+
+class Invoice extends Model
+{
+    use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        // Soft deleted invoices keep their file: they can
+        // be restored. Only a real deletion removes it.
+        static::forceDeleted(function (Invoice $invoice) {
+            if ($invoice->document_path) {
+                Storage::disk('s3')->delete($invoice->document_path);
+            }
+        });
+    }
+}
+
+// ⚠️ A mass delete fires no events, so this leaves
+//    every file behind:
+Invoice::where('created_at', '<', now()->subYears(7))->forceDelete();
+
+// ✓ Load them, so the event runs.
+Invoice::onlyTrashed()
+    ->where('deleted_at', '<', now()->subMonths(3))
+    ->chunkById(500, function ($invoices) {
+        foreach ($invoices as $invoice) {
+            $invoice->forceDelete();
+        }
+    });
+
+
+<?php
+// ---------- Finding the orphans you already have ----------
+
+// php artisan make:command AuditStorage
+
+$referenced = Invoice::withTrashed()
+    ->whereNotNull('document_path')
+    ->pluck('document_path')
+    ->flip();
+
+foreach (Storage::disk('s3')->allFiles('invoices') as $path) {
+    if (! $referenced->has($path)) {
+        $this->warn("Orphan: {$path}");
+        // Storage::disk('s3')->delete($path);
+    }
+}
+
+// Report first, delete later. A cleanup script with a
+// wrong assumption is worse than the orphans.
+
+
+<?php
+// ---------- Read-through: canonical vs cache ----------
+
+// The idea, whatever the configuration looks like:
+//
+//   S3     the truth
+//   local  a cache in front of it
+//
+// First read fetches from S3 and keeps a copy.
+// Later reads are local.
+//
+// An empty or stale cache is never a correctness problem,
+// because the source is still there.
+//
+//   fits:         read many times, changes rarely
+//   does not fit: read once, or changes often`,
+      },
+      keyTakeaways: [
+        "<b>`delete()` takes a path or an array</b>, and `deleteDirectory()` removes a whole prefix.",
+        "`files()`, `allFiles()`, `directories()` and `allDirectories()` inspect what is stored.",
+        "<b>Listing a large bucket is many API calls</b>, so it belongs in a command rather than a web request.",
+        "<b>Files outlive the rows that pointed at them</b>, and nothing cleans them up because nothing knows they exist.",
+        "<b>Delete the file from a model event</b>, and use `forceDeleted` when the model soft deletes.",
+        "<b>A mass delete fires no events</b>, so it leaves every associated file behind.",
+        "<b>Write the code that removes a file in the same sitting as the code that stores it.</b>",
+        "<b>The read-through driver keeps a local copy of remote files</b>, so the first read is remote and the rest are local.",
+        "<b>Separate the canonical storage location from the local read cache</b>: the source stays the truth.",
+        "It fits files read many times and changed rarely, and not files read once or changing often.",
+      ],
+      commonMistakes: [
+        "<b>Deleting a record and leaving its file.</b> The bucket fills with orphans nothing references.",
+        "<b>Using `deleting` on a soft-deleting model.</b> The file goes while the record can still be restored.",
+        "<b>Cleaning up with a mass delete.</b> No models load, so no events fire and no files are removed.",
+        "<b>Calling `allFiles()` in a web request.</b> On a large bucket that is many API calls and a slow page.",
+        "<b>Treating a read-through cache as storage.</b> It is a copy; the remote disk is still the truth.",
+      ],
+      quiz: [
+        {
+          question: "Why do orphaned files accumulate?",
+          options: [
+            "Storage drivers keep backups",
+            "Deleting a record does not delete its file, and nothing else knows the file exists",
+            "S3 versions everything",
+            "Laravel caches them",
+          ],
+          correctIndex: 1,
+          explanation: "Delete from a model event, in the same sitting as the storing code.",
+        },
+        {
+          question: "Which event should delete the file on a soft-deleting model?",
+          options: ["`deleting`", "`deleted`", "`forceDeleted`", "`restored`"],
+          correctIndex: 2,
+          explanation: "A soft-deleted record can be restored, so its file must survive.",
+        },
+        {
+          question: "Why does a mass delete leave files behind?",
+          options: [
+            "Storage is asynchronous",
+            "No models are loaded, so no model events fire",
+            "The paths are cached",
+            "It does not",
+          ],
+          correctIndex: 1,
+          explanation: "Loop with `chunkById()` when the events matter.",
+        },
+        {
+          question: "What is the read-through driver's core idea?",
+          options: [
+            "Writing to two disks at once",
+            "Separating the canonical storage location from a local read cache",
+            "Compressing files on read",
+            "Streaming large files",
+          ],
+          correctIndex: 1,
+          explanation: "The source stays the truth, so a stale cache is not a correctness problem.",
+        },
+      ],
+    },
+    {
+      id: "image-processing",
+      title: "Image processing — resize, convert & HEIC",
+      durationMinutes: 11,
+      explanation: "An uploaded image is rarely the image you want to serve.\n\n---\n\n### 1. Basic — the pipeline\n\nLaravel 13 adds an `Image` facade:\n\n```php\n$image = Image::read($request->file('avatar'));\n\n$image->resize(width: 800, height: 800);\n```\n\nThe shape is always the same:\n\n```text\nupload\n  ↓\ndecode\n  ↓\ntransform      resize, crop, rotate\n  ↓\nencode         JPEG, WebP, AVIF\n  ↓\nstore\n```\n\nAnd the reason to bother is bandwidth. A phone camera produces a four-thousand-pixel photograph; an avatar is displayed at two hundred. Serving the original sends about four hundred times more data than the page uses, on every view, to every visitor.\n\n<b>Resize once on upload, serve the small one forever.</b>\n\n---\n\n### 2. Intermediate — format, and what it is worth\n\nConverting is often a bigger win than resizing:\n\n```text\nJPEG  →  Image  →  WebP\n```\n\nThe same photograph as WebP is typically a good deal smaller with no visible difference, and every current browser reads it. On an image-heavy page that is the single cheapest performance change available.\n\nFormat affects:\n\n```text\nfile size\nquality\nbrowser support\ntransparency\n```\n\nTwo more Laravel 13 capabilities worth knowing.\n\n<b>Dominant colour detection</b> gives you the average colour of an image:\n\n```text\nimage  →  analyse pixels  →  dominant colour\n```\n\nStore it alongside the path and you have a placeholder: the layout can show that colour while the image loads, instead of an empty box that shifts the page when it arrives.\n\n<b>HEIC support</b> matters because modern iPhones produce HEIC by default, and browsers largely do not display it. Without conversion, an iPhone user uploads a photograph that nobody can see:\n\n```text\nHEIC upload  →  processing  →  JPEG / WebP  →  storage\n```\n\nThe user never knows anything happened, which is the correct outcome.\n\n---\n\n### 3. Advanced — images are a memory and CPU surface\n\nThis is the part that belongs to yesterday's lesson as much as this one.\n\n<b>Decoding an image allocates memory in proportion to its dimensions, not its file size.</b> A 10 MB JPEG might be modest; a carefully constructed one can decompress to hundreds of megabytes of raw pixels. That is a <i>decompression bomb</i>, and `max:10240` on the upload does not stop it, because the limit is on the file and the cost is in the pixels.\n\nSo validate the dimensions too:\n\n```php\n'avatar' => ['required', 'image', 'max:10240', 'dimensions:max_width=6000,max_height=6000'],\n```\n\nAnd think about where the work happens. Resizing a large photograph takes real CPU time, and doing it in the request means the user waits and your worker is busy:\n\n```text\nin the request     small images, one at a time\nin a queued job    anything large, or several sizes\n```\n\nThree more habits worth having:\n\n<b>Strip metadata.</b> A photograph carries EXIF, and EXIF carries GPS coordinates. Publishing an uploaded image unchanged can publish where it was taken.\n\n<b>Respect orientation.</b> EXIF also records rotation, and a decode that ignores it turns every phone photograph on its side.\n\n<b>And keep the original if you might need other sizes later.</b> Resizing from an already-resized copy loses quality each time; going back to the original does not.",
+      diagram: `The pipeline
+
+  upload
+    ↓
+  decode
+    ↓
+  transform      resize, crop, rotate
+    ↓
+  encode         JPEG, WebP, AVIF
+    ↓
+  store
+
+  Why bother: a phone camera makes a 4,000px photograph.
+  An avatar displays at 200px. Serving the original sends
+  about 400× more data than the page uses, on every view,
+  to every visitor.
+
+  Resize once on upload. Serve the small one forever.
+
+
+Format is often the bigger win
+
+  JPEG  →  Image  →  WebP
+
+  The same photograph, meaningfully smaller, no visible
+  difference, read by every current browser. On an
+  image-heavy page it is the cheapest performance change
+  available.
+
+  Format affects: file size · quality · browser support
+                  transparency
+
+
+  Dominant colour
+
+    image → analyse pixels → dominant colour
+
+  Store it next to the path and the layout can show that
+  colour while the image loads, instead of an empty box
+  that shifts the page when it arrives.
+
+
+  HEIC
+
+    iPhones produce HEIC by default. Browsers largely do
+    not display it. Without conversion, an iPhone user
+    uploads a photograph nobody can see.
+
+    HEIC upload → processing → JPEG / WebP → storage
+
+    The user never knows. That is the correct outcome.
+
+
+Images are a memory and CPU surface
+
+  ⚠️  Decoding allocates memory in proportion to
+      DIMENSIONS, not file size.
+
+      A 10 MB JPEG can decompress to hundreds of MB of
+      raw pixels. That is a decompression bomb, and
+      max:10240 does not stop it: the limit is on the
+      file, the cost is in the pixels.
+
+    'dimensions:max_width=6000,max_height=6000'
+
+  And decide where the work happens:
+
+    in the request     small images, one at a time
+    in a queued job    anything large, or several sizes
+
+
+Three more habits
+
+  Strip metadata
+    a photograph carries EXIF, and EXIF carries GPS.
+    Publishing it unchanged publishes where it was taken.
+
+  Respect orientation
+    EXIF also records rotation. Ignore it and every
+    phone photograph appears on its side.
+
+  Keep the original
+    resizing from a resized copy loses quality each
+    time. Going back to the original does not.`,
+      codeExample: {
+        title: "An upload pipeline that holds up",
+        code: `<?php
+
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Storage;
+use Illuminate\\Support\\Str;
+
+class AvatarController extends Controller
+{
+    public function store(Request $request)
+    {
+        // Validate the file AND the dimensions. max: limits
+        // the file; dimensions: limits what decoding will cost.
+        $request->validate([
+            'avatar' => [
+                'required',
+                'image',
+                'max:10240',                                   // 10 MB
+                'dimensions:max_width=6000,max_height=6000',
+            ],
+        ]);
+
+        $image = Image::read($request->file('avatar'));
+
+        // EXIF records rotation. Ignore it and every phone
+        // photograph ends up on its side.
+        $image->orient();
+
+        // Constrain the long edge rather than forcing a square.
+        $image->scaleDown(width: 800, height: 800);
+
+        $path = 'avatars/' . Str::uuid() . '.webp';
+
+        Storage::disk('s3')->put(
+            $path,
+            (string) $image->toWebp(quality: 82),
+            'private',
+        );
+
+        $request->user()->update([
+            'avatar_path'  => $path,
+
+            // A placeholder colour, so the layout does not
+            // shift when the image arrives.
+            'avatar_color' => (string) $image->pickColor(0, 0),
+        ]);
+
+        return back();
+    }
 }
 
 
 <?php
-// ---------- The same shape, elsewhere ----------
+// ---------- Why the dimensions rule matters ----------
 
-// A <select> of five options accepts a sixth.
-$request->validate([
-    'status'      => ['required', 'in:draft,sent,paid'],
-    'customer_id' => ['required', 'exists:customers,id'],
-]);
-
-// ❌ The price came from a hidden input the customer controls.
-Order::create([
-    'product_id' => $request->product_id,
-    'price'      => $request->price,
-]);
-
-// ✓ Look it up on the server.
-$product = Product::findOrFail($request->product_id);
-
-Order::create([
-    'product_id' => $product->id,
-    'price'      => $product->price,
-]);
+// Decoding allocates memory for WIDTH × HEIGHT pixels.
+//
+//   a 10 MB JPEG               modest
+//   a crafted 10 MB JPEG       decompresses to hundreds
+//                              of MB of raw pixels
+//
+// max:10240 does not stop that: the limit is on the file,
+// the cost is in the pixels.
 
 
-// ❌ Route model binding resolves invoice 91 for whoever asks.
-public function update(Request $request, Invoice $invoice)
+<?php
+// ---------- Move the work off the request ----------
+
+// Small images, one at a time → fine in the request.
+// Anything large, or several sizes → a job.
+
+class GenerateThumbnails implements ShouldQueue
 {
-    $invoice->update($request->validated());
+    public function __construct(public Media $media) {}
+
+    public function handle(): void
+    {
+        // Always from the original, never from a resized copy:
+        // resizing a resize loses quality each time.
+        $image = Image::read(
+            Storage::disk('s3')->get($this->media->original_path)
+        );
+
+        foreach ([200, 800, 1600] as $width) {
+            $resized = (clone $image)->scaleDown(width: $width);
+
+            Storage::disk('s3')->put(
+                "media/{$this->media->id}/{$width}.webp",
+                (string) $resized->toWebp(quality: 82),
+            );
+        }
+    }
 }
 
-// ✓ Yesterday's policy decides whether they may.
-#[Authorize('update', 'invoice')]
-public function update(Request $request, Invoice $invoice)
+
+<?php
+// ---------- HEIC ----------
+
+// An iPhone uploads HEIC by default, and browsers largely
+// will not display it. Convert on the way in, and the user
+// never knows anything happened.
+
+$image = Image::read($request->file('photo'));   // reads HEIC
+
+Storage::disk('s3')->put(
+    'photos/' . Str::uuid() . '.webp',
+    (string) $image->toWebp(),
+);
+
+
+// ---------- Metadata ----------
+
+// A photograph carries EXIF, and EXIF carries GPS.
+// Re-encoding drops it, which is one more reason to
+// convert rather than store the upload untouched.`,
+      },
+      keyTakeaways: [
+        "<b>The pipeline is always decode, transform, encode, store.</b>",
+        "<b>A phone photograph is far larger than the space it is displayed in</b>, so resize once on upload.",
+        "<b>Converting to WebP is often a bigger win than resizing</b>, with no visible difference.",
+        "<b>Dominant colour gives you a placeholder</b>, so the layout does not shift when the image loads.",
+        "<b>iPhones produce HEIC, which browsers largely do not display</b>, so convert on the way in.",
+        "<b>Decoding allocates memory in proportion to dimensions, not file size</b>, which `max:` does not limit.",
+        "<b>Validate `dimensions:` as well</b>, or a crafted image can exhaust memory within your size limit.",
+        "<b>Do large or multi-size processing in a queued job</b>, not in the request.",
+        "<b>Re-encoding strips EXIF</b>, which otherwise publishes the GPS coordinates of an uploaded photograph.",
+        "<b>Respect EXIF orientation, and keep the original</b>, because resizing a resize loses quality each time.",
+      ],
+      commonMistakes: [
+        "<b>Serving the uploaded original.</b> Every visitor downloads several megabytes to see a thumbnail.",
+        "<b>Relying on `max:` alone.</b> The file is small and the decoded pixels are not.",
+        "<b>Resizing large images in the request.</b> The user waits and the worker is blocked.",
+        "<b>Ignoring EXIF orientation.</b> Every phone photograph appears rotated.",
+        "<b>Generating new sizes from a resized copy.</b> Quality drops with each pass; go back to the original.",
+      ],
+      quiz: [
+        {
+          question: "Why resize an uploaded image rather than serving the original?",
+          options: [
+            "Originals cannot be served",
+            "A phone photograph is far larger than the space it is displayed in, so every visitor downloads data the page never uses",
+            "It is required for WebP",
+            "To strip the filename",
+          ],
+          correctIndex: 1,
+          explanation: "Resize once on upload, serve the small one forever.",
+        },
+        {
+          question: "Why does `max:10240` not protect against a decompression bomb?",
+          options: [
+            "It is measured in bytes",
+            "It limits the file, while decoding allocates memory in proportion to the dimensions",
+            "It only applies to PDFs",
+            "It does protect against it",
+          ],
+          correctIndex: 1,
+          explanation: "Add a `dimensions:` rule as well.",
+        },
+        {
+          question: "Why convert HEIC uploads?",
+          options: [
+            "HEIC files are larger",
+            "Browsers largely do not display HEIC, so the uploaded photograph would be invisible",
+            "Laravel cannot store them",
+            "It removes the need to resize",
+          ],
+          correctIndex: 1,
+          explanation: "Convert on the way in and the user never notices.",
+        },
+        {
+          question: "What does re-encoding an uploaded photograph also do?",
+          options: [
+            "Improves quality",
+            "Strips EXIF metadata, which can contain GPS coordinates",
+            "Adds a watermark",
+            "Sets the visibility",
+          ],
+          correctIndex: 1,
+          explanation: "Publishing an untouched upload can publish where it was taken.",
+        },
+      ],
+    },
+    {
+      id: "http-client-basics",
+      title: "The HTTP client — requests, headers & auth",
+      durationMinutes: 12,
+      explanation: "Files were one thing outside your application. External services are the next.\n\n---\n\n### 1. Basic — making a request\n\n```php\n$response = Http::get('https://api.example.com/users');\n\n$response = Http::post('https://api.example.com/users', [\n    'name' => 'Rajan',\n]);\n```\n\nAlso `put()`, `patch()` and `delete()`. The response is an object, not a string:\n\n```php\n$response->json();          // decoded, as an array\n$response->json('data.0.id');\n$response->body();          // the raw string\n$response->status();        // 200\n$response->successful();    // true for 2xx\n```\n\n<b>`json()` is the one you will use.</b> It decodes for you and, given a key, digs into the structure with dot notation, which saves the usual chain of array accesses that break when a field is missing.\n\n---\n\n### 2. Intermediate — headers, auth and query strings\n\n```php\nHttp::withHeaders(['Accept' => 'application/json'])\n    ->get('https://api.example.com/users');\n```\n\n```php\nHttp::withToken($token)->get(...);                  // Authorization: Bearer ...\nHttp::withBasicAuth($username, $password)->get(...);\n```\n\nQuery parameters go as an array on `get()`:\n\n```php\nHttp::get('https://api.example.com/users', ['page' => 2, 'limit' => 20]);\n```\n\n```text\nGET /users?page=2&limit=20\n```\n\nor fluently, which reads better when they are built up:\n\n```php\nHttp::withQueryParameters(['page' => 2, 'limit' => 20])->get(...);\n```\n\nEither way, <b>the client encodes them</b>, so a value containing a space or an ampersand is handled rather than breaking the URL.\n\nOnce you have more than one call to a service, the repetition is worth removing:\n\n```php\nHttp::baseUrl('https://api.example.com')\n    ->withToken(config('services.example.token'))\n    ->acceptJson();\n```\n\nAnd Laravel lets you name that once, as a macro, so every call site says `Http::example()->get('/users')`. <b>One place holds the base URL, the token and the timeouts</b>, which is also the one place to change when any of them do.\n\n---\n\n### 3. Advanced — one method worth not misreading\n\nLaravel 13 adds:\n\n```php\nHttp::query(...);\n```\n\nand it is <i>not</i> a way to add query-string parameters to a `GET`. It sends an HTTP request using the `QUERY` method.\n\n```text\nHttp::get($url, ['page' => 2])       →  GET /users?page=2\nHttp::withQueryParameters([...])     →  GET /users?page=2\n\nHttp::query($url, [...])             →  QUERY /users\n```\n\nThe problem `QUERY` exists to solve: a search with a large or structured set of criteria does not fit in a URL, so APIs use `POST` for it. But `POST` means \"create something\", so caches will not cache it and clients cannot safely retry it. `QUERY` is a read with a body: safe to retry, cacheable, and not pretending to be a write.\n\nYou will meet it rarely. <b>The distinction to keep is that `Http::query()` is a verb, and `withQueryParameters()` is a URL.</b>\n\nOne last habit, connecting to yesterday. <b>API credentials belong in config, read from the environment.</b>\n\n```php\nHttp::withToken(config('services.example.token'))\n```\n\nnot the token itself, and never `env()` outside a config file, because cached config returns null for it in production.",
+      diagram: `Making a request
+
+  Http::get(\$url)
+  Http::post(\$url, ['name' => 'Rajan'])
+  Http::put / patch / delete
+
+  The response is an object:
+
+    ->json()            decoded, as an array
+    ->json('data.0.id') dot notation into the structure
+    ->body()            the raw string
+    ->status()          200
+    ->successful()      true for 2xx
+
+  json() with a key saves the chain of array accesses
+  that breaks when a field is missing.
+
+
+Headers, auth, query strings
+
+  ->withHeaders(['Accept' => 'application/json'])
+  ->withToken(\$token)                Authorization: Bearer ...
+  ->withBasicAuth(\$user, \$pass)
+
+  Http::get(\$url, ['page' => 2, 'limit' => 20])
+  ->withQueryParameters(['page' => 2, 'limit' => 20])
+
+    GET /users?page=2&limit=20
+
+  Either way the client ENCODES them, so a value with a
+  space or an ampersand is handled rather than breaking
+  the URL.
+
+
+Once there is more than one call to a service
+
+  Http::baseUrl('https://api.example.com')
+      ->withToken(config('services.example.token'))
+      ->acceptJson()
+
+  Name it once, as a macro:
+
+    Http::example()->get('/users')
+
+  One place holds the base URL, the token and the
+  timeouts — and one place to change when any of
+  them do.
+
+
+One method worth not misreading
+
+  Http::query() is NOT a way to add query parameters.
+  It sends an HTTP request with the QUERY method.
+
+    Http::get(\$url, ['page' => 2])    →  GET /users?page=2
+    ->withQueryParameters([...])      →  GET /users?page=2
+
+    Http::query(\$url, [...])          →  QUERY /users
+
+  Why QUERY exists: a search with large or structured
+  criteria does not fit in a URL, so APIs use POST. But
+  POST means "create something": caches will not cache
+  it and clients cannot safely retry it.
+
+  QUERY is a READ with a body: retryable, cacheable,
+  and not pretending to be a write.
+
+  Http::query() is a VERB.
+  withQueryParameters() is a URL.
+
+
+  And credentials come from config, read from the
+  environment:
+
+    ->withToken(config('services.example.token'))
+
+  never the token itself, and never env() outside a
+  config file — cached config returns null in production.`,
+      codeExample: {
+        title: "Talking to an API",
+        code: `<?php
+
+use Illuminate\\Support\\Facades\\Http;
+
+// ---------- The verbs ----------
+
+$response = Http::get('https://api.example.com/users');
+
+$response = Http::post('https://api.example.com/users', [
+    'name'  => 'Rajan',
+    'email' => 'rajan@example.com',
+]);
+
+Http::put('https://api.example.com/users/1', [...]);
+Http::patch('https://api.example.com/users/1', [...]);
+Http::delete('https://api.example.com/users/1');
+
+
+// ---------- Reading the response ----------
+
+$response->json();               // decoded array
+$response->json('data.0.id');    // dot notation into it
+$response->body();               // raw string
+$response->status();             // 200
+$response->header('X-Request-Id');
+$response->successful();         // 2xx
+$response->failed();
+
+
+// ---------- Not everything wants JSON ----------
+
+// Older APIs and almost every OAuth token endpoint want
+// application/x-www-form-urlencoded, not JSON:
+Http::asForm()->post('https://api.example.com/oauth/token', [
+    'grant_type'    => 'client_credentials',
+    'client_id'     => config('services.example.id'),
+    'client_secret' => config('services.example.secret'),
+]);
+
+// Sending a file to somebody else's API is multipart:
+Http::attach(
+    'document',
+    Storage::get($invoice->path),
+    'invoice.pdf',
+)->post('https://api.example.com/documents');
+
+// attach() switches the request to multipart, so do not
+// also call asJson() — pass the other fields as the
+// second argument to post().
+
+
+// ---------- Headers and auth ----------
+
+Http::withHeaders([
+    'Accept'       => 'application/json',
+    'X-Client-Id'  => config('services.example.client_id'),
+])->get('https://api.example.com/users');
+
+// Authorization: Bearer ...
+Http::withToken(config('services.example.token'))->get(...);
+
+Http::withBasicAuth($username, $password)->get(...);
+
+
+// ---------- Query parameters ----------
+
+Http::get('https://api.example.com/users', ['page' => 2, 'limit' => 20]);
+
+Http::withQueryParameters(['page' => 2, 'limit' => 20])
+    ->get('https://api.example.com/users');
+
+// GET /users?page=2&limit=20
+// The client encodes the values, so spaces and
+// ampersands do not break the URL.
+
+
+<?php
+// ---------- One place for everything about a service ----------
+
+// app/Providers/AppServiceProvider.php
+
+use Illuminate\\Support\\Facades\\Http;
+
+public function boot(): void
 {
-    $invoice->update($request->validated());
+    Http::macro('example', function () {
+        return Http::baseUrl('https://api.example.com')
+            ->withToken(config('services.example.token'))
+            ->acceptJson()
+            ->timeout(5)
+            ->connectTimeout(2)
+            ->retry(3, 200);
+    });
+}
+
+// Every call site:
+$users = Http::example()->get('/users')->json();
+Http::example()->post('/users', ['name' => 'Rajan']);
+
+// The base URL, the token and the timeouts live in one
+// place, which is also the one place to change them.
+
+
+<?php
+// ---------- Credentials ----------
+
+// config/services.php
+'example' => [
+    'token' => env('EXAMPLE_API_TOKEN'),
+],
+
+// ✓
+Http::withToken(config('services.example.token'));
+
+// ❌ Committed to the repository forever.
+Http::withToken('sk_live_51H...');
+
+// ❌ Cached config returns null for this in production.
+Http::withToken(env('EXAMPLE_API_TOKEN'));
+
+
+<?php
+// ---------- The QUERY method (Laravel 13) ----------
+
+// A read with a body: retryable and cacheable, unlike
+// a POST used for searching.
+Http::query('https://api.example.com/search', [
+    'filters' => ['status' => 'active', 'tags' => ['a', 'b']],
+]);
+
+// Not the same thing as:
+Http::withQueryParameters(['q' => 'active'])->get('/search');`,
+      },
+      keyTakeaways: [
+        "<b>`Http::get()`, `post()`, `put()`, `patch()` and `delete()` cover the verbs</b>, and return a response object.",
+        "<b>`json()` decodes the body</b>, and with a key it digs in using dot notation.",
+        "`withHeaders()`, `withToken()` and `withBasicAuth()` handle headers and authentication readably.",
+        "<b>Query parameters go as an array on `get()` or through `withQueryParameters()`</b>, and are encoded for you.",
+        "<b>`baseUrl()` plus a macro puts everything about a service in one place</b>: the URL, the token, the timeouts.",
+        "That one place is also the only place to change when any of them do.",
+        "<b>`Http::query()` sends an HTTP `QUERY` request; it does not add query-string parameters.</b>",
+        "<b>`QUERY` is a read with a body</b>, so it is retryable and cacheable where a `POST` search is neither.",
+        "<b>API credentials come from `config()`</b>, never hard-coded, and never `env()` outside a config file.",
+      ],
+      commonMistakes: [
+        "<b>Reading `Http::query()` as \"add query parameters\".</b> It is an HTTP verb, not a URL builder.",
+        "<b>Building a query string by hand.</b> The client encodes values; concatenation breaks on a space.",
+        "<b>Hard-coding an API token.</b> It is then in the repository history permanently.",
+        "<b>Calling `env()` for a token outside a config file.</b> Cached config returns null in production.",
+        "<b>Repeating the base URL and token at every call site.</b> One macro holds them, and one change updates them.",
+      ],
+      quiz: [
+        {
+          question: "What does `$response->json('data.0.id')` do?",
+          options: [
+            "Sends a JSON request",
+            "Decodes the body and reads that key using dot notation",
+            "Validates the response",
+            "Sets the Accept header",
+          ],
+          correctIndex: 1,
+          explanation: "It replaces the chain of array accesses that breaks on a missing field.",
+        },
+        {
+          question: "What does `Http::query()` do?",
+          options: [
+            "Adds query-string parameters to a GET",
+            "Sends a request using the HTTP `QUERY` method",
+            "Builds a database query",
+            "Fetches and caches a response",
+          ],
+          correctIndex: 1,
+          explanation: "`withQueryParameters()` is the one that builds the URL.",
+        },
+        {
+          question: "Why does the `QUERY` method exist?",
+          options: [
+            "It is faster than GET",
+            "A search needs a body, and a POST used for reading is neither cacheable nor safely retryable",
+            "GET cannot be encrypted",
+            "It replaces PATCH",
+          ],
+          correctIndex: 1,
+          explanation: "A read with a body, without pretending to be a write.",
+        },
+        {
+          question: "Where should an API token come from?",
+          options: [
+            "Hard-coded in the calling class",
+            "`config()`, which reads it from the environment",
+            "`env()` at the call site",
+            "The database",
+          ],
+          correctIndex: 1,
+          explanation: "Cached config returns null for a direct `env()` call in production.",
+        },
+      ],
+    },
+    {
+      id: "timeouts-retries-errors",
+      title: "Timeouts, retries & handling failure",
+      durationMinutes: 12,
+      explanation: "An external API is a dependency you do not control, and the interesting question is not what happens when it works.\n\n---\n\n### 1. Basic — never wait forever\n\n```php\nHttp::timeout(5)->get('https://api.example.com/users');\n```\n\nWithout it, a slow API holds your request open for as long as it likes.\n\n<b>And that failure is worse than it sounds.</b> Each waiting request occupies a PHP worker. If an API you call hangs and you have twenty workers, twenty stuck requests take your whole application down, including every page that has nothing to do with that API.\n\n```text\nAPI stops responding\n        ↓\nrequests pile up waiting\n        ↓\nevery worker is busy\n        ↓\nyour site is down\n```\n\nA timeout turns somebody else's outage into a handled error on one feature.\n\nTwo timeouts, because there are two different failures:\n\n```php\nHttp::connectTimeout(3)->timeout(10)->get(...);\n```\n\n```text\nconnectTimeout   how long to establish a connection\ntimeout          how long for the whole request\n```\n\nA host that is down fails the first quickly. A host that answers slowly fails the second. <b>Set both</b>, and keep them well under your own request limit, or a queued job's.\n\n---\n\n### 2. Intermediate — retries\n\nA network blip should not fail an operation that would work a moment later:\n\n```php\nHttp::retry(3, 100)->get('https://api.example.com/users');\n```\n\n```text\nattempt 1  →  fail\n   wait 100ms\nattempt 2  →  fail\n   wait 100ms\nattempt 3  →  success\n```\n\nUse a growing delay rather than a fixed one, so a struggling service is not hit three times in a third of a second:\n\n```php\nHttp::retry(3, fn (int $attempt) => $attempt * 200)\n```\n\nAnd retry only what is worth retrying. A 500 or a timeout may pass; a 404 or a 422 will not, and retrying it three times just makes the failure slower:\n\n```php\nHttp::retry(3, 200, function ($exception, $request) {\n    return $exception instanceof ConnectionException\n        || $exception->response?->status() === 429;\n})\n```\n\n---\n\n### 3. Advanced — when retrying is dangerous\n\nHere is the part that matters.\n\n```text\nGET /users            safe to retry\nPOST /charge-card     not safe\n```\n\nThe failure case is not the request that failed. It is the request that <i>succeeded</i> and whose response you never received:\n\n```text\nyou send   POST /charge-card\nthey       charge the card\nthe response is lost\nyou see    a timeout\nyou retry\nthey       charge the card again\n```\n\nFrom your side both look identical: no response. From the customer's side, they have been charged twice.\n\n<b>The fix is an idempotency key</b>: a value you generate per operation and send with every attempt. The provider records it, and a second request with the same key returns the first result instead of doing the work again.\n\n```php\nHttp::withHeaders(['Idempotency-Key' => $payment->uuid])\n    ->retry(3, 200)\n    ->post('https://payments.example.com/charge', [...]);\n```\n\nSo the rule:\n\n```text\nreads                    retry freely\nwrites, no idempotency   do not retry automatically\nwrites, with a key       retry safely\n```\n\nIf the provider offers no idempotency, do not retry the write. Record the attempt, and reconcile.\n\n---\n\n### Handling the response\n\n```php\n$response->successful();   // 2xx\n$response->failed();       // 4xx or 5xx\n$response->clientError();  // 4xx: usually your bug\n$response->serverError();  // 5xx: usually theirs\n```\n\n<b>A failed HTTP response is not an exception by default.</b> A 500 comes back as a response object, and `$response->json()` on it returns whatever the error body held. Code that forgets to check carries on with nonsense.\n\n```php\n$response = Http::get(...)->throw();\n```\n\nmakes a non-2xx throw instead, which is usually what you want in a job or a service: fail loudly rather than continue with an empty array.\n\n```text\n2xx  →  continue\nelse →  exception\n```\n\nAnd the distinction is worth acting on. <b>A 4xx is usually your bug</b>, so retrying is pointless and an alert is appropriate. <b>A 5xx is usually theirs</b>, so a retry is reasonable and repeated failures mean their outage, not yours.",
+      diagram: `Never wait forever
+
+  Http::timeout(5)->get(\$url)
+
+  Without it, a slow API holds your request open as
+  long as it likes. And each waiting request occupies
+  a PHP worker:
+
+    API stops responding
+            ↓
+    requests pile up waiting
+            ↓
+    every worker is busy
+            ↓
+    YOUR SITE is down
+
+  including every page unrelated to that API.
+
+  A timeout turns somebody else's outage into a handled
+  error on one feature.
+
+  Two timeouts, two failures:
+
+    connectTimeout(3)   establishing a connection
+    timeout(10)         the whole request
+
+  A host that is down fails the first quickly.
+  A host that answers slowly fails the second.
+  Set both, well under your own request limit.
+
+
+Retries
+
+  Http::retry(3, 100)
+
+    attempt 1 → fail → wait 100ms
+    attempt 2 → fail → wait 100ms
+    attempt 3 → success
+
+  Grow the delay, so a struggling service is not hit
+  three times in a third of a second:
+
+    retry(3, fn (\$attempt) => \$attempt * 200)
+
+  And retry only what can succeed. A 500 or a timeout
+  may pass. A 404 or a 422 will not, and retrying makes
+  the failure slower.
+
+
+When retrying is DANGEROUS
+
+  GET /users          safe
+  POST /charge-card   not safe
+
+  The failure case is not the request that failed. It is
+  the one that SUCCEEDED and whose response was lost:
+
+    you send   POST /charge-card
+    they       charge the card
+    the response is lost
+    you see    a timeout
+    you retry
+    they       charge the card AGAIN
+
+  Identical from your side. Not from the customer's.
+
+  The fix: an idempotency key, generated per operation
+  and sent with every attempt. A second request with the
+  same key returns the first result.
+
+    ->withHeaders(['Idempotency-Key' => \$payment->uuid])
+
+    reads                     retry freely
+    writes, no idempotency    do not retry automatically
+    writes, with a key        retry safely
+
+  No idempotency available? Do not retry the write.
+  Record the attempt and reconcile.
+
+
+Handling the response
+
+  successful()   2xx
+  failed()       4xx or 5xx
+  clientError()  4xx — usually YOUR bug
+  serverError()  5xx — usually THEIRS
+
+  ⚠️  A failed response is NOT an exception by default.
+      A 500 comes back as a response object, and json()
+      returns whatever the error body held. Code that
+      forgets to check carries on with nonsense.
+
+    Http::get(...)->throw()
+
+      2xx  → continue
+      else → exception
+
+  Fail loudly rather than continue with an empty array.`,
+      codeExample: {
+        title: "Failure, handled",
+        code: `<?php
+
+use Illuminate\\Http\\Client\\ConnectionException;
+use Illuminate\\Support\\Facades\\Http;
+
+// ---------- Timeouts: both of them ----------
+
+Http::connectTimeout(3)   // establishing the connection
+    ->timeout(10)         // the whole request
+    ->get('https://api.example.com/users');
+
+// ❌ No timeout: a hanging API occupies a worker until
+//    something else gives up. Twenty workers, twenty
+//    stuck requests, and your whole site is down.
+Http::get('https://api.example.com/users');
+
+
+// ---------- Retries ----------
+
+Http::retry(3, 100)->get(...);
+
+// A growing delay, so a struggling service is not hit
+// three times in a third of a second.
+Http::retry(3, fn (int $attempt) => $attempt * 200)->get(...);
+
+// Retry only what can succeed. A 404 will still be a 404.
+Http::retry(3, 200, function ($exception, $request) {
+    return $exception instanceof ConnectionException
+        || $exception->response?->status() === 429
+        || $exception->response?->serverError();
+})->get(...);
+
+
+<?php
+// ---------- The dangerous retry ----------
+
+// ❌ The request may have SUCCEEDED and the response been
+//    lost. Retrying charges the card again.
+Http::retry(3, 200)->post('https://payments.example.com/charge', [
+    'amount' => 5000,
+]);
+
+// ✓ An idempotency key: generated per operation, sent with
+//    every attempt. A repeat returns the first result.
+Http::withHeaders([
+    'Idempotency-Key' => $payment->uuid,
+])->retry(3, 200)->post('https://payments.example.com/charge', [
+    'amount' => 5000,
+]);
+
+// If the provider offers no idempotency, do not retry the
+// write. Record the attempt and reconcile.
+
+
+<?php
+// ---------- Checking the response ----------
+
+$response = Http::get('https://api.example.com/users');
+
+$response->successful();    // 2xx
+$response->failed();        // 4xx or 5xx
+$response->clientError();   // 4xx — usually your bug
+$response->serverError();   // 5xx — usually theirs
+
+if ($response->failed()) {
+    Log::warning('Users API failed', [
+        'status' => $response->status(),
+        'body'   => $response->body(),
+    ]);
+
+    return collect();
+}
+
+
+// ---------- Or throw ----------
+
+// A failed response is not an exception by default, so
+// this carries on with whatever the error body held:
+$users = Http::get('https://api.example.com/users')->json();
+
+// ✓ Fail loudly instead.
+$users = Http::get('https://api.example.com/users')
+    ->throw()
+    ->json();
+
+// Conditionally:
+$response->throwIf($response->serverError());
+$response->throwUnless($response->successful());
+$response->throwUnlessStatus(201);      // anything but 201 throws
+
+
+<?php
+// ---------- What it looks like put together ----------
+
+class ExampleApi
+{
+    public function users(): array
+    {
+        try {
+            return Http::baseUrl(config('services.example.url'))
+                ->withToken(config('services.example.token'))
+                ->connectTimeout(2)
+                ->timeout(5)
+                ->retry(3, fn ($attempt) => $attempt * 200, function ($e) {
+                    return $e instanceof ConnectionException
+                        || $e->response?->serverError();
+                })
+                ->get('/users')
+                ->throw()
+                ->json('data');
+        } catch (RequestException $e) {
+            // Their outage should degrade one feature,
+            // not take down the page.
+            report($e);
+
+            return [];
+        }
+    }
 }`,
       },
       keyTakeaways: [
-        "<b>Mass assignment is setting many attributes at once from an array you did not check.</b>",
-        "<b>A request body is whatever the sender chooses to send</b>, so a form field list is not a limit.",
-        "<b>`$fillable` is an allow list</b> and anything not on it is silently dropped.",
-        "<b>`$guarded` is a block list</b>, and `$guarded = []` is the protection switched off.",
-        "<b>A new column is unassignable under `$fillable` and assignable under `$guarded`</b>, so one fails loudly and one quietly.",
-        "Mass assignment concerns arrays; a deliberate `$user->is_admin = true` is unaffected.",
-        "<b>`validate()` returns only the validated keys</b>, so an extra field never reaches the model.",
-        "<b>Validation limits what the request may contain; `$fillable` limits what the model may accept.</b>",
-        "<b>A `<select>` accepts values it never offered</b>, so constrain it with `in:` or `exists:`.",
-        "<b>Every attack today is somebody sending something the interface did not offer.</b> The server decides, not the form.",
+        "<b>Without a timeout, a slow API holds your request open indefinitely</b>, and each one occupies a worker.",
+        "<b>Enough stuck requests takes your whole site down</b>, including pages unrelated to that API.",
+        "<b>`connectTimeout()` covers reaching the host; `timeout()` covers the whole request.</b> Set both.",
+        "<b>`retry()` handles a transient failure</b>, and a growing delay avoids hammering a struggling service.",
+        "<b>Retry only what can succeed</b>: a 500 or a timeout may pass, a 404 will not.",
+        "<b>The dangerous case is a write that succeeded and whose response was lost</b>, because a retry repeats it.",
+        "<b>An idempotency key makes a repeated write safe</b>, by letting the provider return the first result.",
+        "Without idempotency, do not retry a write; record the attempt and reconcile.",
+        "<b>A failed HTTP response is not an exception by default</b>, so code that forgets to check continues with nonsense.",
+        "<b>`throw()` turns a non-2xx into an exception</b>, and 4xx is usually your bug while 5xx is usually theirs.",
       ],
       commonMistakes: [
-        "<b>Passing `$request->all()` to `create()` or `update()`.</b> Every column becomes writable by the sender.",
-        "<b>Setting `$guarded = []` to make an error go away.</b> That removes the protection entirely.",
-        "<b>Assuming validation makes `$fillable` unnecessary.</b> They guard different doors, and one may be forgotten.",
-        "<b>Trusting a price or an id from a hidden field.</b> Look it up on the server instead.",
-        "<b>Trusting a `<select>` to limit its own values.</b> Any value can be posted; validate with `in:`.",
+        "<b>Calling an API with no timeout.</b> Their outage becomes your outage.",
+        "<b>Setting only `timeout()`.</b> A host that is unreachable still waits the full duration.",
+        "<b>Retrying a payment or any non-idempotent write.</b> The customer is charged twice.",
+        "<b>Retrying a 4xx.</b> It will fail again; you have only made the failure slower.",
+        "<b>Calling `json()` without checking the response.</b> A 500's error body becomes your data.",
       ],
       quiz: [
         {
-          question: "Why can a request contain a field your form never rendered?",
+          question: "Why is calling an API without a timeout dangerous?",
           options: [
-            "Laravel adds defaults",
-            "A request body is whatever the sender chooses to send; the form is only a suggestion",
-            "The browser adds hidden fields",
-            "It cannot",
+            "The response may be truncated",
+            "Each waiting request occupies a worker, so a hanging API can take your whole site down",
+            "Laravel caches the failure",
+            "It is not dangerous",
           ],
           correctIndex: 1,
-          explanation: "`curl` and the developer tools ignore your markup entirely.",
+          explanation: "A timeout turns their outage into a handled error on one feature.",
         },
         {
-          question: "What is the security argument for `$fillable` over `$guarded`?",
+          question: "What is the difference between `connectTimeout()` and `timeout()`?",
+          options: [
+            "None",
+            "One limits establishing the connection; the other limits the whole request",
+            "`timeout()` is for POST only",
+            "`connectTimeout()` is in milliseconds",
+          ],
+          correctIndex: 1,
+          explanation: "An unreachable host fails the first quickly; a slow one fails the second.",
+        },
+        {
+          question: "Why is retrying `POST /charge-card` dangerous?",
+          options: [
+            "POST cannot be retried",
+            "The first request may have succeeded with its response lost, so the retry charges again",
+            "It is slower",
+            "The body cannot be resent",
+          ],
+          correctIndex: 1,
+          explanation: "An idempotency key lets the provider return the first result instead.",
+        },
+        {
+          question: "What does `->throw()` change?",
+          options: [
+            "It retries the request",
+            "A non-2xx response raises an exception instead of being returned",
+            "It logs the response",
+            "It validates the JSON",
+          ],
+          correctIndex: 1,
+          explanation: "Otherwise a 500's error body silently becomes your data.",
+        },
+      ],
+    },
+    {
+      id: "pooling-faking-and-process",
+      title: "Pooling, faking & running processes",
+      durationMinutes: 13,
+      explanation: "Three things to finish: making several calls at once, testing without the internet, and the third boundary out of your application.\n\n---\n\n### 1. Basic — concurrent requests\n\nA page needing three APIs, done sequentially, waits for each in turn:\n\n```text\nUser API → wait → Orders API → wait → Billing API\n\ntotal = T1 + T2 + T3\n```\n\nThree calls at 400ms each is 1.2 seconds of a user watching a spinner, almost all of it spent waiting on somebody else's network.\n\n<b>`Http::pool()` sends them together:</b>\n\n```php\n$responses = Http::pool(fn ($pool) => [\n    $pool->get('https://api.example.com/users'),\n    $pool->get('https://api.example.com/orders'),\n    $pool->get('https://api.example.com/billing'),\n]);\n```\n\n```text\n             ┌→ User API\nApplication ─┼→ Orders API\n             └→ Billing API\n\ntotal ≈ max(T1, T2, T3)\n```\n\n1.2 seconds becomes 400ms.\n\nName them, or you are indexing an array by position:\n\n```php\n$pool->as('users')->get(...);\n$responses['users']->json();\n```\n\n<b>Pooling only works when the calls are independent.</b> If the second needs the first's result, they are sequential by nature and no amount of pooling changes that.\n\nAnd each response still needs checking. One failing does not fail the pool; you get a response object per request, and one of them may be a 500.\n\n---\n\n### 2. Intermediate — faking in tests\n\nA test that calls a real API is slow, needs the internet, fails when somebody else deploys, and may cost money.\n\n```php\nHttp::fake();\n```\n\nEvery request now returns an empty 200 and nothing leaves the machine. Usually you want specific responses:\n\n```php\nHttp::fake([\n    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Rajan'], 200),\n    'api.example.com/*'     => Http::response([], 404),\n]);\n```\n\n```text\nwithout fakes            with fakes\n─────────────            ──────────\ntest → internet          test → Http::fake()\n    → external API           → a response you chose\n    → slow, flaky            → fast, deterministic\n    → costs money            → free\n```\n\n<b>The bigger win is testing failure.</b> You cannot ask a real API for a 500 on demand, so the error handling from the last lesson is untestable against it. A fake produces one instantly, which means retries, timeouts and the `throw()` path all get covered.\n\nAnd you can assert what you sent:\n\n```php\nHttp::assertSent(fn ($request) =>\n    $request->url() === 'https://api.example.com/users'\n    && $request['name'] === 'Rajan');\n```\n\n```text\nwhat did the API return?      the fake\ndid we call it correctly?     assertSent\n```\n\nBoth halves matter. A test that only fakes the response passes when you send the wrong body to the wrong endpoint.\n\n---\n\n### 3. Advanced — processes, and the boundary\n\nThe third door out of your application:\n\n```php\n$result = Process::run('php artisan about');\n\n$result->successful();\n$result->output();\n$result->errorOutput();\n```\n\n```text\nLaravel  →  Process  →  the operating system  →  a command\n```\n\nUseful for the things PHP cannot do itself:\n\n```text\nffmpeg          video and audio\nImageMagick     images beyond what PHP handles\ngit\npython scripts\nany CLI utility\n```\n\n<b>And it is a security boundary, in the same way SQL was.</b>\n\n```php\nProcess::run(\"rm -rf {$userInput}\");\n```\n\nThe user's input becomes part of the command. A value of `/tmp/x; rm -rf /` is two commands, and the shell runs both. This is yesterday's SQL injection with a different interpreter.\n\nThe fix is the same shape: <b>pass the command as an array</b>, so arguments stay arguments:\n\n```php\nProcess::run(['ffmpeg', '-i', $inputPath, $outputPath]);\n```\n\nNo shell parses that, so a semicolon in a filename is a semicolon in a filename. As with SQL, values can be passed safely and <i>structure</i> cannot: a user-chosen flag or command name needs a whitelist.\n\nTwo more habits: <b>set a timeout</b>, because a hung `ffmpeg` is the stuck-worker problem again, and <b>run anything slow in a queued job</b> rather than a request.\n\n---\n\n### The day, in one picture\n\n```text\n                  Laravel\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n   Filesystem   HTTP Client    Process\n        │            │            │\n   local / S3   external APIs    the OS\n```\n\nYour code says \"store this file\", \"call this API\", \"run this process\". <b>Not \"write to /var/www\", \"construct a cURL handle\", or \"build a shell string\".</b> That is what makes an application testable, movable and possible to scale.",
+      diagram: `Concurrent requests
+
+  Sequential:
+
+    User API → wait → Orders API → wait → Billing API
+    total = T1 + T2 + T3
+
+  Three calls at 400ms is 1.2 seconds of spinner,
+  almost all of it waiting on somebody else's network.
+
+  Http::pool(fn (\$pool) => [ ... ])
+
+               ┌→ User API
+  Application ─┼→ Orders API
+               └→ Billing API
+
+    total ≈ max(T1, T2, T3)      1.2s becomes 400ms
+
+  Name them, or you are indexing by position:
+    \$pool->as('users')->get(...)
+    \$responses['users']->json()
+
+  Only works when the calls are INDEPENDENT. If the
+  second needs the first's result, they are sequential
+  by nature.
+
+  And each response still needs checking: one failing
+  does not fail the pool.
+
+
+Faking in tests
+
+  without fakes           with fakes
+  ─────────────           ──────────
+  test → internet         test → Http::fake()
+      → external API          → a response you chose
+      → slow, flaky           → fast, deterministic
+      → costs money           → free
+
+  Http::fake([
+      'api.example.com/users' => Http::response([...], 200),
+      'api.example.com/*'     => Http::response([], 404),
+  ]);
+
+  The bigger win: testing FAILURE. You cannot ask a real
+  API for a 500 on demand, so your retry, timeout and
+  throw() paths are untestable against it. A fake
+  produces one instantly.
+
+  And assert what you SENT:
+
+    Http::assertSent(fn (\$r) =>
+        \$r->url() === '...' && \$r['name'] === 'Rajan');
+
+    what did the API return?   the fake
+    did we call it correctly?  assertSent
+
+  A test that only fakes the response passes when you
+  send the wrong body to the wrong endpoint.
+
+
+Processes, and the boundary
+
+  Laravel → Process → the operating system → a command
+
+  ffmpeg · ImageMagick · git · python · any CLI utility
+
+
+  ⚠️  Process::run("rm -rf {\$userInput}")
+
+      /tmp/x; rm -rf /   is TWO commands, and the shell
+      runs both. This is SQL injection with a different
+      interpreter.
+
+  Same fix, same shape: pass an ARRAY.
+
+    Process::run(['ffmpeg', '-i', \$input, \$output])
+
+  No shell parses that, so a semicolon in a filename is
+  a semicolon in a filename.
+
+  As with SQL: values can be passed safely, STRUCTURE
+  cannot. A user-chosen flag or command needs a whitelist.
+
+  Set a timeout — a hung ffmpeg is the stuck-worker
+  problem again. And run anything slow in a job.
+
+
+The day
+
+                    Laravel
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+     Filesystem   HTTP Client    Process
+          │            │            │
+     local / S3   external APIs    the OS
+
+  "store this file"   not  "write to /var/www"
+  "call this API"     not  "construct a cURL handle"
+  "run this process"  not  "build a shell string"`,
+      codeExample: {
+        title: "Pooling, fakes and processes",
+        code: `<?php
+
+use Illuminate\\Support\\Facades\\Http;
+use Illuminate\\Support\\Facades\\Process;
+
+// ---------- Concurrent, and named ----------
+
+$responses = Http::pool(fn ($pool) => [
+    $pool->as('users')->get('https://api.example.com/users'),
+    $pool->as('orders')->get('https://api.example.com/orders'),
+    $pool->as('billing')->get('https://api.example.com/billing'),
+]);
+
+// Each one still needs checking: one failing does not
+// fail the pool.
+if ($responses['users']->successful()) {
+    $users = $responses['users']->json();
+}
+
+// Only for INDEPENDENT calls. If the second needs the
+// first's id, they are sequential by nature.
+
+
+<?php
+// ---------- Faking ----------
+
+class InvoiceSyncTest extends TestCase
+{
+    public function test_it_stores_the_returned_invoices(): void
+    {
+        Http::fake([
+            'api.example.com/invoices' => Http::response([
+                'data' => [
+                    ['number' => 'INV-001', 'total' => 100],
+                ],
+            ], 200),
+
+            // Anything else is a 404, so an unexpected call
+            // fails the test instead of hitting the network.
+            '*' => Http::response([], 404),
+        ]);
+
+        (new InvoiceSync)->run();
+
+        $this->assertDatabaseHas('invoices', ['number' => 'INV-001']);
+
+        // Did we call it correctly? The fake alone does not
+        // tell you: a test that only fakes the response
+        // passes when you post the wrong body to the wrong URL.
+        Http::assertSent(fn ($request) =>
+            $request->url() === 'https://api.example.com/invoices'
+            && $request->hasHeader('Authorization'));
+
+        // And the half people skip: proving you did NOT
+        // call something.
+        Http::assertNotSent(fn ($request) =>
+            str_contains($request->url(), '/charge'));
+    }
+
+    public function test_it_survives_a_server_error(): void
+    {
+        // You cannot ask a real API for a 500 on demand,
+        // which is why the error path is untestable without
+        // a fake.
+        Http::fake(['*' => Http::response([], 500)]);
+
+        (new InvoiceSync)->run();
+
+        $this->assertDatabaseCount('invoices', 0);
+    }
+}
+
+
+<?php
+// ---------- Processes ----------
+
+$result = Process::run('php artisan about');
+
+$result->successful();
+$result->exitCode();
+$result->output();
+$result->errorOutput();
+
+
+// ❌ The user's value becomes part of the command.
+//    "/tmp/x; rm -rf /" is two commands, and the shell
+//    runs both. SQL injection, different interpreter.
+Process::run("ffmpeg -i {$userPath} out.mp4");
+
+// ✓ An array. No shell parses it, so a semicolon in a
+//   filename is a semicolon in a filename.
+Process::timeout(120)->run([
+    'ffmpeg',
+    '-i', $inputPath,
+    '-vf', 'scale=1280:-2',
+    $outputPath,
+]);
+
+// As with SQL: values pass safely, structure does not.
+// A user-chosen flag or command name needs a whitelist.
+
+$preset = in_array(request('preset'), ['fast', 'slow'], true)
+    ? request('preset')
+    : 'fast';
+
+
+<?php
+// ---------- And off the request ----------
+
+class TranscodeVideo implements ShouldQueue
+{
+    public function handle(): void
+    {
+        // A hung ffmpeg in a request is the stuck-worker
+        // problem from the last lesson.
+        $result = Process::timeout(600)->run([
+            'ffmpeg', '-i', $this->input, $this->output,
+        ]);
+
+        if (! $result->successful()) {
+            throw new RuntimeException($result->errorOutput());
+        }
+    }
+}
+
+
+<?php
+// ---------- Faking processes too ----------
+
+Process::fake([
+    'ffmpeg *' => Process::result(output: 'done', exitCode: 0),
+]);`,
+      },
+      keyTakeaways: [
+        "<b>`Http::pool()` sends independent requests concurrently</b>, so the total is the slowest rather than the sum.",
+        "<b>Name pooled requests with `as()`</b>, rather than indexing the results by position.",
+        "<b>Pooling only helps when the calls are independent</b>, and each response still needs checking.",
+        "<b>`Http::fake()` stops tests reaching the network</b>, making them fast, deterministic and free.",
+        "<b>The bigger win is testing failure</b>, because a real API will not return a 500 on request.",
+        "<b>`Http::assertSent()` checks that you called the API correctly</b>, which a fake alone cannot tell you.",
+        "<b>`Process::run()` executes a system command</b>, for the things PHP cannot do itself.",
+        "<b>Interpolating user input into a command is injection</b>, exactly as it was with SQL.",
+        "<b>Pass the command as an array</b>, so arguments stay arguments and no shell parses them.",
+        "<b>Set a process timeout and run slow commands in a queued job</b>, or you are back to stuck workers.",
+        "<b>Your code should say \"store this file\", \"call this API\", \"run this process\"</b>, never name a path, a cURL handle or a shell string.",
+      ],
+      commonMistakes: [
+        "<b>Pooling calls that depend on each other.</b> The second needs the first's result, so they cannot overlap.",
+        "<b>Assuming a pool fails as a whole.</b> Each response is separate, and one may be a 500.",
+        "<b>Calling real APIs in tests.</b> Slow, flaky, sometimes expensive, and the failure paths stay untested.",
+        "<b>Faking the response without asserting the request.</b> The test passes with the wrong body and the wrong URL.",
+        "<b>Building a shell command by string interpolation.</b> A semicolon in the value runs a second command.",
+      ],
+      quiz: [
+        {
+          question: "What does `Http::pool()` change about three API calls?",
+          options: [
+            "They are cached",
+            "They run concurrently, so the total is roughly the slowest rather than the sum",
+            "They are retried automatically",
+            "They share one connection",
+          ],
+          correctIndex: 1,
+          explanation: "Only when the calls are independent of each other.",
+        },
+        {
+          question: "What is the biggest testing win from `Http::fake()`?",
+          options: [
+            "Faster tests",
+            "You can produce failures such as a 500 on demand, which a real API will not do",
+            "It removes the need for assertions",
+            "It records real responses",
+          ],
+          correctIndex: 1,
+          explanation: "Retries, timeouts and the `throw()` path become testable.",
+        },
+        {
+          question: "Why use `Http::assertSent()` as well as a fake?",
+          options: [
+            "It speeds the test up",
+            "The fake shows what came back, not whether you called the right endpoint with the right body",
+            "It is required by Laravel",
+            "It replaces the fake",
+          ],
+          correctIndex: 1,
+          explanation: "Both halves matter: what they returned and what you sent.",
+        },
+        {
+          question: "Why pass a command to `Process::run()` as an array?",
           options: [
             "It is faster",
-            "A newly added column is not assignable until listed, so the mistake fails loudly",
-            "`$guarded` does not work with `create()`",
-            "There is none",
+            "No shell parses it, so a value containing a semicolon cannot become a second command",
+            "Arrays support timeouts",
+            "It captures output better",
           ],
           correctIndex: 1,
-          explanation: "Under `$guarded`, a new column becomes writable the moment it exists.",
-        },
-        {
-          question: "What does `$request->validate()` return?",
-          options: [
-            "The whole request",
-            "Only the keys that were validated",
-            "A boolean",
-            "The model",
-          ],
-          correctIndex: 1,
-          explanation: "So an extra field is gone before the model sees it.",
-        },
-        {
-          question: "A price arrives in a hidden input. What should the server do?",
-          options: [
-            "Validate it as numeric",
-            "Look the price up from the product on the server",
-            "Encrypt the field",
-            "Trust it; the form set it",
-          ],
-          correctIndex: 1,
-          explanation: "Anything the client can edit is a value the client chose.",
-        },
-      ],
-    },
-    {
-      id: "rate-limiting",
-      title: "Rate limiting & named limiters",
-      durationMinutes: 11,
-      explanation: "The attacks so far were about one crafted request. This one is about a great many ordinary ones.\n\n---\n\n### 1. Basic — what it protects\n\nWithout a limit, an endpoint answers as fast as your server can:\n\n```text\nattacker\n   ↓\n10,000 requests\n   ↓\nyour application\n```\n\nWhich turns several things from impractical into routine:\n\n```text\nlogin           guessing passwords\npassword reset  emailing somebody a thousand times\nsearch          expensive queries, repeated\nAPI             scraping your data\nsignup          creating accounts in bulk\n```\n\n<b>Yesterday's password hashing is what makes login rate limiting work.</b> A slow hash makes each guess expensive; a rate limit makes the number of guesses small. Either alone is much weaker than both.\n\n```text\nattacker → 5 requests → blocked\n```\n\n---\n\n### 2. Intermediate — named limiters\n\nA limiter is defined once and referenced by name:\n\n```php\nRateLimiter::for('login', function (Request $request) {\n    return Limit::perMinute(5)->by($request->ip());\n});\n```\n\n```text\nlogin limiter\n      ↓\n5 requests per minute\n      ↓\nper IP\n```\n\nand applied as middleware:\n\n```php\nRoute::post('/login', ...)->middleware('throttle:login');\n```\n\n```text\nPOST /login\n     ↓\nthrottle:login\n     ↓\nRateLimiter\n     ↓\nallowed?  →  yes: continue\n          →  no:  429\n```\n\nThe name matters more than it looks. <b>A named limiter is a security rule with a home</b>, so \"how many login attempts do we allow\" has one answer that somebody can find, change and review, rather than a number in a middleware string on one route.\n\nAn API limiter usually keys on the user when there is one:\n\n```php\nRateLimiter::for('api', function (Request $request) {\n    return Limit::perMinute(60)->by($request->user()?->id ?? $request->ip());\n});\n```\n\n---\n\n### 3. Advanced — the part people get wrong\n\n<b>Failed attempts must count.</b>\n\nThis sounds obvious and is easy to get backwards, because a limiter applied after a successful login, or one that resets on failure, protects nothing. The whole point is the attempts that <i>do not</i> work:\n\n```text\nrequest 1  →  401\nrequest 2  →  401\nrequest 3  →  401\nrequest 4  →  401\nrequest 5  →  401\nrequest 6  →  429      ← this is the feature\n```\n\nIf failures were free, an attacker gets unlimited guesses and the limit is decoration.\n\n<b>And the limit belongs on the endpoint, not on the outcome.</b> Middleware runs before your controller, so every request counts whatever happens inside.\n\nTwo more things worth deciding deliberately.\n\n<b>What to key on.</b> IP is the only option for an unauthenticated endpoint, and it is imperfect: an office shares one address, and an attacker can rotate through many. It raises the cost rather than removing the attack, which is usually enough.\n\n<b>What the limit protects against.</b> A five-per-minute login limit is aimed at guessing one account's password. It does nothing about the same password tried against a thousand accounts, because each account sees one attempt. That needs a different key, and knowing which attack a limit stops is the difference between security and a number.\n\nLaravel's own login also limits by email plus IP together, which covers both directions better than either alone.\n\nTwo small additions. `Limit::perHour()` and `Limit::perDay()` exist alongside `perMinute()`, and are the natural shape for an export or upload quota rather than a login form.\n\nAnd a boundary worth naming: <b>application rate limiting cannot absorb an attack aimed at your bandwidth.</b> Laravel counting requests still requires PHP to boot for each one. A WAF or edge network in front of the application, Cloudflare or AWS WAF, drops that traffic before it reaches you. <b>They solve different problems</b>: throttling is for abuse of your logic, the edge is for volume.",
-      diagram: `What it protects
-
-  Without a limit, an endpoint answers as fast as
-  your server can.
-
-    attacker → 10,000 requests → your application
-
-  Which makes routine:
-
-    login           guessing passwords
-    password reset  emailing somebody a thousand times
-    search          expensive queries, repeated
-    API             scraping your data
-    signup          accounts in bulk
-
-  Yesterday's slow password hash makes each guess
-  EXPENSIVE. A rate limit makes the number of guesses
-  SMALL. Either alone is much weaker than both.
-
-
-Named limiters
-
-  RateLimiter::for('login', function (Request \$request) {
-      return Limit::perMinute(5)->by(\$request->ip());
-  });
-
-    login limiter → 5 per minute → per IP
-
-  Route::post('/login', ...)->middleware('throttle:login')
-
-    POST /login
-         ↓
-    throttle:login
-         ↓
-    RateLimiter
-         ↓
-    allowed?  → yes: continue
-              → no:  429
-
-  The NAME matters. "How many login attempts do we allow"
-  now has one answer somebody can find, change and review,
-  instead of a number in a string on one route.
-
-
-The part people get wrong
-
-  FAILED attempts must count.
-
-    request 1 → 401
-    request 2 → 401
-    request 3 → 401
-    request 4 → 401
-    request 5 → 401
-    request 6 → 429      ← this is the feature
-
-  A limiter that only counts successes protects nothing.
-  If failures are free, guesses are unlimited.
-
-  Middleware runs before the controller, so every request
-  counts whatever happens inside. The limit is on the
-  ENDPOINT, not on the outcome.
-
-
-Two things to decide deliberately
-
-  What to key on
-    IP is the only option when unauthenticated, and it
-    is imperfect: an office shares one, an attacker
-    rotates many. It raises the cost rather than
-    removing the attack. Usually enough.
-
-  Which attack it stops
-    5/minute per IP stops guessing ONE account's password.
-    It does nothing about one password tried against a
-    thousand accounts: each account sees one attempt.
-
-    Knowing which attack a limit stops is the difference
-    between security and a number.
-
-  Laravel's own login limits by email AND IP together.`,
-      codeExample: {
-        title: "Defining and applying limiters",
-        code: `<?php
-// app/Providers/AppServiceProvider.php
-
-use Illuminate\\Cache\\RateLimiting\\Limit;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\RateLimiter;
-
-public function boot(): void
-{
-    // Unauthenticated: IP is all there is.
-    RateLimiter::for('login', function (Request $request) {
-        return Limit::perMinute(5)->by($request->ip());
-    });
-
-    // Authenticated where possible, IP otherwise.
-    RateLimiter::for('api', function (Request $request) {
-        return Limit::perMinute(60)
-            ->by($request->user()?->id ?? $request->ip());
-    });
-
-    // Expensive, so tighter.
-    RateLimiter::for('reports', function (Request $request) {
-        return Limit::perMinute(3)->by($request->user()->id);
-    });
-
-    // Sending email on somebody else's behalf: tighter still.
-    RateLimiter::for('password-reset', function (Request $request) {
-        return Limit::perMinutes(15, 3)->by($request->ip());
-    });
-}
-
-
-<?php
-// ---------- Applying them ----------
-
-Route::post('/login', [LoginController::class, 'store'])
-    ->middleware('throttle:login');
-
-Route::post('/forgot-password', [PasswordResetController::class, 'send'])
-    ->middleware('throttle:password-reset');
-
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::apiResource('invoices', InvoiceController::class);
-});
-
-// An inline limit, without a named limiter:
-Route::get('/search', SearchController::class)->middleware('throttle:30,1');
-
-
-<?php
-// ---------- Why failed attempts must count ----------
-
-// The limiter is middleware, so it runs BEFORE the
-// controller. Every request counts, whether the login
-// succeeded, failed, or threw.
-
-//   request 1 → 401
-//   ...
-//   request 5 → 401
-//   request 6 → 429     ← the point of the feature
-
-// ❌ Counting only successes protects nothing: an
-//    attacker gets unlimited failed guesses.
-
-
-<?php
-// ---------- Which attack does this stop? ----------
-
-// Stops guessing ONE account's password.
-Limit::perMinute(5)->by($request->ip());
-
-// Does NOT stop one password tried against a thousand
-// accounts: each account sees a single attempt.
-
-// Laravel's own login keys on both directions:
-RateLimiter::for('login', function (Request $request) {
-    $key = Str::lower($request->input('email')) . '|' . $request->ip();
-
-    return Limit::perMinute(5)->by($key);
-});`,
-      },
-      keyTakeaways: [
-        "<b>Without a limit, an endpoint answers as fast as your server can</b>, which makes guessing and scraping routine.",
-        "<b>A slow password hash makes each guess expensive; a rate limit makes the guesses few.</b> Both together is the defence.",
-        "<b>`RateLimiter::for('name', ...)` defines a limiter once</b>, applied with `throttle:name` middleware.",
-        "<b>A named limiter gives a security rule a home</b>, so the number can be found, changed and reviewed.",
-        "An API limiter usually keys on the user id when there is one and the IP otherwise.",
-        "<b>Failed attempts must count</b>, because the attempts that fail are exactly what you are limiting.",
-        "<b>The limiter is middleware, so it runs before the controller</b> and counts every request regardless of outcome.",
-        "<b>IP keying is imperfect</b>: offices share one and attackers rotate many, so it raises cost rather than removing the attack.",
-        "<b>A per-IP login limit does not stop one password tried against many accounts</b>, because each account sees one attempt.",
-        "<b>Knowing which attack a limit stops is the difference between security and a number.</b>",
-      ],
-      commonMistakes: [
-        "<b>Counting only successful logins.</b> The failures are the attack, and they stay free.",
-        "<b>Applying the limit inside the controller.</b> Middleware runs first and counts every request.",
-        "<b>Leaving password reset unthrottled.</b> It becomes a way to email somebody a thousand times.",
-        "<b>Assuming a per-IP limit stops credential stuffing.</b> Spread across accounts, each sees one attempt.",
-        "<b>Writing the number inline on every route.</b> A named limiter is one place to read and change.",
-      ],
-      quiz: [
-        {
-          question: "Why must failed login attempts count towards the limit?",
-          options: [
-            "For accurate metrics",
-            "The failures are the attack; if they are free, guesses are unlimited",
-            "Laravel requires it",
-            "They do not need to",
-          ],
-          correctIndex: 1,
-          explanation: "A limiter that only counts successes protects nothing.",
-        },
-        {
-          question: "What does `RateLimiter::for('login', ...)` give you over an inline limit?",
-          options: [
-            "Better performance",
-            "A named rule with one home, which can be found, changed and reviewed",
-            "Automatic IP detection",
-            "A different status code",
-          ],
-          correctIndex: 1,
-          explanation: "The number stops being buried in a middleware string on one route.",
-        },
-        {
-          question: "Why is a per-IP limit imperfect?",
-          options: [
-            "IPs are unavailable behind a proxy",
-            "Offices share one address and attackers can rotate many",
-            "Laravel cannot read them",
-            "It is not imperfect",
-          ],
-          correctIndex: 1,
-          explanation: "It raises the cost of an attack rather than removing it.",
-        },
-        {
-          question: "What does a 5-per-minute per-IP login limit not stop?",
-          options: [
-            "Guessing one account's password",
-            "One password tried against a thousand different accounts",
-            "Repeated logins from one browser",
-            "Automated form submission",
-          ],
-          correctIndex: 1,
-          explanation: "Each account sees a single attempt, so keying on email plus IP covers both.",
-        },
-      ],
-    },
-    {
-      id: "limit-keys-and-responses",
-      title: "Keys, multiple limits & the 429 response",
-      durationMinutes: 12,
-      explanation: "A limiter is two decisions: how many, and <i>per what</i>. The second one is where the thinking is.\n\n---\n\n### 1. Basic — choosing the key\n\n<b>The key is what the counter is kept against.</b> One counter per key.\n\n```php\nLimit::perMinute(5)->by($request->ip());\n```\n\n```text\nIP 1  →  5 per minute\nIP 2  →  5 per minute\nIP 3  →  5 per minute\n```\n\nUse the IP when there is no user yet: login, registration, password reset, a public API.\n\n```php\nLimit::perMinute(60)->by($request->user()->id);\n```\n\n```text\nUser 1  →  60 per minute\nUser 2  →  60 per minute\n```\n\nUse the user id once somebody is authenticated. It follows them across devices and networks, which an IP does not.\n\nAnd the combination, when you want both to matter:\n\n```php\n->by($request->user()?->id . '|' . $request->ip())\n```\n\n```text\n123|192.168.1.20\n```\n\n<b>Getting the key wrong is the whole bug.</b> A login limiter keyed on the user id cannot work, because there is no user until the login succeeds. A limiter with no `by()` at all counts every request from everybody into one bucket, so one busy user locks out the world.\n\n---\n\n### 2. Intermediate — more than one limit\n\nA limiter can return an array, and all of them apply:\n\n```php\nRateLimiter::for('api', function (Request $request) {\n    return [\n        Limit::perMinute(100)->by($request->user()->id),\n        Limit::perMinute(20)->by($request->ip()),\n    ];\n});\n```\n\n```text\n100 per minute per user\n        +\n 20 per minute per IP\n```\n\nWhich covers two different abuses at once: one account hammering the API, and one machine driving many accounts.\n\nA limiter can also decide per request:\n\n```php\nreturn $request->user()->onPremiumPlan()\n    ? Limit::none()\n    : Limit::perMinute(10)->by($request->user()->id);\n```\n\n<b>`Limit::none()` exempts</b>, which is how a paid tier or an internal service gets past the limit without a second route.\n\n---\n\n### 3. Advanced — the response, and what it tells people\n\nExceeding a limit is <b>429 Too Many Requests</b>. Not 403, not 400: a specific status that means <i>slow down</i>, and clients know how to handle it.\n\nLaravel sends headers with it:\n\n```text\nX-RateLimit-Limit       the ceiling\nX-RateLimit-Remaining   what is left\nRetry-After             seconds until it resets\n```\n\n<b>`Retry-After` is the useful one.</b> A well-written client waits that long instead of retrying immediately, which is the difference between a limit that protects you and one that produces a retry storm.\n\nA custom response, when the default is not friendly enough:\n\n```php\nLimit::perMinute(5)\n    ->by($request->ip())\n    ->response(function (Request $request, array $headers) {\n        return response()->json([\n            'message' => 'Too many login attempts. Please try again later.',\n        ], 429, $headers);\n    });\n```\n\n<b>Pass the `$headers` through.</b> Dropping them removes `Retry-After`, and the client has nothing to work with.\n\nOne judgement about the wording. A rate limit response is shown to somebody who may be an attacker or may be a customer having a bad day:\n\n```text\n✓ \"Too many attempts. Try again in a minute.\"\n✗ \"Too many attempts for user 4192 from 10.0.0.7\"\n```\n\nSay enough to help, and nothing that confirms what they were probing for.\n\nAnd one operational note. <b>Counters live in the cache.</b> On the `array` driver they vanish on restart, and across several servers each keeps its own unless the cache is shared. A five-per-minute limit across four web servers is twenty per minute in practice, which is worth knowing before you rely on the number.",
-      diagram: `The key is what the counter is kept against
-
-  ->by(\$request->ip())
-
-    IP 1 → 5/min    IP 2 → 5/min    IP 3 → 5/min
-
-  Use the IP when there is no user yet:
-    login, registration, password reset, public API
-
-  ->by(\$request->user()->id)
-
-    User 1 → 60/min    User 2 → 60/min
-
-  Use the user id once authenticated. It follows them
-  across devices and networks; an IP does not.
-
-  ->by(\$request->user()?->id . '|' . \$request->ip())
-
-    123|192.168.1.20
-
-
-  ⚠️  Getting the key wrong IS the bug.
-
-      A login limiter keyed on the user id cannot work:
-      there is no user until the login succeeds.
-
-      No by() at all counts everybody into one bucket,
-      so one busy user locks out the world.
-
-
-Several limits at once
-
-  return [
-      Limit::perMinute(100)->by(\$request->user()->id),
-      Limit::perMinute(20)->by(\$request->ip()),
-  ];
-
-    100/min per user   +   20/min per IP
-
-  Covers two abuses: one account hammering the API,
-  and one machine driving many accounts.
-
-  Limit::none()   exempts, for a paid tier or an
-                  internal service, with no second route
-
-
-The response
-
-  429 Too Many Requests
-
-  Not 403, not 400. A specific status meaning SLOW DOWN,
-  which clients know how to handle.
-
-    X-RateLimit-Limit       the ceiling
-    X-RateLimit-Remaining   what is left
-    Retry-After             seconds until it resets
-
-  Retry-After is the useful one: a good client waits
-  that long instead of retrying immediately. That is
-  the difference between a limit that protects you and
-  one that produces a retry storm.
-
-  A custom response must PASS THE HEADERS THROUGH.
-  Dropping them removes Retry-After.
-
-
-  Wording: the reader may be an attacker or a customer
-  having a bad day.
-
-    ✓ "Too many attempts. Try again in a minute."
-    ✗ "Too many attempts for user 4192 from 10.0.0.7"
-
-
-  Counters live in the CACHE. On the array driver they
-  vanish on restart, and across four web servers each
-  keeps its own — so 5/minute is really 20/minute
-  unless the cache is shared.`,
-      codeExample: {
-        title: "Keys, stacked limits and a custom 429",
-        code: `<?php
-
-use Illuminate\\Cache\\RateLimiting\\Limit;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\RateLimiter;
-
-// ---------- Choosing the key ----------
-
-// No user yet, so the IP is all there is.
-RateLimiter::for('login', function (Request $request) {
-    return Limit::perMinute(5)->by($request->ip());
-});
-
-// Authenticated: follows them across devices and networks.
-RateLimiter::for('reports', function (Request $request) {
-    return Limit::perMinute(3)->by($request->user()->id);
-});
-
-// Both, when both should matter.
-RateLimiter::for('uploads', function (Request $request) {
-    return Limit::perMinute(10)
-        ->by($request->user()?->id . '|' . $request->ip());
-});
-
-// ❌ There is no user until the login succeeds.
-RateLimiter::for('login', fn (Request $r) => Limit::perMinute(5)->by($r->user()->id));
-
-// ❌ No by(): everybody shares one counter, so one busy
-//    user locks out the world.
-RateLimiter::for('search', fn () => Limit::perMinute(30));
-
-
-<?php
-// ---------- Several limits at once ----------
-
-RateLimiter::for('api', function (Request $request) {
-    return [
-        // One account hammering the API.
-        Limit::perMinute(100)->by($request->user()->id),
-
-        // One machine driving many accounts.
-        Limit::perMinute(20)->by($request->ip()),
-    ];
-});
-
-
-// ---------- Deciding per request ----------
-
-RateLimiter::for('exports', function (Request $request) {
-    return $request->user()->onPremiumPlan()
-        ? Limit::none()
-        : Limit::perMinute(2)->by($request->user()->id);
-});
-
-
-<?php
-// ---------- The response ----------
-
-RateLimiter::for('login', function (Request $request) {
-    return Limit::perMinute(5)
-        ->by($request->ip())
-        ->response(function (Request $request, array $headers) {
-            return response()->json([
-                'message' => 'Too many login attempts. Please try again later.',
-            ], 429, $headers);   // pass the headers through
-        });
-});
-
-// Dropping $headers removes Retry-After, and the client
-// has nothing to wait for.
-
-// Sent with a 429:
-//   X-RateLimit-Limit: 5
-//   X-RateLimit-Remaining: 0
-//   Retry-After: 47
-
-
-<?php
-// ---------- Reading a limiter yourself ----------
-
-// Outside middleware, such as in a job or a command:
-if (RateLimiter::tooManyAttempts('send-invoice:' . $user->id, 3)) {
-    return;
-}
-
-RateLimiter::hit('send-invoice:' . $user->id, 3600);
-
-// And clearing it, such as after a successful login:
-RateLimiter::clear('login:' . $request->ip());`,
-      },
-      keyTakeaways: [
-        "<b>The key decides what the counter is kept against</b>, and one counter exists per key.",
-        "<b>Use the IP when there is no user yet</b>: login, registration, password reset, a public API.",
-        "<b>Use the user id once authenticated</b>, because it follows them across devices and networks.",
-        "<b>A login limiter keyed on the user id cannot work</b>, since there is no user until login succeeds.",
-        "<b>A limiter with no `by()` counts everybody into one bucket</b>, so one busy user locks out the world.",
-        "<b>Returning an array applies several limits at once</b>, covering per-user and per-IP abuse together.",
-        "`Limit::none()` exempts a request, which is how a paid tier bypasses a limit with no second route.",
-        "<b>Exceeding a limit is 429 Too Many Requests</b>, with `X-RateLimit-*` and `Retry-After` headers.",
-        "<b>A custom response must pass the headers through</b>, or the client loses `Retry-After`.",
-        "<b>Counters live in the cache</b>, so an unshared cache across four servers quadruples your limit in practice.",
-      ],
-      commonMistakes: [
-        "<b>Keying a login limiter on the user.</b> There is no user until the credentials check out.",
-        "<b>Omitting `by()`.</b> Everybody shares one counter, and one user can lock out the rest.",
-        "<b>Dropping `$headers` from a custom response.</b> Clients lose `Retry-After` and retry immediately.",
-        "<b>Returning 403 instead of 429.</b> Clients cannot tell a refusal from a slow-down.",
-        "<b>Assuming the limit holds across servers.</b> Each keeps its own counter unless the cache is shared.",
-      ],
-      quiz: [
-        {
-          question: "Why can a login limiter not key on the user id?",
-          options: [
-            "User ids are not unique",
-            "There is no authenticated user until the login succeeds",
-            "It would be too slow",
-            "It can",
-          ],
-          correctIndex: 1,
-          explanation: "The IP, or the email plus IP, is what is available at that point.",
-        },
-        {
-          question: "What happens if a limiter has no `by()`?",
-          options: [
-            "It applies per route",
-            "Every request shares one counter, so one busy user locks out everyone",
-            "It is disabled",
-            "It defaults to the IP",
-          ],
-          correctIndex: 1,
-          explanation: "The key is what makes the counter per-anything.",
-        },
-        {
-          question: "What status is returned when a rate limit is exceeded?",
-          options: ["403", "400", "429", "503"],
-          correctIndex: 2,
-          explanation: "429 Too Many Requests, with `Retry-After` telling the client how long to wait.",
-        },
-        {
-          question: "Why must a custom 429 response include the `$headers` argument?",
-          options: [
-            "For CORS",
-            "It carries `Retry-After` and the rate-limit headers the client needs",
-            "Laravel requires it",
-            "It sets the status code",
-          ],
-          correctIndex: 1,
-          explanation: "Without it, clients retry immediately and make things worse.",
-        },
-      ],
-    },
-    {
-      id: "headers-and-https",
-      title: "Security headers & HTTPS",
-      durationMinutes: 12,
-      explanation: "Everything so far happened inside your application. This is what you tell the browser to do, and what happens on the wire.\n\n---\n\n### 1. Basic — headers are instructions to the browser\n\nThree that matter:\n\n```text\nContent-Security-Policy     what the page may load and run\nStrict-Transport-Security   always use HTTPS for this site\nX-Frame-Options             who may put this page in a frame\n```\n\n<b>None of them fixes insecure code.</b> They are a second layer that limits the damage when the first one is wrong:\n\n```text\nsecure code\n     +\nsecure browser policies\n     +\nsecure transport\n```\n\nThat framing matters, because headers are easy to add and easy to over-trust. A CSP does not make unescaped output safe; it means that when your escaping is wrong once, the payload may not run.\n\n---\n\n### 2. Intermediate — the three headers\n\n<b>Content-Security-Policy</b> lists which sources the browser may load scripts, styles, images and fonts from.\n\n```http\nContent-Security-Policy: default-src 'self'\n```\n\n\"Only load things from this origin.\" An injected `<script src=\"//evil.com/x.js\">` is refused, and with a strict policy an inline `<script>` is refused too, which is what most XSS payloads are.\n\nThe catch is that real applications load from real places:\n\n```text\nyour JavaScript\na CDN\nGoogle Fonts\nanalytics\nan API on another domain\n```\n\nSo <b>a CSP has to be built from what your application actually does</b>, not copied from an article. Copy a strict one and half your page stops working; write a loose one and it stops being worth much. Start in report-only mode, watch what breaks, then enforce.\n\n<b>Strict-Transport-Security</b> tells the browser to use HTTPS for this site from now on:\n\n```text\nhttp://example.com\n       ↓\nthe browser remembers\n       ↓\nhttps://example.com\n```\n\nSo even a typed `http://` never leaves the machine unencrypted. <b>Be careful with `includeSubDomains` and `preload`</b>: they are hard to undo, and a subdomain without a certificate becomes unreachable rather than insecure.\n\n<b>X-Frame-Options: DENY</b> stops your page being embedded in a frame, which is what clickjacking needs: your real page, invisible, over the attacker's decoy button. CSP's `frame-ancestors` does the same with more nuance and is where new policies go, though sending both is common.\n\n---\n\n### 3. Advanced — HTTPS, and the limits of `forceScheme`\n\nWithout HTTPS, everything today is decoration. Session cookies, passwords and CSRF tokens all cross the network in the clear, and anybody on the same network reads them.\n\nLaravel can generate `https://` URLs:\n\n```php\nURL::forceScheme('https');\n```\n\n<b>And that is all it does.</b> It changes the links your application writes. It does not:\n\n```text\nobtain a certificate\nconfigure the web server\nredirect http to https\nterminate TLS\n```\n\n<b>HTTPS is infrastructure.</b> The certificate, the redirect and the TLS termination live in your web server, load balancer or platform, and `forceScheme` is the small part that stops your own links pointing back at `http://`.\n\nTwo related settings that people miss.\n\n<b>Cookies should be marked secure and http-only.</b> `secure` means the browser never sends them over plain HTTP; `http-only` means JavaScript cannot read them, which limits what an XSS payload can steal. Laravel's session config has both, and `SESSION_SECURE_COOKIE=true` belongs in production.\n\n<b>And behind a proxy, trust it deliberately.</b> A load balancer terminates TLS and forwards plain HTTP, so your application sees an insecure request unless it trusts the `X-Forwarded-Proto` header. Get that wrong and you see redirect loops, `http://` links and an IP address that is the balancer's rather than the visitor's, which quietly breaks the rate limiting from the last lesson.\n\nOne header worth adding to that middleware, because it costs a line and closes a whole category:\n\n```text\nPermissions-Policy: geolocation=(), camera=(), microphone=(), payment=()\n```\n\n<b>It tells the browser which device features the page may use</b>, and the empty parentheses mean \"nobody, including me\". An injected script or a compromised third-party embed then cannot ask for the camera, because the browser refuses before the permission prompt appears.",
-      diagram: `Headers are instructions to the browser
-
-  Content-Security-Policy     what the page may load and run
-  Strict-Transport-Security   always use HTTPS for this site
-  X-Frame-Options             who may frame this page
-
-  None of them fixes insecure code.
-
-    secure code  +  secure browser policies  +  secure transport
-
-  A CSP does not make unescaped output safe. It means
-  that when your escaping is wrong ONCE, the payload
-  may not run.
-
-
-Content-Security-Policy
-
-  default-src 'self'      only load things from this origin
-
-  An injected <script src="//evil.com/x.js"> is refused,
-  and a strict policy refuses inline <script> too — which
-  is what most XSS payloads are.
-
-  The catch: real applications load from real places.
-
-    your JavaScript · a CDN · Google Fonts
-    analytics · an API on another domain
-
-  So build it from what your app actually does. Copy a
-  strict one and half the page breaks; write a loose one
-  and it is not worth much.
-
-  Start in report-only, watch what breaks, then enforce.
-
-
-Strict-Transport-Security
-
-    http://example.com
-           ↓
-    the browser remembers
-           ↓
-    https://example.com
-
-  Even a typed http:// never leaves the machine
-  unencrypted.
-
-  ⚠️  includeSubDomains and preload are hard to undo.
-      A subdomain without a certificate becomes
-      unreachable, not merely insecure.
-
-
-X-Frame-Options: DENY
-
-  Stops your page being embedded in a frame, which is
-  what clickjacking needs: your real page, invisible,
-  over the attacker's decoy button.
-
-  CSP's frame-ancestors does the same with more nuance.
-  Sending both is common.
-
-
-HTTPS, and what forceScheme does not do
-
-  Without HTTPS, everything today is decoration: session
-  cookies, passwords and CSRF tokens all cross the network
-  in the clear.
-
-  URL::forceScheme('https')
-
-  ...changes the links your application WRITES. That is all.
-
-  It does NOT:
-    obtain a certificate
-    configure the web server
-    redirect http to https
-    terminate TLS
-
-  HTTPS is infrastructure. forceScheme is the small part
-  that stops your own links pointing back at http://.
-
-
-Two settings people miss
-
-  Cookies: secure + http-only
-    secure     never sent over plain HTTP
-    http-only  JavaScript cannot read them, which limits
-               what an XSS payload can steal
-    SESSION_SECURE_COOKIE=true in production
-
-  Behind a proxy: trust it deliberately
-    The balancer terminates TLS and forwards plain HTTP,
-    so your app sees an insecure request unless it trusts
-    X-Forwarded-Proto.
-
-    Get it wrong and you get redirect loops, http:// links,
-    and the BALANCER's IP instead of the visitor's — which
-    quietly breaks your rate limiting.`,
-      codeExample: {
-        title: "Headers, cookies and proxies",
-        code: `<?php
-// ---------- A middleware that adds headers ----------
-
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-
-class SecurityHeaders
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $response = $next($request);
-
-        // Built from what this application actually loads.
-        $response->headers->set('Content-Security-Policy', implode('; ', [
-            "default-src 'self'",
-            "script-src 'self' https://cdn.example.com",
-            "style-src 'self' https://fonts.googleapis.com",
-            "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data:",
-            "frame-ancestors 'none'",
-        ]));
-
-        $response->headers->set('X-Frame-Options', 'DENY');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-        if ($request->secure()) {
-            $response->headers->set(
-                'Strict-Transport-Security',
-                'max-age=31536000',
-            );
-        }
-
-        return $response;
-    }
-}
-
-// Start with Content-Security-Policy-Report-Only, watch the
-// console, then switch to enforcing.
-
-
-<?php
-// ---------- HTTPS ----------
-
-// app/Providers/AppServiceProvider.php
-
-use Illuminate\\Support\\Facades\\URL;
-
-public function boot(): void
-{
-    if ($this->app->isProduction()) {
-        // Changes the links this application WRITES.
-        URL::forceScheme('https');
-    }
-}
-
-// It does not obtain a certificate, configure the web
-// server, redirect http to https, or terminate TLS.
-// That is infrastructure.
-
-
-# ---------- Cookies ----------
-
-# .env, in production
-SESSION_SECURE_COOKIE=true
-
-<?php
-// config/session.php
-'secure'    => env('SESSION_SECURE_COOKIE', false),  // HTTPS only
-'http_only' => true,       // JavaScript cannot read it
-'same_site' => 'lax',      // helps against CSRF too
-
-// http_only is what stops an XSS payload reading the
-// session cookie, which limits the damage of the one
-// escaping mistake that gets through.
-
-
-<?php
-// ---------- Behind a load balancer ----------
-
-// bootstrap/app.php
-
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->trustProxies(at: '*');
-})
-
-// Without this, the balancer terminates TLS and forwards
-// plain HTTP, so:
-//   $request->secure() is false      → redirect loops
-//   generated URLs are http://
-//   $request->ip() is the balancer's → your rate limiter
-//                                      counts everybody
-//                                      into one bucket`,
-      },
-      keyTakeaways: [
-        "<b>Security headers are instructions to the browser</b>, and none of them fixes insecure code.",
-        "They are a second layer that limits damage when the first one is wrong.",
-        "<b>A Content-Security-Policy lists which sources may be loaded</b>, and a strict one refuses inline scripts.",
-        "<b>A CSP has to be built from what your application actually loads</b>, so start in report-only mode.",
-        "<b>HSTS tells the browser to always use HTTPS</b>, so even a typed `http://` never leaves the machine in the clear.",
-        "<b>`includeSubDomains` and `preload` are hard to undo</b>, and can make an uncertificated subdomain unreachable.",
-        "<b>`X-Frame-Options: DENY` prevents clickjacking</b>, and CSP's `frame-ancestors` is the modern equivalent.",
-        "<b>Without HTTPS everything else is decoration</b>, because cookies and passwords cross the network readable.",
-        "<b>`URL::forceScheme('https')` only changes the links you generate</b>; certificates and redirects are infrastructure.",
-        "<b>Session cookies should be `secure` and `http_only`</b>, which is what stops an XSS payload reading them.",
-        "<b>Behind a proxy, trust it deliberately</b>, or `$request->ip()` is the balancer's and your rate limiting breaks.",
-      ],
-      commonMistakes: [
-        "<b>Copying a strict CSP from an article.</b> Half the page stops loading, and the policy gets removed rather than fixed.",
-        "<b>Treating a CSP as a substitute for escaping.</b> It limits damage; it does not prevent the injection.",
-        "<b>Enabling HSTS `preload` early.</b> It is very hard to undo, and it applies to subdomains you forgot about.",
-        "<b>Thinking `forceScheme('https')` gives you HTTPS.</b> It only rewrites the URLs you generate.",
-        "<b>Not trusting the proxy.</b> Redirect loops, `http://` links, and every visitor sharing the balancer's rate limit.",
-      ],
-      quiz: [
-        {
-          question: "What does a Content-Security-Policy do?",
-          options: [
-            "Escapes output",
-            "Tells the browser which sources it may load and run, limiting the damage of an injection",
-            "Encrypts the response",
-            "Blocks SQL injection",
-          ],
-          correctIndex: 1,
-          explanation: "A layer that assumes your escaping will one day be wrong.",
-        },
-        {
-          question: "What does HSTS tell the browser?",
-          options: [
-            "To cache the page",
-            "To use HTTPS for this site from now on, even if the user types http://",
-            "Not to frame the page",
-            "To send the CSRF token",
-          ],
-          correctIndex: 1,
-          explanation: "`includeSubDomains` and `preload` are hard to reverse, so enable them deliberately.",
-        },
-        {
-          question: "What does `URL::forceScheme('https')` do?",
-          options: [
-            "Redirects http to https",
-            "Makes the URLs your application generates use https, and nothing more",
-            "Obtains a certificate",
-            "Terminates TLS",
-          ],
-          correctIndex: 1,
-          explanation: "The certificate, redirect and TLS termination are infrastructure.",
-        },
-        {
-          question: "Why does `http_only` on the session cookie matter?",
-          options: [
-            "It speeds up requests",
-            "JavaScript cannot read it, so an XSS payload cannot steal the session",
-            "It encrypts the cookie",
-            "It prevents CSRF",
-          ],
-          correctIndex: 1,
-          explanation: "It limits the damage of the one escaping mistake that gets through.",
-        },
-      ],
-    },
-    {
-      id: "secrets-and-dependencies",
-      title: "Secrets, dependencies & the security mindset",
-      durationMinutes: 11,
-      explanation: "Two attack surfaces that are nothing to do with your code, and then the way of thinking that ties the day together.\n\n---\n\n### 1. Basic — secrets\n\n<b>Never commit `.env`.</b> Laravel gitignores it, and the mistake is usually adding it deliberately to make a deploy work.\n\nWhat is in there:\n\n```text\nAPP_KEY\ndatabase passwords\nAPI keys\nAWS credentials\nOAuth secrets\npayment provider secrets\n```\n\n```text\n.env\n  ↓\n.gitignore\n  ↓\nsecret management / the deployment environment\n```\n\nYour code holds `config('services.stripe.secret')`. The value lives wherever you deploy.\n\n<b>And a committed secret is not fixed by deleting it.</b> Git keeps history, so the commit still holds it and anybody who cloned the repository has it. The only fix is to rotate the secret: issue a new key, revoke the old one. Removing the line makes it invisible, not safe.\n\nWhich is worth knowing before it happens, because the instinct is to quietly delete and move on.\n\n---\n\n### 2. Intermediate — `APP_KEY`\n\nIt deserves its own paragraph, because Day 19 showed why:\n\n```text\nencryption of database columns\nsigned URLs\nsession cookies\n```\n\nAll of it depends on that one value.\n\n<b>A leaked production `APP_KEY` is an incident</b>, not a chore. Anything encrypted with it can be read, and signed URLs can be forged.\n\n<b>And regenerating it casually is a different kind of incident.</b> `php artisan key:generate` on a running production application makes every encrypted column unreadable and logs everybody out. Day 19's `APP_PREVIOUS_KEYS` is what makes a planned rotation possible; there is no undo for an unplanned one.\n\nSo, two rules: keep it out of the repository, and never regenerate it in production without knowing what is encrypted with it.\n\n---\n\n### 3. Advanced — dependencies, automation, and the question\n\nYour application is your code plus Laravel plus a hundred packages, and a vulnerability in any of them is a vulnerability in your application.\n\n```bash\ncomposer audit\n```\n\nchecks what you have installed against known advisories.\n\n```text\nyour code  +  Laravel  +  packages\n                ↓\n         composer audit\n```\n\n<b>Run it in CI, not from memory.</b> A check you have to remember is a check that happens twice a year:\n\n```text\npush\n ↓\ntests\n ↓\nstatic analysis\n ↓\ncomposer audit\n ↓\nbuild\n ↓\ndeploy\n```\n\nSecurity that depends on somebody remembering is not a control, it is a hope.\n\nAnd now the thing worth taking away from the whole day. These are not nine features to memorise:\n\n```text\nCSRF · XSS · SQL injection · mass assignment\nrate limiting · headers · HTTPS · secrets · dependencies\n```\n\nThey are <b>different attack surfaces</b>, each one a place where something outside your application crosses into it:\n\n```text\nHTTP Request\n     │\n ┌───┼───────────┐\n ▼   ▼           ▼\nCSRF XSS       SQLi\n │    │          │\nrequest output database\nforgery injection injection\n     │\n     ▼\nmass assignment  →  Eloquent\n     │\n     ▼\nrate limiting    →  abuse\n     │\n ┌───┴────┐\n ▼        ▼\nheaders  HTTPS\n │        │\nbrowser  transport\n     │\n     ▼\nsecrets + dependencies\n```\n\nWhich turns the skill into one question you can ask about any feature you build:\n\n> <b>What can an attacker control here, what trust boundary are they crossing, and what mechanism stops them?</b>\n\nA search box: they control the query, it crosses into SQL, and binding stops them. A profile page: they control the name, it crosses into HTML, and escaping stops them. An upload: they control the filename and the contents, and neither of those has come up today, which is precisely why the question is more useful than the list.\n\nOne more tool alongside `composer audit`, aimed at your configuration rather than your dependencies:\n\n```bash\ncomposer require enlightn/enlightn --dev\nphp artisan enlightn\n```\n\n<b>It scans for the misconfigurations that cause real incidents</b>: debug mode left on, a wildcard CORS origin, an exposed `.env`, missing security headers, unindexed foreign keys. Worth running once now and once in CI, because every item it finds is something nobody would have noticed until it mattered.\n\nAnd a five-minute audit that needs no tool: `php artisan route:list` and read down the middleware column. <b>Every route without `auth` is public</b>, and seeing that list in one place is how you find the one you forgot.",
-      diagram: `Secrets
-
-  Never commit .env. Laravel gitignores it, and the
-  mistake is usually adding it deliberately to make
-  a deploy work.
-
-    APP_KEY · database passwords · API keys
-    AWS credentials · OAuth secrets · payment secrets
-
-    .env  →  .gitignore  →  the deployment environment
-
-  Your code holds config('services.stripe.secret').
-  The value lives where you deploy.
-
-
-  ⚠️  A committed secret is not fixed by deleting it.
-
-      Git keeps history. The commit still holds it, and
-      anybody who cloned the repo has it.
-
-      The only fix is to ROTATE: new key, revoke the old.
-      Deleting the line makes it invisible, not safe.
-
-
-APP_KEY
-
-  encryption of database columns
-  signed URLs
-  session cookies
-
-  All of it depends on one value.
-
-  Leaked in production   → an incident. Encrypted data
-                           can be read, signed URLs forged.
-
-  Regenerated casually   → a different incident. Every
-                           encrypted column becomes
-                           unreadable and everybody is
-                           logged out. There is no undo.
-
-  APP_PREVIOUS_KEYS is what makes a PLANNED rotation work.
-
-
-Dependencies
-
-  your code  +  Laravel  +  a hundred packages
-
-  A vulnerability in any of them is a vulnerability in
-  your application.
-
-    composer audit
-
-  Run it in CI, not from memory:
-
-    push → tests → static analysis → composer audit
-         → build → deploy
-
-  Security that depends on somebody remembering is not
-  a control. It is a hope.
-
-
-The day, as attack surfaces
-
-  These are not nine features to memorise. They are
-  places where something outside your application
-  crosses into it.
-
-                   HTTP Request
-                        │
-        ┌───────────────┼────────────────┐
-        ▼               ▼                ▼
-      CSRF             XSS             SQLi
-        │               │                │
-     request          output          database
-     forgery         injection        injection
-                        │
-                        ▼
-                 mass assignment  →  Eloquent
-                        │
-                        ▼
-                  rate limiting   →  abuse
-                        │
-             ┌──────────┴──────────┐
-             ▼                     ▼
-          headers               HTTPS
-             │                     │
-          browser              transport
-                        │
-                        ▼
-             secrets + dependencies
-
-
-The question that replaces the list
-
-  What can an attacker control here, what trust
-  boundary are they crossing, and what mechanism
-  stops them?
-
-    a search box  → they control the query
-                  → it crosses into SQL
-                  → binding stops them
-
-    a profile     → they control the name
-                  → it crosses into HTML
-                  → escaping stops them
-
-    an upload     → they control the filename AND the
-                    contents, and neither came up today
-
-  Which is exactly why the question beats the list.`,
-      codeExample: {
-        title: "Secrets, audits, and a pipeline",
-        code: `# ---------- .gitignore ----------
-
-.env
-.env.backup
-.env.production
-
-# .env.example IS committed: the keys, never the values.
-
-
-# .env.example
-APP_KEY=
-DB_PASSWORD=
-STRIPE_SECRET=
-
-
-<?php
-// ---------- Code references config, never the value ----------
-
-// ❌ Committed to the repository forever.
-$stripe = new StripeClient('sk_live_51H...');
-
-// ✓
-$stripe = new StripeClient(config('services.stripe.secret'));
-
-// config/services.php
-'stripe' => [
-    'secret' => env('STRIPE_SECRET'),
-],
-
-// And never call env() outside a config file: cached
-// config returns null for it in production.
-
-
-# ---------- If a secret is committed ----------
-
-# Deleting the line does NOT fix it. Git keeps history,
-# and anybody who cloned the repo has it.
-#
-#   1. rotate the secret at the provider
-#   2. revoke the old one
-#   3. deploy the new value
-#   4. then, optionally, purge the history
-#
-# Steps 1 and 2 are the fix. Step 4 is tidying.
-
-
-# ---------- APP_KEY ----------
-
-# Leaked in production → an incident: encrypted columns
-# can be read and signed URLs forged.
-#
-# Regenerated in production → a different incident:
-# every encrypted column becomes unreadable and everybody
-# is logged out.
-
-# A planned rotation, from Day 19:
-APP_KEY=base64:newkey...
-APP_PREVIOUS_KEYS=base64:oldkey...
-
-
-# ---------- Dependencies ----------
-
-composer audit
-
-# Checks installed packages against known advisories.
-# Your application is your code + Laravel + everything
-# you installed.
-
-
-# ---------- In CI, not from memory ----------
-
-# .github/workflows/ci.yml
-
-name: CI
-on: [push, pull_request]
-
-jobs:
-  checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Tests
-        run: php artisan test
-
-      - name: Static analysis
-        run: ./vendor/bin/phpstan analyse
-
-      - name: Security advisories
-        run: composer audit
-
-# A check you have to remember is a check that happens
-# twice a year.`,
-      },
-      keyTakeaways: [
-        "<b>Never commit `.env`.</b> Commit `.env.example` with the keys and none of the values.",
-        "Code references `config(...)`; the value lives in the deployment environment.",
-        "<b>Deleting a committed secret does not fix it</b>, because Git keeps history and clones already have it.",
-        "<b>The only fix for a leaked secret is to rotate it</b>: issue a new one and revoke the old.",
-        "<b>`APP_KEY` underpins encryption, signed URLs and session cookies</b>, so a leak is an incident.",
-        "<b>Regenerating `APP_KEY` in production makes encrypted columns unreadable</b> and logs everybody out.",
-        "<b>Your application is your code plus Laravel plus every package</b>, and a vulnerability in any of them is yours.",
-        "<b>`composer audit` checks installed packages against known advisories</b>, and belongs in CI.",
-        "<b>Security that depends on somebody remembering is a hope, not a control.</b>",
-        "<b>These are attack surfaces, not features</b>: places where something outside your application crosses into it.",
-        "<b>Ask of any feature: what can an attacker control, what boundary are they crossing, and what stops them?</b>",
-      ],
-      commonMistakes: [
-        "<b>Committing `.env` to make a deploy work.</b> Every secret in it is now permanent history.",
-        "<b>Deleting a leaked key and considering it handled.</b> It is still in the history and in every clone.",
-        "<b>Running `key:generate` on production.</b> Encrypted data becomes unreadable with no way back.",
-        "<b>Calling `env()` outside a config file.</b> Cached config returns null in production.",
-        "<b>Running `composer audit` by hand occasionally.</b> Put it in the pipeline where it cannot be skipped.",
-      ],
-      quiz: [
-        {
-          question: "A secret was committed and you deleted the line. Is it safe?",
-          options: [
-            "Yes",
-            "No; Git keeps the history and clones already have it, so the secret must be rotated",
-            "Yes, after a force push",
-            "Only if the repo is private",
-          ],
-          correctIndex: 1,
-          explanation: "Rotate and revoke. Purging history is tidying, not the fix.",
-        },
-        {
-          question: "What happens if you run `key:generate` on a live production application?",
-          options: [
-            "Nothing noticeable",
-            "Encrypted columns become unreadable and every session is invalidated",
-            "Laravel migrates the data",
-            "Only new data is affected",
-          ],
-          correctIndex: 1,
-          explanation: "A planned rotation uses `APP_PREVIOUS_KEYS`; an unplanned one has no undo.",
-        },
-        {
-          question: "What does `composer audit` do?",
-          options: [
-            "Runs your tests",
-            "Checks installed packages against known security advisories",
-            "Updates dependencies",
-            "Scans your code for vulnerabilities",
-          ],
-          correctIndex: 1,
-          explanation: "Your application is your code plus everything you installed.",
-        },
-        {
-          question: "What question replaces memorising the list of attacks?",
-          options: [
-            "Which Laravel version am I on?",
-            "What can an attacker control here, what boundary are they crossing, and what stops them?",
-            "Is this route authenticated?",
-            "Have I added the security headers?",
-          ],
-          correctIndex: 1,
-          explanation: "It covers the surfaces the list never mentioned, such as uploads.",
+          explanation: "The same shape as parameter binding in SQL.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What problem does CSRF protection solve?",
+      question: "What does `php artisan storage:link` create?",
       options: [
-        "Stolen passwords",
-        "A request the user's browser was tricked into sending, carrying their cookies",
-        "Injected SQL",
-        "Scraping",
+        "A new disk in config",
+        "A symlink from `public/storage` to `storage/app/public`",
+        "An S3 bucket",
+        "A database table",
       ],
       correctIndex: 1,
-      explanation: "The request is genuinely authenticated; it was just never asked for.",
+      explanation: "Without it, files on the public disk sit on disk unreachable.",
     },
     {
-      question: "Why is a CSRF token needed even though authentication uses cookies?",
+      question: "Why is S3 usually better than the local disk in production?",
       options: [
-        "Cookies can be forged",
-        "Cookies are attached based on where the request is going, so an attacker's page gets them too",
-        "Tokens replace cookies",
-        "Cookies are not encrypted",
+        "It is faster to write",
+        "Every application server shares one store, and files survive a server being replaced",
+        "It compresses files",
+        "It is cheaper",
       ],
       correctIndex: 1,
-      explanation: "The token proves the request came from your own pages.",
+      explanation: "The local disk assumes there is one server, forever.",
     },
     {
-      question: "Why is `{{ }}` safer than `{!! !!}` for untrusted content?",
+      question: "What is the difference between `store()` and `storeAs()`?",
       options: [
-        "It is faster",
-        "It escapes HTML, so a script tag is printed rather than executed",
-        "It validates the value",
-        "It strips tags",
+        "The disk used",
+        "`store()` generates the filename; `storeAs()` lets you choose it",
+        "`storeAs()` streams the file",
+        "None",
       ],
       correctIndex: 1,
-      explanation: "`{!! !!}` puts the string into the page as markup.",
+      explanation: "Prefer `store()`, because a filename from a browser is user input.",
     },
     {
-      question: "How does parameter binding prevent SQL injection?",
+      question: "When should a stored file be private?",
       options: [
-        "It escapes quotes",
-        "The statement is parsed before the value arrives, so the value cannot change the query's shape",
-        "It validates the input",
-        "It encrypts the value",
+        "When it is large",
+        "When it belongs to one person: an invoice, an export, a medical document",
+        "Only in production",
+        "When it is not an image",
       ],
       correctIndex: 1,
-      explanation: "Structure and data travel separately.",
+      explanation: "Avatars and logos are public; anything belonging to somebody is not.",
     },
     {
-      question: "Why is `User::create($request->all())` dangerous?",
+      question: "What does a temporary URL let you do?",
+      options: [
+        "Make a public file expire",
+        "Authorize in your application while object storage delivers the file directly",
+        "Compress the download",
+        "Cache the file locally",
+      ],
+      correctIndex: 1,
+      explanation: "The download never passes through your server.",
+    },
+    {
+      question: "What problem does the read-through filesystem driver solve?",
+      options: [
+        "Files being deleted",
+        "Repeatedly fetching the same remote file, by keeping a local read cache in front of the canonical store",
+        "Uploading large files",
+        "Generating thumbnails",
+      ],
+      correctIndex: 1,
+      explanation: "The source stays the truth, so a stale cache is not a correctness problem.",
+    },
+    {
+      question: "Why does `max:10240` not protect against a huge image?",
+      options: [
+        "It is in bytes",
+        "It limits the file size, while decoding allocates memory in proportion to the dimensions",
+        "Images are exempt",
+        "It does protect against it",
+      ],
+      correctIndex: 1,
+      explanation: "Add a `dimensions:` rule as well.",
+    },
+    {
+      question: "Why must external HTTP calls have timeouts?",
+      options: [
+        "To reduce bandwidth",
+        "Each waiting request occupies a worker, so a hanging API can take your whole site down",
+        "Laravel requires it",
+        "To enable retries",
+      ],
+      correctIndex: 1,
+      explanation: "A timeout turns their outage into a handled error on one feature.",
+    },
+    {
+      question: "When is retrying an HTTP request dangerous?",
+      options: [
+        "On any GET",
+        "On a non-idempotent write, because the first attempt may have succeeded with its response lost",
+        "When the API is slow",
+        "Never",
+      ],
+      correctIndex: 1,
+      explanation: "An idempotency key is what makes a repeated write safe.",
+    },
+    {
+      question: "Why fake HTTP calls in tests?",
+      options: [
+        "Only for speed",
+        "For speed and determinism, and because a real API will not return a 500 on demand so failure paths stay untested",
+        "Laravel blocks real calls in tests",
+        "To avoid writing assertions",
+      ],
+      correctIndex: 1,
+      explanation: "Pair the fake with `assertSent()` to check what you sent.",
+    },
+    {
+      question: "Why is interpolating user input into a `Process` command dangerous?",
       options: [
         "It is slow",
-        "The request can contain any field, including ones your form never rendered",
-        "It bypasses validation rules",
-        "It ignores casts",
+        "The value can contain shell syntax and become a second command",
+        "Processes cannot take arguments",
+        "It breaks the output",
       ],
       correctIndex: 1,
-      explanation: "A form is a suggestion; the request body is whatever the sender chooses.",
+      explanation: "Pass the command as an array, so no shell parses it.",
     },
     {
-      question: "Why must login rate limiting count failed attempts?",
+      question: "What is the difference between `Http::query()` and adding query parameters to a GET?",
       options: [
-        "For accurate metrics",
-        "The failures are the attack, so if they are free the number of guesses is unlimited",
-        "Successes are harder to count",
-        "It does not need to",
+        "None",
+        "`Http::query()` sends an HTTP `QUERY` request; query parameters build the URL of a `GET`",
+        "`Http::query()` is for databases",
+        "`Http::query()` encodes the parameters",
       ],
       correctIndex: 1,
-      explanation: "A limiter that only counts successes protects nothing.",
-    },
-    {
-      question: "What status should a rate-limited request receive?",
-      options: ["403", "400", "429", "503"],
-      correctIndex: 2,
-      explanation: "429 Too Many Requests, with `Retry-After` telling the client how long to wait.",
-    },
-    {
-      question: "What is the purpose of a Content-Security-Policy?",
-      options: [
-        "To escape output",
-        "To tell the browser which sources it may load and run, limiting the damage of an injection",
-        "To force HTTPS",
-        "To block SQL injection",
-      ],
-      correctIndex: 1,
-      explanation: "It is the layer that assumes your escaping will one day be wrong.",
-    },
-    {
-      question: "Why does `URL::forceScheme('https')` not replace HTTPS infrastructure?",
-      options: [
-        "It only works in development",
-        "It only changes the URLs your application generates; certificates, redirects and TLS live elsewhere",
-        "It requires a package",
-        "It does replace it",
-      ],
-      correctIndex: 1,
-      explanation: "The web server, load balancer or platform terminates TLS.",
-    },
-    {
-      question: "A secret was committed and the line has been deleted. What now?",
-      options: [
-        "Nothing; it is removed",
-        "Rotate the secret and revoke the old one, because the history and every clone still hold it",
-        "Make the repository private",
-        "Add it to .gitignore",
-      ],
-      correctIndex: 1,
-      explanation: "Deleting makes it invisible, not safe.",
-    },
-    {
-      question: "What does `composer audit` protect against?",
-      options: [
-        "Bugs in your own code",
-        "Installed packages with known published vulnerabilities",
-        "Outdated PHP versions",
-        "Insecure configuration",
-      ],
-      correctIndex: 1,
-      explanation: "Your application is your code plus Laravel plus everything you installed.",
+      explanation: "`QUERY` is a read with a body: retryable and cacheable where a POST search is neither.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Attack InvoiceHub yourself, one surface at a time, and close what you find: CSRF, XSS, injection, mass assignment, rate limiting, headers and secrets.",
-    brief: "InvoiceHub has accounts and it has policies. It has never been attacked.\n\nToday you attack it. Every step is the same shape: try the exploit first, confirm it works, then fix it and confirm it stops. That order matters more than it sounds. <b>A defence you have never seen fail is a defence you cannot be sure exists</b>, and half of the security code in the world protects against nothing because nobody ever checked.\n\nYou will need `curl` or the browser's developer tools, because most of these attacks involve sending something the interface does not offer. That is the point: the form is a convenience for honest users, and the server is the only thing that decides.\n\nWork through the surfaces in order. Each one ends with a note in a file called `SECURITY.md`: what you tried, what happened, and what stops it now.",
+    goal: "Give InvoiceHub file handling and an external integration: PDF invoices on private storage with temporary links, uploaded logos resized and converted, and an exchange-rate API that survives being down.",
+    brief: "InvoiceHub stores rows and nothing else. Today it gets files and a dependency.\n\nBoth are places where your application stops being in control. A file lives somewhere you have to choose, and an external API is a service that will one day be slow, wrong or unreachable while your page is still expected to load.\n\nSo the discipline for today is <b>build the failure case first</b>. Before the happy path works, point the API at a URL that does not answer and decide what the page does. Before the upload works, try a file that is not what it claims to be. The code that handles the good case writes itself; the code that handles the rest is the day.\n\nAnd one rule throughout: nothing in your application should name a filesystem path or construct a URL by hand. Every file goes through `Storage`, so the same code can run against the local disk in tests and S3 in production.",
     steps: [
-      "Create `SECURITY.md`. For every step below, record the attack, the result before, and the result after. This file is the deliverable as much as the code is.",
-      "CSRF: build a tiny HTML file on your machine that posts to InvoiceHub's invoice-delete route, open it while logged in, and see what happens. Then check whether `@csrf` is on every form in the application.",
-      "Find any `GET` route that changes state. If there is one, rewrite it as a `DELETE` or `POST` and note why a `GET` could never be protected.",
-      "XSS: put `<script>alert(1)</script>` into a customer name, then view the invoice list. If it runs, find the `{!! !!}` and decide whether the content is genuinely trusted.",
-      "Try the same payload in a field rendered inside an attribute or a script block. Note whether escaping alone was enough there.",
-      "Add a `website` field to a customer and try `javascript:alert(1)` in it. Confirm the link is dangerous even though the value was escaped, then validate the scheme.",
-      "SQL injection: find every raw query in the project. Try `' OR 1=1 --` in any input that reaches one. Then grep for `whereRaw`, `selectRaw` and `orderByRaw` without a bindings argument.",
-      "Add a sortable column to the invoice list driven by `request('sort')`, do it the unsafe way first, and see what a column name from a request can do. Then whitelist it.",
-      "Mass assignment: add an `is_admin` column to users, remove `$fillable` temporarily, and register with `is_admin=true` in the body. Confirm it works, then put `$fillable` back and confirm it does not.",
-      "Find every `create()` and `update()` that receives `$request->all()` and replace it with `$request->validate()`. Note which fields were reachable that should not have been.",
-      "Rate limiting: define a `login` limiter of five per minute per IP with a custom 429 response. Fail the login six times and confirm the sixth is refused, then wait for the window and confirm it opens again.",
-      "Check that failed attempts count. Write down what would happen if the limiter only counted successful logins.",
-      "Add a `password-reset` limiter and confirm you cannot use the form to send somebody twenty emails.",
-      "Headers: add a middleware setting `Content-Security-Policy-Report-Only`, browse the whole application, and collect what the console reports. Build the real policy from that, then switch to enforcing.",
-      "Add `X-Frame-Options: DENY`, then build a local HTML file that tries to iframe InvoiceHub and confirm it refuses.",
-      "Set `SESSION_SECURE_COOKIE` and `http_only`, then try to read `document.cookie` from the console and confirm the session cookie is not there.",
-      "Secrets: run `git log -p -- .env` and confirm it has never been committed. Then grep the codebase for anything that looks like a key or a password hard-coded in a file.",
-      "Run `composer audit` and record the result. Add it to your CI pipeline alongside the tests, so it runs on every push rather than when you remember.",
-      "Finally, pick one feature you have not touched today, such as file upload or PDF generation, and answer the question for it: what can an attacker control, what boundary does it cross, and what stops them?",
+      "Configure three disks: `local` for private files, `public` for assets, and `s3` if you have credentials, or a second local disk standing in for it. Run `storage:link` and add it to your deploy notes.",
+      "Add a logo upload to the customer form. Validate it with `image`, `max:` and a `dimensions:` rule, and write down in a comment what each rule stops.",
+      "Store it with `store()` and confirm the filename is generated. Then deliberately try `storeAs()` with the original filename and note three things that could go wrong.",
+      "Read the image, correct its orientation, scale it down to 400px and store it as WebP. Compare the stored size with the original and record both numbers.",
+      "Extract the dominant colour and store it on the customer. Use it as the background while the logo loads, and reload the page to see the difference.",
+      "Generate an invoice PDF and store it on a private disk. Confirm from an incognito window that there is no URL that reaches it.",
+      "Add a download route that authorizes with yesterday's policy and streams the file with `download()`, passing the original name. Confirm a second user gets a 403.",
+      "Now add a temporary URL route instead: authorize, then redirect to a ten-minute signed URL. Copy the URL, wait for it to expire, and confirm it stops working.",
+      "Write down the difference between those two routes: what passes through your server in each, and which you would use for a 50 MB file.",
+      "Add a `forceDeleted` hook that removes the PDF, then delete an invoice properly and confirm the file is gone. Then run a mass delete and confirm the file is not.",
+      "Write a command that lists stored invoice files and reports any with no matching record. Report only; do not delete.",
+      "Add an exchange-rate lookup using the HTTP client, with `connectTimeout`, `timeout` and a `retry` that only retries connection errors and 5xx.",
+      "Point it at a URL that does not respond and load the page. Decide what a user sees: a cached rate, a blank field, an error. Write down the decision and implement it.",
+      "Wrap the API in a small class with a macro holding the base URL, token and timeouts, so no controller knows where the service lives.",
+      "Fake the API in a test: one test for the successful response, one for a 500, and one asserting you called the right endpoint with the right headers.",
+      "Add a second API call the page needs and combine them with `Http::pool()`. Time the page before and after, and record both numbers.",
+      "Add a PDF page-count using `Process` with an array command and a timeout. Then try the string-interpolated version with a filename containing a semicolon, see what happens, and revert.",
+      "Finally, list every file your application writes and answer for each: which disk, public or private, who may read it, and what deletes it.",
     ],
     acceptance: [
-      "`SECURITY.md` records every attack you tried, with the before and after result.",
-      "The local CSRF page fails against every state-changing route, and no route was excluded without a signature check replacing it.",
-      "No `GET` route in the application changes state.",
-      "A script payload in a customer name is printed, not executed, on every page that displays it.",
-      "A `javascript:` URL in a user-supplied link is rejected by validation.",
-      "No raw query contains an interpolated variable, and every `whereRaw` family call passes bindings.",
-      "The sortable column is whitelisted, and an unknown value falls back to a default.",
-      "Registering with `is_admin=true` in the body creates a normal user.",
-      "The sixth login attempt in a minute returns 429 with a `Retry-After` header, and the window resets.",
-      "The CSP is built from what the application actually loads, and no console errors remain after enforcing it.",
-      "The session cookie is not readable from JavaScript.",
-      "`.env` has never appeared in the Git history, and `composer audit` runs in CI.",
+      "No path in the application is written by hand; every file goes through `Storage`.",
+      "An uploaded logo is stored with a generated name, correctly oriented, resized and converted, and you recorded the before and after sizes.",
+      "The dominant colour appears as a placeholder before the logo loads.",
+      "Invoice PDFs are on a private disk with no reachable URL.",
+      "The download route refuses a second user with a 403, and the temporary URL stops working after it expires.",
+      "You can explain what passes through your server in each of the two serving routes.",
+      "Deleting an invoice removes its PDF, and you know why a mass delete does not.",
+      "The audit command reports orphaned files without deleting anything.",
+      "With the exchange-rate API unreachable, the page still loads and behaves the way you decided it should.",
+      "Three tests cover the API: success, a 500, and an assertion about the request you sent.",
+      "The two API calls run concurrently, and you recorded the page timing before and after.",
+      "Every `Process` call passes an array and has a timeout.",
+      "You can list every file the application writes, with its disk, its visibility, its readers, and what deletes it.",
     ],
     stretch: [
-      "Add a file upload and work out its attack surface: the filename, the size, the MIME type, the contents, and where the file is served from. Write it up in `SECURITY.md`.",
-      "Key the login limiter on email plus IP and demonstrate that it now also slows one password tried against many accounts.",
-      "Set up HSTS locally with a self-signed certificate, then try to reach the site over `http://` and watch the browser refuse before it sends anything.",
+      "Generate three logo sizes in a queued job from the stored original, and serve the right one per breakpoint.",
+      "Add a temporary upload URL so a large attachment goes from the browser straight to S3, never through your server.",
+      "Add an idempotency key to a write against an external API and demonstrate that a retry does not duplicate the effect.",
     ],
   },
 };

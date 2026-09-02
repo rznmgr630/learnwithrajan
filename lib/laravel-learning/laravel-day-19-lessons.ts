@@ -2,2093 +2,2177 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_19_LESSONS: LessonDay = {
   day: 19,
-  title: "Authentication — guards, sessions, hashing & password resets",
-  totalMinutes: 91,
+  title: "Authorization — Gates, Policies & the #[Authorize] attribute",
+  totalMinutes: 89,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "guards-and-providers",
-      title: "Guards & providers",
+      id: "gates",
+      title: "Gates — the simplest authorization rule",
       durationMinutes: 11,
-      explanation: "Authentication answers one question, and it is worth being precise about which one:\n\n```text\nWho are you?          →  authentication\nAre you allowed to?   →  authorization\n```\n\n<b>Today is entirely the first.</b> The second is a separate system with its own vocabulary, and mixing them up is the most common confusion in this part of Laravel.\n\n---\n\n### 1. Basic — two moving parts\n\nLaravel's authentication is built from two things, and everything else follows from them:\n\n```text\nAuthentication\n      │\n      ├── Guard\n      │     ↓\n      │   HOW the user is authenticated\n      │\n      └── Provider\n            ↓\n          WHERE the user comes from\n```\n\n<b>A <i>guard</i></b> decides how Laravel remembers who you are between requests. The default `web` guard uses the session from Day 10: log in once, and a cookie carries the session id, and the session holds the user's id.\n\n<b>A <i>provider</i></b> decides where the user record is fetched from. The default provider uses Eloquent and your `User` model.\n\nBoth live in `config/auth.php`:\n\n```php\n'guards' => [\n    'web' => [\n        'driver'   => 'session',\n        'provider' => 'users',\n    ],\n],\n\n'providers' => [\n    'users' => [\n        'driver' => 'eloquent',\n        'model'  => App\\Models\\User::class,\n    ],\n],\n```\n\n---\n\n### 2. Intermediate — the chain\n\nRead it top to bottom and the whole system is one line:\n\n```text\nGuard\n  ↓\nweb, session driver\n  ↓\nProvider\n  ↓\nEloquent\n  ↓\nUser model\n  ↓\nusers table\n```\n\nA request arrives with a session cookie. The guard reads the user id out of the session and hands it to the provider. The provider fetches that user from the database. `Auth::user()` returns it.\n\n<b>Guard = how. Provider = from where.</b>\n\nThat sounds like trivia until an application has more than one of either, and then it is the only thing that makes the configuration readable.\n\n---\n\n### 3. Advanced — why the split exists\n\nThe separation pays off in two situations you will meet.\n\n<b>Two kinds of user.</b> An application with customers and staff in separate tables needs two providers, and often two guards so that logging into the admin area does not log you into the shop:\n\n```php\n'guards' => [\n    'web'   => ['driver' => 'session', 'provider' => 'users'],\n    'admin' => ['driver' => 'session', 'provider' => 'admins'],\n],\n```\n\n```php\nAuth::guard('admin')->attempt($credentials);\nAuth::guard('admin')->user();\n```\n\nLeave the guard off and you get the default from `config/auth.php`, which is what every example on this page does quietly.\n\n<b>Two ways of authenticating the same user.</b> A browser session and an API token are different guards over the same provider. The session guard reads a cookie; a token guard reads an `Authorization` header. Same users table, same model, different mechanism:\n\n```text\nbrowser  →  session guard  ┐\n                           ├─→  users provider  →  User\nAPI      →  token guard    ┘\n```\n\nThat is the arrangement Sanctum sets up, and it is why the split exists at all.\n\nOne detail worth carrying: <b>the user model must be `Authenticatable`.</b> Laravel's `User` extends `Illuminate\\Foundation\\Auth\\User`, which supplies the password field, the remember token and the interface the provider expects. A model that does not extend it cannot be authenticated, whatever the config says.",
-      diagram: `Two questions, one system each
+      explanation: "Yesterday answered <i>who are you</i>. Today answers the other question, and it is the one that actually protects your data.\n\n```text\nAuthentication   Who is this user?\nAuthorization    What is this user allowed to do?\n```\n\nThe `auth` middleware from yesterday lets any logged-in user through. Nothing so far stops one customer opening another customer's invoice, and that is what today fixes.\n\n```text\nAuthenticated User\n        │\n        ▼\n   Authorization\n        │\n   ┌────┴────┐\n   ▼         ▼\n Gates     Policies\n   │         │\n simple    model / resource\n checks     permissions\n```\n\n---\n\n### 1. Basic — defining and checking a gate\n\n<b>A <i>gate</i></b> (a named authorization rule, defined as a closure) is the simplest form:\n\n```php\nuse Illuminate\\Support\\Facades\\Gate;\n\nGate::define('access-admin', function (User $user) {\n    return $user->is_admin;\n});\n```\n\nDefine them in `AppServiceProvider::boot()`, and check them anywhere:\n\n```php\nif (Gate::allows('access-admin')) {\n    // allowed\n}\n```\n\n<b>The authenticated user is passed in for you.</b> You never write `Gate::allows('access-admin', $user)`; the first closure parameter is always the current user.\n\nWhich means a guest cannot pass a gate at all. `Gate::allows()` returns `false` for a guest without running your closure, so a gate never has to worry about `$user` being null.\n\n---\n\n### 2. Intermediate — gates that take a model\n\nA gate can receive more:\n\n```php\nGate::define('update-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id;\n});\n```\n\n```php\nGate::allows('update-post', $post);\n```\n\n```text\nUser  +  Post\n      ↓\n  can update?\n```\n\nThat works, and it is also the moment to notice something. As soon as a gate takes a model, you will want `view-post`, `delete-post`, `restore-post` and `publish-post` too, and `AppServiceProvider` fills with closures.\n\n<b>That is what policies are for</b>, two lessons from now. Gates stay useful for the checks that are <i>not</i> about a particular model:\n\n```text\naccess the admin dashboard\nview analytics\nrun an import\nimpersonate a user\n```\n\nNone of those has an obvious model to hang off.\n\n---\n\n### 3. Advanced — the three ways to ask\n\n```php\nGate::allows('access-admin');       // true when allowed\nGate::denies('access-admin');       // the inverse, reads better in a guard clause\nGate::any(['update', 'delete'], $post);    // any of these\nGate::none(['update', 'delete'], $post);   // none of these\n```\n\nAnd the one that does not return a boolean:\n\n```php\nGate::authorize('update-post', $post);\n```\n\n<b>`authorize()` throws when denied</b>, which Laravel turns into a 403. It is the right choice in a controller, where a denial should end the request rather than be handled with an `if`.\n\n```text\nallows() / denies()   →  a boolean, for branching\nauthorize()           →  throws, for stopping the request\n```\n\nA gate can also be a class method rather than a closure, which keeps a complex rule testable:\n\n```php\nGate::define('access-admin', [AdminPolicy::class, 'access']);\n```\n\nOne caution before the next lesson. <b>A gate is invisible from the outside.</b> Nothing in a controller says which rules exist, and a rule nobody checks protects nothing. The habit that saves you is to write the check first, at the top of the action, before the code that does the work.",
+      diagram: `Two questions
 
-  Who are you?          →  authentication    ← today
-  Are you allowed to?   →  authorization     ← a separate topic
+  Authentication   Who is this user?          ← yesterday
+  Authorization    What may they do?          ← today
 
-
-Two moving parts
-
-  Authentication
-        │
-        ├── Guard      HOW the user is authenticated
-        │
-        └── Provider   WHERE the user comes from
-
-  config/auth.php
-
-  'guards' => [
-      'web' => ['driver' => 'session', 'provider' => 'users'],
-  ],
-  'providers' => [
-      'users' => ['driver' => 'eloquent', 'model' => User::class],
-  ],
+  The auth middleware lets ANY logged-in user through.
+  Nothing yet stops one customer opening another
+  customer's invoice.
 
 
-The chain, top to bottom
-
-  Guard
-    ↓
-  web, session driver          reads the user id from the session
-    ↓
-  Provider
-    ↓
-  Eloquent                     fetches that user
-    ↓
-  User model
-    ↓
-  users table
-
-  Guard = how.  Provider = from where.
+  Authenticated User
+          │
+          ▼
+     Authorization
+          │
+     ┌────┴────┐
+     ▼         ▼
+   Gates     Policies
+     │         │
+   simple    model / resource
+   checks     permissions
 
 
-Why the split exists
+Defining a gate
 
-  Two kinds of user: two providers, often two guards
+  Gate::define('access-admin', function (User \$user) {
+      return \$user->is_admin;
+  });
 
-    'web'   → users provider
-    'admin' → admins provider
+  Gate::allows('access-admin')
 
-    Auth::guard('admin')->attempt(\$credentials);
-
-  Two ways to authenticate the same user:
-
-    browser  →  session guard  ┐
-                               ├─→ users provider → User
-    API      →  token guard    ┘
-
-    Same table, same model, different mechanism.
-    That is what Sanctum sets up.
+  The authenticated user is passed in for you. You never
+  pass it yourself, and a guest fails without your closure
+  ever running.
 
 
-  The model must be Authenticatable. Laravel's User extends
-  Illuminate\\Foundation\\Auth\\User, which supplies the password
-  field, the remember token and the interface the provider
-  expects. Without it, nothing authenticates.`,
+Gates with a model
+
+  Gate::define('update-post', function (User \$user, Post \$post) {
+      return \$user->id === \$post->user_id;
+  });
+
+  Gate::allows('update-post', \$post)
+
+  ...and then you want view-post, delete-post,
+  restore-post, publish-post, and AppServiceProvider
+  fills with closures.
+
+  That is what policies are for.
+
+  Gates stay right for checks with no model:
+    access the admin dashboard
+    view analytics
+    run an import
+    impersonate a user
+
+
+Three ways to ask
+
+  Gate::allows('x')            true when allowed
+  Gate::denies('x')            the inverse, reads better in a guard
+  Gate::any(['a','b'], \$post)  any of these
+  Gate::authorize('x', \$post)  THROWS when denied → 403
+
+  allows / denies   →  a boolean, for branching
+  authorize         →  stops the request
+
+
+  ⚠️  A gate is invisible from the outside. Nothing in a
+      controller says which rules exist, and a rule nobody
+      checks protects nothing. Write the check FIRST, at
+      the top of the action.`,
       codeExample: {
-        title: "config/auth.php, and using a named guard",
+        title: "Defining gates and checking them",
         code: `<?php
-// config/auth.php
+// app/Providers/AppServiceProvider.php
 
-return [
+namespace App\\Providers;
 
-    // Used when you do not name a guard.
-    'defaults' => [
-        'guard'     => 'web',
-        'passwords' => 'users',
-    ],
+use App\\Models\\Post;
+use App\\Models\\User;
+use Illuminate\\Support\\Facades\\Gate;
+use Illuminate\\Support\\ServiceProvider;
 
-    // HOW: the mechanism that remembers who you are.
-    'guards' => [
-        'web' => [
-            'driver'   => 'session',
-            'provider' => 'users',
-        ],
-
-        // A second guard over a second provider.
-        'admin' => [
-            'driver'   => 'session',
-            'provider' => 'admins',
-        ],
-    ],
-
-    // WHERE: how a user record is fetched.
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model'  => App\\Models\\User::class,
-        ],
-
-        'admins' => [
-            'driver' => 'eloquent',
-            'model'  => App\\Models\\Admin::class,
-        ],
-    ],
-];
-
-
-<?php
-// ---------- Using the default guard ----------
-
-use Illuminate\\Support\\Facades\\Auth;
-
-Auth::attempt($credentials);
-Auth::user();
-Auth::check();
-
-// Identical to:
-Auth::guard('web')->attempt($credentials);
-
-
-// ---------- Using a named guard ----------
-
-Auth::guard('admin')->attempt($credentials);
-Auth::guard('admin')->user();
-Auth::guard('admin')->logout();
-
-// And in routes:
-Route::middleware('auth:admin')->group(function () {
-    // ...
-});
-
-
-<?php
-// ---------- The model the provider returns ----------
-
-namespace App\\Models;
-
-use Illuminate\\Foundation\\Auth\\User as Authenticatable;
-
-class User extends Authenticatable
+class AppServiceProvider extends ServiceProvider
 {
-    protected $fillable = ['name', 'email', 'password'];
-
-    // Never serialise these. Day 14's $hidden, doing security work.
-    protected $hidden = ['password', 'remember_token'];
-
-    protected function casts(): array
+    public function boot(): void
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-        ];
-    }
-}
+        // No model: a system-level ability.
+        Gate::define('access-admin', function (User $user) {
+            return $user->is_admin;
+        });
 
-// Extending Authenticatable is what supplies the password field,
-// the remember token and the interface the provider expects.`,
-      },
-      keyTakeaways: [
-        "<b>Authentication asks who you are; authorization asks what you may do.</b> They are separate systems.",
-        "<b>A guard decides how Laravel remembers who you are between requests</b>, and the default `web` guard uses the session.",
-        "<b>A provider decides where the user record comes from</b>, and the default uses Eloquent and your `User` model.",
-        "Both are configured in `config/auth.php`, along with the default guard.",
-        "<b>Guard = how. Provider = from where.</b>",
-        "The chain is: session holds the id, guard reads it, provider fetches the user, `Auth::user()` returns it.",
-        "<b>Two kinds of user need two providers</b>, and usually two guards so the sessions stay separate.",
-        "<b>Two ways of authenticating the same user are two guards over one provider</b>, which is what Sanctum sets up.",
-        "`Auth::guard('admin')` names a guard; leaving it off uses the default.",
-        "<b>The user model must extend `Authenticatable`</b>, which supplies the password field and the interface the provider expects.",
-      ],
-      commonMistakes: [
-        "<b>Treating authentication and authorization as one thing.</b> Logging in says nothing about what you may do.",
-        "<b>Adding a second user table without a second provider.</b> The default provider only knows about one model.",
-        "<b>Forgetting the guard name on a second guard's calls.</b> `Auth::user()` returns the default guard's user.",
-        "<b>Building a user model that does not extend `Authenticatable`.</b> Nothing about it can be authenticated.",
-        "<b>Leaving `password` out of `$hidden`.</b> The hash then appears in any JSON response containing the user.",
-      ],
-      quiz: [
-        {
-          question: "What does a guard decide?",
-          options: [
-            "Which users exist",
-            "How Laravel maintains the authenticated state between requests",
-            "What a user is allowed to do",
-            "How passwords are hashed",
-          ],
-          correctIndex: 1,
-          explanation: "The default `web` guard uses the session.",
-        },
-        {
-          question: "What does a provider decide?",
-          options: [
-            "How the user is authenticated",
-            "Where the user record is fetched from",
-            "Which routes are protected",
-            "The session lifetime",
-          ],
-          correctIndex: 1,
-          explanation: "Guard = how, provider = from where.",
-        },
-        {
-          question: "An API and a browser both authenticate the same users table. What does that look like in config?",
-          options: [
-            "Two providers over one guard",
-            "Two guards over one provider",
-            "One guard and one provider",
-            "Two separate applications",
-          ],
-          correctIndex: 1,
-          explanation: "Different mechanism, same source of users. That is what Sanctum sets up.",
-        },
-        {
-          question: "Why must the user model extend `Authenticatable`?",
-          options: [
-            "For the factory to work",
-            "It supplies the password field, remember token and the interface the provider expects",
-            "To enable migrations",
-            "It is only a convention",
-          ],
-          correctIndex: 1,
-          explanation: "Without it, nothing about the model can be authenticated.",
-        },
-      ],
-    },
-    {
-      id: "logging-in-and-out",
-      title: "attempt, login, logout & session regeneration",
-      durationMinutes: 13,
-      explanation: "Four calls, and one line most people leave out.\n\n---\n\n### 1. Basic — `Auth::attempt()`\n\n```php\nif (Auth::attempt(['email' => $email, 'password' => $password])) {\n    // authenticated\n}\n```\n\nWhat it does, in order:\n\n```text\n1. hands the credentials minus the password to the provider\n2. the provider finds a matching user\n3. Hash::check() compares the given password to the stored hash\n4. on success, the user's id goes into the session\n5. returns true\n```\n\nThe password is never queried. <b>Every key except `password` becomes a `where` clause</b>, which is worth knowing because it means you can add conditions:\n\n```php\nAuth::attempt(['email' => $email, 'password' => $password, 'active' => true]);\n```\n\nInactive users now fail to log in, with no extra code.\n\nA complete login action:\n\n```php\n$credentials = $request->validate([\n    'email'    => ['required', 'email'],\n    'password' => ['required'],\n]);\n\nif (! Auth::attempt($credentials)) {\n    return back()->withErrors(['email' => 'Invalid credentials.']);\n}\n\n$request->session()->regenerate();\n\nreturn redirect()->intended('/dashboard');\n```\n\nNote the error message. <b>Say \"invalid credentials\", never \"no account with that email\"</b>, which tells an attacker which addresses are registered.\n\n---\n\n### 2. Intermediate — the line people leave out\n\n```php\n$request->session()->regenerate();\n```\n\nLeave it out and the application works perfectly, which is why it gets left out.\n\n<b>Session fixation</b> (an attack where the attacker fixes the victim's session id before they log in) works like this. The attacker visits your site, gets session id `A`, and tricks the victim into using it. The victim logs in. If the id does not change, session `A` is now an authenticated session, and the attacker has it.\n\n```text\nBefore login          After login, no regenerate\n\nSession A       →     Session A, authenticated\nattacker has it       attacker still has it\n\n\nWith regenerate\n\nSession A       →     Session B, authenticated\nattacker has A        A is worthless\n```\n\nOne line, and the attack does not exist. Regenerate after <i>every</i> authentication, including registration and impersonation.\n\n---\n\n### 3. Advanced — the rest of the API\n\n<b>`Auth::login($user)`</b> authenticates a user you already have, skipping the credential check:\n\n```php\n$user = User::create([...]);\n\nAuth::login($user);\n$request->session()->regenerate();\n```\n\nWhich is exactly what you want after registration, and what impersonation and custom flows use. It trusts you completely, so anything reaching it must have established identity some other way.\n\n`Auth::loginUsingId($id)` is the same thing from a primary key, for when you have an id rather than a model:\n\n```php\nAuth::loginUsingId(1);\n```\n\n<b>Treat it with the same suspicion.</b> It performs no credential check at all, so an id reaching it from a request is an authentication bypass written as one line.\n\n<b>Logging out is three lines, not one:</b>\n\n```php\nAuth::logout();\n\n$request->session()->invalidate();\n$request->session()->regenerateToken();\n```\n\n```text\nAuth::logout()          forget the authenticated user\ninvalidate()            throw the session data away\nregenerateToken()       new CSRF token\n```\n\nWith only the first, the session survives and still holds whatever else was in it. On a shared computer that matters.\n\n<b>Remember me</b> is a second argument:\n\n```php\nAuth::attempt($credentials, $request->boolean('remember'));\n```\n\nIt stores a long-lived token in the `remember_token` column and a matching cookie, so the user stays authenticated after the session expires. Two things follow. The column must exist, and `Auth::logout()` clears the token, which is why logging out on one device signs you out of that browser properly.\n\nOne security note: a remembered user is authenticated but not <i>recently</i> authenticated. That distinction is what password confirmation, in the next lesson, exists for.",
-      diagram: `What Auth::attempt() actually does
+        Gate::define('view-analytics', function (User $user) {
+            return $user->is_admin || $user->role === 'analyst';
+        });
 
-  1. hands the credentials MINUS the password to the provider
-  2. the provider finds a matching user
-  3. Hash::check() compares the password to the stored hash
-  4. on success, the user's id goes into the session
-  5. returns true
+        // With a model. This shape is what policies replace.
+        Gate::define('update-post', function (User $user, Post $post) {
+            return $user->id === $post->user_id;
+        });
 
-  The password is never queried. Every OTHER key
-  becomes a where clause:
-
-    Auth::attempt([... , 'active' => true])
-    → inactive users cannot log in, with no extra code
-
-
-  Error message: "Invalid credentials."
-  Never "no account with that email" — that tells an
-  attacker which addresses are registered.
-
-
-The line people leave out
-
-  \$request->session()->regenerate();
-
-  Without it the app works perfectly, which is the problem.
-
-  Session fixation:
-
-  Before login          After login, NO regenerate
-
-  Session A       →     Session A, authenticated
-  attacker has it       attacker still has it
-
-
-  With regenerate
-
-  Session A       →     Session B, authenticated
-  attacker has A        A is worthless
-
-  Regenerate after EVERY authentication,
-  including registration and impersonation.
-
-
-The rest of the API
-
-  Auth::login(\$user)      authenticate a user you already have
-  Auth::loginUsingId(1)   the same, from a primary key
-                          ⚠️ no credential check — an id
-                             from a request is a bypass
-                          (registration, impersonation)
-                          trusts you completely
-
-  Logout is THREE lines:
-
-    Auth::logout();                         forget the user
-    \$request->session()->invalidate();      throw the data away
-    \$request->session()->regenerateToken(); new CSRF token
-
-  With only the first, the session survives and still holds
-  whatever else was in it.
-
-
-Remember me
-
-  Auth::attempt(\$credentials, \$request->boolean('remember'))
-
-  a long-lived token in remember_token + a cookie
-  the column must exist
-  Auth::logout() clears it
-
-  ⚠️  A remembered user is authenticated, but not RECENTLY
-      authenticated. That is what password confirmation is for.`,
-      codeExample: {
-        title: "A complete login and logout",
-        code: `<?php
-
-namespace App\\Http\\Controllers;
-
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Auth;
-
-class LoginController extends Controller
-{
-    public function store(Request $request)
-    {
-        $credentials = $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        // Every key except password becomes a where clause.
-        $credentials['active'] = true;
-
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Never "no account with that email".
-            return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Invalid credentials.']);
-        }
-
-        // Session fixation protection. Do not skip this.
-        $request->session()->regenerate();
-
-        // intended() sends them where they were originally going.
-        return redirect()->intended('/dashboard');
-    }
-
-    public function destroy(Request $request)
-    {
-        Auth::logout();                          // forget the user
-
-        $request->session()->invalidate();       // throw the data away
-        $request->session()->regenerateToken();  // new CSRF token
-
-        return redirect('/');
+        // A class method, when the rule is worth testing on its own.
+        Gate::define('impersonate', [AdminGate::class, 'impersonate']);
     }
 }
 
 
 <?php
-// ---------- Authenticating a user you already have ----------
+// ---------- Checking ----------
 
-public function register(Request $request)
-{
-    $data = $request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'confirmed', Password::defaults()],
-    ]);
+use Illuminate\\Support\\Facades\\Gate;
 
-    $user = User::create($data);   // the 'hashed' cast handles the password
-
-    Auth::login($user);
-    $request->session()->regenerate();
-
-    return redirect('/dashboard');
+if (Gate::allows('access-admin')) {
+    // allowed
 }
 
-// Or from an id you already trust:
-Auth::loginUsingId($userId);
+if (Gate::denies('access-admin')) {
+    abort(403);
+}
 
-// ⚠️ No credential check. An id arriving from a request
-//    and reaching this line is an authentication bypass.
+Gate::allows('update-post', $post);
 
-// Auth::login() skips the credential check entirely, so anything
-// reaching it must have established identity another way.
+Gate::any(['update-post', 'delete-post'], $post);
+Gate::none(['update-post', 'delete-post'], $post);
 
+// The authenticated user is passed for you. Never this:
+Gate::allows('access-admin', $user);
 
-<?php
-// ---------- Remember me ----------
-
-// The form:
-// <input type="checkbox" name="remember">
-
-Auth::attempt($credentials, $request->boolean('remember'));
-
-// Needs a remember_token column:
-// $table->rememberToken();
-//
-// Auth::logout() clears it, so signing out really signs out.
-
-
-<?php
-// ---------- A named guard ----------
-
-Auth::guard('admin')->attempt($credentials);
-Auth::guard('admin')->logout();`,
-      },
-      keyTakeaways: [
-        "<b>`Auth::attempt()` finds the user, checks the password hash, and puts the user's id in the session.</b>",
-        "<b>Every credential key except `password` becomes a `where` clause</b>, so `'active' => true` blocks inactive users.",
-        "<b>Say \"invalid credentials\"</b>, never that an email is unknown, which reveals who has an account.",
-        "<b>`$request->session()->regenerate()` after login prevents session fixation.</b>",
-        "Without it the application still works, which is exactly why the line gets left out.",
-        "Regenerate after every authentication, including registration and impersonation.",
-        "<b>`Auth::login($user)` authenticates a user you already have</b>, skipping the credential check entirely.",
-        "<b>`Auth::loginUsingId($id)` does the same from a primary key</b>, and an id from a request reaching it is a bypass.",
-        "<b>Logging out is three calls</b>: `logout()`, `session()->invalidate()` and `session()->regenerateToken()`.",
-        "<b>Remember me is a second argument to `attempt()`</b>, needs a `remember_token` column, and is cleared on logout.",
-        "A remembered user is authenticated but not recently authenticated, which is what password confirmation addresses.",
-      ],
-      commonMistakes: [
-        "<b>Skipping `session()->regenerate()`.</b> Everything works, and session fixation is possible.",
-        "<b>Telling the user the email was not found.</b> That enumerates your accounts for an attacker.",
-        "<b>Calling only `Auth::logout()`.</b> The session survives with its data and its CSRF token intact.",
-        "<b>Hashing the password before passing it to `attempt()`.</b> It compares the plain value against the stored hash.",
-        "<b>Adding remember me without the `remember_token` column.</b> The token has nowhere to go.",
-      ],
-      quiz: [
-        {
-          question: "What does `Auth::attempt()` do with the `password` key?",
-          options: [
-            "Adds it to the `where` clause",
-            "Uses it in `Hash::check()` against the stored hash, after finding the user by the other keys",
-            "Hashes it and compares the strings",
-            "Ignores it",
-          ],
-          correctIndex: 1,
-          explanation: "Every other key becomes a `where` clause; the password is verified separately.",
-        },
-        {
-          question: "Why regenerate the session after login?",
-          options: [
-            "To clear old flash data",
-            "So an attacker who fixed the pre-login session id cannot hold the authenticated one",
-            "To refresh the user model",
-            "For performance",
-          ],
-          correctIndex: 1,
-          explanation: "Session fixation, and the fix is one line.",
-        },
-        {
-          question: "What does a complete logout need beyond `Auth::logout()`?",
-          options: [
-            "Nothing",
-            "`session()->invalidate()` and `session()->regenerateToken()`",
-            "A redirect",
-            "Clearing the cache",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise the session survives with its data and CSRF token.",
-        },
-        {
-          question: "When would you use `Auth::login($user)` rather than `Auth::attempt()`?",
-          options: [
-            "When the password is wrong",
-            "When identity is already established, such as straight after registration",
-            "For API requests only",
-            "Never; it is deprecated",
-          ],
-          correctIndex: 1,
-          explanation: "It skips the credential check, so it trusts the caller completely.",
-        },
-      ],
-    },
-    {
-      id: "the-user-and-protecting-routes",
-      title: "The authenticated user, middleware & password confirmation",
-      durationMinutes: 12,
-      explanation: "Having logged somebody in, two things follow: reading who they are, and keeping everybody else out.\n\n---\n\n### 1. Basic — reading the user\n\n```php\n$user = Auth::user();       // the model, or null\n$user = $request->user();   // the same thing\n\nAuth::id();                 // just the id, no query\nAuth::check();              // logged in?\nAuth::guest();              // the opposite\n```\n\n`Auth::user()` and `$request->user()` are the same. Prefer `$request->user()` in a controller, because it makes the dependency visible in the method signature rather than reaching for a facade.\n\n<b>`Auth::id()` is worth knowing.</b> When you only need the id, it avoids fetching the whole user, which matters inside a loop or a query.\n\nIn Blade:\n\n```blade\n@auth\n    <p>Hello, {{ auth()->user()->name }}</p>\n@endauth\n\n@guest\n    <a href=\"/login\">Log in</a>\n@endguest\n```\n\nAnd the mistake to avoid: <b>`Auth::user()` returns `null` for a guest</b>, so `Auth::user()->name` on a public page is a fatal error. Use `Auth::user()?->name`, or check first.\n\n---\n\n### 2. Intermediate — protecting routes\n\n```php\nRoute::get('/dashboard', fn () => view('dashboard'))->middleware('auth');\n```\n\n```text\nGuest → /dashboard → redirected to /login\nUser  → /dashboard → allowed\n```\n\nThe `auth` middleware redirects a guest to the login route and remembers where they were going, which is what `redirect()->intended()` used in the last lesson.\n\nGroups save the repetition:\n\n```php\nRoute::middleware('auth')->group(function () {\n    Route::get('/dashboard', ...);\n    Route::get('/profile', ...);\n    Route::get('/settings', ...);\n});\n```\n\nA named guard goes after a colon: `middleware('auth:admin')`.\n\n<b>And the distinction that keeps this lesson honest.</b> The `auth` middleware answers \"is anybody logged in\", nothing more:\n\n```text\nauth middleware      is Rajan logged in?\nauthorization        can Rajan delete THIS post?\n```\n\nA route protected by `auth` alone lets any authenticated user reach it, including one editing somebody else's record. Authorization, with policies and gates, is a separate topic and a separate day.\n\n---\n\n### 3. Advanced — password confirmation\n\nSome actions deserve more than \"you logged in three weeks ago and ticked remember me\":\n\n```text\nchange password\nchange email\nview or rotate API keys\ndelete the account\n```\n\nFor these, Laravel can ask for the password again:\n\n```php\nRoute::get('/settings/security', ...)\n    ->middleware(['auth', 'password.confirm']);\n```\n\n```text\nalready authenticated\n        ↓\nsensitive action\n        ↓\nconfirm password\n        ↓\ncontinue, for a while\n```\n\nThe confirmation timestamp is stored in the session, so it holds for a configurable window (three hours by default) rather than prompting on every click.\n\n<b>The threat this addresses is not a stranger, it is an unattended browser.</b> Someone sitting at a logged-in machine can read email and change settings; password confirmation stops them taking over the account outright.\n\nTwo related habits worth adopting at the same time.\n\n<b>Rate limit the login route.</b> Without it, nothing stops an attacker trying passwords as fast as your server answers:\n\n```php\nRoute::post('/login', ...)->middleware('throttle:5,1');\n```\n\nLaravel's own login also has `RateLimiter` support keyed on the email plus IP, which is better than either alone.\n\n<b>And redirect authenticated users away from the login page.</b> The `guest` middleware does it:\n\n```php\nRoute::middleware('guest')->group(function () {\n    Route::get('/login', ...);\n    Route::get('/register', ...);\n});\n```\n\nSmall thing, but a logged-in user landing on a login form is a bug report waiting to happen.",
-      diagram: `Reading the user
-
-  Auth::user()         the model, or NULL
-  \$request->user()     the same thing, visible in the signature
-  Auth::id()           just the id, no query
-  Auth::check()        logged in?
-  Auth::guest()        the opposite
-
-  @auth ... @endauth      @guest ... @endguest
-
-  ⚠️  Auth::user() is null for a guest, so
-      Auth::user()->name on a public page is fatal.
-      Use ?-> or check first.
-
-
-Protecting routes
-
-  ->middleware('auth')
-
-    Guest → /dashboard → redirected to /login
-    User  → /dashboard → allowed
-
-  The redirect remembers where they were going, which is
-  what redirect()->intended() uses.
-
-  Route::middleware('auth')->group(function () { ... });
-  ->middleware('auth:admin')          a named guard
-
-
-  auth middleware      is Rajan logged in?
-  authorization        can Rajan delete THIS post?
-
-  A route with auth alone lets ANY authenticated user in,
-  including one editing somebody else's record.
-
-
-Password confirmation
-
-  change password · change email · rotate API keys · delete account
-
-  ->middleware(['auth', 'password.confirm'])
-
-    already authenticated
-            ↓
-    sensitive action
-            ↓
-    confirm password
-            ↓
-    continue, for ~3 hours
-
-  The threat is not a stranger. It is an unattended
-  browser. Reading email is bad; taking over the
-  account is worse.
-
-
-Two habits to adopt at the same time
-
-  Rate limit the login route
-    ->middleware('throttle:5,1')
-    nothing else stops an attacker trying passwords
-    as fast as your server answers
-
-  Send logged-in users away from /login
-    Route::middleware('guest')->group(...)`,
-      codeExample: {
-        title: "Reading the user, and keeping everyone else out",
-        code: `<?php
-
-use Illuminate\\Support\\Facades\\Auth;
-
-// ---------- Reading the user ----------
-
-$user = Auth::user();        // the model, or null
-$user = $request->user();    // the same, and visible in the signature
-
-Auth::id();                  // just the id, no query
-Auth::check();               // true when logged in
-Auth::guest();               // true when not
-
-// ❌ Fatal on a public page: user() is null for a guest.
-Auth::user()->name;
-
-// ✓
-Auth::user()?->name;
-$request->user()?->name;
+// A guest returns false without your closure running,
+// so a gate never has to handle a null user.
 
 
 <?php
 // ---------- In a controller ----------
 
-public function update(Request $request)
+class AdminController extends Controller
 {
-    // The dependency is in the signature, not hidden in a facade.
-    $user = $request->user();
+    public function index()
+    {
+        // Throws, and Laravel turns it into a 403.
+        Gate::authorize('access-admin');
 
-    $user->update($request->validate([
-        'name' => ['required', 'string', 'max:255'],
-    ]));
-
-    return back();
+        return view('admin.dashboard');
+    }
 }
+
+// Compare:
+//   allows() / denies()  →  a boolean, for branching
+//   authorize()          →  ends the request when denied
+
+
+<?php
+// ---------- Another user, when you need it ----------
+
+// Occasionally you are checking on behalf of someone else,
+// such as an admin previewing what a customer can see.
+Gate::forUser($otherUser)->allows('update-post', $post);`,
+      },
+      keyTakeaways: [
+        "<b>Authentication asks who you are; authorization asks what you may do.</b>",
+        "The `auth` middleware lets every logged-in user through, so ownership checks are a separate job.",
+        "<b>A gate is a named authorization rule defined as a closure</b>, usually in `AppServiceProvider::boot()`.",
+        "<b>The authenticated user is passed in as the first argument</b>, so you never supply it yourself.",
+        "A guest fails a gate without your closure running, so gates never handle a null user.",
+        "<b>A gate can take a model as a second argument</b>, but that shape is what policies exist for.",
+        "<b>Gates are right for abilities with no model</b>: the admin dashboard, analytics, running an import.",
+        "<b>`allows()` and `denies()` return booleans; `authorize()` throws and becomes a 403.</b>",
+        "`Gate::any()` and `Gate::none()` check several abilities at once, and `Gate::forUser()` checks on behalf of someone else.",
+        "<b>A rule nobody checks protects nothing</b>, so write the check at the top of the action.",
+      ],
+      commonMistakes: [
+        "<b>Passing the user to `Gate::allows()`.</b> The authenticated user is already the first argument.",
+        "<b>Relying on `auth` middleware for ownership.</b> It only says somebody is logged in.",
+        "<b>Defining a gate and never checking it.</b> The rule exists and protects nothing.",
+        "<b>Filling `AppServiceProvider` with model gates.</b> Four abilities per model is what policies are for.",
+        "<b>Using `allows()` in a controller and forgetting the `abort(403)`.</b> `authorize()` does both.",
+      ],
+      quiz: [
+        {
+          question: "What does authorization decide?",
+          options: [
+            "Whether someone is logged in",
+            "What the authenticated user is allowed to do",
+            "Which guard is used",
+            "Whether the password is correct",
+          ],
+          correctIndex: 1,
+          explanation: "Authentication is the other question, and it was yesterday.",
+        },
+        {
+          question: "Where does the user come from in `Gate::define('x', function (User $user) {...})`?",
+          options: [
+            "You pass it to `Gate::allows()`",
+            "Laravel passes the authenticated user in automatically",
+            "It is resolved from the route",
+            "From the session manually",
+          ],
+          correctIndex: 1,
+          explanation: "A guest fails before your closure ever runs.",
+        },
+        {
+          question: "What is the difference between `Gate::allows()` and `Gate::authorize()`?",
+          options: [
+            "None",
+            "`allows()` returns a boolean; `authorize()` throws when denied, which becomes a 403",
+            "`authorize()` is for policies only",
+            "`allows()` also logs the check",
+          ],
+          correctIndex: 1,
+          explanation: "Booleans for branching, `authorize()` for ending the request.",
+        },
+        {
+          question: "Which is a good fit for a gate rather than a policy?",
+          options: [
+            "Can this user update this post?",
+            "Can this user delete this invoice?",
+            "Can this user access the admin dashboard?",
+            "Can this user view this project?",
+          ],
+          correctIndex: 2,
+          explanation: "There is no particular model behind it.",
+        },
+      ],
+    },
+    {
+      id: "before-after-and-responses",
+      title: "before, after & gate responses",
+      durationMinutes: 11,
+      explanation: "Three features that turn a set of yes-or-no checks into something you can operate.\n\n---\n\n### 1. Basic — `before()`, the override\n\nEvery application eventually wants somebody who can do everything:\n\n```text\nSuper admin\n     ↓\neverything allowed\n```\n\nWritten into each rule, that is `$user->is_super_admin ||` repeated forty times, and the fortieth is the one somebody forgets.\n\n<b>`Gate::before()` runs ahead of every check:</b>\n\n```php\nGate::before(function (User $user, string $ability) {\n    if ($user->is_super_admin) {\n        return true;\n    }\n});\n```\n\n```text\nauthorization request\n        ↓\n     before()\n        │\n    ┌───┴────┐\n   true     null\n    │        │\n allowed   the normal check runs\n```\n\n<b>Returning `null` is what lets the normal check happen</b>, and it is the detail that trips people. Return `false` and you have denied everything for everybody, because a `before` hook that returns anything non-null is the final answer.\n\nSo: return `true` to grant, and nothing at all otherwise.\n\n---\n\n### 2. Intermediate — `after()`, the observer\n\n```php\nGate::after(function (User $user, string $ability, ?bool $result, $arguments) {\n    // the decision has been made\n});\n```\n\n```text\nbefore()   runs before the decision, and can make it\nafter()    runs after the decision, and can see it\n```\n\nIt is mostly for the things you want around authorization rather than in it:\n\n```text\nauditing        who was denied what\nlogging         a denial that keeps recurring is a bug or an attack\nmetrics\ndebugging       why is this user getting a 403?\n```\n\n`after()` can also grant, by returning `true` when the result was null, but that is rare and easy to misuse. <b>Treat it as read-only and you will not surprise anybody.</b>\n\nThe auditing case is worth taking seriously. A log line for every denial tells you when a permission model is wrong, because users hitting 403s on things they should be able to do is a support ticket you can see coming.\n\n---\n\n### 3. Advanced — responses with a reason\n\nA gate returning `false` gives the user \"This action is unauthorized.\" and nothing else. Sometimes the reason matters:\n\n```php\nuse Illuminate\\Auth\\Access\\Response;\n\nGate::define('update-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id\n        ? Response::allow()\n        : Response::deny('You do not own this post.');\n});\n```\n\nNow the denial carries a message, and `authorize()` uses it in the 403.\n\nYou can inspect it directly:\n\n```php\n$response = Gate::inspect('update-post', $post);\n\n$response->allowed();\n$response->message();\n```\n\n<b>This is where authorization messages belong.</b> The alternative is a controller full of `abort(403, 'You do not own this post.')`, with the rule in one place and the explanation in another, drifting apart.\n\nA response can also set its own status:\n\n```php\nResponse::denyWithStatus(404);\nResponse::denyAsNotFound();\n```\n\nWhich exists for a real reason. <b>A 403 confirms the thing exists</b>, so on a private resource, replying 404 tells a stranger nothing at all. If your invoice ids are sequential, a 403 on `/invoices/91` is confirmation that invoice 91 belongs to somebody.\n\nSo the judgement:\n\n```text\nthe user knows the resource exists   →  403 with a helpful reason\nthe user should not know it exists   →  404\n```\n\nAnd one thing to keep in mind about messages: they are shown to somebody who was just refused. <b>Say what is wrong, not why your system said no</b>: \"You do not own this post\" is fine, \"role_id 3 lacks posts.update\" is an information leak dressed as helpfulness.",
+      diagram: `before(): the override
+
+  Every app eventually wants somebody who can do everything.
+
+  Written into each rule, that is
+    \$user->is_super_admin ||
+  repeated forty times, and the fortieth is forgotten.
+
+  Gate::before(function (User \$user, string \$ability) {
+      if (\$user->is_super_admin) return true;
+  });
+
+  authorization request
+          ↓
+       before()
+          │
+      ┌───┴────┐
+     true     null
+      │        │
+   allowed   the normal check runs
+
+  ⚠️  Returning NULL is what lets the normal check happen.
+      Return false and you have denied everything, for
+      everybody. Anything non-null is the final answer.
+
+
+after(): the observer
+
+  before()   runs before the decision, and can MAKE it
+  after()    runs after the decision, and can SEE it
+
+  auditing    who was denied what
+  logging     a recurring denial is a bug or an attack
+  metrics
+  debugging   why is this user getting a 403?
+
+  It can grant, by returning true on a null result.
+  Treat it as read-only and you will surprise nobody.
+
+
+Responses with a reason
+
+  return \$user->id === \$post->user_id
+      ? Response::allow()
+      : Response::deny('You do not own this post.');
+
+  Gate::inspect('update-post', \$post)
+      ->allowed()
+      ->message()
+
+  This is where authorization messages belong. The
+  alternative is abort(403, '...') scattered through
+  controllers, with the rule and the explanation in
+  different files, drifting apart.
+
+
+403 or 404?
+
+  Response::denyAsNotFound()
+
+  A 403 CONFIRMS the thing exists. On sequential ids,
+  a 403 on /invoices/91 tells a stranger invoice 91
+  belongs to somebody.
+
+  user knows it exists      →  403 with a helpful reason
+  user should not know      →  404
+
+
+  And the message is shown to someone just refused.
+  Say what is wrong, not why your system said no.
+
+    ✓ "You do not own this post."
+    ✗ "role_id 3 lacks posts.update"`,
+      codeExample: {
+        title: "Overrides, auditing and reasons",
+        code: `<?php
+// app/Providers/AppServiceProvider.php
+
+use App\\Models\\User;
+use Illuminate\\Auth\\Access\\Response;
+use Illuminate\\Support\\Facades\\Gate;
+use Illuminate\\Support\\Facades\\Log;
+
+public function boot(): void
+{
+    // ---------- before: grant, or say nothing ----------
+
+    Gate::before(function (User $user, string $ability) {
+        if ($user->is_super_admin) {
+            return true;
+        }
+
+        // Returning nothing (null) lets the normal check run.
+        // ❌ return false;  would deny everything, for everybody.
+    });
+
+
+    // ---------- after: watch, do not decide ----------
+
+    Gate::after(function (User $user, string $ability, ?bool $result, $arguments) {
+        if ($result === false) {
+            Log::info('Authorization denied', [
+                'user_id' => $user->id,
+                'ability' => $ability,
+            ]);
+        }
+    });
+
+    // Recurring denials are either a wrong permission model
+    // or somebody probing. Both are worth seeing.
+
+
+    // ---------- Responses that carry a reason ----------
+
+    Gate::define('update-post', function (User $user, Post $post) {
+        return $user->id === $post->user_id
+            ? Response::allow()
+            : Response::deny('You do not own this post.');
+    });
+
+    Gate::define('publish-post', function (User $user, Post $post) {
+        if ($user->id !== $post->user_id) {
+            return Response::deny('You do not own this post.');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            return Response::deny('Verify your email before publishing.');
+        }
+
+        return Response::allow();
+    });
+
+    // A private resource: do not confirm that it exists.
+    Gate::define('view-invoice', function (User $user, Invoice $invoice) {
+        return $user->id === $invoice->user_id
+            ? Response::allow()
+            : Response::denyAsNotFound();
+    });
+}
+
+
+<?php
+// ---------- Reading the response ----------
+
+$response = Gate::inspect('update-post', $post);
+
+if ($response->allowed()) {
+    // ...
+} else {
+    return back()->withErrors(['post' => $response->message()]);
+}
+
+// And authorize() uses the message in the 403 automatically:
+Gate::authorize('update-post', $post);
+
+
+<?php
+// ---------- Where messages should NOT live ----------
+
+// ❌ The rule is in one file and the explanation in another.
+if (! Gate::allows('update-post', $post)) {
+    abort(403, 'You do not own this post.');
+}
+
+// ✓ Both in the gate.
+Gate::authorize('update-post', $post);`,
+      },
+      keyTakeaways: [
+        "<b>`Gate::before()` runs ahead of every check</b>, which is how a super admin bypasses everything in one place.",
+        "<b>Return `true` to grant and nothing at all otherwise</b>: any non-null return is the final answer.",
+        "<b>Returning `false` from a `before` hook denies everything for everybody.</b>",
+        "<b>`Gate::after()` runs once the decision is made</b>, and is for auditing, logging, metrics and debugging.",
+        "Treat `after()` as read-only, even though it can grant, so nothing surprising happens.",
+        "<b>Logging denials shows you a wrong permission model before the support tickets do.</b>",
+        "<b>`Response::allow()` and `Response::deny('reason')` attach a message to the decision.</b>",
+        "`Gate::inspect()` returns the response so you can read `allowed()` and `message()`.",
+        "<b>A 403 confirms the resource exists</b>, so `denyAsNotFound()` is right when it should stay secret.",
+        "<b>Denial messages say what is wrong, not why your system said no</b>, which would leak your permission model.",
+      ],
+      commonMistakes: [
+        "<b>Returning `false` from `Gate::before()`.</b> Every check for every user now fails.",
+        "<b>Repeating a super-admin check in every rule.</b> One of them will be forgotten.",
+        "<b>Granting from `after()`.</b> It works, and nobody reading the gate expects it.",
+        "<b>Putting the denial message in the controller.</b> The rule and the reason then drift apart.",
+        "<b>Returning 403 for a resource the user should not know exists.</b> The status itself is the leak.",
+      ],
+      quiz: [
+        {
+          question: "What should `Gate::before()` return when it has no opinion?",
+          options: ["`false`", "`true`", "Nothing, so it returns null", "An empty array"],
+          correctIndex: 2,
+          explanation: "Any non-null return is the final answer, so `false` would deny everything.",
+        },
+        {
+          question: "What is `Gate::after()` mainly for?",
+          options: [
+            "Granting access to admins",
+            "Auditing, logging, metrics and debugging, after the decision is made",
+            "Defining new gates",
+            "Caching results",
+          ],
+          correctIndex: 1,
+          explanation: "It can grant, but treating it as read-only avoids surprises.",
+        },
+        {
+          question: "What does `Response::deny('You do not own this post.')` add?",
+          options: [
+            "A redirect",
+            "A message that travels with the denial and is used in the 403",
+            "A log entry",
+            "A retry",
+          ],
+          correctIndex: 1,
+          explanation: "So the reason lives with the rule, not scattered in controllers.",
+        },
+        {
+          question: "Why would a policy return 404 rather than 403?",
+          options: [
+            "404 is faster",
+            "A 403 confirms the resource exists, which can be a leak on a private resource",
+            "403 is deprecated",
+            "It avoids logging",
+          ],
+          correctIndex: 1,
+          explanation: "On sequential ids, a 403 tells a stranger that record belongs to somebody.",
+        },
+      ],
+    },
+    {
+      id: "policies",
+      title: "Policies & the seven methods",
+      durationMinutes: 12,
+      explanation: "Gates scale badly for models, and this is the fix.\n\n---\n\n### 1. Basic — one class per model\n\nFour abilities on one model, written as gates:\n\n```text\nGate\n ├── view-post\n ├── update-post\n ├── delete-post\n └── restore-post\n```\n\nMultiply by eight models and `AppServiceProvider` is four hundred lines of closures that nothing groups.\n\n<b>A <i>policy</i></b> (a class holding the authorization rules for one model) gathers them:\n\n```text\nPostPolicy\n ├── view\n ├── create\n ├── update\n ├── delete\n └── restore\n```\n\n```bash\nphp artisan make:policy PostPolicy --model=Post\n```\n\n```text\napp/Policies/PostPolicy.php\n```\n\nThe `--model` flag stubs out the conventional methods, which saves you looking them up.\n\n```php\nclass PostPolicy\n{\n    public function view(User $user, Post $post): bool\n    {\n        return $post->published || $user->id === $post->user_id;\n    }\n\n    public function update(User $user, Post $post): bool\n    {\n        return $user->id === $post->user_id;\n    }\n\n    public function delete(User $user, Post $post): bool\n    {\n        return $user->id === $post->user_id;\n    }\n}\n```\n\n<b>The rules now live next to the resource they protect</b>, which means somebody wondering who can delete a post has one file to open.\n\n---\n\n### 2. Intermediate — the seven conventional methods\n\nLaravel's resource controllers and its authorization share a vocabulary:\n\n```text\nviewAny       the collection: may they see the list at all?\nview          one model\ncreate        a new one\nupdate        an existing one\ndelete        remove it\nrestore       bring back a soft-deleted one\nforceDelete   remove it permanently\n```\n\nThe signatures split into two groups, and the split is the thing to notice:\n\n```php\npublic function viewAny(User $user): bool          // no model yet\npublic function create(User $user): bool           // no model yet\n\npublic function view(User $user, Post $post): bool\npublic function update(User $user, Post $post): bool\npublic function delete(User $user, Post $post): bool\npublic function restore(User $user, Post $post): bool\npublic function forceDelete(User $user, Post $post): bool\n```\n\n<b>`viewAny` and `create` take no model, because there is not one yet.</b> You cannot ask \"may they create this post\" about a post that does not exist, so the rule can only be about the user.\n\nImplement only what you need. A missing method means that ability is denied, which is the safe default and occasionally a confusing one: <b>a check against a method you never wrote fails silently rather than erroring.</b>\n\n---\n\n### 3. Advanced — what belongs in a policy\n\nA policy is not a dumping ground for validation, and the boundary is worth getting right:\n\n```text\nPolicy                        Validation\n──────                        ──────────\nmay this user do this?        is this input acceptable?\nabout identity and            about the request body\n  ownership\n403                           422\n```\n\n\"Is the title under 255 characters\" is validation. \"Does this user own the post\" is authorization. A rule that would be the same for every user is almost always validation.\n\nA policy can take extra arguments after the model:\n\n```php\npublic function update(User $user, Post $post, bool $force = false): bool\n```\n\nand it can use a guest-friendly signature when a resource is publicly viewable:\n\n```php\npublic function view(?User $user, Post $post): bool\n{\n    return $post->published || $user?->id === $post->user_id;\n}\n```\n\n<b>Making `$user` nullable is what lets a guest pass a policy at all.</b> Without the `?`, Laravel denies guests before your method runs, which is right for `update` and wrong for `view` on a public blog.\n\nOne more habit worth forming now. <b>Keep policies free of queries where you can.</b> A policy method runs once per model, so a `$post->comments()->count()` inside `view()` is a query per row on any list page. If a rule needs related data, load it in the controller and let the policy read what is already there.",
+      diagram: `Why policies exist
+
+  Four abilities on one model, as gates:
+
+    Gate
+     ├── view-post
+     ├── update-post
+     ├── delete-post
+     └── restore-post
+
+  × eight models = 400 lines of closures with
+  nothing grouping them.
+
+  A policy gathers them:
+
+    PostPolicy
+     ├── view
+     ├── create
+     ├── update
+     ├── delete
+     └── restore
+
+  php artisan make:policy PostPolicy --model=Post
+
+  The rules now live next to the resource they protect.
+
+
+The seven conventional methods
+
+  viewAny       the collection: may they see the list?
+  view          one model
+  create        a new one
+  update        an existing one
+  delete        remove it
+  restore       bring back a soft-deleted one
+  forceDelete   remove it permanently
+
+
+  And the split that matters:
+
+    viewAny(User \$user)              no model yet
+    create(User \$user)               no model yet
+
+    view(User \$user, Post \$post)
+    update(User \$user, Post \$post)
+    delete(User \$user, Post \$post)
+    restore(User \$user, Post \$post)
+    forceDelete(User \$user, Post \$post)
+
+  You cannot ask "may they create THIS post" about a post
+  that does not exist, so the rule is only about the user.
+
+  ⚠️  A missing method DENIES. Safe, and occasionally
+      confusing: a check against a method you never wrote
+      fails silently rather than erroring.
+
+
+Policy or validation?
+
+  Policy                      Validation
+  ──────                      ──────────
+  may this user do this?      is this input acceptable?
+  identity and ownership      the request body
+  403                         422
+
+  A rule that would be the same for every user is
+  almost always validation.
+
+
+Guests
+
+  public function view(?User \$user, Post \$post): bool
+  {
+      return \$post->published || \$user?->id === \$post->user_id;
+  }
+
+  The ? is what lets a guest pass at all. Without it,
+  Laravel denies guests before your method runs — right
+  for update, wrong for view on a public blog.
+
+
+  Keep queries out of policies. A policy method runs once
+  per model, so a query inside view() is a query per row
+  on every list page.`,
+      codeExample: {
+        title: "A complete policy",
+        code: `<?php
+// php artisan make:policy PostPolicy --model=Post
+
+namespace App\\Policies;
+
+use App\\Models\\Post;
+use App\\Models\\User;
+use Illuminate\\Auth\\Access\\Response;
+
+class PostPolicy
+{
+    // ---------- No model yet ----------
+
+    public function viewAny(User $user): bool
+    {
+        // May they see the list at all?
+        return true;
+    }
+
+    public function create(User $user): bool
+    {
+        // Cannot be about a post: it does not exist yet.
+        return $user->hasVerifiedEmail();
+    }
+
+    // ---------- With a model ----------
+
+    // Nullable user, so guests can view a published post.
+    public function view(?User $user, Post $post): bool
+    {
+        return $post->published || $user?->id === $post->user_id;
+    }
+
+    public function update(User $user, Post $post): Response
+    {
+        return $user->id === $post->user_id
+            ? Response::allow()
+            : Response::deny('You do not own this post.');
+    }
+
+    public function delete(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id;
+    }
+
+    public function restore(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id;
+    }
+
+    public function forceDelete(User $user, Post $post): bool
+    {
+        // Permanent deletion, deliberately narrower.
+        return $user->is_admin;
+    }
+}
+
+
+<?php
+// ---------- Policy or validation? ----------
+
+class PostPolicy
+{
+    public function update(User $user, Post $post): bool
+    {
+        // ✓ Authorization: about who is asking.
+        return $user->id === $post->user_id;
+
+        // ❌ Validation: the same answer for every user,
+        //    and it belongs in a form request, as a 422.
+        // return strlen($post->title) < 255;
+    }
+}
+
+
+<?php
+// ---------- Keep queries out ----------
+
+// ❌ One query per post on every list page.
+public function view(User $user, Post $post): bool
+{
+    return $post->comments()->count() > 0 || $user->id === $post->user_id;
+}
+
+// ✓ Read what the controller already loaded.
+public function view(User $user, Post $post): bool
+{
+    return $post->comments_count > 0 || $user->id === $post->user_id;
+}
+
+// Controller:
+Post::withCount('comments')->paginate(20);
+
+
+<?php
+// ---------- Extra arguments ----------
+
+public function update(User $user, Post $post, bool $ignoreLock = false): bool
+{
+    if ($post->is_locked && ! $ignoreLock) {
+        return false;
+    }
+
+    return $user->id === $post->user_id;
+}
+
+// $user->can('update', [$post, true]);`,
+      },
+      keyTakeaways: [
+        "<b>A policy is a class holding the authorization rules for one model.</b>",
+        "It replaces four or five gates per model, so the rules live next to the resource they protect.",
+        "`php artisan make:policy PostPolicy --model=Post` stubs out the conventional methods.",
+        "<b>The seven conventional methods are `viewAny`, `view`, `create`, `update`, `delete`, `restore` and `forceDelete`.</b>",
+        "<b>`viewAny` and `create` take no model</b>, because there is not one yet, so the rule is only about the user.",
+        "<b>A missing policy method denies</b>, which is safe and silent, so a typo looks like a failing rule.",
+        "<b>A policy answers \"may this user\"; validation answers \"is this input acceptable\"</b>, and they are 403 and 422.",
+        "A rule with the same answer for every user is almost always validation.",
+        "<b>Make `$user` nullable to let guests pass a policy</b>, which is what a public blog's `view` needs.",
+        "<b>Keep queries out of policies</b>, because a policy method runs once per model on every list page.",
+      ],
+      commonMistakes: [
+        "<b>Giving `viewAny` or `create` a model parameter.</b> There is no model at that point.",
+        "<b>Misspelling a method name.</b> The ability is silently denied rather than erroring.",
+        "<b>Putting validation in a policy.</b> Input rules belong in a form request, as a 422.",
+        "<b>Forgetting the `?` on `$user` for a publicly viewable resource.</b> Guests are denied before your method runs.",
+        "<b>Querying inside a policy method.</b> On a list of fifty, that is fifty extra queries.",
+      ],
+      quiz: [
+        {
+          question: "Why does `create()` take no model?",
+          options: [
+            "Laravel does not support it",
+            "The model does not exist yet, so the rule can only be about the user",
+            "Creation is always allowed",
+            "It takes the request instead",
+          ],
+          correctIndex: 1,
+          explanation: "The same is true of `viewAny`.",
+        },
+        {
+          question: "What happens if you check an ability whose policy method does not exist?",
+          options: [
+            "It is allowed",
+            "It is denied, silently",
+            "An exception is thrown",
+            "It falls back to a gate of the same name",
+          ],
+          correctIndex: 1,
+          explanation: "Safe, and it makes a typo look like a failing rule.",
+        },
+        {
+          question: "Which of these belongs in validation rather than a policy?",
+          options: [
+            "Does this user own the post?",
+            "Is the title under 255 characters?",
+            "Is this user an admin?",
+            "Has this user verified their email?",
+          ],
+          correctIndex: 1,
+          explanation: "The answer is the same for every user, so it is not authorization.",
+        },
+        {
+          question: "How do you let a guest pass a policy method?",
+          options: [
+            "Register it as a gate instead",
+            "Make the `$user` parameter nullable with `?User $user`",
+            "Return true by default",
+            "Guests can never pass a policy",
+          ],
+          correctIndex: 1,
+          explanation: "Without the `?`, Laravel denies guests before your method runs.",
+        },
+      ],
+    },
+    {
+      id: "discovery-and-checking",
+      title: "Policy discovery & the ways to check",
+      durationMinutes: 11,
+      explanation: "You wrote a policy. Nothing yet connects it to the model, and nothing yet calls it.\n\n---\n\n### 1. Basic — Laravel finds it for you\n\n```text\napp/Models/Post.php\n        ↓\napp/Policies/PostPolicy.php\n```\n\n<b>Auto-discovery</b> matches a model to a policy by name and location: the model's name plus `Policy`, in the `Policies` directory alongside `Models`. Follow the convention and there is nothing to register.\n\nWhen the convention does not fit, say so explicitly:\n\n```php\nGate::policy(Post::class, PostPolicy::class);\n```\n\nor with an attribute on the model, which is more visible:\n\n```php\n#[UsePolicy(PostPolicy::class)]\nclass Post extends Model\n{\n}\n```\n\nReach for registration when your models live somewhere unusual, when a package's model needs your policy, or when one policy covers several models. <b>Otherwise leave it: an unnecessary registration is a line that can go stale.</b>\n\nThe symptom of discovery not working is worth recognising, because it looks like a broken rule: every check returns denied, because Laravel found no policy and defaults to no.\n\n---\n\n### 2. Intermediate — the same check, three ways\n\nOnce discovered, a policy is reached through the same API as a gate:\n\n```php\nGate::allows('update', $post);\n```\n\n```text\nGate::allows('update', $post)\n        ↓\nthe argument is a Post\n        ↓\nPostPolicy\n        ↓\nupdate($user, $post)\n```\n\n<b>The model argument is what tells Laravel to look for a policy.</b> `Gate::allows('update')` with no model looks for a gate named `update`; with a `Post`, it looks for `PostPolicy::update()`.\n\nThe user object can be asked directly, which usually reads better:\n\n```php\nif ($user->can('update', $post)) { }\nif ($user->cannot('update', $post)) { }\n\n$request->user()->can('update', $post);\n```\n\n```text\n\"Can this user update this post?\"\n$user->can('update', $post)\n```\n\nFor abilities with no model, name the class:\n\n```php\n$user->can('create', Post::class);\n$user->can('viewAny', Post::class);\n```\n\n<b>That is the one people forget.</b> `$user->can('create')` finds nothing, because without an argument Laravel has no idea which policy you meant.\n\n---\n\n### 3. Advanced — choosing between them\n\n```text\nGate::allows('update', $post)     a boolean, from anywhere\n$user->can('update', $post)       a boolean, reads as a sentence\nGate::authorize('update', $post)  throws, so the request ends\n$this->authorize('update', $post) the same, inside a controller\n```\n\nThe first two are identical in effect. Prefer `$user->can()` when you have the user, because the code says what it means; use `Gate::` when you do not, such as in a service with no request.\n\nAnd the rule that decides between boolean and throwing:\n\n```text\ndeciding what to render     →  a boolean\nguarding an action          →  authorize()\n```\n\nA sidebar link is a boolean. A `PUT /posts/1` is `authorize()`, because there is nothing sensible to do with `false` except stop.\n\nOne last piece of vocabulary. `Gate::forUser($other)->can(...)` checks on somebody else's behalf, which is what an admin previewing a customer's view needs.\n\nAnd the thing worth stating plainly, because it is the whole point of the day: <b>a check in Blade is not authorization.</b> Hiding the edit button stops nobody from sending the request. The template check is politeness; the controller check is security. You need both, and only one of them protects anything.",
+      diagram: `Discovery
+
+  app/Models/Post.php
+          ↓
+  app/Policies/PostPolicy.php
+
+  Model name + Policy, in Policies alongside Models.
+  Follow the convention and there is nothing to register.
+
+  When it does not fit:
+
+    Gate::policy(Post::class, PostPolicy::class);
+
+    #[UsePolicy(PostPolicy::class)]
+    class Post extends Model {}
+
+  Register when models live somewhere unusual, when a
+  package's model needs your policy, or when one policy
+  covers several models. Otherwise leave it.
+
+  ⚠️  Discovery failing looks like a broken rule: every
+      check is denied, because no policy was found and
+      the default is no.
+
+
+The model argument is the routing
+
+  Gate::allows('update', \$post)
+          ↓
+  the argument is a Post
+          ↓
+  PostPolicy::update(\$user, \$post)
+
+  Gate::allows('update')          → looks for a GATE
+  Gate::allows('update', \$post)   → looks for a POLICY
+
+  For abilities with no model, name the class:
+
+    \$user->can('create', Post::class)
+    \$user->can('viewAny', Post::class)
+
+  \$user->can('create') finds nothing. Laravel has no
+  idea which policy you meant.
+
+
+Four ways, two behaviours
+
+  Gate::allows('update', \$post)      boolean, from anywhere
+  \$user->can('update', \$post)        boolean, reads as a sentence
+  Gate::authorize('update', \$post)   THROWS → 403
+  \$this->authorize('update', \$post)  the same, in a controller
+
+  deciding what to RENDER   →  a boolean
+  guarding an ACTION        →  authorize()
+
+  A sidebar link is a boolean. A PUT /posts/1 is
+  authorize(), because there is nothing to do with
+  false except stop.
+
+  Gate::forUser(\$other)->can(...)   on somebody else's behalf
+
+
+  And the point of the whole day:
+
+    A check in Blade is NOT authorization.
+
+  Hiding the edit button stops nobody from sending the
+  request. The template check is politeness. The
+  controller check is security. You need both, and only
+  one of them protects anything.`,
+      codeExample: {
+        title: "Connecting the policy, and calling it",
+        code: `<?php
+// ---------- Discovery: nothing to do ----------
+
+// app/Models/Post.php      →  app/Policies/PostPolicy.php
+// Laravel finds it by name and location.
+
+
+// ---------- Registration, when the convention does not fit ----------
+
+// app/Providers/AppServiceProvider.php
+use Illuminate\\Support\\Facades\\Gate;
+
+public function boot(): void
+{
+    Gate::policy(Post::class, PostPolicy::class);
+}
+
+// Or on the model, which is more visible:
+use Illuminate\\Database\\Eloquent\\Attributes\\UsePolicy;
+
+#[UsePolicy(PostPolicy::class)]
+class Post extends Model
+{
+}
+
+
+<?php
+// ---------- Checking ----------
+
+use Illuminate\\Support\\Facades\\Gate;
+
+// The model argument is what sends this to a policy.
+Gate::allows('update', $post);      // PostPolicy::update()
+Gate::allows('access-admin');       // a gate, no model
+
+// Reads better when you have the user:
+$user->can('update', $post);
+$user->cannot('update', $post);
+$request->user()->can('delete', $post);
+
+// Abilities with no model: name the class.
+$user->can('create', Post::class);
+$user->can('viewAny', Post::class);
+
+// ❌ Finds nothing: Laravel cannot tell which policy.
+$user->can('create');
+
+// On somebody else's behalf.
+Gate::forUser($customer)->can('view', $invoice);
+
+
+<?php
+// ---------- In a controller ----------
+
+class PostController extends Controller
+{
+    public function index(Request $request)
+    {
+        Gate::authorize('viewAny', Post::class);
+
+        // A boolean, because this decides what to render.
+        return view('posts.index', [
+            'posts'     => Post::paginate(20),
+            'canCreate' => $request->user()->can('create', Post::class),
+        ]);
+    }
+
+    public function update(Request $request, Post $post)
+    {
+        // Throws when denied. There is nothing else to do here.
+        Gate::authorize('update', $post);
+
+        $post->update($request->validated());
+
+        return redirect()->route('posts.show', $post);
+    }
+}
+
+
+<?php
+// ---------- The point of the day ----------
+
+// In a view: politeness. It hides a button.
+// @can('update', $post) ... @endcan
+
+// In the controller: security. It stops the request.
+Gate::authorize('update', $post);
+
+// Without the second one, anybody can send
+// PUT /posts/1 with curl and it works.`,
+      },
+      keyTakeaways: [
+        "<b>Laravel discovers a policy by name and location</b>: `Post` finds `PostPolicy` in `app/Policies`.",
+        "<b>Register manually with `Gate::policy()` or `#[UsePolicy]`</b> when the convention does not fit.",
+        "<b>Discovery failing looks like a broken rule</b>, because a missing policy means every check is denied.",
+        "<b>The model argument is what sends a check to a policy</b> rather than to a gate of the same name.",
+        "<b>Abilities with no model need the class name</b>, as in `$user->can('create', Post::class)`.",
+        "`$user->can()` and `Gate::allows()` are the same check, and `can()` usually reads better.",
+        "<b>Use a boolean when deciding what to render, and `authorize()` when guarding an action.</b>",
+        "`Gate::forUser($other)` checks on somebody else's behalf.",
+        "<b>A check in Blade is not authorization.</b> Hiding a button stops nobody from sending the request.",
+        "<b>The template check is politeness; the controller check is security.</b> You need both.",
+      ],
+      commonMistakes: [
+        "<b>Only checking in the view.</b> The route still accepts the request from anyone who sends it.",
+        "<b>Calling `$user->can('create')` with no class.</b> Laravel cannot tell which policy you meant.",
+        "<b>Putting a policy somewhere discovery cannot find it.</b> Every check silently denies.",
+        "<b>Registering a policy that discovery already handles.</b> One more line that can go stale.",
+        "<b>Using `allows()` in a controller and forgetting to abort.</b> The check runs and nothing happens.",
+      ],
+      quiz: [
+        {
+          question: "How does Laravel find `PostPolicy` for the `Post` model?",
+          options: [
+            "It must be registered in a provider",
+            "By convention: the model name plus `Policy`, in `app/Policies`",
+            "From a config file",
+            "From the database",
+          ],
+          correctIndex: 1,
+          explanation: "Register manually only when the convention does not fit.",
+        },
+        {
+          question: "What sends `Gate::allows('update', $post)` to a policy rather than a gate?",
+          options: [
+            "The ability name",
+            "The model passed as an argument",
+            "A config setting",
+            "The controller it is called from",
+          ],
+          correctIndex: 1,
+          explanation: "With no argument, Laravel looks for a gate named `update`.",
+        },
+        {
+          question: "How do you check an ability that has no model, such as `create`?",
+          options: [
+            "`$user->can('create')`",
+            "`$user->can('create', Post::class)`",
+            "`Gate::define('create')`",
+            "You cannot",
+          ],
+          correctIndex: 1,
+          explanation: "The class name tells Laravel which policy to use.",
+        },
+        {
+          question: "Is `@can('update', $post)` in a view enough to protect the update route?",
+          options: [
+            "Yes",
+            "No; it only hides the button, and the request can still be sent directly",
+            "Yes, if the route is named",
+            "Only for authenticated users",
+          ],
+          correctIndex: 1,
+          explanation: "The template check is politeness; the controller check is security.",
+        },
+      ],
+    },
+    {
+      id: "authorize-and-the-attribute",
+      title: "authorize(), and the #[Authorize] attribute",
+      durationMinutes: 11,
+      explanation: "The same rule, expressed three ways, each one further from the code that does the work.\n\n---\n\n### 1. Basic — `authorize()` in the controller\n\n```php\npublic function update(Request $request, Post $post)\n{\n    $this->authorize('update', $post);\n\n    $post->update($request->validated());\n}\n```\n\n```text\nallowed  →  continue\ndenied   →  AuthorizationException  →  403\n```\n\nCompare it with the version people write first:\n\n```php\nif (! $request->user()->can('update', $post)) {\n    abort(403);\n}\n```\n\nSame behaviour, more line noise, and one more place to get the negation backwards. In a controller, <b>`authorize()` is the default choice</b>, because a denial there has no sensible handling except stopping.\n\nIt is also available as a helper anywhere:\n\n```php\nGate::authorize('update', $post);\n```\n\nWhich matters in a route closure, a job, or an action class that has no controller around it.\n\n---\n\n### 2. Intermediate — the three styles, side by side\n\n```php\nGate::allows('update', $post);        // boolean\n$user->can('update', $post);          // boolean\n$this->authorize('update', $post);    // throws\n```\n\nThe rule stays identical in all three. What changes is what happens when the answer is no:\n\n```text\nboolean       you decide what to do next\nauthorize()   the request ends with a 403\n```\n\nWhich is why the choice follows the situation rather than taste:\n\n```text\nrendering a menu item        →  can()\nfiltering a list             →  can()\nreturning JSON about state   →  can()\nguarding a write             →  authorize()\nguarding a read of one       →  authorize()\n  private record\n```\n\nFor a resource controller there is a shortcut that wires all seven policy methods to the seven actions at once:\n\n```php\npublic function __construct()\n{\n    $this->authorizeResource(Post::class, 'post');\n}\n```\n\n<b>`index` checks `viewAny`, `show` checks `view`, `store` checks `create`, and so on.</b> One line instead of seven, and impossible to forget one.\n\n---\n\n### 3. Advanced — moving it out of the method\n\nLaravel 13 adds an attribute, so authorization becomes part of the method's declaration rather than its first statement:\n\n```php\n#[Authorize('update', 'post')]\npublic function update(Request $request, Post $post)\n{\n    $post->update($request->validated());\n}\n```\n\n```text\nHTTP request\n     ↓\n#[Authorize(...)]\n     ↓\nPostPolicy::update()\n     ↓\nallowed → the method runs\ndenied  → 403, the method never runs\n```\n\nThe second argument names the route parameter to authorize against, matching your route's binding.\n\nWhat this buys you is not fewer characters. <b>It is that the method body contains only the operation.</b> Reading `update()`, you see an update. The authorization is stated where the signature is, alongside the route model binding it depends on, and it cannot be lost in a refactor that rewrites the body.\n\nAnd the point the exercise at the end of this day makes:\n\n```text\nVERSION 1   Gate         →  update-post  →  the rule\nVERSION 2   Policy       →  PostPolicy::update()  →  the rule\nVERSION 3   #[Authorize] →  PostPolicy::update()  →  the rule\n```\n\n<b>The rule never changed.</b> `$user->id === $post->user_id` is the same line in all three. What moved is where it is declared and how it is invoked.\n\nThat is worth holding onto, because it is the difference between learning five Laravel APIs and understanding one system with several doors into it. When you meet middleware and Blade directives in the next lesson, they are two more doors, not two more concepts.",
+      diagram: `authorize() in a controller
+
+  \$this->authorize('update', \$post);
+
+    allowed  →  continue
+    denied   →  AuthorizationException  →  403
+
+  versus the version people write first:
+
+    if (! \$request->user()->can('update', \$post)) {
+        abort(403);
+    }
+
+  Same behaviour, more noise, one more place to get
+  the negation backwards.
+
+  Gate::authorize(...) works outside controllers too:
+  route closures, jobs, action classes.
+
+
+The three styles
+
+  Gate::allows('update', \$post)       boolean
+  \$user->can('update', \$post)         boolean
+  \$this->authorize('update', \$post)   throws
+
+  The RULE is identical. Only the failure differs.
+
+    boolean       you decide what to do next
+    authorize()   the request ends with a 403
+
+  rendering a menu item       →  can()
+  filtering a list            →  can()
+  guarding a write            →  authorize()
+  reading one private record  →  authorize()
+
+
+A resource controller, in one line
+
+  \$this->authorizeResource(Post::class, 'post');
+
+    index   → viewAny
+    show    → view
+    create  → create
+    store   → create
+    edit    → update
+    update  → update
+    destroy → delete
+
+  Seven checks, impossible to forget one.
+
+
+Laravel 13: out of the method entirely
+
+  #[Authorize('update', 'post')]
+  public function update(Request \$request, Post \$post)
+  {
+      \$post->update(\$request->validated());
+  }
+
+  HTTP request
+       ↓
+  #[Authorize(...)]
+       ↓
+  PostPolicy::update()
+       ↓
+  allowed → the method runs
+  denied  → 403, the method never runs
+
+  Not fewer characters. The method body now contains
+  only the operation, and the authorization sits with
+  the signature where a refactor cannot lose it.
+
+
+The lesson of all three
+
+  VERSION 1   Gate          →  update-post           →  the rule
+  VERSION 2   Policy        →  PostPolicy::update()  →  the rule
+  VERSION 3   #[Authorize]  →  PostPolicy::update()  →  the rule
+
+  \$user->id === \$post->user_id is the same line in all
+  three. Only where it is declared changed.
+
+  Five APIs, or one system with several doors into it.`,
+      codeExample: {
+        title: "The same rule, three ways",
+        code: `<?php
+// ---------- Version 1: a gate ----------
+
+// AppServiceProvider
+Gate::define('update-post', function (User $user, Post $post) {
+    return $user->id === $post->user_id;
+});
+
+// Controller
+public function update(Request $request, Post $post)
+{
+    Gate::authorize('update-post', $post);
+
+    $post->update($request->validated());
+}
+
+
+<?php
+// ---------- Version 2: a policy ----------
+
+// app/Policies/PostPolicy.php
+public function update(User $user, Post $post): bool
+{
+    return $user->id === $post->user_id;   // the same line
+}
+
+// Controller
+public function update(Request $request, Post $post)
+{
+    $this->authorize('update', $post);
+
+    $post->update($request->validated());
+}
+
+
+<?php
+// ---------- Version 3: the attribute ----------
+
+use Illuminate\\Auth\\Access\\Attributes\\Authorize;
+
+#[Authorize('update', 'post')]
+public function update(Request $request, Post $post)
+{
+    // Only the operation. Nothing else.
+    $post->update($request->validated());
+}
+
+// The rule never changed. Only where it is declared.
+
+
+<?php
+// ---------- A whole resource controller ----------
+
+class PostController extends Controller
+{
+    public function __construct()
+    {
+        // Wires all seven policy methods to the seven actions.
+        $this->authorizeResource(Post::class, 'post');
+    }
+
+    public function index()   { /* viewAny */ }
+    public function create()  { /* create  */ }
+    public function store()   { /* create  */ }
+    public function show(Post $post)    { /* view   */ }
+    public function edit(Post $post)    { /* update */ }
+    public function update(Post $post)  { /* update */ }
+    public function destroy(Post $post) { /* delete */ }
+}
+
+
+<?php
+// ---------- Choosing between boolean and throwing ----------
+
+public function index(Request $request)
+{
+    Gate::authorize('viewAny', Post::class);   // guard the action
+
+    return view('posts.index', [
+        'posts' => Post::paginate(20),
+
+        // Booleans, because these decide what to render.
+        'canCreate' => $request->user()->can('create', Post::class),
+    ]);
+}
+
+// Outside a controller, where $this->authorize() does not exist:
+Route::delete('/posts/{post}', function (Post $post) {
+    Gate::authorize('delete', $post);
+
+    $post->delete();
+});`,
+      },
+      keyTakeaways: [
+        "<b>`$this->authorize('update', $post)` throws when denied</b>, which Laravel turns into a 403.",
+        "It replaces `if (! $user->can(...)) abort(403)` with one line and no negation to get wrong.",
+        "<b>`Gate::authorize()` works outside controllers</b>, in route closures, jobs and action classes.",
+        "<b>The three styles share one rule and differ only in what happens on failure.</b>",
+        "<b>Use a boolean for rendering decisions and `authorize()` for guarding actions.</b>",
+        "<b>`authorizeResource(Post::class, 'post')` wires all seven policy methods to a resource controller</b> in one line.",
+        "<b>Laravel 13's `#[Authorize]` attribute moves the check out of the method body</b> and onto its declaration.",
+        "The gain is that the method contains only the operation, and a refactor cannot lose the check.",
+        "<b>Across gate, policy and attribute, the rule itself never changes</b>: only where it is declared and how it is invoked.",
+        "<b>These are doors into one authorization system, not separate features.</b>",
+      ],
+      commonMistakes: [
+        "<b>Writing `if (! $user->can(...)) abort(403)` everywhere.</b> `authorize()` says the same thing once.",
+        "<b>Calling `$this->authorize()` outside a controller.</b> Use `Gate::authorize()` there.",
+        "<b>Using a boolean check to guard a write.</b> There is nothing sensible to do with `false` except stop.",
+        "<b>Writing seven `authorize()` calls in a resource controller.</b> `authorizeResource()` does it in one, and cannot miss one.",
+        "<b>Naming the wrong route parameter in `#[Authorize]`.</b> It has to match the binding in the route.",
+      ],
+      quiz: [
+        {
+          question: "What does `$this->authorize('update', $post)` do when denied?",
+          options: [
+            "Returns false",
+            "Throws `AuthorizationException`, which Laravel turns into a 403",
+            "Redirects to login",
+            "Logs a warning",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why it needs no `if` and no `abort()`.",
+        },
+        {
+          question: "What does `authorizeResource(Post::class, 'post')` do?",
+          options: [
+            "Registers the policy",
+            "Wires each resource controller action to its matching policy method",
+            "Creates the policy file",
+            "Adds middleware to the routes",
+          ],
+          correctIndex: 1,
+          explanation: "`index` to `viewAny`, `show` to `view`, and so on.",
+        },
+        {
+          question: "What does `#[Authorize('update', 'post')]` change?",
+          options: [
+            "The authorization rule",
+            "Where the check is declared: on the method rather than inside it",
+            "The policy used",
+            "The HTTP status returned",
+          ],
+          correctIndex: 1,
+          explanation: "The method body is left with only the operation.",
+        },
+        {
+          question: "Moving from a gate to a policy to the attribute, what changed?",
+          options: [
+            "The rule became stricter",
+            "Nothing about the rule; only where it is declared and how it is invoked",
+            "The user object",
+            "The HTTP status",
+          ],
+          correctIndex: 1,
+          explanation: "Several doors into one system, not several systems.",
+        },
+      ],
+    },
+    {
+      id: "blade-and-middleware",
+      title: "Blade directives & the can middleware",
+      durationMinutes: 11,
+      explanation: "Two more doors into the same system: one for what the user sees, one for what the request reaches.\n\n---\n\n### 1. Basic — Blade\n\n```blade\n@can('update', $post)\n    <a href=\"/posts/{{ $post->id }}/edit\">Edit</a>\n@endcan\n\n@cannot('update', $post)\n    <p>You cannot edit this post.</p>\n@endcannot\n\n@canany(['update', 'delete'], $post)\n    <div class=\"actions\">...</div>\n@endcanany\n```\n\n`@canany` means <i>any</i> of the listed abilities, which is what an actions menu needs: show the container if there is at least one thing to put in it.\n\n`@can` also takes an else branch, which saves writing the check twice, inverted:\n\n```blade\n@can('update', $post)\n    <a href=\"...\">Edit</a>\n@elsecan('view', $post)\n    <a href=\"...\">View</a>\n@endcan\n```\n\nThey run the same policies as everything else, so a `@can` and an `authorize()` cannot disagree.\n\n<b>And the warning from the last lesson, because this is where it bites.</b> These directives decide what is <i>rendered</i>. They do not protect anything. A user who never sees the edit button can still send `PUT /posts/1`, and if the controller does not check, it works.\n\n```text\n@can          the button is hidden\nauthorize()   the request is refused\n```\n\nOne is a courtesy, the other is the lock. Write both, and never let the template be the only one.\n\n---\n\n### 2. Intermediate — the `can` middleware\n\nSometimes the check should happen before the controller runs at all:\n\n```php\nRoute::put('/posts/{post}', [PostController::class, 'update'])\n    ->middleware('can:update,post');\n```\n\n```text\nPUT /posts/123\n       ↓\ncan:update,post\n       ↓\nresolve the route parameter {post}  →  Post #123\n       ↓\nPostPolicy::update($user, $post)\n       ↓\n403, or on to the controller\n```\n\n<b>The second argument is the route parameter name, not a variable.</b> `can:update,post` means \"the `{post}` in the URL\", which Laravel resolves through route model binding before running the check.\n\nFor abilities with no model, pass the class:\n\n```php\n->middleware('can:create,App\\Models\\Post');\n```\n\nThere is a fluent version that reads better and avoids the string:\n\n```php\nRoute::put('/posts/{post}', ...)->can('update', 'post');\n```\n\nAnd it works on a group, which is where it earns its place:\n\n```php\nRoute::middleware('can:access-admin')->prefix('admin')->group(function () {\n    // every route inside\n});\n```\n\n---\n\n### 3. Advanced — choosing the door\n\nFour ways to reach the same policy method:\n\n```text\n@can              hide UI                    not security\ncan: middleware   before the controller      whole routes, groups\nauthorize()       inside the controller      needs data first\n#[Authorize]      on the method              the modern default\n```\n\nThe question that decides it: <b>does the check need anything the controller has to work out?</b>\n\n```text\nno   →  middleware or the attribute\nyes  →  authorize() inside the method\n```\n\nA route protected by \"can this user update this post\" needs only the model, which route binding already gives you, so it belongs on the route. A check that depends on the request body, such as \"can this user move the post into <i>that</i> category\", needs the request read first, so it belongs in the method.\n\nTwo practical notes.\n\n<b>Middleware runs before validation.</b> An unauthorized request with an invalid body gets a 403 rather than a 422, which is the right order: there is no point telling somebody their input is malformed when they were never allowed to send it.\n\n<b>And a group-level `can:` is worth more than it looks.</b> Twenty admin routes each carrying their own check is twenty chances to miss one; one check on the group is a single place to read and a single place to be wrong.\n\nThe pattern most applications settle on is: a coarse check on the group, a precise check per action, and Blade directives so the interface never offers something that will be refused.",
+      diagram: `Blade
+
+  @can('update', \$post)      ... @endcan
+  @cannot('update', \$post)   ... @endcannot
+  @canany(['update','delete'], \$post) ... @endcanany
+  @can(...) ... @elsecan(...) ... @endcan
+
+  canany = ANY of these, which is what an actions
+  menu needs: show the container if there is at least
+  one thing to put in it.
+
+  Same policies as everywhere else, so a @can and an
+  authorize() cannot disagree.
+
+  ⚠️  @can          the button is hidden
+      authorize()   the request is REFUSED
+
+      A user who never sees the button can still send
+      PUT /posts/1. One is a courtesy, the other is
+      the lock.
+
+
+The can middleware
+
+  ->middleware('can:update,post')
+
+  PUT /posts/123
+         ↓
+  can:update,post
+         ↓
+  resolve {post} via route binding → Post #123
+         ↓
+  PostPolicy::update(\$user, \$post)
+         ↓
+  403, or on to the controller
+
+  The second argument is the ROUTE PARAMETER NAME,
+  not a variable.
+
+  No model:  'can:create,App\\Models\\Post'
+  Fluent:    ->can('update', 'post')
+  On a group: Route::middleware('can:access-admin')->group(...)
+
+
+Choosing the door
+
+  @can              hide UI                 NOT security
+  can: middleware   before the controller   whole routes, groups
+  authorize()       inside the controller   needs data first
+  #[Authorize]      on the method           the modern default
+
+  Does the check need something the controller
+  must work out first?
+
+    no   →  middleware or the attribute
+    yes  →  authorize() inside the method
+
+  "Can this user update this post" needs only the model,
+  which route binding gives you → put it on the route.
+
+  "Can this user move it into THAT category" needs the
+  request body → put it in the method.
+
+
+  Middleware runs BEFORE validation, so an unauthorized
+  request with a bad body gets 403, not 422. Right order:
+  no point critiquing input they were never allowed to send.
+
+  A group-level can: is worth more than it looks. Twenty
+  admin routes each carrying their own check is twenty
+  chances to miss one.
+
+  Most applications settle on: a coarse check on the
+  group, a precise check per action, and Blade directives
+  so the UI never offers what will be refused.`,
+      codeExample: {
+        title: "Blade, middleware, and where each belongs",
+        code: `{{-- resources/views/posts/show.blade.php --}}
+
+<article>
+    <h1>{{ $post->title }}</h1>
+    <p>{{ $post->body }}</p>
+</article>
+
+@can('update', $post)
+    <a href="{{ route('posts.edit', $post) }}">Edit</a>
+@endcan
+
+@cannot('update', $post)
+    <p class="muted">You cannot edit this post.</p>
+@endcannot
+
+{{-- Show the actions box if there is at least one action --}}
+@can('update', $post)
+    <a href="/posts/{{ $post->id }}/edit">Edit</a>
+@elsecan('view', $post)
+    <a href="/posts/{{ $post->id }}">View</a>
+@endcan
+
+@canany(['update', 'delete'], $post)
+    <div class="actions">
+        @can('update', $post)
+            <a href="{{ route('posts.edit', $post) }}">Edit</a>
+        @endcan
+
+        @can('delete', $post)
+            <form method="POST" action="{{ route('posts.destroy', $post) }}">
+                @csrf @method('DELETE')
+                <button>Delete</button>
+            </form>
+        @endcan
+    </div>
+@endcanany
+
+{{-- An ability with no model --}}
+@can('create', App\Models\Post::class)
+    <a href="{{ route('posts.create') }}">New post</a>
+@endcan
 
 
 <?php
 // ---------- routes/web.php ----------
 
+use App\\Http\\Controllers\\PostController;
 use Illuminate\\Support\\Facades\\Route;
 
-// Guests only: a logged-in user visiting /login is a bug report.
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'create']);
-    Route::post('/login', [LoginController::class, 'store'])
-        ->middleware('throttle:5,1');          // 5 attempts a minute
-    Route::get('/register', [RegisterController::class, 'create']);
-});
+// The second argument is the ROUTE PARAMETER name.
+Route::put('/posts/{post}', [PostController::class, 'update'])
+    ->middleware('can:update,post');
 
-// Authenticated only.
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::get('/profile', [ProfileController::class, 'edit']);
+// The fluent version, without the string.
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])
+    ->can('delete', 'post');
 
-    // Sensitive: ask for the password again.
-    Route::middleware('password.confirm')->group(function () {
-        Route::get('/settings/security', [SecurityController::class, 'edit']);
-        Route::put('/settings/password', [PasswordController::class, 'update']);
-        Route::delete('/account', [AccountController::class, 'destroy']);
+// No model: pass the class.
+Route::post('/posts', [PostController::class, 'store'])
+    ->middleware('can:create,App\\Models\\Post');
+
+// A coarse check on a whole group: one place to read,
+// one place to be wrong.
+Route::middleware(['auth', 'can:access-admin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::get('/reports', [ReportController::class, 'index']);
     });
-
-    Route::post('/logout', [LoginController::class, 'destroy']);
-});
-
-// A named guard.
-Route::middleware('auth:admin')->prefix('admin')->group(function () {
-    // ...
-});
 
 
 <?php
-// ---------- What auth middleware does NOT do ----------
+// ---------- When the check needs the request ----------
 
-Route::get('/posts/{post}/edit', function (Post $post) {
-    // Any authenticated user reaches this, including one
-    // editing somebody else's post.
-    return view('posts.edit', compact('post'));
-})->middleware('auth');
+class PostController extends Controller
+{
+    // Only the model is needed, so it goes on the route.
+    #[Authorize('update', 'post')]
+    public function update(Request $request, Post $post)
+    {
+        $post->update($request->validated());
+    }
 
-// "Can this user edit THIS post?" is authorization:
-// policies, gates and the can middleware. A separate day.`,
+    // This one depends on the request body, so it has to
+    // happen after the controller has read it.
+    public function move(Request $request, Post $post)
+    {
+        $this->authorize('update', $post);
+
+        $category = Category::findOrFail($request->category_id);
+
+        // Not knowable from the route alone.
+        $this->authorize('addPost', $category);
+
+        $post->update(['category_id' => $category->id]);
+    }
+}
+
+
+{{-- And the thing to remember --}}
+{{-- @can hides the button. It does not stop the request. --}}
+{{-- Every guarded action needs a check on the server too. --}}`,
       },
       keyTakeaways: [
-        "<b>`Auth::user()` and `$request->user()` return the authenticated model, or `null` for a guest.</b>",
-        "Prefer `$request->user()` in a controller, so the dependency is visible in the signature.",
-        "<b>`Auth::id()` gives the id without fetching the user</b>, which matters inside loops and queries.",
-        "`Auth::check()`, `Auth::guest()` and Blade's `@auth` / `@guest` cover the conditional cases.",
-        "<b>`Auth::user()->name` is fatal on a public page</b>, so use `?->` or check first.",
-        "<b>The `auth` middleware redirects guests to login and remembers where they were going.</b>",
-        "<b>`auth` answers \"is anybody logged in\", not \"may this person do this\"</b>, which is authorization.",
-        "<b>`password.confirm` asks for the password again before sensitive actions</b>, holding for about three hours.",
-        "The threat it addresses is an unattended logged-in browser, not a stranger.",
-        "<b>Rate limit the login route</b>, and use the `guest` middleware so logged-in users are sent away from it.",
+        "<b>`@can`, `@cannot` and `@canany` run the same policies as the rest of the system.</b>",
+        "`@canany` passes when any listed ability is allowed, which suits an actions menu.",
+        "<b>Blade directives decide what is rendered, not what is permitted.</b>",
+        "A user who never sees the edit button can still send the request, so the server must check too.",
+        "<b>`can:update,post` middleware runs the policy before the controller</b>, resolving the route parameter first.",
+        "<b>The second argument is the route parameter name</b>, not a variable, and a class name is used for model-less abilities.",
+        "`->can('update', 'post')` is the fluent form, and `can:` works on a whole route group.",
+        "<b>Put the check on the route when it needs only the model, and in the method when it needs the request.</b>",
+        "<b>Middleware runs before validation</b>, so an unauthorized request gets a 403 rather than a 422.",
+        "<b>A group-level check is one place to read and one place to be wrong</b>, instead of twenty chances to forget.",
       ],
       commonMistakes: [
-        "<b>Calling `Auth::user()->name` on a page guests can see.</b> `null` has no properties.",
-        "<b>Treating `auth` middleware as authorization.</b> It lets every logged-in user through, including the wrong one.",
-        "<b>Fetching the whole user when you only wanted the id.</b> `Auth::id()` avoids the query.",
-        "<b>Leaving the login route unthrottled.</b> Passwords can then be tried as fast as your server answers.",
-        "<b>Skipping password confirmation on account-level changes.</b> An unattended browser becomes a stolen account.",
+        "<b>Treating `@can` as protection.</b> It hides the button and nothing else.",
+        "<b>Passing a variable to `can:` middleware.</b> It expects the route parameter's name.",
+        "<b>Forgetting the class for a model-less ability.</b> `can:create` alone has no policy to reach.",
+        "<b>Putting a request-dependent check on the route.</b> The body has not been read yet.",
+        "<b>Repeating the same coarse check on twenty routes.</b> Put it on the group instead.",
       ],
       quiz: [
         {
-          question: "What does `Auth::user()` return for a guest?",
-          options: ["A guest user object", "`false`", "`null`", "It throws"],
-          correctIndex: 2,
-          explanation: "Which is why `Auth::user()->name` is fatal on a public page.",
-        },
-        {
-          question: "What does the `auth` middleware guarantee?",
+          question: "What does `@can('update', $post)` protect?",
           options: [
-            "That the user owns the record",
-            "That somebody is logged in, and nothing more",
-            "That the email is verified",
-            "That the password was recently confirmed",
+            "The update route",
+            "Nothing; it only decides whether the markup is rendered",
+            "The model from being changed",
+            "The form submission",
           ],
           correctIndex: 1,
-          explanation: "Ownership is authorization, a separate system.",
+          explanation: "The request can still be sent directly, so the server must check too.",
         },
         {
-          question: "What is `password.confirm` middleware for?",
+          question: "In `can:update,post`, what is `post`?",
           options: [
-            "Confirming a password on registration",
-            "Requiring the password again before sensitive actions, against an unattended logged-in browser",
-            "Checking password strength",
-            "Rehashing the password",
+            "A variable in the controller",
+            "The name of the route parameter, resolved by route model binding",
+            "The policy class",
+            "The table name",
           ],
           correctIndex: 1,
-          explanation: "The confirmation is held in the session for a few hours.",
+          explanation: "Laravel resolves `{post}` to the model before checking.",
         },
         {
-          question: "Why put the login route behind `throttle`?",
+          question: "When should a check live inside the controller method rather than on the route?",
           options: [
-            "To reduce server load",
-            "Otherwise passwords can be tried as fast as the server can answer",
-            "Laravel requires it",
-            "To prevent session fixation",
+            "Always",
+            "When it depends on something the controller must read first, such as the request body",
+            "When the model is soft-deletable",
+            "When the route is a GET",
           ],
           correctIndex: 1,
-          explanation: "Rate limiting is what makes guessing impractical.",
+          explanation: "Route-level checks only have the bound model.",
+        },
+        {
+          question: "Why does an unauthorized request with an invalid body return 403 rather than 422?",
+          options: [
+            "Validation is disabled",
+            "Middleware runs before validation, and there is no point critiquing input they were never allowed to send",
+            "422 is only for APIs",
+            "Laravel merges the two",
+          ],
+          correctIndex: 1,
+          explanation: "Authorization first, then the shape of the input.",
         },
       ],
     },
     {
-      id: "password-hashing",
-      title: "Password hashing, bcrypt, Argon2 & rehashing",
-      durationMinutes: 12,
-      explanation: "The one part of authentication where getting it wrong is unrecoverable.\n\n---\n\n### 1. Basic — never store the password\n\n```text\npassword\n─────────────────────────────────\npassword123          ❌ plain text\n```\n\nOne database leak and every account is gone, along with every other site where that person reused the password.\n\n<b>Hash it instead:</b>\n\n```php\n$user->password = Hash::make($request->password);\n```\n\n```text\npassword\n─────────────────────────────────\n$2y$12$k9.3f...      ✓ a hash\n```\n\n<b>A <i>hash</i></b> (a one-way transformation of a value) cannot be reversed. There is no `Hash::unmake()`, and that is the point: your database never contains anything that could be used to log in elsewhere.\n\nTo check a password:\n\n```php\nif (Hash::check($request->password, $user->password)) {\n    // correct\n}\n```\n\nHash the attempt, compare the hashes. <b>You never decrypt a password, because a password hash is not encrypted.</b>\n\nSince Day 14 you have had a shorter way:\n\n```php\nprotected function casts(): array\n{\n    return ['password' => 'hashed'];\n}\n```\n\nNow assigning a plain password hashes it on the way in, and `User::create([...])` needs no `Hash::make()` at all.\n\n---\n\n### 2. Intermediate — why hashing is slow on purpose\n\nA hash for a file is designed to be fast. <b>A password hash is designed to be slow.</b>\n\nAn attacker with your database tries billions of guesses. If each check costs a microsecond, a common password falls in seconds. If each costs a tenth of a second, the same attack takes years.\n\nThat slowness is the <i>work factor</i>, and it is configurable:\n\n```text\nbcrypt   rounds       12 by default; each step doubles the work\nargon2   memory,      memory-hard, so it also resists\n         time, threads   parallel attacks on graphics hardware\n```\n\n<b>bcrypt</b> is mature, extremely well understood, and Laravel's default. <b>Argon2id</b> was designed specifically for passwords and is memory-hard, which makes the massively parallel attacks that graphics hardware enables much more expensive.\n\nWhich to choose:\n\n```text\nno strong reason to change?   bcrypt, Laravel's default\nyou can spare the memory?     argon2id\n```\n\nThe honest answer is that both are fine, and the configuration matters more than the choice. A badly configured Argon2 is worse than a well configured bcrypt. Set it in `config/hashing.php` and leave it alone.\n\n---\n\n### 3. Advanced — rehashing\n\nWork factors get raised as hardware gets faster. But existing hashes were made with the old one:\n\n```text\n2026    bcrypt, 10 rounds       every existing user\n  ↓\n2028    bcrypt, 12 rounds       every new user\n```\n\nYou cannot re-hash them yourself, because you do not have anybody's password. You only ever see one at a single moment: <b>login.</b>\n\n```text\nsuccessful login\n      ↓\nyou have the plain password, briefly\n      ↓\ndoes the stored hash use the old work factor?\n      ↓\nyes → hash it again with the new one, and save\n```\n\nLaravel does this automatically when the configuration changes. Over a few weeks, active users are silently upgraded, and nobody is asked to reset anything.\n\nThat is worth appreciating as a pattern, not just a feature: <b>a security upgrade that costs users nothing gets deployed; one that requires a password reset email to everybody does not.</b>\n\nThree last rules, each of which has cost somebody an incident.\n\n<b>Never log the request.</b> A `Log::info($request->all())` in a login controller writes plain passwords to a file, and probably to a log service you do not control.\n\n<b>Keep `password` in `$hidden`.</b> Laravel's `User` does this already; a model you write yourself does not.\n\n<b>And never write your own comparison.</b> `Hash::check()` compares in constant time, so it does not leak information through how long it takes.",
-      diagram: `Never store the password
+      id: "filtering-and-performance",
+      title: "Filtering collections & authorization performance",
+      durationMinutes: 10,
+      explanation: "Authorization is application code, so it has the same performance problems as application code. This is the one nobody warns you about.\n\n---\n\n### 1. Basic — filtering by policy\n\nA page listing everything the user can act on:\n\n```php\n$posts = Post::all();\n\n$editable = $posts->filter(\n    fn (Post $post) => $request->user()->can('update', $post)\n);\n```\n\n```text\nall posts\n    ↓\npolicy check, per post\n    ↓\nonly the authorized ones\n```\n\nWhich is genuinely useful for admin dashboards, action lists and bulk-operation screens, where you cannot express the rule as a query.\n\nAnd immediately worth being careful about, because <b>you are now running your authorization logic once per row.</b>\n\n---\n\n### 2. Intermediate — the N+1 hiding in a policy\n\nHere is the trap:\n\n```php\n$posts = Post::all();\n\n$posts->filter(fn ($post) => $post->author->id === auth()->id());\n```\n\n`$post->author` is a lazy relationship. Day 15's N+1, except it is inside authorization code, where nobody looks for it.\n\n```text\n1 query    the posts\n100 queries  one author per post\n```\n\nThe fix is the same as it was then:\n\n```php\n$posts = Post::with('author')->get();\n```\n\nBut the reason it is worth restating is that <b>the query is in a policy, and the fix is in a controller.</b> Somebody profiling the page sees a hundred queries and no loop that explains them, because the loop is a `filter()` calling a method in another file.\n\nSo two habits:\n\n<b>Keep relationship access out of policies where you can.</b> Compare `$post->user_id` rather than `$post->author->id`: the foreign key is already on the row, and no query happens at all.\n\n<b>And when a policy does need a relationship, eager load it at the call site.</b> `Model::preventLazyLoading()` from Day 15 will tell you loudly if you forget.\n\n---\n\n### 3. Advanced — filter in the database instead\n\nStep back and the real answer is often that you should not be filtering in PHP.\n\n```text\nfilter in PHP                  filter in the query\n─────────────                  ───────────────────\nfetch every row                fetch only what matters\nrun the policy per row         one WHERE clause\npaginate afterwards, wrongly   paginate correctly\n```\n\nThat last line is the one that bites. <b>Paginate then filter and your pages have different sizes</b>, because you fetched twenty and threw eleven away. The count is wrong, the page links are wrong, and there is no way to fix it without asking the database the right question in the first place:\n\n```php\nPost::where('user_id', $request->user()->id)->paginate(20);\n```\n\nSame rule, expressed as a query. Twenty rows, correct pagination, no policy calls at all.\n\nWhich leaves a real question: the rule now exists twice, in the policy and in the query. A common answer is a scope that mirrors it:\n\n```php\npublic function scopeVisibleTo($query, User $user)\n{\n    return $query->where('user_id', $user->id)->orWhere('published', true);\n}\n```\n\nand a policy that reads the same way. <b>They can still drift, and a test that checks they agree is worth more than either of them.</b>\n\nSo the guidance, in order:\n\n```text\nCan the rule be a WHERE clause?      →  put it in the query\nNeeds per-model logic on a small     →  filter with the policy\n  set?\nA large list?                        →  the rule has to be a query\n```\n\nPolicies protect individual actions extremely well. They are not a filter for a list of ten thousand rows, and reaching for them there is how a page ends up loading the whole table.",
+      diagram: `Filtering by policy
 
-  password123          ❌  one leak and every account is gone,
-                           along with every site where that
-                           person reused it
+  \$posts->filter(fn (\$post) => \$user->can('update', \$post))
 
-  Hash::make(\$password)
+    all posts
+        ↓
+    policy check, per post
+        ↓
+    only the authorized ones
 
-  \$2y\$12\$k9.3f...      ✓  one-way. There is no Hash::unmake().
-
-
-  Checking: hash the attempt, compare the hashes.
-
-    Hash::check(\$plain, \$user->password)
-
-  You never DECRYPT a password. It is not encrypted.
-
-  Or let the cast do it:  'password' => 'hashed'
+  Useful for admin dashboards, action lists and bulk
+  screens. And you are now running authorization once
+  per row.
 
 
-Why a password hash is slow ON PURPOSE
+The N+1 hiding in a policy
 
-  A file hash is designed to be fast.
-  A password hash is designed to be slow.
+  \$posts = Post::all();
+  \$posts->filter(fn (\$post) => \$post->author->id === auth()->id());
 
-  1 microsecond per guess  →  common password falls in seconds
-  0.1 seconds per guess    →  the same attack takes years
+    1 query      the posts
+    100 queries  one author per post
 
-  bcrypt    rounds (12 default), each step doubles the work
-  argon2id  memory-hard: also resists parallel attacks
-            on graphics hardware
+  Day 15's N+1, inside authorization code, where nobody
+  looks for it. Someone profiling sees a hundred queries
+  and no loop, because the loop is a filter() calling a
+  method in another file.
 
-  no strong reason to change?  bcrypt, the default
-  can spare the memory?        argon2id
+  Two habits:
 
-  Both are fine. The CONFIGURATION matters more than
-  the choice. Set it in config/hashing.php and leave it.
+    Compare \$post->user_id, not \$post->author->id.
+      The foreign key is already on the row.
 
-
-Rehashing: upgrading without asking anybody
-
-  2026   bcrypt, 10 rounds      every existing user
-    ↓
-  2028   bcrypt, 12 rounds      every new user
-
-  You cannot rehash them yourself: you do not have
-  anybody's password. You see one at exactly one moment.
-
-    successful login
-          ↓
-    you have the plain password, briefly
-          ↓
-    does the stored hash use the old work factor?
-          ↓
-    yes → hash again with the new one, save
-
-  Over a few weeks, active users are upgraded silently.
-
-  A security upgrade that costs users nothing gets
-  deployed. One that emails everybody does not.
+    When a policy does need a relationship, eager load
+      it at the call site. preventLazyLoading() will
+      tell you loudly if you forget.
 
 
-Three rules that have each cost somebody an incident
+The real answer: filter in the database
 
-  Never log the request in a login controller.
-    Log::info(\$request->all()) writes plain passwords
-    to a file, and to a log service you do not control.
+  filter in PHP                 filter in the query
+  ─────────────                 ───────────────────
+  fetch every row               fetch only what matters
+  policy per row                one WHERE clause
+  pagination BREAKS             pagination is correct
 
-  Keep password in \$hidden.
-    Laravel's User does. A model you wrote does not.
+  ⚠️  Paginate then filter and your pages have different
+      sizes: you fetched 20 and threw 11 away. The count
+      is wrong, the links are wrong, and there is no fix
+      except asking the database the right question.
 
-  Never write your own comparison.
-    Hash::check() compares in constant time, so it does
-    not leak information through how long it takes.`,
+    Post::where('user_id', \$user->id)->paginate(20)
+
+  Same rule. Twenty rows. No policy calls.
+
+
+  The rule now exists twice: in the policy and in the
+  query. A scope can mirror it:
+
+    scopeVisibleTo(\$query, User \$user)
+
+  They can still drift, and a test that checks they
+  agree is worth more than either of them.
+
+
+In order
+
+  Can the rule be a WHERE clause?   →  put it in the query
+  Per-model logic, small set?       →  filter with the policy
+  A large list?                     →  it has to be a query
+
+  Policies protect individual actions extremely well.
+  They are not a filter for ten thousand rows.`,
       codeExample: {
-        title: "Hashing, checking and rehashing",
+        title: "Filtering, and the two ways it goes wrong",
         code: `<?php
 
-use Illuminate\\Support\\Facades\\Hash;
+use App\\Models\\Post;
 
-// ---------- Storing ----------
+// ---------- Filtering by policy: fine on a small set ----------
 
-$user->password = Hash::make($request->password);
-$user->save();
+$posts = Post::all();
 
-// In the database: $2y$12$k9.3f...
-// The original password is not stored anywhere.
+$editable = $posts->filter(
+    fn (Post $post) => $request->user()->can('update', $post)
+);
+
+// Genuinely useful for admin dashboards and bulk-action
+// screens, where the rule is not expressible as a query.
 
 
-// ---------- Or let the cast do it (Day 14) ----------
+// ---------- The N+1 inside the policy ----------
+
+// ❌ $post->author is lazy. 1 query for posts, 100 for authors.
+public function update(User $user, Post $post): bool
+{
+    return $post->author->id === $user->id;
+}
+
+// ✓ The foreign key is already on the row. No query at all.
+public function update(User $user, Post $post): bool
+{
+    return $post->user_id === $user->id;
+}
+
+// And when a relationship really is needed, load it at
+// the call site:
+$posts = Post::with('author')->get();
+
+// Model::preventLazyLoading() from Day 15 turns the
+// mistake into an exception in development.
+
+
+<?php
+// ---------- The one that breaks pagination ----------
+
+// ❌ Fetch 20, throw 11 away. Pages have different sizes,
+//    the total is wrong, and the links are wrong.
+$posts = Post::paginate(20)
+    ->filter(fn ($post) => $request->user()->can('update', $post));
+
+// ✓ Ask the database the right question.
+$posts = Post::where('user_id', $request->user()->id)->paginate(20);
+
+// Twenty rows, correct pagination, no policy calls.
+
+
+<?php
+// ---------- Keeping the query and the policy in step ----------
+
+// app/Models/Post.php
+public function scopeVisibleTo($query, User $user)
+{
+    return $query->where(function ($q) use ($user) {
+        $q->where('published', true)
+          ->orWhere('user_id', $user->id);
+    });
+}
+
+// app/Policies/PostPolicy.php
+public function view(User $user, Post $post): bool
+{
+    return $post->published || $post->user_id === $user->id;
+}
+
+// The same rule, twice. They can drift, so test that
+// they agree:
+
+// test:
+//   $visible = Post::visibleTo($user)->pluck('id');
+//   $allowed = Post::all()->filter(fn ($p) => $user->can('view', $p))
+//                          ->pluck('id');
+//   expect($visible->sort()->values())
+//       ->toEqual($allowed->sort()->values());
+
+
+<?php
+// ---------- The order to think in ----------
+
+// 1. Can the rule be a WHERE clause?      → the query
+$posts = Post::visibleTo($user)->paginate(20);
+
+// 2. Per-model logic on a small set?      → filter with the policy
+$actions = $selected->filter(fn ($p) => $user->can('delete', $p));
+
+// 3. A large list?                        → it has to be a query`,
+      },
+      keyTakeaways: [
+        "<b>Filtering a collection with `can()` runs your authorization logic once per row.</b>",
+        "It suits admin dashboards and bulk-action screens where the rule is not expressible as a query.",
+        "<b>A policy that reads a relationship creates an N+1</b>, hidden inside authorization code.",
+        "<b>Compare `$post->user_id` rather than `$post->author->id`</b>: the foreign key is already on the row.",
+        "When a policy genuinely needs a relationship, eager load it at the call site.",
+        "`Model::preventLazyLoading()` turns the mistake into an exception in development.",
+        "<b>Paginating and then filtering breaks pagination</b>: page sizes vary and the totals and links are wrong.",
+        "<b>Express the rule as a query instead</b>, so the database returns exactly the rows the user may see.",
+        "<b>A scope mirroring the policy keeps them aligned</b>, and a test that they agree is worth more than either.",
+        "<b>Policies protect individual actions well; they are not a filter for a large list.</b>",
+      ],
+      commonMistakes: [
+        "<b>Loading every row to filter by policy.</b> On a large table the page loads the whole table.",
+        "<b>Reading a relationship inside a policy method.</b> One query per row, in a file nobody profiles.",
+        "<b>Calling `paginate()` and then `filter()`.</b> Page sizes, totals and links all become wrong.",
+        "<b>Duplicating the rule in a query without testing that they agree.</b> They drift, and one of them is wrong.",
+        "<b>Using policies as the list filter on ten thousand rows.</b> The rule needs to be a `WHERE` clause.",
+      ],
+      quiz: [
+        {
+          question: "What is the risk of `$posts->filter(fn ($p) => $user->can('update', $p))`?",
+          options: [
+            "It bypasses the policy",
+            "Authorization runs once per row, and any relationship the policy reads becomes an N+1",
+            "It returns an array",
+            "It ignores gates",
+          ],
+          correctIndex: 1,
+          explanation: "The loop is in a `filter()` calling a method in another file, so it is easy to miss.",
+        },
+        {
+          question: "How do you avoid a query inside a policy that checks ownership?",
+          options: [
+            "Cache the policy result",
+            "Compare `$post->user_id` instead of `$post->author->id`",
+            "Use a gate instead",
+            "Eager load inside the policy",
+          ],
+          correctIndex: 1,
+          explanation: "The foreign key is already on the row, so no query happens.",
+        },
+        {
+          question: "What breaks when you paginate and then filter?",
+          options: [
+            "Nothing",
+            "Page sizes vary and the totals and links are wrong, because rows were fetched then discarded",
+            "The policy stops running",
+            "The order changes",
+          ],
+          correctIndex: 1,
+          explanation: "The database has to be asked the right question in the first place.",
+        },
+        {
+          question: "For a list of ten thousand rows, where should the visibility rule live?",
+          options: [
+            "In the policy, applied with `filter()`",
+            "In the query, as a `WHERE` clause, usually via a scope",
+            "In Blade",
+            "In middleware",
+          ],
+          correctIndex: 1,
+          explanation: "Policies protect actions; they are not a list filter.",
+        },
+      ],
+    },
+    {
+      id: "roles-permissions-and-choosing",
+      title: "Roles, permissions & choosing the right tool",
+      durationMinutes: 12,
+      explanation: "Everything so far answers \"does this user own this thing\". Larger applications need something else.\n\n---\n\n### 1. Basic — roles and permissions\n\n```text\nUser\n ↓\nRole\n ↓\nPermissions\n```\n\n```text\nAdmin              Editor\n ├── users.view     ├── posts.view\n ├── users.create   ├── posts.create\n ├── users.update   └── posts.update\n └── users.delete\n```\n\n<b>A <i>role</i></b> is a named bundle of permissions; <b>a <i>permission</i></b> is a single named ability. The indirection is the point: promote somebody by changing their role, and every rule follows, without touching any code.\n\nThe distinction from ownership is worth stating:\n\n```text\nownership       does this user own this post?          the model decides\npermission      may this user update posts at all?     the role decides\n```\n\nMost real policies use both:\n\n```php\npublic function update(User $user, Post $post): bool\n{\n    return $user->hasPermission('posts.update')\n        && ($user->id === $post->user_id || $user->hasPermission('posts.update.any'));\n}\n```\n\n<b>Roles and policies are not alternatives.</b> The role says what kind of thing you may do; the policy says whether you may do it to <i>this</i> record.\n\n---\n\n### 2. Intermediate — building it yourself\n\nThe schema is Day 15's many-to-many, twice:\n\n```text\nusers    roles    permissions    role_user    permission_role\n```\n\n```text\nUser ──belongsToMany──> Role ──belongsToMany──> Permission\n```\n\nWhich is a morning's work. What follows is not:\n\n```text\nrole assignment UI\npermission checks that are fast\ncaching, because every request asks\nmiddleware integration\npolicy integration\nseeding and migrations for new permissions\ntesting all of it\n```\n\n<b>The performance one is the trap.</b> `$user->hasPermission('posts.update')` naively written is two joins on every check, and a page checking twelve abilities runs twelve of them. The fix is to load a user's permissions once per request and cache them, which is straightforward once you know to do it and invisible until the page is slow.\n\nBuild it yourself when the model is genuinely simple: a fixed set of roles, checked with `$user->role === 'admin'`, needs no tables at all and often no more than an enum.\n\n---\n\n### 3. Advanced — the actual decision\n\nThe question is not whether packages are good.\n\n```text\nSimple authorization?\n       ↓\nGates + Policies, and maybe a role column\n\nComplex RBAC?\n       ↓\nconsider a mature package\n```\n\nReach for a package when you need:\n\n```text\nmultiple roles per user\nmany permissions, changing over time\nteams or tenants\npermissions editable by admins at runtime\nrole management UI\n```\n\nAnd do not when you need \"the owner can edit their own posts\", which is four lines of policy and no dependency.\n\nIn the Laravel ecosystem that package is <b>`spatie/laravel-permission`</b>, which is the de facto standard and worth knowing by name:\n\n```bash\ncomposer require spatie/laravel-permission\n```\n\n```php\n$user->assignRole('editor');\n$user->givePermissionTo('posts.publish');\n\n$user->hasRole('editor');\n$user->can('posts.publish');      // the same can() your policies use\n```\n\n<b>Notice that last line.</b> The package registers its permissions as gates, so `$user->can()`, `@can` and `authorize()` keep working unchanged. You are not replacing Laravel's authorization, you are giving it a database-backed source of abilities.\n\n<b>The cost of a package is not the code, it is that permissions become data.</b> A rule in a policy is in version control, reviewed and testable. A rule in a permissions table can be changed in production by somebody in an admin screen, and your tests will never know. That is exactly what you want for a product where customers configure their own roles, and exactly what you do not want for a rule that must always hold.\n\nAnd the summary of the whole day:\n\n```text\nSystem-level ability          →  Gate\n  access the admin dashboard\n\nModel or resource ability     →  Policy\n  update THIS post\n\nWhat kind of user is this     →  roles and permissions\n  editors may publish\n```\n\n```text\nHTTP Request\n     ↓\nAuthentication\n     ↓\nAuthenticated User\n     ↓\nAuthorization\n     │\n ┌───┴────────────┐\n ▼                ▼\nGate           Policy\n │                │\n └───────┬────────┘\n         ▼\n   allowed / 403\n```\n\nOne last piece of advice, and it is the one that matters most. <b>Authorization is the code most likely to be wrong and least likely to be noticed</b>, because the happy path works perfectly whether or not the rules do. Test the denials: log in as the wrong user and confirm the 403. Nothing else tells you the lock is fitted.",
+      diagram: `Roles and permissions
+
+  User  →  Role  →  Permissions
+
+  Admin              Editor
+   ├── users.view     ├── posts.view
+   ├── users.create   ├── posts.create
+   ├── users.update   └── posts.update
+   └── users.delete
+
+  A role is a named bundle. Promote somebody by changing
+  their role, and every rule follows, with no code change.
+
+
+  ownership     does this user own THIS post?      the model decides
+  permission    may they update posts at all?      the role decides
+
+  Most real policies use both, and they are not
+  alternatives:
+
+    return \$user->hasPermission('posts.update')
+        && (\$user->id === \$post->user_id
+            || \$user->hasPermission('posts.update.any'));
+
+
+Building it yourself
+
+  users  roles  permissions  role_user  permission_role
+
+  User ─belongsToMany→ Role ─belongsToMany→ Permission
+
+  The schema is a morning. What follows is not:
+
+    role assignment UI
+    permission checks that are fast
+    caching, because every request asks
+    middleware integration
+    policy integration
+    seeding for new permissions
+    testing all of it
+
+  ⚠️  hasPermission() naively written is two joins per
+      check, and a page checking twelve abilities runs
+      twelve of them. Load once per request and cache.
+
+  A fixed set of roles checked with \$user->role === 'admin'
+  needs no tables at all. Often an enum is the answer.
+
+
+The decision
+
+  Simple?        →  Gates + Policies, maybe a role column
+  Complex RBAC?  →  consider a mature package
+
+  Reach for a package when you need:
+    multiple roles per user
+    many permissions, changing over time
+    teams or tenants
+    permissions editable by admins at runtime
+    a role management UI
+
+  Do not, for "the owner can edit their own posts".
+
+
+The package: spatie/laravel-permission
+
+    composer require spatie/laravel-permission
+
+    \$user->assignRole('editor');
+    \$user->givePermissionTo('posts.publish');
+    \$user->hasRole('editor');
+    \$user->can('posts.publish');    ← the same can()
+
+  It registers permissions as GATES, so can(), @can
+  and authorize() keep working unchanged.
+
+  You are not replacing Laravel's authorization. You
+  are giving it a database-backed source of abilities.
+
+
+  The real cost of a package: permissions become DATA.
+
+    a rule in a policy      in version control,
+                            reviewed, testable
+    a rule in a table       changeable in production by
+                            somebody in an admin screen,
+                            and your tests never know
+
+  Right for a product where customers configure roles.
+  Wrong for a rule that must always hold.
+
+
+The whole day
+
+  System-level ability       →  Gate
+  Model or resource ability  →  Policy
+  What kind of user is this  →  roles and permissions
+
+  HTTP Request → Authentication → Authenticated User
+                                        ↓
+                                  Authorization
+                                        │
+                                  ┌─────┴─────┐
+                                  ▼           ▼
+                                Gate       Policy
+                                  └─────┬─────┘
+                                        ▼
+                                 allowed / 403
+
+
+  Authorization is the code most likely to be wrong and
+  least likely to be noticed: the happy path works
+  perfectly whether or not the rules do.
+
+  Test the DENIALS.`,
+      codeExample: {
+        title: "Roles, permissions, and where policies fit",
+        code: `<?php
+// ---------- The simplest thing that works ----------
+
+// A fixed set of roles needs no tables at all.
+enum Role: string
+{
+    case Admin  = 'admin';
+    case Editor = 'editor';
+    case Reader = 'reader';
+}
 
 class User extends Authenticatable
 {
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
+        return ['role' => Role::class];
+    }
+
+    public function isEditor(): bool
+    {
+        return in_array($this->role, [Role::Admin, Role::Editor], true);
     }
 }
 
-// Now this is enough:
-User::create([
-    'name'     => $request->name,
-    'email'    => $request->email,
-    'password' => $request->password,   // hashed on the way in
-]);
-
-
-// ---------- Checking ----------
-
-if (Hash::check($request->password, $user->password)) {
-    // correct
-}
-
-// Hash::attempt() does this for you inside Auth::attempt().
-
-// ❌ There is no way back. This does not exist:
-// Hash::unmake($user->password);
-
-// ❌ And never write your own comparison: == is not
-//    constant time, so it leaks information through timing.
-if ($user->password === Hash::make($request->password)) { }
-
-
-<?php
-// ---------- Configuration ----------
-
-// config/hashing.php
-
-return [
-    'driver' => 'bcrypt',        // or 'argon2id'
-
-    'bcrypt' => [
-        'rounds' => env('BCRYPT_ROUNDS', 12),
-    ],
-
-    'argon' => [
-        'memory' => 65536,
-        'threads' => 1,
-        'time' => 4,
-    ],
-];
-
-// Each extra bcrypt round doubles the work an attacker does.
-
-
-<?php
-// ---------- Rehashing on login ----------
-
-// Laravel does this automatically when the config changes:
-
-if (Hash::needsRehash($user->password)) {
-    // Only possible here, because this is the one moment
-    // you hold the plain password.
-    $user->password = Hash::make($request->password);
-    $user->save();
-}
-
-// Active users are upgraded silently over a few weeks.
-// Nobody is asked to reset anything.
-
-
-<?php
-// ---------- Things that leak passwords ----------
-
-// ❌ Writes plain passwords to your logs, and to whatever
-//    log service they are shipped to.
-Log::info('Login attempt', $request->all());
-
-// ✓
-Log::info('Login attempt', ['email' => $request->email]);
-
-// ❌ A model without $hidden puts the hash in every JSON
-//    response containing a user.
-protected $hidden = ['password', 'remember_token'];`,
-      },
-      keyTakeaways: [
-        "<b>Never store a plain password.</b> One leak exposes every account, and every site where it was reused.",
-        "<b>`Hash::make()` is one-way</b>: there is no way back, and that is the point.",
-        "<b>`Hash::check($plain, $hash)` verifies a password</b> by hashing the attempt, not by decrypting anything.",
-        "The `'password' => 'hashed'` cast does it automatically on assignment.",
-        "<b>A password hash is slow on purpose</b>, and that slowness is what makes guessing impractical.",
-        "<b>bcrypt is mature and the default; Argon2id is memory-hard</b> and resists parallel attacks better.",
-        "<b>The configuration matters more than the choice</b>, so set it in `config/hashing.php` and leave it.",
-        "<b>Rehashing upgrades a hash at login</b>, the one moment the plain password is available.",
-        "That lets security improve without asking every user to reset their password.",
-        "<b>Never log the request in a login controller, keep `password` in `$hidden`, and never write your own comparison.</b>",
-      ],
-      commonMistakes: [
-        "<b>Trying to recover a password.</b> Hashing is not encryption; there is nothing to decrypt.",
-        "<b>Hashing the input before `Auth::attempt()`.</b> It expects the plain password and hashes it itself.",
-        "<b>Logging `$request->all()` in a login controller.</b> Plain passwords go straight into your logs.",
-        "<b>Comparing hashes with `===`.</b> `Hash::check()` compares in constant time for a reason.",
-        "<b>Assuming a newer algorithm is automatically safer.</b> A badly configured Argon2 loses to a well configured bcrypt.",
-      ],
-      quiz: [
-        {
-          question: "How do you verify a password against a stored hash?",
-          options: [
-            "Decrypt the hash and compare",
-            "`Hash::check($plain, $hash)`, which hashes the attempt and compares",
-            "`$plain === $hash`",
-            "`Hash::make($hash)`",
-          ],
-          correctIndex: 1,
-          explanation: "There is nothing to decrypt; hashing is one-way.",
-        },
-        {
-          question: "Why is a password hash deliberately slow?",
-          options: [
-            "To reduce server load",
-            "So an attacker with the database cannot try billions of guesses cheaply",
-            "To allow rehashing",
-            "It is a side effect of the algorithm",
-          ],
-          correctIndex: 1,
-          explanation: "The work factor is what turns seconds into years.",
-        },
-        {
-          question: "What makes Argon2id different from bcrypt?",
-          options: [
-            "It is faster",
-            "It is memory-hard, which resists massively parallel attacks better",
-            "It is reversible",
-            "It needs no configuration",
-          ],
-          correctIndex: 1,
-          explanation: "Both are fine; configuration matters more than the choice.",
-        },
-        {
-          question: "Why can a password only be rehashed at login?",
-          options: [
-            "Laravel only allows it then",
-            "That is the one moment the plain password is available",
-            "The database is locked otherwise",
-            "It is a performance choice",
-          ],
-          correctIndex: 1,
-          explanation: "Which is what lets the work factor rise without a mass reset.",
-        },
-      ],
-    },
-    {
-      id: "encryption",
-      title: "Encryption, and how it differs from hashing",
-      durationMinutes: 10,
-      explanation: "Two operations that sound similar, solve different problems, and are constantly confused.\n\n---\n\n### 1. Basic — the difference\n\n```text\nHashing                      Encryption\n───────                      ──────────\npassword                     secret\n   ↓                            ↓\nhash                         encrypted value\n                                ↓\n(no way back)                decrypt\n                                ↓\n                             secret\n```\n\n<b>Hashing is one-way.</b> You use it when you never need the original value back, only to check whether something matches it. Passwords, and essentially nothing else.\n\n<b>Encryption is two-way.</b> You use it when you <i>do</i> need the value back: an API token you must send to a provider, a bank account number you have to display, a note only the owner should read.\n\n<b>The question that decides it: do you ever need the original value?</b>\n\n```text\nno   →  hash it\nyes  →  encrypt it\n```\n\nEncrypting a password is a real mistake with a real consequence. It means the plain passwords are recoverable, so a leak of your database plus your key hands over every account, and every other site those people reused the password on.\n\n---\n\n### 2. Intermediate — using it\n\n```php\n$encrypted = Crypt::encryptString('sensitive information');\n\n$value = Crypt::decryptString($encrypted);\n```\n\n`encrypt()` and `decrypt()` handle any serialisable value; the `String` variants are for plain text and are what you usually want.\n\nOr let the model do it, with Day 16's cast:\n\n```php\nprotected function casts(): array\n{\n    return ['api_token' => 'encrypted'];\n}\n```\n\nThe key comes from `APP_KEY` in your `.env`. Two consequences, both from that lesson and both worth repeating here because this is where they bite:\n\n<b>An encrypted column cannot be searched.</b> Every row's ciphertext is different, so no `where`, no index, no sorting.\n\n<b>Lose `APP_KEY` and the data is gone.</b> Not \"hard to recover\": gone. It is not a password you can reset; it is the only thing that can read those bytes.\n\nOne more property worth knowing: Laravel's encryption is authenticated, so tampering with a ciphertext produces a `DecryptException` rather than quiet nonsense. Catch it rather than letting it become a 500.\n\n---\n\n### 3. Advanced — key rotation\n\nKeys are infrastructure, and infrastructure sometimes has to change. Perhaps it leaked, perhaps a policy requires rotation.\n\nThe problem states itself:\n\n```text\nexisting data\n     ↓\nencrypted with the old key\n\nreplace APP_KEY\n     ↓\nnothing can read any of it\n```\n\nSo a rotation is not a single edit. Laravel supports previous keys:\n\n```env\nAPP_KEY=base64:newkey...\nAPP_PREVIOUS_KEYS=base64:oldkey...\n```\n\n```text\nnew values  →  encrypted with the current key\nold values  →  still decryptable with a previous key\n```\n\nThat gives you a window. During it you re-encrypt the existing rows, and only when everything is on the new key do you drop the old one.\n\n```text\n1. generate a new key, keep the old one as previous\n2. deploy: new writes use the new key, old reads still work\n3. re-encrypt existing rows, in batches\n4. remove the previous key\n```\n\n<b>And the thing worth internalising: this is only possible because you planned for it.</b> An application that hard-codes a key, or has no idea which columns are encrypted, cannot rotate at all. Keep a note of which columns use the `encrypted` cast, and rotation stays a task rather than a crisis.\n\nOne closing note on sessions, connecting this to the rest of the day: `APP_KEY` also signs session cookies. Change it and everybody is logged out, which is inconvenient but not dangerous, and occasionally exactly what you want after a breach.",
-      diagram: `The difference
-
-  Hashing                      Encryption
-  ───────                      ──────────
-  password                     secret
-     ↓                            ↓
-  hash                         encrypted value
-                                  ↓
-  (no way back)                decrypt
-                                  ↓
-                               secret
-
-  Do you ever need the original value back?
-
-    no   →  hash it        passwords, essentially nothing else
-    yes  →  encrypt it     API tokens, account numbers, notes
-
-
-  Encrypting a password means plain passwords are
-  recoverable. Your database plus your key hands over
-  every account, and every site those people reused it on.
-
-
-Using it
-
-  Crypt::encryptString('sensitive information')
-  Crypt::decryptString(\$encrypted)
-
-  or the cast:  'api_token' => 'encrypted'
-
-  The key is APP_KEY.
-
-  ⚠️  Cannot be searched: every ciphertext differs,
-      so no where, no index, no sort.
-  ⚠️  Lose APP_KEY and the data is GONE. Not hard to
-      recover. Gone.
-
-  Encryption is authenticated, so tampering raises a
-  DecryptException rather than producing quiet nonsense.
-
-
-Key rotation
-
-  existing data encrypted with the old key
-        ↓
-  replace APP_KEY
-        ↓
-  nothing can read any of it
-
-  So Laravel keeps previous keys:
-
-    APP_KEY=base64:newkey...
-    APP_PREVIOUS_KEYS=base64:oldkey...
-
-    new values  →  current key
-    old values  →  still readable
-
-  1. generate a new key, keep the old as previous
-  2. deploy: new writes new key, old reads still work
-  3. re-encrypt existing rows, in batches
-  4. remove the previous key
-
-  Only possible because you planned for it. An app that
-  hard-codes a key, or does not know which columns are
-  encrypted, cannot rotate at all.
-
-
-  APP_KEY also signs session cookies, so changing it
-  logs everybody out. Inconvenient, and occasionally
-  exactly what you want after a breach.`,
-      codeExample: {
-        title: "Encrypting values you need back",
-        code: `<?php
-
-use Illuminate\\Support\\Facades\\Crypt;
-
-// ---------- Two-way ----------
-
-$encrypted = Crypt::encryptString('sensitive information');
-
-$value = Crypt::decryptString($encrypted);
-
-
-// Any serialisable value:
-$encrypted = encrypt(['card' => '4242', 'expires' => '12/28']);
-$data      = decrypt($encrypted);
-
-
-// ---------- Or the cast (Day 16) ----------
-
-class Integration extends Model
+// PostPolicy
+public function create(User $user): bool
 {
-    protected function casts(): array
-    {
-        return [
-            'api_token' => 'encrypted',
-            'settings'  => 'encrypted:array',
-        ];
-    }
-}
-
-$integration->api_token = 'sk_live_...';   // encrypted on write
-$integration->api_token;                    // decrypted on read
-
-
-// ---------- Tampering is detected ----------
-
-use Illuminate\\Contracts\\Encryption\\DecryptException;
-
-try {
-    $value = Crypt::decryptString($fromTheUser);
-} catch (DecryptException $e) {
-    // Modified or from a different key. Handle it; do not 500.
-    abort(400);
+    return $user->isEditor();
 }
 
 
 <?php
-// ---------- Choosing between them ----------
+// ---------- Roles and permissions as tables ----------
 
-// Do you ever need the original value back?
+// users  roles  permissions  role_user  permission_role
 
-// No: a password. Hash it.
-$user->password = Hash::make($request->password);
-
-// Yes: a token you must send to a provider. Encrypt it.
-$integration->api_token = $request->token;   // 'encrypted' cast
-
-// ❌ Never. This makes every password recoverable.
-$user->password = Crypt::encryptString($request->password);
-
-
-# ---------- Key rotation ----------
-
-# .env
-APP_KEY=base64:bmV3a2V5...
-APP_PREVIOUS_KEYS=base64:b2xka2V5...
-
-# New writes use APP_KEY. Existing values still decrypt
-# with a previous key, which gives you a window.
-
-<?php
-// During that window, re-encrypt in batches:
-
-Integration::chunkById(500, function ($integrations) {
-    foreach ($integrations as $integration) {
-        // Reading decrypts with whichever key works;
-        // saving re-encrypts with the current one.
-        $integration->api_token = $integration->api_token;
-        $integration->save();
-    }
-});
-
-// Then remove APP_PREVIOUS_KEYS.
-
-// Keep a note of which columns are encrypted. Without it,
-// rotation is not a task, it is a crisis.`,
-      },
-      keyTakeaways: [
-        "<b>Hashing is one-way and encryption is two-way</b>, and they answer different questions.",
-        "<b>The deciding question: do you ever need the original value back?</b> No means hash, yes means encrypt.",
-        "<b>Encrypting a password is a real mistake</b>: it makes every password recoverable from your database plus the key.",
-        "`Crypt::encryptString()` and `Crypt::decryptString()` handle text; `encrypt()` and `decrypt()` handle any value.",
-        "The `'encrypted'` cast does it on the model, using `APP_KEY`.",
-        "<b>An encrypted column cannot be searched, indexed or sorted.</b>",
-        "<b>Losing `APP_KEY` loses the data permanently.</b>",
-        "Laravel's encryption is authenticated, so a tampered ciphertext raises `DecryptException` rather than returning nonsense.",
-        "<b>`APP_PREVIOUS_KEYS` lets old values still decrypt while new ones use the new key</b>, which is what makes rotation possible.",
-        "<b>Rotation only works if you planned for it</b>, so keep a note of which columns are encrypted.",
-      ],
-      commonMistakes: [
-        "<b>Encrypting passwords instead of hashing them.</b> The plain values become recoverable.",
-        "<b>Encrypting a column you need to search.</b> Every ciphertext differs, so no `where` will match.",
-        "<b>Replacing `APP_KEY` without previous keys.</b> Every encrypted value in the database becomes unreadable.",
-        "<b>Letting `DecryptException` become a 500.</b> Tampered input should be a 400, handled deliberately.",
-        "<b>Not recording which columns are encrypted.</b> Rotation then has no list to work from.",
-      ],
-      quiz: [
-        {
-          question: "When should you encrypt rather than hash?",
-          options: [
-            "Whenever the value is sensitive",
-            "When you need the original value back later",
-            "For passwords",
-            "When the column is indexed",
-          ],
-          correctIndex: 1,
-          explanation: "Hashing is for values you only ever need to match against.",
-        },
-        {
-          question: "What is wrong with encrypting passwords?",
-          options: [
-            "It is slower",
-            "It makes them recoverable, so a leak of the database plus the key exposes every account",
-            "It cannot be done",
-            "Nothing",
-          ],
-          correctIndex: 1,
-          explanation: "A password should never be recoverable, by anyone, including you.",
-        },
-        {
-          question: "What happens if you lose `APP_KEY`?",
-          options: [
-            "Laravel regenerates it",
-            "Encrypted data is permanently unreadable",
-            "Users must log in again, and nothing else",
-            "The data decrypts with the previous key automatically",
-          ],
-          correctIndex: 1,
-          explanation: "It also signs sessions, so everybody is logged out too.",
-        },
-        {
-          question: "What does `APP_PREVIOUS_KEYS` make possible?",
-          options: [
-            "Multiple applications sharing data",
-            "Rotating the key while old values remain decryptable",
-            "Faster decryption",
-            "Encrypting more columns",
-          ],
-          correctIndex: 1,
-          explanation: "It gives you a window to re-encrypt existing rows.",
-        },
-      ],
-    },
-    {
-      id: "password-resets",
-      title: "Password resets & reset tokens",
-      durationMinutes: 11,
-      explanation: "The feature most likely to be built badly, because the obvious implementation is a security hole.\n\n---\n\n### 1. Basic — what it must not be\n\nThe naive version emails the user their current password. It cannot: you hashed it, and there is nothing to send. <b>That is the hashing lesson paying off already</b> — a site that can email you your password is telling you it stores passwords it should not have.\n\nThe correct flow never touches the old password at all:\n\n```text\nUser\n ↓\n\"Forgot password?\"\n ↓\nenter email\n ↓\ngenerate a reset token, store its hash\n ↓\nemail a link containing the token\n ↓\nuser clicks it\n ↓\nnew password\n ↓\nHash::make()\n ↓\nsave, and delete the token\n```\n\nThe token is a temporary, single-use proof that the person controls that inbox.\n\nLaravel provides the whole thing. `Password::sendResetLink()` and `Password::reset()`, backed by a `password_reset_tokens` table:\n\n```php\n$status = Password::sendResetLink($request->only('email'));\n```\n\nThat `$status` is a constant you can branch on:\n\n```text\nPassword::RESET_LINK_SENT     the email went out\nPassword::INVALID_USER        no account with that address\nPassword::RESET_THROTTLED     asked again too soon\n```\n\n<b>Useful for logging, and useless for the response</b>, for the reason two sections down: branching on it in the user-facing message is exactly the leak you are trying to avoid.\n\n---\n\n### 2. Intermediate — the four properties a token needs\n\nEvery one of these has been the cause of a real breach somewhere.\n\n```text\nunpredictable      cannot be guessed or derived\nexpires            useless after a short window\nsingle use         invalidated the moment it works\nstored hashed      a database leak does not hand over resets\n```\n\n<b>Unpredictable</b> rules out the mistake that looks reasonable:\n\n```text\n/reset-password/user/123      ❌ the id is the token\n/reset-password/{64 random chars}   ✓\n```\n\nAnything derived from the user id, the email, or a timestamp is guessable. It must be random.\n\n<b>Expires</b> because an old email in an inbox should not be a permanent key. Laravel defaults to sixty minutes.\n\n<b>Single use</b> because a token that still works after the password changed lets anybody who saw the link do it again.\n\n<b>Stored hashed</b> for exactly the reason passwords are. Laravel hashes reset tokens in the database, so leaking that table does not let an attacker reset anybody's password.\n\n---\n\n### 3. Advanced — the details around the edges\n\n<b>Do not reveal whether the email exists.</b>\n\n```text\n❌ \"No account with that email.\"\n✓ \"If that email is registered, we have sent a link.\"\n```\n\nThe same message either way. Otherwise the forgot-password form becomes a tool for discovering who has an account, which is how a credential-stuffing list gets refined.\n\n<b>Rate limit it.</b> Without a limit, the form is a way to send somebody unlimited email. Laravel throttles resend attempts per email by default; keep that, and add `throttle` middleware on the route.\n\n<b>Decide what a reset does to existing sessions.</b> This is the question people forget. Somebody resetting their password because it was stolen expects the thief to be logged out. If sessions survive the reset, they are not.\n\n```php\n$user->forceFill([\n    'password'       => $password,\n    'remember_token' => Str::random(60),\n])->save();\n```\n\nRegenerating `remember_token` kills remembered logins. Laravel can also invalidate other sessions when the password changes, and on a real application you want that on.\n\n<b>And validate the new password properly:</b>\n\n```php\n'password' => ['required', 'confirmed', Password::defaults()],\n```\n\n`Password::defaults()` is configurable in one place, and `->uncompromised()` additionally checks the password against known breach data without ever sending it anywhere useful.\n\nOne last note tying back to the last lesson. A reset link arrives by email, so <b>the security of the whole flow is the security of the inbox.</b> That is a reasonable trade for most applications, and it is also the reason two-factor authentication exists.",
-      diagram: `What it must NOT be
-
-  Emailing the current password. You cannot: you hashed it.
-
-  A site that can email your password is telling you
-  it stores passwords it should not have.
-
-
-The correct flow
-
-  "Forgot password?"
-        ↓
-  enter email
-        ↓
-  generate a reset token, store its HASH
-        ↓
-  email a link containing the token
-        ↓
-  user clicks it
-        ↓
-  new password → Hash::make() → save
-        ↓
-  delete the token
-
-  The token is temporary, single-use proof that the
-  person controls that inbox.
-
-
-Four properties a token needs
-
-  unpredictable   cannot be guessed or derived
-  expires         useless after a short window (60 min)
-  single use      invalidated the moment it works
-  stored hashed   a database leak does not hand over resets
-
-  /reset-password/user/123            ❌ the id IS the token
-  /reset-password/{64 random chars}   ✓
-
-  Anything derived from the id, the email or a timestamp
-  is guessable. It must be random.
-
-
-The edges people forget
-
-  Do not reveal whether the email exists
-
-    ❌ "No account with that email."
-    ✓ "If that email is registered, we have sent a link."
-
-    The same message either way, or the form becomes a
-    tool for discovering who has an account.
-
-  Rate limit it
-    Otherwise it is a way to send somebody unlimited email.
-
-  Decide what a reset does to existing SESSIONS
-    Someone resetting because their password was stolen
-    expects the thief to be logged out. If sessions
-    survive, they are not.
-
-    Regenerate remember_token, and invalidate other
-    sessions on password change.
-
-  Validate the new password
-    ['required', 'confirmed', Password::defaults()]
-    ->uncompromised() checks it against breach data
-
-
-  The link arrives by email, so the security of the whole
-  flow is the security of the inbox. A reasonable trade
-  for most applications, and the reason 2FA exists.`,
-      codeExample: {
-        title: "A reset flow that holds up",
-        code: `<?php
-
-namespace App\\Http\\Controllers;
-
-use Illuminate\\Auth\\Events\\PasswordReset;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Hash;
-use Illuminate\\Support\\Facades\\Password;
-use Illuminate\\Support\\Str;
-use Illuminate\\Validation\\Rules\\Password as PasswordRule;
-
-class PasswordResetController extends Controller
+class User extends Authenticatable
 {
-    // ---------- Step 1: send the link ----------
-
-    public function sendLink(Request $request)
+    public function roles()
     {
-        $request->validate(['email' => ['required', 'email']]);
+        return $this->belongsToMany(Role::class);
+    }
 
-        $status = Password::sendResetLink($request->only('email'));
+    public function hasPermission(string $name): bool
+    {
+        // ❌ Two joins on EVERY check. A page checking twelve
+        //    abilities runs twelve of these.
+        // return $this->roles()
+        //     ->whereHas('permissions', fn ($q) => $q->where('name', $name))
+        //     ->exists();
 
-        // Branch on the status for LOGGING, never for the response
-        if ($status === Password::RESET_THROTTLED) {
-            Log::info('Reset link throttled', ['email' => $request->email]);
+        // ✓ Load once per request, then check in memory.
+        return $this->permissionNames()->contains($name);
+    }
+
+    protected function permissionNames(): Collection
+    {
+        return once(fn () => $this->roles
+            ->loadMissing('permissions')
+            ->flatMap->permissions
+            ->pluck('name')
+            ->unique());
+    }
+}
+
+
+<?php
+// ---------- Permissions and ownership, together ----------
+
+class PostPolicy
+{
+    public function update(User $user, Post $post): bool
+    {
+        // The role says what kind of thing you may do.
+        if (! $user->hasPermission('posts.update')) {
+            return false;
         }
 
-        // The SAME message whether or not the email exists.
-        // Otherwise this form tells an attacker who has an account.
-        return back()->with('status',
-            'If that email is registered, we have sent a link.');
-    }
-
-    // ---------- Step 2: accept the new password ----------
-
-    public function reset(Request $request)
-    {
-        $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email'],
-            'password' => [
-                'required',
-                'confirmed',
-                PasswordRule::defaults(),   // configured in one place
-            ],
-        ]);
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-
-                    // Kills remembered logins on other devices.
-                    'remember_token' => Str::random(60),
-                ])->save();
-
-                event(new PasswordReset($user));
-            },
-        );
-
-        // Laravel deletes the token once it has been used.
-
-        return $status === Password::PASSWORD_RESET
-            ? redirect('/login')->with('status', 'Password updated.')
-            : back()->withErrors(['email' => __($status)]);
+        // The policy says whether you may do it to THIS one.
+        return $post->user_id === $user->id
+            || $user->hasPermission('posts.update.any');
     }
 }
 
+// Roles and policies are not alternatives.
+
 
 <?php
-// ---------- routes/web.php ----------
+// ---------- Test the denials ----------
 
-Route::middleware('guest')->group(function () {
-    Route::get('/forgot-password', ...)->name('password.request');
+it('lets an owner update their post', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->for($user)->create();
 
-    // Rate limit: otherwise this sends somebody unlimited email.
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])
-        ->middleware('throttle:5,1')
-        ->name('password.email');
-
-    Route::get('/reset-password/{token}', ...)->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
-        ->middleware('throttle:5,1')
-        ->name('password.update');
+    $this->actingAs($user)
+        ->put("/posts/{$post->id}", ['title' => 'New'])
+        ->assertRedirect();
 });
 
+it('stops another user updating it', function () {
+    $post    = Post::factory()->create();
+    $someone = User::factory()->create();
 
-<?php
-// ---------- Password rules, in one place ----------
+    // This is the test that proves the lock is fitted.
+    $this->actingAs($someone)
+        ->put("/posts/{$post->id}", ['title' => 'New'])
+        ->assertForbidden();
+});
 
-// app/Providers/AppServiceProvider.php
+it('stops a guest updating it', function () {
+    $post = Post::factory()->create();
 
-use Illuminate\\Validation\\Rules\\Password;
-
-public function boot(): void
-{
-    Password::defaults(fn () => $this->app->isProduction()
-        ? Password::min(12)->letters()->numbers()->uncompromised()
-        : Password::min(8));
-}
-
-// uncompromised() checks the password against known breach
-// data without sending anything useful anywhere.
-
-
-<?php
-// ---------- The URL shape ----------
-
-// ❌ The id is the token. Anyone can reset anyone.
-// /reset-password/user/123
-
-// ✓ Unpredictable, expiring, single use, stored hashed.
-// /reset-password/8f3a...64 random characters...?email=...`,
+    $this->put("/posts/{$post->id}", ['title' => 'New'])
+        ->assertRedirect('/login');
+});`,
       },
       keyTakeaways: [
-        "<b>A reset never emails the old password</b>, because it was hashed and does not exist to send.",
-        "The flow is: request, generate a token, email a link, verify the token, hash the new password, delete the token.",
-        "<b>A reset token must be unpredictable, expiring, single use, and stored hashed.</b>",
-        "<b>A URL containing the user id is not a token</b>, and neither is anything derived from the email or a timestamp.",
-        "Laravel stores reset tokens hashed, so leaking that table does not hand over resets.",
-        "<b>Give the same response whether or not the email exists</b>, or the form enumerates your accounts.",
-        "<b>`sendResetLink()` returns a status</b> (`RESET_LINK_SENT`, `INVALID_USER`, `RESET_THROTTLED`) worth logging, never surfacing.",
-        "<b>Rate limit both reset routes</b>, or the form becomes a way to send somebody unlimited email.",
-        "<b>Decide what a reset does to existing sessions</b>: someone resetting a stolen password expects the thief logged out.",
-        "Regenerating `remember_token` kills remembered logins on other devices.",
-        "<b>Validate with `Password::defaults()`</b>, and consider `uncompromised()` to reject known-breached passwords.",
+        "<b>A role is a named bundle of permissions</b>, so promoting somebody changes what they may do with no code change.",
+        "<b>Ownership asks whether this user owns this record; a permission asks what kind of thing they may do at all.</b>",
+        "<b>Roles and policies are not alternatives</b>: most real policies check a permission and then ownership.",
+        "Rolling your own is a many-to-many schema plus assignment, caching, middleware, seeding and tests.",
+        "<b>A naive `hasPermission()` runs two joins per check</b>, so load a user's permissions once per request.",
+        "<b>A fixed set of roles needs no tables</b>, and an enum plus a policy is often the whole answer.",
+        "<b>Reach for a package when permissions must change at runtime</b>, or you need teams, many roles, or a management UI.",
+        "<b>`spatie/laravel-permission` is the de facto package</b>: `assignRole()`, `givePermissionTo()`, `hasRole()`.",
+        "<b>It registers permissions as gates</b>, so `can()`, `@can` and `authorize()` keep working unchanged.",
+        "<b>`@elsecan` gives `@can` an else branch</b>, so you do not write the same check twice, inverted.",
+        "<b>The real cost of a package is that permissions become data</b>, changeable in production and invisible to your tests.",
+        "That is right when customers configure their own roles, and wrong for a rule that must always hold.",
+        "<b>Gates for system-level abilities, policies for model abilities, roles for what kind of user somebody is.</b>",
+        "<b>Authorization is the code most likely to be wrong and least likely to be noticed</b>, so test the denials.",
       ],
       commonMistakes: [
-        "<b>Building a reset URL from the user id.</b> Anybody can then reset anybody's password.",
-        "<b>Saying \"no account with that email\".</b> The forgot-password form becomes an account-discovery tool.",
-        "<b>Leaving reset tokens valid after use.</b> Anyone who saw the link can reset the password again.",
-        "<b>Leaving other sessions alive after a reset.</b> The attacker whose access prompted it stays logged in.",
-        "<b>Not throttling the request route.</b> It becomes an email-sending tool aimed at whoever you like.",
+        "<b>Replacing policies with roles.</b> A role cannot know whether this particular record belongs to you.",
+        "<b>Querying permissions on every check.</b> Twelve abilities on a page means twelve round trips.",
+        "<b>Reaching for a package for \"owners can edit their own posts\".</b> That is four lines and no dependency.",
+        "<b>Putting a rule that must always hold into an editable permissions table.</b> It can be switched off in production.",
+        "<b>Only testing the happy path.</b> The application behaves identically whether or not the rules work.",
       ],
       quiz: [
         {
-          question: "Why can a password reset not email the current password?",
+          question: "What is the difference between a permission check and an ownership check?",
           options: [
-            "It would be too long",
-            "The password is hashed, so it does not exist in a form that could be sent",
-            "Email is not secure enough",
-            "It can, with encryption",
+            "None",
+            "A permission says what kind of thing you may do; ownership says whether you may do it to this record",
+            "Permissions are for admins only",
+            "Ownership is checked by middleware",
           ],
           correctIndex: 1,
-          explanation: "A site that can email your password stores something it should not.",
+          explanation: "Most real policies use both.",
         },
         {
-          question: "Which of these is not a required property of a reset token?",
-          options: ["Unpredictable", "Expires", "Single use", "Human readable"],
-          correctIndex: 3,
-          explanation: "It should be random; readability would make it guessable.",
-        },
-        {
-          question: "Why respond identically whether or not the email exists?",
+          question: "What is the performance trap in a hand-rolled permission system?",
           options: [
-            "It is simpler to code",
-            "Different responses let an attacker discover which emails have accounts",
-            "It is faster",
+            "Too many roles",
+            "Checking a permission queries the database every time, so a page runs one query per ability",
+            "Policies cannot be cached",
+            "Migrations are slow",
+          ],
+          correctIndex: 1,
+          explanation: "Load a user's permissions once per request and check in memory.",
+        },
+        {
+          question: "When is a roles-and-permissions package worth it?",
+          options: [
+            "Always",
+            "When permissions change at runtime, or you need many roles, teams or a management UI",
+            "For any application with an admin",
+            "Never; policies are enough",
+          ],
+          correctIndex: 1,
+          explanation: "For \"owners edit their own posts\", a policy is four lines.",
+        },
+        {
+          question: "Why test the denials rather than only the happy path?",
+          options: [
+            "Denials are faster to test",
+            "The application behaves identically whether or not the rules work, so only a denial proves the lock is fitted",
             "Laravel requires it",
+            "To measure performance",
           ],
           correctIndex: 1,
-          explanation: "That is how a credential-stuffing list gets refined.",
-        },
-        {
-          question: "Why regenerate `remember_token` during a reset?",
-          options: [
-            "To invalidate the reset token",
-            "So remembered logins on other devices stop working, including an attacker's",
-            "To hash the new password",
-            "It is required by the database",
-          ],
-          correctIndex: 1,
-          explanation: "Someone resetting a stolen password expects the thief logged out.",
-        },
-      ],
-    },
-    {
-      id: "email-verification",
-      title: "Email verification & the whole flow",
-      durationMinutes: 10,
-      explanation: "Registration proves somebody typed an email address. Verification proves they can read it.\n\n---\n\n### 1. Basic — why it exists\n\nWithout verification, anybody can register as anybody:\n\n```text\nsignup form\n     ↓\nemail: someone.else@example.com\n     ↓\naccount created\n```\n\nThat matters more than it first looks. Password resets go to that address, so an unverified account attached to an email you do not control is an account somebody else can take. And an application that emails unverified addresses eventually gets marked as spam.\n\nThe flow:\n\n```text\nregistration\n     ↓\nuser created, email_verified_at = null\n     ↓\nverification email with a signed link\n     ↓\nuser clicks it\n     ↓\nemail_verified_at = now()\n```\n\nTwo steps to turn it on. The model declares the contract:\n\n```php\nclass User extends Authenticatable implements MustVerifyEmail\n{\n    //\n}\n```\n\nand the routes get a second middleware:\n\n```php\nRoute::get('/dashboard', ...)->middleware(['auth', 'verified']);\n```\n\n---\n\n### 2. Intermediate — two middlewares, two questions\n\n```text\nauth       is anybody logged in?\nverified   has that person proved they own the address?\n```\n\nThey stack, and the order matters conceptually if not mechanically: there is no point asking the second question until the first is answered.\n\n```text\nguest            → /login\nlogged in,       → /email/verify\n  unverified\nlogged in,       → the page\n  verified\n```\n\nNote what verification does <i>not</i> do: it does not block logging in. An unverified user is authenticated, and can reach anything protected by `auth` alone. That is usually right, because they need somewhere to land and a resend button, but it means you have to decide which routes carry `verified` rather than assuming it applies everywhere.\n\nThe verification link is <b>signed</b>: it carries a hash Laravel checks, so nobody can craft a link verifying an address they do not control, and it expires.\n\n---\n\n### 3. Advanced — the whole picture\n\nEverything today, in one diagram:\n\n```text\n              Registration\n                   ↓\n                 User\n                   ↓\n            Hash::make(password)\n                   ↓\n               Database\n                   ↓\n           Email verification\n                   ↓\n               Verified\n                   ↓\n                 Login\n                   ↓\n            Auth::attempt()\n                   ↓\n         session regeneration\n                   ↓\n             Authenticated\n                   ↓\n        ┌──────────┴──────────┐\n        ↓                     ↓\n  auth middleware      verified middleware\n        └──────────┬──────────┘\n                   ↓\n               Dashboard\n```\n\nand separately:\n\n```text\nForgot password → reset token → email → new password\n     → Hash::make() → database\n```\n\nThree practical notes to finish.\n\n<b>Sending mail during registration slows registration.</b> Queue the verification email rather than making the user wait for an SMTP round trip, which is a good habit before you meet queues properly.\n\n<b>Give unverified users somewhere to be.</b> A page saying what happened, with a resend button, throttled so it cannot be used to flood an inbox.\n\n<b>And decide deliberately what unverified users may do.</b> Blocking everything is safe and frustrating; blocking nothing makes the feature pointless. Most applications let them see their account and nothing that acts on the world.",
-      diagram: `Why it exists
-
-  signup form
-       ↓
-  email: someone.else@example.com
-       ↓
-  account created                    ← nobody checked
-
-  Password resets go to that address, so an unverified
-  account on an email you do not control is an account
-  somebody else can take.
-
-
-The flow
-
-  registration
-       ↓
-  user created, email_verified_at = null
-       ↓
-  verification email, SIGNED link
-       ↓
-  user clicks it
-       ↓
-  email_verified_at = now()
-
-  Two steps to turn on:
-
-    class User extends Authenticatable implements MustVerifyEmail
-    ->middleware(['auth', 'verified'])
-
-
-Two middlewares, two questions
-
-  auth       is anybody logged in?
-  verified   has that person proved they own the address?
-
-  guest                    → /login
-  logged in, unverified    → /email/verify
-  logged in, verified      → the page
-
-  Verification does NOT block logging in. An unverified
-  user is authenticated and can reach anything protected
-  by auth alone — which is usually right, because they
-  need somewhere to land and a resend button.
-
-  The link is signed, so nobody can craft one for an
-  address they do not control, and it expires.
-
-
-The whole day, in one picture
-
-              Registration
-                   ↓
-                 User
-                   ↓
-            Hash::make(password)
-                   ↓
-               Database
-                   ↓
-           Email verification
-                   ↓
-               Verified
-                   ↓
-                 Login
-                   ↓
-            Auth::attempt()
-                   ↓
-         session regeneration
-                   ↓
-             Authenticated
-                   ↓
-        ┌──────────┴──────────┐
-        ↓                     ↓
-  auth middleware      verified middleware
-        └──────────┬──────────┘
-                   ↓
-               Dashboard
-
-  Forgot password → reset token → email → new password
-       → Hash::make() → database
-
-
-Three practical notes
-
-  Queue the verification email, or registration waits
-  for an SMTP round trip.
-
-  Give unverified users a page with a resend button,
-  throttled so it cannot flood an inbox.
-
-  Decide deliberately what they may do. Blocking
-  everything is safe and frustrating. Blocking nothing
-  makes the feature pointless.`,
-      codeExample: {
-        title: "Turning verification on",
-        code: `<?php
-// ---------- 1. The model declares the contract ----------
-
-namespace App\\Models;
-
-use Illuminate\\Contracts\\Auth\\MustVerifyEmail;
-use Illuminate\\Foundation\\Auth\\User as Authenticatable;
-
-class User extends Authenticatable implements MustVerifyEmail
-{
-    protected $fillable = ['name', 'email', 'password'];
-
-    protected $hidden = ['password', 'remember_token'];
-
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-        ];
-    }
-}
-
-
-<?php
-// ---------- 2. Routes ----------
-
-Route::middleware('auth')->group(function () {
-
-    // Somewhere for unverified users to be.
-    Route::get('/email/verify', fn () => view('auth.verify-email'))
-        ->name('verification.notice');
-
-    // The signed link from the email.
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();          // sets email_verified_at
-
-        return redirect('/dashboard');
-    })->middleware('signed')->name('verification.verify');
-
-    // Resend, throttled so it cannot flood an inbox.
-    Route::post('/email/verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('status', 'Verification link sent.');
-    })->middleware('throttle:6,1')->name('verification.send');
-
-    // Authenticated AND verified.
-    Route::middleware('verified')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index']);
-        Route::post('/invoices', [InvoiceController::class, 'store']);
-    });
-});
-
-
-<?php
-// ---------- 3. Registration ----------
-
-public function register(Request $request)
-{
-    $user = User::create($request->validate([
-        'name'     => ['required', 'string', 'max:255'],
-        'email'    => ['required', 'email', 'unique:users'],
-        'password' => ['required', 'confirmed', Password::defaults()],
-    ]));
-
-    // Queue it, or registration waits for an SMTP round trip.
-    event(new Registered($user));
-
-    Auth::login($user);
-    $request->session()->regenerate();
-
-    return redirect()->route('verification.notice');
-}
-
-
-<?php
-// ---------- Checking it yourself ----------
-
-$request->user()->hasVerifiedEmail();
-$request->user()->markEmailAsVerified();
-
-// The three states:
-//   guest                 → /login
-//   logged in, unverified → /email/verify
-//   logged in, verified   → the page`,
-      },
-      keyTakeaways: [
-        "<b>Registration proves somebody typed an address; verification proves they can read it.</b>",
-        "An unverified account on an address you do not control is an account somebody else can take, via password reset.",
-        "<b>Implement `MustVerifyEmail` on the model and add `verified` middleware to routes.</b>",
-        "<b>`auth` asks whether anybody is logged in; `verified` asks whether they proved they own the address.</b>",
-        "<b>Verification does not block logging in</b>, so decide which routes carry `verified`.",
-        "The verification link is signed and expiring, so nobody can craft one for an address they do not control.",
-        "`hasVerifiedEmail()` and `markEmailAsVerified()` let you check and set it yourself.",
-        "<b>Queue the verification email</b>, or registration waits for an SMTP round trip.",
-        "<b>Give unverified users a page with a throttled resend button</b>, so it cannot flood an inbox.",
-        "Blocking everything is frustrating and blocking nothing is pointless, so choose deliberately.",
-      ],
-      commonMistakes: [
-        "<b>Adding `verified` middleware without implementing `MustVerifyEmail`.</b> Nothing sends and nothing verifies.",
-        "<b>Putting `verified` on the verification notice page.</b> The user can never reach the page telling them to verify.",
-        "<b>Assuming an unverified user cannot log in.</b> They are authenticated; only `verified` routes are closed.",
-        "<b>Leaving the resend route unthrottled.</b> It becomes a way to flood somebody's inbox.",
-        "<b>Sending the verification email synchronously.</b> Registration then waits for the mail server.",
-      ],
-      quiz: [
-        {
-          question: "What does email verification prove?",
-          options: [
-            "That the password is strong",
-            "That the person can read the address they registered with",
-            "That the account is authorized",
-            "That the email is unique",
-          ],
-          correctIndex: 1,
-          explanation: "Which matters because password resets go to that address.",
-        },
-        {
-          question: "What two things turn verification on?",
-          options: [
-            "A migration and a seeder",
-            "Implementing `MustVerifyEmail` on the model and adding `verified` middleware",
-            "A config flag",
-            "A trait and a factory",
-          ],
-          correctIndex: 1,
-          explanation: "The contract makes Laravel send the mail; the middleware enforces it.",
-        },
-        {
-          question: "Can an unverified user log in?",
-          options: [
-            "No, login is blocked",
-            "Yes; they are authenticated, but `verified` routes are closed to them",
-            "Only for an hour",
-            "Only with remember me",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why they need a landing page with a resend button.",
-        },
-        {
-          question: "Why is the verification link signed?",
-          options: [
-            "For tracking",
-            "So nobody can craft a link verifying an address they do not control",
-            "To identify the mail client",
-            "To allow reuse",
-          ],
-          correctIndex: 1,
-          explanation: "It expires too, so an old email is not a permanent key.",
-        },
-      ],
-    },
-    {
-      id: "starter-kits-fortify-socialite",
-      title: "Starter kits, Fortify & Socialite",
-      durationMinutes: 12,
-      explanation: "Everything so far is what these tools generate for you. Knowing it first is what makes them safe to use.\n\n---\n\n### 1. Basic — starter kits\n\nA starter kit scaffolds registration, login, password reset, verification and the routes and views around them. Current Laravel offers them for:\n\n```text\nReact    Vue    Svelte    Livewire\n```\n\n> <b>Breeze and Jetstream are no longer the maintained direction for new applications.</b> Learn the newer starter-kit approach rather than building new projects on them.\n\nThe important framing: <b>a starter kit is application scaffolding, not the authentication concept.</b> It writes the controllers you wrote today, into your project, for you to own and change. It does not hide them.\n\nWhich means the useful question is not \"should I use one\", but \"do I understand what it generated\". If a starter kit's login controller is the first time you have seen `session()->regenerate()`, you cannot tell whether removing it matters.\n\nThere is also a WorkOS AuthKit variant, for applications whose authentication is more than email and password:\n\n```text\nYour Laravel application\n        │\n        ▼\n   WorkOS AuthKit\n        │\n        ├── Social login\n        ├── Passkeys\n        └── SSO\n```\n\nSSO is the one that decides it. A company buying your product for five hundred employees expects them to sign in with the company identity provider, not five hundred new passwords.\n\n---\n\n### 2. Intermediate — Fortify\n\nSometimes you want the authentication backend and none of the frontend. A React or Vue application, or a mobile app, has its own screens.\n\n<b>Fortify</b> is that: routes, controllers and the authentication logic, with no views.\n\n```text\nYour React / Vue / mobile frontend\n         │\n         ▼\n   Laravel Fortify\n         │\n         ├── Login\n         ├── Registration\n         ├── Password reset\n         ├── Email verification\n         └── Two-factor authentication\n```\n\n```text\nStarter kit          Fortify\n───────────          ───────\nroutes + views       routes only\ncontrollers in       controllers in the package\n  your project\nyou own and edit     you configure\nquickest start       your own frontend\n```\n\nThe two-factor support is the strongest argument. Implementing TOTP, recovery codes and the confirmation flow correctly is real work, and getting it slightly wrong is worse than not having it.\n\n---\n\n### 3. Advanced — Socialite, and the model behind it\n\n<b>Socialite</b> handles logging in with Google, GitHub, Facebook and the rest:\n\n```text\nyour application\n      ↓\n\"Log in with Google\"\n      ↓\nGoogle authenticates them\n      ↓\nredirects back with an identity\n      ↓\nfind or create a local user\n      ↓\nAuth::login()\n```\n\nAnd here is the part people get wrong. <b>A Google identity is not a Laravel user.</b>\n\n```text\n❌ Google user = Laravel user\n\n✓ Google identity\n       ↓\n  external provider id\n       ↓\n  local User\n       ↓\n  Laravel authentication\n```\n\nYour application still needs its own user record, because everything else in it points at that record: invoices, sessions, roles.\n\nThe naive implementation matches on email:\n\n```php\nUser::firstOrCreate(['email' => $googleUser->getEmail()]);\n```\n\nwhich has two problems. An email can change at the provider, and matching on email alone means anybody who can get a provider account with your email address can walk into your account.\n\nStore the provider identity separately:\n\n```text\nusers                 social_accounts\n─────                 ───────────────\nid                    user_id\nname                  provider        'google'\nemail                 provider_id     '10429...'\n```\n\nNow the same person can attach GitHub later, changing their Google email breaks nothing, and the join is on the provider's stable id rather than a display value.\n\n<b>And after all of it, the last line is the one from lesson two:</b>\n\n```php\nAuth::login($user);\n$request->session()->regenerate();\n```\n\nSocial login authenticates through somebody else. Your session, your rules, and every habit from today still applies.",
-      diagram: `Starter kits
-
-  React    Vue    Svelte    Livewire
-
-  > Breeze and Jetstream are no longer the maintained
-    direction for new applications.
-
-  A starter kit is application SCAFFOLDING, not the
-  authentication concept. It writes the controllers you
-  wrote today into your project, for you to own.
-
-  So the question is not "should I use one" but
-  "do I understand what it generated".
-
-  If a starter kit's login controller is the first time
-  you have seen session()->regenerate(), you cannot tell
-  whether removing it matters.
-
-
-  WorkOS AuthKit variant, when auth is more than a password:
-
-    Your application → WorkOS AuthKit
-                          ├── Social login
-                          ├── Passkeys
-                          └── SSO
-
-  SSO decides it. A company buying your product for 500
-  employees expects their identity provider, not 500
-  new passwords.
-
-
-Fortify: the backend, no frontend
-
-  Your React / Vue / mobile frontend
-           ↓
-     Laravel Fortify
-           ├── Login
-           ├── Registration
-           ├── Password reset
-           ├── Email verification
-           └── Two-factor authentication
-
-  Starter kit          Fortify
-  ───────────          ───────
-  routes + views       routes only
-  controllers in       controllers in the package
-    your project
-  you own and edit     you configure
-  quickest start       your own frontend
-
-  The 2FA support is the strongest argument: TOTP,
-  recovery codes and the confirmation flow are real
-  work, and slightly wrong is worse than absent.
-
-
-Socialite, and the model behind it
-
-  your application
-        ↓
-  "Log in with Google"
-        ↓
-  Google authenticates them
-        ↓
-  redirects back with an identity
-        ↓
-  find or create a LOCAL user
-        ↓
-  Auth::login()
-
-
-  ❌ Google user = Laravel user
-
-  ✓ Google identity → provider id → local User
-                                        ↓
-                              Laravel authentication
-
-  Matching on email alone has two problems:
-    an email can change at the provider
-    anyone who gets a provider account with your email
-    walks into your account
-
-  users              social_accounts
-  ─────              ───────────────
-  id                 user_id
-  name               provider      'google'
-  email              provider_id   '10429...'
-
-  Same person can add GitHub later. Changing their
-  Google email breaks nothing. The join is on a
-  stable id, not a display value.
-
-
-  And the last line is still lesson two's:
-
-    Auth::login(\$user);
-    \$request->session()->regenerate();`,
-      codeExample: {
-        title: "Socialite, done properly",
-        code: `<?php
-// ---------- The tables ----------
-
-Schema::create('social_accounts', function (Blueprint $table) {
-    $table->id();
-
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-
-    $table->string('provider');       // 'google', 'github'
-    $table->string('provider_id');    // the provider's stable id
-
-    $table->timestamps();
-
-    // One provider account maps to one local user.
-    $table->unique(['provider', 'provider_id']);
-});
-
-
-<?php
-// ---------- The controller ----------
-
-namespace App\\Http\\Controllers;
-
-use App\\Models\\SocialAccount;
-use App\\Models\\User;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Auth;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Support\\Str;
-use Laravel\\Socialite\\Facades\\Socialite;
-
-class SocialLoginController extends Controller
-{
-    public function redirect(string $provider)
-    {
-        return Socialite::driver($provider)->redirect();
-    }
-
-    public function callback(Request $request, string $provider)
-    {
-        $socialUser = Socialite::driver($provider)->user();
-
-        // Match on the provider's stable id, not the email.
-        $account = SocialAccount::where('provider', $provider)
-            ->where('provider_id', $socialUser->getId())
-            ->first();
-
-        if ($account) {
-            $user = $account->user;
-        } else {
-            $user = DB::transaction(function () use ($socialUser, $provider) {
-                $user = User::create([
-                    'name'              => $socialUser->getName(),
-                    'email'             => $socialUser->getEmail(),
-                    'password'          => Str::random(40),   // unusable
-                    'email_verified_at' => now(),             // the provider checked
-                ]);
-
-                $user->socialAccounts()->create([
-                    'provider'    => $provider,
-                    'provider_id' => $socialUser->getId(),
-                ]);
-
-                return $user;
-            });
-        }
-
-        // Every habit from earlier today still applies.
-        Auth::login($user, remember: true);
-        $request->session()->regenerate();
-
-        return redirect()->intended('/dashboard');
-    }
-}
-
-
-<?php
-// ---------- The mistake worth naming ----------
-
-// ❌ An email can change at the provider, and anyone who
-//    obtains a provider account with this address walks
-//    straight into the local account.
-User::firstOrCreate(['email' => $socialUser->getEmail()]);
-
-// ✓ Join on provider + provider_id, kept in its own table,
-//   so the same person can attach GitHub later and changing
-//   their Google email breaks nothing.
-
-
-<?php
-// ---------- Routes ----------
-
-Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect']);
-Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback']);`,
-      },
-      keyTakeaways: [
-        "<b>A starter kit is application scaffolding</b>: it writes the controllers you wrote today into your project.",
-        "Current kits target React, Vue, Svelte and Livewire; <b>Breeze and Jetstream are no longer the maintained direction.</b>",
-        "<b>The question is not whether to use one, but whether you understand what it generated.</b>",
-        "The WorkOS AuthKit variant adds social login, passkeys and SSO, which matters for company customers.",
-        "<b>Fortify provides the authentication backend with no views</b>, for applications with their own frontend.",
-        "Its two-factor support is the strongest argument, because TOTP and recovery codes are easy to get subtly wrong.",
-        "<b>Socialite handles the OAuth round trip</b>, but your application still needs its own local user.",
-        "<b>A Google identity is not a Laravel user</b>: everything else in your application points at the local record.",
-        "<b>Match on the provider's stable id, not the email</b>, which can change and can be obtained by somebody else.",
-        "<b>Store provider identities in their own table</b>, so a user can attach several providers.",
-        "After any social login, `Auth::login()` and `session()->regenerate()` still apply.",
-      ],
-      commonMistakes: [
-        "<b>Using a starter kit before understanding what it generates.</b> You cannot tell which lines matter.",
-        "<b>Matching a social login on email alone.</b> Anyone obtaining a provider account with that address gets in.",
-        "<b>Treating the provider's user as your user.</b> Your invoices, roles and sessions all point at a local record.",
-        "<b>Storing `provider` and `provider_id` on the users table.</b> A second provider then has nowhere to go.",
-        "<b>Skipping `session()->regenerate()` after a social login.</b> The same session fixation risk as any other login.",
-      ],
-      quiz: [
-        {
-          question: "What is a starter kit?",
-          options: [
-            "A package that hides authentication behind an API",
-            "Scaffolding that writes authentication routes, controllers and views into your project",
-            "A replacement for guards and providers",
-            "A hosted identity service",
-          ],
-          correctIndex: 1,
-          explanation: "You own and edit what it generates, which is why you need to understand it.",
-        },
-        {
-          question: "When would you choose Fortify over a starter kit?",
-          options: [
-            "When you want it done fastest",
-            "When you have your own frontend and want the authentication backend only",
-            "When you need a second guard",
-            "When you cannot use Eloquent",
-          ],
-          correctIndex: 1,
-          explanation: "Routes and logic, no views, plus two-factor support.",
-        },
-        {
-          question: "Why should a social login not match on email alone?",
-          options: [
-            "Emails are slow to query",
-            "An email can change at the provider, and anyone obtaining a provider account with that address gets in",
-            "Providers do not return emails",
-            "It breaks eager loading",
-          ],
-          correctIndex: 1,
-          explanation: "Match on the provider's stable id, in its own table.",
-        },
-        {
-          question: "What does your application still need after a successful social login?",
-          options: [
-            "Nothing; the provider handles it",
-            "Its own local user record, then `Auth::login()` and a session regeneration",
-            "A second guard",
-            "A password from the user",
-          ],
-          correctIndex: 1,
-          explanation: "Everything else in your application points at the local record.",
+          explanation: "Authorization is the code most likely to be wrong and least likely to be noticed.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What is the difference between a guard and a provider?",
+      question: "What is the difference between authentication and authorization?",
       options: [
         "None",
-        "A guard decides how the user is authenticated; a provider decides where the user comes from",
-        "A guard is for APIs, a provider for browsers",
-        "A provider validates passwords",
+        "Authentication asks who you are; authorization asks what you may do",
+        "Authorization runs first",
+        "Authentication is for APIs only",
       ],
       correctIndex: 1,
-      explanation: "Guard = how. Provider = from where.",
+      explanation: "The `auth` middleware answers the first and nothing about the second.",
     },
     {
-      question: "What happens when `Auth::attempt()` succeeds?",
+      question: "When should you use a gate rather than a policy?",
       options: [
-        "The password is stored in the session",
-        "The user's id is put in the session, after `Hash::check()` verifies the password",
-        "A token is emailed",
-        "The user model is cached",
+        "When the model is soft-deletable",
+        "When the ability is not about a particular model, such as accessing the admin dashboard",
+        "When there are more than three abilities",
+        "Gates are always preferable",
       ],
       correctIndex: 1,
-      explanation: "Every credential key except `password` becomes a `where` clause.",
+      explanation: "Model abilities belong in a policy, gathered in one class.",
     },
     {
-      question: "Why regenerate the session after login?",
-      options: [
-        "To clear flash data",
-        "To prevent session fixation, where an attacker's pre-login session id becomes the authenticated one",
-        "To refresh the CSRF token only",
-        "For performance",
-      ],
-      correctIndex: 1,
-      explanation: "One line, and the attack does not exist.",
+      question: "What should `Gate::before()` return when it has no opinion?",
+      options: ["`false`", "`true`", "Nothing, so it returns null", "An empty response"],
+      correctIndex: 2,
+      explanation: "Any non-null return is the final answer, so `false` denies everything.",
     },
     {
-      question: "Why is hashing different from encryption?",
+      question: "What are the seven conventional policy methods?",
       options: [
-        "Hashing is faster",
-        "Hashing is one-way, so the original value can never be recovered",
-        "Encryption is one-way",
-        "They are the same with different names",
+        "index, show, create, store, edit, update, destroy",
+        "viewAny, view, create, update, delete, restore, forceDelete",
+        "read, write, delete, restore, publish, archive, share",
+        "can, cannot, allow, deny, before, after, inspect",
       ],
       correctIndex: 1,
-      explanation: "Encrypt when you need the value back; hash when you never do.",
+      explanation: "`viewAny` and `create` take no model, because there is not one yet.",
     },
     {
-      question: "How does password rehashing improve security without a mass reset?",
+      question: "How does Laravel discover a policy automatically?",
       options: [
-        "It re-encrypts the stored hash",
-        "At login, the plain password is briefly available, so an outdated hash can be replaced",
-        "It emails every user a new password",
-        "It runs as a scheduled job",
+        "From a config array",
+        "By convention: the model name plus `Policy`, in `app/Policies`",
+        "By scanning for the `Policy` interface",
+        "It does not; policies must be registered",
       ],
       correctIndex: 1,
-      explanation: "Login is the one moment you hold the password.",
+      explanation: "A policy discovery cannot find means every check is silently denied.",
     },
     {
-      question: "Why must logout invalidate the session?",
+      question: "What is the difference between `$user->can()` and `authorize()`?",
       options: [
-        "To free memory",
-        "Otherwise the session survives with its data and CSRF token intact",
-        "To clear the remember token",
-        "It does not need to",
+        "None",
+        "`can()` returns a boolean; `authorize()` throws when denied, which becomes a 403",
+        "`authorize()` only works with gates",
+        "`can()` also checks authentication",
       ],
       correctIndex: 1,
-      explanation: "`Auth::logout()` alone only forgets the authenticated user.",
+      explanation: "Booleans for rendering decisions, `authorize()` for guarding actions.",
     },
     {
-      question: "How does `auth` middleware differ from `verified`?",
+      question: "What does `#[Authorize]` change about a controller method?",
       options: [
-        "They are the same",
-        "`auth` asks whether anybody is logged in; `verified` asks whether they proved they own the email address",
-        "`verified` also checks permissions",
-        "`auth` requires a password confirmation",
+        "The authorization rule itself",
+        "Where the check is declared: on the method rather than as its first statement",
+        "The policy that runs",
+        "The status code returned",
       ],
       correctIndex: 1,
-      explanation: "An unverified user is still authenticated.",
+      explanation: "The body is left with only the operation.",
     },
     {
-      question: "What must a password reset token be?",
+      question: "Is `@can('update', $post)` enough to protect the update route?",
       options: [
-        "Readable and short",
-        "Unpredictable, expiring, single use, and stored hashed",
-        "Derived from the user id",
-        "Permanent, so the link keeps working",
+        "Yes",
+        "No; it only hides the markup, and the request can still be sent directly",
+        "Yes, with route model binding",
+        "Only for guests",
       ],
       correctIndex: 1,
-      explanation: "A URL containing the user id is not a token.",
+      explanation: "The template check is politeness; the controller check is security.",
     },
     {
-      question: "Why would you choose Fortify over a starter kit?",
+      question: "In `can:update,post` middleware, what is `post`?",
       options: [
-        "It is faster to set up",
-        "You have your own frontend and want the authentication backend only, plus two-factor support",
-        "It supports more guards",
-        "Starter kits cannot do password resets",
+        "A controller property",
+        "The route parameter name, resolved by route model binding",
+        "The policy class",
+        "The database table",
       ],
       correctIndex: 1,
-      explanation: "Routes and controllers in the package, no views.",
+      explanation: "Laravel resolves `{post}` before running the policy.",
     },
     {
-      question: "How should a social login connect an external identity to a local user?",
+      question: "How can filtering a collection with policies cause N+1 queries?",
       options: [
-        "By matching on email",
-        "By storing the provider and the provider's stable id, and joining on those",
-        "By using the provider's user as the Laravel user",
-        "By generating a password from the provider id",
+        "It runs the query twice",
+        "The policy runs per row, so any relationship it reads is fetched once per model",
+        "Collections cannot be filtered",
+        "It reloads the user each time",
       ],
       correctIndex: 1,
-      explanation: "An email can change, and can be obtained by somebody else.",
+      explanation: "The loop is a `filter()` calling a method in another file, so nobody spots it.",
+    },
+    {
+      question: "When should you use a roles-and-permissions package rather than policies alone?",
+      options: [
+        "For any application with an admin user",
+        "When permissions must change at runtime, or you need many roles, teams or a management UI",
+        "Whenever there is more than one role",
+        "Never",
+      ],
+      correctIndex: 1,
+      explanation: "For \"owners can edit their own posts\", a policy is four lines.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Build InvoiceHub's authentication by hand: registration, login, verification, password reset and logout, with the security reason for every step written down.",
-    brief: "InvoiceHub has had no users at all. Every invoice belongs to nobody, and anybody who can reach the URL can see everything.\n\nToday it gets accounts, and you build them without a starter kit. That is deliberate. A starter kit would generate all of this in a minute, and you would not be able to tell which lines are load-bearing. Build it once by hand and every starter kit you use afterwards is readable.\n\nThe rule for the day: <b>for every step, write down the attack it prevents.</b> If you cannot name one, you have either found a line that does not matter or a gap in your understanding, and both are worth knowing.\n\nAuthorization stays out of scope. Today is only about who somebody is, not what they may do. Making sure a customer cannot read another customer's invoices comes later.",
+    goal: "Lock InvoiceHub down: nobody sees or touches an invoice that is not theirs, expressed as a policy and enforced everywhere a request can arrive.",
+    brief: "Yesterday gave InvoiceHub accounts. It did not give it any protection: every signed-in user can still open every invoice, because `auth` middleware only says somebody is logged in.\n\nToday closes that, and the interesting part is that the rule is trivial. `$invoice->user_id === $user->id` is the whole thing. What takes the day is making sure that one line is consulted on every path into an invoice: the list, the detail page, the edit form, the update, the delete, the PDF, the API, and whatever else you built.\n\nSo the discipline for the day is the opposite of usual: <b>write the failing case first.</b> For every route, log in as the wrong user and confirm you get a 403 before you write the check that produces it. A test that has never failed proves nothing.\n\nYou will also do the same rule three times, as a gate, then a policy, then an attribute. That is deliberate. Feeling the rule stay identical while the plumbing changes is the point of the exercise.",
     steps: [
-      "Read `config/auth.php` before writing anything. Write down which guard and which provider a request to InvoiceHub uses, and what each one does.",
-      "Build registration: a form, validation with `Password::defaults()`, and `User::create()`. Add the `'password' => 'hashed'` cast rather than calling `Hash::make()` yourself, and confirm from tinker that the column holds a hash.",
-      "Log the user in after registration with `Auth::login()` and regenerate the session. Write a comment naming the attack that regeneration prevents.",
-      "Build login: `Auth::attempt()`, a session regeneration, and `redirect()->intended()`. Use one error message for both a wrong password and an unknown email, and note why.",
-      "Add a remember-me checkbox, confirm the `remember_token` column exists, and test both paths. Close the browser and reopen it to see the difference.",
-      "Build logout as all three calls. Then remove `session()->invalidate()`, log out, and check what survives in the session. Put it back.",
-      "Protect the invoice routes with `auth`, and put the login and registration routes behind `guest`. Confirm a logged-in user visiting `/login` is redirected.",
-      "Add `throttle:5,1` to the login route and test it by failing five times. Note what a user sees and whether that is acceptable.",
-      "Implement `MustVerifyEmail` on `User`, add a verification notice page with a throttled resend button, and put `verified` on the invoice routes. Log in as an unverified user and confirm exactly which pages you can reach.",
-      "Build the password reset flow: request, email, token form, and update. Use Laravel's `Password` facade rather than rolling your own tokens.",
-      "Regenerate `remember_token` during the reset. Then test it properly: log in on two browsers, reset the password in one, and confirm the other is signed out.",
-      "Try to reuse a reset token after it has worked. Confirm it fails, and note where Laravel stores and deletes it.",
-      "Add `password.confirm` middleware to a settings page that changes the email address. Confirm the prompt appears, and that it does not appear again immediately afterwards.",
-      "Attach the invoices to users: add `user_id`, a relationship, and scope the list to `$request->user()`. Then log in as a second user and confirm the first user's invoices are gone from the list.",
-      "Write the security tests: wrong password, unknown email, duplicate registration, weak password, expired reset token, reused reset token, unverified user on a verified route, guest on a protected route, and a session that changes id after login.",
-      "Grep the codebase for anywhere the password could leak: a `Log::info($request->all())`, a missing `$hidden`, a JSON response containing a user. Fix whatever you find.",
-      "Finally, draw the whole flow from memory: registration through hashing, verification, login, session regeneration, the two middlewares, and separately the reset flow. Compare it with what you built.",
+      "Log in as user A, create an invoice, note its id. Log in as user B and open that invoice's URL. Write down everything B can currently see and do.",
+      "Start with a gate: `Gate::define('update-invoice', ...)` comparing `user_id`. Call `Gate::authorize()` in the update action and confirm B now gets a 403.",
+      "Move it into an `InvoicePolicy` with `php artisan make:policy InvoicePolicy --model=Invoice`, and switch the controller to `$this->authorize('update', $invoice)`. Confirm the test still passes without touching the rule.",
+      "Move it once more onto the method with `#[Authorize('update', 'invoice')]`. Write down what changed between the three versions and what did not.",
+      "Fill in the rest of the policy: `viewAny`, `view`, `create`, `update`, `delete`, and `forceDelete` restricted to admins. Note which two take no model and why.",
+      "Add `$this->authorizeResource(Invoice::class, 'invoice')` to the controller and delete the individual calls. Confirm every action is still protected by testing each one as the wrong user.",
+      "Fix the list page. It currently shows every invoice; make the query return only the signed-in user's, and confirm the policy and the query agree.",
+      "Deliberately do it the wrong way first: `Invoice::paginate(20)->filter(...)`. Look at the page sizes and the total, write down what broke, then revert to the query.",
+      "Add `@can` and `@canany` in the views so the edit and delete buttons only appear for the owner. Then send the delete request with curl as the wrong user and confirm it is still refused.",
+      "Add an `access-admin` gate and put the admin routes behind `can:access-admin` at the group level rather than per route. Explain in a comment why the group is the better place.",
+      "Add a `Gate::before()` for a super admin, then deliberately return `false` from it instead of null, and see what breaks. Put it back.",
+      "Give the view policy a denial reason with `Response::deny()`, then change it to `denyAsNotFound()` and note which one you would ship for invoices, and why.",
+      "Add a `Gate::after()` that logs every denial with the user id and ability. Browse as the wrong user for a minute and read the log.",
+      "Check the policy for hidden queries: if anything reads a relationship, replace it with the foreign key or eager load at the call site. Confirm the invoice list runs the same number of queries with 5 invoices as with 200.",
+      "Add a role: `admin` may view any invoice, `user` may view only their own. Put the permission check and the ownership check in the same policy method and note which part each answers.",
+      "Write the denial tests: guest on each route, wrong user on each route, owner on each route, admin on each route. Include the API endpoints if you built any.",
+      "Finally, list every path into an invoice in your application and tick off the check protecting each one. Anything without a tick is the bug this day exists to find.",
     ],
     acceptance: [
-      "A user can register, verify their email, log in, reset their password and log out, with no starter kit involved.",
-      "The `users` table contains no plain passwords, and no log file or JSON response contains one either.",
-      "The session id changes after every login, and you can demonstrate it.",
-      "Logging out leaves no usable session and issues a fresh CSRF token.",
-      "A wrong password and an unknown email produce the same message.",
-      "An unverified user can log in and reach the notice page, and nothing else.",
-      "Resetting a password signs the user out of other browsers.",
-      "A used reset token cannot be used again.",
-      "Failing login five times is throttled.",
-      "The invoice list shows only the signed-in user's invoices.",
-      "You can state, for each step, which attack it prevents.",
+      "User B gets a 403 or 404 on every route belonging to user A's invoice: view, edit, update, delete and any API endpoint.",
+      "The invoice list shows only the signed-in user's invoices, filtered in the query rather than in PHP.",
+      "Pagination is correct: every page holds the same number of rows and the total matches.",
+      "The edit and delete buttons are hidden for non-owners, and the requests are still refused when sent directly.",
+      "Every action of the invoice controller is authorized, and you proved it by testing each one as the wrong user.",
+      "Admin routes are protected at the group level, not route by route.",
+      "The policy runs no queries, and the invoice list has the same query count with 5 invoices as with 200.",
+      "The denial log shows the user id and the ability for every refusal.",
+      "There is a test for the guest, the wrong user, the owner and the admin on each route, and the denial tests failed before you wrote the checks.",
+      "You can list every path into an invoice and name the check protecting it.",
     ],
     stretch: [
-      "Add Socialite for one provider, with a `social_accounts` table keyed on provider and provider id rather than email.",
-      "Add a second guard for an admin area with its own provider, and confirm logging into one does not log you into the other.",
-      "Raise `BCRYPT_ROUNDS`, log in as an existing user, and prove from the database that the stored hash was upgraded without a password reset.",
+      "Write a test asserting that the list query and the `view` policy agree: every invoice the query returns passes the policy, and every one it excludes fails it.",
+      "Add a `shared_with` many-to-many so an invoice can be shared with another user, and extend the policy without breaking any existing test.",
+      "Add `Response::denyAsNotFound()` for invoices and prove from an incognito window that sequential ids reveal nothing about which invoices exist.",
     ],
   },
 };
