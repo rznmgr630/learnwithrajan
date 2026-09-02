@@ -7,6 +7,7 @@ import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { LARAVEL_PHASE_0_LESSONS } from "@/lib/laravel-learning/laravel-phase-0-lessons";
 import { LARAVEL_DAY_1_LESSONS } from "@/lib/laravel-learning/laravel-day-1-lessons";
@@ -85,11 +86,41 @@ const LARAVEL_LESSON_DAYS: Record<number, LessonDay> = {
   33: LARAVEL_DAY_33_LESSONS,
 };
 
+const LARAVEL_LESSON_DAY_NUMBERS = Object.keys(LARAVEL_LESSON_DAYS)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+/** Localized day titles, keyed by day, taken from the roadmap rows. */
+const LARAVEL_DAY_TITLES = new Map(
+  LARAVEL_ROADMAP_WEEKS.flatMap((week) => week.days.map((d) => [d.day, d.title] as const)),
+);
+
 export function LaravelRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useLaravelProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
   const [lessonDay, setLessonDay] = useState<number | null>(null);
+
+  const lessonNeighbours = useMemo(() => {
+    if (lessonDay === null) return { previous: null, next: null };
+
+    const toTarget = (n: number | undefined): LessonNavTarget | null => {
+      if (n === undefined) return null;
+      const title = LARAVEL_DAY_TITLES.get(n);
+
+      return {
+        day: n,
+        title: title ? stripRichMarkers(pickLocalized(title, locale)) : "",
+      };
+    };
+
+    const i = LARAVEL_LESSON_DAY_NUMBERS.indexOf(lessonDay);
+
+    return {
+      previous: toTarget(LARAVEL_LESSON_DAY_NUMBERS[i - 1]),
+      next: toTarget(LARAVEL_LESSON_DAY_NUMBERS[i + 1]),
+    };
+  }, [lessonDay, locale]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / LARAVEL_TOTAL_DAYS) * 100))}%`,
@@ -260,6 +291,9 @@ export function LaravelRoadmap() {
           open
           onClose={() => setLessonDay(null)}
           day={LARAVEL_LESSON_DAYS[lessonDay]}
+          previousDay={lessonNeighbours.previous}
+          nextDay={lessonNeighbours.next}
+          onNavigateDay={setLessonDay}
           track="laravel"
         />
       )}
