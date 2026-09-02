@@ -3,251 +3,160 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_9_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
-      np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
-      jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
+      en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",
+      np: "मिडलवेयरले साझा लजिक क्रममा चलाउँछ — परीक्षण योग्य संरचना।",
+      jp: "**ミドルウェア** で共通処理を順に適用。構成でテストしやすくする。",
     },
     {
-      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
-      np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
-      jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
+      en: "Using **`node --inspect`** with Chrome DevTools is much more powerful than adding `console.log` everywhere. You can set breakpoints, step through async code, and see the actual call stack when a Promise is waiting — which makes tracking down bugs much faster.",
+      np: "`--inspect` ले async डिबग सजिलो बनाउँछ।",
+      jp: "**`--inspect`** で非同期もブレークポイントを張れる。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "The evolution of async patterns",
-        np: "async ढाँचाको विकास",
-        jp: "非同期パターンの進化",
-      },
+      title: { en: "Middleware — the heart of Express", np: "मिडलवेयर", jp: "ミドルウェア" },
       blocks: [
         {
           type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "JavaScript Promises in 10 Minutes",
-        },
-        {
-          type: "diagram",
-          id: "nodejs-async-evolution",
+          videoId: "MIr1oxQ3pao",
+          title: "Express Middleware Explained",
         },
         {
           type: "code",
-          title: {
-            en: "Same operation — callback → Promise → async/await",
-            np: "एउटै काम — तीन तरिका",
-            jp: "同じ操作を 3 通りで書く",
-          },
-          code: `// ── Callback style ──────────────────────────────────
-function getUserCb(id, cb) {
-  db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-    if (err) return cb(err);
-    cb(null, rows[0]);
-  });
-}
-getUserCb(42, (err, user) => {
-  if (err) console.error(err);
-  else console.log(user);
+          title: { en: "Three middlewares in order", np: "मिडलवेयर क्रम", jp: "順番に並べる" },
+          code: `const express = require('express');
+const app = express();
+
+app.use(express.json());
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
 });
-
-// ── Promise style ─────────────────────────────────────
-function getUserP(id) {
-  return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows[0]);
-    });
-  });
-}
-getUserP(42).then(console.log).catch(console.error);
-
-// ── async/await style ─────────────────────────────────
-async function getUser(id) {
-  const rows = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-  return rows[0];
-}
-try {
-  const user = await getUser(42);
-  console.log(user);
-} catch (err) {
-  console.error(err);
-}`,
+app.get('/api/ping', (req, res) => res.send('pong'));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
-            np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
-            jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Sync vs async — why Node feels different",
-        np: "सिंक र असिंक",
-        jp: "同期と非同期の違い",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Blocking vs yielding the thread",
-            np: "ब्लक बनाम असिंक",
-            jp: "ブロックと譲る",
-          },
-          code: `const fs = require('fs');
-
-// BAD in a busy HTTP handler — blocks every waiting request:
-// const data = fs.readFileSync('./big.json', 'utf8');
-
-// GOOD — yields the thread; other requests run while this waits:
-fs.readFile('./big.json', 'utf8', (err, data) => {
-  if (err) throw err;
-  console.log('bytes:', data.length);
-});`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
-            np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
-            jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
+            en: "Every middleware function gets three arguments: **`req`**, **`res`**, and **`next`**. Call **`next()`** when you are done and want the next middleware to run. Call **`next(err)`** if something goes wrong — Express will skip to your error handler. Once you call `res.send()` or `res.json()`, the chain stops and no more middleware runs.",
+            np: "`next()` अगाडि, `next(err)` त्रुटि ह्यान्डलर, प्रतिक्रिया पठाएपछि रोकिन्छ।",
+            jp: "**ミドルウェア** — `next()` で次へ、`next(err)` でエラーへ。送信後はチェーン停止。",
           },
         },
         {
           type: "diagram",
-          id: "node-execution-priority",
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Promise utilities — all, allSettled, race",
-        np: "Promise utilities — all, allSettled, race",
-        jp: "Promise ユーティリティ",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "Promise.all, allSettled, race Explained",
-        },
-        {
-          type: "code",
-          title: {
-            en: "Running independent async tasks concurrently",
-            np: "स्वतन्त्र कार्य एकैसाथ",
-            jp: "独立タスクを並行実行",
-          },
-          code: `// Promise.all — fails fast if ANY promise rejects
-const [user, orders] = await Promise.all([
-  fetchUser(userId),
-  fetchOrders(userId),
-]);
-// wall-clock time ≈ max(fetchUser, fetchOrders) — not their sum
-
-// Promise.allSettled — always waits for all, captures failures too
-const results = await Promise.allSettled([
-  sendEmail(user),
-  sendSMS(user),
-  pushNotify(user),
-]);
-for (const r of results) {
-  if (r.status === 'rejected') console.error('Notification failed', r.reason);
-}
-
-// Promise.race — first settled wins (useful for timeouts)
-const withTimeout = Promise.race([
-  fetchExpensiveData(),
-  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
-]);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
-            np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
-            jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Error handling patterns",
-        np: "त्रुटि व्यवस्थापन ढाँचा",
-        jp: "エラーハンドリングパターン",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Reliable async error handling",
-            np: "विश्वसनीय async त्रुटि",
-            jp: "信頼できる非同期エラー処理",
-          },
-          code: `// ── try/catch in async functions ─────────────────────
-async function createUser(data) {
-  try {
-    const user = await User.create(data);
-    return user;
-  } catch (err) {
-    if (err.code === 11000) throw new Error('Email already in use');
-    throw err; // rethrow — don't swallow unknown errors
-  }
-}
-
-// ── .catch() on promise chains ────────────────────────
-fetchUser(id)
-  .then(user => processUser(user))
-  .catch(err => {
-    logger.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
-
-// ── Global safety net (log, never swallow) ────────────
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
-  // In production: alert on-call, then graceful shutdown
-  process.exit(1);
-});`,
+          id: "nodejs-express-middleware-chain",
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
-              np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
-              jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
+              en: "**Built-ins** — `express.json()` parses JSON request bodies, `express.urlencoded` handles HTML form data, and `express.static` serves files from a folder. Mount static files before your route middleware so simple file requests do not go through your auth checks.",
+              np: "`express.json` अघि रूट — बडी पहिले पार्स।",
+              jp: "**組み込み** — JSON・フォーム・静的ファイル。順序が重要。",
             },
             {
-              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
-              np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
-              jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
-            },
-            {
-              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
-              np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
-              jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
+              en: "**Third-party** — `cors` controls which origins can call your API, `helmet` sets secure HTTP headers, and `morgan` logs every request. Add only what you actually need, and put security middleware near the top so it runs before anything else.",
+              np: "cors, helmet — सुरक्षा अगाडि।",
+              jp: "**サードパーティ** — cors / helmet は早めに。",
             },
           ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Environments, configuration & debugging",
+        np: "वातावरण, विन्यास र डिबग",
+        jp: "環境・設定・デバッグ",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "L72fhGm1tfE",
+          title: "Debugging Node.js with Chrome DevTools",
+        },
+        {
+          type: "code",
+          title: { en: "NODE_ENV + inspect flag", np: "NODE_ENV र inspect", jp: "環境と inspect" },
+          code: `# Terminal (development):
+NODE_ENV=development node --inspect server.js
+# Then open chrome://inspect → inspect your process
+
+console.log(process.env.NODE_ENV);
+console.log(process.env.PORT ?? 3000);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**`NODE_ENV`** is a widely used convention. Setting it to `production` tells libraries to enable optimizations and hide detailed error messages from users. Setting it to `test` lets you point to a test database or use mocks. Read all your environment variables in one place — a `config.js` file or a validated schema — so a missing or misspelled variable fails at startup rather than crashing mid-request.",
+            np: "`NODE_ENV` र एक पटक विन्यास जाँच।",
+            jp: "**NODE_ENV** — 起動時に設定を一箇所で検証。",
+          },
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Debugging** — start your server with `node --inspect server.js`, go to `chrome://inspect` in Chrome, and attach to your process. You can set breakpoints and inspect `req` and `res` objects directly. Pair this with structured (JSON) logs instead of scattered `console.log` strings — they are much easier to search and filter.",
+              np: "`--inspect` र संरचित लग।",
+              jp: "**デバッグ** — `--inspect` と構造化ログ。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Templating, database hooks & folder structure",
+        np: "टेम्प्लेट, डाटाबेस र फोल्डर",
+        jp: "テンプレート・DB・フォルダ構成",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Suggested folder layout", np: "फोल्डर संरचना", jp: "フォルダ例" },
+          code: `/*
+  src/
+    index.js       ← creates app, listens
+    routes/
+    models/
+    middleware/
+    startup/db.js  ← mongoose.connect isolated here
+*/`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Template engines** like Pug, EJS, or Handlebars let Express render HTML on the server — useful if your app serves web pages, not just a JSON API. Many modern apps skip templates entirely and serve a separate frontend. For database connections, keep **`mongoose.connect`** and your models in their own file (like `startup/db.js`) so tests can easily swap in a different database URI.",
+            np: "SSR को लागि टेम्प्लेट; DB जडान अलग फाइलमा।",
+            jp: "SSR が要るときテンプレート。DB 接続は別モジュールへ。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "cache-aside-pattern",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The cache-aside pattern is about databases, but the same principle applies to how you structure your app: **each module should do one thing**. Routes handle incoming requests, services contain your business logic, and data access files talk to the database. When you refactor your folder structure, the API should behave exactly the same — verify that with your existing tests or Postman.",
+            np: "पुनर्संरचना — व्यवहार उही, फाइल मात्र बाँड्नुहोस्।",
+            jp: "**リファクタ** — 挙動は変えずフォルダだけ分ける。Postman で確認。",
+          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "Promise.all or sequential await?",
-        np: "Promise.all वा क्रम await?",
-        jp: "all と順番 await？",
-      },
+      question: { en: "Why does middleware order matter?", np: "मिडलवेयर क्रम किन?", jp: "ミドルウェアの順番は？" },
       answer: {
-        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
-        np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
-        jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
+        en: "Express runs middleware in the order you register it. Body parsers need to come before any handler that reads `req.body`. Auth middleware must come before the routes it is protecting. Error handlers (the ones with four arguments) must be registered last — after all your routes — so that `next(err)` has somewhere to land.",
+        np: "पार्सर अघि, प्रमाणीकरण रूट अघि, त्रुटि अन्तिम।",
+        jp: "パーサ → 認証 → ルート → エラーの順。",
       },
     },
   ],
