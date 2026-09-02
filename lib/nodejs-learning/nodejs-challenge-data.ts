@@ -38,6 +38,7 @@ const NODEJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
 };
 
 const DOT: Record<string, string> = {
+  "nodejs-w0": "bg-[color-mix(in_oklab,var(--accent)_45%,#94a3b8)]",
   "nodejs-w1": "bg-green-600",
   "nodejs-w2": "bg-emerald-600",
   "nodejs-w3": "bg-teal-600",
@@ -57,6 +58,7 @@ function nodejsDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
 }
 
 export const NODEJS_ROADMAP_WEEKS: RoadmapWeek[] = [
+  { id: "nodejs-w0", title: nodejsWeekTitle("nodejs-w0"), dotClass: DOT["nodejs-w0"], days: [nodejsDayRow(0, ["prereq", "js"])] },
   { id: "nodejs-w1", title: nodejsWeekTitle("nodejs-w1"), dotClass: DOT["nodejs-w1"], days: [nodejsDayRow(1, ["fundamentals", "runtime"]), nodejsDayRow(2, ["modules", "core"])] },
   { id: "nodejs-w2", title: nodejsWeekTitle("nodejs-w2"), dotClass: DOT["nodejs-w2"], days: [nodejsDayRow(3, ["core", "http"]), nodejsDayRow(4, ["npm", "semver"])] },
   { id: "nodejs-w3", title: nodejsWeekTitle("nodejs-w3"), dotClass: DOT["nodejs-w3"], days: [nodejsDayRow(5, ["express", "http"]), nodejsDayRow(6, ["express", "validation"])] },

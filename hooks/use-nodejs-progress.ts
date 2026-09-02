@@ -15,7 +15,7 @@ function deserialize(raw: string): Set<number> | null {
     const arr = JSON.parse(raw) as unknown;
     if (!Array.isArray(arr)) return null;
     return new Set(
-      arr.filter((n): n is number => typeof n === "number" && n >= 1 && n <= NODEJS_TOTAL_DAYS),
+      arr.filter((n): n is number => typeof n === "number" && n >= 0 && n <= NODEJS_TOTAL_DAYS),
     );
   } catch {
     return null;
@@ -60,7 +60,7 @@ export function useNodejsProgress() {
   const snapshot = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const completed = useMemo(() => new Set(JSON.parse(snapshot) as number[]), [snapshot]);
 
-  const completedCount = completed.size;
+  const completedCount = useMemo(() => [...completed].filter((d) => d >= 1).length, [completed]);
   const percent = useMemo(
     () => Math.round((Math.min(completedCount, NODEJS_TOTAL_DAYS) / NODEJS_TOTAL_DAYS) * 100),
     [completedCount],
