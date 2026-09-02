@@ -137,13 +137,6 @@ export const LARAVEL_ROADMAP_WEEKS: RoadmapWeek[] = [
     ],
   },
   {
-    id: "laravel-w6",
-    title: laravelWeekTitle("laravel-w6"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_46%,#a78bfa)]",
-    days: [
-    ],
-  },
-  {
     id: "laravel-w7",
     title: laravelWeekTitle("laravel-w7"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#f87171)]",
