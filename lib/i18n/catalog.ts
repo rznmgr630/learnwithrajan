@@ -98,14 +98,14 @@ export const UI_STRINGS = {
     jp: "ロードマップを開く →",
   },
   "hub.laravel.title": {
-    en: "Laravel 11 · novice to ninja",
-    np: "Laravel 11 · शुरुदेखि दक्षसम्म",
-    jp: "Laravel 11 · 初心者から達人まで",
+    en: "Laravel 13 · novice to ninja",
+    np: "Laravel 13 · शुरुदेखि दक्षसम्म",
+    jp: "Laravel 13 · 初心者から達人まで",
   },
   "hub.laravel.subtitle": {
-    en: "Ten days from MVC & Composer to routing, Blade, Eloquent, mail & queues — notes & self-check each day.",
-    np: "MVC र Composerदेखि routing, Blade, Eloquent, मेल र queue सम्म दस दिन — हरेक दिन नोट र आत्मजाँच।",
-    jp: "MVC・Composerからルーティング・Blade・Eloquent・メール・キューまで10日 — 各日に解説とセルフチェック。",
+    en: "34 days from MVC & Composer to Eloquent, security, APIs, queues, real time, testing, AI search & deployment.",
+    np: "MVC र Composerदेखि Eloquent, सुरक्षा, API, queue, real time, testing, AI search र deployment सम्म ३४ दिन।",
+    jp: "MVC・ComposerからEloquent・セキュリティ・API・キュー・リアルタイム・テスト・AI検索・デプロイまで34日。",
   },
   "hub.laravel.cta": {
     en: "Open roadmap →",
@@ -329,19 +329,19 @@ export const UI_STRINGS = {
     jp: "型変換の例を自分でたどり、セルフチェックに取り組めたら1日目にチェック。",
   },
   "laravelRoadmap.title": {
-    en: "Laravel 11 · novice to ninja",
-    np: "Laravel 11 · शुरुदेखि दक्षसम्म",
-    jp: "Laravel 11 · 初心者から達人まで",
+    en: "Laravel 13 · novice to ninja",
+    np: "Laravel 13 · शुरुदेखि दक्षसम्म",
+    jp: "Laravel 13 · 初心者から達人まで",
   },
   "laravelRoadmap.subtitle": {
-    en: "From installation & MVC through routing, Blade, validation, middleware, Eloquent, sessions, relationships, and integrations. Open a day card for notes and self-check.",
-    np: "स्थापना र MVC देखि routing, Blade, प्रमाणीकरण, मिडलवेयर, Eloquent, सत्र, सम्बन्ध र एकीकरण। कार्ड खोलेर नोट र आत्मजाँच।",
-    jp: "インストール・MVCからルーティング・Blade・検証・ミドルウェア・Eloquent・セッション・リレーション・連携まで。カードで解説とセルフチェック。",
+    en: "From installation & MVC through routing, Blade, validation, middleware and Eloquent, then security, APIs, queues, real time, testing, tooling, AI search and deployment. Open a day card for its lessons, quiz and project.",
+    np: "स्थापना र MVC देखि routing, Blade, प्रमाणीकरण, मिडलवेयर र Eloquent, अनि सुरक्षा, API, queue, real time, testing, tooling, AI search र deployment सम्म। कार्ड खोलेर पाठ, क्विज र प्रोजेक्ट हेर्नुहोस्।",
+    jp: "インストール・MVCからルーティング・Blade・検証・ミドルウェア・Eloquent、さらにセキュリティ・API・キュー・リアルタイム・テスト・ツール・AI検索・デプロイまで。カードを開くとレッスン・クイズ・課題があります。",
   },
   "laravelRoadmap.daysListAria": {
-    en: "Laravel 11 course days 1 through 10",
-    np: "Laravel 11 पाठ्यक्रम दिन १ देखि १०",
-    jp: "Laravel 11 コース 1日目から10日目",
+    en: "Laravel 13 course days 1 through 34",
+    np: "Laravel 13 पाठ्यक्रम दिन १ देखि ३४",
+    jp: "Laravel 13 コース 1日目から34日目",
   },
   "laravelRoadmap.overallProgress": {
     en: "Overall progress",
@@ -354,9 +354,9 @@ export const UI_STRINGS = {
     jp: "% 完了",
   },
   "laravelRoadmap.bottomBlurb": {
-    en: "Tick a day when you have tried the commands or patterns yourself (even in a throwaway project) and closed the self-check from memory.",
-    np: "आफैले आदेश वा ढाँचा प्रयोग गर्नुभयो र आत्मजाँच स्मरणमा गर्नुभयो भने दिन टिक गर्नुहोस्।",
-    jp: "手を動かした（サンプルプロジェクトでも）うえでセルフチェックを見ずに答えられたら、その日にチェック。",
+    en: "Tick a day when you have written the code yourself, passed the quiz from memory, and built that day's slice of the project.",
+    np: "आफैले कोड लेख्नुभयो, क्विज स्मरणबाट पास गर्नुभयो र त्यो दिनको प्रोजेक्ट बनाउनुभयो भने दिन टिक गर्नुहोस्।",
+    jp: "自分でコードを書き、クイズを見ずに答え、その日の課題を作れたら、その日にチェック。",
   },
   "nodejsRoadmap.title": {
     en: "Node.js · runtime to production",
