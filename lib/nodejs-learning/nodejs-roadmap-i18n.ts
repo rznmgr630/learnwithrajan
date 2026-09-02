@@ -2,6 +2,8 @@ import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapTag } from "@/lib/challenge-data";
 
 const NODEJS_TAG: Record<string, LocalizedString> = {
+  prereq: { en: "prerequisites", np: "पूर्वतयारी", jp: "前提知識" },
+  js: { en: "JavaScript", np: "JavaScript", jp: "JavaScript" },
   fundamentals: { en: "fundamentals", np: "आधार", jp: "基礎" },
   runtime: { en: "runtime", np: "रनटाइम", jp: "ランタイム" },
   modules: { en: "modules", np: "मोड्युल", jp: "モジュール" },
@@ -32,6 +34,11 @@ export function nodejsTags(slugs: [string, string]): RoadmapTag[] {
 }
 
 const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
+  0: {
+    en: "Phase 0 — Before you start (JavaScript, web & tooling prerequisites)",
+    np: "Phase 0 — सुरु गर्नुअघि (JavaScript, वेब र उपकरण पूर्वतयारी)",
+    jp: "Phase 0 — はじめる前に（JavaScript・Web・ツールの前提知識）",
+  },
   1: {
     en: "Getting started — what Node is, architecture & first program",
     np: "सुरुवात — Node के हो, आर्किटेक्चर र पहिलो कार्यक्रम",
@@ -105,6 +112,7 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
 };
 
 const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
+  "nodejs-w0": { en: "Before you start", np: "सुरु गर्नुअघि", jp: "はじめる前に" },
   "nodejs-w1": { en: "Foundations & module system", np: "आधार र मोड्युल", jp: "基礎とモジュール" },
   "nodejs-w2": { en: "npm & Express REST", np: "npm र Express REST", jp: "npm と Express REST" },
   "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
