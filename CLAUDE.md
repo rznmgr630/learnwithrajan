@@ -47,7 +47,7 @@ Owner: Rajan (git author `rznmgr`, email rajan.magar@carepilot.com). He brings s
   - Kafka — `lib/kafka/concepts.ts`, `components/learn/KafkaConcepts.tsx`, `/learn/kafka` — 9 concepts, `kafkajs` examples
 - **Supabase** — `lib/supabase-learn/concepts.ts`, `components/learn/SupabaseConcepts.tsx`, `/learn/supabase` — 21 concepts
 - SQL, MongoDB, DSA, JavaScript, React Native, DevOps, Git-7-days, Backend Engineering
-- **Laravel roadmap** — `lib/laravel-learning/`, `components/learn/LaravelRoadmap.tsx` — 40 days / 12 weeks, novice-to-ninja
+- **Laravel roadmap** — `lib/laravel-learning/`, `components/learn/LaravelRoadmap.tsx` — 34 days / 10 weeks, novice-to-ninja
 - **React roadmap** — `lib/react-learning/`, `components/learn/ReactRoadmap.tsx` — 27 days / 10 weeks, novice-to-ninja
 - Developer Websites section (Exercism, VisuAlgo, Project Euler, Refactoring Guru, Codewars)
 - JLPT N5 lesson drawer (kanji, vocab, YouTube embeds) — Days 1–7 complete
@@ -130,7 +130,7 @@ RoadmapDay = { day: number; title: LocalizedString; tags: RoadmapTag[]; detail?:
 ```
 Note: paragraph blocks use `text`, not `content`.
 
-Track structure: Laravel = 12 weeks / 40 days (MVC → deployment). React = 10 weeks / 27 days (JSX → production architecture).
+Track structure: Laravel = 10 weeks / 34 days (MVC → deployment). React = 10 weeks / 27 days (JSX → production architecture).
 
 `dotClass` week color convention: `bg-[color-mix(in_oklab,var(--accent)_XX%,#RRGGBB)]`, `XX%` decreasing week over week (100% pure accent at week 1, blending toward a secondary hue in later weeks).
 
