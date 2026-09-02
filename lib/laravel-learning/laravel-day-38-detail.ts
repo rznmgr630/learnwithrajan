@@ -3,440 +3,392 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_38_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Eloquent has <b>magic features</b> beyond basic CRUD — think of it as a smart filing clerk.\n\nThis clerk can:\n• <b>Reformat documents</b> as they're filed or retrieved (<b>accessors</b> and <b>mutators</b>)\n• <b>Apply automatic labels</b> to every document that enters the system (<b>casts</b>)\n• <b>Save pre-built search filters</b> you can reuse any time (<b>scopes</b>)\n• <b>File documents</b> that could belong to any department — posts, videos, or products (<b>polymorphic relations</b>)\n• <b>Watch for changes</b> and react automatically (<b>observers</b>)\n\nToday we go beyond `find()`, `create()`, and `where()` — and unlock the full power of Eloquent.",
-      np: "Eloquent का advanced features: accessors, mutators, casts, scopes, polymorphic relations र observers।",
-      jp: "Eloquent の高度な機能 — アクセサ・キャスト・スコープ・ポリモーフィック・オブザーバを学びます。",
+      en: "Modern Laravel apps almost always have a frontend story. You have three main paths: <b>Blade + Livewire</b> (server-rendered, reactive without writing JavaScript), <b>Inertia.js</b> (SPA feel with Vue or React, using Laravel routing and controllers), or a fully decoupled <b>API + frontend</b> (Sanctum + Next.js/Nuxt — covered in Day 21). Today covers Livewire and Inertia — the two \"integrated\" approaches that keep your team in one codebase.",
+      np: "Laravel frontend: Livewire (PHP-centric, reactive), Inertia.js (Vue/React + Laravel routing), वा Sanctum API। आज Livewire र Inertia cover गर्छौं।",
+      jp: "Laravel のフロントエンド: Livewire（PHP 中心）、Inertia.js（Vue/React + Laravel ルーティング）、Sanctum API の 3 択。今日は Livewire と Inertia を学ぶ。",
     },
     {
-      en: "Here is what we cover today:\n\n• <b>Accessors</b> — transform data as it is <b>READ</b> from the model (e.g. combine `first_name` + `last_name` into `full_name`)\n  ↳ The DB stores them separately; your code sees one tidy attribute\n• <b>Mutators</b> — transform data as it is <b>WRITTEN</b> to the model (e.g. always lowercase email before saving)\n  ↳ Great for normalising input so your DB stays consistent\n• <b>Casts</b> — auto-convert column values (JSON string ↔ PHP array, `0`/`1` ↔ boolean, timestamp ↔ Carbon date)\n  ↳ Define once in `$casts`; Eloquent handles conversion on every read and write\n• <b>Local scopes</b> — reusable named query fragments like `scopePublished()` that you chain fluently\n• <b>Global scopes</b> — filters that apply to EVERY query on a model automatically\n• <b>Polymorphic relations</b> — one `comments` table that works for posts, videos, products, and more\n• <b>Observers</b> — centralised event handlers that fire when models are created, updated, or deleted",
-      np: "Accessors (read), mutators (write), casts (type conversion), local/global scopes, polymorphic relations, observers।",
-      jp: "アクセサ・ミューテタ・キャスト・スコープ・ポリモーフィック・オブザーバを順に解説します。",
+      en: "What each option is best for:\n\n<b>Livewire</b> — best when your team prefers PHP and minimal JavaScript\n↳ Think of it as interactive Blade — components re-render server-side on user interaction\n• No JavaScript framework to learn\n• Two-way data binding with `wire:model`\n• Full access to Laravel validation, auth, and Eloquent\n\n<b>Inertia.js</b> — best when your team knows Vue or React and wants a proper SPA\n↳ Think of it as using Laravel as a JSON API but with server-side routing (no `/api` prefix, no token management)\n• Controllers return Inertia responses instead of JSON\n• Vue/React page components receive props directly from controllers\n\n<b>Vite</b> — the asset bundler used by both; replaces Laravel Mix\n↳ Hot Module Replacement, near-instant builds, works with React, Vue, TypeScript",
+      np: "Livewire: PHP-first, reactive Blade। Inertia: Vue/React + Laravel routing। Vite: asset bundler (Laravel Mix को replacement)।",
+      jp: "Livewire: PHP 重視・Blade 拡張。Inertia: Vue/React + Laravel ルーティング。Vite: アセットバンドラー（Mix の後継）。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Accessors & mutators (new attribute syntax)",
-        np: "Accessors र mutators",
-        jp: "アクセサとミューテタ",
+        en: "Vite — asset bundling in Laravel",
+        np: "Vite — asset bundling",
+        jp: "Vite — アセットバンドル",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The <b>old way</b> (Laravel 8 and below) required two separate methods:\n• `getFirstNameAttribute()` — called when you READ the attribute\n• `setFirstNameAttribute($value)` — called when you WRITE the attribute\n\nAnalogy: two separate post-office windows — one labelled <b>IN</b>, one labelled <b>OUT</b>.\n\n<b>Laravel 9+ replaces both with a single `Attribute::make()` call.</b>\n• One computed property handles both directions\n• The `get:` closure runs on read; the `set:` closure runs on write\n  ↳ If you only need one direction, omit the other closure entirely\n\nThis is now the standard — use the new syntax for all new code.",
-            np: "पुरानो: `getXAttribute()` / `setXAttribute()`। नयाँ (Laravel 9+): `Attribute::make(get:, set:)`।",
-            jp: "旧来の get/set メソッドは Laravel 9+ で `Attribute::make()` に統一されました。",
+            en: "Before diving into Livewire or Inertia, you need to understand the asset pipeline. <b>Vite</b> is a build tool — it takes your JS, CSS, and TypeScript files and bundles them for the browser. It replaced Laravel Mix in Laravel 10+.\n\nThe key win over Mix:\n• Dev server starts instantly (no webpack cold start)\n• Hot-reloads changes in milliseconds instead of seconds\n• Native TypeScript and JSX support with zero config\n• Smaller production bundles via tree-shaking",
+            np: "Vite = JS/CSS build tool। Laravel 10+ मा Laravel Mix को replacement। Hot reload instant छ।",
+            jp: "Vite は JS/CSS ビルドツール。Laravel 10 以降 Mix の後継。ホットリロードが高速。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "app/Models/User.php — accessor, mutator & auto-hash mutator",
-            np: "Accessor, mutator र auto-hash",
-            jp: "アクセサ・ミューテタの例",
-          },
-          code: `<?php
+          title: { en: "vite.config.js + Blade integration", np: "vite.config.js", jp: "vite.config.js" },
+          code: `// vite.config.js (default Laravel setup)
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 
-use Illuminate\\Database\\Eloquent\\Casts\\Attribute;
-use Illuminate\\Support\\Facades\\Hash;
-
-class User extends Model
-{
-    // Accessor: combine first_name + last_name into a virtual attribute
-    protected function fullName(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => "{$this->first_name} {$this->last_name}",
-        );
-    }
-
-    // Mutator: always store email as lowercase
-    protected function email(): Attribute
-    {
-        return Attribute::make(
-            get: fn (string $value) => $value,
-            set: fn (string $value) => strtolower($value),
-        );
-    }
-
-    // Mutator only: auto-hash password on assignment
-    protected function password(): Attribute
-    {
-        return Attribute::make(
-            set: fn (string $value) => Hash::make($value),
-        );
-    }
-}
-
-// Usage
-$user = User::find(1);
-echo $user->full_name;   // "Jane Doe"  ← accessor fires
-$user->email = 'JANE@EXAMPLE.COM';  // stored as "jane@example.com"
-$user->password = 'secret123';     // stored as hashed value`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Accessor vs database computed column — when to use each:</b>\n\n• <b>Use an accessor</b> when the transformation is cheap and you do not need to search/sort by the result in SQL\n  ↳ Examples: formatting a phone number for display, combining name parts, masking a card number\n• <b>Use a DB computed column</b> when you need to `WHERE`, `ORDER BY`, or index the result\n  ↳ Example: `full_name` as a stored generated column so `WHERE full_name LIKE '%Jane%'` uses an index\n\nAccessors are PHP-side — fast and free, but invisible to the database.",
-            np: "Accessor = PHP-side transformation। DB computed column = SQL मा searchable।",
-            jp: "アクセサは PHP 側の変換。SQL で検索したい場合は DB 計算列を使う。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Model casts — auto-converting column types",
-        np: "Model casts",
-        jp: "モデルキャスト",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "Think of casts as a <b>universal power adapter</b>.\n\nThe database stores data in its own formats: `1`/`0` for booleans, JSON strings for arrays, Unix timestamps for dates. Without casts, your PHP code would need to manually convert every time.\n\n<b>Casts declare the conversion once</b> in the `$casts` property — Eloquent handles the rest automatically on every read and write.\n\n• <b>`boolean`</b> — `0`/`1` in DB becomes `true`/`false` in PHP\n• <b>`array`</b> — JSON string in DB becomes PHP array (and back)\n• <b>`datetime`</b> — timestamp string becomes a Carbon object\n• <b>`encrypted`</b> — value is encrypted before saving, decrypted on read\n• <b>`AsCollection`</b> — like `array`, but returns a Laravel Collection\n  ↳ Collections have `map()`, `filter()`, `sum()`, etc. built in",
-            np: "Casts: `boolean`, `array`, `datetime`, `encrypted`, `AsCollection` — DB format ↔ PHP format।",
-            jp: "`$casts` で DB 型と PHP 型の変換を自動化。boolean・array・datetime・encrypted など。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "app/Models/Post.php — built-in casts + custom cast class",
-            np: "Built-in casts र custom cast",
-            jp: "組み込みキャストとカスタムキャスト",
-          },
-          code: `<?php
-
-use Illuminate\\Database\\Eloquent\\Casts\\AsCollection;
-
-class Post extends Model
-{
-    protected $casts = [
-        'is_published' => 'boolean',        // 0/1 → true/false
-        'metadata'     => 'array',          // JSON string → PHP array
-        'settings'     => AsCollection::class, // JSON string → Collection
-        'published_at' => 'datetime',       // string → Carbon
-        'price'        => 'decimal:2',      // stored as string, precision 2
-        'secret_token' => 'encrypted',      // auto encrypt/decrypt
-    ];
-}
-
-// Custom cast class — for reusable type conversions
-// app/Casts/Money.php
-namespace App\\Casts;
-
-use Illuminate\\Contracts\\Database\\Eloquent\\CastsAttributes;
-
-class Money implements CastsAttributes
-{
-    public function get($model, $key, $value, $attributes): string
-    {
-        return '$' . number_format($value / 100, 2); // stored in cents
-    }
-
-    public function set($model, $key, $value, $attributes): int
-    {
-        return (int) ($value * 100); // convert dollars to cents for DB
-    }
-}
-
-// In the model
-protected $casts = [
-    'price' => Money::class,
-];
-
-// Usage
-$post->price = 19.99;   // stored as 1999 (cents)
-echo $post->price;       // "$19.99"`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>`array` vs `AsCollection` — which one to pick:</b>\n\n• <b>`array`</b> — returns a plain PHP array. Use when you just need to read/write key-value data and don't need transformation methods.\n• <b>`AsCollection`</b> — returns a Laravel Collection object. Use when you want to call `->filter()`, `->map()`, `->sum()`, `->pluck()`, etc. on the data.\n\n↳ Both store the same JSON in the database — the difference is only what PHP hands you back on read.\n\nPro tip: add `->sortBy()` or `->groupBy()` to a Collection cast and your model method becomes a clean one-liner.",
-            np: "`array` = PHP array। `AsCollection` = Laravel Collection (map, filter, etc.)।",
-            jp: "`array` は PHP 配列、`AsCollection` は Collection — どちらも DB は JSON。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Local scopes — reusable query filters",
-        np: "Local scopes",
-        jp: "ローカルスコープ",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "A <b>scope</b> is a saved, named query fragment — like a saved search in your email inbox.\n\nInstead of writing `->where('status', 'published')->where('published_at', '<=', now())` in every controller, you name it once as `scopePublished()` and chain it anywhere.\n\n<b>Two types of scopes:</b>\n• <b>Local scope</b> — opt-in, called explicitly: `Post::published()->get()`\n  ↳ Defined as a method prefixed with `scope` on the model\n  ↳ The `scope` prefix is stripped when you call it: `scopePublished()` → `->published()`\n• <b>Global scope</b> — automatic, applies to EVERY query on the model\n  ↳ Useful for multi-tenancy (always filter by `company_id`) or soft-deletes\n  ↳ Use sparingly — invisible filters make queries hard to debug",
-            np: "Local scope = opt-in query fragment। Global scope = automatic filter on every query।",
-            jp: "ローカルスコープは明示的に呼ぶ再利用可能フィルタ。グローバルスコープは全クエリに自動適用。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "app/Models/Post.php — local scopes + global scope",
-            np: "Local र global scope",
-            jp: "ローカル・グローバルスコープ",
-          },
-          code: `<?php
-
-use Illuminate\\Database\\Eloquent\\Builder;
-use Illuminate\\Database\\Eloquent\\Model;
-
-class Post extends Model
-{
-    // ── LOCAL SCOPES ──────────────────────────────────────────
-
-    // No extra parameters
-    public function scopePublished(Builder $query): Builder
-    {
-        return $query->where('status', 'published')
-                     ->whereNotNull('published_at');
-    }
-
-    // With a required parameter
-    public function scopeByUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    // With an optional parameter (default value)
-    public function scopeRecent(Builder $query, int $days = 30): Builder
-    {
-        return $query->where('published_at', '>=', now()->subDays($days));
-    }
-
-    // ── GLOBAL SCOPE ──────────────────────────────────────────
-    protected static function booted(): void
-    {
-        // Always filter to the authenticated user's posts
-        static::addGlobalScope('owner', function (Builder $query) {
-            if (auth()->check()) {
-                $query->where('user_id', auth()->id());
-            }
-        });
-    }
-}
-
-// Chaining local scopes
-$posts = Post::published()
-             ->byUser(auth()->id())
-             ->recent(7)
-             ->orderByDesc('published_at')
-             ->get();
-
-// Removing a global scope when you need all posts (e.g. admin panel)
-$allPosts = Post::withoutGlobalScope('owner')->get();`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Global scope gotcha — the invisible filter problem:</b>\n\nGlobal scopes are powerful but can surprise you:\n• A new developer calls `Post::all()` expecting every post — but only their posts come back\n  ↳ The global scope is invisible in the controller code\n• Unit tests may fail unexpectedly because no user is logged in and the scope returns nothing\n\n<b>Best practices:</b>\n• Name your global scope (second argument to `addGlobalScope`) so it can be removed with `withoutGlobalScope('name')`\n• Document global scopes prominently in the model's docblock\n• For multi-tenancy, consider a dedicated package (Tenancy for Laravel) instead of hand-rolled global scopes",
-            np: "Global scope invisible हुन्छ — debug गाह्रो। नाम दिनुहोस् र document गर्नुहोस्।",
-            jp: "グローバルスコープは見えないフィルタ — 名前付きで追加して `withoutGlobalScope` で除外可能。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Polymorphic relationships",
-        np: "Polymorphic relationships",
-        jp: "ポリモーフィックリレーション",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Polymorphic</b> means \"many shapes.\" It solves a specific problem:\n\n<b>Problem:</b> You want `Comment` to belong to both `Post` and `Video`. Without polymorphic, you'd need:\n• A `post_comments` table with a `post_id` foreign key\n• A `video_comments` table with a `video_id` foreign key\n• Two separate models, two sets of routes, two sets of controllers\n\n<b>Solution:</b> One `comments` table with two special columns:\n• `commentable_id` — stores the ID of the parent (e.g. `42`)\n• `commentable_type` — stores the class name of the parent (e.g. `App\\Models\\Post`)\n\nLaravel's `morphTo()` and `morphMany()` handle the magic of knowing which table to join based on the `_type` column.\n\n↳ One table, one model, works with any number of parent types.",
-            np: "Polymorphic = एउटै `comments` table जुन Post, Video, Product सबैमा काम गर्छ।",
-            jp: "ポリモーフィックは 1 テーブルが複数の親モデルに属せる仕組み（`_id` + `_type` カラム）。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Migration + Comment model + Post & Video models",
-            np: "Polymorphic migration र models",
-            jp: "マイグレーションとモデルの実装",
-          },
-          code: `// database/migrations/create_comments_table.php
-Schema::create('comments', function (Blueprint $table) {
-    $table->id();
-    $table->text('body');
-    $table->morphs('commentable'); // creates commentable_id + commentable_type
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->timestamps();
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true, // auto-refresh Blade on change
+        }),
+    ],
 });
 
-// app/Models/Comment.php
-class Comment extends Model
-{
-    protected $fillable = ['body', 'user_id'];
+// Adding React support
+// npm install @vitejs/plugin-react
+import react from '@vitejs/plugin-react';
 
-    // "I can belong to anything"
-    public function commentable(): MorphTo
+export default defineConfig({
+    plugins: [
+        laravel({ input: ['resources/js/app.jsx'], refresh: true }),
+        react(),
+    ],
+});
+
+// In Blade layouts — include compiled assets
+// resources/views/layouts/app.blade.php
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+
+// Dev: npm run dev   (starts Vite dev server with HMR)
+// Prod: npm run build  (outputs to public/build/ with hashed filenames)`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Vite in production (`npm run build`) outputs versioned files to `public/build/manifest.json`. The `@vite()` directive reads this manifest to inject the correct hashed filenames. Never commit the `public/build/` folder to git — always run `npm run build` in your CI/CD pipeline.",
+            np: "Production मा `npm run build` चलाउनुस्। `public/build/` git मा commit नगर्नुस् — CI/CD मा build गर्नुस्।",
+            jp: "本番は `npm run build`。`public/build/` は git に含めず、CI/CD でビルドする。",
+          },
+        },
+      ],
+    },
     {
-        return $this->morphTo();
+      title: {
+        en: "Livewire — reactive PHP components",
+        np: "Livewire — reactive PHP components",
+        jp: "Livewire — リアクティブ PHP コンポーネント",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Livewire works by rendering a component as HTML on the server, sending it to the browser, and then — when the user interacts (types, clicks, submits) — sending a small Ajax request back to re-render just that component. No page refresh, no JavaScript state management, no REST API needed.\n\nAnalogy: it's like a turbo-charged Blade component that can react to user input.",
+            np: "Livewire = server-side HTML render गर्छ। User interact गर्दा Ajax request पठाउँछ, component फेरि render हुन्छ। JavaScript framework चाहिँदैन।",
+            jp: "Livewire はサーバー側で HTML をレンダリングし、ユーザー操作時に Ajax で再レンダリング。JS フレームワーク不要。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "SearchPosts Livewire component", np: "Livewire component example", jp: "Livewire コンポーネント例" },
+          code: `// php artisan make:livewire SearchPosts
+// Creates: app/Livewire/SearchPosts.php + resources/views/livewire/search-posts.blade.php
+
+// app/Livewire/SearchPosts.php
+namespace App\\Livewire;
+
+use Livewire\\Component;
+use App\\Models\\Post;
+
+class SearchPosts extends Component
+{
+    public string $search = '';
+
+    // Runs automatically whenever $search changes
+    public function updatedSearch(): void
+    {
+        $this->resetPage(); // reset pagination on new search
+    }
+
+    public function render()
+    {
+        return view('livewire.search-posts', [
+            'posts' => Post::where('title', 'like', "%{$this->search}%")
+                ->latest()
+                ->limit(20)
+                ->get(),
+        ]);
     }
 }
 
-// app/Models/Post.php
-class Post extends Model
-{
-    public function comments(): MorphMany
+// resources/views/livewire/search-posts.blade.php
+<div>
+    <input wire:model.live.debounce.300ms="search"
+           type="text"
+           placeholder="Search posts..."
+           class="w-full border rounded px-3 py-2" />
+
+    <ul class="mt-4 space-y-2">
+        @foreach ($posts as $post)
+            <li>{{ $post->title }}</li>
+        @endforeach
+    </ul>
+</div>
+
+{{-- Include in any Blade view --}}
+<livewire:search-posts />`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Key Livewire directives:\n• `wire:model` — two-way data binding (input ↔ PHP property)\n  ↳ `wire:model.live` updates on every keystroke; `wire:model.blur` updates on focus-out\n  ↳ `wire:model.live.debounce.300ms` waits 300ms after the user stops typing\n• `wire:click` — call a PHP method on click: `wire:click=\"deletePost({{ $post->id }})\"`\n• `wire:submit` — handle form submission server-side\n• `wire:loading` — show/hide an element while a network request is in flight\n  ↳ `wire:loading.class=\"opacity-50\"` dims the component while loading",
+            np: "`wire:model`, `wire:click`, `wire:submit`, `wire:loading` — Livewire का मुख्य directives।",
+            jp: "`wire:model`（双方向バインド）、`wire:click`（メソッド呼び出し）、`wire:submit`、`wire:loading` が主なディレクティブ。",
+          },
+        },
+      ],
+    },
     {
-        return $this->morphMany(Comment::class, 'commentable');
+      title: {
+        en: "Livewire — forms, validation & lifecycle hooks",
+        np: "Livewire forms, validation र lifecycle",
+        jp: "Livewire のフォーム・バリデーション・ライフサイクル",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Livewire form handling feels like writing a normal PHP form but without the redirect cycle. Define properties, validate with the same rules as Form Requests, and show errors with `@error`. For complex forms, use the `Form` object class (Livewire 3) to encapsulate form state and validation in one place.",
+            np: "Livewire forms = PHP properties + validate() + @error। Redirect cycle नभई direct update हुन्छ।",
+            jp: "Livewire のフォームは PHP プロパティ + `validate()` + `@error`。リダイレットなしで即更新。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "CreatePost Livewire form", np: "CreatePost form", jp: "CreatePost フォーム" },
+          code: `// app/Livewire/CreatePost.php
+namespace App\\Livewire;
+
+use Livewire\\Component;
+use App\\Models\\Post;
+
+class CreatePost extends Component
+{
+    public string $title = '';
+    public string $body  = '';
+
+    // Livewire 3: attribute-based validation
+    #[\\Livewire\\Attributes\\Validate('required|min:3|max:255')]
+    public string $titleField = '';
+
+    protected $rules = [
+        'title' => 'required|min:3|max:255',
+        'body'  => 'required|min:10',
+    ];
+
+    public function save(): void
+    {
+        $validated = $this->validate();
+
+        Post::create([
+            ...$validated,
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->reset(['title', 'body']); // clear form
+        session()->flash('message', 'Post created successfully.');
+    }
+
+    public function render()
+    {
+        return view('livewire.create-post');
     }
 }
 
-// app/Models/Video.php
-class Video extends Model
-{
-    public function comments(): MorphMany
+{{-- resources/views/livewire/create-post.blade.php --}}
+<form wire:submit="save">
+    <div>
+        <input wire:model="title" type="text" placeholder="Post title" />
+        @error('title') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <div class="mt-3">
+        <textarea wire:model="body" placeholder="Post body"></textarea>
+        @error('body') <span class="text-red-500">{{ $message }}</span> @enderror
+    </div>
+    <button type="submit" wire:loading.attr="disabled">
+        <span wire:loading>Saving...</span>
+        <span wire:loading.remove>Save Post</span>
+    </button>
+</form>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Livewire lifecycle hooks</b>:\n• `mount()` — runs once when the component is first created (like a constructor)\n  ↳ Use it to load initial data: `$this->post = Post::find($id)`\n• `updated($property)` — runs after any property changes\n  ↳ Avoid expensive queries here; debounce or use `updatedTitle()` for specific properties\n• `hydrate()` / `dehydrate()` — run before/after each network request\n  ↳ Use for re-initialising non-serialisable state (e.g. DB connections)\n• `#[Lazy]` attribute — defers component rendering until after the page loads (great for heavy components)",
+            np: "`mount()`, `updated()`, `hydrate()`/`dehydrate()` — Livewire lifecycle hooks।",
+            jp: "`mount()`（初期化）、`updated()`（プロパティ変更後）、`hydrate()`/`dehydrate()`（リクエスト前後）が主なライフサイクル。",
+          },
+        },
+      ],
+    },
     {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
+      title: {
+        en: "Inertia.js — SPA feel, server-side routing",
+        np: "Inertia.js — SPA feel with server-side routing",
+        jp: "Inertia.js — SPA 感覚＋サーバー側ルーティング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Inertia is not a framework — it's a protocol. It sits between Laravel (server) and Vue/React (client) and lets them speak the same language.\n\nYour Laravel controller returns an Inertia response: `Inertia::render('PostIndex', ['posts' => $posts])`. On first load, the full HTML is returned. Subsequent navigations return a JSON payload that swaps out just the current page component — no full page reload, no routing library needed on the frontend.\n\nAnalogy: imagine a TV remote that changes what's showing on screen without turning the TV off and on again.",
+            np: "Inertia = Laravel controller + Vue/React page components। Page navigation = JSON swap (no full reload)।",
+            jp: "Inertia は Laravel コントローラーと Vue/React ページコンポーネントをつなぐプロトコル。ページ遷移は JSON スワップ（フルリロードなし）。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Inertia setup + controller + Vue page", np: "Inertia example", jp: "Inertia の例" },
+          code: `// Install
+// composer require inertiajs/inertia-laravel
+// npm install @inertiajs/vue3 vue
+
+// resources/views/app.blade.php (root layout)
+<!DOCTYPE html>
+<html>
+<head>
+    @vite(['resources/js/app.js'])
+    @inertiaHead
+</head>
+<body>
+    @inertia
+</body>
+</html>
+
+// resources/js/app.js
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/vue3';
+
+createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
+        return pages[\`./Pages/\${name}.vue\`];
+    },
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .mount(el);
+    },
+});
+
+// app/Http/Controllers/PostController.php
+use Inertia\\Inertia;
+use App\\Http\\Resources\\PostResource;
+
+public function index()
+{
+    return Inertia::render('Posts/Index', [
+        'posts' => PostResource::collection(Post::with('author')->latest()->paginate(15)),
+    ]);
 }
 
-// Usage
-$post->comments()->create(['body' => 'Great post!', 'user_id' => 1]);
-$video->comments()->create(['body' => 'Nice video!', 'user_id' => 2]);
+// resources/js/Pages/Posts/Index.vue
+<script setup>
+import { Link } from '@inertiajs/vue3';
 
-// Get the parent of a comment (either a Post or Video)
-$comment = Comment::find(1);
-$parent = $comment->commentable; // returns Post or Video instance`,
+defineProps({ posts: Object });
+</script>
+
+<template>
+  <div>
+    <Link href="/posts/create">New Post</Link>
+    <div v-for="post in posts.data" :key="post.id">
+      <Link :href="\`/posts/\${post.id}\`">{{ post.title }}</Link>
+    </div>
+  </div>
+</template>`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Shared data</b> — auth user, flash messages, and app-wide props belong in `HandleInertiaRequests` middleware's `share()` method, so they're available in every page component:\n• `auth.user` → `usePage().props.auth.user` in Vue/React\n• `flash.message` → show success/error banners globally\n• `ziggy` → share named routes to the frontend (with the Ziggy package)\n\nThis is the Inertia equivalent of Blade's `@auth` / `view()->share()` — define once, use everywhere.",
+            np: "`HandleInertiaRequests::share()` मा auth user, flash messages राख्नुस् — सबै pages मा available हुन्छ।",
+            jp: "`HandleInertiaRequests::share()` に認証ユーザーやフラッシュを設定すると全ページで利用できる。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Choosing your stack & SSR considerations",
+        np: "Stack छनोट र SSR",
+        jp: "スタック選択と SSR",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Which frontend approach to choose — the honest decision matrix:\n• Full PHP team, existing Blade app → add Livewire incrementally to specific components\n  ↳ No big rewrite; Blade and Livewire coexist perfectly\n• Vue/React team, wants tight Laravel integration → Inertia\n  ↳ Controllers, validation, auth all stay in PHP — just the views move to Vue/React\n• Separate mobile app OR third-party consumers → Sanctum API (Day 21)\n  ↳ Completely decoupled; frontend can be any technology\n• Need SEO on a Vue/React Inertia app → enable Inertia SSR with `php artisan inertia:start-ssr`",
+            np: "PHP team → Livewire। Vue/React team → Inertia। Mobile/API → Sanctum। SEO चाहिने → Inertia SSR।",
+            jp: "PHP チーム→ Livewire。Vue/React チーム→ Inertia。モバイル/API→ Sanctum。SEO 必要→ Inertia SSR。",
+          },
         },
         {
           type: "table",
           caption: {
-            en: "Eloquent relationship cheat-sheet — pick the right one for your data shape",
-            np: "Relationship cheat-sheet",
-            jp: "リレーション早見表",
+            en: "Frontend approach comparison",
+            np: "Frontend approaches",
+            jp: "フロントエンドアプローチ比較",
           },
           headers: [
-            { en: "Relationship", np: "Relationship", jp: "リレーション" },
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "Use when…", np: "कहिले प्रयोग", jp: "使う場面" },
+            { en: "Approach", np: "Approach", jp: "アプローチ" },
+            { en: "JS required", np: "JS", jp: "JS 必要" },
+            { en: "Routing", np: "Routing", jp: "ルーティング" },
+            { en: "Auth", np: "Auth", jp: "認証" },
+            { en: "SEO", np: "SEO", jp: "SEO" },
+            { en: "Best for", np: "Best for", jp: "向いている用途" },
           ],
           rows: [
             [
-              { en: "Has one", np: "Has one", jp: "hasOne" },
-              { en: "`hasOne()`", np: "`hasOne()`", jp: "`hasOne()`" },
-              { en: "User → one Profile", np: "User → एउटा Profile", jp: "User → 1つの Profile" },
+              { en: "Blade", np: "Blade", jp: "Blade" },
+              { en: "None", np: "नभएको", jp: "不要" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Content sites", np: "Content sites", jp: "コンテンツサイト" },
             ],
             [
-              { en: "Has many", np: "Has many", jp: "hasMany" },
-              { en: "`hasMany()`", np: "`hasMany()`", jp: "`hasMany()`" },
-              { en: "User → many Posts", np: "User → धेरै Posts", jp: "User → 複数の Post" },
+              { en: "Livewire", np: "Livewire", jp: "Livewire" },
+              { en: "Minimal", np: "न्यूनतम", jp: "最小限" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Excellent", np: "उत्तम", jp: "優秀" },
+              { en: "Admin UIs / forms", np: "Admin UIs", jp: "管理 UI・フォーム" },
             ],
             [
-              { en: "Belongs to", np: "Belongs to", jp: "belongsTo" },
-              { en: "`belongsTo()`", np: "`belongsTo()`", jp: "`belongsTo()`" },
-              { en: "Post → one User (owner)", np: "Post → एउटा User", jp: "Post → 1つの User" },
+              { en: "Inertia + Vue/React", np: "Inertia", jp: "Inertia" },
+              { en: "Vue or React", np: "Vue वा React", jp: "Vue か React" },
+              { en: "Server", np: "Server", jp: "サーバー" },
+              { en: "Session", np: "Session", jp: "セッション" },
+              { en: "Needs SSR", np: "SSR चाहिन्छ", jp: "SSR が必要" },
+              { en: "SPA with Laravel backend", np: "SPA + Laravel", jp: "Laravel バックエンド SPA" },
             ],
             [
-              { en: "Belongs to many", np: "Belongs to many", jp: "belongsToMany" },
-              { en: "`belongsToMany()`", np: "`belongsToMany()`", jp: "`belongsToMany()`" },
-              { en: "Post ↔ many Tags (pivot table)", np: "Post ↔ धेरै Tags", jp: "Post ↔ 複数の Tag（中間テーブル）" },
-            ],
-            [
-              { en: "Morph to", np: "Morph to", jp: "morphTo" },
-              { en: "`morphTo()`", np: "`morphTo()`", jp: "`morphTo()`" },
-              { en: "Comment → Post OR Video", np: "Comment → Post वा Video", jp: "Comment → Post か Video" },
-            ],
-            [
-              { en: "Morph many", np: "Morph many", jp: "morphMany" },
-              { en: "`morphMany()`", np: "`morphMany()`", jp: "`morphMany()`" },
-              { en: "Post → many Comments (poly)", np: "Post → धेरै Comments", jp: "Post → 複数の Comment（ポリ）" },
-            ],
-            [
-              { en: "Morph to many", np: "Morph to many", jp: "morphToMany" },
-              { en: "`morphToMany()`", np: "`morphToMany()`", jp: "`morphToMany()`" },
-              { en: "Post/Video → shared Tags", np: "Post/Video → shared Tags", jp: "Post/Video → 共通 Tag" },
+              { en: "Decoupled API", np: "API", jp: "分離 API" },
+              { en: "Any framework", np: "कुनै पनि", jp: "任意" },
+              { en: "Client-side", np: "Client", jp: "クライアント" },
+              { en: "Sanctum tokens", np: "Sanctum tokens", jp: "Sanctum トークン" },
+              { en: "Client-side", np: "Client", jp: "クライアント側" },
+              { en: "Mobile / headless", np: "Mobile / headless", jp: "モバイル・ヘッドレス" },
             ],
           ],
         },
-      ],
-    },
-    {
-      title: {
-        en: "Model observers — reacting to lifecycle events",
-        np: "Model observers",
-        jp: "モデルオブザーバ",
-      },
-      blocks: [
         {
           type: "paragraph",
           text: {
-            en: "An <b>observer</b> is like a security camera for your model.\n\nWhenever something happens — a record is created, updated, or deleted — the observer fires the matching handler automatically. No manual calls in your controllers needed.\n\n<b>Without observers</b>, side-effects scatter across controllers:\n• `PostController::store()` sends a welcome notification\n• `PostController::update()` logs the change\n• `PostController::destroy()` deletes related files\n• If someone adds another way to create a post (a command, a seeder, an API), they must remember to add the side-effect too\n\n<b>With observers</b>, the side-effect logic lives in one place — if a post is created anywhere in the app, the observer fires.\n\n↳ Think of it as a pub/sub pattern built into Eloquent.",
-            np: "Observer = model lifecycle events (created, updated, deleted) मा centralised reactions।",
-            jp: "オブザーバはモデルの lifecycle イベントに対する一元的なハンドラ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "PostObserver — generate, implement, register",
-            np: "PostObserver बनाउने र register गर्ने",
-            jp: "PostObserver の生成・実装・登録",
-          },
-          code: `// Generate the observer class
-php artisan make:observer PostObserver --model=Post
-
-// app/Observers/PostObserver.php
-namespace App\\Observers;
-
-use App\\Models\\Post;
-use Illuminate\\Support\\Facades\\Log;
-
-class PostObserver
-{
-    public function created(Post $post): void
-    {
-        // Side-effect: notify the author's followers
-        $post->user->notify(new PostPublishedNotification($post));
-    }
-
-    public function updating(Post $post): void
-    {
-        // Log who changed what (before the save)
-        if ($post->isDirty('status')) {
-            Log::info("Post #{$post->id} status changed", [
-                'from' => $post->getOriginal('status'),
-                'to'   => $post->status,
-                'by'   => auth()->id(),
-            ]);
-        }
-    }
-
-    public function deleted(Post $post): void
-    {
-        // Clean up associated files when a post is deleted
-        Storage::delete("posts/{$post->id}");
-    }
-}
-
-// Register in AppServiceProvider::boot()
-use App\\Models\\Post;
-use App\\Observers\\PostObserver;
-
-public function boot(): void
-{
-    Post::observe(PostObserver::class);
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Critical gotcha — bulk operations bypass observers:</b>\n\nObservers are Eloquent-level hooks. They fire when you call `->save()`, `->create()`, `->delete()` on a model instance. They do <b>NOT</b> fire for SQL-level bulk operations:\n\n• `Post::where('user_id', $id)->delete()` → NO observer\n• `Post::truncate()` → NO observer\n• `Post::insert([...])` → NO observer (also bypasses `$fillable`!)\n\n↳ If you need side-effects for bulk deletes, dispatch an event or job manually before/after the bulk query.\n\n↳ Available hooks: `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `restoring`, `restored` (for soft-deletes).",
-            np: "Bulk operations (`where()->delete()`, `truncate()`) ले observers trigger गर्दैन।",
-            jp: "バルク操作（`where()->delete()` など）はオブザーバを発火しない点に注意。",
+            en: "Inertia SSR runs a Node.js server (`php artisan inertia:start-ssr`) that renders the first page server-side for SEO and faster initial load. It's an opt-in — most admin apps don't need it. For public-facing marketing pages with SEO requirements, enable SSR or use a static site generator for those specific pages.",
+            np: "Inertia SSR: Node.js server ले first page server-side render गर्छ। SEO चाहिने apps मा enable गर्नुस्।",
+            jp: "Inertia SSR: Node.js が初回ページをサーバー側でレンダリング。SEO が必要な場合に有効化。",
           },
         },
       ],
@@ -445,62 +397,62 @@ public function boot(): void
   faq: [
     {
       question: {
-        en: "When should I use an accessor vs a plain getter method on the model?",
-        np: "Accessor vs getter method — कहिले कुन?",
-        jp: "アクセサとゲッターメソッドはどう使い分けますか？",
+        en: "Can I mix Livewire and Inertia in the same app?",
+        np: "एउटै app मा Livewire र Inertia दुवै प्रयोग गर्न सकिन्छ?",
+        jp: "同じアプリで Livewire と Inertia を混在できますか?",
       },
       answer: {
-        en: "<b>Use an accessor</b> when the value behaves like a natural attribute of the model:\n• It integrates with `$model->attribute_name` syntax automatically\n• It is included in `->toArray()` and JSON serialisation\n• Example: `full_name`, `avatar_url`, `formatted_price`\n\n<b>Use a plain method</b> when the operation reads like an action or requires parameters:\n• `$model->getFormattedAddress($format)` — takes a parameter\n• `$model->calculateTax($rate)` — performs a calculation, not just reading data\n• It's clearer that calling it has intent, not just property access\n\nRule of thumb: if you'd describe it as \"the model's X\", use an accessor. If you'd describe it as \"getting the model's X given Y\", use a method.",
-        np: "Accessor = attribute-like value (toArray मा पनि)। Method = parameter लिने वा calculation गर्ने।",
-        jp: "属性のように扱うならアクセサ、引数や計算が必要ならメソッドが適切。",
+        en: "Technically yes, but it creates two frontend systems to maintain. Typical pattern: use Inertia for the main app and Blade/Livewire for a simpler admin panel. Mixing them in the same views is unsupported and creates confusing state management.",
+        np: "हुन्छ, तर maintenance double हुन्छ। Main app मा Inertia, admin panel मा Livewire — यो common pattern हो।",
+        jp: "技術的には可能ですが、2 つのフロントエンドシステムを管理することになります。メインアプリに Inertia、管理パネルに Livewire が一般的なパターンです。",
       },
     },
     {
       question: {
-        en: "What is the difference between `$casts` and `$dates`?",
-        np: "`$casts` र `$dates` को फरक?",
-        jp: "`$casts` と `$dates` の違いは？",
+        en: "Does Livewire work with Alpine.js?",
+        np: "Livewire र Alpine.js सँगसँगै काम गर्छन्?",
+        jp: "Livewire は Alpine.js と連携できますか?",
       },
       answer: {
-        en: "`$dates` is the <b>old way</b> to tell Eloquent \"cast this column to a Carbon instance.\" It is <b>deprecated as of Laravel 10</b> and will be removed in a future version.\n\n<b>Always use `$casts` for new code:</b>\n• `'published_at' => 'datetime'` → Carbon (mutable)\n• `'published_at' => 'immutable_datetime'` → CarbonImmutable (preferred — mutations return a new instance)\n• `'created_at'` and `'updated_at'` are automatically cast to Carbon by Eloquent — no entry needed\n\n↳ `immutable_datetime` is safer in pipelines because you can't accidentally mutate the original value.",
-        np: "`$dates` deprecated छ। `$casts` मा `datetime` वा `immutable_datetime` प्रयोग गर्नुहोस्।",
-        jp: "`$dates` は非推奨。`$casts` で `datetime` または `immutable_datetime` を使用する。",
+        en: "Yes, they are designed to work together. Alpine.js handles client-side interactions (toggles, animations, dropdowns) while Livewire handles server interactions. Livewire ships with Alpine included — you don't need to install it separately. Rule: use `x-data`, `x-show`, `x-on:click` for purely visual JavaScript; use `wire:click` when a server round-trip is needed.",
+        np: "हो, सँगसँगै काम गर्छन्। Alpine = client-side UI। Livewire = server interactions। Alpine Livewire मा included छ।",
+        jp: "はい、一緒に使えます。Alpine は UI インタラクション、Livewire はサーバー通信を担当。Livewire に Alpine が同梱されています。",
       },
     },
     {
       question: {
-        en: "Can local scopes conflict with each other when chained?",
-        np: "Chained scopes conflict हुन्छन् कि?",
-        jp: "スコープをチェーンするとき競合しますか？",
+        en: "How does Inertia handle form validation errors?",
+        np: "Inertia मा form validation errors कसरी handle हुन्छ?",
+        jp: "Inertia のフォームバリデーションエラーはどう扱いますか?",
       },
       answer: {
-        en: "No — local scopes are just query builder calls under the hood, and query builder calls stack cleanly. Each scope adds its `WHERE` clause to the same underlying query.\n\nThe only potential conflict is if <b>two global scopes</b> filter the same column with incompatible conditions:\n• Global scope A: `->where('status', 'published')`\n• Global scope B: `->where('status', 'draft')`\n→ Both apply; the query returns no results (impossible condition)\n\nFix: remove the conflicting scope with `withoutGlobalScope(MyScope::class)` or `withoutGlobalScopes()` (removes all).\n\nFor local scopes, the only thing to watch is ordering — `scopeRecent()` using `orderBy` after another `orderBy` can produce surprising results. Use `reorder()` to clear previous orderings first.",
-        np: "Local scopes stack cleanly। Global scopes same column filter गर्छन् भने conflict हुन सक्छ।",
-        jp: "ローカルスコープはスタックで問題なし。グローバルスコープ同士が同列を競合する場合は `withoutGlobalScope` で除外。",
+        en: "Inertia redirects back with a 422 response (Laravel validation failure) and includes the errors in the Inertia shared props. Use the `useForm()` helper in Vue/React — it automatically populates `form.errors` from the 422 response. No manual error parsing needed.",
+        np: "`useForm()` helper प्रयोग गर्नुस्। 422 response आउँदा `form.errors` automatically populate हुन्छ।",
+        jp: "`useForm()` ヘルパーを使うと、422 レスポンスから `form.errors` が自動的に設定されます。",
       },
     },
     {
       question: {
-        en: "What is a polymorphic many-to-many relationship?",
-        np: "Polymorphic many-to-many भनेको के हो?",
-        jp: "ポリモーフィック多対多とは？",
+        en: "What is the performance impact of Livewire's network requests?",
+        np: "Livewire का network requests को performance impact के हो?",
+        jp: "Livewire のネットワークリクエストがパフォーマンスに与える影響は?",
       },
       answer: {
-        en: "A regular `belongsToMany` links <b>two specific models</b> via a pivot table (e.g. `Post` ↔ `Tag`).\n\nA <b>polymorphic many-to-many</b> lets a model relate to <b>multiple different model types</b> via a single pivot table.\n\nExample: `Tag` can belong to both `Post` AND `Video`:\n• Migration: `taggables` pivot with `tag_id`, `taggable_id`, `taggable_type`\n• `Tag` model: `morphedByMany(Post::class, 'taggable')` and `morphedByMany(Video::class, 'taggable')`\n• `Post` and `Video` models: `morphToMany(Tag::class, 'taggable')`\n\nOne `tags` table, one `taggables` pivot — works for any model that needs tags.",
-        np: "Polymorphic many-to-many: Tag ले Post र Video दुवैमा belongsToMany हुन्छ।",
-        jp: "ポリモーフィック多対多は 1 つのピボットテーブルで複数モデルと多対多を実現（例: Tag ↔ Post/Video）。",
+        en: "Every `wire:model.live` keystroke triggers a network request. For search inputs, use `wire:model.live.debounce.500ms` to delay the request 500ms after the user stops typing. For non-interactive updates, use `wire:model.blur` (only fires on focus-out). Profile with browser DevTools network tab to see the frequency and payload size.",
+        np: "प्रत्येक keystroke मा request जान्छ। `wire:model.live.debounce.500ms` प्रयोग गर्नुस् search inputs मा।",
+        jp: "キーストロークごとにリクエストが発生します。検索入力には `wire:model.live.debounce.500ms` を使い、不要なリクエストを減らしましょう。",
       },
     },
     {
       question: {
-        en: "Do model observers run inside database transactions?",
-        np: "Observers DB transaction भित्र fire हुन्छन् कि?",
-        jp: "オブザーバはトランザクション内で実行されますか？",
+        en: "Can Vite handle TypeScript out of the box?",
+        np: "Vite ले TypeScript automatically handle गर्छ?",
+        jp: "Vite は TypeScript をそのまま扱えますか?",
       },
       answer: {
-        en: "Yes — and this can cause a subtle bug.\n\nIf you run a save inside a `DB::transaction()` and the transaction is <b>rolled back</b>, the `created`/`updated` event has already fired and your observer's side-effects have already happened:\n• Email sent to user → cannot be unsent\n• File written to disk → file is now orphaned\n\n<b>Two solutions:</b>\n1. Use `DB::afterCommit()` to delay the observer logic until after a successful commit\n2. Set `public bool $afterCommit = true` on any listener/job dispatched from the observer — queued jobs won't dispatch until the transaction commits\n\n↳ For simple apps without transactions, this is a non-issue. For financial or critical data, always use the `$afterCommit` flag.",
-        np: "Transaction rollback हुँदा observer पहिल्यै fire भइसकेको हुन्छ। `$afterCommit = true` प्रयोग गर्नुहोस्।",
-        jp: "ロールバック後もオブザーバは発火済み。`$afterCommit = true` でコミット後のみ実行できる。",
+        en: "Yes. Vite processes TypeScript natively via esbuild without needing a separate `ts-loader`. Add `@types/node` and a `tsconfig.json`, then rename files to `.ts` or `.tsx`. Important caveat: Vite skips type-checking for speed — run `tsc --noEmit` separately in CI to catch type errors before deployment.",
+        np: "हो, Vite ले TypeScript native support गर्छ (esbuild मार्फत)। CI मा `tsc --noEmit` छुट्टै चलाउनुस्।",
+        jp: "はい、esbuild 経由でネイティブ対応。ただし型チェックはスキップされるため、CI で `tsc --noEmit` を別途実行してください。",
       },
     },
   ],

