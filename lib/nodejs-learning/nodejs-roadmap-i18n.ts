@@ -40,9 +40,9 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Phase 0 — はじめる前に（JavaScript・Web・ツールの前提知識）",
   },
   1: {
-    en: "Getting started — what Node is, architecture & first program",
-    np: "सुरुवात — Node के हो, आर्किटेक्चर र पहिलो कार्यक्रम",
-    jp: "はじめに — Node の概要・アーキテクチャ・最初のプログラム",
+    en: "Install, run & understand the shape of a Node.js project",
+    np: "स्थापना, सञ्चालन र Node.js परियोजनाको बनोट",
+    jp: "インストール・実行・Node.js プロジェクトの形",
   },
   2: {
     en: "Global object, CommonJS modules, Path & OS",
@@ -113,8 +113,7 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
 
 const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-w0": { en: "Before you start", np: "सुरु गर्नुअघि", jp: "はじめる前に" },
-  "nodejs-w1": { en: "Foundations & module system", np: "आधार र मोड्युल", jp: "基礎とモジュール" },
-  "nodejs-w2": { en: "npm & Express REST", np: "npm र Express REST", jp: "npm と Express REST" },
+  "nodejs-w1": { en: "Phase 1 · The runtime", np: "Phase 1 · रनटाइम", jp: "Phase 1 · ランタイム" },
   "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
   "nodejs-w4": { en: "Async JavaScript & Mongoose CRUD", np: "async JS र Mongoose CRUD", jp: "非同期JSとMongoose CRUD" },
   "nodejs-w5": { en: "Validation & relationships", np: "प्रमाणीकरण र सम्बन्ध", jp: "検証とリレーション" },
