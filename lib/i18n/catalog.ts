@@ -103,9 +103,9 @@ export const UI_STRINGS = {
     jp: "Laravel 13 · 初心者から達人まで",
   },
   "hub.laravel.subtitle": {
-    en: "34 days from MVC & Composer to Eloquent, security, APIs, queues, real time, testing, AI search & deployment.",
-    np: "MVC र Composerदेखि Eloquent, सुरक्षा, API, queue, real time, testing, AI search र deployment सम्म ३४ दिन।",
-    jp: "MVC・ComposerからEloquent・セキュリティ・API・キュー・リアルタイム・テスト・AI検索・デプロイまで34日。",
+    en: "33 days from MVC & Composer to Eloquent, security, APIs, queues, real time, testing, AI search & deployment.",
+    np: "MVC र Composerदेखि Eloquent, सुरक्षा, API, queue, real time, testing, AI search र deployment सम्म ३३ दिन।",
+    jp: "MVC・ComposerからEloquent・セキュリティ・API・キュー・リアルタイム・テスト・AI検索・デプロイまで33日。",
   },
   "hub.laravel.cta": {
     en: "Open roadmap →",
@@ -339,9 +339,9 @@ export const UI_STRINGS = {
     jp: "インストール・MVCからルーティング・Blade・検証・ミドルウェア・Eloquent、さらにセキュリティ・API・キュー・リアルタイム・テスト・ツール・AI検索・デプロイまで。カードを開くとレッスン・クイズ・課題があります。",
   },
   "laravelRoadmap.daysListAria": {
-    en: "Laravel 13 course days 1 through 34",
-    np: "Laravel 13 पाठ्यक्रम दिन १ देखि ३४",
-    jp: "Laravel 13 コース 1日目から34日目",
+    en: "Laravel 13 course days 1 through 33",
+    np: "Laravel 13 पाठ्यक्रम दिन १ देखि ३३",
+    jp: "Laravel 13 コース 1日目から33日目",
   },
   "laravelRoadmap.overallProgress": {
     en: "Overall progress",

@@ -2,2347 +2,2348 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_22_LESSONS: LessonDay = {
   day: 22,
-  title: "File storage, the HTTP client & processes",
-  totalMinutes: 92,
+  title: "Building a REST API with Sanctum",
+  totalMinutes: 91,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "filesystem-disks",
-      title: "Disks — local, public & S3",
-      durationMinutes: 12,
-      explanation: "Three things your application talks to that live outside it:\n\n```text\nApplication\n   │\n   ├── Files            →  local / public / S3\n   ├── External APIs    →  HTTP client\n   └── System commands  →  Process\n```\n\nAnd one idea running through all of them:\n\n> <b>Your application should not care where a file physically lives or how an external service is implemented. It should talk to an abstraction.</b>\n\n---\n\n### 1. Basic — what a disk is\n\nInstead of writing paths:\n\n```php\nfile_put_contents('/var/www/app/storage/reports/report.pdf', $contents);\n```\n\nyou write:\n\n```php\nStorage::put('reports/report.pdf', $contents);\n```\n\n<b>A <i>disk</i></b> (a named, configured storage location) is what the second version is talking to. Configured in `config/filesystems.php`, and the three you will meet are:\n\n```text\nlocal     storage/app, not reachable from the web\npublic    storage/app/public, meant to be served\ns3        object storage, not on your server at all\n```\n\n```php\nStorage::disk('s3')->put('reports/report.pdf', $contents);\n```\n\n<b>The gain is that the path is configuration, not code.</b> Moving from the server to S3 changes a `.env` value rather than every method that touches a file.\n\n---\n\n### 2. Intermediate — public, and the link\n\nThe `public` disk is for files users are meant to fetch: avatars, uploaded images, a logo.\n\nBut it writes to `storage/app/public`, and the web server only serves `public/`. Putting a file there does not make it reachable. <b>That is what `storage:link` is for:</b>\n\n```bash\nphp artisan storage:link\n```\n\n```text\nstorage/app/public\n        │\n        │ symbolic link\n        ▼\npublic/storage\n```\n\nNow a file stored as `avatars/user.jpg` is served at `/storage/avatars/user.jpg`.\n\n```text\nupload\n  ↓\npublic disk\n  ↓\nstorage:link\n  ↓\n/storage/avatars/user.jpg\n```\n\nThe symptom of forgetting it is a 404 on every uploaded image, with the file plainly sitting on disk. And it has to be run on every environment, which is why it belongs in your deploy script rather than your memory.\n\n<b>The `local` disk is the opposite</b>: nothing under it is reachable from the web, which is right for anything private. Serving one of those means reading it through a controller that checks authorization first.\n\n---\n\n### 3. Advanced — why object storage\n\nOn one server, the local disk is fine. Add a second and it stops being fine:\n\n```text\nuser uploads → Server 1 → the file is on Server 1\n\nuser reloads → Server 2 → file missing\n```\n\nThe load balancer sent them elsewhere, and the file is not there. <b>The local disk assumes there is one server, forever.</b>\n\n```text\nServer 1 ─┐\nServer 2 ─┼──→  S3\nServer 3 ─┘\n```\n\nOne store, every server. And it survives replacing a server, which a modern deploy does routinely.\n\nThree more reasons it is usually right in production: your files stop counting towards the disk on your application server, backups become somebody else's problem, and large files can be served without passing through PHP at all.\n\nThe practical arrangement most applications land on:\n\n```text\nlocal    temporary files, caches, things you can regenerate\npublic   small public assets, on a single-server app\ns3       anything a user uploaded, in production\n```\n\nAnd because the disk name is configuration, <b>the same code runs against `local` in tests and `s3` in production</b>, which is the reason to use `Storage` even on a one-server application you are sure will never grow.",
-      diagram: `Three things outside your application
-
-  Application
-     │
-     ├── Files            →  local / public / S3
-     ├── External APIs    →  HTTP client
-     └── System commands  →  Process
-
-  Your code should say "store this file", not
-  "write to /var/www/...".
-
-
-A disk is a named, configured location
-
-  file_put_contents('/var/www/app/storage/...')   a path in code
-  Storage::put('reports/report.pdf', ...)          a disk
-
-  local     storage/app, NOT reachable from the web
-  public    storage/app/public, meant to be served
-  s3        object storage, not on your server at all
-
-  The path becomes configuration. Moving to S3 is a
-  .env change, not a rewrite.
-
-
-public, and the link
-
-  The public disk writes to storage/app/public.
-  The web server serves public/. Those are different
-  places, so a file there is not reachable.
-
-    php artisan storage:link
-
-    storage/app/public
-            │
-            │ symbolic link
-            ▼
-    public/storage
-
-  Stored as avatars/user.jpg → served at
-  /storage/avatars/user.jpg
-
-  Forgetting it: a 404 on every image, with the file
-  plainly sitting on disk. Run it on every environment,
-  from the deploy script rather than from memory.
-
-  The local disk is the opposite: nothing under it is
-  web-reachable, which is right for private files. Serve
-  those through a controller that authorizes first.
-
-
-Why object storage
-
-  One server: local is fine.
-  Two servers:
-
-    user uploads → Server 1 → the file is on Server 1
-    user reloads → Server 2 → file missing
-
-  The local disk assumes one server, forever.
-
-    Server 1 ─┐
-    Server 2 ─┼──→  S3
-    Server 3 ─┘
-
-  One store, every server. And it survives replacing a
-  server, which deploys do routinely.
-
-  Plus: files stop filling your application disk, backups
-  are somebody else's problem, and large files can be
-  served without passing through PHP.
-
-
-Where most applications land
-
-  local    temporary files, caches, regenerable things
-  public   small public assets, single-server apps
-  s3       anything a user uploaded, in production
-
-  And because the disk is configuration, the same code
-  runs against local in tests and s3 in production.
-  That is the reason to use Storage even on an app you
-  are sure will never grow.`,
-      codeExample: {
-        title: "Disks, and the link that catches everyone",
-        code: `<?php
-// config/filesystems.php
-
-return [
-    'default' => env('FILESYSTEM_DISK', 'local'),
-
-    'disks' => [
-
-        // Not reachable from the web. Private by default.
-        'local' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/private'),
-        ],
-
-        // Meant to be served, once storage:link exists.
-        'public' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/public'),
-            'url'        => env('APP_URL') . '/storage',
-            'visibility' => 'public',
-        ],
-
-        // Not on your server at all.
-        's3' => [
-            'driver' => 's3',
-            'key'    => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-
-            // For MinIO, DigitalOcean Spaces and anything
-            // else S3-compatible but not S3 itself:
-            'endpoint'                => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-        ],
-
-    ],
-];
-
-
-# ---------- The S3 driver is a separate package ----------
-
-composer require league/flysystem-aws-s3-v3
-
-# Laravel ships the disk configuration; the adapter that
-# talks to S3 is not installed by default.
-
-
-# ---------- The link ----------
-
-php artisan storage:link
-
-#   storage/app/public  →  public/storage
-#
-# Put it in your deploy script. Forgetting it on a new
-# environment is a 404 on every uploaded image, with the
-# file sitting plainly on disk.
-
-
-<?php
-// ---------- Using them ----------
-
-use Illuminate\\Support\\Facades\\Storage;
-
-// The default disk, from FILESYSTEM_DISK.
-Storage::put('reports/report.pdf', $contents);
-
-// A named disk.
-Storage::disk('public')->put('avatars/user.jpg', $contents);
-Storage::disk('s3')->put('invoices/2026/INV-001.pdf', $contents);
-
-// The same line of application code, wherever the file goes.
-
-
-# ---------- Which is why this works ----------
-
-# .env, locally
-FILESYSTEM_DISK=public
-
-# .env, in production
-FILESYSTEM_DISK=s3
-
-# phpunit.xml, in tests
-# <env name="FILESYSTEM_DISK" value="local"/>
-
-
-<?php
-// ---------- Private files are not served directly ----------
-
-// The local disk is not web-reachable, so this is the
-// only way in, and it can authorize first.
-Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
-    Gate::authorize('view', $invoice);
-
-    return Storage::disk('local')->download($invoice->pdf_path);
-})->middleware('auth');`,
-      },
-      keyTakeaways: [
-        "<b>Your application should say \"store this file\", not name a path on a server.</b>",
-        "<b>A disk is a named, configured storage location</b>, defined in `config/filesystems.php`.",
-        "<b>`local` is not reachable from the web; `public` is meant to be served; `s3` is not on your server.</b>",
-        "Because the disk is configuration, the same code can write locally in tests and to S3 in production.",
-        "<b>The `public` disk writes to `storage/app/public`, which the web server does not serve.</b>",
-        "<b>`php artisan storage:link` creates the symlink</b> that makes those files reachable at `/storage/...`.",
-        "Forgetting the link is a 404 on every image, so run it from your deploy script.",
-        "<b>The local disk assumes there is one server forever</b>, and breaks the moment there are two.",
-        "<b>Object storage gives every server one store</b>, and survives a server being replaced.",
-        "Private files belong on a non-public disk and are served through a controller that authorizes first.",
-      ],
-      commonMistakes: [
-        "<b>Forgetting `storage:link` on a new environment.</b> Every uploaded image 404s while sitting on disk.",
-        "<b>Writing absolute paths instead of using `Storage`.</b> Moving to S3 then means rewriting every call.",
-        "<b>Putting private files on the public disk.</b> The URL is guessable and nothing checks who is asking.",
-        "<b>Using the local disk on a multi-server deployment.</b> Half the requests cannot find the file.",
-        "<b>Assuming `storage:link` is one-time.</b> It is per environment, including every fresh container.",
-      ],
-      quiz: [
-        {
-          question: "What does `php artisan storage:link` create?",
-          options: [
-            "A new disk",
-            "A symlink from `public/storage` to `storage/app/public`, so those files can be served",
-            "A database record",
-            "An S3 bucket",
-          ],
-          correctIndex: 1,
-          explanation: "Without it, files on the public disk are on disk but not reachable.",
-        },
-        {
-          question: "Why does the local disk break on a multi-server deployment?",
-          options: [
-            "It is slower",
-            "The file exists only on the server that received the upload",
-            "Laravel disables it",
-            "It has a size limit",
-          ],
-          correctIndex: 1,
-          explanation: "The next request may be served by a different machine.",
-        },
-        {
-          question: "Where do private user files belong?",
-          options: [
-            "The public disk, with a long random filename",
-            "A non-public disk, served through a controller that authorizes first",
-            "The database",
-            "The public disk, with `.htaccess`",
-          ],
-          correctIndex: 1,
-          explanation: "A guessable URL with nothing checking who is asking is not protection.",
-        },
-        {
-          question: "What is the main benefit of the `Storage` abstraction?",
-          options: [
-            "Faster file access",
-            "The storage location becomes configuration, so the same code runs against local or S3",
-            "Automatic backups",
-            "Built-in image resizing",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why it is worth using even on a one-server application.",
-        },
-      ],
-    },
-    {
-      id: "storing-files",
-      title: "Storing files — put, store & the filename question",
+      id: "api-routes-and-sanctum",
+      title: "API routes, and what makes them different",
       durationMinutes: 11,
-      explanation: "Five methods that all write a file, and one decision underneath them.\n\n---\n\n### 1. Basic — contents you already have\n\n```php\nStorage::put('documents/file.txt', $contents);\n\nStorage::disk('s3')->put('documents/file.txt', $contents);\n```\n\n```text\npath + contents  →  Storage\n```\n\nYou name the file, you supply the bytes. That is right for something your application generated: a PDF, an export, a report.\n\n---\n\n### 2. Intermediate — files that arrived from a user\n\nAn upload is different, because you have an `UploadedFile` rather than a string, and <b>you almost certainly do not want the name it came with.</b>\n\nFour methods, and the difference is who chooses the filename and where you call it from:\n\n```text\nStorage::putFile('documents', $file)               Laravel names it\nStorage::putFileAs('documents', $file, 'a.pdf')    you name it\n\n$file->store('documents')                          Laravel names it\n$file->storeAs('documents', 'a.pdf')               you name it\n```\n\nThe `Storage::` pair and the `$file->` pair do the same thing; the second reads better in a controller and takes the disk as a last argument:\n\n```php\n$path = $request->file('avatar')->store('avatars', 'public');\n\n$path = $request->file('avatar')->storeAs('avatars', \"user-{$user->id}.jpg\", 'public');\n```\n\n<b>Every one of them returns the path</b>, and that is what you store on the model. Not the URL, which changes if you move disks or domains, and not the original name.\n\n---\n\n### 3. Advanced — why the generated name is the safe default\n\nA filename from a browser is user input, and it has been the source of several distinct problems:\n\n```text\n../../.env                path traversal\nreport.pdf.php            an executable extension\nCV.pdf uploaded twice     one overwrites the other\nsome very long name…      breaks on some filesystems\nrésumé (1).pdf            encoding, spaces, brackets in URLs\n```\n\n`store()` sidesteps all of it by generating a random name and keeping only the extension. <b>Use `store()` by default and `storeAs()` only when the name genuinely matters</b>, and even then build it from your own data (`user-{id}`, `invoice-{number}`) rather than from theirs.\n\nWhen you do want to show people the original name, keep it as data:\n\n```php\n$invoice->update([\n    'path'          => $request->file('doc')->store('invoices', 's3'),\n    'original_name' => $request->file('doc')->getClientOriginalName(),\n]);\n```\n\nThe path is what the filesystem uses; the original name is a label you render, and later hand to `download()` as the name the browser should save it under.\n\nTwo more things worth doing every time.\n\n<b>Validate before storing.</b> `['required', 'file', 'mimes:pdf', 'max:10240']` checks the actual file, not the claimed content type, and `max` is in kilobytes. Without a size limit, the upload limit is whatever PHP allows.\n\n<b>And never trust the client's `Content-Type`.</b> It is a header the sender wrote. `mimes:` inspects the file itself, which is the difference between a rule and a suggestion.",
-      diagram: `Contents you already have
+      explanation: "Everything so far has been a browser talking to Blade. An API is the same application answering a different kind of client.\n\n```text\nClient\n  │  HTTP + JSON\n  ▼\nLaravel API\n  ├── Authentication\n  ├── Authorization\n  ├── Validation\n  ├── Business logic\n  ├── Eloquent\n  └── API Resources\n           ↓\n         JSON\n```\n\nEvery one of those is a day you have already done. <b>Today is about what changes when the caller is a mobile app rather than a browser.</b>\n\n---\n\n### 1. Basic — turning it on\n\n```bash\nphp artisan install:api\n```\n\nWhich creates `routes/api.php`, registers it, and installs Sanctum. API routes are not there by default because plenty of applications never need them.\n\n```text\nroutes/\n├── web.php\n└── api.php\n```\n\nRoutes in `api.php` are prefixed with `/api` automatically:\n\n```http\nGET    /api/posts\nPOST   /api/posts\nGET    /api/posts/123\nPATCH  /api/posts/123\nDELETE /api/posts/123\n```\n\n---\n\n### 2. Intermediate — why two files\n\nThey are not two files for tidiness. <b>They have different middleware, and that is the whole point.</b>\n\n```text\nweb.php                    api.php\n───────                    ───────\nsessions                   no session\ncookies                    no cookies\nCSRF protection            no CSRF\nredirects on failure       JSON on failure\nstateful                   stateless\n```\n\nEach line follows from the client.\n\n<b>No session, because there is nothing to remember between requests.</b> A mobile app sends its credentials every time, so the server keeps nothing.\n\n<b>No CSRF, because there is nothing to forge.</b> Day 20: CSRF exists because browsers attach cookies automatically. A token in an `Authorization` header is attached deliberately, by code, so an attacker's page cannot cause one to be sent.\n\n<b>And failures come back as JSON.</b> A browser gets redirected back to the form with errors in the session; an API client gets a 422 with a body it can read. Same validation, different presentation, decided by which file the route is in.\n\n```text\niOS / Android\n      ↓\n    HTTPS\n      ↓\n  Laravel API\n```\n\nIt never asked for a Blade view, and it cannot follow a redirect to one.\n\n---\n\n### 3. Advanced — what Sanctum is\n\n<b>Sanctum</b> is Laravel's lightweight API authentication, and it does two quite different jobs. Knowing they are different is the thing people get wrong first.\n\n```text\nAPI tokens                 SPA cookies\n──────────                 ───────────\nmobile apps                a first-party SPA on your domain\nCLI tools                  React or Vue you also wrote\nthird-party clients\n\nAuthorization: Bearer …    the session cookie\nstateless                  stateful\nno CSRF                    CSRF still applies\n```\n\nThe token flow, which is most of today:\n\n```text\nclient\n  ↓ log in\nLaravel\n  ↓ issues a token\nclient stores it\n  ↓\nAuthorization: Bearer …  on every request\n```\n\nThe SPA flow is different: your JavaScript and your API are on the same site, the browser holds a normal session cookie, and Sanctum simply lets that count as authentication for `api.php` routes. <b>No token is involved, and CSRF protection comes back</b>, because cookies are automatic again.\n\nThe choice is not about preference:\n\n```text\nyou control the frontend and it runs on your domain  →  SPA cookies\nanything else                                        →  tokens\n```\n\nAnd it is worth being clear about one thing before the next lesson: <b>a token is a credential, not a session.</b> It does not expire when a browser closes, it is stored on the client, and anybody holding it is that user until it is revoked. Everything in the next two lessons follows from that.",
+      diagram: `The same application, a different client
 
-  Storage::put('documents/file.txt', \$contents)
+  Client
+    │  HTTP + JSON
+    ▼
+  Laravel API
+    ├── Authentication      Day 18
+    ├── Authorization       Day 19
+    ├── Validation          Day 9
+    ├── Business logic
+    ├── Eloquent            Days 14–16
+    └── API Resources       Day 16
+             ↓
+           JSON
 
-    path + contents  →  Storage
-
-  Right for something you generated: a PDF, an export.
-
-
-Files that arrived from a user
-
-  You have an UploadedFile, not a string — and almost
-  certainly do not want the name it came with.
-
-  Storage::putFile('documents', \$file)             Laravel names it
-  Storage::putFileAs('documents', \$file, 'a.pdf')  you name it
-
-  \$file->store('documents')                        Laravel names it
-  \$file->storeAs('documents', 'a.pdf')             you name it
-
-  Same thing. The \$file-> pair reads better in a
-  controller and takes the disk last.
-
-  All of them return the PATH. Store that on the model.
-  Not the URL, which changes with the disk or domain.
-  Not the original name.
+  Every one is a day you have done. Today is what
+  changes when the caller is not a browser.
 
 
-Why the generated name is the safe default
+Turning it on
 
-  A filename from a browser is user input:
+  php artisan install:api
 
-    ../../.env              path traversal
-    report.pdf.php          an executable extension
-    CV.pdf, twice           one overwrites the other
-    a very long name…       breaks on some filesystems
-    résumé (1).pdf          encoding, spaces, brackets
+  creates routes/api.php, registers it, installs Sanctum.
+  Not there by default, because plenty of apps never
+  need it.
 
-  store() sidesteps all of it: a random name, the
-  extension kept.
-
-  Use store() by default. Use storeAs() only when the
-  name matters, and build it from YOUR data:
-  user-{id}, invoice-{number}.
-
-  Want to show the original name? Keep it as DATA:
-
-    'path'          => \$file->store('invoices', 's3'),
-    'original_name' => \$file->getClientOriginalName(),
-
-  The path is what the filesystem uses. The original
-  name is a label you render, and later hand to
-  download() as the name the browser saves it under.
+  Routes are prefixed /api automatically.
 
 
-Every time
+Why two files: different MIDDLEWARE
 
-  Validate first
-    ['required', 'file', 'mimes:pdf', 'max:10240']
-    max is in KILOBYTES. Without it, your upload limit
-    is whatever PHP allows.
+  web.php                   api.php
+  ───────                   ───────
+  sessions                  no session
+  cookies                   no cookies
+  CSRF protection           no CSRF
+  redirects on failure      JSON on failure
+  stateful                  stateless
 
-  Never trust Content-Type
-    It is a header the sender wrote. mimes: inspects the
-    file itself. That is the difference between a rule
-    and a suggestion.`,
+  No session: a mobile app sends its credentials every
+  time, so the server remembers nothing.
+
+  No CSRF: CSRF exists because browsers attach cookies
+  automatically. A token in an Authorization header is
+  attached deliberately, by code. Nothing to forge.
+
+  JSON on failure: a browser is redirected back to the
+  form; an API client gets a 422 with a readable body.
+  Same validation, different presentation, decided by
+  which file the route lives in.
+
+
+Sanctum does TWO different jobs
+
+  API tokens                SPA cookies
+  ──────────                ───────────
+  mobile apps               a first-party SPA on your domain
+  CLI tools                 React or Vue you also wrote
+  third-party clients
+
+  Authorization: Bearer …   the session cookie
+  stateless                 stateful
+  no CSRF                   CSRF STILL APPLIES
+
+  The token flow (most of today):
+
+    client → log in → Laravel → issues a token
+                                    ↓
+                         client stores it
+                                    ↓
+                  Authorization: Bearer … every request
+
+  The SPA flow: your JavaScript and your API are on the
+  same site, the browser holds a normal session cookie,
+  and Sanctum lets that authenticate api.php routes.
+  No token, and CSRF is back, because cookies are
+  automatic again.
+
+    you control the frontend, on your domain → SPA cookies
+    anything else                            → tokens
+
+
+  And before the next lesson:
+
+    A token is a CREDENTIAL, not a session.
+
+  It does not expire when a browser closes, it is stored
+  on the client, and anybody holding it is that user
+  until it is revoked.`,
       codeExample: {
-        title: "Storing an upload safely",
-        code: `<?php
+        title: "Setting up an API",
+        code: `# Creates routes/api.php, registers it, installs Sanctum.
+php artisan install:api
 
+
+<?php
+// routes/api.php
+//
+// Automatically prefixed with /api and given the api
+// middleware group: no session, no cookies, no CSRF.
+
+use App\\Http\\Controllers\\Api\\PostController;
 use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Storage;
+use Illuminate\\Support\\Facades\\Route;
 
-// ---------- Contents you generated ----------
+Route::post('/login', [AuthController::class, 'login']);
 
-Storage::put('reports/2026-09.pdf', $pdfContents);
-Storage::disk('s3')->put('exports/invoices.csv', $csv);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => $request->user());
 
+    Route::apiResource('posts', PostController::class);
+});
 
-// ---------- An upload ----------
-
-public function store(Request $request)
-{
-    // Validate first. mimes: inspects the file, not the
-    // Content-Type header the sender wrote.
-    $request->validate([
-        'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-    ]);
-
-    // Laravel generates a random name and keeps the extension.
-    $path = $request->file('document')->store('documents', 's3');
-    // documents/9f2b1c...pdf
-
-    // Store the PATH on the model, not a URL.
-    $invoice->update([
-        'document_path' => $path,
-
-        // The original name is a label you render later.
-        'document_name' => $request->file('document')->getClientOriginalName(),
-    ]);
-}
+// GET    /api/posts
+// POST   /api/posts
+// GET    /api/posts/{post}
+// PATCH  /api/posts/{post}
+// DELETE /api/posts/{post}
 
 
-// ---------- The four ways, side by side ----------
+<?php
+// ---------- The same validation, two presentations ----------
 
-Storage::putFile('documents', $file);                 // Laravel names it
-Storage::putFileAs('documents', $file, 'report.pdf'); // you name it
+// In web.php: a failure redirects back with errors in
+// the session, and the Blade form renders them.
+//
+// In api.php: a failure is a 422 with a JSON body.
+//
+// You write the rules once; the route file decides how
+// a failure is delivered.
 
-$file->store('documents', 'public');                  // Laravel names it
-$file->storeAs('documents', 'report.pdf', 'public');  // you name it
+$request->validate([
+    'title' => ['required', 'string', 'max:255'],
+]);
 
-// All of them return the path.
-
-
-// ---------- When the name matters ----------
-
-// ❌ The name came from the browser.
-$file->storeAs('documents', $file->getClientOriginalName());
-
-// The generated name on its own, when you want Laravel's
-// name but your own directory or disk:
-$name = $file->hashName();            // 8f3c…d1.pdf
-$file->storeAs('invoices/2026', $name, 's3');
-
-// A filename is user input:
-//   ../../.env          path traversal
-//   report.pdf.php      an executable extension
-//   CV.pdf twice        one overwrites the other
-
-// ✓ Build it from your own data.
-$file->storeAs(
-    'invoices',
-    "invoice-{$invoice->number}.pdf",
-    's3',
-);
+// api.php response:
+// 422
+// {
+//   "message": "The title field is required.",
+//   "errors": { "title": ["The title field is required."] }
+// }
 
 
-// ---------- Giving the original name back at download time ----------
+<?php
+// ---------- Why an API route needs no CSRF ----------
 
-return Storage::disk('s3')->download(
-    $invoice->document_path,     // where it actually is
-    $invoice->document_name,     // what the browser saves it as
-);
+// Day 20: CSRF exists because a browser attaches cookies
+// automatically, so a request from evil.com is genuinely
+// authenticated.
+//
+// A token is attached by code:
+//
+//   Authorization: Bearer 3|abc...
+//
+// An attacker's page cannot cause that header to be sent,
+// so there is nothing to forge.
+//
+// ⚠️ This stops being true for Sanctum SPA authentication,
+//    which uses cookies. CSRF applies there.
 
 
-// ---------- Cleaning up ----------
+# ---------- The two Sanctum flows ----------
 
-// Replacing a file? Delete the old one, or the bucket
-// grows forever with orphans nothing points at.
-if ($invoice->document_path) {
-    Storage::disk('s3')->delete($invoice->document_path);
-}
+# Token: a mobile app, a CLI, a third-party client.
+curl https://example.com/api/posts \\
+  -H "Authorization: Bearer 3|abcdef..." \\
+  -H "Accept: application/json"
 
-$invoice->document_path = $request->file('document')->store('documents', 's3');
-$invoice->save();`,
+# SPA: your own React app on your own domain, using the
+# session cookie the browser already holds. No token.
+
+
+# ---------- The SPA flow, wired up ----------
+
+# .env — which domains count as "first party"
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.example.com
+SESSION_DOMAIN=.example.com
+
+# The frontend must do this ONCE, before logging in:
+#
+#   GET /sanctum/csrf-cookie
+#
+# It sets the XSRF-TOKEN cookie. Without it, your very
+# first POST /login returns 419 and looks like a broken
+# login rather than a missing setup step.
+
+// resources/js/bootstrap.js
+axios.defaults.withCredentials = true;      // send cookies
+axios.defaults.withXSRFToken  = true;       // echo the CSRF cookie
+
+// And then, in order:
+await axios.get('/sanctum/csrf-cookie');    // 1. get the cookie
+await axios.post('/login', { email, password });   // 2. log in
+await axios.get('/api/user');               // 3. authenticated by session
+
+// No token anywhere. The browser holds a session cookie,
+// exactly as it does for your Blade pages — which is why
+// CSRF still applies here and does not for tokens.`,
       },
       keyTakeaways: [
-        "<b>`Storage::put()` writes contents you already have</b>, which suits files your application generated.",
-        "<b>An upload gives you an `UploadedFile`</b>, and `store()`, `storeAs()`, `putFile()` and `putFileAs()` handle it.",
-        "<b>`store()` generates a filename; `storeAs()` lets you choose one.</b>",
-        "The `$file->` methods read better in a controller and take the disk as the last argument.",
-        "<b>All of them return the path, and that is what you store on the model</b>, not a URL.",
-        "<b>A filename from a browser is user input</b>, and has caused path traversal, executable extensions and collisions.",
-        "<b>Use `store()` by default</b>, and build any custom name from your own data rather than theirs.",
-        "Keep the original name as a separate column, to render and to pass to `download()`.",
-        "<b>Validate with `mimes:` and `max:` before storing</b>; `max` is in kilobytes.",
-        "<b>Never trust the client's `Content-Type`</b>, because it is a header the sender wrote.",
+        "<b>An API is the same application answering a client that is not a browser.</b>",
+        "`php artisan install:api` creates `routes/api.php`, registers it and installs Sanctum.",
+        "<b>`web.php` and `api.php` exist to have different middleware</b>, not for tidiness.",
+        "<b>API routes have no session and no cookies</b>, because the client sends its credentials every time.",
+        "<b>API routes need no CSRF</b>, because a token header is attached by code rather than automatically.",
+        "<b>Failures come back as JSON rather than a redirect</b>, which is the same validation presented differently.",
+        "<b>Sanctum does two different jobs</b>: API tokens, and cookie authentication for a first-party SPA.",
+        "Token authentication is stateless and header-based; SPA authentication uses the session cookie and still needs CSRF.",
+        "<b>SPA mode needs three things wired up</b>: `SANCTUM_STATEFUL_DOMAINS`, `withCredentials` on the client, and a `GET /sanctum/csrf-cookie` before the first login.",
+        "<b>Use SPA cookies when you control the frontend and it runs on your domain</b>, and tokens for everything else.",
+        "<b>A token is a credential, not a session</b>: anybody holding it is that user until it is revoked.",
       ],
       commonMistakes: [
-        "<b>Storing the file under its original name.</b> That accepts a path, an extension and a collision from the user.",
-        "<b>Saving a URL on the model instead of the path.</b> It breaks the moment the disk or domain changes.",
-        "<b>Validating on `Content-Type`.</b> The sender chose that value; `mimes:` inspects the file.",
-        "<b>Omitting `max:`.</b> Your upload limit becomes whatever PHP happens to allow.",
-        "<b>Replacing a file without deleting the old one.</b> The bucket fills with orphans nothing points at.",
+        "<b>Putting API routes in `web.php`.</b> They pick up sessions and CSRF, and failures redirect instead of returning JSON.",
+        "<b>Confusing the two Sanctum flows.</b> SPA authentication uses cookies and does need CSRF.",
+        "<b>Skipping `GET /sanctum/csrf-cookie`.</b> The first login returns 419 and looks like broken credentials.",
+        "<b>Expecting a redirect to work for an API client.</b> It cannot follow one, and would not want the HTML.",
+        "<b>Forgetting the `Accept: application/json` header when testing.</b> Laravel then answers as if you were a browser.",
+        "<b>Treating a token like a session.</b> It survives everything until you revoke it.",
       ],
       quiz: [
         {
-          question: "What do `store()` and `storeAs()` return?",
-          options: ["A URL", "The stored path", "The UploadedFile", "A boolean"],
-          correctIndex: 1,
-          explanation: "Store the path on the model; a URL breaks when the disk changes.",
-        },
-        {
-          question: "Why not store an upload under its original filename?",
+          question: "Why do API routes not need CSRF protection?",
           options: [
-            "It is slower",
-            "The name is user input, and has caused path traversal, executable extensions and collisions",
-            "Laravel does not allow it",
-            "Filenames must be unique in S3",
+            "APIs are trusted",
+            "A token header is attached deliberately by code, not automatically like a cookie",
+            "CSRF only applies to GET",
+            "Laravel disables it for performance",
           ],
           correctIndex: 1,
-          explanation: "`store()` generates a name and keeps only the extension.",
+          explanation: "An attacker's page cannot cause an `Authorization` header to be sent.",
         },
         {
-          question: "Why is validating on the client's `Content-Type` not enough?",
+          question: "What is the real difference between `web.php` and `api.php`?",
           options: [
-            "It is often missing",
-            "It is a header the sender wrote, so it can say anything",
-            "Laravel ignores it",
-            "It is only for images",
+            "The URL prefix only",
+            "Different middleware: sessions, cookies and CSRF versus stateless JSON",
+            "API routes are faster",
+            "They use different controllers",
           ],
           correctIndex: 1,
-          explanation: "`mimes:` inspects the file itself.",
+          explanation: "Which is also why a failure redirects in one and returns a 422 in the other.",
         },
         {
-          question: "How do you show the user their original filename on download?",
+          question: "Which Sanctum flow still needs CSRF protection?",
           options: [
-            "Store the file under that name",
-            "Keep it in a separate column and pass it as the second argument to `download()`",
-            "Read it from the path",
-            "It is not possible",
+            "Token authentication",
+            "SPA cookie authentication",
+            "Both",
+            "Neither",
           ],
           correctIndex: 1,
-          explanation: "The path is for the filesystem; the original name is data you render.",
+          explanation: "It uses the session cookie, which the browser attaches automatically.",
+        },
+        {
+          question: "When should you use Sanctum's SPA cookie authentication rather than tokens?",
+          options: [
+            "For mobile applications",
+            "When you control the frontend and it runs on your own domain",
+            "For third-party clients",
+            "Whenever the API is public",
+          ],
+          correctIndex: 1,
+          explanation: "Anything else, including mobile and CLI clients, uses tokens.",
         },
       ],
     },
     {
-      id: "retrieving-and-serving",
-      title: "Reading, downloading & temporary URLs",
+      id: "tokens",
+      title: "Issuing tokens & protecting routes",
       durationMinutes: 12,
-      explanation: "Getting a file back out, and the security decision hiding in it.\n\n---\n\n### 1. Basic — reading\n\n```php\nStorage::exists('documents/report.pdf');\n\n$contents = Storage::get('documents/report.pdf');\n\n$url = Storage::disk('public')->url('avatars/user.jpg');\n```\n\n`get()` reads the whole file into memory, which is fine for a text file and a bad idea for a video.\n\nAnd `url()` only means something on a disk that has one. On a private disk it will not give you a working address, which is the point of that disk.\n\nTo send a file to the browser as a download:\n\n```php\nreturn Storage::download('documents/report.pdf');\n\nreturn Storage::download('documents/report.pdf', 'my-report.pdf');\n```\n\nThe second argument is what the browser saves it as, which is where the original filename from the last lesson goes. `download()` sets `Content-Disposition: attachment`:\n\n```text\ndon't display this\nsave it\n```\n\n---\n\n### 2. Intermediate — do not read big files into memory\n\n```php\n$contents = Storage::get('videos/video.mp4');   // the whole file, in RAM\n```\n\nA 500 MB video is 500 MB of PHP memory, per concurrent request. Ten of those and the server is gone.\n\n```text\n❌ file → RAM → response\n✓ file → stream → response\n```\n\n```php\nreturn Storage::disk('s3')->response('videos/video.mp4');\n\nreturn Storage::download('videos/video.mp4');     // also streamed\n```\n\nThese send the file in chunks, so memory stays flat whatever the size.\n\n<b>The rule: memory use should not depend on the file's size.</b> Anywhere it does, you have a limit you did not choose, and you find it when somebody uploads something large.\n\nThe files this matters for are predictable: videos, backups, exports, large PDFs.\n\n---\n\n### 3. Advanced — public, private, and temporary URLs\n\n<b>Visibility</b> is whether a stored file is readable by anybody with the address:\n\n```php\nStorage::disk('s3')->put('reports/report.pdf', $contents, 'private');\n```\n\nAnd it is a real decision, not a detail:\n\n```text\npublic     an avatar, a logo, a product photo\nprivate    an invoice, a medical document, an export,\n           anything belonging to one person\n```\n\nA private file has no public URL, which raises the obvious question: how does the owner get it?\n\nOne answer is to stream it through your application, which is the controller from the first lesson: authorize, then `download()`. Correct, and every byte passes through PHP.\n\nThe better answer for object storage is a <b>temporary URL</b>:\n\n```php\n$url = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(10));\n```\n\n```text\nprivate file\n     ↓\nyour application authorizes the user\n     ↓\nsigned URL, valid for ten minutes\n     ↓\nthe browser fetches it from S3 directly\n     ↓\nthe URL expires\n```\n\n<b>Your application makes the decision; S3 does the delivering.</b> The download does not touch your server at all, which for a large file is the difference between a slow page and no load.\n\nThree things to get right.\n\n<b>The expiry is a real trade-off.</b> Long enough to click and download, short enough that a copied link stops working. Ten minutes is a reasonable default; hours are not.\n\n<b>A temporary URL is not authorization.</b> It says \"whoever holds this link, for the next ten minutes\". Your application decides who gets handed one, and that check is the actual protection.\n\n<b>And it needs a private file to be worth anything.</b> Generating a temporary URL for a file on the public disk is theatre: the file is already reachable at a plain, permanent address.",
-      diagram: `Reading
+      explanation: "How a client gets a credential, and how the server recognises it.\n\n---\n\n### 1. Basic — issuing one\n\nThe model needs Sanctum's trait:\n\n```php\nuse Laravel\\Sanctum\\HasApiTokens;\n\nclass User extends Authenticatable\n{\n    use HasApiTokens;\n}\n```\n\nThen, after checking credentials:\n\n```php\n$token = $user->createToken('mobile-app');\n\nreturn ['token' => $token->plainTextToken];\n```\n\n```text\nuser\n ↓\ncreateToken()\n ↓\na row in personal_access_tokens\n ↓\nthe plain text token, once\n```\n\n<b>`plainTextToken` is available exactly once</b>, on the object you just created. The database stores a hash, exactly as it does for a password, so a leak of that table does not hand over anybody's tokens, and there is no way to look one up later.\n\nWhich means the client stores it, and \"I lost my token\" is answered by issuing a new one, never by retrieving the old one.\n\nThe name (`'mobile-app'`) is for humans: it is what a \"your devices\" screen lists, so the user can see and revoke them individually.\n\n---\n\n### 2. Intermediate — the login endpoint\n\nEverything from Day 18 still applies, minus the session:\n\n```php\n$request->validate([\n    'email'    => ['required', 'email'],\n    'password' => ['required'],\n]);\n\n$user = User::where('email', $request->email)->first();\n\nif (! $user || ! Hash::check($request->password, $user->password)) {\n    throw ValidationException::withMessages([\n        'email' => ['Invalid credentials.'],\n    ]);\n}\n\nreturn ['token' => $user->createToken($request->device_name)->plainTextToken];\n```\n\nNote what is <i>not</i> there. No `Auth::attempt()`, because there is no session to establish, and no `session()->regenerate()`, because there is no session to fix.\n\nWhat is still there: <b>one error message for a wrong password and an unknown email</b>, and <b>rate limiting on this route</b>. An API login is a better target than a web one, because there is no interface slowing anybody down.\n\n---\n\n### 3. Advanced — the request, and the guard\n\nThe client sends:\n\n```http\nAuthorization: Bearer 3|abcdef...\n```\n\n```text\nrequest\n  ↓\nBearer token\n  ↓\nSanctum: hash it, find the row, load the user\n  ↓\n$request->user()\n```\n\nAnd you protect routes with the guard:\n\n```php\nRoute::middleware('auth:sanctum')->group(function () {\n    Route::get('/user', fn (Request $request) => $request->user());\n    Route::apiResource('posts', PostController::class);\n});\n```\n\n```text\nGET /api/posts\n      ↓\nauth:sanctum\n  ┌───┴───┐\nvalid   invalid\n  ↓        ↓\nuser      401\n```\n\n<b>`auth:sanctum` is the guard name from Day 18</b>, doing exactly what that lesson described: the guard decides how identity is established, the provider fetches the user. Here the guard reads a header instead of a session, and the provider is the same one.\n\nInside a controller, `$request->user()` is the authenticated user, as always.\n\nTwo practical notes.\n\n<b>Ask for JSON.</b> Without `Accept: application/json`, an unauthenticated request gets redirected to a login page that does not exist, and you spend twenty minutes debugging a 302 that should have been a 401.\n\n<b>And the token is only as safe as its transport.</b> A bearer token over plain HTTP is readable by anybody on the network, and unlike a session cookie there is no `secure` flag to forget: it is your job to serve the API over HTTPS and nothing else.\n\n<b>One piece of history, because you will meet it in older codebases.</b> Before Sanctum, Laravel shipped a `token` guard backed by a single `api_token` column on `users`:\n\n```php\n// config/auth.php — the old way\n'api' => ['driver' => 'token', 'provider' => 'users'],\n```\n\nOne token per user, stored in plain text, with no scopes, no expiry, no revocation short of overwriting the column, and no record of when it was last used. <b>Every one of those is a reason `personal_access_tokens` exists.</b> Recognise it, and never start a new project with it.\n\n<b>Registration is the same shape as login, one step earlier:</b>\n\n```php\n$user = User::create([...]);\n\nreturn response()->json([\n    'token' => $user->createToken($request->device_name)->plainTextToken,\n], 201);\n```\n\nNote what is missing compared with Day 18's web version: no `Auth::login()`, no `session()->regenerate()`, no redirect. <b>The client gets a credential and goes away</b>, which is the whole difference between an API and a form.\n\nAnd then the question nobody answers until it is a problem: <b>where does the client keep it?</b>\n\n```text\niOS         Keychain\nAndroid     Keystore\nbrowser     an HttpOnly cookie, or use SPA mode instead\n```\n\n<b>Not `localStorage`</b>, which any script on the page can read, and never in a log line. A token in your application logs is a credential in your log aggregator, readable by everyone with access and retained as long as your policy says.\n\nOne practical note for building: <b>Postman and Insomnia both have an Authorization tab</b> where you paste the token as a Bearer credential. Save it as an environment variable and reference it as `{{token}}`, so one login updates every request in the collection.",
+      diagram: `Issuing a token
 
-  Storage::exists('documents/report.pdf')
-  Storage::get('documents/report.pdf')        the WHOLE file, in memory
-  Storage::disk('public')->url('avatars/x.jpg')
+  use Laravel\\Sanctum\\HasApiTokens;
 
-  url() only means something on a disk that has one.
-  On a private disk it does not give you a working
-  address, which is the point of that disk.
+  \$token = \$user->createToken('mobile-app');
+  \$token->plainTextToken
 
-  Storage::download(\$path)
-  Storage::download(\$path, 'my-report.pdf')   what the browser saves it as
+    user → createToken() → a row in personal_access_tokens
 
-    Content-Disposition: attachment
-      → don't display this, save it
+  ⚠️  What it replaced, still in older codebases:
 
+      config/auth.php
+        'api' => ['driver' => 'token', ...]
 
-Do not read big files into memory
+      one api_token column on users:
+        plain text · one per user · no scopes
+        no expiry · no revocation · no last-used
 
-  \$contents = Storage::get('videos/video.mp4')
+      Every one of those is why personal_access_tokens
+      exists. Recognise it; never start with it.
+                                 ↓
+                       the plain text token, ONCE
 
-  A 500 MB video is 500 MB of PHP memory, PER concurrent
-  request. Ten of those and the server is gone.
+  The database stores a HASH, as it does for a password.
+  A leak of that table hands over nothing, and there is
+  no way to look a token up later.
 
-    ❌  file → RAM → response
-    ✓  file → stream → response
+  "I lost my token" is answered by issuing a new one.
 
-  Storage::disk('s3')->response(\$path)
-  Storage::download(\$path)              also streamed
-
-  Rule: memory use should not depend on the file's size.
-  Anywhere it does, you have a limit you did not choose,
-  and you find it when somebody uploads something large.
-
-  Predictable culprits: videos, backups, exports, big PDFs.
+  The name is for humans: it is what a "your devices"
+  screen lists, so tokens can be revoked individually.
 
 
-Visibility is a real decision
+The login endpoint
 
-  public     an avatar, a logo, a product photo
-  private    an invoice, a medical document, an export,
-             anything belonging to one person
+  Everything from Day 18, minus the session:
 
-  A private file has no public URL. So how does the
-  owner get it?
+    validate
+    find the user
+    Hash::check
+    createToken()
 
-  Option 1: stream it through your app
-    authorize, then download()
-    correct, and every byte passes through PHP
+  NOT there:
+    Auth::attempt()          no session to establish
+    session()->regenerate()  no session to fix
 
-  Option 2: a temporary URL
+  Still there:
+    one message for a wrong password AND an unknown email
+    rate limiting on this route
 
-    private file
-         ↓
-    your application authorizes the user
-         ↓
-    signed URL, valid ten minutes
-         ↓
-    the browser fetches from S3 DIRECTLY
-         ↓
-    the URL expires
-
-  Your application decides. S3 delivers. The download
-  never touches your server.
+  An API login is a better target than a web one:
+  no interface slows anybody down.
 
 
-Three things to get right
+The request
 
-  The expiry is a trade-off
-    long enough to click and download, short enough
-    that a copied link stops working.
-    Ten minutes is reasonable. Hours are not.
+  Authorization: Bearer 3|abcdef...
 
-  A temporary URL is not authorization
-    it says "whoever holds this link, for ten minutes".
-    Deciding who gets handed one is the real protection.
+    request → Bearer token → Sanctum hashes it, finds
+              the row, loads the user → \$request->user()
 
-  It needs a PRIVATE file to mean anything
-    generating one for a file on the public disk is
-    theatre: it is already at a plain permanent address.`,
+
+  Route::middleware('auth:sanctum')
+
+    GET /api/posts
+          ↓
+    auth:sanctum
+      ┌───┴───┐
+    valid   invalid
+      ↓        ↓
+     user     401
+
+  auth:sanctum is the GUARD from Day 18, doing exactly
+  what that lesson described: the guard decides how
+  identity is established, the provider fetches the user.
+  Here the guard reads a header instead of a session.
+
+
+Two practical notes
+
+  Send Accept: application/json.
+    Without it, an unauthenticated request is REDIRECTED
+    to a login page that does not exist, and you debug a
+    302 that should have been a 401.
+
+  A bearer token is only as safe as its transport.
+    Over plain HTTP anybody on the network reads it, and
+    unlike a session cookie there is no secure flag to
+    forget: serving the API over HTTPS is your job.`,
       codeExample: {
-        title: "Serving files, publicly and privately",
+        title: "A login endpoint and a protected route",
         code: `<?php
-
-use Illuminate\\Support\\Facades\\Storage;
-
-// ---------- Reading ----------
-
-Storage::exists('documents/report.pdf');       // true / false
-$contents = Storage::get('documents/report.pdf');
-$size = Storage::size('documents/report.pdf');
-$when = Storage::lastModified('documents/report.pdf');
-$type = Storage::mimeType('documents/report.pdf');   // application/pdf
-
-// The inverse of exists(), which reads better in a guard:
-if (Storage::missing($path)) {
-    abort(404);
-}
-
-// A public URL, on a disk that has one.
-$url = Storage::disk('public')->url('avatars/user.jpg');
-
-
-// ---------- Downloads ----------
-
-return Storage::download('documents/report.pdf');
-
-// The second argument is what the browser saves it as.
-return Storage::download($invoice->path, $invoice->original_name);
-
-
-// ---------- Big files ----------
-
-// ❌ 500 MB of PHP memory, per concurrent request.
-$contents = Storage::get('videos/video.mp4');
-return response($contents);
-
-// ✓ Streamed in chunks. Memory stays flat.
-return Storage::disk('s3')->response('videos/video.mp4');
-
-// Memory use should not depend on the file's size.
-
-
-<?php
-// ---------- Visibility ----------
-
-Storage::disk('s3')->put('avatars/user.jpg', $contents, 'public');
-Storage::disk('s3')->put('invoices/INV-001.pdf', $contents, 'private');
-
-Storage::disk('s3')->setVisibility('invoices/INV-001.pdf', 'private');
-
-
-<?php
-// ---------- Serving a private file: through the app ----------
-
-Route::get('/invoices/{invoice}/download', function (Invoice $invoice) {
-    Gate::authorize('view', $invoice);
-
-    // Correct, and every byte passes through PHP.
-    return Storage::disk('s3')->download(
-        $invoice->path,
-        $invoice->original_name,
-    );
-})->middleware('auth');
-
-
-<?php
-// ---------- Serving a private file: a temporary URL ----------
-
-Route::get('/invoices/{invoice}/link', function (Invoice $invoice) {
-    // Your application decides. This check is the real protection.
-    Gate::authorize('view', $invoice);
-
-    // S3 delivers. The download never touches your server.
-    return redirect(
-        Storage::disk('s3')->temporaryUrl(
-            $invoice->path,
-            now()->addMinutes(10),
-        )
-    );
-})->middleware('auth');
-
-
-// The expiry is a trade-off: long enough to click and
-// download, short enough that a copied link stops working.
-
-// ❌ A day is not a temporary URL.
-Storage::disk('s3')->temporaryUrl($path, now()->addDay());
-
-// ❌ Theatre: the file is already at a plain permanent address.
-Storage::disk('public')->temporaryUrl($path, now()->addMinutes(10));
-
-
-<?php
-// ---------- Temporary upload URLs, for large files ----------
-
-// The same idea in reverse: the browser uploads straight
-// to S3 and never sends the file through your server.
-$upload = Storage::disk('s3')->temporaryUploadUrl(
-    'uploads/' . Str::uuid(),
-    now()->addMinutes(5),
-);`,
-      },
-      keyTakeaways: [
-        "<b>`exists()`, `get()`, `size()` and `url()` read a file and its metadata.</b>",
-        "<b>`get()` loads the whole file into memory</b>, which is fine for text and wrong for a video.",
-        "<b>`download()` sends a file as an attachment</b>, and its second argument is the name the browser saves.",
-        "<b>Memory use should not depend on the file's size</b>, so stream anything large with `response()` or `download()`.",
-        "<b>Visibility decides whether a file is readable by anybody with the address.</b>",
-        "Avatars and logos are public; invoices, exports and anything belonging to one person are private.",
-        "<b>A private file can be streamed through a controller that authorizes first</b>, at the cost of passing every byte through PHP.",
-        "<b>A temporary URL lets your application authorize and object storage deliver</b>, so the download misses your server.",
-        "<b>The expiry is a trade-off</b>: long enough to use, short enough that a copied link dies.",
-        "<b>A temporary URL is not authorization</b>, and on a public file it is theatre.",
-      ],
-      commonMistakes: [
-        "<b>Reading a large file with `get()` before returning it.</b> Memory scales with file size and concurrency.",
-        "<b>Putting private files on the public disk.</b> The address is permanent and nothing checks the requester.",
-        "<b>Generating a temporary URL for a public file.</b> The plain URL still works forever.",
-        "<b>Setting a long expiry.</b> A day-long \"temporary\" link is a permanent link with extra steps.",
-        "<b>Treating the temporary URL as the security.</b> The authorization before you hand it out is the protection.",
-      ],
-      quiz: [
-        {
-          question: "Why not use `Storage::get()` to serve a large video?",
-          options: [
-            "It is not supported on S3",
-            "It loads the whole file into memory, per concurrent request",
-            "It corrupts binary files",
-            "It is slower to write",
-          ],
-          correctIndex: 1,
-          explanation: "Stream it instead, so memory does not depend on the file's size.",
-        },
-        {
-          question: "What does the second argument to `download()` do?",
-          options: [
-            "Picks the disk",
-            "Sets the filename the browser saves the file as",
-            "Sets the content type",
-            "Sets an expiry",
-          ],
-          correctIndex: 1,
-          explanation: "Which is where the stored original filename goes.",
-        },
-        {
-          question: "What does a temporary URL let you do?",
-          options: [
-            "Make a public file private",
-            "Authorize in your application while object storage delivers the file directly",
-            "Compress the file",
-            "Cache the file locally",
-          ],
-          correctIndex: 1,
-          explanation: "The download never passes through your server.",
-        },
-        {
-          question: "Why is a temporary URL for a file on the public disk pointless?",
-          options: [
-            "Laravel throws an error",
-            "The file already has a plain, permanent address",
-            "It expires immediately",
-            "It is not pointless",
-          ],
-          correctIndex: 1,
-          explanation: "Temporary URLs only mean something for private files.",
-        },
-      ],
-    },
-    {
-      id: "managing-and-read-through",
-      title: "Deleting, listing & the read-through driver",
-      durationMinutes: 9,
-      explanation: "Housekeeping, and one Laravel 13 addition worth understanding as an idea rather than a config block.\n\n---\n\n### 1. Basic — deleting and listing\n\n```php\nStorage::delete('documents/report.pdf');\n\nStorage::delete(['a.txt', 'b.txt']);\n\nStorage::disk('s3')->delete($invoice->path);\n\nStorage::deleteDirectory('exports/2025');\n```\n\n```php\n$files = Storage::files('documents');\n$all   = Storage::allFiles('documents');       // recursive\n\n$dirs  = Storage::directories('documents');\n$allDirs = Storage::allDirectories('documents');\n```\n\nUseful for admin tools, cleanup jobs and storage audits.\n\n<b>And `allFiles()` on a large bucket is a lot of requests.</b> On S3 each page is an API call, so listing a bucket with a hundred thousand objects is slow and metered. Fine in a command, wrong in a web request.\n\n---\n\n### 2. Intermediate — the orphan problem\n\nThe thing nobody plans for: files outlive the rows that pointed at them.\n\n```text\ninvoice deleted\n      ↓\nrow gone\n      ↓\nthe PDF is still in the bucket, forever\n```\n\nNothing cleans it up, because nothing knows it exists. A year later the bucket is full of files no record references, and working out which is which means listing everything and comparing.\n\nDay 14's model events are the fix, applied deliberately:\n\n```php\nstatic::deleting(function (Invoice $invoice) {\n    Storage::disk('s3')->delete($invoice->path);\n});\n```\n\nWith two caveats you already know. <b>A mass delete fires no events</b>, so `Invoice::where(...)->delete()` leaves every file behind. And <b>a soft delete is an update</b>, so the file should survive until the record is really gone, which means `forceDeleted` rather than `deleting`.\n\nThe habit worth forming: <b>whenever you write code that stores a file, write the code that removes it in the same sitting.</b> Otherwise it never gets written.\n\n---\n\n### 3. Advanced — the read-through driver\n\nLaravel 13 adds a <b>read-through</b> filesystem driver, and the idea is worth more than the configuration.\n\nThe problem it solves: your canonical storage is remote, and something reads the same files repeatedly. Every read is a network round trip to S3, paid for in latency and requests.\n\n```text\nApplication\n     ↓\nread-through filesystem\n     │\n     ├── is it here locally?\n     │        ↓\n     │       yes → read the local copy\n     │\n     └── no\n          ↓\n      read from the source\n          ↓\n      keep a local copy\n          ↓\n      return it\n```\n\nSo the first read is remote and the rest are local.\n\n> <b>Separate the canonical storage location from the local read cache.</b>\n\nThat sentence is the takeaway. S3 remains the truth; the local disk is a cache, and a cache being empty or stale is never a correctness problem because the source is still there.\n\nWhich also tells you when it fits and when it does not:\n\n```text\nfits              read many times, changes rarely\n                  templates, assets, reference documents\n\ndoes not fit      read once each          nothing to reuse\n                  changes often           the cache is wrong\n                  user uploads            read by their owner, once\n```\n\nAnd it is the same shape as every cache you will meet later in the track: a fast copy in front of a slow source of truth, useful exactly when reads repeat.",
-      diagram: `Deleting and listing
-
-  Storage::delete(\$path)
-  Storage::delete(['a.txt', 'b.txt'])
-  Storage::deleteDirectory('exports/2025')
-
-  Storage::files('documents')            one level
-  Storage::allFiles('documents')         recursive
-  Storage::directories('documents')
-
-  ⚠️  allFiles() on a large bucket is a lot of API calls.
-      On S3 each page is a request: slow and metered.
-      Fine in a command. Wrong in a web request.
-
-
-The orphan problem
-
-  invoice deleted
-        ↓
-  row gone
-        ↓
-  the PDF is still in the bucket, forever
-
-  Nothing cleans it up because nothing knows it exists.
-  A year later the bucket is full of files no record
-  references, and telling them apart means listing
-  everything and comparing.
-
-  Day 14's model events, applied deliberately:
-
-    static::deleting(fn (\$invoice) =>
-        Storage::disk('s3')->delete(\$invoice->path));
-
-  Two caveats you already know:
-
-    a MASS delete fires no events
-      Invoice::where(...)->delete() leaves every file
-
-    a SOFT delete is an update
-      the file should survive until the record really
-      goes → use forceDeleted, not deleting
-
-  Habit: whenever you write code that stores a file,
-  write the code that removes it in the same sitting.
-  Otherwise it never gets written.
-
-
-The read-through driver
-
-  Problem: canonical storage is remote, and something
-  reads the same files repeatedly. Every read is a
-  round trip, paid in latency and requests.
-
-  Application
-       ↓
-  read-through filesystem
-       │
-       ├── is it here locally?
-       │        ↓
-       │       yes → read the local copy
-       │
-       └── no
-            ↓
-        read from the source
-            ↓
-        keep a local copy
-            ↓
-        return it
-
-  First read remote. The rest local.
-
-  > Separate the canonical storage location from the
-    local read cache.
-
-  S3 stays the truth. The local disk is a cache, so an
-  empty or stale cache is never a correctness problem.
-
-
-  fits           read many times, changes rarely
-                 templates, assets, reference documents
-
-  does not fit   read once each      nothing to reuse
-                 changes often       the cache is wrong
-                 user uploads        read by their owner, once
-
-
-  The same shape as every cache later in the track:
-  a fast copy in front of a slow source of truth,
-  useful exactly when reads repeat.`,
-      codeExample: {
-        title: "Cleanup that actually happens",
-        code: `<?php
-
-use Illuminate\\Support\\Facades\\Storage;
-
-// ---------- Copying and moving ----------
-
-Storage::copy('invoices/draft.pdf', 'invoices/archive/draft.pdf');
-Storage::move('invoices/draft.pdf', 'invoices/final.pdf');
-
-// Both stay on the same disk. Across disks, read and write:
-Storage::disk('s3')->put($path, Storage::disk('local')->get($path));
-
-
-// ---------- Appending to a file ----------
-
-Storage::append('logs/import.log', "row {$id} skipped");
-Storage::prepend('logs/import.log', '--- newest first ---');
-
-// Fine for a small audit trail. Not a substitute for a
-// log channel, and not safe with several writers at once.
-
-
-// ---------- Deleting ----------
-
-Storage::delete('documents/report.pdf');
-Storage::delete(['exports/a.csv', 'exports/b.csv']);
-Storage::disk('s3')->delete($invoice->path);
-Storage::deleteDirectory('exports/2025');
-
-
-// ---------- Listing ----------
-
-Storage::files('documents');            // one level
-Storage::allFiles('documents');         // recursive
-Storage::directories('documents');
-Storage::allDirectories('documents');
-
-// ⚠️ On S3 each page is an API call. Listing a bucket
-//    with 100,000 objects belongs in a command, not in
-//    a web request.
-
-
-<?php
-// ---------- The orphan problem ----------
+// ---------- The model ----------
 
 namespace App\\Models;
 
-use Illuminate\\Database\\Eloquent\\Model;
-use Illuminate\\Database\\Eloquent\\SoftDeletes;
-use Illuminate\\Support\\Facades\\Storage;
+use Illuminate\\Foundation\\Auth\\User as Authenticatable;
+use Laravel\\Sanctum\\HasApiTokens;
 
-class Invoice extends Model
+class User extends Authenticatable
 {
-    use SoftDeletes;
+    use HasApiTokens;
 
+    protected $hidden = ['password', 'remember_token'];
+}
+
+
+<?php
+// ---------- The login endpoint ----------
+
+namespace App\\Http\\Controllers\\Api;
+
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Hash;
+use Illuminate\\Validation\\ValidationException;
+
+class AuthController extends Controller
+{
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email'       => ['required', 'email'],
+            'password'    => ['required'],
+            'device_name' => ['required', 'string'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        // One message for both cases, exactly as on Day 18.
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Invalid credentials.'],
+            ]);
+        }
+
+        // plainTextToken is available exactly once.
+        return response()->json([
+            'token' => $user->createToken($request->device_name)->plainTextToken,
+        ]);
+    }
+}
+
+// No Auth::attempt() and no session()->regenerate():
+// there is no session here to establish or to fix.
+
+
+<?php
+// ---------- routes/api.php ----------
+
+// Rate limit it. An API login has no interface slowing
+// anybody down.
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:login');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => $request->user());
+
+    Route::apiResource('posts', PostController::class);
+});
+
+
+# ---------- The client ----------
+
+# Log in.
+curl -X POST https://example.com/api/login \\
+  -H "Accept: application/json" \\
+  -d "email=rajan@example.com&password=secret&device_name=iphone"
+
+# { "token": "3|kZ9x..." }
+
+# Every request afterwards.
+curl https://example.com/api/posts \\
+  -H "Authorization: Bearer 3|kZ9x..." \\
+  -H "Accept: application/json"
+
+
+# ⚠️ Without Accept: application/json, an unauthenticated
+#    request is redirected to a login page that does not
+#    exist, and you debug a 302 instead of reading a 401.
+
+
+<?php
+// ---------- In a controller ----------
+
+public function index(Request $request)
+{
+    // The authenticated user, exactly as in web routes.
+    return $request->user()->posts()->paginate(20);
+}
+
+// And the token itself, when you need it:
+$request->user()->currentAccessToken();`,
+      },
+      keyTakeaways: [
+        "<b>The user model needs the `HasApiTokens` trait</b> before it can issue tokens.",
+        "<b>`createToken('name')` creates a token row</b>, and `plainTextToken` gives you the value exactly once.",
+        "<b>The database stores a hash, not the token</b>, so a leak of that table hands over nothing.",
+        "There is no way to retrieve a lost token; you issue a new one.",
+        "<b>The token's name is for humans</b>, and is what a \"your devices\" screen lists for individual revocation.",
+        "<b>An API login has no `Auth::attempt()` and no session regeneration</b>, because there is no session.",
+        "It still needs one error message for both failures, and rate limiting.",
+        "<b>The client sends `Authorization: Bearer …`, and `auth:sanctum` turns it into a user or a 401.</b>",
+        "<b>`auth:sanctum` is a guard</b>: the same Day 18 concept, reading a header instead of a session.",
+        "<b>Send `Accept: application/json`</b>, or an unauthenticated request is redirected rather than answered with a 401.",
+        "<b>A bearer token over plain HTTP is readable by anybody on the network</b>, so the API must be HTTPS only.",
+        "<b>The legacy `token` guard used one plain-text `api_token` column</b>: no scopes, no expiry, no revocation.",
+      ],
+      commonMistakes: [
+        "<b>Trying to read a token back later.</b> Only the hash is stored; issue a new one instead.",
+        "<b>Using `Auth::attempt()` in an API login.</b> It establishes a session the API will never use.",
+        "<b>Omitting `Accept: application/json`.</b> A 401 arrives as a redirect and the debugging goes sideways.",
+        "<b>Leaving the API login unthrottled.</b> There is no interface to slow an attacker down.",
+        "<b>Serving an API over plain HTTP.</b> The token is in a header anybody on the network can read.",
+      ],
+      quiz: [
+        {
+          question: "How many times can you read `plainTextToken`?",
+          options: ["Any number of times", "Once, on the object you just created", "Until it expires", "Only in tests"],
+          correctIndex: 1,
+          explanation: "The database stores a hash, so there is nothing to read back.",
+        },
+        {
+          question: "What does an API login endpoint not need?",
+          options: [
+            "Validation",
+            "Rate limiting",
+            "`Auth::attempt()` and a session regeneration",
+            "A password check",
+          ],
+          correctIndex: 2,
+          explanation: "There is no session to establish or to protect from fixation.",
+        },
+        {
+          question: "What does `auth:sanctum` do?",
+          options: [
+            "Creates a token",
+            "Reads the bearer token, resolves the user, and returns 401 when it cannot",
+            "Checks policies",
+            "Adds CSRF protection",
+          ],
+          correctIndex: 1,
+          explanation: "It is a guard, in the Day 18 sense of the word.",
+        },
+        {
+          question: "Why send `Accept: application/json`?",
+          options: [
+            "It is required by Sanctum",
+            "Without it, an unauthenticated request is redirected instead of returning a 401",
+            "It speeds up the response",
+            "It selects the API version",
+          ],
+          correctIndex: 1,
+          explanation: "Laravel otherwise answers as though you were a browser.",
+        },
+      ],
+    },
+    {
+      id: "abilities",
+      title: "Token abilities & least privilege",
+      durationMinutes: 11,
+      explanation: "A token says who the request is. <b>Abilities say what that token may do</b>, which is not the same question.\n\n---\n\n### 1. Basic — a token with limits\n\n```php\n$token = $user->createToken('mobile', ['orders:read']);\n```\n\nThe second argument is a list of abilities:\n\n```text\norders:read     ✓\norders:delete   ✗\nusers:admin     ✗\n```\n\nCheck one:\n\n```php\nif ($request->user()->tokenCan('orders:read')) {\n    // ...\n}\n```\n\nor on a route:\n\n```php\nRoute::get('/orders', ...)->middleware(['auth:sanctum', 'abilities:orders:read']);\n```\n\n<b>By default a token has `['*']`</b>, meaning every ability, which is why `tokenCan()` returns true for everything until you start naming them.\n\n---\n\n### 2. Intermediate — what abilities are actually for\n\nThis is where it gets misused, so it is worth being precise.\n\n<b>Abilities limit the credential, not the person.</b> Yesterday's policy answers \"may this user delete this invoice\". An ability answers \"may this <i>token</i> be used to delete invoices at all\".\n\n```text\nauthorization    may this USER do this to this record?     a policy\nabilities        may this TOKEN be used for this at all?   the credential\n```\n\nBoth apply, and neither replaces the other:\n\n```text\nthe token allows orders:delete\n            AND\nthe policy says this user owns that order\n            ↓\n         allowed\n```\n\nA token with `orders:delete` held by somebody who does not own the order is still refused, by the policy. And a user who owns the order, using a read-only token, is also refused, by the ability. <b>Two different questions, both of which have to say yes.</b>\n\nWhich makes the useful case clear: <b>a token you issue for one purpose should only do that thing.</b> A deploy script that reads a status endpoint gets a token that can read a status endpoint. If it leaks, that is what the attacker has.\n\n---\n\n### 3. Advanced — least privilege in practice\n\nThe temptation is to give every token `['*']`, because it always works and nothing ever fails confusingly. And that is exactly the cost: <b>a leaked `['*']` token is the user's entire account.</b>\n\n```text\n['*']                     everything the user can do\n['orders:read']           read orders, nothing else\n```\n\nSo the useful habit is to name abilities when you issue a token for a <i>purpose</i>:\n\n```text\na mobile app the user lives in          broad, or ['*']\na CI job posting deployment status      ['deployments:write']\na third-party integration               exactly what it asked for\na CLI tool that only reads              ['*:read']\n```\n\nAnd the naming convention matters more than it looks. `resource:action` reads well, groups well, and lets you add `orders:write` later without renaming anything.\n\nThree things worth knowing before you rely on this.\n\n<b>`tokenCan()` returns true when there is no token at all.</b> On a Sanctum SPA-authenticated request there is no token to limit, so it passes. If a route must be token-only, check for the token, not just the ability.\n\n<b>The `abilities` middleware requires all listed; `ability` requires any.</b> One of those is what you meant.\n\n<b>And abilities are set at creation and do not change.</b> Granting more means issuing a new token, which is a feature: a credential's scope cannot quietly widen after it was handed out.",
+      diagram: `A token with limits
+
+  \$user->createToken('mobile', ['orders:read'])
+
+    orders:read     ✓
+    orders:delete   ✗
+    users:admin     ✗
+
+  \$request->user()->tokenCan('orders:read')
+
+  ->middleware(['auth:sanctum', 'abilities:orders:read'])
+
+  Default is ['*'] — every ability — which is why
+  tokenCan() returns true for everything until you
+  start naming them.
+
+
+What abilities are actually for
+
+  Abilities limit the CREDENTIAL, not the person.
+
+    authorization   may this USER do this to this record?
+                    → a policy
+
+    abilities       may this TOKEN be used for this at all?
+                    → the credential
+
+  Both apply. Neither replaces the other:
+
+    the token allows orders:delete
+                AND
+    the policy says this user owns that order
+                ↓
+             allowed
+
+  A token with orders:delete held by somebody who does
+  not own the order → refused by the POLICY.
+
+  The owner, using a read-only token → refused by the
+  ABILITY.
+
+  Two questions. Both must say yes.
+
+
+Least privilege in practice
+
+  The temptation is ['*'] on everything, because it
+  always works and never fails confusingly. That is
+  exactly the cost:
+
+    a leaked ['*'] token IS the user's whole account
+
+  Name abilities when a token exists for a PURPOSE:
+
+    a mobile app the user lives in     broad, or ['*']
+    a CI job posting deploy status     ['deployments:write']
+    a third-party integration          exactly what it asked
+    a CLI tool that only reads         ['*:read']
+
+  resource:action reads well, groups well, and lets you
+  add orders:write later without renaming anything.
+
+
+Three things before you rely on it
+
+  tokenCan() returns TRUE when there is no token at all.
+    On a Sanctum SPA request there is no token to limit,
+    so it passes. A token-only route must check for the
+    token, not just the ability.
+
+  abilities:  requires ALL listed
+  ability:    requires ANY
+    One of those is what you meant.
+
+  Abilities are set at creation and do not change.
+    Granting more means a new token — which is a feature:
+    a credential's scope cannot quietly widen after it
+    has been handed out.`,
+      codeExample: {
+        title: "Abilities, and where they sit next to policies",
+        code: `<?php
+// ---------- Issuing a scoped token ----------
+
+// Broad: the user's own app.
+$user->createToken('iphone')->plainTextToken;              // ['*']
+
+// Narrow: a token that exists for one purpose.
+$user->createToken('ci-deploy', ['deployments:write']);
+$user->createToken('reporting', ['orders:read', 'invoices:read']);
+$user->createToken('readonly-cli', ['*:read']);
+
+// A leaked ['*'] token is the user's entire account.
+// A leaked ['orders:read'] token can read orders.
+
+
+<?php
+// ---------- Checking ----------
+
+if ($request->user()->tokenCan('orders:delete')) {
+    // ...
+}
+
+// ⚠️ Returns TRUE when there is no token at all, such as
+//    on a Sanctum SPA-authenticated request.
+if ($request->user()->currentAccessToken()
+    && ! $request->user()->tokenCan('orders:delete')) {
+    abort(403);
+}
+
+
+<?php
+// ---------- On routes ----------
+
+// abilities: ALL of them
+Route::delete('/orders/{order}', ...)
+    ->middleware(['auth:sanctum', 'abilities:orders:delete']);
+
+// ability: ANY of them
+Route::get('/reports', ...)
+    ->middleware(['auth:sanctum', 'ability:orders:read,invoices:read']);
+
+
+<?php
+// ---------- Abilities and policies are different questions ----------
+
+class OrderController extends Controller
+{
+    public function destroy(Request $request, Order $order)
+    {
+        // May this TOKEN be used to delete orders at all?
+        if (! $request->user()->tokenCan('orders:delete')) {
+            abort(403, 'This token cannot delete orders.');
+        }
+
+        // May this USER delete THIS order?
+        Gate::authorize('delete', $order);
+
+        $order->delete();
+
+        return response()->noContent();
+    }
+}
+
+// A token with orders:delete, held by somebody who does
+// not own the order → refused by the policy.
+//
+// The owner, using a read-only token → refused by the
+// ability.
+
+
+<?php
+// ---------- Issuing a scoped token for an integration ----------
+
+public function createIntegrationToken(Request $request)
+{
+    $request->validate([
+        'name'        => ['required', 'string', 'max:255'],
+        'abilities'   => ['required', 'array'],
+        'abilities.*' => ['in:orders:read,orders:write,invoices:read'],
+    ]);
+
+    // Only the abilities that were asked for, whitelisted.
+    $token = $request->user()->createToken(
+        $request->name,
+        $request->abilities,
+    );
+
+    // Shown once, and never again.
+    return response()->json(['token' => $token->plainTextToken], 201);
+}
+
+// Abilities are fixed at creation. Granting more means a
+// new token, so a credential's scope cannot quietly widen.`,
+      },
+      keyTakeaways: [
+        "<b>`createToken('name', ['orders:read'])` limits what a token may be used for.</b>",
+        "<b>A token defaults to `['*']`</b>, so `tokenCan()` passes everything until you name abilities.",
+        "<b>Abilities limit the credential; a policy limits the person.</b> They are different questions.",
+        "<b>Both have to say yes</b>: the right token used by the wrong user is still refused, and the reverse too.",
+        "<b>A leaked `['*']` token is the user's entire account</b>, which is what least privilege avoids.",
+        "Scope a token to its purpose: a CI job gets exactly the ability that job needs.",
+        "<b>`resource:action` naming groups well</b> and lets you add abilities later without renaming.",
+        "<b>`tokenCan()` returns true when there is no token</b>, such as on an SPA-authenticated request.",
+        "<b>`abilities:` requires all listed and `ability:` requires any</b>, so pick the one you meant.",
+        "<b>Abilities are fixed at creation</b>, so widening a credential's scope means issuing a new token.",
+      ],
+      commonMistakes: [
+        "<b>Using abilities instead of policies.</b> An ability cannot know whether this user owns that record.",
+        "<b>Giving every token `['*']`.</b> A leak then hands over the whole account.",
+        "<b>Relying on `tokenCan()` alone on a route an SPA can reach.</b> With no token, it returns true.",
+        "<b>Mixing up `abilities:` and `ability:`.</b> One requires all of them and one requires any.",
+        "<b>Expecting to add an ability to an existing token.</b> Issue a new one; the scope is fixed.",
+      ],
+      quiz: [
+        {
+          question: "What do token abilities limit?",
+          options: [
+            "What the user may do",
+            "What that particular token may be used for",
+            "Which routes exist",
+            "How long the token lasts",
+          ],
+          correctIndex: 1,
+          explanation: "The policy still decides what the user may do to a given record.",
+        },
+        {
+          question: "A token has `orders:delete` but the user does not own the order. What happens?",
+          options: [
+            "Allowed, because the token permits it",
+            "Refused by the policy",
+            "Refused by the ability",
+            "A 401",
+          ],
+          correctIndex: 1,
+          explanation: "Both questions must say yes, and this one fails the policy.",
+        },
+        {
+          question: "What does a token's default ability list contain?",
+          options: ["Nothing", "`['*']`, meaning everything", "`['read']`", "Whatever the guard defines"],
+          correctIndex: 1,
+          explanation: "Which is why `tokenCan()` passes until you start naming abilities.",
+        },
+        {
+          question: "Why does `tokenCan()` return true on a Sanctum SPA request?",
+          options: [
+            "SPAs are trusted",
+            "There is no token, so there is nothing limiting the request",
+            "It is a bug",
+            "SPAs always get `['*']`",
+          ],
+          correctIndex: 1,
+          explanation: "A token-only route should check for the token as well as the ability.",
+        },
+      ],
+    },
+    {
+      id: "revocation-and-expiry",
+      title: "Revoking tokens & expiry",
+      durationMinutes: 10,
+      explanation: "A token is a credential that works until something stops it. This is the something.\n\n---\n\n### 1. Basic — logging out\n\nA web logout destroys a session. There is no session here, so <b>logging out means deleting the token</b>:\n\n```php\n$request->user()->currentAccessToken()->delete();\n```\n\nThat is \"log out this device\". The token the request arrived with stops working; every other token the user has carries on.\n\nAnd the other one:\n\n```php\n$request->user()->tokens()->delete();\n```\n\n<b>\"Log out everywhere.\"</b> Every device, every integration, every CLI tool.\n\n```text\ncurrentAccessToken()->delete()   this device\ntokens()->delete()               everywhere\n```\n\nThe second is the one that matters after a security incident. Somebody's phone is stolen, or a token was pasted into a public repository: one call and every credential the account has is dead.\n\nWhich is also a good reason to give tokens meaningful names. A \"your devices\" screen listing `iphone`, `ipad` and `ci-deploy` lets somebody revoke the one that was lost, rather than logging themselves out of everything.\n\n---\n\n### 2. Intermediate — why revocation is not enough\n\nRevocation is manual. It requires somebody to notice.\n\n```text\ntoken leaks\n     ↓\nnobody notices\n     ↓\nit works forever\n```\n\nThat is the real problem with a long-lived credential: not that it can be stolen, but that a stolen one stays useful indefinitely.\n\n<b>Expiry puts a limit on that without anybody noticing anything:</b>\n\n```text\ntoken\n  ↓\nvalid\n  ↓\nexpiration reached\n  ↓\n401\n```\n\nSanctum can expire tokens globally through configuration, or per token when you create one. A stolen credential then has a lifetime, and the question stops being \"will anybody notice\" and becomes \"how much time does this buy an attacker\".\n\n---\n\n### 3. Advanced — the three together\n\nExpiry, revocation and abilities each limit a different dimension, and a serious API uses all three:\n\n```text\nabilities     what a token can do\nexpiry        how long it can do it\nrevocation    stopping it early\n```\n\nWhich turns into a real design question per token, and the answer differs:\n\n```text\na mobile app the user opens daily\n  long expiry, or none, plus revocation from a devices screen\n  a short one means logging in constantly, and people\n  work around friction\n\na CI token\n  narrow abilities, and an expiry matching the project\n\na third-party integration\n  exactly the abilities asked for, and an expiry the\n  customer can see\n\nanything with elevated access\n  short expiry, narrow abilities, and an audit trail\n```\n\n<b>Security that makes an app unusable gets removed</b>, which is why \"expire everything after an hour\" is not automatically the safer answer.\n\nTwo practical notes.\n\n<b>Expired tokens stay in the table.</b> They stop working, and they accumulate. `sanctum:prune-expired` clears them out, and it belongs in the scheduler alongside your other cleanup.\n\n<b>And revocation should follow the events that imply it.</b> A password change, a role change, or an account being suspended are all moments where existing tokens are suspect. Day 18 made that point about sessions; the same applies here, and it has to be deliberate because nothing does it for you.",
+      diagram: `Logging out, when there is no session
+
+  \$request->user()->currentAccessToken()->delete()
+      this device
+
+  \$request->user()->tokens()->delete()
+      everywhere
+
+  The second is the one that matters after an incident:
+  a stolen phone, or a token pasted into a public repo.
+  One call, every credential dead.
+
+  Which is why token NAMES matter. A devices screen
+  listing iphone, ipad, ci-deploy lets somebody revoke
+  the one that was lost, instead of signing out of
+  everything.
+
+
+Why revocation is not enough
+
+  Revocation is manual. It needs somebody to notice.
+
+    token leaks → nobody notices → it works forever
+
+  That is the real problem with a long-lived credential:
+  not that it can be stolen, but that a stolen one stays
+  useful indefinitely.
+
+  Expiry puts a limit on it with nobody noticing anything:
+
+    token → valid → expiration reached → 401
+
+  The question stops being "will anybody notice" and
+  becomes "how much time does this buy an attacker".
+
+
+Three dimensions, all three used
+
+  abilities     WHAT a token can do
+  expiry        HOW LONG it can do it
+  revocation    stopping it EARLY
+
+  And the answer differs per token:
+
+    a mobile app the user opens daily
+      long expiry or none, plus a devices screen
+      a short one means logging in constantly, and
+      people work around friction
+
+    a CI token
+      narrow abilities, expiry matching the project
+
+    a third-party integration
+      exactly the abilities asked for, and an expiry
+      the customer can see
+
+    anything with elevated access
+      short expiry, narrow abilities, an audit trail
+
+  Security that makes an app unusable gets removed.
+  "Expire everything after an hour" is not automatically
+  the safer answer.
+
+
+Two practical notes
+
+  Expired tokens stay in the table.
+    They stop working and they accumulate.
+    sanctum:prune-expired belongs in the scheduler.
+
+  Revocation should follow the events that imply it.
+    A password change, a role change, a suspension —
+    all moments where existing tokens are suspect.
+    Nothing does it for you.`,
+      codeExample: {
+        title: "Logout, revocation and expiry",
+        code: `<?php
+// ---------- Logout ----------
+
+namespace App\\Http\\Controllers\\Api;
+
+class AuthController extends Controller
+{
+    // This device.
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->noContent();
+    }
+
+    // Everywhere. The one that matters after an incident.
+    public function logoutEverywhere(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->noContent();
+    }
+}
+
+
+<?php
+// ---------- A devices screen ----------
+
+public function devices(Request $request)
+{
+    return $request->user()->tokens()
+        ->select('id', 'name', 'abilities', 'last_used_at', 'created_at')
+        ->latest()
+        ->get();
+}
+
+public function revoke(Request $request, int $tokenId)
+{
+    // Only your own tokens.
+    $request->user()->tokens()->where('id', $tokenId)->delete();
+
+    return response()->noContent();
+}
+
+// Meaningful names are what make this screen useful:
+// iphone, ipad, ci-deploy — revoke the one that was lost
+// rather than signing out of everything.
+
+
+<?php
+// ---------- Expiry ----------
+
+// config/sanctum.php — globally, in minutes.
+'expiration' => 60 * 24 * 30,   // 30 days
+
+// Or per token, which is usually what you want.
+$user->createToken('ci-deploy', ['deployments:write'], now()->addDays(90));
+
+$user->createToken('support-access', ['*'], now()->addHours(2));
+
+
+# Expired tokens stop working and stay in the table.
+php artisan sanctum:prune-expired --hours=24
+
+<?php
+// routes/console.php
+Schedule::command('sanctum:prune-expired --hours=24')->daily();
+
+
+<?php
+// ---------- Revoking on the events that imply it ----------
+
+class User extends Authenticatable
+{
     protected static function booted(): void
     {
-        // Soft deleted invoices keep their file: they can
-        // be restored. Only a real deletion removes it.
-        static::forceDeleted(function (Invoice $invoice) {
-            if ($invoice->document_path) {
-                Storage::disk('s3')->delete($invoice->document_path);
+        static::updated(function (User $user) {
+            // A password change should not leave old
+            // credentials working. Nothing does this for you.
+            if ($user->wasChanged('password')) {
+                $user->tokens()->delete();
+            }
+
+            if ($user->wasChanged('is_suspended') && $user->is_suspended) {
+                $user->tokens()->delete();
             }
         });
     }
 }
 
-// ⚠️ A mass delete fires no events, so this leaves
-//    every file behind:
-Invoice::where('created_at', '<', now()->subYears(7))->forceDelete();
-
-// ✓ Load them, so the event runs.
-Invoice::onlyTrashed()
-    ->where('deleted_at', '<', now()->subMonths(3))
-    ->chunkById(500, function ($invoices) {
-        foreach ($invoices as $invoice) {
-            $invoice->forceDelete();
-        }
-    });
-
 
 <?php
-// ---------- Finding the orphans you already have ----------
+// ---------- The three dimensions ----------
 
-// php artisan make:command AuditStorage
+// abilities   what it can do
+// expiry      how long
+// revocation  stopping it early
 
-$referenced = Invoice::withTrashed()
-    ->whereNotNull('document_path')
-    ->pluck('document_path')
-    ->flip();
-
-foreach (Storage::disk('s3')->allFiles('invoices') as $path) {
-    if (! $referenced->has($path)) {
-        $this->warn("Orphan: {$path}");
-        // Storage::disk('s3')->delete($path);
-    }
-}
-
-// Report first, delete later. A cleanup script with a
-// wrong assumption is worse than the orphans.
-
-
-<?php
-// ---------- Read-through: canonical vs cache ----------
-
-// The idea, whatever the configuration looks like:
-//
-//   S3     the truth
-//   local  a cache in front of it
-//
-// First read fetches from S3 and keeps a copy.
-// Later reads are local.
-//
-// An empty or stale cache is never a correctness problem,
-// because the source is still there.
-//
-//   fits:         read many times, changes rarely
-//   does not fit: read once, or changes often`,
+$user->createToken(
+    'partner-integration',
+    ['orders:read'],          // narrow
+    now()->addMonths(6),      // limited
+);                            // and revocable from the devices screen`,
       },
       keyTakeaways: [
-        "<b>`delete()` takes a path or an array</b>, and `deleteDirectory()` removes a whole prefix.",
-        "`files()`, `allFiles()`, `directories()` and `allDirectories()` inspect what is stored.",
-        "<b>Listing a large bucket is many API calls</b>, so it belongs in a command rather than a web request.",
-        "<b>Files outlive the rows that pointed at them</b>, and nothing cleans them up because nothing knows they exist.",
-        "<b>Delete the file from a model event</b>, and use `forceDeleted` when the model soft deletes.",
-        "<b>A mass delete fires no events</b>, so it leaves every associated file behind.",
-        "<b>Write the code that removes a file in the same sitting as the code that stores it.</b>",
-        "<b>The read-through driver keeps a local copy of remote files</b>, so the first read is remote and the rest are local.",
-        "<b>Separate the canonical storage location from the local read cache</b>: the source stays the truth.",
-        "It fits files read many times and changed rarely, and not files read once or changing often.",
+        "<b>An API logout deletes a token</b>, because there is no session to destroy.",
+        "<b>`currentAccessToken()->delete()` logs out this device; `tokens()->delete()` logs out everywhere.</b>",
+        "The second is what an incident needs: one call and every credential on the account is dead.",
+        "<b>Meaningful token names make a devices screen useful</b>, so one lost device can be revoked alone.",
+        "<b>Revocation is manual and requires somebody to notice</b>, which a leaked token relies on nobody doing.",
+        "<b>Expiry limits a stolen credential's lifetime</b> without anybody noticing anything.",
+        "<b>Abilities, expiry and revocation limit three different dimensions</b>, and a serious API uses all three.",
+        "<b>The right expiry differs per token</b>: a daily-use app is not a CI job is not elevated access.",
+        "<b>Security that makes an app unusable gets removed</b>, so a very short expiry is not automatically safer.",
+        "<b>Expired tokens stay in the table</b>, so schedule `sanctum:prune-expired`.",
+        "<b>Revoke on the events that imply it</b>: a password change, a role change, a suspension.",
       ],
       commonMistakes: [
-        "<b>Deleting a record and leaving its file.</b> The bucket fills with orphans nothing references.",
-        "<b>Using `deleting` on a soft-deleting model.</b> The file goes while the record can still be restored.",
-        "<b>Cleaning up with a mass delete.</b> No models load, so no events fire and no files are removed.",
-        "<b>Calling `allFiles()` in a web request.</b> On a large bucket that is many API calls and a slow page.",
-        "<b>Treating a read-through cache as storage.</b> It is a copy; the remote disk is still the truth.",
+        "<b>Deleting all tokens on a normal logout.</b> The user is signed out of every other device too.",
+        "<b>Issuing tokens with no expiry and no devices screen.</b> Nothing can ever stop one except a full purge.",
+        "<b>Leaving tokens alive after a password change.</b> The credential the attacker took still works.",
+        "<b>Setting a very short expiry on a consumer app.</b> Constant logins are friction people route around.",
+        "<b>Never pruning.</b> Expired rows accumulate in `personal_access_tokens` indefinitely.",
       ],
       quiz: [
         {
-          question: "Why do orphaned files accumulate?",
+          question: "What does an API logout do?",
           options: [
-            "Storage drivers keep backups",
-            "Deleting a record does not delete its file, and nothing else knows the file exists",
-            "S3 versions everything",
-            "Laravel caches them",
+            "Destroys the session",
+            "Deletes the token the request arrived with",
+            "Expires all tokens",
+            "Clears the cache",
           ],
           correctIndex: 1,
-          explanation: "Delete from a model event, in the same sitting as the storing code.",
+          explanation: "There is no session; the token is the credential.",
         },
         {
-          question: "Which event should delete the file on a soft-deleting model?",
-          options: ["`deleting`", "`deleted`", "`forceDeleted`", "`restored`"],
-          correctIndex: 2,
-          explanation: "A soft-deleted record can be restored, so its file must survive.",
-        },
-        {
-          question: "Why does a mass delete leave files behind?",
+          question: "When would you call `$user->tokens()->delete()`?",
           options: [
-            "Storage is asynchronous",
-            "No models are loaded, so no model events fire",
-            "The paths are cached",
+            "On every logout",
+            "After a security incident, or when the user asks to be signed out everywhere",
+            "When a token expires",
+            "When creating a new token",
+          ],
+          correctIndex: 1,
+          explanation: "On a normal logout it also signs them out of every other device.",
+        },
+        {
+          question: "Why is expiry needed when tokens can be revoked?",
+          options: [
+            "Revocation is slow",
+            "Revocation requires somebody to notice; expiry limits a leaked token even when nobody does",
+            "Expired tokens are deleted automatically",
+            "It is not needed",
+          ],
+          correctIndex: 1,
+          explanation: "The question becomes how much time a leak buys, rather than whether anybody notices.",
+        },
+        {
+          question: "Which event should usually revoke a user's tokens?",
+          options: [
+            "Logging in",
+            "A password change",
+            "Viewing their profile",
+            "Creating a post",
+          ],
+          correctIndex: 1,
+          explanation: "Otherwise the credential an attacker took still works after the reset.",
+        },
+      ],
+    },
+    {
+      id: "restful-crud",
+      title: "RESTful CRUD & apiResource",
+      durationMinutes: 10,
+      explanation: "REST is a convention, and its value is entirely that other people already know it.\n\n---\n\n### 1. Basic — the five routes\n\nOne resource, five things you can do to it:\n\n```http\nGET    /api/posts           list them\nPOST   /api/posts           create one\nGET    /api/posts/{post}    read one\nPATCH  /api/posts/{post}    update one\nDELETE /api/posts/{post}    delete one\n```\n\nWhich map to five controller methods:\n\n```text\nindex   store   show   update   destroy\n```\n\n<b>The URL names the resource; the verb says what to do with it.</b> That is the whole idea, and it is why a client that has used one REST API can guess yours.\n\nThe symptom of ignoring it:\n\n```text\nPOST /api/getPosts\nPOST /api/deletePost\nPOST /api/updatePostTitle\n```\n\nEverything is a POST, the verb is in the URL, and nothing about it is predictable. Caches cannot cache the reads, and nobody can guess the next endpoint.\n\n---\n\n### 2. Intermediate — generating it\n\n```bash\nphp artisan make:controller Api/PostController --api\n```\n\n`--api` gives you exactly those five methods, without `create` and `edit`, which existed to render forms an API does not have.\n\n```php\nRoute::apiResource('posts', PostController::class);\n```\n\nOne line for all five routes, correctly named:\n\n```text\nposts.index   posts.store   posts.show\nposts.update  posts.destroy\n```\n\n<b>The value is not the typing it saves.</b> It is that the routes cannot drift: nobody adds a sixth verb, misspells a path, or protects four of the five.\n\nWhen you need a subset:\n\n```php\nRoute::apiResource('posts', PostController::class)->only(['index', 'show']);\nRoute::apiResource('posts', PostController::class)->except(['destroy']);\n```\n\nAnd nested, when a resource only exists inside another:\n\n```php\nRoute::apiResource('posts.comments', CommentController::class);\n// GET /api/posts/{post}/comments\n```\n\n---\n\n### 3. Advanced — where the convention runs out\n\nCRUD covers most of an API and not all of it. The question that comes up is what to do with an action that is not create, read, update or delete:\n\n```text\npublish a post\nrefund an order\nresend an invoice\n```\n\nTwo answers, and the second is usually better.\n\n<b>Bend the verb:</b> `POST /api/posts/{post}/publish`. Readable, obvious, and no longer strictly REST.\n\n<b>Or model the thing as a resource:</b> a publication is a thing that exists or does not, so `POST /api/posts/{post}/publication` creates one and `DELETE` removes it. Which sounds like pedantry until you need to know <i>when</i> it was published and <i>by whom</i>, and discover the resource had data all along.\n\nThe honest guidance: <b>use the convention where it fits, and do not contort a domain to keep it.</b> An endpoint everybody understands beats a purist one nobody does.\n\nTwo details worth getting right.\n\n<b>`PATCH` and `PUT` are not the same.</b> `PUT` replaces the resource; `PATCH` updates part of it. Most APIs mean `PATCH`, and most send `PUT`. Accept both if you like, but be clear which one you implemented, because a client sending `PUT` with two fields may expect the rest to be cleared.\n\n<b>And a collection endpoint needs pagination from the start.</b> `GET /api/posts` returning every row works until there are fifty thousand. Day 13's `paginate()` belongs there on the first day, not after the first outage.",
+      diagram: `The five routes
+
+  GET    /api/posts           list them        index
+  POST   /api/posts           create one       store
+  GET    /api/posts/{post}    read one         show
+  PATCH  /api/posts/{post}    update one       update
+  DELETE /api/posts/{post}    delete one       destroy
+
+  The URL names the RESOURCE. The verb says what to do.
+
+  That is the whole idea, and it is why a client that
+  has used one REST API can guess yours.
+
+
+  Ignoring it looks like:
+
+    POST /api/getPosts
+    POST /api/deletePost
+    POST /api/updatePostTitle
+
+  Everything a POST, the verb in the URL, nothing
+  predictable. Caches cannot cache the reads and
+  nobody can guess the next endpoint.
+
+
+Generating it
+
+  php artisan make:controller Api/PostController --api
+
+    exactly those five methods — no create or edit,
+    which existed to render forms an API does not have
+
+  Route::apiResource('posts', PostController::class)
+
+    posts.index  posts.store  posts.show
+    posts.update  posts.destroy
+
+  The value is not the typing. It is that the routes
+  cannot drift: nobody adds a sixth verb, misspells a
+  path, or protects four of the five.
+
+  ->only([...])  ->except([...])
+
+  Route::apiResource('posts.comments', ...)
+    GET /api/posts/{post}/comments
+
+
+Where the convention runs out
+
+  publish a post · refund an order · resend an invoice
+
+  Bend the verb:
+    POST /api/posts/{post}/publish
+    readable, obvious, not strictly REST
+
+  Or model it as a resource:
+    POST   /api/posts/{post}/publication
+    DELETE /api/posts/{post}/publication
+
+  Which sounds like pedantry until you need to know WHEN
+  it was published and BY WHOM, and discover the resource
+  had data all along.
+
+  Use the convention where it fits. Do not contort a
+  domain to keep it. An endpoint everybody understands
+  beats a purist one nobody does.
+
+
+Two details
+
+  PATCH ≠ PUT
+    PUT replaces the resource. PATCH updates part of it.
+    Most APIs mean PATCH and most clients send PUT.
+    Be clear which you implemented: a client sending PUT
+    with two fields may expect the rest to be cleared.
+
+  A collection endpoint needs pagination FROM THE START.
+    GET /api/posts returning every row works until there
+    are fifty thousand. paginate() belongs there on day
+    one, not after the first outage.`,
+      codeExample: {
+        title: "A resource controller, wired in one line",
+        code: `# php artisan make:controller Api/PostController --api --model=Post
+
+<?php
+
+namespace App\\Http\\Controllers\\Api;
+
+use App\\Models\\Post;
+use Illuminate\\Http\\Request;
+
+class PostController extends Controller
+{
+    // GET /api/posts
+    public function index(Request $request)
+    {
+        // Pagination from the first day, not after the
+        // first outage.
+        return PostResource::collection(
+            Post::latest()->paginate(20)
+        );
+    }
+
+    // POST /api/posts
+    public function store(Request $request)
+    {
+        $post = $request->user()->posts()->create(
+            $request->validate([
+                'title' => ['required', 'string', 'max:255'],
+                'body'  => ['required', 'string'],
+            ])
+        );
+
+        return new PostResource($post);
+    }
+
+    // GET /api/posts/{post}
+    public function show(Post $post)
+    {
+        return new PostResource($post);
+    }
+
+    // PATCH /api/posts/{post}
+    public function update(Request $request, Post $post)
+    {
+        $post->update($request->validate([
+            'title' => ['sometimes', 'string', 'max:255'],
+            'body'  => ['sometimes', 'string'],
+        ]));
+
+        return new PostResource($post);
+    }
+
+    // DELETE /api/posts/{post}
+    public function destroy(Post $post)
+    {
+        $post->delete();
+
+        return response()->noContent();
+    }
+}
+
+// No create() or edit(): those rendered forms.
+// 'sometimes' in update() is what makes it a PATCH:
+// a field that is absent is left alone, not cleared.
+
+
+<?php
+// ---------- routes/api.php ----------
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Five routes, correctly named, that cannot drift.
+    Route::apiResource('posts', PostController::class);
+
+    // Subsets.
+    Route::apiResource('users', UserController::class)->only(['index', 'show']);
+    Route::apiResource('orders', OrderController::class)->except(['destroy']);
+
+    // Nested, when the child only exists inside the parent.
+    Route::apiResource('posts.comments', CommentController::class);
+    // GET /api/posts/{post}/comments
+});
+
+
+<?php
+// ---------- Actions that are not CRUD ----------
+
+// Bending the verb: readable, and no longer strictly REST.
+Route::post('/posts/{post}/publish', [PostController::class, 'publish']);
+
+// Modelling it as a resource: sounds like pedantry until
+// you need to know when it was published and by whom.
+Route::post('/posts/{post}/publication', [PublicationController::class, 'store']);
+Route::delete('/posts/{post}/publication', [PublicationController::class, 'destroy']);
+
+
+# ---------- What ignoring the convention looks like ----------
+
+# POST /api/getPosts
+# POST /api/deletePost
+# POST /api/updatePostTitle
+#
+# Everything a POST, the verb in the URL, nothing
+# predictable, and no read a cache can cache.`,
+      },
+      keyTakeaways: [
+        "<b>REST puts the resource in the URL and the action in the verb</b>, which is why clients can guess your API.",
+        "The five routes map to `index`, `store`, `show`, `update` and `destroy`.",
+        "<b>`--api` generates a controller without `create` and `edit`</b>, which existed to render forms.",
+        "<b>`Route::apiResource()` registers all five, correctly named</b>, so the routes cannot drift apart.",
+        "`only()` and `except()` take a subset, and dotted names nest a child resource inside its parent.",
+        "<b>Not every action is CRUD</b>, and the two answers are bending the verb or modelling the action as a resource.",
+        "<b>Modelling it as a resource often turns out to have data</b>, such as when and by whom.",
+        "<b>Use the convention where it fits and do not contort the domain to keep it.</b>",
+        "<b>`PUT` replaces and `PATCH` updates part</b>, so be clear which one you implemented.",
+        "<b>A collection endpoint needs pagination from the first day</b>, not after the first outage.",
+      ],
+      commonMistakes: [
+        "<b>Putting the verb in the URL.</b> `POST /getPosts` is unpredictable and uncacheable.",
+        "<b>Writing the five routes by hand.</b> One eventually differs in name, path or middleware.",
+        "<b>Returning every row from an index endpoint.</b> It works until the table grows.",
+        "<b>Treating `PUT` and `PATCH` as the same.</b> A client sending `PUT` may expect absent fields to be cleared.",
+        "<b>Forcing every action into CRUD.</b> An endpoint nobody understands is worse than an unRESTful one.",
+      ],
+      quiz: [
+        {
+          question: "What does `--api` change about a generated controller?",
+          options: [
+            "It adds authentication",
+            "It omits `create` and `edit`, which existed to render forms",
+            "It returns JSON automatically",
+            "It adds validation",
+          ],
+          correctIndex: 1,
+          explanation: "An API has no forms to render.",
+        },
+        {
+          question: "What is the main value of `Route::apiResource()`?",
+          options: [
+            "Fewer characters",
+            "All five routes are registered consistently, so they cannot drift in name, path or middleware",
+            "It generates the controller",
+            "It adds pagination",
+          ],
+          correctIndex: 1,
+          explanation: "Hand-written routes eventually differ in one of those.",
+        },
+        {
+          question: "What is the difference between `PUT` and `PATCH`?",
+          options: [
+            "None",
+            "`PUT` replaces the resource; `PATCH` updates part of it",
+            "`PATCH` is for collections",
+            "`PUT` is deprecated",
+          ],
+          correctIndex: 1,
+          explanation: "Most APIs mean `PATCH`, and most clients send `PUT`.",
+        },
+        {
+          question: "How should a \"publish this post\" action be exposed?",
+          options: [
+            "`POST /api/publishPost`",
+            "As a sub-resource or a bent verb, such as `POST /posts/{post}/publication`",
+            "`GET /api/posts/{post}/publish`",
+            "It cannot be exposed in REST",
+          ],
+          correctIndex: 1,
+          explanation: "Modelling it as a resource often reveals it had data all along.",
+        },
+      ],
+    },
+    {
+      id: "resources-and-consistency",
+      title: "API Resources & a consistent shape",
+      durationMinutes: 11,
+      explanation: "Day 16 introduced resources. This is why they matter more for an API than anywhere else.\n\n---\n\n### 1. Basic — the boundary\n\n```php\nreturn $post;\n```\n\nworks, and it publishes your table. Every column, including the ones you did not think about:\n\n```text\nyour table          your API, accidentally\n──────────          ──────────────────────\nid                  id\ntitle               title\nbody                body\nuser_id             user_id\ninternal_status     internal_status\nadmin_notes         admin_notes\n```\n\nA resource is the boundary between the two:\n\n```text\ndatabase model\n      ↓\nAPI Resource\n      ↓\npublic JSON\n```\n\n```bash\nphp artisan make:resource PostResource\n```\n\n```php\nreturn new PostResource($post);\n\nreturn PostResource::collection($posts);\n```\n\n<b>The resource is your API contract, in a file somebody can read.</b> Which is the difference between \"what does this endpoint return\" being answerable and being a question you answer by running it.\n\n---\n\n### 2. Intermediate — why it matters more here\n\nOn a web page, returning too much data is invisible: the Blade template only renders what it renders. <b>On an API, everything you return is published</b>, and clients start depending on it.\n\nThree consequences follow:\n\n```text\nyou add a column         it appears in the API\nyou rename a column      every client breaks\nyou add a sensitive      it leaks until somebody\n  column                   remembers $hidden\n```\n\nAnd the last one is the ugly case: a migration adding `internal_notes` publishes it to every client, silently, on deploy. Nothing fails, nothing warns you, and the data is out.\n\n<b>With a resource, a new column changes nothing until you decide it should.</b> That is the entire argument, and it is why `$hidden` is a safety net rather than a solution: `$hidden` fails open, and a resource fails closed.\n\nThe two conditionals from Day 16 matter here too:\n\n```php\n'email' => $this->when($request->user()->isAdmin(), $this->email),\n'comments' => CommentResource::collection($this->whenLoaded('comments')),\n```\n\n<b>`whenLoaded()` is what keeps an N+1 out of your API</b>, where it would run once per model, on every response, invisibly.\n\n---\n\n### 3. Advanced — consistency\n\nA resource wraps its output:\n\n```json\n{ \"data\": { \"id\": 123, \"title\": \"Laravel\" } }\n```\n\nand a collection:\n\n```json\n{ \"data\": [ { \"id\": 123 }, { \"id\": 124 } ] }\n```\n\n<b>The envelope is a design choice; consistency is not.</b> A client should not have to remember that one endpoint returns `{data: …}`, another a bare object, and a third `{result: …}`. Every deviation is a special case in somebody's code.\n\nPick a shape and hold it, including for the cases people forget:\n\n```text\na single resource     { \"data\": {...} }\na collection          { \"data\": [...] }\na paginated list      { \"data\": [...], \"links\": {...}, \"meta\": {...} }\nan error              { \"message\": \"...\" }\na validation error    { \"message\": \"...\", \"errors\": {...} }\nno content            204, an empty body\n```\n\nLaravel gives you most of that for free: a paginated collection through a resource produces `links` and `meta` without you writing them, and validation failures already have that shape.\n\nTwo things worth deciding once, for the whole API.\n\n<b>Dates.</b> ISO 8601 in UTC, everywhere. A custom format means every client writes a parser, and one gets the timezone wrong.\n\n<b>And ids.</b> Whether they are integers or strings, be the same everywhere. An API that returns `123` in one place and `\"123\"` in another produces a real bug in a typed client.\n\nThe underlying idea, one more time: <b>the model is your database representation and the resource is your API representation.</b> They change for different reasons, at different times, and keeping them apart is what lets your schema evolve without breaking anybody.\n\nTwo notes on pagination. <b>A bare paginator returns its own shape</b>, which is what you get without a resource:\n\n```text\ndata · current_page · last_page · per_page · total\nnext_page_url · prev_page_url · from · to\n```\n\nA resource collection reorganises that into `data`, `links` and `meta`. <b>Either is fine, and mixing them across endpoints is not.</b>\n\nAnd let the client choose the page size, within a limit:\n\n```php\n$perPage = min($request->integer('per_page', 15), 100);\n\nreturn InvoiceResource::collection($query->paginate($perPage));\n```\n\n<b>The `min()` is the part that matters.</b> Without a ceiling, `?per_page=100000` is a denial-of-service request your own API happily serves.",
+      diagram: `The boundary
+
+  return \$post;   works, and publishes your table
+
+  your table          your API, accidentally
+  ──────────          ──────────────────────
+  id                  id
+  title               title
+  body                body
+  user_id             user_id
+  internal_status     internal_status
+  admin_notes         admin_notes
+
+  A resource sits between:
+
+    database model → API Resource → public JSON
+
+  The resource is your API CONTRACT, in a file somebody
+  can read. Which is the difference between "what does
+  this endpoint return" being answerable and being a
+  question you answer by running it.
+
+
+Why it matters more on an API
+
+  On a web page, extra data is invisible: the template
+  renders what it renders.
+
+  On an API, everything you return is PUBLISHED, and
+  clients start depending on it.
+
+    you add a column       → it appears in the API
+    you rename a column    → every client breaks
+    you add a sensitive    → it leaks until somebody
+      column                 remembers \$hidden
+
+  A migration adding internal_notes publishes it to
+  every client, silently, on deploy. Nothing fails and
+  nothing warns you.
+
+  With a resource, a new column changes nothing until
+  you decide it should.
+
+    \$hidden    fails OPEN
+    a resource fails CLOSED
+
+  And whenLoaded() is what keeps an N+1 out of your API,
+  where it would run once per model, on every response,
+  invisibly.
+
+
+Consistency
+
+  { "data": { ... } }        a single resource
+  { "data": [ ... ] }        a collection
+
+  The envelope is a design choice. Consistency is not.
+  A client should not have to remember that one endpoint
+  returns {data: …}, another a bare object, and a third
+  {result: …}.
+
+  Pick a shape and hold it, including the forgotten cases:
+
+    single            { "data": {...} }
+    collection        { "data": [...] }
+    paginated         { "data": [...], "links": {...},
+                        "meta": {...} }
+    error             { "message": "..." }
+    validation error  { "message": "...", "errors": {...} }
+    no content        204, empty body
+
+  Laravel gives most of that free: a paginated collection
+  produces links and meta, and validation failures already
+  have that shape.
+
+
+Decide once, for the whole API
+
+  Dates    ISO 8601 in UTC, everywhere. A custom format
+           means every client writes a parser, and one
+           gets the timezone wrong.
+
+  Ids      integers or strings, but the SAME everywhere.
+           123 in one place and "123" in another is a
+           real bug in a typed client.
+
+
+  The model is your DATABASE representation.
+  The resource is your API representation.
+  They change for different reasons.`,
+      codeExample: {
+        title: "A resource as the contract",
+        code: `<?php
+// php artisan make:resource PostResource
+
+namespace App\\Http\\Resources;
+
+use Illuminate\\Http\\Request;
+use Illuminate\\Http\\Resources\\Json\\JsonResource;
+
+class PostResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'         => $this->id,
+            'title'      => $this->title,
+            'body'       => $this->body,
+
+            // ISO 8601, in UTC, everywhere in the API.
+            'created_at' => $this->created_at,
+
+            // Only for admins. A false condition omits the key.
+            'internal_status' => $this->when(
+                $request->user()?->isAdmin(),
+                $this->internal_status,
+            ),
+
+            // Only if the controller eager loaded it. Without
+            // this, the resource runs a query per model on
+            // every response.
+            'author' => new UserResource($this->whenLoaded('user')),
+
+            'comment_count' => $this->whenCounted('comments'),
+        ];
+    }
+}
+
+// internal_notes, admin_notes and anything else added by
+// a future migration are not here, and will not appear
+// until somebody decides they should.
+
+
+<?php
+// ---------- Using it ----------
+
+class PostController extends Controller
+{
+    public function index()
+    {
+        // Ask for exactly what the resource may include.
+        $posts = Post::with('user')
+            ->withCount('comments')
+            ->latest()
+            ->paginate(20);
+
+        // links and meta come for free.
+        return PostResource::collection($posts);
+    }
+
+    public function show(Post $post)
+    {
+        $post->load('user')->loadCount('comments');
+
+        return new PostResource($post);
+    }
+}
+
+// {
+//   "data": [ { "id": 123, "title": "Laravel", ... } ],
+//   "links": { "first": "...", "next": "..." },
+//   "meta":  { "current_page": 1, "total": 240 }
+// }
+
+
+<?php
+// ---------- What returning the model does ----------
+
+// ❌ Publishes every column, including ones added later.
+public function show(Post $post)
+{
+    return $post;
+}
+
+// A migration adding internal_notes ships it to every
+// client, silently, on deploy.
+//
+// $hidden fails open: a new column is exposed until
+//   somebody remembers to list it.
+// A resource fails closed: a new column is invisible
+//   until somebody adds it.
+
+
+<?php
+// ---------- One shape, everywhere ----------
+
+// single            { "data": {...} }
+return new PostResource($post);
+
+// collection        { "data": [...] }
+return PostResource::collection($posts);
+
+// no content        204, empty body
+return response()->noContent();
+
+// error             { "message": "..." }
+return response()->json(['message' => 'Post not found.'], 404);
+
+// validation error  { "message": "...", "errors": {...} }
+// Laravel already produces this shape.
+
+// A client should not have to remember which endpoint
+// deviates. Every deviation is a special case in
+// somebody else's code.`,
+      },
+      keyTakeaways: [
+        "<b>Returning a model publishes your table</b>, including columns added by future migrations.",
+        "<b>An API Resource is the boundary between your schema and your API contract.</b>",
+        "<b>On a web page extra data is invisible; on an API it is published</b> and clients depend on it.",
+        "<b>A migration adding a column ships it to every client silently</b>, unless a resource stands in the way.",
+        "<b>`$hidden` fails open and a resource fails closed</b>, which is why the resource is the solution.",
+        "`when()` includes a key conditionally, and a false condition omits it entirely.",
+        "<b>`whenLoaded()` keeps an N+1 out of your API</b>, where it would run once per model on every response.",
+        "<b>The envelope is a design choice; consistency is not.</b>",
+        "<b>Hold one shape for single resources, collections, pagination, errors and no content.</b>",
+        "<b>Decide dates and id types once for the whole API</b>: ISO 8601 in UTC, and one type everywhere.",
+      ],
+      commonMistakes: [
+        "<b>Returning Eloquent models from a public API.</b> The next migration is an unannounced API change.",
+        "<b>Relying on `$hidden` instead of a resource.</b> A new sensitive column is exposed until somebody notices.",
+        "<b>Serialising a relationship without `whenLoaded()`.</b> One query per model, per response, invisibly.",
+        "<b>Varying the envelope between endpoints.</b> Every deviation becomes a special case in a client.",
+        "<b>Returning ids as an integer in one place and a string in another.</b> Typed clients break on it.",
+      ],
+      quiz: [
+        {
+          question: "What is the risk of `return $post;` from an API endpoint?",
+          options: [
+            "It is slower",
+            "Every column is published, including ones added by future migrations",
+            "It cannot be paginated",
+            "It breaks route model binding",
+          ],
+          correctIndex: 1,
+          explanation: "A resource fails closed where `$hidden` fails open.",
+        },
+        {
+          question: "What does `whenLoaded()` prevent?",
+          options: [
+            "Exposing a hidden column",
+            "An N+1 caused by the resource serialising a relationship nobody eager loaded",
+            "A 404",
+            "Duplicate keys",
+          ],
+          correctIndex: 1,
+          explanation: "It would run once per model, on every response.",
+        },
+        {
+          question: "What comes for free from returning a paginated query through a resource collection?",
+          options: [
+            "Authentication",
+            "`links` and `meta` describing the pagination",
+            "Eager loading",
+            "Caching",
+          ],
+          correctIndex: 1,
+          explanation: "Day 13's pagination arriving in the response shape.",
+        },
+        {
+          question: "Why does the response envelope need to be consistent?",
+          options: [
+            "It is required by REST",
+            "Every deviation becomes a special case in every client's code",
+            "It makes responses smaller",
+            "Laravel enforces it",
+          ],
+          correctIndex: 1,
+          explanation: "The specific shape is a choice; varying it is not.",
+        },
+      ],
+    },
+    {
+      id: "status-codes",
+      title: "Status codes — saying what happened",
+      durationMinutes: 13,
+      explanation: "An API's status code is not decoration. It is the part of the response a client acts on before reading a single byte of the body.\n\n---\n\n### 1. Basic — success\n\n```text\n200 OK          here is the thing        GET, PATCH\n201 Created     it now exists            POST\n204 No Content  done, nothing to say     DELETE\n```\n\nAll three mean success, and they mean different things:\n\n<b>`201` should carry the created resource</b>, so the client does not need a second request to learn its id.\n\n<b>`204` has an empty body</b>, genuinely empty. A `204` with `{\"message\": \"Deleted\"}` in it is a contradiction, and some clients will not read it.\n\n---\n\n### 2. Intermediate — the four failures\n\n```text\n401 Unauthorized   who are you?\n403 Forbidden      I know who you are, and no\n404 Not Found      there is no such thing\n422 Unprocessable  I understood you, and the data is wrong\n```\n\n<b>401 versus 403 is the one people get wrong.</b>\n\n```text\nno token, or a bad one          →  401\na valid token, wrong user       →  403\n```\n\nA user editing somebody else's post is authenticated perfectly well. Returning 401 tells their client to log in again, which it does, successfully, and then fails identically. <b>401 means try again with credentials; 403 means credentials will not help.</b>\n\n<b>404 versus 422</b> is the other pair:\n\n```text\nGET /api/posts/999999      the post does not exist    404\nPOST /api/posts {title:\"\"} the post is invalid        422\n```\n\nRoute model binding gives you the 404 without writing anything, and a failed `validate()` gives you the 422 with a structured body:\n\n```json\n{\n  \"message\": \"The title field is required.\",\n  \"errors\": { \"title\": [\"The title field is required.\"] }\n}\n```\n\n<b>That `errors` object is the useful part</b>, because a frontend can put each message next to its field rather than showing one sentence at the top.\n\nAnd from Day 19, the one nuance: <b>a 403 confirms the resource exists.</b> On sequential ids, a 403 on `/api/invoices/91` tells a stranger invoice 91 belongs to somebody. `Response::denyAsNotFound()` returns 404 instead, when that matters.\n\n---\n\n### 3. Advanced — the pipeline\n\nEvery status code corresponds to a layer, and they run in order:\n\n```text\nPOST /api/v1/posts\n        ↓\nauth:sanctum        authenticated?   no → 401\n        ↓\nvalidation          valid?           no → 422\n        ↓\npolicy              allowed?         no → 403\n        ↓\ncontroller\n        ↓\nEloquent\n        ↓\nPostResource\n        ↓\n201 + JSON\n```\n\n<b>Read that top to bottom and the whole day is in it.</b> Each layer is a separate day of this track, and each one has exactly one status code it produces.\n\nWhich also settles the order questions people argue about. Authentication first, because everything else needs to know who is asking. Then, for a route-level policy, authorization before validation: there is no point telling somebody their input is malformed when they were never allowed to send it. Inside a controller, validation usually runs first simply because the check needs the data.\n\nTwo more worth knowing:\n\n<b>429 Too Many Requests</b>, from Day 20, with `Retry-After`.\n\n<b>500</b> for anything you did not anticipate, and the rule that goes with it: <b>a 500 body must not contain a stack trace.</b> `APP_DEBUG=false` in production, as Day 11 said, and an API leaks internals faster than a web page because the client stores whatever it receives.\n\nAnd the summary worth memorising, because it is what a client's error handling switches on:\n\n```text\n2xx  it worked\n4xx  you did something wrong        do not retry unchanged\n5xx  we did something wrong         retrying may work\n```\n\nOne related piece of wiring, because `Accept: application/json` only helps when you control the client. An unauthenticated API request otherwise redirects to a login route that does not exist:\n\n```php\n// bootstrap/app.php\n->withExceptions(function (Exceptions $exceptions) {\n    $exceptions->render(function (AuthenticationException $e, Request $request) {\n        if ($request->is('api/*')) {\n            return response()->json(['message' => 'Unauthenticated.'], 401);\n        }\n    });\n})\n```\n\n<b>Now the API returns 401 regardless of what headers the caller sent</b>, which is the difference between a documented contract and one that depends on the client behaving.",
+      diagram: `Success
+
+  200 OK          here is the thing      GET, PATCH
+  201 Created     it now exists          POST
+  204 No Content  done, nothing to say   DELETE
+
+  201 should CARRY the created resource, so the client
+  does not need a second request for its id.
+
+  204 has a genuinely empty body. A 204 containing
+  {"message": "Deleted"} is a contradiction, and some
+  clients will not read it.
+
+
+The four failures
+
+  401 Unauthorized   who are you?
+  403 Forbidden      I know who you are, and no
+  404 Not Found      there is no such thing
+  422 Unprocessable  I understood you, the data is wrong
+
+
+  401 vs 403 — the one people get wrong
+
+    no token, or a bad one       →  401
+    a valid token, wrong user    →  403
+
+  A user editing somebody else's post is authenticated
+  perfectly well. A 401 tells their client to log in
+  again — which it does, successfully, and then fails
+  identically.
+
+    401  try again with credentials
+    403  credentials will not help
+
+
+  404 vs 422
+
+    GET /posts/999999        does not exist   404
+    POST /posts {title:""}   invalid          422
+
+  Route model binding gives the 404 for free.
+  A failed validate() gives the 422, with:
+
+    { "message": "...",
+      "errors": { "title": ["..."] } }
+
+  The errors object is the useful part: a frontend can
+  put each message next to its field.
+
+
+  And from Day 19: a 403 CONFIRMS the resource exists.
+  On sequential ids, a 403 on /api/invoices/91 tells a
+  stranger invoice 91 belongs to somebody.
+  denyAsNotFound() returns 404 instead.
+
+
+The pipeline
+
+  POST /api/v1/posts
+          ↓
+  auth:sanctum      authenticated?   no → 401
+          ↓
+  validation        valid?           no → 422
+          ↓
+  policy            allowed?         no → 403
+          ↓
+  controller
+          ↓
+  Eloquent
+          ↓
+  PostResource
+          ↓
+  201 + JSON
+
+  Each layer is a separate day of this track, and each
+  produces exactly one status code.
+
+  Authentication first: everything else needs to know
+  who is asking. A route-level policy before validation:
+  no point critiquing input they were never allowed to
+  send. Inside a controller, validation first, because
+  the check needs the data.
+
+
+  429  too many requests, with Retry-After   (Day 20)
+  500  anything you did not anticipate
+
+  ⚠️  A 500 body must not contain a stack trace.
+      APP_DEBUG=false in production. An API leaks
+      internals faster than a web page, because the
+      client stores whatever it receives.
+
+
+  2xx  it worked
+  4xx  you did something wrong    do not retry unchanged
+  5xx  we did something wrong     retrying may work`,
+      codeExample: {
+        title: "Every status this API can return",
+        code: `<?php
+
+namespace App\\Http\\Controllers\\Api;
+
+use App\\Models\\Post;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Gate;
+
+class PostController extends Controller
+{
+    // 200 — here is the thing
+    public function index()
+    {
+        return PostResource::collection(Post::paginate(20));
+    }
+
+    // 404 — route model binding, with nothing written
+    public function show(Post $post)
+    {
+        Gate::authorize('view', $post);          // 403 if not
+
+        return new PostResource($post);          // 200
+    }
+
+    // 201 — created, carrying the resource
+    public function store(Request $request)
+    {
+        $data = $request->validate([             // 422 if invalid
+            'title' => ['required', 'string', 'max:255'],
+            'body'  => ['required', 'string'],
+        ]);
+
+        $post = $request->user()->posts()->create($data);
+
+        // 201, with the resource, so no second request is needed.
+        return (new PostResource($post))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    // 200 — updated
+    public function update(Request $request, Post $post)
+    {
+        Gate::authorize('update', $post);        // 403
+
+        $post->update($request->validate([       // 422
+            'title' => ['sometimes', 'string', 'max:255'],
+        ]));
+
+        return new PostResource($post);          // 200
+    }
+
+    // 204 — done, nothing to say
+    public function destroy(Post $post)
+    {
+        Gate::authorize('delete', $post);        // 403
+
+        $post->delete();
+
+        // Genuinely empty. A 204 with a body is a contradiction.
+        return response()->noContent();
+    }
+}
+
+
+<?php
+// ---------- 401 vs 403 ----------
+
+// No token, or an invalid one → auth:sanctum returns 401.
+//   "who are you?"
+
+// A valid token, wrong user → the policy returns 403.
+//   "I know who you are, and no."
+
+// ❌ Returning 401 here tells the client to log in again.
+//    It does, successfully, and fails identically.
+
+
+<?php
+// ---------- 422, and why the shape matters ----------
+
+// {
+//   "message": "The title field is required.",
+//   "errors": {
+//     "title": ["The title field is required."],
+//     "body":  ["The body field is required."]
+//   }
+// }
+//
+// The errors object lets a frontend put each message next
+// to its field, instead of one sentence at the top.
+
+
+<?php
+// ---------- Not confirming that something exists ----------
+
+// A 403 on /api/invoices/91 tells a stranger that invoice
+// 91 belongs to somebody. On sequential ids that is a leak.
+
+public function view(User $user, Invoice $invoice): Response
+{
+    return $invoice->user_id === $user->id
+        ? Response::allow()
+        : Response::denyAsNotFound();      // 404, not 403
+}
+
+
+<?php
+// ---------- What a client switches on ----------
+
+// 2xx  it worked
+// 4xx  you did something wrong   → do not retry unchanged
+// 5xx  we did something wrong    → retrying may work
+//
+// Which is exactly the retry rule from Day 21.
+
+// And in production:
+//   APP_DEBUG=false
+// A 500 body must never contain a stack trace. An API
+// leaks internals faster than a web page, because the
+// client stores whatever it receives.`,
+      },
+      keyTakeaways: [
+        "<b>`200` returns the thing, `201` means created, `204` means done with an empty body.</b>",
+        "<b>A `201` should carry the created resource</b>, so the client does not need a second request.",
+        "<b>A `204` body is genuinely empty</b>, and putting a message in one is a contradiction.",
+        "<b>`401` means \"who are you\" and `403` means \"credentials will not help\".</b>",
+        "Returning 401 for a wrong user makes the client log in again, succeed, and fail identically.",
+        "<b>`404` means the resource does not exist; `422` means the data is wrong.</b>",
+        "<b>Route model binding produces the 404</b>, and a failed `validate()` produces a structured 422.",
+        "<b>The `errors` object lets a frontend put each message beside its field.</b>",
+        "<b>A 403 confirms the resource exists</b>, so use `denyAsNotFound()` when that itself is a leak.",
+        "<b>Each layer produces one status</b>: guard 401, validation 422, policy 403, controller 200 or 201.",
+        "<b>4xx means do not retry unchanged; 5xx means retrying may work</b>, which is what a client switches on.",
+        "<b>A 500 body must never contain a stack trace</b>, so `APP_DEBUG=false` in production.",
+      ],
+      commonMistakes: [
+        "<b>Returning 401 when a user may not touch a record.</b> They are authenticated; that is a 403.",
+        "<b>Returning 200 with an error message in the body.</b> Clients switch on the status, not the text.",
+        "<b>Putting a body in a 204.</b> Some clients will not read it, and the status says there is none.",
+        "<b>Returning 201 without the created resource.</b> The client needs a second request just for the id.",
+        "<b>Leaving `APP_DEBUG=true` in production.</b> A 500 then hands the client a stack trace it will store.",
+      ],
+      quiz: [
+        {
+          question: "A valid token, but the user does not own the record. What status?",
+          options: ["401", "403", "404", "422"],
+          correctIndex: 1,
+          explanation: "They are authenticated; logging in again would change nothing.",
+        },
+        {
+          question: "What is the difference between 404 and 422?",
+          options: [
+            "None",
+            "404 means the resource does not exist; 422 means the data sent is invalid",
+            "422 is for authentication",
+            "404 is for collections",
+          ],
+          correctIndex: 1,
+          explanation: "Route model binding gives the first; validation gives the second.",
+        },
+        {
+          question: "What should a `201 Created` response contain?",
+          options: [
+            "An empty body",
+            "The created resource, so the client does not need a second request",
+            "A redirect",
+            "The list of all resources",
+          ],
+          correctIndex: 1,
+          explanation: "A 204 is the one with an empty body.",
+        },
+        {
+          question: "Why does a 403 sometimes leak information?",
+          options: [
+            "It includes the policy name",
+            "It confirms the resource exists, which on sequential ids tells a stranger it belongs to somebody",
+            "It logs the request",
             "It does not",
           ],
           correctIndex: 1,
-          explanation: "Loop with `chunkById()` when the events matter.",
-        },
-        {
-          question: "What is the read-through driver's core idea?",
-          options: [
-            "Writing to two disks at once",
-            "Separating the canonical storage location from a local read cache",
-            "Compressing files on read",
-            "Streaming large files",
-          ],
-          correctIndex: 1,
-          explanation: "The source stays the truth, so a stale cache is not a correctness problem.",
+          explanation: "`denyAsNotFound()` returns 404 instead when that matters.",
         },
       ],
     },
     {
-      id: "image-processing",
-      title: "Image processing — resize, convert & HEIC",
-      durationMinutes: 11,
-      explanation: "An uploaded image is rarely the image you want to serve.\n\n---\n\n### 1. Basic — the pipeline\n\nLaravel 13 adds an `Image` facade:\n\n```php\n$image = Image::read($request->file('avatar'));\n\n$image->resize(width: 800, height: 800);\n```\n\nThe shape is always the same:\n\n```text\nupload\n  ↓\ndecode\n  ↓\ntransform      resize, crop, rotate\n  ↓\nencode         JPEG, WebP, AVIF\n  ↓\nstore\n```\n\nAnd the reason to bother is bandwidth. A phone camera produces a four-thousand-pixel photograph; an avatar is displayed at two hundred. Serving the original sends about four hundred times more data than the page uses, on every view, to every visitor.\n\n<b>Resize once on upload, serve the small one forever.</b>\n\n---\n\n### 2. Intermediate — format, and what it is worth\n\nConverting is often a bigger win than resizing:\n\n```text\nJPEG  →  Image  →  WebP\n```\n\nThe same photograph as WebP is typically a good deal smaller with no visible difference, and every current browser reads it. On an image-heavy page that is the single cheapest performance change available.\n\nFormat affects:\n\n```text\nfile size\nquality\nbrowser support\ntransparency\n```\n\nTwo more Laravel 13 capabilities worth knowing.\n\n<b>Dominant colour detection</b> gives you the average colour of an image:\n\n```text\nimage  →  analyse pixels  →  dominant colour\n```\n\nStore it alongside the path and you have a placeholder: the layout can show that colour while the image loads, instead of an empty box that shifts the page when it arrives.\n\n<b>HEIC support</b> matters because modern iPhones produce HEIC by default, and browsers largely do not display it. Without conversion, an iPhone user uploads a photograph that nobody can see:\n\n```text\nHEIC upload  →  processing  →  JPEG / WebP  →  storage\n```\n\nThe user never knows anything happened, which is the correct outcome.\n\n---\n\n### 3. Advanced — images are a memory and CPU surface\n\nThis is the part that belongs to yesterday's lesson as much as this one.\n\n<b>Decoding an image allocates memory in proportion to its dimensions, not its file size.</b> A 10 MB JPEG might be modest; a carefully constructed one can decompress to hundreds of megabytes of raw pixels. That is a <i>decompression bomb</i>, and `max:10240` on the upload does not stop it, because the limit is on the file and the cost is in the pixels.\n\nSo validate the dimensions too:\n\n```php\n'avatar' => ['required', 'image', 'max:10240', 'dimensions:max_width=6000,max_height=6000'],\n```\n\nAnd think about where the work happens. Resizing a large photograph takes real CPU time, and doing it in the request means the user waits and your worker is busy:\n\n```text\nin the request     small images, one at a time\nin a queued job    anything large, or several sizes\n```\n\nThree more habits worth having:\n\n<b>Strip metadata.</b> A photograph carries EXIF, and EXIF carries GPS coordinates. Publishing an uploaded image unchanged can publish where it was taken.\n\n<b>Respect orientation.</b> EXIF also records rotation, and a decode that ignores it turns every phone photograph on its side.\n\n<b>And keep the original if you might need other sizes later.</b> Resizing from an already-resized copy loses quality each time; going back to the original does not.",
-      diagram: `The pipeline
-
-  upload
-    ↓
-  decode
-    ↓
-  transform      resize, crop, rotate
-    ↓
-  encode         JPEG, WebP, AVIF
-    ↓
-  store
-
-  Why bother: a phone camera makes a 4,000px photograph.
-  An avatar displays at 200px. Serving the original sends
-  about 400× more data than the page uses, on every view,
-  to every visitor.
-
-  Resize once on upload. Serve the small one forever.
-
-
-Format is often the bigger win
-
-  JPEG  →  Image  →  WebP
-
-  The same photograph, meaningfully smaller, no visible
-  difference, read by every current browser. On an
-  image-heavy page it is the cheapest performance change
-  available.
-
-  Format affects: file size · quality · browser support
-                  transparency
-
-
-  Dominant colour
-
-    image → analyse pixels → dominant colour
-
-  Store it next to the path and the layout can show that
-  colour while the image loads, instead of an empty box
-  that shifts the page when it arrives.
-
-
-  HEIC
-
-    iPhones produce HEIC by default. Browsers largely do
-    not display it. Without conversion, an iPhone user
-    uploads a photograph nobody can see.
-
-    HEIC upload → processing → JPEG / WebP → storage
-
-    The user never knows. That is the correct outcome.
-
-
-Images are a memory and CPU surface
-
-  ⚠️  Decoding allocates memory in proportion to
-      DIMENSIONS, not file size.
-
-      A 10 MB JPEG can decompress to hundreds of MB of
-      raw pixels. That is a decompression bomb, and
-      max:10240 does not stop it: the limit is on the
-      file, the cost is in the pixels.
-
-    'dimensions:max_width=6000,max_height=6000'
-
-  And decide where the work happens:
-
-    in the request     small images, one at a time
-    in a queued job    anything large, or several sizes
-
-
-Three more habits
-
-  Strip metadata
-    a photograph carries EXIF, and EXIF carries GPS.
-    Publishing it unchanged publishes where it was taken.
-
-  Respect orientation
-    EXIF also records rotation. Ignore it and every
-    phone photograph appears on its side.
-
-  Keep the original
-    resizing from a resized copy loses quality each
-    time. Going back to the original does not.`,
-      codeExample: {
-        title: "An upload pipeline that holds up",
-        code: `<?php
-
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Storage;
-use Illuminate\\Support\\Str;
-
-class AvatarController extends Controller
-{
-    public function store(Request $request)
-    {
-        // Validate the file AND the dimensions. max: limits
-        // the file; dimensions: limits what decoding will cost.
-        $request->validate([
-            'avatar' => [
-                'required',
-                'image',
-                'max:10240',                                   // 10 MB
-                'dimensions:max_width=6000,max_height=6000',
-            ],
-        ]);
-
-        $image = Image::read($request->file('avatar'));
-
-        // EXIF records rotation. Ignore it and every phone
-        // photograph ends up on its side.
-        $image->orient();
-
-        // Constrain the long edge rather than forcing a square.
-        $image->scaleDown(width: 800, height: 800);
-
-        $path = 'avatars/' . Str::uuid() . '.webp';
-
-        Storage::disk('s3')->put(
-            $path,
-            (string) $image->toWebp(quality: 82),
-            'private',
-        );
-
-        $request->user()->update([
-            'avatar_path'  => $path,
-
-            // A placeholder colour, so the layout does not
-            // shift when the image arrives.
-            'avatar_color' => (string) $image->pickColor(0, 0),
-        ]);
-
-        return back();
-    }
-}
-
-
-<?php
-// ---------- Why the dimensions rule matters ----------
-
-// Decoding allocates memory for WIDTH × HEIGHT pixels.
-//
-//   a 10 MB JPEG               modest
-//   a crafted 10 MB JPEG       decompresses to hundreds
-//                              of MB of raw pixels
-//
-// max:10240 does not stop that: the limit is on the file,
-// the cost is in the pixels.
-
-
-<?php
-// ---------- Move the work off the request ----------
-
-// Small images, one at a time → fine in the request.
-// Anything large, or several sizes → a job.
-
-class GenerateThumbnails implements ShouldQueue
-{
-    public function __construct(public Media $media) {}
-
-    public function handle(): void
-    {
-        // Always from the original, never from a resized copy:
-        // resizing a resize loses quality each time.
-        $image = Image::read(
-            Storage::disk('s3')->get($this->media->original_path)
-        );
-
-        foreach ([200, 800, 1600] as $width) {
-            $resized = (clone $image)->scaleDown(width: $width);
-
-            Storage::disk('s3')->put(
-                "media/{$this->media->id}/{$width}.webp",
-                (string) $resized->toWebp(quality: 82),
-            );
-        }
-    }
-}
-
-
-<?php
-// ---------- HEIC ----------
-
-// An iPhone uploads HEIC by default, and browsers largely
-// will not display it. Convert on the way in, and the user
-// never knows anything happened.
-
-$image = Image::read($request->file('photo'));   // reads HEIC
-
-Storage::disk('s3')->put(
-    'photos/' . Str::uuid() . '.webp',
-    (string) $image->toWebp(),
-);
-
-
-// ---------- Metadata ----------
-
-// A photograph carries EXIF, and EXIF carries GPS.
-// Re-encoding drops it, which is one more reason to
-// convert rather than store the upload untouched.`,
-      },
-      keyTakeaways: [
-        "<b>The pipeline is always decode, transform, encode, store.</b>",
-        "<b>A phone photograph is far larger than the space it is displayed in</b>, so resize once on upload.",
-        "<b>Converting to WebP is often a bigger win than resizing</b>, with no visible difference.",
-        "<b>Dominant colour gives you a placeholder</b>, so the layout does not shift when the image loads.",
-        "<b>iPhones produce HEIC, which browsers largely do not display</b>, so convert on the way in.",
-        "<b>Decoding allocates memory in proportion to dimensions, not file size</b>, which `max:` does not limit.",
-        "<b>Validate `dimensions:` as well</b>, or a crafted image can exhaust memory within your size limit.",
-        "<b>Do large or multi-size processing in a queued job</b>, not in the request.",
-        "<b>Re-encoding strips EXIF</b>, which otherwise publishes the GPS coordinates of an uploaded photograph.",
-        "<b>Respect EXIF orientation, and keep the original</b>, because resizing a resize loses quality each time.",
-      ],
-      commonMistakes: [
-        "<b>Serving the uploaded original.</b> Every visitor downloads several megabytes to see a thumbnail.",
-        "<b>Relying on `max:` alone.</b> The file is small and the decoded pixels are not.",
-        "<b>Resizing large images in the request.</b> The user waits and the worker is blocked.",
-        "<b>Ignoring EXIF orientation.</b> Every phone photograph appears rotated.",
-        "<b>Generating new sizes from a resized copy.</b> Quality drops with each pass; go back to the original.",
-      ],
-      quiz: [
-        {
-          question: "Why resize an uploaded image rather than serving the original?",
-          options: [
-            "Originals cannot be served",
-            "A phone photograph is far larger than the space it is displayed in, so every visitor downloads data the page never uses",
-            "It is required for WebP",
-            "To strip the filename",
-          ],
-          correctIndex: 1,
-          explanation: "Resize once on upload, serve the small one forever.",
-        },
-        {
-          question: "Why does `max:10240` not protect against a decompression bomb?",
-          options: [
-            "It is measured in bytes",
-            "It limits the file, while decoding allocates memory in proportion to the dimensions",
-            "It only applies to PDFs",
-            "It does protect against it",
-          ],
-          correctIndex: 1,
-          explanation: "Add a `dimensions:` rule as well.",
-        },
-        {
-          question: "Why convert HEIC uploads?",
-          options: [
-            "HEIC files are larger",
-            "Browsers largely do not display HEIC, so the uploaded photograph would be invisible",
-            "Laravel cannot store them",
-            "It removes the need to resize",
-          ],
-          correctIndex: 1,
-          explanation: "Convert on the way in and the user never notices.",
-        },
-        {
-          question: "What does re-encoding an uploaded photograph also do?",
-          options: [
-            "Improves quality",
-            "Strips EXIF metadata, which can contain GPS coordinates",
-            "Adds a watermark",
-            "Sets the visibility",
-          ],
-          correctIndex: 1,
-          explanation: "Publishing an untouched upload can publish where it was taken.",
-        },
-      ],
-    },
-    {
-      id: "http-client-basics",
-      title: "The HTTP client — requests, headers & auth",
-      durationMinutes: 12,
-      explanation: "Files were one thing outside your application. External services are the next.\n\n---\n\n### 1. Basic — making a request\n\n```php\n$response = Http::get('https://api.example.com/users');\n\n$response = Http::post('https://api.example.com/users', [\n    'name' => 'Rajan',\n]);\n```\n\nAlso `put()`, `patch()` and `delete()`. The response is an object, not a string:\n\n```php\n$response->json();          // decoded, as an array\n$response->json('data.0.id');\n$response->body();          // the raw string\n$response->status();        // 200\n$response->successful();    // true for 2xx\n```\n\n<b>`json()` is the one you will use.</b> It decodes for you and, given a key, digs into the structure with dot notation, which saves the usual chain of array accesses that break when a field is missing.\n\n---\n\n### 2. Intermediate — headers, auth and query strings\n\n```php\nHttp::withHeaders(['Accept' => 'application/json'])\n    ->get('https://api.example.com/users');\n```\n\n```php\nHttp::withToken($token)->get(...);                  // Authorization: Bearer ...\nHttp::withBasicAuth($username, $password)->get(...);\n```\n\nQuery parameters go as an array on `get()`:\n\n```php\nHttp::get('https://api.example.com/users', ['page' => 2, 'limit' => 20]);\n```\n\n```text\nGET /users?page=2&limit=20\n```\n\nor fluently, which reads better when they are built up:\n\n```php\nHttp::withQueryParameters(['page' => 2, 'limit' => 20])->get(...);\n```\n\nEither way, <b>the client encodes them</b>, so a value containing a space or an ampersand is handled rather than breaking the URL.\n\nOnce you have more than one call to a service, the repetition is worth removing:\n\n```php\nHttp::baseUrl('https://api.example.com')\n    ->withToken(config('services.example.token'))\n    ->acceptJson();\n```\n\nAnd Laravel lets you name that once, as a macro, so every call site says `Http::example()->get('/users')`. <b>One place holds the base URL, the token and the timeouts</b>, which is also the one place to change when any of them do.\n\n---\n\n### 3. Advanced — one method worth not misreading\n\nLaravel 13 adds:\n\n```php\nHttp::query(...);\n```\n\nand it is <i>not</i> a way to add query-string parameters to a `GET`. It sends an HTTP request using the `QUERY` method.\n\n```text\nHttp::get($url, ['page' => 2])       →  GET /users?page=2\nHttp::withQueryParameters([...])     →  GET /users?page=2\n\nHttp::query($url, [...])             →  QUERY /users\n```\n\nThe problem `QUERY` exists to solve: a search with a large or structured set of criteria does not fit in a URL, so APIs use `POST` for it. But `POST` means \"create something\", so caches will not cache it and clients cannot safely retry it. `QUERY` is a read with a body: safe to retry, cacheable, and not pretending to be a write.\n\nYou will meet it rarely. <b>The distinction to keep is that `Http::query()` is a verb, and `withQueryParameters()` is a URL.</b>\n\nOne last habit, connecting to yesterday. <b>API credentials belong in config, read from the environment.</b>\n\n```php\nHttp::withToken(config('services.example.token'))\n```\n\nnot the token itself, and never `env()` outside a config file, because cached config returns null for it in production.",
-      diagram: `Making a request
-
-  Http::get(\$url)
-  Http::post(\$url, ['name' => 'Rajan'])
-  Http::put / patch / delete
-
-  The response is an object:
-
-    ->json()            decoded, as an array
-    ->json('data.0.id') dot notation into the structure
-    ->body()            the raw string
-    ->status()          200
-    ->successful()      true for 2xx
-
-  json() with a key saves the chain of array accesses
-  that breaks when a field is missing.
-
-
-Headers, auth, query strings
-
-  ->withHeaders(['Accept' => 'application/json'])
-  ->withToken(\$token)                Authorization: Bearer ...
-  ->withBasicAuth(\$user, \$pass)
-
-  Http::get(\$url, ['page' => 2, 'limit' => 20])
-  ->withQueryParameters(['page' => 2, 'limit' => 20])
-
-    GET /users?page=2&limit=20
-
-  Either way the client ENCODES them, so a value with a
-  space or an ampersand is handled rather than breaking
-  the URL.
-
-
-Once there is more than one call to a service
-
-  Http::baseUrl('https://api.example.com')
-      ->withToken(config('services.example.token'))
-      ->acceptJson()
-
-  Name it once, as a macro:
-
-    Http::example()->get('/users')
-
-  One place holds the base URL, the token and the
-  timeouts — and one place to change when any of
-  them do.
-
-
-One method worth not misreading
-
-  Http::query() is NOT a way to add query parameters.
-  It sends an HTTP request with the QUERY method.
-
-    Http::get(\$url, ['page' => 2])    →  GET /users?page=2
-    ->withQueryParameters([...])      →  GET /users?page=2
-
-    Http::query(\$url, [...])          →  QUERY /users
-
-  Why QUERY exists: a search with large or structured
-  criteria does not fit in a URL, so APIs use POST. But
-  POST means "create something": caches will not cache
-  it and clients cannot safely retry it.
-
-  QUERY is a READ with a body: retryable, cacheable,
-  and not pretending to be a write.
-
-  Http::query() is a VERB.
-  withQueryParameters() is a URL.
-
-
-  And credentials come from config, read from the
-  environment:
-
-    ->withToken(config('services.example.token'))
-
-  never the token itself, and never env() outside a
-  config file — cached config returns null in production.`,
-      codeExample: {
-        title: "Talking to an API",
-        code: `<?php
-
-use Illuminate\\Support\\Facades\\Http;
-
-// ---------- The verbs ----------
-
-$response = Http::get('https://api.example.com/users');
-
-$response = Http::post('https://api.example.com/users', [
-    'name'  => 'Rajan',
-    'email' => 'rajan@example.com',
-]);
-
-Http::put('https://api.example.com/users/1', [...]);
-Http::patch('https://api.example.com/users/1', [...]);
-Http::delete('https://api.example.com/users/1');
-
-
-// ---------- Reading the response ----------
-
-$response->json();               // decoded array
-$response->json('data.0.id');    // dot notation into it
-$response->body();               // raw string
-$response->status();             // 200
-$response->header('X-Request-Id');
-$response->successful();         // 2xx
-$response->failed();
-
-
-// ---------- Not everything wants JSON ----------
-
-// Older APIs and almost every OAuth token endpoint want
-// application/x-www-form-urlencoded, not JSON:
-Http::asForm()->post('https://api.example.com/oauth/token', [
-    'grant_type'    => 'client_credentials',
-    'client_id'     => config('services.example.id'),
-    'client_secret' => config('services.example.secret'),
-]);
-
-// Sending a file to somebody else's API is multipart:
-Http::attach(
-    'document',
-    Storage::get($invoice->path),
-    'invoice.pdf',
-)->post('https://api.example.com/documents');
-
-// attach() switches the request to multipart, so do not
-// also call asJson() — pass the other fields as the
-// second argument to post().
-
-
-// ---------- Headers and auth ----------
-
-Http::withHeaders([
-    'Accept'       => 'application/json',
-    'X-Client-Id'  => config('services.example.client_id'),
-])->get('https://api.example.com/users');
-
-// Authorization: Bearer ...
-Http::withToken(config('services.example.token'))->get(...);
-
-Http::withBasicAuth($username, $password)->get(...);
-
-
-// ---------- Query parameters ----------
-
-Http::get('https://api.example.com/users', ['page' => 2, 'limit' => 20]);
-
-Http::withQueryParameters(['page' => 2, 'limit' => 20])
-    ->get('https://api.example.com/users');
-
-// GET /users?page=2&limit=20
-// The client encodes the values, so spaces and
-// ampersands do not break the URL.
-
-
-<?php
-// ---------- One place for everything about a service ----------
-
-// app/Providers/AppServiceProvider.php
-
-use Illuminate\\Support\\Facades\\Http;
-
-public function boot(): void
-{
-    Http::macro('example', function () {
-        return Http::baseUrl('https://api.example.com')
-            ->withToken(config('services.example.token'))
-            ->acceptJson()
-            ->timeout(5)
-            ->connectTimeout(2)
-            ->retry(3, 200);
-    });
-}
-
-// Every call site:
-$users = Http::example()->get('/users')->json();
-Http::example()->post('/users', ['name' => 'Rajan']);
-
-// The base URL, the token and the timeouts live in one
-// place, which is also the one place to change them.
-
-
-<?php
-// ---------- Credentials ----------
-
-// config/services.php
-'example' => [
-    'token' => env('EXAMPLE_API_TOKEN'),
-],
-
-// ✓
-Http::withToken(config('services.example.token'));
-
-// ❌ Committed to the repository forever.
-Http::withToken('sk_live_51H...');
-
-// ❌ Cached config returns null for this in production.
-Http::withToken(env('EXAMPLE_API_TOKEN'));
-
-
-<?php
-// ---------- The QUERY method (Laravel 13) ----------
-
-// A read with a body: retryable and cacheable, unlike
-// a POST used for searching.
-Http::query('https://api.example.com/search', [
-    'filters' => ['status' => 'active', 'tags' => ['a', 'b']],
-]);
-
-// Not the same thing as:
-Http::withQueryParameters(['q' => 'active'])->get('/search');`,
-      },
-      keyTakeaways: [
-        "<b>`Http::get()`, `post()`, `put()`, `patch()` and `delete()` cover the verbs</b>, and return a response object.",
-        "<b>`json()` decodes the body</b>, and with a key it digs in using dot notation.",
-        "`withHeaders()`, `withToken()` and `withBasicAuth()` handle headers and authentication readably.",
-        "<b>Query parameters go as an array on `get()` or through `withQueryParameters()`</b>, and are encoded for you.",
-        "<b>`baseUrl()` plus a macro puts everything about a service in one place</b>: the URL, the token, the timeouts.",
-        "That one place is also the only place to change when any of them do.",
-        "<b>`Http::query()` sends an HTTP `QUERY` request; it does not add query-string parameters.</b>",
-        "<b>`QUERY` is a read with a body</b>, so it is retryable and cacheable where a `POST` search is neither.",
-        "<b>API credentials come from `config()`</b>, never hard-coded, and never `env()` outside a config file.",
-      ],
-      commonMistakes: [
-        "<b>Reading `Http::query()` as \"add query parameters\".</b> It is an HTTP verb, not a URL builder.",
-        "<b>Building a query string by hand.</b> The client encodes values; concatenation breaks on a space.",
-        "<b>Hard-coding an API token.</b> It is then in the repository history permanently.",
-        "<b>Calling `env()` for a token outside a config file.</b> Cached config returns null in production.",
-        "<b>Repeating the base URL and token at every call site.</b> One macro holds them, and one change updates them.",
-      ],
-      quiz: [
-        {
-          question: "What does `$response->json('data.0.id')` do?",
-          options: [
-            "Sends a JSON request",
-            "Decodes the body and reads that key using dot notation",
-            "Validates the response",
-            "Sets the Accept header",
-          ],
-          correctIndex: 1,
-          explanation: "It replaces the chain of array accesses that breaks on a missing field.",
-        },
-        {
-          question: "What does `Http::query()` do?",
-          options: [
-            "Adds query-string parameters to a GET",
-            "Sends a request using the HTTP `QUERY` method",
-            "Builds a database query",
-            "Fetches and caches a response",
-          ],
-          correctIndex: 1,
-          explanation: "`withQueryParameters()` is the one that builds the URL.",
-        },
-        {
-          question: "Why does the `QUERY` method exist?",
-          options: [
-            "It is faster than GET",
-            "A search needs a body, and a POST used for reading is neither cacheable nor safely retryable",
-            "GET cannot be encrypted",
-            "It replaces PATCH",
-          ],
-          correctIndex: 1,
-          explanation: "A read with a body, without pretending to be a write.",
-        },
-        {
-          question: "Where should an API token come from?",
-          options: [
-            "Hard-coded in the calling class",
-            "`config()`, which reads it from the environment",
-            "`env()` at the call site",
-            "The database",
-          ],
-          correctIndex: 1,
-          explanation: "Cached config returns null for a direct `env()` call in production.",
-        },
-      ],
-    },
-    {
-      id: "timeouts-retries-errors",
-      title: "Timeouts, retries & handling failure",
-      durationMinutes: 12,
-      explanation: "An external API is a dependency you do not control, and the interesting question is not what happens when it works.\n\n---\n\n### 1. Basic — never wait forever\n\n```php\nHttp::timeout(5)->get('https://api.example.com/users');\n```\n\nWithout it, a slow API holds your request open for as long as it likes.\n\n<b>And that failure is worse than it sounds.</b> Each waiting request occupies a PHP worker. If an API you call hangs and you have twenty workers, twenty stuck requests take your whole application down, including every page that has nothing to do with that API.\n\n```text\nAPI stops responding\n        ↓\nrequests pile up waiting\n        ↓\nevery worker is busy\n        ↓\nyour site is down\n```\n\nA timeout turns somebody else's outage into a handled error on one feature.\n\nTwo timeouts, because there are two different failures:\n\n```php\nHttp::connectTimeout(3)->timeout(10)->get(...);\n```\n\n```text\nconnectTimeout   how long to establish a connection\ntimeout          how long for the whole request\n```\n\nA host that is down fails the first quickly. A host that answers slowly fails the second. <b>Set both</b>, and keep them well under your own request limit, or a queued job's.\n\n---\n\n### 2. Intermediate — retries\n\nA network blip should not fail an operation that would work a moment later:\n\n```php\nHttp::retry(3, 100)->get('https://api.example.com/users');\n```\n\n```text\nattempt 1  →  fail\n   wait 100ms\nattempt 2  →  fail\n   wait 100ms\nattempt 3  →  success\n```\n\nUse a growing delay rather than a fixed one, so a struggling service is not hit three times in a third of a second:\n\n```php\nHttp::retry(3, fn (int $attempt) => $attempt * 200)\n```\n\nAnd retry only what is worth retrying. A 500 or a timeout may pass; a 404 or a 422 will not, and retrying it three times just makes the failure slower:\n\n```php\nHttp::retry(3, 200, function ($exception, $request) {\n    return $exception instanceof ConnectionException\n        || $exception->response?->status() === 429;\n})\n```\n\n---\n\n### 3. Advanced — when retrying is dangerous\n\nHere is the part that matters.\n\n```text\nGET /users            safe to retry\nPOST /charge-card     not safe\n```\n\nThe failure case is not the request that failed. It is the request that <i>succeeded</i> and whose response you never received:\n\n```text\nyou send   POST /charge-card\nthey       charge the card\nthe response is lost\nyou see    a timeout\nyou retry\nthey       charge the card again\n```\n\nFrom your side both look identical: no response. From the customer's side, they have been charged twice.\n\n<b>The fix is an idempotency key</b>: a value you generate per operation and send with every attempt. The provider records it, and a second request with the same key returns the first result instead of doing the work again.\n\n```php\nHttp::withHeaders(['Idempotency-Key' => $payment->uuid])\n    ->retry(3, 200)\n    ->post('https://payments.example.com/charge', [...]);\n```\n\nSo the rule:\n\n```text\nreads                    retry freely\nwrites, no idempotency   do not retry automatically\nwrites, with a key       retry safely\n```\n\nIf the provider offers no idempotency, do not retry the write. Record the attempt, and reconcile.\n\n---\n\n### Handling the response\n\n```php\n$response->successful();   // 2xx\n$response->failed();       // 4xx or 5xx\n$response->clientError();  // 4xx: usually your bug\n$response->serverError();  // 5xx: usually theirs\n```\n\n<b>A failed HTTP response is not an exception by default.</b> A 500 comes back as a response object, and `$response->json()` on it returns whatever the error body held. Code that forgets to check carries on with nonsense.\n\n```php\n$response = Http::get(...)->throw();\n```\n\nmakes a non-2xx throw instead, which is usually what you want in a job or a service: fail loudly rather than continue with an empty array.\n\n```text\n2xx  →  continue\nelse →  exception\n```\n\nAnd the distinction is worth acting on. <b>A 4xx is usually your bug</b>, so retrying is pointless and an alert is appropriate. <b>A 5xx is usually theirs</b>, so a retry is reasonable and repeated failures mean their outage, not yours.",
-      diagram: `Never wait forever
-
-  Http::timeout(5)->get(\$url)
-
-  Without it, a slow API holds your request open as
-  long as it likes. And each waiting request occupies
-  a PHP worker:
-
-    API stops responding
-            ↓
-    requests pile up waiting
-            ↓
-    every worker is busy
-            ↓
-    YOUR SITE is down
-
-  including every page unrelated to that API.
-
-  A timeout turns somebody else's outage into a handled
-  error on one feature.
-
-  Two timeouts, two failures:
-
-    connectTimeout(3)   establishing a connection
-    timeout(10)         the whole request
-
-  A host that is down fails the first quickly.
-  A host that answers slowly fails the second.
-  Set both, well under your own request limit.
-
-
-Retries
-
-  Http::retry(3, 100)
-
-    attempt 1 → fail → wait 100ms
-    attempt 2 → fail → wait 100ms
-    attempt 3 → success
-
-  Grow the delay, so a struggling service is not hit
-  three times in a third of a second:
-
-    retry(3, fn (\$attempt) => \$attempt * 200)
-
-  And retry only what can succeed. A 500 or a timeout
-  may pass. A 404 or a 422 will not, and retrying makes
-  the failure slower.
-
-
-When retrying is DANGEROUS
-
-  GET /users          safe
-  POST /charge-card   not safe
-
-  The failure case is not the request that failed. It is
-  the one that SUCCEEDED and whose response was lost:
-
-    you send   POST /charge-card
-    they       charge the card
-    the response is lost
-    you see    a timeout
-    you retry
-    they       charge the card AGAIN
-
-  Identical from your side. Not from the customer's.
-
-  The fix: an idempotency key, generated per operation
-  and sent with every attempt. A second request with the
-  same key returns the first result.
-
-    ->withHeaders(['Idempotency-Key' => \$payment->uuid])
-
-    reads                     retry freely
-    writes, no idempotency    do not retry automatically
-    writes, with a key        retry safely
-
-  No idempotency available? Do not retry the write.
-  Record the attempt and reconcile.
-
-
-Handling the response
-
-  successful()   2xx
-  failed()       4xx or 5xx
-  clientError()  4xx — usually YOUR bug
-  serverError()  5xx — usually THEIRS
-
-  ⚠️  A failed response is NOT an exception by default.
-      A 500 comes back as a response object, and json()
-      returns whatever the error body held. Code that
-      forgets to check carries on with nonsense.
-
-    Http::get(...)->throw()
-
-      2xx  → continue
-      else → exception
-
-  Fail loudly rather than continue with an empty array.`,
-      codeExample: {
-        title: "Failure, handled",
-        code: `<?php
-
-use Illuminate\\Http\\Client\\ConnectionException;
-use Illuminate\\Support\\Facades\\Http;
-
-// ---------- Timeouts: both of them ----------
-
-Http::connectTimeout(3)   // establishing the connection
-    ->timeout(10)         // the whole request
-    ->get('https://api.example.com/users');
-
-// ❌ No timeout: a hanging API occupies a worker until
-//    something else gives up. Twenty workers, twenty
-//    stuck requests, and your whole site is down.
-Http::get('https://api.example.com/users');
-
-
-// ---------- Retries ----------
-
-Http::retry(3, 100)->get(...);
-
-// A growing delay, so a struggling service is not hit
-// three times in a third of a second.
-Http::retry(3, fn (int $attempt) => $attempt * 200)->get(...);
-
-// Retry only what can succeed. A 404 will still be a 404.
-Http::retry(3, 200, function ($exception, $request) {
-    return $exception instanceof ConnectionException
-        || $exception->response?->status() === 429
-        || $exception->response?->serverError();
-})->get(...);
-
-
-<?php
-// ---------- The dangerous retry ----------
-
-// ❌ The request may have SUCCEEDED and the response been
-//    lost. Retrying charges the card again.
-Http::retry(3, 200)->post('https://payments.example.com/charge', [
-    'amount' => 5000,
-]);
-
-// ✓ An idempotency key: generated per operation, sent with
-//    every attempt. A repeat returns the first result.
-Http::withHeaders([
-    'Idempotency-Key' => $payment->uuid,
-])->retry(3, 200)->post('https://payments.example.com/charge', [
-    'amount' => 5000,
-]);
-
-// If the provider offers no idempotency, do not retry the
-// write. Record the attempt and reconcile.
-
-
-<?php
-// ---------- Checking the response ----------
-
-$response = Http::get('https://api.example.com/users');
-
-$response->successful();    // 2xx
-$response->failed();        // 4xx or 5xx
-$response->clientError();   // 4xx — usually your bug
-$response->serverError();   // 5xx — usually theirs
-
-if ($response->failed()) {
-    Log::warning('Users API failed', [
-        'status' => $response->status(),
-        'body'   => $response->body(),
-    ]);
-
-    return collect();
-}
-
-
-// ---------- Or throw ----------
-
-// A failed response is not an exception by default, so
-// this carries on with whatever the error body held:
-$users = Http::get('https://api.example.com/users')->json();
-
-// ✓ Fail loudly instead.
-$users = Http::get('https://api.example.com/users')
-    ->throw()
-    ->json();
-
-// Conditionally:
-$response->throwIf($response->serverError());
-$response->throwUnless($response->successful());
-$response->throwUnlessStatus(201);      // anything but 201 throws
-
-
-<?php
-// ---------- What it looks like put together ----------
-
-class ExampleApi
-{
-    public function users(): array
-    {
-        try {
-            return Http::baseUrl(config('services.example.url'))
-                ->withToken(config('services.example.token'))
-                ->connectTimeout(2)
-                ->timeout(5)
-                ->retry(3, fn ($attempt) => $attempt * 200, function ($e) {
-                    return $e instanceof ConnectionException
-                        || $e->response?->serverError();
-                })
-                ->get('/users')
-                ->throw()
-                ->json('data');
-        } catch (RequestException $e) {
-            // Their outage should degrade one feature,
-            // not take down the page.
-            report($e);
-
-            return [];
-        }
-    }
-}`,
-      },
-      keyTakeaways: [
-        "<b>Without a timeout, a slow API holds your request open indefinitely</b>, and each one occupies a worker.",
-        "<b>Enough stuck requests takes your whole site down</b>, including pages unrelated to that API.",
-        "<b>`connectTimeout()` covers reaching the host; `timeout()` covers the whole request.</b> Set both.",
-        "<b>`retry()` handles a transient failure</b>, and a growing delay avoids hammering a struggling service.",
-        "<b>Retry only what can succeed</b>: a 500 or a timeout may pass, a 404 will not.",
-        "<b>The dangerous case is a write that succeeded and whose response was lost</b>, because a retry repeats it.",
-        "<b>An idempotency key makes a repeated write safe</b>, by letting the provider return the first result.",
-        "Without idempotency, do not retry a write; record the attempt and reconcile.",
-        "<b>A failed HTTP response is not an exception by default</b>, so code that forgets to check continues with nonsense.",
-        "<b>`throw()` turns a non-2xx into an exception</b>, and 4xx is usually your bug while 5xx is usually theirs.",
-      ],
-      commonMistakes: [
-        "<b>Calling an API with no timeout.</b> Their outage becomes your outage.",
-        "<b>Setting only `timeout()`.</b> A host that is unreachable still waits the full duration.",
-        "<b>Retrying a payment or any non-idempotent write.</b> The customer is charged twice.",
-        "<b>Retrying a 4xx.</b> It will fail again; you have only made the failure slower.",
-        "<b>Calling `json()` without checking the response.</b> A 500's error body becomes your data.",
-      ],
-      quiz: [
-        {
-          question: "Why is calling an API without a timeout dangerous?",
-          options: [
-            "The response may be truncated",
-            "Each waiting request occupies a worker, so a hanging API can take your whole site down",
-            "Laravel caches the failure",
-            "It is not dangerous",
-          ],
-          correctIndex: 1,
-          explanation: "A timeout turns their outage into a handled error on one feature.",
-        },
-        {
-          question: "What is the difference between `connectTimeout()` and `timeout()`?",
-          options: [
-            "None",
-            "One limits establishing the connection; the other limits the whole request",
-            "`timeout()` is for POST only",
-            "`connectTimeout()` is in milliseconds",
-          ],
-          correctIndex: 1,
-          explanation: "An unreachable host fails the first quickly; a slow one fails the second.",
-        },
-        {
-          question: "Why is retrying `POST /charge-card` dangerous?",
-          options: [
-            "POST cannot be retried",
-            "The first request may have succeeded with its response lost, so the retry charges again",
-            "It is slower",
-            "The body cannot be resent",
-          ],
-          correctIndex: 1,
-          explanation: "An idempotency key lets the provider return the first result instead.",
-        },
-        {
-          question: "What does `->throw()` change?",
-          options: [
-            "It retries the request",
-            "A non-2xx response raises an exception instead of being returned",
-            "It logs the response",
-            "It validates the JSON",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise a 500's error body silently becomes your data.",
-        },
-      ],
-    },
-    {
-      id: "pooling-faking-and-process",
-      title: "Pooling, faking & running processes",
+      id: "versioning-cors-and-passport",
+      title: "Versioning, CORS, throttling & choosing Passport",
       durationMinutes: 13,
-      explanation: "Three things to finish: making several calls at once, testing without the internet, and the third boundary out of your application.\n\n---\n\n### 1. Basic — concurrent requests\n\nA page needing three APIs, done sequentially, waits for each in turn:\n\n```text\nUser API → wait → Orders API → wait → Billing API\n\ntotal = T1 + T2 + T3\n```\n\nThree calls at 400ms each is 1.2 seconds of a user watching a spinner, almost all of it spent waiting on somebody else's network.\n\n<b>`Http::pool()` sends them together:</b>\n\n```php\n$responses = Http::pool(fn ($pool) => [\n    $pool->get('https://api.example.com/users'),\n    $pool->get('https://api.example.com/orders'),\n    $pool->get('https://api.example.com/billing'),\n]);\n```\n\n```text\n             ┌→ User API\nApplication ─┼→ Orders API\n             └→ Billing API\n\ntotal ≈ max(T1, T2, T3)\n```\n\n1.2 seconds becomes 400ms.\n\nName them, or you are indexing an array by position:\n\n```php\n$pool->as('users')->get(...);\n$responses['users']->json();\n```\n\n<b>Pooling only works when the calls are independent.</b> If the second needs the first's result, they are sequential by nature and no amount of pooling changes that.\n\nAnd each response still needs checking. One failing does not fail the pool; you get a response object per request, and one of them may be a 500.\n\n---\n\n### 2. Intermediate — faking in tests\n\nA test that calls a real API is slow, needs the internet, fails when somebody else deploys, and may cost money.\n\n```php\nHttp::fake();\n```\n\nEvery request now returns an empty 200 and nothing leaves the machine. Usually you want specific responses:\n\n```php\nHttp::fake([\n    'api.example.com/users' => Http::response(['id' => 1, 'name' => 'Rajan'], 200),\n    'api.example.com/*'     => Http::response([], 404),\n]);\n```\n\n```text\nwithout fakes            with fakes\n─────────────            ──────────\ntest → internet          test → Http::fake()\n    → external API           → a response you chose\n    → slow, flaky            → fast, deterministic\n    → costs money            → free\n```\n\n<b>The bigger win is testing failure.</b> You cannot ask a real API for a 500 on demand, so the error handling from the last lesson is untestable against it. A fake produces one instantly, which means retries, timeouts and the `throw()` path all get covered.\n\nAnd you can assert what you sent:\n\n```php\nHttp::assertSent(fn ($request) =>\n    $request->url() === 'https://api.example.com/users'\n    && $request['name'] === 'Rajan');\n```\n\n```text\nwhat did the API return?      the fake\ndid we call it correctly?     assertSent\n```\n\nBoth halves matter. A test that only fakes the response passes when you send the wrong body to the wrong endpoint.\n\n---\n\n### 3. Advanced — processes, and the boundary\n\nThe third door out of your application:\n\n```php\n$result = Process::run('php artisan about');\n\n$result->successful();\n$result->output();\n$result->errorOutput();\n```\n\n```text\nLaravel  →  Process  →  the operating system  →  a command\n```\n\nUseful for the things PHP cannot do itself:\n\n```text\nffmpeg          video and audio\nImageMagick     images beyond what PHP handles\ngit\npython scripts\nany CLI utility\n```\n\n<b>And it is a security boundary, in the same way SQL was.</b>\n\n```php\nProcess::run(\"rm -rf {$userInput}\");\n```\n\nThe user's input becomes part of the command. A value of `/tmp/x; rm -rf /` is two commands, and the shell runs both. This is yesterday's SQL injection with a different interpreter.\n\nThe fix is the same shape: <b>pass the command as an array</b>, so arguments stay arguments:\n\n```php\nProcess::run(['ffmpeg', '-i', $inputPath, $outputPath]);\n```\n\nNo shell parses that, so a semicolon in a filename is a semicolon in a filename. As with SQL, values can be passed safely and <i>structure</i> cannot: a user-chosen flag or command name needs a whitelist.\n\nTwo more habits: <b>set a timeout</b>, because a hung `ffmpeg` is the stuck-worker problem again, and <b>run anything slow in a queued job</b> rather than a request.\n\n---\n\n### The day, in one picture\n\n```text\n                  Laravel\n                     │\n        ┌────────────┼────────────┐\n        ▼            ▼            ▼\n   Filesystem   HTTP Client    Process\n        │            │            │\n   local / S3   external APIs    the OS\n```\n\nYour code says \"store this file\", \"call this API\", \"run this process\". <b>Not \"write to /var/www\", \"construct a cURL handle\", or \"build a shell string\".</b> That is what makes an application testable, movable and possible to scale.",
-      diagram: `Concurrent requests
+      explanation: "The things that only matter once somebody else depends on your API.\n\n---\n\n### 1. Basic — versioning\n\nAn API with clients you do not control cannot change shape freely. Renaming a field breaks an app in an app store that somebody installed six months ago.\n\n```text\n/api/v1/posts    { \"title\": \"Laravel\" }\n/api/v2/posts    { \"title\": \"Laravel\", \"author\": { \"id\": 123 } }\n```\n\nThree ways to say which version:\n\n```text\nURL           /api/v1/posts\n              obvious, visible in logs, easy to route\n\nheader        Accept: application/vnd.myapp.v2+json\n              keeps the URL stable, invisible in a browser\n\nquery         /api/posts?version=2\n              simple, and easy to forget\n```\n\n<b>URL versioning is the pragmatic default</b>: a client can see it, you can route it, and a support conversation can say \"which version are you calling\" and get an answer.\n\nAnd the point worth understanding: <b>a version is a promise you keep, not a folder you make.</b> `v1` only means something if `v1` keeps working. Two versions means two sets of resources and two sets of tests, and the reason to think before adding one.\n\nAdditive changes need no version. <b>Adding a field is safe; removing or renaming one is not.</b>\n\n---\n\n### 2. Intermediate — CORS and throttling\n\n<b>CORS</b> is the browser refusing a cross-origin request unless the server says it is allowed:\n\n```text\nhttps://app.example.com   your frontend\nhttps://api.example.com   your API\n```\n\nDifferent origins, so the browser asks first and your API answers with which origins, methods and headers it permits.\n\nTwo things to be clear about.\n\n<b>CORS is a browser mechanism, not a security control.</b> `curl` ignores it entirely, and so does every mobile app. It stops one <i>website</i> reading another's responses in a user's browser; it protects nothing else. Authentication and authorization are still the security.\n\n<b>And do not allow everything.</b> `*` for origins is fine for a genuinely public read-only API and wrong for one using cookies, where it undoes the protection the browser was giving you. List the origins you actually have.\n\n<b>Throttling</b> is Day 20, applied per endpoint class:\n\n```text\npublic API           60/min\nauthenticated API   300/min\nlogin                 5/min per IP\nexpensive report      3/min\n```\n\nOne limit for everything is either too tight for the cheap endpoints or too loose for the expensive ones.\n\n---\n\n### 3. Advanced — Sanctum or Passport, and documentation\n\n```text\nSanctum                    Passport\n───────                    ────────\nAPI tokens                 a full OAuth2 server\nSPA cookie auth            authorization grants\nmobile apps                refresh tokens\nfirst-party clients        third-party client registration\n                           delegated authorization\n```\n\nThe question that decides it is not how professional something sounds. It is: <b>does somebody need to authorize your application to act on their behalf in a third party's system, or the reverse?</b>\n\n```text\nyour own mobile app                          Sanctum\nyour own SPA                                 Sanctum\na customer's server calling your API         Sanctum\n\n\"Log in with YourApp\" on somebody else's     Passport\nthird parties registering their own clients  Passport\nthe full grant and refresh flow              Passport\n```\n\n<b>Passport is an OAuth2 authorization server.</b> If you are not building one, it is a great deal of machinery for a token in a header, and Sanctum already does that.\n\n---\n\n### Documentation\n\nAn API that nobody can use is not finished. What a consumer needs:\n\n```text\nendpoints\nauthentication\nrequest body\nresponse body\nstatus codes\nerrors\npagination\nrate limits\nversioning\n```\n\nAt minimum, per endpoint:\n\n```text\nPOST /api/v1/posts\n\nAuthorization: Bearer <token>\n\nBody:      { \"title\": \"Laravel\", \"body\": \"...\" }\nResponses: 201 · 401 · 403 · 422 · 429\n```\n\nFor anything larger, <b>OpenAPI</b>, because a specification is machine-readable: it generates the documentation page, client libraries and a test collection from one file, and it can be checked against the real API so the documentation cannot quietly go stale.\n\nAnd the separation the whole day comes down to:\n\n```text\nwho are you?               Sanctum\nwhat can you do?           policies and abilities\nis this input valid?       the validator\nwhat should they receive?  the API Resource\nwhat happened?             the status code\n```\n\n<b>Five questions, five mechanisms, each answered in one place.</b> That is what makes an API a system rather than a pile of CRUD routes.\n\nOne CORS key worth knowing because its absence is confusing: <b>`exposed_headers`</b>. A browser lets JavaScript read only a handful of response headers by default, so a custom `X-Total-Count` or `X-RateLimit-Remaining` is sent, arrives, and is invisible to the client. Listing it in `exposed_headers` is what makes it readable.",
+      diagram: `Versioning
 
-  Sequential:
+  An API with clients you do not control cannot change
+  shape freely. Renaming a field breaks an app somebody
+  installed six months ago.
 
-    User API → wait → Orders API → wait → Billing API
-    total = T1 + T2 + T3
+    /api/v1/posts   { "title": "Laravel" }
+    /api/v2/posts   { "title": "...", "author": {...} }
 
-  Three calls at 400ms is 1.2 seconds of spinner,
-  almost all of it waiting on somebody else's network.
+  URL      /api/v1/posts
+           obvious, visible in logs, easy to route
+  header   Accept: application/vnd.myapp.v2+json
+           stable URL, invisible in a browser
+  query    /api/posts?version=2
+           simple, easy to forget
 
-  Http::pool(fn (\$pool) => [ ... ])
+  URL versioning is the pragmatic default: the client
+  can see it, you can route it, and support can ask
+  "which version" and get an answer.
 
-               ┌→ User API
-  Application ─┼→ Orders API
-               └→ Billing API
+  ⚠️  A version is a PROMISE YOU KEEP, not a folder you
+      make. v1 only means something if v1 keeps working.
+      Two versions is two sets of resources and two sets
+      of tests.
 
-    total ≈ max(T1, T2, T3)      1.2s becomes 400ms
-
-  Name them, or you are indexing by position:
-    \$pool->as('users')->get(...)
-    \$responses['users']->json()
-
-  Only works when the calls are INDEPENDENT. If the
-  second needs the first's result, they are sequential
-  by nature.
-
-  And each response still needs checking: one failing
-  does not fail the pool.
+  Adding a field is safe. Removing or renaming one is not.
 
 
-Faking in tests
+CORS
 
-  without fakes           with fakes
-  ─────────────           ──────────
-  test → internet         test → Http::fake()
-      → external API          → a response you chose
-      → slow, flaky           → fast, deterministic
-      → costs money           → free
+    https://app.example.com   your frontend
+    https://api.example.com   your API
 
-  Http::fake([
-      'api.example.com/users' => Http::response([...], 200),
-      'api.example.com/*'     => Http::response([], 404),
-  ]);
+  Different origins, so the browser asks first and your
+  API answers with which origins, methods and headers
+  it permits.
 
-  The bigger win: testing FAILURE. You cannot ask a real
-  API for a 500 on demand, so your retry, timeout and
-  throw() paths are untestable against it. A fake
-  produces one instantly.
+  ⚠️  CORS is a BROWSER mechanism, not a security control.
+      curl ignores it. So does every mobile app. It stops
+      one website reading another's responses in a user's
+      browser, and protects nothing else.
 
-  And assert what you SENT:
+      Authentication and authorization are the security.
 
-    Http::assertSent(fn (\$r) =>
-        \$r->url() === '...' && \$r['name'] === 'Rajan');
-
-    what did the API return?   the fake
-    did we call it correctly?  assertSent
-
-  A test that only fakes the response passes when you
-  send the wrong body to the wrong endpoint.
+  And do not allow *. Fine for a public read-only API.
+  Wrong for one using cookies, where it undoes what the
+  browser was doing for you.
 
 
-Processes, and the boundary
+Throttling, per endpoint class
 
-  Laravel → Process → the operating system → a command
+    public API          60/min
+    authenticated API  300/min
+    login                5/min per IP
+    expensive report     3/min
 
-  ffmpeg · ImageMagick · git · python · any CLI utility
-
-
-  ⚠️  Process::run("rm -rf {\$userInput}")
-
-      /tmp/x; rm -rf /   is TWO commands, and the shell
-      runs both. This is SQL injection with a different
-      interpreter.
-
-  Same fix, same shape: pass an ARRAY.
-
-    Process::run(['ffmpeg', '-i', \$input, \$output])
-
-  No shell parses that, so a semicolon in a filename is
-  a semicolon in a filename.
-
-  As with SQL: values can be passed safely, STRUCTURE
-  cannot. A user-chosen flag or command needs a whitelist.
-
-  Set a timeout — a hung ffmpeg is the stuck-worker
-  problem again. And run anything slow in a job.
+  One limit for everything is too tight for the cheap
+  endpoints or too loose for the expensive ones.
 
 
-The day
+Sanctum or Passport
 
-                    Laravel
-                       │
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-     Filesystem   HTTP Client    Process
-          │            │            │
-     local / S3   external APIs    the OS
+  Sanctum                  Passport
+  ───────                  ────────
+  API tokens               a full OAuth2 server
+  SPA cookie auth          authorization grants
+  mobile apps              refresh tokens
+  first-party clients      third-party client registration
+                           delegated authorization
 
-  "store this file"   not  "write to /var/www"
-  "call this API"     not  "construct a cURL handle"
-  "run this process"  not  "build a shell string"`,
+  The question is not which sounds professional. It is:
+  does somebody need to authorize your application to
+  act on their behalf in a third party's system, or
+  the reverse?
+
+    your own mobile app                     Sanctum
+    your own SPA                            Sanctum
+    a customer's server calling your API    Sanctum
+
+    "Log in with YourApp" elsewhere         Passport
+    third parties registering clients       Passport
+    the full grant and refresh flow         Passport
+
+  Passport is an OAuth2 authorization server. If you are
+  not building one, it is a lot of machinery for a token
+  in a header.
+
+
+Documentation
+
+  endpoints · authentication · request body ·
+  response body · status codes · errors ·
+  pagination · rate limits · versioning
+
+    POST /api/v1/posts
+    Authorization: Bearer <token>
+    Body:      { "title": "...", "body": "..." }
+    Responses: 201 · 401 · 403 · 422 · 429
+
+  For anything larger: OpenAPI. A specification is
+  machine-readable, so one file generates the docs page,
+  client libraries and a test collection — and can be
+  checked against the real API so it cannot go stale.
+
+
+The separation this day comes down to
+
+  who are you?               Sanctum
+  what can you do?           policies and abilities
+  is this input valid?       the validator
+  what should they receive?  the API Resource
+  what happened?             the status code
+
+  Five questions, five mechanisms, each in one place.
+  That is what makes an API a system rather than a
+  pile of CRUD routes.`,
       codeExample: {
-        title: "Pooling, fakes and processes",
+        title: "Versioning, CORS, limits and the choice",
         code: `<?php
+// ---------- URL versioning ----------
 
-use Illuminate\\Support\\Facades\\Http;
-use Illuminate\\Support\\Facades\\Process;
+// routes/api.php
 
-// ---------- Concurrent, and named ----------
+Route::prefix('v1')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('posts', V1\\PostController::class);
+    });
+});
 
-$responses = Http::pool(fn ($pool) => [
-    $pool->as('users')->get('https://api.example.com/users'),
-    $pool->as('orders')->get('https://api.example.com/orders'),
-    $pool->as('billing')->get('https://api.example.com/billing'),
-]);
+Route::prefix('v2')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('posts', V2\\PostController::class);
+    });
+});
 
-// Each one still needs checking: one failing does not
-// fail the pool.
-if ($responses['users']->successful()) {
-    $users = $responses['users']->json();
-}
+// Two versions is two sets of resources and two sets of
+// tests. v1 only means something if v1 keeps working.
 
-// Only for INDEPENDENT calls. If the second needs the
-// first's id, they are sequential by nature.
-
-
-<?php
-// ---------- Faking ----------
-
-class InvoiceSyncTest extends TestCase
-{
-    public function test_it_stores_the_returned_invoices(): void
-    {
-        Http::fake([
-            'api.example.com/invoices' => Http::response([
-                'data' => [
-                    ['number' => 'INV-001', 'total' => 100],
-                ],
-            ], 200),
-
-            // Anything else is a 404, so an unexpected call
-            // fails the test instead of hitting the network.
-            '*' => Http::response([], 404),
-        ]);
-
-        (new InvoiceSync)->run();
-
-        $this->assertDatabaseHas('invoices', ['number' => 'INV-001']);
-
-        // Did we call it correctly? The fake alone does not
-        // tell you: a test that only fakes the response
-        // passes when you post the wrong body to the wrong URL.
-        Http::assertSent(fn ($request) =>
-            $request->url() === 'https://api.example.com/invoices'
-            && $request->hasHeader('Authorization'));
-
-        // And the half people skip: proving you did NOT
-        // call something.
-        Http::assertNotSent(fn ($request) =>
-            str_contains($request->url(), '/charge'));
-    }
-
-    public function test_it_survives_a_server_error(): void
-    {
-        // You cannot ask a real API for a 500 on demand,
-        // which is why the error path is untestable without
-        // a fake.
-        Http::fake(['*' => Http::response([], 500)]);
-
-        (new InvoiceSync)->run();
-
-        $this->assertDatabaseCount('invoices', 0);
-    }
-}
+// Adding a field is safe. Removing or renaming one is not.
 
 
 <?php
-// ---------- Processes ----------
+// ---------- Separate resources per version ----------
 
-$result = Process::run('php artisan about');
+// app/Http/Resources/V1/PostResource.php
+return [
+    'id'    => $this->id,
+    'title' => $this->title,
+];
 
-$result->successful();
-$result->exitCode();
-$result->output();
-$result->errorOutput();
-
-
-// ❌ The user's value becomes part of the command.
-//    "/tmp/x; rm -rf /" is two commands, and the shell
-//    runs both. SQL injection, different interpreter.
-Process::run("ffmpeg -i {$userPath} out.mp4");
-
-// ✓ An array. No shell parses it, so a semicolon in a
-//   filename is a semicolon in a filename.
-Process::timeout(120)->run([
-    'ffmpeg',
-    '-i', $inputPath,
-    '-vf', 'scale=1280:-2',
-    $outputPath,
-]);
-
-// As with SQL: values pass safely, structure does not.
-// A user-chosen flag or command name needs a whitelist.
-
-$preset = in_array(request('preset'), ['fast', 'slow'], true)
-    ? request('preset')
-    : 'fast';
+// app/Http/Resources/V2/PostResource.php
+return [
+    'id'     => $this->id,
+    'title'  => $this->title,
+    'author' => new UserResource($this->whenLoaded('user')),
+];
 
 
 <?php
-// ---------- And off the request ----------
+// ---------- CORS ----------
 
-class TranscodeVideo implements ShouldQueue
-{
-    public function handle(): void
-    {
-        // A hung ffmpeg in a request is the stuck-worker
-        // problem from the last lesson.
-        $result = Process::timeout(600)->run([
-            'ffmpeg', '-i', $this->input, $this->output,
-        ]);
+// config/cors.php
 
-        if (! $result->successful()) {
-            throw new RuntimeException($result->errorOutput());
-        }
-    }
-}
+return [
+    'paths' => ['api/*'],
+
+    // The origins you actually have.
+    'allowed_origins' => [
+        'https://app.example.com',
+        'https://admin.example.com',
+    ],
+
+    'allowed_methods' => ['GET', 'POST', 'PATCH', 'DELETE'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'Accept'],
+
+    // Only for Sanctum SPA cookie authentication, and it
+    // cannot be combined with an allowed_origins of *.
+    'supports_credentials' => false,
+];
+
+// ⚠️ CORS is a browser mechanism. curl ignores it, and so
+//    does every mobile app. It is not your security.
 
 
 <?php
-// ---------- Faking processes too ----------
+// ---------- Throttling, per endpoint class ----------
 
-Process::fake([
-    'ffmpeg *' => Process::result(output: 'done', exitCode: 0),
-]);`,
+// AppServiceProvider
+
+RateLimiter::for('api', fn (Request $r) =>
+    Limit::perMinute(300)->by($r->user()?->id ?? $r->ip()));
+
+RateLimiter::for('api-public', fn (Request $r) =>
+    Limit::perMinute(60)->by($r->ip()));
+
+RateLimiter::for('reports', fn (Request $r) =>
+    Limit::perMinute(3)->by($r->user()->id));
+
+
+// routes/api.php
+
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::apiResource('posts', PostController::class);
+
+    Route::get('/reports/revenue', ReportController::class)
+        ->middleware('throttle:reports');
+});
+
+Route::middleware('throttle:api-public')->group(function () {
+    Route::get('/status', StatusController::class);
+});
+
+
+<?php
+// ---------- Sanctum or Passport ----------
+
+// Sanctum: a token in a header, and SPA cookies.
+//   your own mobile app
+//   your own SPA
+//   a customer's server calling your API
+//
+// Passport: an OAuth2 authorization server.
+//   "Log in with YourApp" on somebody else's site
+//   third parties registering their own clients
+//   the full grant and refresh flow
+//
+// If you are not building an authorization server,
+// Passport is a lot of machinery for something Sanctum
+// already does.
+
+
+# ---------- The minimum documentation ----------
+
+# POST /api/v1/posts
+#
+# Authorization: Bearer <token>
+# Accept: application/json
+#
+# Body:
+#   { "title": "Laravel", "body": "..." }
+#
+# Responses:
+#   201  the created post
+#   401  no or invalid token
+#   403  not permitted
+#   422  { "message": "...", "errors": {...} }
+#   429  rate limited, with Retry-After
+#
+# For anything larger: OpenAPI, so one file generates the
+# docs, the client libraries and a test collection — and
+# can be verified against the real API.`,
       },
       keyTakeaways: [
-        "<b>`Http::pool()` sends independent requests concurrently</b>, so the total is the slowest rather than the sum.",
-        "<b>Name pooled requests with `as()`</b>, rather than indexing the results by position.",
-        "<b>Pooling only helps when the calls are independent</b>, and each response still needs checking.",
-        "<b>`Http::fake()` stops tests reaching the network</b>, making them fast, deterministic and free.",
-        "<b>The bigger win is testing failure</b>, because a real API will not return a 500 on request.",
-        "<b>`Http::assertSent()` checks that you called the API correctly</b>, which a fake alone cannot tell you.",
-        "<b>`Process::run()` executes a system command</b>, for the things PHP cannot do itself.",
-        "<b>Interpolating user input into a command is injection</b>, exactly as it was with SQL.",
-        "<b>Pass the command as an array</b>, so arguments stay arguments and no shell parses them.",
-        "<b>Set a process timeout and run slow commands in a queued job</b>, or you are back to stuck workers.",
-        "<b>Your code should say \"store this file\", \"call this API\", \"run this process\"</b>, never name a path, a cURL handle or a shell string.",
+        "<b>An API with clients you do not control cannot change shape freely</b>, which is what versioning is for.",
+        "<b>URL versioning is the pragmatic default</b>: visible to the client, routable, and answerable in support.",
+        "<b>A version is a promise you keep</b>, so two versions means two sets of resources and two sets of tests.",
+        "<b>Adding a field is safe; removing or renaming one is not.</b>",
+        "<b>CORS is the browser refusing a cross-origin request unless the server permits it.</b>",
+        "<b>CORS is a browser mechanism, not a security control</b>: `curl` and mobile apps ignore it entirely.",
+        "Allowing `*` is fine for a public read-only API and wrong for one using cookies.",
+        "<b>Throttle per endpoint class</b>, because one limit is too tight for cheap endpoints or too loose for expensive ones.",
+        "<b>Sanctum covers tokens and first-party SPAs; Passport is a full OAuth2 authorization server.</b>",
+        "Choose Passport only when third parties register clients or somebody delegates authorization.",
+        "<b>Document endpoints, auth, bodies, statuses, errors, pagination, limits and versions</b>, and use OpenAPI for anything large.",
+        "<b>Five questions, five mechanisms</b>: Sanctum, policies, the validator, the resource, the status code.",
       ],
       commonMistakes: [
-        "<b>Pooling calls that depend on each other.</b> The second needs the first's result, so they cannot overlap.",
-        "<b>Assuming a pool fails as a whole.</b> Each response is separate, and one may be a 500.",
-        "<b>Calling real APIs in tests.</b> Slow, flaky, sometimes expensive, and the failure paths stay untested.",
-        "<b>Faking the response without asserting the request.</b> The test passes with the wrong body and the wrong URL.",
-        "<b>Building a shell command by string interpolation.</b> A semicolon in the value runs a second command.",
+        "<b>Creating a `v2` and abandoning `v1`.</b> A version nobody maintains is worse than no version.",
+        "<b>Versioning for an added field.</b> Additive changes do not break clients.",
+        "<b>Treating CORS as security.</b> Anything that is not a browser ignores it completely.",
+        "<b>Allowing `*` origins with credentials.</b> That undoes the protection the browser was providing.",
+        "<b>Choosing Passport because OAuth sounds more professional.</b> It is an authorization server, not a token library.",
       ],
       quiz: [
         {
-          question: "What does `Http::pool()` change about three API calls?",
+          question: "Which change requires a new API version?",
           options: [
-            "They are cached",
-            "They run concurrently, so the total is roughly the slowest rather than the sum",
-            "They are retried automatically",
-            "They share one connection",
+            "Adding a field to a response",
+            "Renaming or removing a field",
+            "Adding a new endpoint",
+            "Adding an optional query parameter",
           ],
           correctIndex: 1,
-          explanation: "Only when the calls are independent of each other.",
+          explanation: "Additive changes do not break existing clients.",
         },
         {
-          question: "What is the biggest testing win from `Http::fake()`?",
+          question: "What does CORS actually protect?",
           options: [
-            "Faster tests",
-            "You can produce failures such as a 500 on demand, which a real API will not do",
-            "It removes the need for assertions",
-            "It records real responses",
+            "Your API from any unauthorised client",
+            "One website from reading another's responses in a user's browser",
+            "Tokens in transit",
+            "Against rate limit abuse",
           ],
           correctIndex: 1,
-          explanation: "Retries, timeouts and the `throw()` path become testable.",
+          explanation: "`curl` and mobile apps ignore it, so it is not your security.",
         },
         {
-          question: "Why use `Http::assertSent()` as well as a fake?",
+          question: "When should you choose Passport over Sanctum?",
           options: [
-            "It speeds the test up",
-            "The fake shows what came back, not whether you called the right endpoint with the right body",
-            "It is required by Laravel",
-            "It replaces the fake",
+            "For any mobile application",
+            "When third parties register their own clients, or somebody delegates authorization",
+            "Whenever the API is public",
+            "When you need refresh tokens for your own app",
           ],
           correctIndex: 1,
-          explanation: "Both halves matter: what they returned and what you sent.",
+          explanation: "Passport is an OAuth2 authorization server, not a token library.",
         },
         {
-          question: "Why pass a command to `Process::run()` as an array?",
+          question: "Why is a single throttle limit for a whole API a poor fit?",
           options: [
-            "It is faster",
-            "No shell parses it, so a value containing a semicolon cannot become a second command",
-            "Arrays support timeouts",
-            "It captures output better",
+            "Laravel does not allow it",
+            "It is either too tight for cheap endpoints or too loose for expensive ones",
+            "It cannot key on the user",
+            "It breaks CORS",
           ],
           correctIndex: 1,
-          explanation: "The same shape as parameter binding in SQL.",
+          explanation: "A report costing seconds and a status check are not the same endpoint.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What does `php artisan storage:link` create?",
+      question: "Why does `php artisan install:api` exist rather than API routes being there by default?",
       options: [
-        "A new disk in config",
-        "A symlink from `public/storage` to `storage/app/public`",
-        "An S3 bucket",
-        "A database table",
+        "It is a licensing requirement",
+        "Plenty of applications never expose an API, so the routes and Sanctum are opt-in",
+        "It configures the database",
+        "It is required for Blade",
       ],
       correctIndex: 1,
-      explanation: "Without it, files on the public disk sit on disk unreachable.",
+      explanation: "It creates `routes/api.php`, registers it and installs Sanctum.",
     },
     {
-      question: "Why is S3 usually better than the local disk in production?",
+      question: "Why do API routes not need CSRF protection?",
       options: [
-        "It is faster to write",
-        "Every application server shares one store, and files survive a server being replaced",
-        "It compresses files",
-        "It is cheaper",
+        "APIs are trusted",
+        "A token header is attached by code, not automatically like a cookie, so there is nothing to forge",
+        "CSRF only applies to forms",
+        "Laravel disables it for speed",
       ],
       correctIndex: 1,
-      explanation: "The local disk assumes there is one server, forever.",
+      explanation: "This stops being true for Sanctum SPA cookie authentication.",
     },
     {
-      question: "What is the difference between `store()` and `storeAs()`?",
+      question: "How many times can you read a token's plain text value?",
+      options: ["Any number of times", "Once, when it is created", "Until it expires", "Only from the database"],
+      correctIndex: 1,
+      explanation: "The database stores a hash, exactly as it does for a password.",
+    },
+    {
+      question: "What do token abilities limit?",
       options: [
-        "The disk used",
-        "`store()` generates the filename; `storeAs()` lets you choose it",
-        "`storeAs()` streams the file",
-        "None",
+        "What the user may do to a record",
+        "What that particular token may be used for",
+        "How many requests a token may make",
+        "Which routes exist",
       ],
       correctIndex: 1,
-      explanation: "Prefer `store()`, because a filename from a browser is user input.",
+      explanation: "The policy still decides what the user may do to a given record.",
     },
     {
-      question: "When should a stored file be private?",
+      question: "What does `$user->tokens()->delete()` do?",
       options: [
-        "When it is large",
-        "When it belongs to one person: an invoice, an export, a medical document",
-        "Only in production",
-        "When it is not an image",
+        "Logs out the current device",
+        "Revokes every token the user has, on every device",
+        "Expires tokens after an hour",
+        "Deletes the user",
       ],
       correctIndex: 1,
-      explanation: "Avatars and logos are public; anything belonging to somebody is not.",
+      explanation: "`currentAccessToken()->delete()` is the one for a normal logout.",
     },
     {
-      question: "What does a temporary URL let you do?",
+      question: "Why does expiry matter when tokens can be revoked?",
       options: [
-        "Make a public file expire",
-        "Authorize in your application while object storage delivers the file directly",
-        "Compress the download",
-        "Cache the file locally",
+        "It is faster",
+        "Revocation needs somebody to notice; expiry limits a leaked token even when nobody does",
+        "Expired tokens are removed automatically",
+        "It replaces abilities",
       ],
       correctIndex: 1,
-      explanation: "The download never passes through your server.",
+      explanation: "The question becomes how much time a leak buys, not whether anybody notices.",
     },
     {
-      question: "What problem does the read-through filesystem driver solve?",
+      question: "What is the main value of `Route::apiResource()`?",
       options: [
-        "Files being deleted",
-        "Repeatedly fetching the same remote file, by keeping a local read cache in front of the canonical store",
-        "Uploading large files",
-        "Generating thumbnails",
+        "It generates the controller",
+        "All five routes are registered consistently, so they cannot drift in name, path or middleware",
+        "It adds authentication",
+        "It paginates the index",
       ],
       correctIndex: 1,
-      explanation: "The source stays the truth, so a stale cache is not a correctness problem.",
+      explanation: "Hand-written routes eventually differ in one of those.",
     },
     {
-      question: "Why does `max:10240` not protect against a huge image?",
+      question: "Why return an API Resource rather than the model?",
       options: [
-        "It is in bytes",
-        "It limits the file size, while decoding allocates memory in proportion to the dimensions",
-        "Images are exempt",
-        "It does protect against it",
+        "It is faster",
+        "The model publishes every column, including ones added by future migrations",
+        "Models cannot be serialised",
+        "Resources add pagination",
       ],
       correctIndex: 1,
-      explanation: "Add a `dimensions:` rule as well.",
+      explanation: "`$hidden` fails open; a resource fails closed.",
     },
     {
-      question: "Why must external HTTP calls have timeouts?",
-      options: [
-        "To reduce bandwidth",
-        "Each waiting request occupies a worker, so a hanging API can take your whole site down",
-        "Laravel requires it",
-        "To enable retries",
-      ],
+      question: "A valid token, but the user does not own the record. What status?",
+      options: ["401", "403", "404", "422"],
       correctIndex: 1,
-      explanation: "A timeout turns their outage into a handled error on one feature.",
+      explanation: "They are authenticated, so logging in again would change nothing.",
     },
     {
-      question: "When is retrying an HTTP request dangerous?",
-      options: [
-        "On any GET",
-        "On a non-idempotent write, because the first attempt may have succeeded with its response lost",
-        "When the API is slow",
-        "Never",
-      ],
-      correctIndex: 1,
-      explanation: "An idempotency key is what makes a repeated write safe.",
-    },
-    {
-      question: "Why fake HTTP calls in tests?",
-      options: [
-        "Only for speed",
-        "For speed and determinism, and because a real API will not return a 500 on demand so failure paths stay untested",
-        "Laravel blocks real calls in tests",
-        "To avoid writing assertions",
-      ],
-      correctIndex: 1,
-      explanation: "Pair the fake with `assertSent()` to check what you sent.",
-    },
-    {
-      question: "Why is interpolating user input into a `Process` command dangerous?",
-      options: [
-        "It is slow",
-        "The value can contain shell syntax and become a second command",
-        "Processes cannot take arguments",
-        "It breaks the output",
-      ],
-      correctIndex: 1,
-      explanation: "Pass the command as an array, so no shell parses it.",
-    },
-    {
-      question: "What is the difference between `Http::query()` and adding query parameters to a GET?",
+      question: "What is the difference between 404 and 422?",
       options: [
         "None",
-        "`Http::query()` sends an HTTP `QUERY` request; query parameters build the URL of a `GET`",
-        "`Http::query()` is for databases",
-        "`Http::query()` encodes the parameters",
+        "404 means the resource does not exist; 422 means the data sent is invalid",
+        "422 is for missing authentication",
+        "404 is only for collections",
       ],
       correctIndex: 1,
-      explanation: "`QUERY` is a read with a body: retryable and cacheable where a POST search is neither.",
+      explanation: "Route model binding gives the first; validation gives the second.",
+    },
+    {
+      question: "What does CORS actually protect?",
+      options: [
+        "Your API from unauthorised clients",
+        "One website from reading another's responses in a user's browser",
+        "Tokens in transit",
+        "Against rate-limit abuse",
+      ],
+      correctIndex: 1,
+      explanation: "`curl` and mobile apps ignore it entirely, so it is not your security.",
+    },
+    {
+      question: "When is Passport the right choice over Sanctum?",
+      options: [
+        "For any mobile application",
+        "When third parties register their own clients or somebody delegates authorization",
+        "Whenever tokens need to expire",
+        "For any public API",
+      ],
+      correctIndex: 1,
+      explanation: "Passport is an OAuth2 authorization server, not a token library.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Give InvoiceHub file handling and an external integration: PDF invoices on private storage with temporary links, uploaded logos resized and converted, and an exchange-rate API that survives being down.",
-    brief: "InvoiceHub stores rows and nothing else. Today it gets files and a dependency.\n\nBoth are places where your application stops being in control. A file lives somewhere you have to choose, and an external API is a service that will one day be slow, wrong or unreachable while your page is still expected to load.\n\nSo the discipline for today is <b>build the failure case first</b>. Before the happy path works, point the API at a URL that does not answer and decide what the page does. Before the upload works, try a file that is not what it claims to be. The code that handles the good case writes itself; the code that handles the rest is the day.\n\nAnd one rule throughout: nothing in your application should name a filesystem path or construct a URL by hand. Every file goes through `Storage`, so the same code can run against the local disk in tests and S3 in production.",
+    goal: "Expose InvoiceHub as a token-authenticated REST API that a mobile client could build against, and prove every failure returns the right status.",
+    brief: "InvoiceHub has screens. Today it gets an interface something else can call.\n\nAlmost nothing here is new. The authentication is Day 18, the policies are Day 19, the validation is Day 9, the resources are Day 16, the rate limiting is Day 20. <b>What is new is that all of it now has to be visible in the response.</b> A browser can be redirected and shown a message; a client gets a number and a body, and has to decide what to do from those alone.\n\nSo the day is measured in status codes. For every endpoint, five requests: no token, a valid token from the wrong user, a missing record, invalid data, and a correct request. Each has one right answer, and until all five are right the endpoint is not finished.\n\nWork in `routes/api.php`, keep everything under `/api/v1`, and treat the resource files as the contract: if it is not in a resource, it is not in your API.",
     steps: [
-      "Configure three disks: `local` for private files, `public` for assets, and `s3` if you have credentials, or a second local disk standing in for it. Run `storage:link` and add it to your deploy notes.",
-      "Add a logo upload to the customer form. Validate it with `image`, `max:` and a `dimensions:` rule, and write down in a comment what each rule stops.",
-      "Store it with `store()` and confirm the filename is generated. Then deliberately try `storeAs()` with the original filename and note three things that could go wrong.",
-      "Read the image, correct its orientation, scale it down to 400px and store it as WebP. Compare the stored size with the original and record both numbers.",
-      "Extract the dominant colour and store it on the customer. Use it as the background while the logo loads, and reload the page to see the difference.",
-      "Generate an invoice PDF and store it on a private disk. Confirm from an incognito window that there is no URL that reaches it.",
-      "Add a download route that authorizes with yesterday's policy and streams the file with `download()`, passing the original name. Confirm a second user gets a 403.",
-      "Now add a temporary URL route instead: authorize, then redirect to a ten-minute signed URL. Copy the URL, wait for it to expire, and confirm it stops working.",
-      "Write down the difference between those two routes: what passes through your server in each, and which you would use for a 50 MB file.",
-      "Add a `forceDeleted` hook that removes the PDF, then delete an invoice properly and confirm the file is gone. Then run a mass delete and confirm the file is not.",
-      "Write a command that lists stored invoice files and reports any with no matching record. Report only; do not delete.",
-      "Add an exchange-rate lookup using the HTTP client, with `connectTimeout`, `timeout` and a `retry` that only retries connection errors and 5xx.",
-      "Point it at a URL that does not respond and load the page. Decide what a user sees: a cached rate, a blank field, an error. Write down the decision and implement it.",
-      "Wrap the API in a small class with a macro holding the base URL, token and timeouts, so no controller knows where the service lives.",
-      "Fake the API in a test: one test for the successful response, one for a 500, and one asserting you called the right endpoint with the right headers.",
-      "Add a second API call the page needs and combine them with `Http::pool()`. Time the page before and after, and record both numbers.",
-      "Add a PDF page-count using `Process` with an array command and a timeout. Then try the string-interpolated version with a filename containing a semicolon, see what happens, and revert.",
-      "Finally, list every file your application writes and answer for each: which disk, public or private, who may read it, and what deletes it.",
+      "Run `php artisan install:api` and read what it changed. Write down which middleware `api.php` has that `web.php` does not, and what each difference means for a mobile client.",
+      "Add `HasApiTokens` to `User` and build a login endpoint that validates, checks the password, and returns a token. Use one error message for a wrong password and an unknown email.",
+      "Rate limit that endpoint with the `login` limiter from Day 20, then fail it six times and confirm the 429 and its `Retry-After` header.",
+      "Add `GET /api/v1/user` behind `auth:sanctum`. Call it with no token and confirm a 401. Then call it without `Accept: application/json` and note what you get instead, and why.",
+      "Build `InvoiceController` with `--api` and register it with `apiResource` under a `v1` prefix. Confirm all five routes exist with `php artisan route:list`.",
+      "Write `InvoiceResource` and `CustomerResource`. Include the customer with `whenLoaded()` and a line count with `whenCounted()`. Nothing that is not in the resource should appear in a response.",
+      "Add a column to the invoices table, deploy nothing else, and confirm it does not appear in the API. Write down what would have happened if the controller returned the model.",
+      "Make `index` paginated and confirm the response carries `links` and `meta` without you writing them.",
+      "Apply the Day 19 policy to every action, and confirm a second user gets a 403 on show, update and destroy.",
+      "Change the `view` policy to `denyAsNotFound()` and note what a stranger can now learn from a sequential id, compared with before.",
+      "Get the statuses right: 201 with the created invoice on store, 200 on update, 204 with an empty body on destroy. Check the delete response really is empty.",
+      "Trigger a 422 and read the body. Confirm the `errors` object maps messages to fields, and write down how a mobile client would use it.",
+      "Now the five-request test, for every endpoint: no token, wrong user, missing record, invalid data, correct request. Record the status you got for each in a table.",
+      "Issue a second token with `['invoices:read']` and confirm it can list invoices and cannot delete one. Then confirm the delete failure is a 403 and not a 401.",
+      "Build a devices endpoint listing the user's tokens with their names and last use, and a revoke endpoint. Revoke one from a second client and confirm it stops working immediately.",
+      "Add token revocation on password change, then change a password and confirm every other client is signed out.",
+      "Configure CORS for one specific origin, call the API from a page on that origin and from another, and write down which one the browser refused and why `curl` succeeded from both.",
+      "Write the documentation: for each endpoint, the method, path, auth, request body, and every status it can return. Compare it against your table from step 13 and fix whichever is wrong.",
     ],
     acceptance: [
-      "No path in the application is written by hand; every file goes through `Storage`.",
-      "An uploaded logo is stored with a generated name, correctly oriented, resized and converted, and you recorded the before and after sizes.",
-      "The dominant colour appears as a placeholder before the logo loads.",
-      "Invoice PDFs are on a private disk with no reachable URL.",
-      "The download route refuses a second user with a 403, and the temporary URL stops working after it expires.",
-      "You can explain what passes through your server in each of the two serving routes.",
-      "Deleting an invoice removes its PDF, and you know why a mass delete does not.",
-      "The audit command reports orphaned files without deleting anything.",
-      "With the exchange-rate API unreachable, the page still loads and behaves the way you decided it should.",
-      "Three tests cover the API: success, a 500, and an assertion about the request you sent.",
-      "The two API calls run concurrently, and you recorded the page timing before and after.",
-      "Every `Process` call passes an array and has a timeout.",
-      "You can list every file the application writes, with its disk, its visibility, its readers, and what deletes it.",
+      "Every endpoint lives under `/api/v1` and is registered through `apiResource`.",
+      "No token returns 401, a valid token from the wrong user returns 403, and you can explain why those are different.",
+      "A missing invoice returns 404 and invalid data returns 422 with a field-keyed `errors` object.",
+      "Creating returns 201 with the invoice; deleting returns 204 with a genuinely empty body.",
+      "The API returns only what the resource files list, and a newly added column does not appear.",
+      "The index endpoint is paginated and returns `links` and `meta`.",
+      "A read-only token can list invoices and is refused with a 403 on delete.",
+      "The devices endpoint lists tokens, revoking one takes effect immediately, and a password change signs out every client.",
+      "The login endpoint is rate limited and returns 429 with `Retry-After`.",
+      "CORS permits your frontend origin and refuses another in a browser, and you can explain why `curl` is unaffected.",
+      "Your documentation lists every status each endpoint can return, and matches what the API actually does.",
     ],
     stretch: [
-      "Generate three logo sizes in a queued job from the stored original, and serve the right one per breakpoint.",
-      "Add a temporary upload URL so a large attachment goes from the browser straight to S3, never through your server.",
-      "Add an idempotency key to a write against an external API and demonstrate that a retry does not duplicate the effect.",
+      "Add `/api/v2` that renames one field, keep `v1` working, and write a test proving both still return the right shape.",
+      "Publish an OpenAPI specification for the API and generate a documentation page from it.",
+      "Add a `POST /api/v1/invoices/{invoice}/payment` sub-resource rather than a `pay` verb, and write down what modelling it as a resource gave you.",
     ],
   },
 };

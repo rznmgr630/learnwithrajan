@@ -147,86 +147,81 @@ const LARAVEL_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "モデルファクトリとデータベースシーディング",
   },
   18: {
-    en: "Caching & localization",
-    np: "Caching र localization",
-    jp: "キャッシュと多言語",
-  },
-  19: {
     en: "Authentication — guards, sessions, hashing & password resets",
     np: "Authentication — guards, sessions, hashing र password resets",
     jp: "認証 — ガード・セッション・ハッシュ・パスワードリセット",
   },
-  20: {
+  19: {
     en: "Authorization — Gates, Policies & the #[Authorize] attribute",
     np: "Authorization — Gates, Policies र #[Authorize] attribute",
     jp: "認可 — Gate・Policy・#[Authorize] 属性",
   },
-  21: {
+  20: {
     en: "Application security — CSRF, XSS, rate limiting & headers",
     np: "Application security — CSRF, XSS, rate limiting र headers",
     jp: "アプリケーションセキュリティ — CSRF・XSS・レート制限・ヘッダー",
   },
-  22: {
+  21: {
     en: "File storage, the HTTP client & processes",
     np: "File storage, HTTP client र processes",
     jp: "ファイルストレージ・HTTP クライアント・プロセス",
   },
-  23: {
+  22: {
     en: "Building a REST API with Sanctum",
     np: "Sanctum सँग REST API बनाउने",
     jp: "Sanctum で REST API を作る",
   },
-  24: {
+  23: {
     en: "Frontend integration — Vite, Livewire & Inertia",
     np: "Frontend integration — Vite, Livewire र Inertia",
     jp: "フロントエンド統合 — Vite・Livewire・Inertia",
   },
-  25: {
+  24: {
     en: "Localization, collections & helpers",
     np: "Localization, collections र helpers",
     jp: "多言語化・コレクション・ヘルパ",
   },
-  26: {
+  25: {
     en: "Queues & jobs — batching, retries, failures & Horizon",
     np: "Queues र jobs — batching, retries, failures र Horizon",
     jp: "キューとジョブ — バッチ・リトライ・失敗・Horizon",
   },
-  27: {
+  26: {
     en: "Events, listeners, scheduling, mail & notifications",
     np: "Events, listeners, scheduling, mail र notifications",
     jp: "イベント・リスナー・スケジューラ・メール・通知",
   },
-  28: {
+  27: {
     en: "Broadcasting & real time — Reverb, channels & Echo",
     np: "Broadcasting र real time — Reverb, channels र Echo",
     jp: "ブロードキャストとリアルタイム — Reverb・チャンネル・Echo",
   },
-  29: {
+  28: {
     en: "Testing — Pest, feature tests, fakes & coverage",
     np: "Testing — Pest, feature tests, fakes र coverage",
     jp: "テスト — Pest・機能テスト・フェイク・カバレッジ",
   },
-  30: {
+  29: {
     en: "Artisan, tooling & code quality",
     np: "Artisan, tooling र code quality",
     jp: "Artisan・ツール・コード品質",
   },
-  31: {
+  30: {
     en: "The Laravel AI SDK — agents, tools & embeddings",
     np: "Laravel AI SDK — agents, tools र embeddings",
     jp: "Laravel AI SDK — エージェント・ツール・埋め込み",
   },
-  32: {
+  31: {
     en: "Semantic search — Scout, pgvector & hybrid ranking",
     np: "Semantic search — Scout, pgvector र hybrid ranking",
     jp: "セマンティック検索 — Scout・pgvector・ハイブリッド",
   },
-  33: {
+  32: {
     en: "Caching & performance — measure, then optimise",
     np: "Caching र performance — measure, then optimise",
     jp: "キャッシュとパフォーマンス — 計測してから最適化",
   },
-  34: {
+  33: {
     en: "Deployment — CI/CD, workers, scheduler & zero downtime",
     np: "Deployment — CI/CD, workers, scheduler र zero downtime",
     jp: "デプロイ — CI/CD・ワーカー・スケジューラ・ゼロダウンタイム",
@@ -251,12 +246,12 @@ const LARAVEL_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "Phase 3 · データベースとEloquent（Day 12–17）",
   },
   "laravel-w5": {
-    en: "Phase 4 · Security (Days 19–22)",
+    en: "Phase 4 · Security (Days 18–21)",
     np: "Phase 4 · Security (दिन 19–22)",
     jp: "Phase 4 · セキュリティ（Day 19–22）",
   },
   "laravel-w5b": {
-    en: "Phase 5 · APIs and Frontend (Days 23–25)",
+    en: "Phase 5 · APIs and Frontend (Days 22–24)",
     np: "Phase 5 · APIs र Frontend (दिन 23–25)",
     jp: "Phase 5 · API とフロントエンド（Day 23–25）",
   },

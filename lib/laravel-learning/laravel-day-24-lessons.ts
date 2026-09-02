@@ -2,2403 +2,2389 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_24_LESSONS: LessonDay = {
   day: 24,
-  title: "Frontend integration — Vite, Livewire & Inertia",
-  totalMinutes: 90,
+  title: "Localization, collections & helpers",
+  totalMinutes: 89,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "two-paths",
-      title: "Two paths, and where state lives",
+      id: "localization",
+      title: "Localization — language files & __()",
       durationMinutes: 11,
-      explanation: "Yesterday built an API for a client you do not write. Today is the client you do.\n\nLaravel offers two ways, and they are genuinely different:\n\n```text\n                    Laravel\n                       │\n         ┌─────────────┴─────────────┐\n         ▼                           ▼\n   Blade + Livewire          JavaScript + Inertia\n         │                           │\n   server-driven                client-side UI\n         │                           │\n   PHP components          React / Vue / Svelte\n```\n\n<b>The useful skill is knowing when to choose each</b>, not memorising both APIs.\n\n---\n\n### 1. Basic — the two stacks\n\n<b>Livewire</b> keeps you in PHP:\n\n```text\nbrowser  →  Blade  →  Livewire  →  Laravel  →  database\n```\n\nYou write PHP classes and Blade templates. JavaScript is minimal, and often none of your own.\n\n<b>Inertia</b> keeps Laravel and gives the browser a real JavaScript application:\n\n```text\nbrowser  →  React / Vue / Svelte  →  Inertia  →  Laravel  →  database\n```\n\nYour routes, controllers, validation and Eloquent are unchanged. The views become components.\n\n<b>Neither is an API.</b> That is worth stating, because both give you a single-page feel without the thing you built yesterday: no separate client, no tokens, no versioning, no CORS. The frontend and the backend are one deployment that happens to speak to itself.\n\n---\n\n### 2. Intermediate — the one difference that matters\n\nEverything else follows from this: <b>where does the interface's state live?</b>\n\n```text\nLivewire                       Inertia\n────────                       ───────\nbrowser                        browser\n   ↓                              ↓\nLivewire component             React state\n   ↓                              ↓\nPHP state, on the server       Inertia visit\n   ↓                              ↓\nLaravel                        Laravel\n```\n\nIn Livewire, <b>the truth about what is typed in that search box is a PHP property on the server.</b> The browser holds a rendering of it. Type a character and a request goes out; PHP updates and sends back new HTML.\n\nIn Inertia, <b>the truth is JavaScript state in the browser.</b> React owns it, and Laravel is asked for data when the page needs some.\n\nEverything you notice afterwards comes from that. Livewire needs a round trip for interactions and gives you PHP everywhere. Inertia is instant locally and asks you to write and reason about a JavaScript application.\n\n---\n\n### 3. Advanced — choosing\n\nThe honest answer is that it depends on things that are not about Laravel:\n\n```text\nteam skills\napplication complexity\nhow much of the UI is genuinely interactive\nhow much JavaScript you want to own\n```\n\n<b>Livewire fits when Laravel should own the application:</b>\n\n```text\nadmin panels · dashboards · CRUD · forms\ninternal tools · data tables · a CMS\n```\n\nThings that are mostly a database with an interface on it. Writing those in React means rebuilding validation, pagination and state that Laravel already has.\n\n<b>Inertia fits when the interface is the product:</b>\n\n```text\na SaaS dashboard · rich data visualisation\nhighly interactive UI · a large component system\n```\n\nAnd it fits when your team already writes React well, because then Livewire is the unfamiliar thing.\n\nTwo cautions worth carrying.\n\n<b>Livewire's round trip is real.</b> Every interaction is a request, so a component that reacts to each keystroke is a request per keystroke. On a fast connection it is invisible; on a slow one it is not, and the fixes are debouncing and doing less per interaction rather than a different framework.\n\n<b>And Inertia is a JavaScript application.</b> Choosing it means a build step, a component tree, client state and everything else that comes with React, which is a real cost when the page is a table with a filter.\n\n<b>You can also use both</b>, in the same application, on different pages. The admin area in Livewire and the customer-facing dashboard in Inertia is a normal arrangement, because Laravel underneath is identical.",
-      diagram: `Two paths
+      explanation: "Three things today, and one idea underneath all of them:\n\n```text\nLocalization   →  multiple languages\nCollections    →  transform data\nStrings        →  clean manipulation\nHelpers        →  common operations\nConcurrency    →  parallel work\n```\n\n<b>The goal is not to use every abstraction everywhere.</b> It is to know when Laravel's version makes the code clearer, and when plain PHP already did.\n\n---\n\n### 1. Basic — text that is not in the code\n\nA hard-coded string works until somebody wants a second language:\n\n```text\nEnglish   \"Welcome\"\nJapanese  \"ようこそ\"\nNepali    \"स्वागत छ\"\n```\n\nThe answer is not conditionals scattered through your views. It is to <b>take the text out of the code and look it up by key:</b>\n\n```text\nlang/\n├── en/messages.php\n├── ja/messages.php\n└── ne/messages.php\n```\n\n```php\n// lang/en/messages.php\nreturn ['welcome' => 'Welcome'];\n\n// lang/ja/messages.php\nreturn ['welcome' => 'ようこそ'];\n```\n\n```php\n__('messages.welcome');\n```\n\n```blade\n{{ __('messages.welcome') }}\n```\n\n```text\nmessages.welcome\n       ↓\nthe current locale\n       ↓\nthe translation\n```\n\n<b>Your code never asks which language it is.</b> That `if ($language === 'ja')` is the thing localization exists to delete.\n\n---\n\n### 2. Intermediate — parameters\n\nText with a value in it cannot be split up, because word order differs between languages:\n\n```php\n// ❌ 'Welcome, ' . $name\n```\n\nWhich is fine in English and wrong in a language that puts the name first. <b>Put the placeholder in the translation:</b>\n\n```php\n'welcome' => 'Welcome, :name',\n```\n\n```php\n__('messages.welcome', ['name' => $user->name]);\n```\n\n```text\nWelcome, Rajan\n```\n\nNow each translation owns its own word order, and the code passes values rather than sentence fragments.\n\n<b>That rule generalises: a translation is a whole sentence.</b> Concatenating two translated pieces produces something that reads correctly in the language you tested and awkwardly in the rest.\n\n---\n\n### 3. Advanced — the two file formats\n\nAlongside PHP files keyed by short names, Laravel supports JSON files keyed by the English text:\n\n```text\nlang/ja.json\n```\n\n```json\n{\n    \"Welcome\": \"ようこそ\",\n    \"Dashboard\": \"ダッシュボード\"\n}\n```\n\n```php\n__('Welcome');\n```\n\nSo the choice is what your keys are:\n\n```text\nPHP files                    JSON files\n─────────                    ──────────\n__('messages.welcome')       __('Welcome')\na key, in a namespace        the English text is the key\n\ngrouping and structure       nothing to invent\na missing translation is     a missing translation shows\n  visible as a raw key         readable English\nrenaming a key touches       changing the English text\n  every usage                  changes the key everywhere\n```\n\n<b>Neither is wrong.</b> JSON suits an application whose interface text is written in English and translated afterwards; PHP files suit one where the text is long, grouped or edited by people who are not developers.\n\nPick one per project. Using both is legal and makes \"where is this string\" a two-place question forever.\n\nOne practical note that catches everyone: <b>Blade escapes translated output</b>, exactly as it escapes everything else. A translation containing markup needs `{!! !!}` and therefore the Day 20 judgement about whether that content is trusted, which for a file in your own repository it usually is.\n\nFour more things worth having.\n\n<b>Laravel's own strings live in the vendor package</b>, so to change \"The :attribute field is required.\" you first copy them into your project:\n\n```bash\nphp artisan lang:publish\n```\n\nThat gives you `lang/en/validation.php`, which is where translated validation messages belong. It also has an `attributes` array for field names:\n\n```php\n'attributes' => [\n    'due_on' => 'due date',\n],\n```\n\n<b>Which fixes \"The due on field is required\"</b> in every message at once, rather than per rule.\n\n<b>`trans()` is an alias for `__()`</b>, and `trans_choice()` for the plural form. Identical behaviour; you will meet both in existing code.\n\nBlade has directive forms too:\n\n```blade\n@lang('messages.welcome')\n@choice('messages.invoices', $count)\n```\n\n<b>Prefer `{{ __('...') }}`</b>, because `@lang` does not escape its output, and a translation string containing HTML is a translation string somebody can edit.\n\nAnd a detail that saves a surprise: <b>placeholder capitalisation is part of the placeholder.</b>\n\n```text\n:name    rajan\n:Name    Rajan\n:NAME    RAJAN\n```\n\nSame value, capitalised to match how you wrote it, which is what makes a string work at the start of a sentence without a second key.\n\nOne performance note, in case you were worried: <b>translation files are loaded lazily</b>, only when a key from that file is first read. Twenty locales and fifty files cost nothing on a request that touches none of them.",
+      diagram: `Three things, one idea
 
-                      Laravel
-                         │
-           ┌─────────────┴─────────────┐
-           ▼                           ▼
-     Blade + Livewire          JavaScript + Inertia
-           │                           │
-     server-driven                client-side UI
-           │                           │
-     PHP components          React / Vue / Svelte
+  Localization  →  multiple languages
+  Collections   →  transform data
+  Strings       →  clean manipulation
+  Helpers       →  common operations
+  Concurrency   →  parallel work
 
-
-  Livewire   browser → Blade → Livewire → Laravel → db
-  Inertia    browser → React → Inertia  → Laravel → db
-
-  Neither is an API. Both give a single-page feel with
-  no separate client, no tokens, no versioning, no CORS.
-  One deployment, talking to itself.
+  The goal is not to use every abstraction everywhere.
+  It is knowing when Laravel's version is clearer, and
+  when plain PHP already was.
 
 
-The one difference that matters
+Text that is not in the code
 
-  Where does the interface's STATE live?
+  English   "Welcome"
+  Japanese  "ようこそ"
+  Nepali    "स्वागत छ"
 
-  Livewire                    Inertia
-  ────────                    ───────
-  browser                     browser
-     ↓                           ↓
-  Livewire component          React state
-     ↓                           ↓
-  PHP state, ON THE SERVER    Inertia visit
-     ↓                           ↓
-  Laravel                     Laravel
+  Not conditionals scattered through views. Take the
+  text OUT of the code and look it up by key:
 
-  Livewire: the truth about what is in that search box
-  is a PHP property. The browser holds a rendering of
-  it. Type a character → a request → new HTML.
+    lang/
+    ├── en/messages.php
+    ├── ja/messages.php
+    └── ne/messages.php
 
-  Inertia: the truth is JavaScript state in the browser.
-  React owns it; Laravel is asked for data.
+    __('messages.welcome')
+    {{ __('messages.welcome') }}
 
-  Everything else follows. Livewire needs a round trip
-  and gives you PHP everywhere. Inertia is instant
-  locally and asks you to own a JavaScript application.
+      messages.welcome → the current locale → the text
+
+  Your code never asks which language it is. That
+  if (\$language === 'ja') is what localization deletes.
 
 
-Choosing
+Parameters
 
-  It depends on things that are not about Laravel:
-    team skills
-    how much of the UI is genuinely interactive
-    how much JavaScript you want to own
+  ❌ 'Welcome, ' . \$name
 
-  Livewire, when Laravel should own the application:
-    admin panels · dashboards · CRUD · forms
-    internal tools · data tables · a CMS
+  Fine in English. Wrong in a language that puts the
+  name first.
 
-    Mostly a database with an interface on it. Writing
-    those in React means rebuilding validation,
-    pagination and state Laravel already has.
+    'welcome' => 'Welcome, :name',
+    __('messages.welcome', ['name' => \$user->name])
 
-  Inertia, when the interface IS the product:
-    a SaaS dashboard · rich visualisation
-    highly interactive UI · a large component system
+  Each translation owns its own word order, and the code
+  passes VALUES rather than sentence fragments.
 
-    And when the team already writes React well.
+  A translation is a WHOLE SENTENCE. Concatenating two
+  translated pieces reads correctly in the language you
+  tested and awkwardly in the rest.
+
+
+Two file formats
+
+  PHP files                   JSON files
+  ─────────                   ──────────
+  __('messages.welcome')      __('Welcome')
+  a key, in a namespace       the English text IS the key
+
+  grouping and structure      nothing to invent
+  a missing translation       a missing translation
+    shows a raw key             shows readable English
+  renaming a key touches      changing the English text
+    every usage                 changes the key everywhere
+
+  Neither is wrong.
+
+    JSON  an interface written in English, translated after
+    PHP   long text, grouped, or edited by non-developers
+
+  Pick one per project. Both is legal and makes "where
+  is this string" a two-place question forever.
+
+
+  Blade ESCAPES translated output, like everything else.
+  A translation containing markup needs {!! !!} and the
+  Day 20 judgement about trust — which for a file in
+  your own repository it usually passes.`,
+      codeExample: {
+        title: "Language files and lookups",
+        code: `<?php
+// lang/en/messages.php
+
+return [
+    'welcome'  => 'Welcome',
+    'greeting' => 'Welcome, :name',
+
+    'invoice' => [
+        'created'  => 'Invoice :number created.',
+        'overdue'  => 'Invoice :number is overdue.',
+    ],
+];
+
+
+<?php
+// lang/ja/messages.php
+
+return [
+    'welcome'  => 'ようこそ',
+    'greeting' => ':name さん、ようこそ',
+
+    'invoice' => [
+        'created'  => '請求書 :number を作成しました。',
+        'overdue'  => '請求書 :number は期限切れです。',
+    ],
+];
+
+// Notice the greeting: Japanese puts the name first.
+// That is exactly why the placeholder lives in the
+// translation rather than in a concatenation.
+
+
+<?php
+// ---------- Using them ----------
+
+__('messages.welcome');
+
+__('messages.greeting', ['name' => $user->name]);
+
+// Nested keys use dots all the way down.
+__('messages.invoice.created', ['number' => $invoice->number]);
+?>
+
+{{-- In Blade --}}
+<h1>{{ __('messages.welcome') }}</h1>
+<p>{{ __('messages.greeting', ['name' => $user->name]) }}</p>
+
+{{-- Escaped, like everything else. A translation with
+     markup needs {!! !!} and the Day 20 judgement. --}}
+<p>{!! __('messages.terms_html') !!}</p>
+
+
+<?php
+// ---------- JSON translations ----------
+
+// lang/ja.json
+// {
+//     "Welcome": "ようこそ",
+//     "Dashboard": "ダッシュボード",
+//     "Welcome, :name": ":name さん、ようこそ"
+// }
+
+__('Welcome');
+__('Welcome, :name', ['name' => $user->name]);
+
+// The English text is the key. A missing translation
+// shows readable English rather than "messages.welcome".
+
+
+<?php
+// ---------- The rule that matters ----------
+
+// ❌ Two translated fragments. Reads correctly in the
+//    language you tested and awkwardly in the rest.
+echo __('messages.you_have') . ' ' . $count . ' ' . __('messages.invoices');
+
+// ✓ One sentence, with a placeholder.
+echo __('messages.you_have_invoices', ['count' => $count]);
+
+// A translation is a whole sentence. Word order is not
+// yours to decide once there is a second language.`,
+      },
+      keyTakeaways: [
+        "<b>Localization takes the text out of the code and looks it up by key</b>, so the code never asks which language it is.",
+        "Language files live under `lang/{locale}/`, returning an array of keys and translations.",
+        "<b>`__('messages.welcome')` resolves the key against the current locale</b>, and works the same in Blade.",
+        "<b>Placeholders belong in the translation</b>, as `:name`, so each language owns its own word order.",
+        "<b>A translation is a whole sentence</b>; concatenating translated fragments breaks in other languages.",
+        "<b>JSON files key translations by the English text itself</b>, so `__('Welcome')` needs no key invented.",
+        "<b>PHP files give grouping and structure; JSON gives readable fallback text</b> when a translation is missing.",
+        "Pick one format per project, because using both makes finding a string a two-place question.",
+        "<b>Blade escapes translated output</b>, so a translation containing markup needs `{!! !!}` and a trust judgement.",
+      ],
+      commonMistakes: [
+        "<b>Branching on the language in your views.</b> That conditional is what localization exists to remove.",
+        "<b>Concatenating a translated string with a value.</b> Word order differs, so the placeholder goes in the translation.",
+        "<b>Joining two translated fragments into a sentence.</b> It reads correctly only in the language you tested.",
+        "<b>Mixing PHP and JSON translations in one project.</b> Every string is then in one of two places.",
+        "<b>Putting markup in a translation and forgetting it is escaped.</b> The tags appear as text.",
+      ],
+      quiz: [
+        {
+          question: "What does `__('messages.welcome')` do?",
+          options: [
+            "Returns the English text",
+            "Looks the key up in the current locale's language file",
+            "Sets the locale",
+            "Escapes the string",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why the code never has to know which language is active.",
+        },
+        {
+          question: "Why should a placeholder live in the translation rather than in a concatenation?",
+          options: [
+            "It is shorter",
+            "Word order differs between languages, so each translation must own it",
+            "Concatenation is slower",
+            "Blade cannot concatenate",
+          ],
+          correctIndex: 1,
+          explanation: "Japanese puts the name before the greeting; English does not.",
+        },
+        {
+          question: "What is the practical difference between PHP and JSON translation files?",
+          options: [
+            "JSON is faster",
+            "JSON uses the English text as the key, so a missing translation shows readable English",
+            "PHP files cannot take parameters",
+            "JSON supports more languages",
+          ],
+          correctIndex: 1,
+          explanation: "PHP files give grouping and structure instead.",
+        },
+        {
+          question: "What happens to a translation containing HTML in `{{ __('...') }}`?",
+          options: [
+            "It renders as HTML",
+            "It is escaped and the tags appear as text",
+            "Blade strips the tags",
+            "It throws",
+          ],
+          correctIndex: 1,
+          explanation: "Blade escapes translated output like any other output.",
+        },
+      ],
+    },
+    {
+      id: "pluralization-and-locale",
+      title: "Pluralization, setting & detecting the locale",
+      durationMinutes: 11,
+      explanation: "Counting things in more than one language, and deciding which language you are in.\n\n---\n\n### 1. Basic — plurals\n\n```text\n1 post\n5 posts\n```\n\nThe obvious version:\n\n```php\nif ($count === 1) { echo 'post'; } else { echo 'posts'; }\n```\n\nwhich works in English and stops working immediately. <b>Plural rules are a property of the language</b>, and they differ: some languages have one form, some have two, several have three or more, and the rules are not \"is it 1\".\n\nSo the count belongs in the translation:\n\n```php\n'posts' => '{0} No posts|{1} One post|[2,*] :count posts',\n```\n\n```php\ntrans_choice('messages.posts', $count, ['count' => $count]);\n```\n\n```text\n0  →  No posts\n1  →  One post\n5  →  5 posts\n```\n\n<b>The pipe separates forms and the prefix selects one</b>: exact values in braces, ranges in brackets. A translator for another language writes however many forms that language needs, without your code changing.\n\n`trans_choice()` is what you will see in existing applications, and worth recognising for that reason alone.\n\n---\n\n### 2. Intermediate — setting the locale\n\n```php\nApp::setLocale('ja');\n```\n\n```text\nsetLocale('ja')\n      ↓\ncurrent locale = ja\n      ↓\n__('messages.welcome')\n      ↓\nようこそ\n```\n\nIt applies to the current request only, which is exactly right: the locale is a property of who is asking, not of the application.\n\n<b>Which means it has to be set on every request</b>, and the natural place is middleware, before anything renders.\n\n---\n\n### 3. Advanced — deciding which locale\n\nSeveral sources, and they disagree:\n\n```text\nthe user's saved preference\nthe URL\nthe session\nthe Accept-Language header\nthe default\n```\n\n<b>The order matters more than the mechanism:</b>\n\n```text\n1. what the user explicitly chose\n2. the URL or an application setting\n3. the browser's preference\n4. the fallback\n```\n\nAnd the rule underneath: <b>an explicit choice beats a detected one.</b> Somebody who switched your site to English on a Japanese laptop chose English, and re-detecting Japanese on the next page is the application overruling them. It is a small thing that feels broken.\n\n<b>A fallback locale</b> catches what is missing:\n\n```text\nja\n ↓\nno translation for this key\n ↓\nen\n ↓\nthe English text\n```\n\nWithout it, an incomplete translation file shows raw keys, so a half-translated page reads `messages.invoice.overdue` where a sentence should be. With it, that line is in English and the page still makes sense.\n\nThree practical notes.\n\n<b>Putting the locale in the URL is worth it</b> if pages should be linkable and indexable per language. `/ja/invoices` can be shared and cached; a session-only locale cannot.\n\n<b>Locale is not only text.</b> Dates, numbers and currency have formats too, and a translated interface showing `09/01/2026` to a reader who expects `2026-09-01` is only half-localised.\n\n<b>And translation keys need finding.</b> `php artisan lang:missing`-style tooling, or a test that loads every key referenced in your views, is what stops a language file drifting behind the interface.\n\nReading the locale back, as well as setting it:\n\n```php\nApp::getLocale();          // 'ja'\nApp::isLocale('ja');       // true\nApp::currentLocale();\n```\n\n<b>`isLocale()` is the one for a conditional</b>, where a string comparison against `getLocale()` is what people write instead.\n\nAnd the defaults have env keys, not just config entries:\n\n```text\nAPP_LOCALE=en\nAPP_FALLBACK_LOCALE=en\nAPP_FAKER_LOCALE=en_GB\n```\n\n<b>The fallback is what saves a half-translated locale</b>: a key missing from `ja` falls back to `en` rather than rendering the raw key at somebody.",
+      diagram: `Plurals
+
+  1 post · 5 posts
+
+  ❌ if (\$count === 1) 'post' else 'posts'
+
+  Works in English. Stops working immediately.
+
+  Plural rules are a property of the LANGUAGE: some have
+  one form, some two, several three or more, and the
+  rule is not "is it 1".
+
+    'posts' => '{0} No posts|{1} One post|[2,*] :count posts'
+
+    trans_choice('messages.posts', \$count, ['count' => \$count])
+
+      0 → No posts
+      1 → One post
+      5 → 5 posts
+
+  The pipe separates forms; the prefix selects one.
+  Exact values in braces, ranges in brackets.
+
+  A translator writes however many forms their language
+  needs, with no change to your code.
+
+
+Setting the locale
+
+    App::setLocale('ja')
+          ↓
+    current locale = ja
+          ↓
+    __('messages.welcome')  →  ようこそ
+
+  It applies to the CURRENT REQUEST, which is right:
+  the locale belongs to who is asking, not to the
+  application.
+
+  So it must be set on every request — middleware,
+  before anything renders.
+
+
+Deciding which locale
+
+  Sources, and they disagree:
+
+    the user's saved preference
+    the URL
+    the session
+    the Accept-Language header
+    the default
+
+  Order matters more than mechanism:
+
+    1. what the user explicitly CHOSE
+    2. the URL or an application setting
+    3. the browser's preference
+    4. the fallback
+
+  An explicit choice beats a detected one. Somebody who
+  switched to English on a Japanese laptop chose English.
+  Re-detecting Japanese on the next page is the
+  application overruling them, and it feels broken.
+
+
+Fallback
+
+    ja
+     ↓
+    no translation for this key
+     ↓
+    en
+     ↓
+    the English text
+
+  Without it, an incomplete file shows raw keys, so a
+  half-translated page reads messages.invoice.overdue
+  where a sentence should be.
+
+
+Three practical notes
+
+  The locale in the URL is worth it if pages should be
+  linkable and indexable per language. /ja/invoices can
+  be shared and cached; a session-only locale cannot.
+
+  Locale is not only TEXT. Dates, numbers and currency
+  have formats too. A translated page showing 09/01/2026
+  to someone expecting 2026-09-01 is half-localised.
+
+  Translation keys need finding. Tooling, or a test that
+  loads every key your views reference, is what stops a
+  language file drifting behind the interface.`,
+      codeExample: {
+        title: "Plurals, and choosing a locale per request",
+        code: `<?php
+// ---------- Plurals ----------
+
+// lang/en/messages.php
+return [
+    'posts'    => '{0} No posts|{1} One post|[2,*] :count posts',
+    'invoices' => '{0} No invoices|{1} 1 invoice|[2,*] :count invoices',
+];
+
+// lang/ja/messages.php
+return [
+    // Japanese has one form. The translator decides that,
+    // not your code.
+    'posts' => ':count 件の投稿',
+];
+
+
+<?php
+trans_choice('messages.posts', 0);   // No posts
+trans_choice('messages.posts', 1);   // One post
+trans_choice('messages.posts', 5, ['count' => 5]);   // 5 posts
+
+// The pipe separates forms.
+// {0} {1}   exact values
+// [2,*]     a range
+
+
+<?php
+// ---------- Setting it, per request ----------
+
+// app/Http/Middleware/SetLocale.php
+
+namespace App\\Http\\Middleware;
+
+use Closure;
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\App;
+
+class SetLocale
+{
+    public function handle(Request $request, Closure $next)
+    {
+        App::setLocale($this->resolve($request));
+
+        return $next($request);
+    }
+
+    protected function resolve(Request $request): string
+    {
+        $supported = ['en', 'ja', 'ne'];
+
+        // 1. What the user explicitly chose. An explicit
+        //    choice beats a detected one, always.
+        if ($locale = $request->user()?->locale) {
+            return $locale;
+        }
+
+        // 2. The URL, or a session set by a language switcher.
+        if (in_array($request->segment(1), $supported, true)) {
+            return $request->segment(1);
+        }
+
+        if ($locale = $request->session()->get('locale')) {
+            return $locale;
+        }
+
+        // 3. The browser's preference, whitelisted.
+        if ($locale = $request->getPreferredLanguage($supported)) {
+            return $locale;
+        }
+
+        // 4. The fallback.
+        return config('app.fallback_locale');
+    }
+}
+
+
+<?php
+// config/app.php
+
+'locale'          => 'en',
+'fallback_locale' => 'en',
+
+// Without a fallback, a half-translated page shows
+// "messages.invoice.overdue" where a sentence should be.
+
+
+<?php
+// ---------- The language switcher ----------
+
+Route::post('/locale', function (Request $request) {
+    $request->validate([
+        'locale' => ['required', 'in:en,ja,ne'],
+    ]);
+
+    // Save it against the user when there is one, so the
+    // choice survives the next device.
+    $request->user()?->update(['locale' => $request->locale]);
+
+    $request->session()->put('locale', $request->locale);
+
+    return back();
+});
+
+
+<?php
+// ---------- Locale is not only text ----------
+
+// A translated page showing dates in the wrong format is
+// only half localised.
+$invoice->created_at
+    ->locale(app()->getLocale())
+    ->isoFormat('LL');
+
+Number::currency($invoice->total, in: 'JPY', locale: app()->getLocale());`,
+      },
+      keyTakeaways: [
+        "<b>Plural rules are a property of the language</b>, and \"is it 1\" is only the English rule.",
+        "<b>The count belongs in the translation</b>, with forms separated by pipes and selected by `{0}`, `{1}` or `[2,*]`.",
+        "`trans_choice()` picks the right form, and appears throughout existing Laravel applications.",
+        "<b>`App::setLocale()` applies to the current request</b>, because the locale belongs to who is asking.",
+        "<b>It has to be set on every request</b>, which means middleware, before anything renders.",
+        "<b>An explicit user choice beats a detected one</b>, always: re-detecting overrules somebody who already chose.",
+        "The usual order is saved preference, then URL or session, then the browser, then the fallback.",
+        "<b>A fallback locale stops a half-translated page showing raw keys</b>, which is what missing translations do.",
+        "<b>Putting the locale in the URL makes pages linkable and cacheable per language.</b>",
+        "<b>Locale is not only text</b>: dates, numbers and currency have formats too.",
+      ],
+      commonMistakes: [
+        "<b>Branching on the count in PHP.</b> That encodes the English plural rule into your application.",
+        "<b>Detecting the locale on every request and ignoring a saved preference.</b> The user's choice is silently overruled.",
+        "<b>Trusting `Accept-Language` without a whitelist.</b> A header value should not select an arbitrary file.",
+        "<b>Leaving the fallback locale unset.</b> A missing key renders as a raw key in the interface.",
+        "<b>Translating the text and leaving dates in one format.</b> The page is half localised and looks it.",
+      ],
+      quiz: [
+        {
+          question: "Why not write `if ($count === 1)` for pluralization?",
+          options: [
+            "It is slower",
+            "Plural rules differ by language, and \"is it 1\" is only the English rule",
+            "Laravel forbids it",
+            "It cannot be translated",
+          ],
+          correctIndex: 1,
+          explanation: "Several languages have three or more forms.",
+        },
+        {
+          question: "Where should the locale be set?",
+          options: [
+            "In `config/app.php` only",
+            "Per request, usually in middleware, because it belongs to who is asking",
+            "In the model",
+            "At deploy time",
+          ],
+          correctIndex: 1,
+          explanation: "`App::setLocale()` applies to the current request.",
+        },
+        {
+          question: "Which source of locale should win?",
+          options: [
+            "The `Accept-Language` header",
+            "The user's explicit choice",
+            "The server default",
+            "Whichever is checked first",
+          ],
+          correctIndex: 1,
+          explanation: "Re-detecting overrules somebody who already told you.",
+        },
+        {
+          question: "What does a fallback locale prevent?",
+          options: [
+            "A 500 error",
+            "Missing translations rendering as raw keys in the interface",
+            "The wrong date format",
+            "An invalid locale being set",
+          ],
+          correctIndex: 1,
+          explanation: "A half-translated page then reads in English rather than in keys.",
+        },
+      ],
+    },
+    {
+      id: "collections-core",
+      title: "Collections — map, filter, reduce & pluck",
+      durationMinutes: 12,
+      explanation: "You have used collections since Day 14. This is the part that changes how code reads.\n\n---\n\n### 1. Basic — a pipeline instead of a loop\n\n```php\n$users\n    ->filter(...)\n    ->map(...)\n    ->sortBy(...);\n```\n\n```text\nCollection → transform → filter → group → sort → result\n```\n\nEach step does one thing and hands the result to the next, so the shape of the transformation is visible without reading any bodies.\n\n<b>`map()` transforms every item:</b>\n\n```php\n$names = $users->map(fn ($user) => $user->name);\n```\n\n```text\nA → f(A)\nB → f(B)\nC → f(C)\n```\n\nSame number of items, different contents.\n\n<b>`filter()` keeps the ones that pass:</b>\n\n```php\n$active = $users->filter(fn ($user) => $user->active);\n```\n\n```text\nA ✓    A\nB ✗ →  C\nC ✓\nD ✗\n```\n\nFewer items, unchanged contents.\n\n<b>Those two together are most of what you will write</b>, and knowing which one you want is the entire skill: are you changing each item, or removing some?\n\n---\n\n### 2. Intermediate — reduce and pluck\n\n<b>`reduce()` collapses many values into one:</b>\n\n```php\n$total = $orders->reduce(fn ($total, $order) => $total + $order->amount, 0);\n```\n\n```text\n100 + 200 + 300  →  600\n```\n\nThe second argument is the starting value, and forgetting it is the usual bug: without it the first call receives `null`.\n\nFor a plain sum there is a shorter way, and it is clearer:\n\n```php\n$orders->sum('amount');\n```\n\n<b>Reach for `reduce()` when the result is not a number</b>: building a keyed structure, or folding items into an object.\n\n<b>`pluck()` extracts one field:</b>\n\n```php\n$names = $users->pluck('name');\n```\n\nagainst the version everybody writes first:\n\n```php\n$names = [];\nforeach ($users as $user) { $names[] = $user->name; }\n```\n\nSame output, and the first one says what it is doing. `pluck('name', 'id')` keys the result, which is how you build a lookup table in one line.\n\n---\n\n### 3. Advanced — the trap that matters\n\n<b>A collection method runs in PHP; a query method runs in the database.</b> Day 16 said this, and it is worth repeating because collections make it so easy to get wrong:\n\n```text\nUser::where('active', true)->get()      the database filters, 240 rows\nUser::all()->filter(...)               900 rows fetched, PHP discards 660\n```\n\nBoth give the same answer. <b>If the condition can be a `WHERE` clause, it belongs in the query.</b>\n\nThe same applies to `sum()`, `count()` and `groupBy()`: `withSum()` in the query beats summing a loaded collection every time.\n\nThree more things worth knowing.\n\n<b>Collections are immutable.</b> `filter()` returns a new collection and leaves the original alone, which is why a chain is safe and why forgetting to assign the result produces \"nothing happened\".\n\n<b>`filter()` preserves keys.</b> After filtering, the keys are `0, 2, 5`, and `json_encode` turns that into an object rather than an array. `->values()` is the fix, and the symptom is an API returning `{\"0\": …}` instead of `[…]`.\n\n<b>And a chain is not free.</b> Each step iterates the whole collection, so five steps over ten thousand items is fifty thousand iterations. Fine almost always, and worth knowing when it is not.",
+      diagram: `A pipeline instead of a loop
+
+  \$users->filter(...)->map(...)->sortBy(...)
+
+    Collection → transform → filter → group → sort → result
+
+  Each step does one thing and hands on the result, so
+  the shape of the transformation is visible without
+  reading any bodies.
+
+
+  map()      transform every item
+
+    A → f(A)          same number of items
+    B → f(B)          different contents
+    C → f(C)
+
+  filter()   keep the ones that pass
+
+    A ✓        A       fewer items
+    B ✗   →    C       unchanged contents
+    C ✓
+    D ✗
+
+  Those two are most of what you write, and the whole
+  skill is knowing which you want: are you CHANGING each
+  item, or REMOVING some?
+
+
+reduce and pluck
+
+  \$orders->reduce(fn (\$total, \$o) => \$total + \$o->amount, 0)
+
+    100 + 200 + 300  →  600
+
+  The second argument is the starting value. Forgetting
+  it is the usual bug: the first call gets null.
+
+  For a plain sum, ->sum('amount') is shorter and clearer.
+  Reach for reduce() when the result is NOT a number:
+  a keyed structure, or folding into an object.
+
+  \$users->pluck('name')
+
+    against the version everybody writes first:
+
+      \$names = [];
+      foreach (\$users as \$user) { \$names[] = \$user->name; }
+
+  Same output. One of them says what it is doing.
+  pluck('name', 'id') keys the result — a lookup table
+  in one line.
+
+
+The trap that matters
+
+  A collection method runs in PHP.
+  A query method runs in the DATABASE.
+
+    User::where('active', true)->get()
+        the database filters, 240 rows come back
+
+    User::all()->filter(...)
+        900 rows fetched, PHP discards 660
+
+  Same answer. If the condition can be a WHERE clause,
+  it belongs in the query. Same for sum, count and
+  groupBy — withSum() beats summing a loaded collection.
+
+
+Three more things
+
+  Collections are IMMUTABLE. filter() returns a new one
+  and leaves the original alone — which is why chains
+  are safe, and why forgetting to assign the result
+  looks like "nothing happened".
+
+  filter() PRESERVES KEYS. Afterwards they are 0, 2, 5,
+  and json_encode turns that into an object. ->values()
+  is the fix. The symptom is an API returning
+  {"0": …} instead of […].
+
+  A chain is not free. Each step iterates the whole
+  collection: five steps over ten thousand items is
+  fifty thousand iterations. Fine almost always.`,
+      codeExample: {
+        title: "The four you will use most",
+        code: `<?php
+
+// ---------- map: change every item ----------
+
+$names = $users->map(fn ($user) => $user->name);
+
+$rows = $invoices->map(fn ($invoice) => [
+    'number' => $invoice->number,
+    'total'  => $invoice->total->format(),
+]);
+
+
+// ---------- filter: keep some ----------
+
+$active = $users->filter(fn ($user) => $user->active);
+
+// ⚠️ Keys are preserved: 0, 2, 5. json_encode makes that
+//    an object. ->values() reindexes.
+$active = $users->filter(fn ($user) => $user->active)->values();
+
+// The higher-order form, when the test is a property:
+$active = $users->filter->active;
+
+
+// ---------- reduce: many into one ----------
+
+$total = $orders->reduce(
+    fn ($carry, $order) => $carry + $order->amount,
+    0,          // ⚠️ without this, the first call gets null
+);
+
+// For a plain sum, this is shorter and clearer:
+$total = $orders->sum('amount');
+
+// reduce() earns its place when the result is not a number:
+$byStatus = $invoices->reduce(function (array $carry, $invoice) {
+    $carry[$invoice->status] ??= 0;
+    $carry[$invoice->status] += $invoice->total;
+
+    return $carry;
+}, []);
+
+
+// ---------- pluck: one field ----------
+
+$names = $users->pluck('name');
+
+// Keyed: a lookup table in one line.
+$namesById = $users->pluck('name', 'id');
+// [1 => 'Rajan', 2 => 'Alice']
+
+// Nested with dots.
+$countries = $users->pluck('profile.country');
+
+
+<?php
+// ---------- The trap ----------
+
+// ❌ 900 rows fetched, and PHP throws 660 away.
+User::all()->filter(fn ($user) => $user->active);
+
+// ✓ The database filters. 240 rows come back.
+User::where('active', true)->get();
+
+// ❌ Every invoice loaded to add up one column.
+Invoice::all()->sum('total');
+
+// ✓ One query, one number.
+Invoice::sum('total');
+
+// ✓ And per customer, without loading any invoices:
+Customer::withSum('invoices', 'total')->get();
+
+
+<?php
+// ---------- Immutability ----------
+
+$users->filter(fn ($user) => $user->active);
+
+// $users is unchanged. This line did nothing.
+
+$active = $users->filter(fn ($user) => $user->active);
+
+// Which is also why a chain is safe: no step mutates
+// what came before it.`,
+      },
+      keyTakeaways: [
+        "<b>A collection chain shows the shape of a transformation</b> without you reading the bodies.",
+        "<b>`map()` changes every item and keeps the count; `filter()` keeps some and leaves them unchanged.</b>",
+        "Knowing which of those two you want is most of the skill.",
+        "<b>`reduce()` collapses many values into one</b>, and its second argument is the starting value.",
+        "For a plain sum, `sum()` is shorter and clearer; `reduce()` earns its place when the result is a structure.",
+        "<b>`pluck()` extracts one field</b>, and `pluck('name', 'id')` builds a keyed lookup in a line.",
+        "<b>A collection method runs in PHP; a query method runs in the database.</b>",
+        "<b>If a condition can be a `WHERE` clause, it belongs in the query</b>, and the same goes for sums and counts.",
+        "<b>Collections are immutable</b>, so forgetting to assign the result looks like nothing happened.",
+        "<b>`filter()` preserves keys</b>, which turns a JSON array into an object; `values()` is the fix.",
+      ],
+      commonMistakes: [
+        "<b>Calling `all()` and filtering in PHP.</b> Every row is fetched and most are discarded.",
+        "<b>Omitting `reduce()`'s initial value.</b> The first iteration receives `null` and the arithmetic breaks.",
+        "<b>Forgetting `values()` after `filter()`.</b> The JSON response becomes an object keyed by index.",
+        "<b>Not assigning the result of a chain.</b> Collections are immutable, so the original is untouched.",
+        "<b>Using `reduce()` for a sum.</b> `sum()` says the same thing in one word.",
+      ],
+      quiz: [
+        {
+          question: "What is the difference between `map()` and `filter()`?",
+          options: [
+            "None",
+            "`map()` changes every item; `filter()` removes some and leaves the rest unchanged",
+            "`filter()` is faster",
+            "`map()` returns an array",
+          ],
+          correctIndex: 1,
+          explanation: "Changing each item, or removing some: that is the question.",
+        },
+        {
+          question: "What is wrong with `User::all()->filter(fn ($u) => $u->active)`?",
+          options: [
+            "Nothing",
+            "Every row is fetched and PHP discards most of them; the database should filter",
+            "`filter()` does not work on models",
+            "It returns an array",
+          ],
+          correctIndex: 1,
+          explanation: "If the condition can be a `WHERE` clause, it belongs in the query.",
+        },
+        {
+          question: "Why does a filtered collection sometimes serialise as a JSON object?",
+          options: [
+            "A cast is missing",
+            "`filter()` preserves keys, so the indexes are no longer sequential",
+            "Collections always serialise as objects",
+            "It is a bug",
+          ],
+          correctIndex: 1,
+          explanation: "`->values()` reindexes and restores the array shape.",
+        },
+        {
+          question: "What does `reduce()`'s second argument do?",
+          options: [
+            "Sets the key",
+            "Provides the starting value, without which the first call receives `null`",
+            "Limits the iterations",
+            "Chooses the field",
+          ],
+          correctIndex: 1,
+          explanation: "Forgetting it is the usual `reduce()` bug.",
+        },
+      ],
+    },
+    {
+      id: "grouping-and-higher-order",
+      title: "groupBy, sortBy, each, when & higher-order messages",
+      durationMinutes: 11,
+      explanation: "The methods that turn a list into a report, and the syntax that makes short chains readable.\n\n---\n\n### 1. Basic — grouping and sorting\n\n<b>`groupBy()` turns a flat list into a keyed structure:</b>\n\n```php\n$groups = $users->groupBy('department');\n```\n\n```text\nengineering\n ├── User A\n └── User C\n\nsales\n └── User B\n```\n\nWhich is the shape every report wants: totals per customer, invoices per month, orders per status. And it takes a closure when the key is derived rather than a column:\n\n```php\n$users->groupBy(fn ($user) => $user->created_at->format('Y-m'));\n```\n\n<b>`sortBy()` sorts by a field or a computed value:</b>\n\n```php\n$users->sortBy('name');\n$users->sortBy(fn ($user) => $user->created_at);\n$users->sortByDesc('created_at');\n```\n\nAnd the reminder from the last lesson: <b>sorting and grouping in the database is usually better</b>, because `orderBy()` uses an index and `sortBy()` reads every row first. Sort in PHP when the value is not a column, and in the query when it is.\n\n---\n\n### 2. Intermediate — `each()` and `when()`\n\n```php\n$users->each(fn ($user) => $user->notify(...));\n```\n\n<b>`each()` is for side effects</b>, and that is the whole distinction:\n\n```text\nmap()   transform data, return something new\neach()  do something, return nothing useful\n```\n\nUsing `each()` to build a result, by pushing into an outer array, is a `map()` written the long way. And using `map()` for a side effect works and misleads the reader, because a `map()` implies its result is the point.\n\n<b>`when()` applies part of a chain conditionally:</b>\n\n```php\n$posts->when($search, fn ($posts) => $posts->filter(...));\n```\n\n```text\ncondition?\n ├── true  → run the callback\n └── false → carry on unchanged\n```\n\nThe same shape as Day 13's query `when()`, and for the same reason: it keeps an optional step inside the chain rather than breaking it with an `if`.\n\n---\n\n### 3. Advanced — higher-order messages\n\n```php\n$users->each->notify();\n```\n\ninstead of:\n\n```php\n$users->each(fn ($user) => $user->notify());\n```\n\n<b>The collection forwards the call to every item.</b> It works on `each`, `map`, `filter`, `sum`, `sortBy` and several others:\n\n```text\n$users->filter->active\n$invoices->sum->total\n$posts->map->title\n$users->each->notify()\n```\n\nAnd `$users->filter->active` is the line worth looking at, because of what it says:\n\n```text\nforeach ($users as $user) {\n    if ($user->active) { ... }\n}\n```\n\ndescribes the mechanism. `$users->filter->active` describes the intention: <b>give me the active users.</b>\n\nThat is the actual point of this whole lesson. <b>Code that says what you want beats code that says how to get it</b>, and the closure version sits in between.\n\nTwo cautions, because this is easy to overdo.\n\n<b>It only works for a bare property or a no-argument method.</b> Anything else needs the closure, and half a chain in higher-order form with the rest in closures reads worse than either.\n\n<b>And a chain is not automatically clearer than a loop.</b> A five-step chain with three closures spanning twenty lines is harder to follow than the `foreach` it replaced. Use a chain when the pipeline is the point, and a loop when the control flow is.",
+      diagram: `Grouping and sorting
+
+  \$users->groupBy('department')
+
+    engineering            The shape every report wants:
+     ├── User A            totals per customer, invoices
+     └── User C            per month, orders per status
+    sales
+     └── User B
+
+  With a closure, when the key is derived:
+
+    groupBy(fn (\$u) => \$u->created_at->format('Y-m'))
+
+  \$users->sortBy('name')
+  \$users->sortBy(fn (\$u) => \$u->created_at)
+  \$users->sortByDesc('created_at')
+
+  ⚠️  Sorting and grouping in the DATABASE is usually
+      better: orderBy() uses an index, sortBy() reads
+      every row first.
+
+      Sort in PHP when the value is not a column.
+
+
+each() and when()
+
+  \$users->each(fn (\$user) => \$user->notify(...))
+
+    map()   transform data, return something new
+    each()  do something, return nothing useful
+
+  Using each() to build a result by pushing into an
+  outer array is a map() written the long way.
+  Using map() for a side effect works and misleads:
+  a map() implies its result is the point.
+
+  \$posts->when(\$search, fn (\$posts) => \$posts->filter(...))
+
+    condition?
+     ├── true  → run the callback
+     └── false → carry on unchanged
+
+  Same shape as Day 13's query when(), for the same
+  reason: an optional step stays inside the chain.
+
+
+Higher-order messages
+
+  \$users->each->notify()
+
+  instead of
+
+  \$users->each(fn (\$user) => \$user->notify())
+
+  The collection forwards the call to every item:
+
+    \$users->filter->active
+    \$invoices->sum->total
+    \$posts->map->title
+    \$users->each->notify()
+
+
+  And this is the line worth looking at:
+
+    foreach (\$users as \$user) {
+        if (\$user->active) { ... }
+    }
+        describes the MECHANISM
+
+    \$users->filter->active
+        describes the INTENTION: give me the active users
+
+  Which is the point of the whole lesson. Code that says
+  what you WANT beats code that says how to get it. The
+  closure version sits in between.
 
 
 Two cautions
 
-  Livewire's round trip is real. Every interaction is a
-  request, so reacting to each keystroke is a request
-  per keystroke. The fixes are debouncing and doing less,
-  not a different framework.
+  It only works for a bare property or a no-argument
+  method. Anything else needs the closure, and half a
+  chain in each style reads worse than either.
 
-  Inertia IS a JavaScript application: a build step, a
-  component tree, client state. A real cost when the
-  page is a table with a filter.
+  A chain is not automatically clearer than a loop. Five
+  steps with three closures over twenty lines is harder
+  to follow than the foreach it replaced.
 
-
-  And you can use BOTH, on different pages of one app.
-  Laravel underneath is identical.`,
+    the pipeline is the point   → a chain
+    the control flow is         → a loop`,
       codeExample: {
-        title: "The same page, two ways",
+        title: "Reports, conditionals and intention",
         code: `<?php
-// ---------- Livewire: the state is a PHP property ----------
 
-// app/Livewire/SearchPosts.php
+// ---------- Grouping: the shape of a report ----------
 
-namespace App\\Livewire;
+$byDepartment = $users->groupBy('department');
 
-use App\\Models\\Post;
-use Livewire\\Component;
+// engineering => [User A, User C]
+// sales       => [User B]
 
-class SearchPosts extends Component
-{
-    // The truth about what is in the search box.
-    public string $search = '';
+// A derived key.
+$byMonth = $invoices->groupBy(
+    fn ($invoice) => $invoice->created_at->format('Y-m')
+);
 
-    public function render()
-    {
-        return view('livewire.search-posts', [
-            'posts' => Post::where('title', 'like', "%{$this->search}%")
-                ->paginate(10),
-        ]);
-    }
-}
-?>
-
-{{-- resources/views/livewire/search-posts.blade.php --}}
-
-<div>
-    <input wire:model.live="search" placeholder="Search posts">
-
-    @foreach ($posts as $post)
-        <p>{{ $post->title }}</p>
-    @endforeach
-
-    {{ $posts->links() }}
-</div>
-
-{{-- Type a character → a request → PHP re-renders → new HTML --}}
+// Grouped, then summarised.
+$totals = $invoices
+    ->groupBy('customer_id')
+    ->map(fn ($group) => $group->sum('total'));
 
 
-<?php
-// ---------- Inertia: the state is React state ----------
+// ---------- Sorting ----------
 
-// app/Http/Controllers/PostController.php
+$users->sortBy('name');
+$users->sortByDesc('created_at');
+$users->sortBy(fn ($user) => $user->invoices->count());
 
-public function index(Request $request)
-{
-    return Inertia::render('Posts/Index', [
-        'posts'   => PostResource::collection(
-            Post::where('title', 'like', "%{$request->search}%")->paginate(10)
-        ),
-        'filters' => $request->only('search'),
-    ]);
-}
-?>
-
-// resources/js/pages/Posts/Index.tsx
-
-import { useState } from 'react';
-import { router } from '@inertiajs/react';
-
-export default function Index({ posts, filters }) {
-    // The truth about what is in the search box.
-    const [search, setSearch] = useState(filters.search ?? '');
-
-    return (
-        <div>
-            <input
-                value={search}
-                onChange={(e) => {
-                    setSearch(e.target.value);
-                    router.get('/posts', { search: e.target.value },
-                        { preserveState: true, replace: true });
-                }}
-            />
-
-            {posts.data.map((post) => <p key={post.id}>{post.title}</p>)}
-        </div>
-    );
-}
-
-// Typing updates React instantly. Laravel is asked for
-// data, not for the interface.
+// ⚠️ The last one loads every user's invoices. In the
+//    query it is one line and no N+1:
+User::withCount('invoices')->orderByDesc('invoices_count')->get();
 
 
-<?php
-// ---------- What is identical in both ----------
+// ---------- each: for side effects ----------
 
-// routes, controllers, validation, policies, Eloquent,
-// migrations, jobs, mail — every day of this track so far.
-//
-// Only the last step differs: a Blade view driven by
-// Livewire, or a component driven by Inertia.
-//
-// Which is why the two can live in one application,
-// on different pages.`,
-      },
-      keyTakeaways: [
-        "<b>Laravel offers two frontend paths: Blade with Livewire, and a JavaScript framework with Inertia.</b>",
-        "<b>Livewire keeps you in PHP</b>, with Blade templates and minimal JavaScript.",
-        "<b>Inertia keeps Laravel's routes, controllers and validation</b>, and replaces the views with components.",
-        "<b>Neither is an API</b>: no separate client, no tokens, no versioning, no CORS.",
-        "<b>The difference that matters is where the interface's state lives.</b>",
-        "<b>In Livewire the state is a PHP property on the server</b>, and the browser holds a rendering of it.",
-        "<b>In Inertia the state is JavaScript state in the browser</b>, and Laravel is asked for data.",
-        "<b>Livewire fits work that is mostly a database with an interface</b>: admin panels, CRUD, internal tools.",
-        "<b>Inertia fits when the interface is the product</b>, or when the team already writes React well.",
-        "<b>Livewire's round trip is real</b>, so per-keystroke interactivity is a request per keystroke.",
-        "<b>Inertia is a JavaScript application</b>, with the build step and client state that implies.",
-        "<b>Both can be used in one application on different pages</b>, because Laravel underneath is identical.",
-      ],
-      commonMistakes: [
-        "<b>Treating this as an API decision.</b> Neither approach needs the API you built yesterday.",
-        "<b>Choosing by fashion rather than by team.</b> The unfamiliar option is the expensive one, whichever it is.",
-        "<b>Building an admin CRUD screen in React.</b> You rebuild validation, pagination and state Laravel already has.",
-        "<b>Reaching for Livewire on a highly interactive interface.</b> Every interaction becomes a round trip.",
-        "<b>Assuming you must pick one for the whole application.</b> Different pages can use different approaches.",
-      ],
-      quiz: [
-        {
-          question: "What is the core difference between Livewire and Inertia?",
-          options: [
-            "One is faster",
-            "Where the interface's state lives: a PHP property on the server, or JavaScript state in the browser",
-            "Inertia requires an API",
-            "Livewire cannot paginate",
-          ],
-          correctIndex: 1,
-          explanation: "Everything else you notice follows from that.",
-        },
-        {
-          question: "Does Inertia require you to build a REST API?",
-          options: [
-            "Yes, it consumes one",
-            "No; Laravel's routes and controllers return pages with props",
-            "Only for forms",
-            "Only in production",
-          ],
-          correctIndex: 1,
-          explanation: "That is the point of it: a SPA feel without a separate API.",
-        },
-        {
-          question: "Which kind of application suits Livewire best?",
-          options: [
-            "A highly interactive data visualisation tool",
-            "An admin panel or CRUD-heavy internal tool",
-            "A public marketing site",
-            "A mobile application",
-          ],
-          correctIndex: 1,
-          explanation: "Mostly a database with an interface, where Laravel already has the pieces.",
-        },
-        {
-          question: "What is the cost of Livewire's model?",
-          options: [
-            "It cannot validate",
-            "Every interaction is a server round trip",
-            "It requires a build step",
-            "It needs a separate deployment",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why per-keystroke updates need debouncing.",
-        },
-      ],
-    },
-    {
-      id: "vite-and-tailwind",
-      title: "Vite, hot reload & asset versioning",
-      durationMinutes: 11,
-      explanation: "Both paths need the same thing underneath: something that turns your CSS and JavaScript into files a browser can use.\n\n---\n\n### 1. Basic — what Vite is for\n\n```text\nresources/\n├── css/app.css\n└── js/app.js\n```\n\nThose are not files a browser should fetch directly. They import other files, they may be TypeScript, and the CSS needs processing. <b>Vite is the build tool that turns them into something servable</b>, and the dev server that makes changes appear instantly.\n\n```text\nJavaScript · CSS · TypeScript · assets\nhot reload · production builds\n```\n\nIn Blade:\n\n```blade\n@vite(['resources/css/app.css', 'resources/js/app.js'])\n```\n\nOne directive, two behaviours:\n\n```text\ndevelopment              production\n───────────              ──────────\npoints at the dev        points at the built,\nserver                   versioned files\nhot updates              cached hard\n```\n\n<b>That is the whole reason `@vite` exists</b> rather than a `<script src>`: the correct answer differs between environments, and the directive knows which one you are in.\n\n---\n\n### 2. Intermediate — hot reload\n\n```bash\nnpm run dev\n```\n\nThen edit a component or a stylesheet:\n\n```text\nbefore                  with Vite\n──────                  ─────────\nedit                    edit\n  ↓                       ↓\nbuild                   Vite detects it\n  ↓                       ↓\nrefresh                 the browser updates\n```\n\nAnd in the good case it updates <i>without</i> a full reload, so the state you had on screen survives. On a form you are halfway through, that is the difference between a two-second loop and a twenty-second one.\n\nTwo things that catch people:\n\n<b>`npm run dev` must be running.</b> Without it, `@vite` points at a dev server that is not there and the page loads with no styles at all. The blank unstyled page is almost always this.\n\n<b>And it is for development only.</b> Production runs `npm run build` once, at deploy time, and serves the output. A server running `npm run dev` in production is a misconfiguration, not a shortcut.\n\n---\n\n### 3. Advanced — why versioned filenames\n\nBrowsers cache aggressively, which is what you want until you deploy.\n\n```text\nyou deploy a fix\n      ↓\nthe browser has app.js cached\n      ↓\nthe user runs yesterday's code\n```\n\nAnd nothing tells either of you. The bug is fixed, the customer still has it, and \"try a hard refresh\" is a support conversation nobody should have to have.\n\n<b>Vite gives every build a filename derived from its contents:</b>\n\n```text\napp.js  →  app-abc123.js\n\ncontent changes\n\napp.js  →  app-def456.js\n```\n\nA different filename is a different URL, so the cache cannot answer it. <b>Change the code and every browser fetches the new file; change nothing and every browser keeps the cached one.</b> Correct in both directions, with no cache headers to tune.\n\nThe manifest maps the names, and `@vite` reads it, which is why you never write a hashed filename yourself.\n\nOne deployment note that follows: <b>`npm run build` has to run before the new code is live</b>, or Blade asks the manifest for a file that is not there yet. That is a real deployment error, and its message is `Unable to locate file in Vite manifest`.\n\n---\n\n### Tailwind\n\nThe styling layer both paths share:\n\n```html\n<button class=\"rounded-lg bg-blue-600 px-4 py-2 text-white\">Search</button>\n```\n\nrather than inventing `.search-button` and a stylesheet to hold it.\n\nThe trade is real and worth naming: <b>the markup gets noisier and the stylesheet stops growing.</b> A CSS file that only ever gets added to is a genuine long-term problem, because nobody can safely delete from it; utility classes make the styling local to the thing it styles, which means deleting a component deletes its styles.\n\nAnd when a pattern repeats, it becomes a component in whichever system you are using: a Blade component, or a React one. <b>The repetition is a signal, not a defect.</b>\n\nThree footnotes.\n\n<b>Vite replaced Laravel Mix</b>, which wrapped webpack and used a `webpack.mix.js`. You will meet it in projects from before 2022; the concepts map across, and there is a migration guide.\n\n<b>The manifest is a real file:</b> `public/build/manifest.json`, mapping `resources/js/app.js` to the hashed filename Vite produced. That is what `@vite` reads, and \"Unable to locate file in Vite manifest\" means it is missing or stale.\n\n<b>And Vite does not type-check.</b> esbuild strips TypeScript types without looking at them, so a type error compiles perfectly and ships:\n\n```bash\nnpx tsc --noEmit\n```\n\nThat has to run separately, in CI. Which matters because the argument for TypeScript here is that renaming a prop becomes a compile error, and that is only true if something actually compiles it.",
-      diagram: `What Vite is for
+$users->each(fn ($user) => $user->notify(new InvoiceOverdue()));
 
-  resources/
-  ├── css/app.css
-  └── js/app.js
-
-  Not files a browser should fetch: they import other
-  files, may be TypeScript, and the CSS needs processing.
-
-  Vite builds them, and serves them instantly while
-  you work.
-
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-  development              production
-  ───────────              ──────────
-  points at the dev        points at the built,
-  server                   versioned files
-  hot updates              cached hard
-
-  That is why @vite exists rather than a <script src>:
-  the right answer differs per environment, and the
-  directive knows which one you are in.
-
-
-Hot reload
-
-  npm run dev
-
-  before                   with Vite
-  ──────                   ─────────
-  edit                     edit
-    ↓                        ↓
-  build                    Vite detects it
-    ↓                        ↓
-  refresh                  the browser updates
-
-  And often without a full reload, so the state on
-  screen survives. Halfway through a form, that is a
-  two-second loop instead of twenty.
-
-  ⚠️  npm run dev must be RUNNING. Without it, @vite
-      points at a server that is not there and the page
-      loads with no styles. The blank unstyled page is
-      almost always this.
-
-  ⚠️  It is development only. Production runs npm run
-      build once at deploy time.
-
-
-Why versioned filenames
-
-  you deploy a fix
-        ↓
-  the browser has app.js cached
-        ↓
-  the user runs yesterday's code
-
-  Nothing tells either of you. The bug is fixed, the
-  customer still has it, and "try a hard refresh" is a
-  support conversation nobody should have.
-
-  Vite names every build from its CONTENTS:
-
-    app.js  →  app-abc123.js
-    content changes
-    app.js  →  app-def456.js
-
-  A different filename is a different URL, so the cache
-  cannot answer it.
-
-    code changed    → every browser fetches the new file
-    nothing changed → every browser keeps the cached one
-
-  Correct both ways, with no cache headers to tune.
-
-  ⚠️  npm run build must run before the new code is live,
-      or Blade asks the manifest for a file that is not
-      there:  "Unable to locate file in Vite manifest".
-
-
-Tailwind
-
-  <button class="rounded-lg bg-blue-600 px-4 py-2 text-white">
-
-  rather than inventing .search-button and a stylesheet
-  to hold it.
-
-  The trade: noisier markup, and a stylesheet that stops
-  growing. A CSS file that is only ever added to is a
-  real long-term problem, because nobody can safely
-  delete from it. Utility classes keep styling local, so
-  deleting a component deletes its styles.
-
-  When a pattern repeats, it becomes a component —
-  Blade or React. The repetition is a signal, not
-  a defect.`,
-      codeExample: {
-        title: "Vite from development to deploy",
-        code: `// vite.config.js
-
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            refresh: true,      // reload on Blade and route changes
-        }),
-        react(),
-    ],
+// ❌ each() building a result is a map() written long.
+$names = [];
+$users->each(function ($user) use (&$names) {
+    $names[] = $user->name;
 });
 
-
-{{-- resources/views/layouts/app.blade.php --}}
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    {{-- Points at the dev server locally and at the built,
-         versioned files in production. --}}
-    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
-</head>
-<body>
-    {{ $slot }}
-</body>
-</html>
+// ✓
+$names = $users->map(fn ($user) => $user->name);
 
 
-# ---------- Development ----------
+// ---------- when: an optional step in the chain ----------
 
-npm run dev
+$results = $posts
+    ->when($search, fn ($posts) => $posts->filter(
+        fn ($post) => str_contains($post->title, $search)
+    ))
+    ->when($status, fn ($posts) => $posts->where('status', $status))
+    ->sortByDesc('created_at')
+    ->values();
 
-# Leave it running. Edit a component and the browser
-# updates, often without losing the state on screen.
-#
-# ⚠️ A page with no styles at all is almost always this
-#    command not running.
-
-
-# ---------- Production ----------
-
-npm run build
-
-# resources/js/app.tsx  →  public/build/assets/app-abc123.js
-# resources/css/app.css →  public/build/assets/app-def456.css
-#
-# The filename comes from the CONTENT, so:
-#
-#   code changed    → new filename → every browser fetches it
-#   nothing changed → same filename → every browser caches it
-#
-# ⚠️ This must run before the new code is live, or:
-#    "Unable to locate file in Vite manifest"
+// Without when(), that is three ifs and a broken chain.
 
 
-# ---------- A deploy script ----------
+<?php
+// ---------- Higher-order messages ----------
 
-git pull
-composer install --no-dev --optimize-autoloader
-npm ci
-npm run build              # before the code goes live
-php artisan migrate --force
-php artisan config:cache
-php artisan route:cache
+$users->filter->active;          // filter(fn ($u) => $u->active)
+$invoices->sum->total;           // sum(fn ($i) => $i->total)
+$posts->map->title;              // map(fn ($p) => $p->title)
+$users->each->notify();          // each(fn ($u) => $u->notify())
 
+// The comparison worth keeping:
 
-{{-- ---------- Tailwind ---------- --}}
-
-{{-- Utilities, in the markup that uses them --}}
-<button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-    Search
-</button>
-
-{{-- When it repeats, it becomes a component --}}
-{{-- resources/views/components/button.blade.php --}}
-<button {{ $attributes->merge([
-    'class' => 'rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700',
-]) }}>
-    {{ $slot }}
-</button>
-
-{{-- <x-button>Search</x-button> --}}`,
-      },
-      keyTakeaways: [
-        "<b>Vite builds your CSS and JavaScript</b> and serves them instantly while you work.",
-        "<b>`@vite()` points at the dev server locally and at built, versioned files in production.</b>",
-        "That is why it exists rather than a plain `<script src>`: the right answer differs per environment.",
-        "<b>`npm run dev` must be running</b>, and a page with no styles at all is almost always that.",
-        "<b>Hot reload often updates without a full refresh</b>, so the state on screen survives an edit.",
-        "<b>Production runs `npm run build` once at deploy time</b>, and serves the output.",
-        "<b>Browsers cache assets, so a deploy can leave users running yesterday's code.</b>",
-        "<b>Vite names every build from its contents</b>, so a changed file is a new URL the cache cannot answer.",
-        "<b>`npm run build` must run before the new code is live</b>, or Blade cannot find the file in the manifest.",
-        "<b>Tailwind trades noisier markup for a stylesheet that stops growing</b>, and keeps styles local to what they style.",
-        "<b>A repeated utility pattern becomes a component</b>, which is a signal rather than a defect.",
-      ],
-      commonMistakes: [
-        "<b>Loading the page without `npm run dev` running.</b> Nothing is styled and nothing explains why.",
-        "<b>Running `npm run dev` on a production server.</b> Production serves built files, not a dev server.",
-        "<b>Deploying without `npm run build`.</b> Blade asks the manifest for files that do not exist.",
-        "<b>Writing hashed filenames by hand.</b> The manifest maps them, and `@vite` reads it.",
-        "<b>Adding a `.search-button` class for every component.</b> The stylesheet grows and nobody can safely delete from it.",
-      ],
-      quiz: [
-        {
-          question: "What does `@vite()` do differently in production?",
-          options: [
-            "Nothing",
-            "It points at the built, versioned files rather than the dev server",
-            "It minifies at request time",
-            "It disables CSS",
-          ],
-          correctIndex: 1,
-          explanation: "One directive, and it knows which environment it is in.",
-        },
-        {
-          question: "The page loads with no styles at all. What is the usual cause?",
-          options: [
-            "A missing Tailwind config",
-            "`npm run dev` is not running, so `@vite` points at a dev server that is not there",
-            "The cache needs clearing",
-            "A missing layout",
-          ],
-          correctIndex: 1,
-          explanation: "In production the equivalent cause is a missing `npm run build`.",
-        },
-        {
-          question: "Why does Vite include a hash in built filenames?",
-          options: [
-            "To prevent tampering",
-            "A changed file gets a new URL, so caches cannot serve the old one",
-            "For debugging",
-            "To compress them",
-          ],
-          correctIndex: 1,
-          explanation: "And unchanged files keep their name, so they stay cached.",
-        },
-        {
-          question: "What is the trade Tailwind makes?",
-          options: [
-            "Smaller pages for slower rendering",
-            "Noisier markup for a stylesheet that stops growing, with styles local to what they style",
-            "Less flexibility for faster builds",
-            "None",
-          ],
-          correctIndex: 1,
-          explanation: "Deleting a component then deletes its styles too.",
-        },
-      ],
-    },
-    {
-      id: "livewire-basics",
-      title: "Livewire — components, properties & wire:model",
-      durationMinutes: 12,
-      explanation: "Interactive interfaces, written in PHP.\n\n---\n\n### 1. Basic — a component is two files\n\n```bash\nphp artisan make:livewire SearchPosts\n```\n\n```text\napp/Livewire/SearchPosts.php               the class: state and actions\nresources/views/livewire/search-posts.blade.php   the template\n```\n\nThe class holds state and behaviour; the Blade file renders it. Which is the same split as a controller and a view, except that <b>the class stays alive across interactions</b> rather than answering one request and disappearing.\n\nA property is state:\n\n```php\nclass SearchPosts extends Component\n{\n    public string $search = '';\n\n    public function render()\n    {\n        return view('livewire.search-posts', [\n            'posts' => Post::where('title', 'like', \"%{$this->search}%\")->get(),\n        ]);\n    }\n}\n```\n\nAnd `render()` runs again after every interaction, which is why the list updates without you writing anything to update it.\n\n---\n\n### 2. Intermediate — `wire:model`\n\n```blade\n<input wire:model=\"search\">\n```\n\n```text\nuser types\n    ↓\nwire:model\n    ↓\n$search on the server\n```\n\n<b>`$this->search` is now what the user typed</b>, in PHP, with no route, no request handling and no JavaScript of your own.\n\nOne detail that decides how the component feels:\n\n```text\nwire:model             updates on blur or submit\nwire:model.live        updates on every keystroke\nwire:model.live.debounce.300ms   after they stop typing\nwire:model.blur        explicitly on blur\n```\n\n<b>The default is deliberate.</b> Livewire waits, because the alternative is a server request per keystroke. `.live` is what you want for a search box, and `.debounce` is what makes `.live` reasonable: one request when they pause, not eight while they type \"laravel\".\n\nThat one modifier is the difference between a component that feels instant and one that feels like a form from 2004, and it is the most common Livewire performance problem.\n\n---\n\n### 3. Advanced — what is actually being sent\n\n<b>Every interaction sends the component's public properties to the server and gets HTML back.</b> Which explains three rules that otherwise look arbitrary.\n\n<b>Public properties must be serialisable.</b> Strings, numbers, arrays, and Eloquent models Livewire can re-resolve. Not a closure, a file handle, or an arbitrary object. Anything the component needs but cannot serialise belongs in `render()` or a computed property, not a public property.\n\n<b>They also travel in both directions</b>, which makes them visible to the browser. A public property is not a place for anything the user should not see.\n\n<b>And they can be modified by the client.</b> A `public int $userId` can be changed before the request comes back, so <b>authorization has to be checked in the action, not assumed from the property.</b> Day 20 applies here exactly as it does in a controller.\n\nTwo things that make components readable.\n\n<b>A computed property</b> for anything derived, so it is not stored and not sent:\n\n```php\n#[Computed]\npublic function posts()\n{\n    return Post::where('title', 'like', \"%{$this->search}%\")->paginate(10);\n}\n```\n\n<b>And `wire:key` in loops</b>, so Livewire can tell rows apart when the list changes. Without it, a filtered list can reuse the wrong DOM element, which produces the bug where a checkbox stays ticked on the wrong row.\n\nOne thing the class and its view do not tell you: <b>how the component gets onto a page.</b>\n\n```blade\n<livewire:search-posts />\n<livewire:search-posts :category=\"$category\" />\n\n@livewire('search-posts')\n```\n\nThe tag syntax is the modern one, and public properties are passed as attributes.\n\nAnd for a component that is expensive to render, `#[Lazy]` defers it until after the page has loaded:\n\n```php\n#[Lazy]\nclass RevenueChart extends Component\n{\n    public function placeholder()\n    {\n        return view('components.skeleton');\n    }\n}\n```\n\n<b>The page arrives immediately with a placeholder</b>, and the component loads in a second request. Same idea as Inertia's deferred props later in the day, from the other direction.",
-      diagram: `A component is two files
-
-  php artisan make:livewire SearchPosts
-
-    app/Livewire/SearchPosts.php          the class
-    resources/views/livewire/
-        search-posts.blade.php            the template
-
-  The same split as a controller and a view, except the
-  class STAYS ALIVE across interactions rather than
-  answering one request and disappearing.
-
-    public string \$search = '';
-
-  render() runs again after every interaction, which is
-  why the list updates without you writing anything to
-  update it.
-
-
-wire:model
-
-  <input wire:model="search">
-
-    user types → wire:model → \$search on the server
-
-  \$this->search is what the user typed. In PHP. No route,
-  no request handling, no JavaScript of your own.
-
-  And the modifier decides how it FEELS:
-
-    wire:model                      on blur or submit
-    wire:model.live                 every keystroke
-    wire:model.live.debounce.300ms  when they stop
-    wire:model.blur                 explicitly on blur
-
-  The default waits on purpose: the alternative is a
-  request per keystroke. .live suits a search box, and
-  .debounce is what makes .live reasonable — one request
-  when they pause, not eight while they type "laravel".
-
-  That one modifier is the most common Livewire
-  performance problem.
-
-
-What is actually being sent
-
-  Every interaction sends the component's PUBLIC
-  PROPERTIES to the server and gets HTML back.
-
-  Which explains three rules:
-
-    They must be SERIALISABLE.
-      strings, numbers, arrays, models Livewire can
-      re-resolve — not closures, handles or arbitrary
-      objects. Anything else belongs in render() or a
-      computed property.
-
-    They travel in BOTH directions.
-      A public property is visible to the browser. Not
-      a place for anything the user should not see.
-
-    They can be MODIFIED by the client.
-      A public int \$userId can be changed before the
-      request comes back. Authorization is checked in
-      the ACTION, never assumed from the property.
-      Day 20 applies exactly as in a controller.
-
-
-Two things that make components readable
-
-  #[Computed] for anything derived
-    not stored, not sent
-
-  wire:key in loops
-    so Livewire can tell rows apart when the list
-    changes. Without it, a filtered list reuses the
-    wrong DOM element — the bug where a checkbox
-    stays ticked on the wrong row.`,
-      codeExample: {
-        title: "A search component",
-        code: `<?php
-// php artisan make:livewire SearchPosts
-
-namespace App\\Livewire;
-
-use App\\Models\\Post;
-use Livewire\\Attributes\\Computed;
-use Livewire\\Component;
-use Livewire\\WithPagination;
-
-class SearchPosts extends Component
-{
-    use WithPagination;
-
-    // State. Sent to the server on every interaction,
-    // and visible to the browser.
-    public string $search = '';
-    public string $status = 'all';
-
-    // Derived: not stored, not sent.
-    #[Computed]
-    public function posts()
-    {
-        return Post::query()
-            ->when($this->search, fn ($q) =>
-                $q->where('title', 'like', "%{$this->search}%"))
-            ->when($this->status !== 'all', fn ($q) =>
-                $q->where('status', $this->status))
-            ->latest()
-            ->paginate(10);
-    }
-
-    public function render()
-    {
-        return view('livewire.search-posts');
+foreach ($users as $user) {
+    if ($user->active) {
+        // ...
     }
 }
-?>
+// says HOW
 
-{{-- resources/views/livewire/search-posts.blade.php --}}
+$users->filter->active;
+// says WHAT: give me the active users
 
-<div>
-    {{-- .live.debounce: one request when they pause,
-         not one per keystroke --}}
-    <input
-        wire:model.live.debounce.300ms="search"
-        placeholder="Search posts"
-        class="rounded border px-3 py-2"
-    >
 
-    <select wire:model.live="status" class="rounded border px-3 py-2">
-        <option value="all">All</option>
-        <option value="published">Published</option>
-        <option value="draft">Draft</option>
-    </select>
-
-    {{-- Livewire shows this while a request is in flight --}}
-    <div wire:loading class="text-sm text-gray-500">Searching…</div>
-
-    @forelse ($this->posts as $post)
-        {{-- wire:key so rows are not confused when the
-             list changes --}}
-        <div wire:key="post-{{ $post->id }}" class="border-b py-2">
-            <p class="font-medium">{{ $post->title }}</p>
-            <p class="text-sm text-gray-500">{{ $post->status }}</p>
-        </div>
-    @empty
-        <p class="py-8 text-center text-gray-500">No posts found.</p>
-    @endforelse
-
-    {{ $this->posts->links() }}
-</div>
+// ⚠️ Only for a bare property or a no-argument method.
+//    Anything else needs the closure:
+$users->filter(fn ($user) => $user->created_at->isToday());
 
 
 <?php
-// ---------- The modifiers, and what they cost ----------
+// ---------- When a loop is better ----------
 
-// wire:model                     on blur or submit
-// wire:model.live                every keystroke  ← 8 requests
-//                                   for "laravel"
-// wire:model.live.debounce.300ms one request when they pause
-// wire:model.blur                explicitly on blur
-
-
-<?php
-// ---------- Public properties are client-controlled ----------
-
-class EditPost extends Component
-{
-    public Post $post;
-
-    // ❌ The browser can change $post's id before the
-    //    request returns. This trusts it.
-    public function save()
-    {
-        $this->post->update(['title' => $this->title]);
-    }
-
-    // ✓ Authorize in the action, exactly as in a controller.
-    public function saveSafely()
-    {
-        $this->authorize('update', $this->post);
-
-        $this->post->update(['title' => $this->title]);
-    }
-}
-
-
-<?php
-// ---------- What cannot be a public property ----------
-
-// ❌ Not serialisable, and sent on every interaction.
-public \\Closure $formatter;
-public $fileHandle;
-
-// ✓ Derive it where it is needed.
-#[Computed]
-public function formatter()
-{
-    return fn ($value) => number_format($value, 2);
-}`,
-      },
-      keyTakeaways: [
-        "<b>A Livewire component is a PHP class plus a Blade view</b>, and the class stays alive across interactions.",
-        "<b>Public properties are the component's state</b>, and `render()` runs again after every interaction.",
-        "<b>`wire:model` binds an input to a property</b>, so `$this->search` is what the user typed.",
-        "<b>The default updates on blur</b>, because `.live` means a server request per keystroke.",
-        "<b>`.debounce` is what makes `.live` reasonable</b>: one request when they pause, not one per character.",
-        "<b>Every interaction sends the public properties to the server</b> and receives HTML back.",
-        "<b>Public properties must be serialisable</b>, so closures and handles belong in `render()` or a computed property.",
-        "<b>They are visible to the browser</b>, so nothing secret belongs in one.",
-        "<b>They can be modified by the client</b>, so authorization is checked in the action, never assumed.",
-        "<b>`#[Computed]` derives values without storing or sending them</b>, and `wire:key` keeps rows straight in a loop.",
-      ],
-      commonMistakes: [
-        "<b>Using `wire:model.live` with no debounce on a text input.</b> Every keystroke is a server request.",
-        "<b>Trusting a public property in an action.</b> The client can change it; authorize as you would in a controller.",
-        "<b>Putting a closure or a resource in a public property.</b> It cannot be serialised and is sent every time.",
-        "<b>Omitting `wire:key` in a loop.</b> Filtering reuses the wrong DOM element and state sticks to the wrong row.",
-        "<b>Storing derived data in a public property.</b> It is recomputed anyway, and now it travels both ways.",
-      ],
-      quiz: [
-        {
-          question: "What does a Livewire interaction actually send?",
-          options: [
-            "Only the changed field",
-            "The component's public properties, receiving rendered HTML back",
-            "A JSON API request",
-            "The whole page",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why properties must be serialisable and are visible to the client.",
-        },
-        {
-          question: "Why does `wire:model` default to updating on blur?",
-          options: [
-            "It is easier to implement",
-            "`.live` means a server request per keystroke",
-            "Blur events are more reliable",
-            "For accessibility",
-          ],
-          correctIndex: 1,
-          explanation: "`.debounce` is what makes `.live` reasonable on a text input.",
-        },
-        {
-          question: "Can you trust a public property's value in an action?",
-          options: [
-            "Yes, it comes from the server",
-            "No; the client can modify it, so authorize in the action",
-            "Only if it is typed",
-            "Only for strings",
-          ],
-          correctIndex: 1,
-          explanation: "Day 20's rules apply exactly as they do in a controller.",
-        },
-        {
-          question: "What does `wire:key` prevent in a loop?",
-          options: [
-            "Duplicate database queries",
-            "Livewire reusing the wrong DOM element when the list changes",
-            "Validation errors",
-            "Extra requests",
-          ],
-          correctIndex: 1,
-          explanation: "The classic symptom is a checkbox staying ticked on the wrong row.",
-        },
-      ],
-    },
-    {
-      id: "livewire-actions-and-uploads",
-      title: "Actions, lifecycle hooks, validation & uploads",
-      durationMinutes: 12,
-      explanation: "State was the first half. This is the part that does things.\n\n---\n\n### 1. Basic — actions\n\nA public method is an action:\n\n```php\npublic function searchPosts()\n{\n    // query posts\n}\n```\n\n```blade\n<button wire:click=\"searchPosts\">Search</button>\n```\n\n```text\nclick\n  ↓\nLivewire request\n  ↓\nyour PHP method\n  ↓\ndatabase\n  ↓\nupdated HTML\n  ↓\nbrowser\n```\n\n<b>You never write the AJAX request</b>, and that is the whole appeal: `wire:click` calls a PHP method, and the page updates.\n\nActions take arguments:\n\n```blade\n<button wire:click=\"delete({{ $post->id }})\">Delete</button>\n```\n\nAnd the warning from the last lesson applies with more force here: <b>that id comes from the browser.</b> An action is a route, and it needs the same authorization a route would.\n\nUseful modifiers:\n\n```text\nwire:click.prevent       stop the default\nwire:submit              a form, without a page load\nwire:confirm=\"Sure?\"     a confirmation before it runs\nwire:loading             shown while a request is in flight\nwire:dirty               shown when there are unsaved changes\n```\n\n---\n\n### 2. Intermediate — lifecycle hooks and validation\n\nA hook runs when something changes:\n\n```php\npublic function updatedSearch()\n{\n    $this->resetPage();\n}\n```\n\n```text\n$search changes\n      ↓\nupdatedSearch()\n      ↓\nreset to page 1\n```\n\n<b>That specific example is one you will need.</b> Filter a paginated list while on page 5 and you are looking at page 5 of a shorter list, which is usually empty. Resetting the page on every filter change is the fix, and forgetting it is a bug that looks like \"search is broken\".\n\nOther hooks: `mount()` when the component is created, `updating()` before a change, `updated()` after any of them.\n\n<b>Keep them small.</b> A hook runs on every relevant change, so a heavy one runs constantly, and logic buried in a hook is hard to find when the component misbehaves.\n\nValidation is Laravel's, in the component:\n\n```php\n$this->validate([\n    'title' => ['required', 'string', 'max:255'],\n]);\n```\n\nErrors reach Blade through the same `@error` directive as a normal form:\n\n```text\ninput → Livewire → Laravel validation → errors → Blade\n```\n\n<b>Same rules, same messages, no duplication.</b> Which is the strongest practical argument for Livewire: the validation you already wrote works, unchanged, in an interactive interface.\n\nAnd `#[Validate]` attributes put the rule next to the property, so it also validates live as the user types.\n\n---\n\n### 3. Advanced — file uploads\n\n```blade\n<input type=\"file\" wire:model=\"photo\">\n```\n\n```php\nuse Livewire\\WithFileUploads;\n\npublic $photo;\n```\n\n```text\nbrowser\n  ↓\nLivewire upload\n  ↓\na temporary file\n  ↓\nvalidation\n  ↓\nstorage\n```\n\nThe upload happens immediately, into temporary storage, so you can show a preview before anything is saved. `$this->photo->temporaryUrl()` is what that preview uses.\n\n<b>And every rule from Day 22 still applies</b>, because nothing about Livewire changes what an upload is:\n\n```text\nvalidate the type, with mimes:\nvalidate the size, with max:\nvalidate dimensions on an image\nnever trust the filename\nstore with store(), not storeAs() from the client\n```\n\nTwo things specific to this arrangement.\n\n<b>Temporary files accumulate.</b> An upload that is never submitted still landed on your server, so the temporary directory needs pruning; Livewire's own cleanup handles it if configured.\n\n<b>And validate on upload, not only on submit.</b> `#[Validate('image|max:2048')]` on the property rejects a 40 MB file as it arrives, rather than after it has been transferred and is sitting in temporary storage.\n\n<b>And Livewire ships with Alpine.js</b>, which matters more than it sounds, because it answers \"do I need a round trip for this?\"\n\n```blade\n<div x-data=\"{ open: false }\">\n    <button x-on:click=\"open = !open\">Details</button>\n\n    <div x-show=\"open\">…</div>\n</div>\n```\n\n```text\nAlpine   purely visual state: a dropdown, a modal, a tab\nwire:    anything the server has to know or decide\n```\n\n<b>Opening a modal through Livewire is a network request to toggle a boolean</b>, which is a visible delay for something that should be instant. Alpine handles it in the browser, and the two compose in the same template.\n\nOne more directive worth knowing: `wire:loading.class=\"opacity-50\"` applies a class during a request, alongside the `.attr` and `.remove` variants.\n\nAnd two hooks for state that cannot survive the round trip:\n\n```php\npublic function hydrate(): void   { /* before each request  */ }\npublic function dehydrate(): void { /* after each request   */ }\n```\n\n<b>They exist because properties are serialised between requests</b>, so anything that is not serialisable has to be rebuilt on the way in and cleared on the way out.",
-      diagram: `Actions
-
-  public function searchPosts() { ... }
-
-  <button wire:click="searchPosts">Search</button>
-
-    click → Livewire request → your PHP method
-          → database → updated HTML → browser
-
-  You never write the AJAX request. That is the appeal.
-
-  With arguments:
-
-    wire:click="delete({{ \$post->id }})"
-
-  ⚠️  That id comes from the BROWSER. An action is a
-      route, and needs the authorization a route would.
-
-  Modifiers:
-    wire:click.prevent     stop the default
-    wire:submit            a form, no page load
-    wire:confirm="Sure?"   confirm before running
-    wire:loading           shown during a request
-    wire:dirty             shown when unsaved
-
-
-Lifecycle hooks
-
-    \$search changes → updatedSearch() → resetPage()
-
-  That specific one you will need: filter a paginated
-  list while on page 5 and you are on page 5 of a
-  shorter list, which is usually empty. Forgetting it
-  is a bug that looks like "search is broken".
-
-  Also: mount() on creation, updating() before,
-  updated() after any change.
-
-  Keep them SMALL. A hook runs on every relevant change,
-  so a heavy one runs constantly — and logic buried in
-  a hook is hard to find when the component misbehaves.
-
-
-Validation is Laravel's, in the component
-
-  \$this->validate([
-      'title' => ['required', 'string', 'max:255'],
-  ]);
-
-    input → Livewire → Laravel validation → errors → Blade
-
-  Same rules, same messages, no duplication. Which is
-  the strongest practical argument for Livewire: the
-  validation you already wrote works, unchanged, in an
-  interactive interface.
-
-  #[Validate] puts the rule next to the property, and
-  validates live as the user types.
-
-
-File uploads
-
-  <input type="file" wire:model="photo">
-  use WithFileUploads;
-
-    browser → Livewire upload → a temporary file
-            → validation → storage
-
-  The upload happens immediately, so you can show a
-  preview: \$this->photo->temporaryUrl()
-
-  Every Day 22 rule still applies:
-    validate the type with mimes:
-    validate the size with max:
-    validate dimensions on an image
-    never trust the filename
-    store() rather than storeAs() from the client
-
-  Two things specific here:
-
-    Temporary files accumulate. An upload never
-    submitted still landed on your server.
-
-    Validate ON UPLOAD, not only on submit.
-    #[Validate('image|max:2048')] rejects a 40 MB file
-    as it arrives, rather than after it is transferred.`,
-      codeExample: {
-        title: "Actions, hooks, validation and an upload",
-        code: `<?php
-
-namespace App\\Livewire;
-
-use App\\Models\\Post;
-use Livewire\\Attributes\\Validate;
-use Livewire\\Component;
-use Livewire\\WithFileUploads;
-use Livewire\\WithPagination;
-
-class PostForm extends Component
-{
-    use WithPagination, WithFileUploads;
-
-    // The rule sits next to the property, and validates
-    // live as the user types.
-    #[Validate('required|string|max:255')]
-    public string $title = '';
-
-    #[Validate('required|string')]
-    public string $body = '';
-
-    // Rejected as it arrives, not after transfer.
-    #[Validate('nullable|image|max:2048')]
-    public $photo;
-
-    public string $search = '';
-
-    // ---------- Lifecycle ----------
-
-    public function mount(): void
-    {
-        // Runs once, when the component is created.
-    }
-
-    public function updatedSearch(): void
-    {
-        // Filtering while on page 5 shows page 5 of a
-        // shorter list, which is usually empty.
-        $this->resetPage();
-    }
-
-    // ---------- Actions ----------
-
-    public function save()
-    {
-        // Laravel's validation, unchanged.
-        $this->validate();
-
-        $post = auth()->user()->posts()->create([
-            'title' => $this->title,
-            'body'  => $this->body,
-        ]);
-
-        if ($this->photo) {
-            // Day 22's rules, unchanged: a generated name.
-            $post->update([
-                'photo_path' => $this->photo->store('photos', 's3'),
-            ]);
+// ❌ A chain that is not a pipeline.
+$results = $rows
+    ->map(function ($row) use (&$errors, $importer) {
+        try {
+            return $importer->parse($row);
+        } catch (ParseException $e) {
+            $errors[] = $e->getMessage();
+            return null;
         }
+    })
+    ->filter()
+    ->values();
 
-        $this->reset(['title', 'body', 'photo']);
-
-        session()->flash('status', 'Post created.');
+// ✓ Control flow, side effects and early exits: a loop
+//   says this more clearly, and there is no prize for
+//   fewer lines.
+foreach ($rows as $row) {
+    try {
+        $parsed[] = $importer->parse($row);
+    } catch (ParseException $e) {
+        $errors[] = $e->getMessage();
+        continue;
     }
-
-    public function delete(int $postId): void
-    {
-        $post = Post::findOrFail($postId);
-
-        // That id came from the browser. An action is a
-        // route, and needs the same authorization.
-        $this->authorize('delete', $post);
-
-        $post->delete();
-    }
-
-    public function render()
-    {
-        return view('livewire.post-form');
-    }
-}
-?>
-
-{{-- resources/views/livewire/post-form.blade.php --}}
-
-<div>
-    <form wire:submit="save">
-        <input wire:model.blur="title" class="rounded border px-3 py-2">
-        @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-        <textarea wire:model.blur="body" class="rounded border px-3 py-2"></textarea>
-        @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-        <input type="file" wire:model="photo">
-
-        {{-- A preview, before anything is saved --}}
-        @if ($photo)
-            <img src="{{ $photo->temporaryUrl() }}" class="h-24 w-24 rounded">
-        @endif
-
-        <button type="submit" wire:loading.attr="disabled">
-            <span wire:loading.remove>Save</span>
-            <span wire:loading>Saving…</span>
-        </button>
-    </form>
-
-    @foreach ($posts as $post)
-        <div wire:key="post-{{ $post->id }}">
-            {{ $post->title }}
-
-            <button
-                wire:click="delete({{ $post->id }})"
-                wire:confirm="Delete this post?"
-            >Delete</button>
-        </div>
-    @endforeach
-</div>
-
-
-<?php
-// ---------- Keep hooks small ----------
-
-// ❌ Runs on every keystroke of every property.
-public function updated($property): void
-{
-    $this->recalculateEverything();
-    $this->syncWithExternalApi();
-}
-
-// ✓ One property, one small job.
-public function updatedSearch(): void
-{
-    $this->resetPage();
 }`,
       },
       keyTakeaways: [
-        "<b>A public method is an action</b>, called from Blade with `wire:click` or `wire:submit`.",
-        "<b>You never write the AJAX request</b>: the click calls PHP and the page updates.",
-        "<b>An action's arguments come from the browser</b>, so an action needs the authorization a route would.",
-        "`wire:loading`, `wire:confirm`, `wire:dirty` and `.prevent` cover the common interface needs.",
-        "<b>Lifecycle hooks react to changes</b>, and `updatedSearch()` calling `resetPage()` is one you will need.",
-        "Filtering a paginated list without resetting the page shows an empty page 5, which looks like broken search.",
-        "<b>Keep hooks small</b>, because they run on every relevant change and hide logic when things misbehave.",
-        "<b>Validation is Laravel's, unchanged</b>, and errors reach Blade through the usual `@error` directive.",
-        "<b>`#[Validate]` puts the rule next to the property</b> and validates live as the user types.",
-        "<b>File uploads land in temporary storage immediately</b>, so `temporaryUrl()` can show a preview.",
-        "<b>Every Day 22 upload rule still applies</b>, and validating on upload rejects a huge file as it arrives.",
+        "<b>`groupBy()` turns a flat list into the keyed shape every report wants</b>, and takes a closure for derived keys.",
+        "<b>`sortBy()` sorts by a field or a computed value</b>, and `sortByDesc()` reverses it.",
+        "<b>Sorting and grouping in the query is usually better</b>, because the database has indexes and reads fewer rows.",
+        "<b>`each()` is for side effects and `map()` is for transformation</b>, and using one for the other misleads the reader.",
+        "Building a result by pushing into an outer array from `each()` is a `map()` written the long way.",
+        "<b>`when()` applies part of a chain conditionally</b>, keeping an optional step inside the pipeline.",
+        "<b>Higher-order messages forward a call to every item</b>: `$users->filter->active`, `$invoices->sum->total`.",
+        "<b>`$users->filter->active` states the intention where a `foreach` states the mechanism.</b>",
+        "They only work for a bare property or a no-argument method; anything else needs a closure.",
+        "<b>A chain is not automatically clearer than a loop</b>: use a chain when the pipeline is the point.",
       ],
       commonMistakes: [
-        "<b>Trusting an id passed to an action.</b> It came from the browser, so authorize before acting on it.",
-        "<b>Filtering without `resetPage()`.</b> The user sees an empty page and reports that search is broken.",
-        "<b>Putting heavy work in a lifecycle hook.</b> It runs on every change, and nobody looks there first.",
-        "<b>Re-implementing validation in JavaScript.</b> The rules you already wrote work here unchanged.",
-        "<b>Validating an upload only on submit.</b> The file has already been transferred and stored temporarily.",
+        "<b>Sorting a loaded collection when the database could order it.</b> Every row is read before sorting.",
+        "<b>Using `each()` with a reference to build an array.</b> That is `map()`, spelled awkwardly.",
+        "<b>Using `map()` purely for a side effect.</b> The reader expects the result to matter.",
+        "<b>Mixing higher-order and closure forms in one chain.</b> It reads worse than either style alone.",
+        "<b>Forcing complex control flow into a chain.</b> Early exits and error collection belong in a loop.",
       ],
       quiz: [
         {
-          question: "What does `wire:click=\"delete(5)\"` require you to remember?",
+          question: "What is the difference between `map()` and `each()`?",
           options: [
-            "To debounce it",
-            "That the argument came from the browser, so the action must authorize",
-            "To wrap it in a form",
-            "To add `wire:key`",
+            "None",
+            "`map()` transforms and returns a new collection; `each()` performs a side effect",
+            "`each()` is faster",
+            "`map()` cannot use closures",
           ],
           correctIndex: 1,
-          explanation: "An action is a route, with the same rules.",
+          explanation: "Using one for the other works and misleads the next reader.",
         },
         {
-          question: "Why does a filter change usually need `resetPage()`?",
+          question: "What does `$users->filter->active` do?",
           options: [
-            "To clear the cache",
-            "Otherwise the user stays on page 5 of a now-shorter list, which is usually empty",
-            "To re-run validation",
-            "To reset the sort order",
+            "Sorts by the active field",
+            "Filters to items whose `active` property is truthy",
+            "Sets `active` on each user",
+            "Counts the active users",
           ],
           correctIndex: 1,
-          explanation: "The symptom looks like search returning nothing.",
+          explanation: "A higher-order message: the collection forwards the property access.",
         },
         {
-          question: "What validation does a Livewire component use?",
+          question: "Why is `$users->sortBy(fn ($u) => $u->invoices->count())` risky?",
           options: [
-            "A JavaScript library",
-            "Laravel's validator, with the same rules and messages",
-            "Its own rule set",
-            "Browser validation",
+            "`sortBy` cannot take a closure",
+            "It loads every user's invoices, which is an N+1 the query could avoid",
+            "It returns an array",
+            "It mutates the collection",
           ],
           correctIndex: 1,
-          explanation: "Which is the strongest practical argument for Livewire.",
+          explanation: "`withCount()` and `orderByDesc()` do it in one query.",
         },
         {
-          question: "When does a Livewire file upload reach the server?",
+          question: "When is a `foreach` better than a collection chain?",
           options: [
-            "On form submission",
-            "Immediately, into temporary storage, which is what allows a preview",
-            "Only after validation passes",
-            "Never; it stays in the browser",
-          ],
-          correctIndex: 1,
-          explanation: "So validate on upload rather than only on submit.",
-        },
-      ],
-    },
-    {
-      id: "volt-and-flux",
-      title: "Volt & Flux UI",
-      durationMinutes: 9,
-      explanation: "Two things built on Livewire that change how much you write.\n\n---\n\n### 1. Basic — Volt\n\nA Livewire component is two files. For a small one, that is two files for eleven lines of code:\n\n```text\napp/Livewire/SearchPosts.php\nresources/views/livewire/search-posts.blade.php\n```\n\n<b>Volt</b> puts both in one:\n\n```text\nsearch-posts.blade.php\n        │\n        ├── PHP logic\n        └── HTML\n```\n\nThe state, the actions and the markup sit together, which for a small component is genuinely easier to read: you can see everything the thing does without opening a second file.\n\n```text\nVolt              one file, less ceremony\nclass-based       separate concerns, easier to test\n```\n\n<b>The trade-off is real in both directions.</b> A component with three properties and one action reads better in one file. A component with fifteen properties, six actions and validation is easier to navigate, and much easier to unit test, as a class.\n\nThe useful rule: <b>start with Volt for small components, and move to a class when the file stops fitting on a screen.</b> Converting is mechanical.\n\n---\n\n### 2. Intermediate — Flux\n\nEvery application needs the same primitives:\n\n```text\nbutton · modal · dropdown · input\nselect · tabs · table · badge\n```\n\nBuilding them yourself means building focus management, keyboard handling, accessible labelling and consistent styling, per component, and getting each of them right.\n\n<b>Flux</b> is a component library built for Livewire:\n\n```text\nLivewire  +  Flux  →  an interactive Laravel interface\n```\n\nSo a modal is a modal, a dropdown closes on escape, and everything looks like the same product without you designing a design system first.\n\n---\n\n### 3. Advanced — what you are choosing\n\nA component library is a real decision, in both directions.\n\n<b>What you get:</b> consistency without effort, accessibility you would otherwise have to know about, and speed. A form built from ready components is an afternoon rather than a week, and it is a better form.\n\n<b>What you give up:</b> a dependency in your interface layer, someone else's design opinions, and the awkward moment when a design calls for something the library does not do. Fighting a component library is slower than not having one.\n\nThe question worth asking: <b>is your interface a differentiator, or a way to use the application?</b>\n\n```text\nan admin panel, an internal tool,\na back-office system                     →  use a library\n\na product whose interface is the thing\nyou are selling                          →  own more of it\n```\n\nMost applications are the first, and most teams overestimate how much the second applies to them.\n\nOne last note that generalises. <b>The same argument recurs on the Inertia side</b>, where shadcn/ui appears later today with a different answer: it gives you the component code in your own project rather than as a dependency. Different trade, same question, and knowing which one you are making is the point.",
-      diagram: `Volt: one file instead of two
-
-  app/Livewire/SearchPosts.php
-  resources/views/livewire/search-posts.blade.php
-
-  Two files for eleven lines of code.
-
-  Volt:
-
-    search-posts.blade.php
-            │
-            ├── PHP logic
-            └── HTML
-
-  State, actions and markup together, so you can see
-  everything the component does without opening a
-  second file.
-
-    Volt          one file, less ceremony
-    class-based   separate concerns, easier to test
-
-  Three properties and one action → one file reads better.
-  Fifteen properties, six actions and validation →
-  easier to navigate, and much easier to unit test,
-  as a class.
-
-  Start with Volt. Move to a class when the file stops
-  fitting on a screen. Converting is mechanical.
-
-
-Flux: the primitives you always need
-
-  button · modal · dropdown · input
-  select · tabs · table · badge
-
-  Building them yourself means focus management,
-  keyboard handling, accessible labelling and consistent
-  styling — per component, each of them correct.
-
-    Livewire + Flux → an interactive Laravel interface
-
-  A modal is a modal. A dropdown closes on escape.
-  Everything matches, without designing a design system
-  first.
-
-
-What you are actually choosing
-
-  You get
-    consistency without effort
-    accessibility you would otherwise have to know about
-    speed — a form is an afternoon, and a better form
-
-  You give up
-    a dependency in your interface layer
-    somebody else's design opinions
-    the awkward moment when a design needs something
-    the library does not do
-
-  Fighting a component library is slower than not
-  having one.
-
-
-  The question:
-
-    is your interface a DIFFERENTIATOR, or a way to
-    use the application?
-
-      admin panel, internal tool,      → use a library
-      back-office system
-
-      a product whose interface is     → own more of it
-      the thing you are selling
-
-  Most applications are the first, and most teams
-  overestimate how much the second applies to them.
-
-
-  The same argument recurs on the Inertia side, where
-  shadcn/ui answers it differently: the component code
-  lives in your project rather than as a dependency.
-  Different trade, same question.`,
-      codeExample: {
-        title: "Volt, and a Flux-built form",
-        code: `{{-- ---------- A Volt component: one file ---------- --}}
-{{-- resources/views/livewire/search-posts.blade.php --}}
-
-<?php
-
-use App\\Models\\Post;
-use Livewire\\Volt\\Component;
-use Livewire\\WithPagination;
-
-new class extends Component {
-    use WithPagination;
-
-    public string $search = '';
-
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function with(): array
-    {
-        return [
-            'posts' => Post::when($this->search, fn ($q) =>
-                $q->where('title', 'like', "%{$this->search}%"))
-                ->paginate(10),
-        ];
-    }
-}; ?>
-
-<div>
-    <input wire:model.live.debounce.300ms="search" placeholder="Search">
-
-    @foreach ($posts as $post)
-        <p wire:key="post-{{ $post->id }}">{{ $post->title }}</p>
-    @endforeach
-
-    {{ $posts->links() }}
-</div>
-
-{{-- Everything the component does, on one screen. --}}
-
-
-{{-- ---------- When it should become a class ---------- --}}
-
-{{-- Fifteen properties, six actions and validation is
-     easier to navigate, and much easier to unit test,
-     as app/Livewire/PostManager.php with its own view. --}}
-
-
-{{-- ---------- Flux: the primitives ---------- --}}
-
-<flux:input wire:model="email" label="Email" type="email" />
-
-@error('email')
-    <flux:error>{{ $message }}</flux:error>
-@enderror
-
-<flux:select wire:model.live="status" label="Status">
-    <flux:select.option value="all">All</flux:select.option>
-    <flux:select.option value="published">Published</flux:select.option>
-</flux:select>
-
-<flux:button wire:click="save" variant="primary">Save</flux:button>
-
-<flux:modal name="confirm-delete">
-    <flux:heading>Delete this post?</flux:heading>
-    <flux:text>This cannot be undone.</flux:text>
-
-    <flux:button wire:click="delete" variant="danger">Delete</flux:button>
-</flux:modal>
-
-{{-- The modal traps focus, closes on escape and is
-     labelled correctly. None of which you wrote. --}}
-
-
-{{-- ---------- What building it yourself involves ---------- --}}
-
-{{-- A modal is not a div with a fixed position:
-
-       focus moves into it, and back out on close
-       escape closes it
-       the background does not scroll
-       screen readers announce it
-       tab does not escape into the page behind
-
-     Each of those is a thing to know, and to get right,
-     for every primitive.
-
-     Which is the argument for a library — and the reason
-     to ask first whether your interface is a
-     differentiator or a way to use the application. --}}`,
-      },
-      keyTakeaways: [
-        "<b>A Livewire component is normally two files</b>, which is a lot of ceremony for a small one.",
-        "<b>Volt puts the logic and the template in one file</b>, so a small component is readable at a glance.",
-        "<b>A class-based component is easier to navigate and much easier to unit test</b> once it grows.",
-        "<b>Start with Volt and convert when the file stops fitting on a screen</b>; the conversion is mechanical.",
-        "<b>Flux is a component library for Livewire</b>, covering buttons, modals, dropdowns, inputs and tables.",
-        "Building those yourself means focus management, keyboard handling and accessible labelling, each done correctly.",
-        "<b>A library buys consistency, accessibility and speed</b>, and costs a dependency and somebody else's opinions.",
-        "<b>Fighting a component library is slower than not having one</b>, so the fit matters.",
-        "<b>Ask whether your interface is a differentiator or a way to use the application.</b>",
-        "<b>The same question appears on the Inertia side with shadcn/ui</b>, answered differently: you own the code.",
-      ],
-      commonMistakes: [
-        "<b>Writing every component as a class out of habit.</b> A three-property component is clearer in one file.",
-        "<b>Keeping a Volt file that has grown to hundreds of lines.</b> That is the point to convert.",
-        "<b>Building your own modal.</b> Focus, escape, scroll locking and announcements are all part of it.",
-        "<b>Fighting a component library's design.</b> That is slower than having written the components yourself.",
-        "<b>Assuming your interface is a differentiator.</b> Most applications are an interface onto a database.",
-      ],
-      quiz: [
-        {
-          question: "What does Volt change?",
-          options: [
-            "It replaces Livewire",
-            "It puts a component's logic and template in a single file",
-            "It removes the need for validation",
-            "It compiles components to JavaScript",
-          ],
-          correctIndex: 1,
-          explanation: "Convenient for a small component; a class scales better.",
-        },
-        {
-          question: "When should a Volt component become a class?",
-          options: [
-            "Immediately",
-            "When it grows enough that navigating and unit testing it in one file becomes awkward",
-            "When it uses validation",
             "Never",
+            "When there is real control flow: early exits, error collection, several side effects",
+            "When the collection is large",
+            "When the items are models",
           ],
           correctIndex: 1,
-          explanation: "The conversion is mechanical, so start simple.",
-        },
-        {
-          question: "What is the strongest argument for a component library like Flux?",
-          options: [
-            "It reduces bundle size",
-            "Accessibility and consistency you would otherwise have to build correctly per primitive",
-            "It removes the need for Tailwind",
-            "It generates the backend",
-          ],
-          correctIndex: 1,
-          explanation: "A modal alone involves focus, escape, scroll locking and announcements.",
-        },
-        {
-          question: "What question decides whether to use one?",
-          options: [
-            "How large the team is",
-            "Whether your interface is a differentiator or a way to use the application",
-            "Which framework you chose",
-            "Whether you use TypeScript",
-          ],
-          correctIndex: 1,
-          explanation: "Most applications are the second, and most teams assume the first.",
+          explanation: "There is no prize for fewer lines; readable code wins.",
         },
       ],
     },
     {
-      id: "inertia-basics",
-      title: "Inertia — pages, props & forms",
-      durationMinutes: 12,
-      explanation: "The other path: a real JavaScript frontend, without the API you built yesterday.\n\n---\n\n### 1. Basic — what Inertia is\n\n> <b>A single-page frontend without turning Laravel into a separate API backend.</b>\n\n```text\nReact\n  ↕\nInertia\n  ↕\nLaravel\n  ↕\nEloquent\n```\n\nLaravel keeps everything it already did:\n\n```text\nroutes · controllers · validation · authorization · database\n```\n\nReact handles what it is good at:\n\n```text\ncomponents · interface state · interactions\n```\n\n<b>The thing worth appreciating is what is absent.</b> No tokens, no CORS, no versioning, no separate deployment, no second set of routes. Yesterday's API exists because a client you do not control needs a contract. Inertia's client is your own code, shipped together, so it does not need one.\n\n---\n\n### 2. Intermediate — pages and props\n\nA controller returns a page instead of a view:\n\n```php\nreturn Inertia::render('Posts/Index', [\n    'posts'   => $posts,\n    'filters' => $filters,\n]);\n```\n\n```text\nresources/js/pages/Posts/Index.tsx\n```\n\nAnd the second argument arrives as props:\n\n```text\nLaravel controller\n      ↓\nprops\n      ↓\nInertia\n      ↓\nReact page\n```\n\n<b>Which makes the mental model simple: a controller is still a controller.</b> It authorizes, queries and returns data. Only the last line changed.\n\nProps travel over the wire, so <b>use API Resources here too</b>, for the same reason as yesterday: without one you serialise the model, and every column reaches the browser and the page source.\n\nTypes make the contract explicit on the other side:\n\n```ts\ntype Props = {\n    posts: Post[];\n    filters: Filters;\n};\n```\n\n<b>An Inertia visit is not a page load.</b> Clicking a link makes a request, receives the new page's props as JSON, and swaps the component. The layout, the JavaScript and the scroll position survive, which is what makes it feel like a single-page application.\n\n---\n\n### 3. Advanced — forms, and why they are the good part\n\nThis is where Inertia earns its place, because it is the part a hand-rolled API makes tedious.\n\n```text\nReact form\n   ↓\nInertia form helper\n   ↓\na normal Laravel route\n   ↓\nvalidation\n   ↓\nredirect, or errors\n   ↓\nReact\n```\n\n```tsx\nconst form = useForm({ title: '', body: '' });\n\nform.post('/posts');\n```\n\nAnd the controller is the one you would have written anyway:\n\n```php\n$request->validate([...]);\n\nPost::create($data);\n\nreturn redirect()->route('posts.index');\n```\n\n<b>A failed validation redirects back, and Inertia puts the errors in `form.errors`</b>, keyed by field. No 422 to parse, no error shape to agree on, no duplicated rules.\n\nThe helper also gives you the things every form needs and nobody enjoys writing:\n\n```text\nform.processing    disable the button\nform.errors        per field\nform.progress      for uploads\nform.reset()\nform.isDirty       warn before leaving\n```\n\nTwo things worth knowing.\n\n<b>A controller redirects, it does not return JSON.</b> That surprises people coming from an API: after a successful `POST`, redirect as you would for a Blade form, and Inertia follows it and renders the next page.\n\n<b>And validation errors are shared automatically</b>, so `form.errors` is populated without the controller doing anything special. Same rules, same messages, one source of truth.\n\nThe wiring underneath all of that, since `Inertia::render()` has to reach a component somehow:\n\n```bash\ncomposer require inertiajs/inertia-laravel\nnpm install @inertiajs/react\n```\n\nA root Blade layout, which is the only Blade file in an Inertia application:\n\n```blade\n<head>\n    @vite('resources/js/app.tsx')\n    @inertiaHead\n</head>\n<body>\n    @inertia\n</body>\n```\n\nAnd the entry point that resolves a page name to a component:\n\n```js\ncreateInertiaApp({\n    resolve: (name) => resolvePageComponent(\n        `./Pages/${name}.tsx`,\n        import.meta.glob('./Pages/**/*.tsx'),\n    ),\n    setup: ({ el, App, props }) => createRoot(el).render(<App {...props} />),\n});\n```\n\n<b>`Inertia::render('Posts/Index')` is a filename lookup</b>, which is why a typo produces a blank page rather than an error you can read.\n\nTwo things every application needs beyond that.\n\n<b>Shared props</b> for what belongs on every page:\n\n```php\n// app/Http/Middleware/HandleInertiaRequests.php\npublic function share(Request $request): array\n{\n    return array_merge(parent::share($request), [\n        'auth'  => ['user' => $request->user()],\n        'flash' => ['success' => fn () => $request->session()->get('success')],\n    ]);\n}\n```\n\n```jsx\nconst { auth, flash } = usePage().props;\n```\n\nThat is where the authenticated user and flash messages come from, and it is also how validation errors reach every page automatically.\n\n<b>And Ziggy</b>, which shares Laravel's named routes with JavaScript:\n\n```jsx\n<Link href={route('posts.show', post.id)}>{post.title}</Link>\n```\n\nWithout it every URL in your frontend is a hardcoded string, and renaming a route breaks them silently. With it, the route name is the contract on both sides.",
-      diagram: `What Inertia is
+      id: "lazy-collections-and-macros",
+      title: "Lazy collections, reduceInto & macros",
+      durationMinutes: 11,
+      explanation: "Collections when the data does not fit, and collections you extend yourself.\n\n---\n\n### 1. Basic — the memory problem\n\nA collection holds every item:\n\n```text\n10 million rows\n       ↓\nCollection\n       ↓\nRAM 💥\n```\n\n<b>A <i>lazy collection</i></b> produces values one at a time instead:\n\n```text\nDatabase\n ↓\nrow 1 → process\nrow 2 → process\nrow 3 → process\n...\n```\n\nWhich is Day 13's `cursor()` and `lazy()`, and the same rule: <b>memory use should not depend on the number of rows.</b>\n\n```php\nUser::lazy()->each(fn ($user) => $user->recalculate());\n\nLazyCollection::make(function () {\n    // yield values\n});\n```\n\nAnd the chain still works:\n\n```php\n->map(...)->filter(...)->each(...)\n```\n\nThe difference is that nothing runs until something asks for a value, and then only enough of it to produce that value.\n\nWhat it is for:\n\n```text\nlarge imports · exports · log files\ndata migrations · ETL jobs\n```\n\nAnything where the input is bigger than memory, or where you do not know how big it is.\n\n---\n\n### 2. Intermediate — `reduceInto()`\n\n`reduce()` carries a value along. When the accumulator is an object you are building up, <b>`reduceInto()` makes that explicit:</b>\n\n```php\n$report = $items->reduceInto(new Report(), function ($report, $item) {\n    $report->add($item);\n\n    return $report;\n});\n```\n\n```text\nitems\n ↓\nReport object\n ↓\nmutate the accumulator\n ↓\nReport object\n```\n\nThe initial value comes first, which reads better when it is a real object with a name, and it makes the type of the result obvious.\n\nUseful when the output is a structure rather than a number:\n\n```text\nDTOs · reports · aggregated objects\ncustom result structures\n```\n\nWhen the result is a total, `sum()` still wins.\n\n---\n\n### 3. Advanced — macros\n\nYou can add your own collection methods:\n\n```php\nCollection::macro('active', function () {\n    return $this->filter(fn ($item) => $item->active);\n});\n```\n\n```php\n$users->active();\n```\n\n<b>You have extended the collection API for the whole application</b>, which is genuinely powerful and genuinely easy to misuse.\n\nThe test is whether the name means something in your domain:\n\n```text\na good macro                  a bad macro\n────────────                  ───────────\na reusable domain concept     a shortcut nobody knows\n\n->overdue()                   ->firstTwoUppercased()\n->totalExcludingTax()         ->doTheThing()\n->activeThisMonth()\n```\n\n<b>The cost of a macro is discoverability.</b> Every Laravel developer knows what `filter()` does; nobody knows what `->flatten2()` does, and it is defined in a service provider they have no reason to open. A macro that saves one line and costs a search is a bad trade.\n\nSo the guidance:\n\n```text\nused in several places, and named after\nsomething your domain actually calls it      →  a macro\n\nused once, or a mechanical shortcut          →  leave it inline\n```\n\nAnd the alternative worth remembering from Day 16: <b>a custom collection class</b> gives the same methods to one model's collections only, which is often what you actually wanted. `Invoice::all()->totalOutstanding()` is discoverable, because it lives on `InvoiceCollection`; a global macro is not.\n\nRegister macros in a service provider, and only ever from your own code: a macro defined in a package that collides with a Laravel method is a debugging afternoon nobody enjoys.",
+      diagram: `The memory problem
 
-  > A single-page frontend without turning Laravel into
-    a separate API backend.
+    10 million rows → Collection → RAM 💥
 
-    React
-      ↕
-    Inertia
-      ↕
-    Laravel
-      ↕
-    Eloquent
+  A lazy collection produces values one at a time:
 
-  Laravel keeps: routes · controllers · validation ·
-                 authorization · database
-  React handles: components · interface state ·
-                 interactions
-
-  What is ABSENT is the point:
-
-    no tokens · no CORS · no versioning
-    no separate deployment · no second set of routes
-
-  Yesterday's API exists because a client you do not
-  control needs a contract. Inertia's client is your
-  own code, shipped together.
-
-
-Pages and props
-
-  return Inertia::render('Posts/Index', [
-      'posts'   => \$posts,
-      'filters' => \$filters,
-  ]);
-
-    resources/js/pages/Posts/Index.tsx
-
-    Laravel controller → props → Inertia → React page
-
-  A controller is still a controller: it authorizes,
-  queries and returns data. Only the last line changed.
-
-  Props travel over the wire, so use API Resources here
-  too — without one you serialise the model and every
-  column reaches the browser and the page source.
-
-  type Props = { posts: Post[]; filters: Filters };
-
-
-  An Inertia VISIT is not a page load. A link makes a
-  request, receives the next page's props as JSON, and
-  swaps the component. The layout, the JavaScript and
-  the scroll position survive.
-
-
-Forms: the part that earns its place
-
-  React form
+    Database
      ↓
-  Inertia form helper
-     ↓
-  a NORMAL Laravel route
-     ↓
-  validation
-     ↓
-  redirect, or errors
-     ↓
-  React
+    row 1 → process
+    row 2 → process
+    row 3 → process
+    ...
 
-    const form = useForm({ title: '', body: '' });
-    form.post('/posts');
+  Which is Day 13's cursor() and lazy(), and the same
+  rule: memory use should not depend on the number
+  of rows.
 
-  And the controller is the one you would have written:
+    User::lazy()->each(...)
+    LazyCollection::make(function () { /* yield */ })
 
-    \$request->validate([...]);
-    Post::create(\$data);
-    return redirect()->route('posts.index');
+  The chain still works. The difference is that nothing
+  runs until something asks for a value, and then only
+  enough to produce it.
 
-  A failed validation redirects back, and Inertia puts
-  the errors in form.errors, keyed by field.
+  For: large imports · exports · log files
+       data migrations · ETL jobs
 
-    no 422 to parse
-    no error shape to agree on
-    no duplicated rules
+  Anything bigger than memory, or of unknown size.
 
-  Plus what every form needs and nobody enjoys writing:
 
-    form.processing   disable the button
-    form.errors       per field
-    form.progress     uploads
-    form.reset()
-    form.isDirty      warn before leaving
+reduceInto
 
+  reduce() carries a value along. When the accumulator
+  is an object you are building, reduceInto() makes
+  that explicit:
 
-  Two things:
-
-    A controller REDIRECTS, it does not return JSON.
-    Surprising if you came from an API. Redirect as you
-    would for a Blade form; Inertia follows it.
-
-    Validation errors are shared automatically, so
-    form.errors is populated with no special controller
-    code. One source of truth.`,
-      codeExample: {
-        title: "A page, its props, and a form",
-        code: `<?php
-// ---------- The controller: still a controller ----------
-
-namespace App\\Http\\Controllers;
-
-use App\\Models\\Post;
-use Illuminate\\Http\\Request;
-use Inertia\\Inertia;
-
-class PostController extends Controller
-{
-    public function index(Request $request)
-    {
-        return Inertia::render('Posts/Index', [
-            // A resource here too: without one, every
-            // column reaches the browser and the page source.
-            'posts' => PostResource::collection(
-                Post::query()
-                    ->when($request->search, fn ($q, $search) =>
-                        $q->where('title', 'like', "%{$search}%"))
-                    ->latest()
-                    ->paginate(10)
-                    ->withQueryString()
-            ),
-            'filters' => $request->only('search', 'status'),
-        ]);
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'body'  => ['required', 'string'],
-        ]);
-
-        $request->user()->posts()->create($data);
-
-        // A redirect, not JSON. Inertia follows it.
-        return redirect()->route('posts.index')
-            ->with('status', 'Post created.');
-    }
-}
-?>
-
-// ---------- The page ----------
-// resources/js/pages/Posts/Index.tsx
-
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
-
-type Post = { id: number; title: string; status: string };
-type Props = { posts: { data: Post[] }; filters: { search?: string } };
-
-export default function Index({ posts, filters }: Props) {
-    const [search, setSearch] = useState(filters.search ?? '');
-
-    return (
-        <>
-            <Head title="Posts" />
-
-            <input
-                value={search}
-                onChange={(e) => {
-                    setSearch(e.target.value);
-                    router.get('/posts', { search: e.target.value }, {
-                        preserveState: true,
-                        replace: true,
-                    });
-                }}
-            />
-
-            {posts.data.map((post) => (
-                <Link key={post.id} href={'/posts/' + post.id}>
-                    {post.title}
-                </Link>
-            ))}
-        </>
-    );
-}
-
-// A Link is an Inertia visit, not a page load: it fetches
-// the next page's props and swaps the component. The
-// layout and the JavaScript survive.
-
-
-// ---------- The form ----------
-// resources/js/pages/Posts/Create.tsx
-
-import { useForm } from '@inertiajs/react';
-
-export default function Create() {
-    const form = useForm({ title: '', body: '' });
-
-    function submit(e: React.FormEvent) {
-        e.preventDefault();
-        form.post('/posts');
-    }
-
-    return (
-        <form onSubmit={submit}>
-            <input
-                value={form.data.title}
-                onChange={(e) => form.setData('title', e.target.value)}
-            />
-            {/* Populated from Laravel's validation. No 422 parsing. */}
-            {form.errors.title && <p>{form.errors.title}</p>}
-
-            <textarea
-                value={form.data.body}
-                onChange={(e) => form.setData('body', e.target.value)}
-            />
-            {form.errors.body && <p>{form.errors.body}</p>}
-
-            <button type="submit" disabled={form.processing}>
-                {form.processing ? 'Saving…' : 'Save'}
-            </button>
-        </form>
-    );
-}
-
-// form.processing · form.errors · form.progress
-// form.reset() · form.isDirty
-//
-// The things every form needs and nobody enjoys writing.`,
-      },
-      keyTakeaways: [
-        "<b>Inertia gives a single-page frontend without a separate API</b>: no tokens, no CORS, no versioning.",
-        "<b>Laravel keeps its routes, controllers, validation, authorization and Eloquent</b>; React takes the views.",
-        "<b>`Inertia::render('Page', [...])` returns a page and its props</b>, so only the controller's last line changed.",
-        "<b>Props travel over the wire, so use API Resources here too</b>, or every column reaches the browser.",
-        "TypeScript types make the prop contract explicit on the frontend side.",
-        "<b>An Inertia visit is not a page load</b>: it fetches props and swaps the component, keeping layout and state.",
-        "<b>The form helper posts to a normal Laravel route</b>, which validates and redirects as it always did.",
-        "<b>Validation errors arrive in `form.errors`, keyed by field</b>, with no 422 to parse and no duplicated rules.",
-        "<b>A controller redirects rather than returning JSON</b>, and Inertia follows the redirect.",
-        "`form.processing`, `form.progress`, `form.reset()` and `form.isDirty` cover what every form needs.",
-      ],
-      commonMistakes: [
-        "<b>Returning JSON from an Inertia controller.</b> Redirect as you would for a Blade form.",
-        "<b>Passing models straight into props.</b> Every column is serialised into the page, exactly as on an API.",
-        "<b>Rebuilding validation in React.</b> The rules already exist and their errors arrive automatically.",
-        "<b>Using a plain `<a>` instead of `Link`.</b> That is a full page load, and the SPA feel is gone.",
-        "<b>Thinking Inertia needs the API from yesterday.</b> It replaces the need for one.",
-      ],
-      quiz: [
-        {
-          question: "What does Inertia let you avoid?",
-          options: [
-            "Writing controllers",
-            "Building a separate API with tokens, CORS and versioning",
-            "Using Eloquent",
-            "Validation",
-          ],
-          correctIndex: 1,
-          explanation: "Its client is your own code, shipped with the application.",
-        },
-        {
-          question: "What does an Inertia controller return after a successful POST?",
-          options: [
-            "JSON with the created model",
-            "A redirect, which Inertia follows",
-            "A 201 status",
-            "The page component",
-          ],
-          correctIndex: 1,
-          explanation: "Exactly as it would for a Blade form.",
-        },
-        {
-          question: "How do Laravel validation errors reach a React form?",
-          options: [
-            "You parse the 422 body",
-            "Inertia shares them automatically, and they appear in `form.errors` keyed by field",
-            "You duplicate the rules in JavaScript",
-            "Through a separate endpoint",
-          ],
-          correctIndex: 1,
-          explanation: "One source of truth for the rules and the messages.",
-        },
-        {
-          question: "Why use an API Resource for Inertia props?",
-          options: [
-            "Inertia requires it",
-            "Props are serialised into the page, so without one every column reaches the browser",
-            "For pagination",
-            "For TypeScript types",
-          ],
-          correctIndex: 1,
-          explanation: "The same argument as yesterday, for the same reason.",
-        },
-      ],
-    },
-    {
-      id: "inertia-performance-and-types",
-      title: "Partial reloads, deferred props, TypeScript & Precognition",
-      durationMinutes: 12,
-      explanation: "Making an Inertia page fast, and making its contract hold.\n\n---\n\n### 1. Basic — partial reloads\n\nA dashboard page has several props:\n\n```text\nPosts · Statistics · Notifications · Profile\n```\n\nChange the search filter and, by default, the controller runs again and returns all four. Three of them were fine.\n\n<b>A partial reload asks for a subset:</b>\n\n```tsx\nrouter.get('/dashboard', { search }, { only: ['posts'] });\n```\n\n```text\nrequest\n  ↓\n\"only posts\"\n  ↓\nLaravel\n  ↓\nposts\n  ↓\nReact updates posts\n```\n\nAnd because a prop can be a closure, <b>Laravel does not even run the queries for the props you did not ask for:</b>\n\n```php\n'statistics' => fn () => $this->expensiveStats(),\n```\n\nThat closure is only called when `statistics` is included. Without it, a filter keystroke re-runs the statistics query every time, which is the most common Inertia performance problem and the least visible one.\n\n---\n\n### 2. Intermediate — deferred props\n\nSome data is slow and not needed immediately:\n\n```text\ntitle       immediate\nposts       immediate\nanalytics   takes two seconds\n```\n\nBy default the page waits for all three, so the user sees nothing for two seconds because of a chart below the fold.\n\n<b>A deferred prop lets the page render first:</b>\n\n```php\n'analytics' => Inertia::defer(fn () => $this->analytics()),\n```\n\n```text\npage renders\n     ↓\ndeferred request\n     ↓\nanalytics arrive\n     ↓\nthat part fills in\n```\n\n<b>The total time is the same; the perceived time is not.</b> Something useful is on screen immediately, and the expensive part appears where a placeholder was.\n\nWhich makes the design question explicit: what does the user need first? Usually the thing they came for, and rarely the chart.\n\n---\n\n### 3. Advanced — types, components and duplicated rules\n\n<b>TypeScript</b> makes the prop contract checkable:\n\n```ts\ntype User = { id: number; name: string; email: string };\n```\n\n```text\nLaravel data → Inertia props → TypeScript types → React\n```\n\nWithout it, a renamed field in a resource is a runtime `undefined` somewhere in the interface. With it, it is a compile error, in the right file, before it ships.\n\nThe types are still written by hand, so they can drift; a generator that produces them from your resources removes that, and is worth adding once the number of pages grows.\n\n<b>shadcn/ui</b> is the component-library question from the Volt lesson, answered differently. <b>You copy the component code into your project and own it.</b> No dependency to fight, no upgrade to fear, and no ceiling when a design needs something unusual. The cost is that it is now your code: your bugs, your accessibility, your maintenance.\n\n```text\na library      somebody else's code, somebody else's decisions\nshadcn/ui      your code, from a good starting point\n```\n\n<b>Precognition</b> solves the duplication that Inertia otherwise reintroduces.\n\nLivewire validates on the server as you type, because the state is already there. In React, live validation usually means writing the rules again:\n\n```text\nLaravel                React\n───────                ─────\nemail required         email required\nemail valid            email valid\npassword min 12        password min 12\n```\n\n<b>Two sources of truth, and one of them will fall behind.</b>\n\nPrecognition sends the form to Laravel <i>before</i> submission and asks it to validate without executing:\n\n```text\nuser types\n    ↓\nprecognition request\n    ↓\nLaravel's own rules\n    ↓\nvalidation result\n    ↓\nfrontend shows it\n```\n\nOne set of rules, live feedback, and no chance of the two disagreeing. On a long form, that is the difference between finding out about field three at the end and finding out immediately.",
-      diagram: `Partial reloads
-
-  A dashboard: Posts · Statistics · Notifications · Profile
-
-  Change the filter and, by default, the controller runs
-  again and returns all four. Three were fine.
-
-    router.get('/dashboard', { search }, { only: ['posts'] })
-
-    request → "only posts" → Laravel → posts
-            → React updates posts
-
-  And because a prop can be a CLOSURE, Laravel does not
-  even run the queries you did not ask for:
-
-    'statistics' => fn () => \$this->expensiveStats(),
-
-  Without that, a filter keystroke re-runs the statistics
-  query every time. The most common Inertia performance
-  problem, and the least visible.
-
-
-Deferred props
-
-    title       immediate
-    posts       immediate
-    analytics   takes two seconds
-
-  By default the page waits for all three, so the user
-  sees nothing for two seconds because of a chart below
-  the fold.
-
-    'analytics' => Inertia::defer(fn () => ...)
-
-    page renders → deferred request → analytics arrive
-                 → that part fills in
-
-  Total time is the same. PERCEIVED time is not.
-
-  Which makes the design question explicit: what does
-  the user need first? Usually the thing they came for,
-  rarely the chart.
-
-
-TypeScript
-
-    type User = { id: number; name: string; email: string };
-
-    Laravel data → Inertia props → TypeScript types → React
-
-  Without it, a renamed field in a resource is a runtime
-  undefined somewhere in the interface. With it, it is a
-  compile error, in the right file, before it ships.
-
-  The types are hand-written and can drift. A generator
-  that produces them from your resources removes that.
-
-
-shadcn/ui: the same question, a different answer
-
-    a library     somebody else's code and decisions
-    shadcn/ui     YOUR code, from a good starting point
-
-  You copy the component in and own it. No dependency to
-  fight, no upgrade to fear, no ceiling when a design
-  needs something unusual.
-
-  The cost: it is now your code. Your bugs, your
-  accessibility, your maintenance.
-
-
-Precognition
-
-  Livewire validates on the server as you type, because
-  the state is already there. In React, live validation
-  usually means writing the rules again:
-
-    Laravel              React
-    ───────              ─────
-    email required       email required
-    email valid          email valid
-    password min 12      password min 12
-
-  Two sources of truth, and one will fall behind.
-
-    user types
-        ↓
-    precognition request
-        ↓
-    Laravel's OWN rules
-        ↓
-    validation result
-        ↓
-    the frontend shows it
-
-  One set of rules, live feedback, no chance of the two
-  disagreeing. On a long form, that is finding out about
-  field three immediately rather than at the end.`,
-      codeExample: {
-        title: "A fast page with one set of rules",
-        code: `<?php
-// ---------- Partial reloads and lazy props ----------
-
-class DashboardController extends Controller
-{
-    public function index(Request $request)
-    {
-        return Inertia::render('Dashboard', [
-            // Always sent.
-            'filters' => $request->only('search'),
-
-            'posts' => PostResource::collection(
-                Post::where('title', 'like', "%{$request->search}%")
-                    ->paginate(10)
-            ),
-
-            // A closure: only evaluated when this prop is
-            // actually requested. Without it, every filter
-            // keystroke re-runs this query.
-            'statistics' => fn () => $this->expensiveStatistics(),
-
-            // The page renders first; this fills in after.
-            'analytics' => Inertia::defer(fn () => $this->analytics()),
-        ]);
-    }
-}
-?>
-
-// resources/js/pages/Dashboard.tsx
-
-import { router, Deferred } from '@inertiajs/react';
-
-// Ask for one prop, and Laravel runs one query.
-router.get('/dashboard', { search }, {
-    only: ['posts'],
-    preserveState: true,
-    replace: true,
-});
-
-// The deferred prop, with something to show meanwhile.
-<Deferred data="analytics" fallback={<Skeleton />}>
-    <AnalyticsChart />
-</Deferred>
-
-
-// ---------- TypeScript ----------
-
-// resources/js/types/index.d.ts
-
-export type User = {
-    id: number;
-    name: string;
-    email: string;
-};
-
-export type Post = {
-    id: number;
-    title: string;
-    status: 'draft' | 'published';
-    author: User;
-};
-
-// A renamed field in PostResource is now a compile error
-// in the right file, rather than a runtime undefined
-// somewhere in the interface.
-
-export default function Index({ posts }: { posts: Post[] }) {
-    return <>{posts.map((p) => <p key={p.id}>{p.title}</p>)}</>;
-}
-
-
-<?php
-// ---------- Precognition: one set of rules ----------
-
-// The route accepts a precognitive request and runs the
-// same validation without executing the action.
-
-Route::post('/register', [RegisterController::class, 'store'])
-    ->middleware(HandlePrecognitiveRequests::class);
-
-
-class RegisterController extends Controller
-{
-    public function store(Request $request)
-    {
-        // Precognition runs exactly these rules, and stops.
-        $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ]);
-
-        User::create($data);
-
-        return redirect()->route('dashboard');
-    }
-}
-?>
-
-// resources/js/pages/Register.tsx
-
-import { useForm } from 'laravel-precognition-react-inertia';
-
-export default function Register() {
-    const form = useForm('post', '/register', {
-        name: '', email: '', password: '',
+    \$items->reduceInto(new Report(), function (\$report, \$item) {
+        \$report->add(\$item);
+        return \$report;
     });
 
-    return (
-        <form onSubmit={(e) => { e.preventDefault(); form.submit(); }}>
-            <input
-                value={form.data.email}
-                onChange={(e) => form.setData('email', e.target.value)}
-                // Validated by LARAVEL, as they leave the field.
-                onBlur={() => form.validate('email')}
-            />
-            {form.errors.email && <p>{form.errors.email}</p>}
+    items → Report object → mutate → Report object
 
-            <button disabled={form.processing}>Register</button>
-        </form>
-    );
+  The initial value comes FIRST, which reads better when
+  it is a real object with a name, and makes the result
+  type obvious.
+
+  For: DTOs · reports · aggregated objects
+       custom result structures
+
+  When the result is a total, sum() still wins.
+
+
+Macros
+
+  Collection::macro('active', function () {
+      return \$this->filter(fn (\$item) => \$item->active);
+  });
+
+  \$users->active();
+
+  You have extended the collection API for the whole
+  application. Powerful, and easy to misuse.
+
+  a good macro                  a bad macro
+  ────────────                  ───────────
+  a reusable DOMAIN concept     a shortcut nobody knows
+
+  ->overdue()                   ->firstTwoUppercased()
+  ->totalExcludingTax()         ->doTheThing()
+  ->activeThisMonth()
+
+  The cost is DISCOVERABILITY. Every Laravel developer
+  knows filter(). Nobody knows ->flatten2(), and it is
+  defined in a service provider they have no reason to
+  open. Saving one line and costing a search is a bad
+  trade.
+
+    several places, named after something your
+    domain actually calls it        →  a macro
+    used once, or mechanical        →  leave it inline
+
+
+  And the alternative from Day 16: a CUSTOM COLLECTION
+  CLASS gives those methods to one model only, which is
+  often what you wanted.
+
+    Invoice::all()->totalOutstanding()
+
+  is discoverable — it lives on InvoiceCollection.
+  A global macro is not.
+
+  Register macros in a service provider, from your own
+  code only. A package macro colliding with a Laravel
+  method is a debugging afternoon.`,
+      codeExample: {
+        title: "Streaming, folding and extending",
+        code: `<?php
+
+use Illuminate\\Support\\Collection;
+use Illuminate\\Support\\LazyCollection;
+
+// ---------- Lazy: memory does not grow with the rows ----------
+
+// ❌ Ten million models in memory.
+User::all()->each(fn ($user) => $user->recalculate());
+
+// ✓ One at a time.
+User::lazy()->each(fn ($user) => $user->recalculate());
+
+// And the chain still reads the same.
+User::lazy()
+    ->filter(fn ($user) => $user->needs_sync)
+    ->map(fn ($user) => $user->toSyncPayload())
+    ->each(fn ($payload) => $this->push($payload));
+
+// Nothing runs until something asks for a value, and
+// then only enough to produce it.
+
+
+// ---------- A lazy collection from anything ----------
+
+// A log file of unknown size, read line by line.
+$lines = LazyCollection::make(function () {
+    $handle = fopen(storage_path('logs/laravel.log'), 'r');
+
+    while (($line = fgets($handle)) !== false) {
+        yield $line;
+    }
+
+    fclose($handle);
+});
+
+$errors = $lines
+    ->filter(fn ($line) => str_contains($line, 'ERROR'))
+    ->take(100)          // stops reading after 100
+    ->values();
+
+// take() is where lazy pays off: the file is not read
+// past the hundredth error.
+
+
+<?php
+// ---------- reduceInto: the accumulator is an object ----------
+
+$report = $invoices->reduceInto(
+    new MonthlyReport(),
+    function (MonthlyReport $report, Invoice $invoice) {
+        $report->add($invoice);
+
+        return $report;
+    },
+);
+
+// The initial value first, so the result's type is
+// obvious at a glance.
+
+// For a plain total, this still wins:
+$total = $invoices->sum('total');
+
+
+<?php
+// ---------- Macros ----------
+
+// app/Providers/AppServiceProvider.php
+
+public function boot(): void
+{
+    // ✓ A domain concept, used in several places.
+    Collection::macro('overdue', function () {
+        return $this->filter(fn ($invoice) => $invoice->isOverdue());
+    });
+
+    // ❌ A mechanical shortcut nobody will find.
+    Collection::macro('f2u', function () {
+        return $this->take(2)->map(fn ($s) => strtoupper($s));
+    });
 }
 
-// The rules exist once. The frontend cannot disagree
-// with the backend, because it is asking the backend.`,
+$invoices->overdue();
+
+
+<?php
+// ---------- Often better: a custom collection class ----------
+
+// Day 16: the methods belong to one model's collections,
+// and live somewhere a reader can find them.
+
+namespace App\\Models;
+
+use Illuminate\\Database\\Eloquent\\Collection;
+
+class InvoiceCollection extends Collection
+{
+    public function overdue(): static
+    {
+        return $this->filter(fn ($invoice) => $invoice->isOverdue());
+    }
+
+    public function totalOutstanding(): int
+    {
+        return $this->reject->is_paid->sum('total');
+    }
+}
+
+class Invoice extends Model
+{
+    public function newCollection(array $models = []): InvoiceCollection
+    {
+        return new InvoiceCollection($models);
+    }
+}
+
+// Invoice::all()->totalOutstanding()
+//
+// Discoverable: it is on InvoiceCollection, next to the
+// model. A global macro is not.`,
       },
       keyTakeaways: [
-        "<b>A partial reload requests a subset of props</b>, so a filter change does not rebuild the whole page.",
-        "<b>A prop defined as a closure is only evaluated when requested</b>, so unrequested queries never run.",
-        "Without that, every filter keystroke re-runs the expensive props, which is the common Inertia performance bug.",
-        "<b>A deferred prop lets the page render before slow data arrives</b>, and fills in afterwards.",
-        "<b>The total time is unchanged; the perceived time is not</b>, which makes \"what do they need first\" a real question.",
-        "<b>TypeScript turns a renamed field into a compile error</b> rather than a runtime `undefined` in the interface.",
-        "Hand-written types can drift, so generating them from your resources is worth doing as pages grow.",
-        "<b>shadcn/ui gives you the component code to own</b>, trading a dependency for maintenance you now carry.",
-        "<b>Live validation in React normally duplicates the rules</b>, creating two sources of truth.",
-        "<b>Precognition asks Laravel to validate before submission</b>, using the same rules, so the two cannot disagree.",
+        "<b>A collection holds every item, so a large result set exhausts memory.</b>",
+        "<b>A lazy collection produces values one at a time</b>, so memory does not grow with the number of rows.",
+        "`User::lazy()` and `LazyCollection::make()` both work with the normal chain methods.",
+        "<b>Nothing runs until a value is asked for</b>, which is why `take()` can stop the work early.",
+        "It suits large imports, exports, log files, migrations and anything of unknown size.",
+        "<b>`reduceInto()` puts the accumulator first</b>, which reads better when it is an object you are building.",
+        "Use it for reports, DTOs and structures; for a total, `sum()` still wins.",
+        "<b>A macro adds a method to every collection in the application.</b>",
+        "<b>The cost of a macro is discoverability</b>: nobody knows it exists, and it lives in a provider they will not open.",
+        "<b>Write a macro for a named domain concept used in several places</b>, and leave a mechanical shortcut inline.",
+        "<b>A custom collection class is often what you wanted</b>, because the methods live next to the model that uses them.",
       ],
       commonMistakes: [
-        "<b>Returning every prop on every filter change.</b> Three expensive queries run for a search box.",
-        "<b>Passing an evaluated value where a closure would do.</b> The query runs whether or not the prop is wanted.",
-        "<b>Blocking a page on a slow chart.</b> Defer it and show what the user actually came for.",
-        "<b>Re-implementing validation rules in React.</b> They will fall out of step with the server's.",
-        "<b>Treating hand-written prop types as guaranteed.</b> They are a claim about the backend, not a check of it.",
+        "<b>Loading a huge table into a collection.</b> Memory scales with rows, and `lazy()` is one word away.",
+        "<b>Chaining after `get()` on a large query.</b> The rows are already in memory; `lazy()` had to come first.",
+        "<b>Writing a macro for a one-line shortcut.</b> It saves a line and costs the next reader a search.",
+        "<b>Defining macros for another team's convenience.</b> Undiscoverable methods are worse than repeated code.",
+        "<b>Using `reduceInto()` for a sum.</b> `sum()` says it in one word.",
       ],
       quiz: [
         {
-          question: "What does `only: ['posts']` do on an Inertia visit?",
-          options: [
-            "Filters the posts",
-            "Requests just that prop, so closure props that were not asked for are never evaluated",
-            "Caches the response",
-            "Skips the controller",
-          ],
-          correctIndex: 1,
-          explanation: "Which is what stops a filter keystroke re-running every expensive query.",
-        },
-        {
-          question: "What does a deferred prop change?",
-          options: [
-            "The total load time",
-            "The page renders before that data arrives, and it fills in afterwards",
-            "The prop is cached",
-            "The query runs in a job",
-          ],
-          correctIndex: 1,
-          explanation: "Perceived performance, not actual total time.",
-        },
-        {
-          question: "What does TypeScript catch in an Inertia application?",
-          options: [
-            "Validation failures",
-            "A renamed or missing prop field, at compile time rather than as a runtime `undefined`",
-            "Missing authorization",
-            "N+1 queries",
-          ],
-          correctIndex: 1,
-          explanation: "In the right file, before it ships.",
-        },
-        {
-          question: "What problem does Precognition solve?",
+          question: "What problem does a lazy collection solve?",
           options: [
             "Slow queries",
-            "Live validation in the frontend duplicating the server's rules into a second source of truth",
-            "Missing CSRF tokens",
-            "Large bundles",
+            "Holding every item in memory, which fails on a large result set",
+            "Missing eager loads",
+            "Duplicate values",
           ],
           correctIndex: 1,
-          explanation: "It asks Laravel to run the real rules before submission.",
+          explanation: "Values are produced one at a time, so memory does not grow with the rows.",
+        },
+        {
+          question: "Why can `take(100)` on a lazy collection stop early?",
+          options: [
+            "It caches",
+            "Nothing runs until a value is asked for, so the source stops being read",
+            "It runs a LIMIT query",
+            "It cannot stop early",
+          ],
+          correctIndex: 1,
+          explanation: "Which is what makes it work on a file of unknown size.",
+        },
+        {
+          question: "What does `reduceInto()` make clearer than `reduce()`?",
+          options: [
+            "The iteration order",
+            "That the accumulator is a specific object, because it comes first",
+            "The performance",
+            "The item type",
+          ],
+          correctIndex: 1,
+          explanation: "Useful when the result is a report or a DTO rather than a number.",
+        },
+        {
+          question: "What is the main cost of a collection macro?",
+          options: [
+            "Performance",
+            "Discoverability: nobody knows it exists, and it is defined in a provider they will not open",
+            "Memory",
+            "It breaks type hints",
+          ],
+          correctIndex: 1,
+          explanation: "A custom collection class keeps the methods next to the model.",
         },
       ],
     },
     {
-      id: "folio-and-choosing",
-      title: "Folio, and choosing between the two",
-      durationMinutes: 11,
-      explanation: "One more routing option, and then the decision this day exists to make.\n\n---\n\n### 1. Basic — Folio\n\nNormal routing names every page:\n\n```php\nRoute::get('/about', [AboutController::class, 'index']);\n```\n\nWhich is right when the page has logic. For a page that is only content, it is a route, a controller and a view for something that is one file's worth of markup.\n\n<b>Folio makes the filesystem the routes:</b>\n\n```text\npages/\n├── index.blade.php      →  /\n├── about.blade.php      →  /about\n└── contact.blade.php    →  /contact\n```\n\nAdd a file, get a URL. If you have written Next.js, this is the arrangement you already know.\n\n<b>It suits pages, not applications.</b> Marketing pages, documentation, a terms page. Anything with authorization, several actions or real logic wants a controller, where that logic has somewhere to live and something to test.\n\nAnd it composes: Folio for the public pages, normal routes for the application, in the same project.\n\n---\n\n### 2. Intermediate — the comparison\n\n```text\n                     Livewire            Inertia\n───────────────────────────────────────────────────────\nmain language        PHP                 JS / TS\nUI                   Blade               React/Vue/Svelte\nserver interaction   Livewire requests   Inertia visits\nbrowser state        Livewire-managed    the JS framework\nJavaScript needed    minimal             significant\nbest for             CRUD, admin         rich frontends\nLaravel integration  very deep           very deep\nSPA-like feel        yes                 yes\nAPI required         no                  no\n```\n\n<b>Read the last two rows together</b>, because they are the point of the day: both give a single-page feel and neither needs the API from yesterday. The choice is not about capability.\n\n---\n\n### 3. Advanced — actually choosing\n\n<b>Livewire, when Laravel should own the application:</b>\n\n```text\nLaravel owns most of it\n        +\nthe UI is not extremely JavaScript-heavy\n        +\nthe team is stronger in PHP\n```\n\n```text\nadmin dashboard · CMS · back-office\nCRUD · internal management system\n```\n\n<b>Inertia, when the frontend is the work:</b>\n\n```text\nthe UI is genuinely rich\n        +\nthe team writes React or Vue well\n        +\nyou still want Laravel's conventions\n```\n\n```text\nSaaS dashboard · complex application\nrich data visualisation · a large component system\n```\n\nAnd the honest tiebreaker: <b>the unfamiliar option is the expensive one.</b> A team that writes React fluently will build a better admin panel in Inertia than in a framework they are learning, whatever the general advice says.\n\n<b>If you already work in React, Inertia plus TypeScript is the shorter path</b>, and Livewire is still worth understanding, because it is what most of the Laravel ecosystem is written against.\n\n---\n\n### What this day was actually about\n\n```text\nLaravel\n ├── routing\n ├── authentication\n ├── authorization\n ├── validation\n ├── Eloquent\n └── business logic\n        │\n        ├───────────────┐\n        ▼               ▼\n   Livewire          Inertia\n        │               │\n      Blade      React / Vue / Svelte\n```\n\n<b>Everything above the split is every day of this track</b>, and it does not change. Days 1 to 23 are the same whichever branch you take.\n\nWhich reframes the whole question. You are not choosing between two frameworks, or learning two systems. <b>You are choosing how the browser drives the same Laravel application</b>, and that is a decision you can revisit per page, per feature, or per team.\n\nAnd it is why the mastery target for today is not \"can you build both\". It is: <b>can you explain why the same Laravel backend supports two completely different frontend models?</b> If the answer is \"because everything that matters happens below the split\", the day has done its job.\n\nOne axis missing from that comparison, and it decides the choice for some projects: <b>search engines.</b>\n\n```text\nBlade      the server sends HTML          fine\nLivewire   the server sends HTML          fine\nInertia    the server sends an empty div  needs SSR\n```\n\nAn Inertia page renders in the browser, so a crawler that does not execute JavaScript sees nothing. The answer is server-side rendering:\n\n```bash\nphp artisan inertia:start-ssr\n```\n\n<b>Which means a Node process running alongside PHP</b>, supervised and deployed like any other, so it is a real operational cost rather than a checkbox. For a dashboard behind a login it does not matter at all; for a public marketing site or a catalogue it decides the stack.\n\nAnd on combining them: <b>Livewire and Inertia work fine on different pages of the same application</b>, and not inside the same view. An admin area in Livewire and a customer-facing app in Inertia is a reasonable split; a Livewire component inside an Inertia page is not supported.",
-      diagram: `Folio: the filesystem is the routes
+      id: "strings",
+      title: "Strings — Str and Str::of()",
+      durationMinutes: 9,
+      explanation: "PHP's string functions are a museum of inconsistent argument orders. `Str` is the tidy layer over them.\n\n---\n\n### 1. Basic — the operations you keep needing\n\n```php\nStr::slug('Laravel Eloquent');   // laravel-eloquent\n```\n\nAnd the rest of the set:\n\n```text\nStr::limit()        truncate, with an ellipsis\nStr::contains()     is this in there?\nStr::startsWith()   Str::endsWith()\nStr::replace()\nStr::before()       Str::after()\nStr::headline()     Str::title()\nStr::camel()        Str::snake()      Str::studly()\nStr::random()       Str::uuid()\nStr::mask()\n```\n\n<b>The value is not that these are impossible in plain PHP.</b> It is that `Str::before($email, '@')` says what it does, where `substr($email, 0, strpos($email, '@'))` says how, and gets the argument order wrong once in every codebase.\n\nTwo worth knowing specifically. <b>`Str::slug()` is what turns a title into a URL segment</b>, handling accents and punctuation you would otherwise discover one bug at a time. And <b>`Str::mask()` is for showing a card number or an email partially</b>, which otherwise becomes a hand-written `substr` with an off-by-one.\n\n---\n\n### 2. Intermediate — the fluent form\n\nNested calls read inside out:\n\n```php\nStr::lower(Str::slug($title));\n```\n\nYou read `Str::lower`, then have to find the innermost call to know what happens first. <b>`Str::of()` reverses that:</b>\n\n```php\nStr::of($title)->trim()->lower()->slug();\n```\n\n```text\ninput → trim → lower → slug → result\n```\n\nTop to bottom, in the order it happens. On two operations it barely matters; on five it is the difference between reading it and decoding it.\n\nAnd it ends in whatever you need:\n\n```php\nStr::of($name)->trim()->title()->toString();\n$slug = (string) Str::of($title)->slug();\n```\n\n---\n\n### 3. Advanced — where this fits, and where it does not\n\n<b>`Str` is a convenience, not a validator.</b> `Str::contains($url, 'example.com')` is true for `evil.com/?x=example.com`, and using it as a security check is how a filter gets bypassed. Day 20's rule stands: parse the thing properly, or whitelist.\n\nThe fluent form is also useful in a chain of transformations you might otherwise scatter:\n\n```php\n$reference = Str::of($customer->name)\n    ->ascii()\n    ->upper()\n    ->replaceMatches('/[^A-Z]/', '')\n    ->limit(3, '')\n    ->append('-', $invoice->id);\n```\n\nAll of which could be four statements and three temporary variables. <b>The chain is worth it when the steps have no meaning individually</b>, which is the same test as a collection pipeline.\n\nThree practical notes.\n\n<b>`Str::of()` returns a `Stringable`, not a string.</b> Most places accept it because it casts, and a strict type hint will not. Call `->toString()` when the boundary is strict.\n\n<b>Multibyte is handled.</b> `Str::limit()` and `Str::upper()` do not cut a character in half the way `substr()` and `strtoupper()` can, which matters the first time a Japanese or Nepali name goes through them, and connects directly to the localization at the start of today.\n\n<b>And `Str::random()` is not for anything secret.</b> For a token or a password reset value, use the framework's cryptographic helpers rather than a random string, exactly as Day 18 described.",
+      diagram: `The operations you keep needing
 
-  Route::get('/about', [AboutController::class, 'index']);
+  Str::slug('Laravel Eloquent')   →  laravel-eloquent
 
-  Right when the page has logic. For a page that is only
-  content, that is a route, a controller and a view for
-  one file's worth of markup.
+    Str::limit()       truncate, with an ellipsis
+    Str::contains()    startsWith()   endsWith()
+    Str::replace()     before()       after()
+    Str::headline()    title()
+    Str::camel()       snake()        studly()
+    Str::random()      uuid()         mask()
 
-    pages/
-    ├── index.blade.php     →  /
-    ├── about.blade.php     →  /about
-    └── contact.blade.php   →  /contact
+  The value is not that these are impossible in PHP.
+  It is that
 
-  Add a file, get a URL. If you have written Next.js,
-  you already know this arrangement.
+    Str::before(\$email, '@')
 
-  It suits PAGES, not applications. Marketing pages,
-  documentation, a terms page. Anything with
-  authorization, several actions or real logic wants a
-  controller, where that logic has somewhere to live and
-  something to test.
+  says WHAT it does, where
 
-  And it composes: Folio for public pages, normal routes
-  for the application, in one project.
+    substr(\$email, 0, strpos(\$email, '@'))
 
+  says HOW, and gets the argument order wrong once in
+  every codebase.
 
-The comparison
-
-                       Livewire            Inertia
-  ─────────────────────────────────────────────────────
-  main language        PHP                 JS / TS
-  UI                   Blade               React/Vue/Svelte
-  server interaction   Livewire requests   Inertia visits
-  browser state        Livewire-managed    the JS framework
-  JavaScript needed    minimal             significant
-  best for             CRUD, admin         rich frontends
-  Laravel integration  very deep           very deep
-  SPA-like feel        yes                 yes
-  API required         no                  no
-
-  Read the last two rows together: both feel like a SPA
-  and neither needs yesterday's API. The choice is not
-  about capability.
+  Two specifically: slug() turns a title into a URL
+  segment, handling accents and punctuation you would
+  otherwise find one bug at a time. mask() shows a card
+  number or an email partially, without a hand-written
+  substr and an off-by-one.
 
 
-Choosing
+The fluent form
 
-  Livewire, when Laravel should own the application:
+  Str::lower(Str::slug(\$title))
 
-    Laravel owns most of it
-          + the UI is not extremely JavaScript-heavy
-          + the team is stronger in PHP
+  reads inside out: you read lower, then hunt for the
+  innermost call to know what happens first.
 
-    admin dashboard · CMS · back-office
-    CRUD · internal management system
+  Str::of(\$title)->trim()->lower()->slug()
 
-  Inertia, when the frontend IS the work:
+    input → trim → lower → slug → result
 
-    the UI is genuinely rich
-          + the team writes React or Vue well
-          + you still want Laravel's conventions
+  Top to bottom, in the order it happens. On two
+  operations it barely matters. On five it is the
+  difference between reading and decoding.
 
-    SaaS dashboard · complex application
-    rich visualisation · a large component system
-
-  The honest tiebreaker: the UNFAMILIAR option is the
-  expensive one. A team fluent in React will build a
-  better admin panel in Inertia than in a framework they
-  are learning.
-
-  Already working in React? Inertia plus TypeScript is
-  the shorter path. Livewire is still worth knowing:
-  it is what most of the ecosystem is written against.
+  Ends in what you need:
+    ->toString()      or      (string) Str::of(...)
 
 
-What this day was about
+Where it fits, and where it does not
 
-  Laravel
-   ├── routing
-   ├── authentication
-   ├── authorization
-   ├── validation
-   ├── Eloquent
-   └── business logic
-          │
-          ├───────────────┐
-          ▼               ▼
-     Livewire          Inertia
-          │               │
-        Blade      React / Vue / Svelte
+  ⚠️  Str is a CONVENIENCE, not a validator.
 
-  Everything ABOVE the split is every day of this track,
-  and it does not change. Days 1 to 23 are the same
-  whichever branch you take.
+      Str::contains(\$url, 'example.com')
 
-  So you are not choosing between two frameworks, or
-  learning two systems. You are choosing how the browser
-  DRIVES the same Laravel application — a decision you
-  can revisit per page, per feature, or per team.
+      is true for evil.com/?x=example.com. Using it as
+      a security check is how a filter gets bypassed.
+      Parse it properly, or whitelist. Day 20 stands.
 
-  Which is why the target today is not "can you build
-  both". It is:
+  The chain is worth it when the steps have no meaning
+  individually — the same test as a collection pipeline.
+  Four statements and three temporary variables, or one
+  chain that reads in order.
 
-    can you explain why the same Laravel backend
-    supports two completely different frontend models?
 
-  "Because everything that matters happens below the
-  split" is the answer.`,
+Three practical notes
+
+  Str::of() returns a Stringable, not a string. Most
+  places accept it because it casts; a strict type hint
+  will not. ->toString() at a strict boundary.
+
+  Multibyte is handled. limit() and upper() do not cut
+  a character in half the way substr() and strtoupper()
+  can — which matters the first time a Japanese or
+  Nepali name goes through, and connects straight back
+  to this morning's localization.
+
+  Str::random() is not for anything secret. Tokens and
+  reset values use the framework's cryptographic
+  helpers, exactly as Day 18 described.`,
       codeExample: {
-        title: "Folio, and the two versions of one page",
-        code: `{{-- ---------- Folio: a page is a file ---------- --}}
+        title: "Str, and when to chain",
+        code: `<?php
 
-{{-- resources/views/pages/about.blade.php  →  /about --}}
+use Illuminate\\Support\\Str;
 
-<x-layout>
-    <h1>About us</h1>
-    <p>...</p>
-</x-layout>
+// ---------- The set you will actually use ----------
 
-{{-- resources/views/pages/posts/[Post].blade.php  →  /posts/{post} --}}
+Str::slug('Laravel Eloquent');              // laravel-eloquent
+Str::limit($post->body, 150);               // truncated with …
+Str::before($email, '@');                   // the local part
+Str::after($path, 'invoices/');
+Str::contains($title, 'Laravel');
+Str::startsWith($path, 'admin/');
+Str::headline('invoice_line_items');        // Invoice Line Items
+Str::snake('invoiceLineItems');             // invoice_line_items
+Str::camel('invoice_line_items');           // invoiceLineItems
+Str::mask($card, '*', 0, -4);               // ************4242
+Str::uuid();
+
+// Says what it does:
+Str::before($email, '@');
+
+// Says how, and has the argument order wrong somewhere
+// in every codebase:
+substr($email, 0, strpos($email, '@'));
+
+
+// ---------- The fluent form ----------
+
+// ❌ Reads inside out.
+$slug = Str::lower(Str::slug(trim($title)));
+
+// ✓ Reads in the order it happens.
+$slug = Str::of($title)->trim()->lower()->slug();
+
+// input → trim → lower → slug → result
+
+
+// A chain earns its place when the steps mean nothing
+// on their own:
+$reference = Str::of($customer->name)
+    ->ascii()
+    ->upper()
+    ->replaceMatches('/[^A-Z]/', '')
+    ->limit(3, '')
+    ->append('-' . $invoice->id)
+    ->toString();
+
+// RAJ-1042
+//
+// The alternative is four statements and three
+// temporary variables that each need a name.
+
 
 <?php
-use function Laravel\\Folio\\{name, middleware};
+// ---------- Stringable, not string ----------
 
-name('posts.show');
-middleware(['auth']);
-?>
+$value = Str::of($title)->trim()->lower();   // a Stringable
 
-<x-layout>
-    <h1>{{ $post->title }}</h1>
-</x-layout>
+// Casts almost everywhere:
+echo $value;
+$post->slug = $value;
 
-{{-- Right for pages. A screen with authorization, several
-     actions and real logic wants a controller, where that
-     logic has somewhere to live and something to test. --}}
+// A strict type hint will not:
+function save(string $slug) { }
+
+save($value);                 // ❌ TypeError
+save($value->toString());     // ✓
+save((string) $value);        // ✓
 
 
 <?php
-// ---------- The same page, both ways ----------
+// ---------- Where Str is the wrong tool ----------
 
-// Livewire: the state is a PHP property.
-
-class SearchPosts extends Component
-{
-    public string $search = '';
-    public string $status = 'all';
-
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    #[Computed]
-    public function posts()
-    {
-        return Post::query()
-            ->when($this->search, fn ($q) =>
-                $q->where('title', 'like', "%{$this->search}%"))
-            ->when($this->status !== 'all', fn ($q) =>
-                $q->where('status', $this->status))
-            ->paginate(10);
-    }
+// ❌ True for evil.com/?redirect=example.com
+if (Str::contains($url, 'example.com')) {
+    return redirect($url);
 }
 
-// wire:model.live.debounce → a request → PHP → new HTML
+// ✓ Parse it, and check the host.
+$host = parse_url($url, PHP_URL_HOST);
 
-
-// Inertia: the state is React state.
-
-class PostController extends Controller
-{
-    public function index(Request $request)
-    {
-        return Inertia::render('Posts/Index', [
-            'posts' => PostResource::collection(
-                Post::query()
-                    ->when($request->search, fn ($q, $s) =>
-                        $q->where('title', 'like', "%{$s}%"))
-                    ->when($request->status !== 'all', fn ($q) =>
-                        $q->where('status', $request->status))
-                    ->paginate(10)
-                    ->withQueryString()
-            ),
-            'filters' => $request->only('search', 'status'),
-        ]);
-    }
+if ($host === 'example.com' || Str::endsWith($host, '.example.com')) {
+    return redirect($url);
 }
 
-// React state → an Inertia visit → props → React renders
+
+// ❌ Not for anything secret.
+$token = Str::random(40);
+
+// ✓ Day 18's helpers, for a credential.
+$token = $user->createToken('api')->plainTextToken;
 
 
 <?php
-// ---------- What is identical ----------
+// ---------- Multibyte ----------
 
-// The query. The policy. The validation. The pagination.
-// The model. The migration. The tests for all of it.
-//
-//   Laravel
-//    ├── routing
-//    ├── authentication
-//    ├── authorization
-//    ├── validation
-//    ├── Eloquent
-//    └── business logic
-//           │
-//           ├──────────────┐
-//           ▼              ▼
-//      Livewire         Inertia
-//           │              │
-//         Blade      React / Vue / Svelte
-//
-// Days 1 to 23 sit above the split and do not change.
-// You are choosing how the browser drives the same
-// application — per page, per feature, or per team.`,
+// substr() and strtoupper() can cut a character in half.
+// Str::limit() and Str::upper() do not.
+
+Str::limit('ラーメンとカレー', 5);     // safe
+substr('ラーメンとカレー', 0, 5);       // broken bytes
+
+// Which matters the first time a Japanese or Nepali name
+// goes through your string handling.`,
       },
       keyTakeaways: [
-        "<b>Folio makes the filesystem the routes</b>: add a Blade file under `pages/` and it becomes a URL.",
-        "<b>It suits pages rather than applications</b>: marketing, documentation, a terms page.",
-        "Anything with authorization, several actions or real logic wants a controller it can be tested through.",
-        "<b>Livewire and Inertia both give a single-page feel, and neither needs an API</b>, so the choice is not about capability.",
-        "<b>Livewire fits when Laravel should own the application</b> and the team is stronger in PHP.",
-        "<b>Inertia fits when the interface is rich</b> and the team already writes React or Vue well.",
-        "<b>The unfamiliar option is the expensive one</b>, whatever the general advice says.",
-        "If you already work in React, Inertia plus TypeScript is the shorter path, and Livewire is still worth knowing.",
-        "<b>Everything above the split is every day of this track</b>, unchanged by the choice.",
-        "<b>You are not choosing between two frameworks; you are choosing how the browser drives one application.</b>",
-        "<b>The target is being able to explain why one Laravel backend supports two frontend models</b>, not building both.",
+        "<b>`Str` is a consistent layer over PHP's string functions</b>, which have inconsistent argument orders.",
+        "<b>`Str::before($email, '@')` says what it does</b> where the `substr` and `strpos` version says how.",
+        "`slug()`, `limit()`, `mask()`, `headline()` and the case converters cover most of what you need.",
+        "<b>Nested `Str::` calls read inside out; `Str::of()` reads in the order things happen.</b>",
+        "<b>A chain is worth it when the steps have no meaning individually</b>, the same test as a collection pipeline.",
+        "<b>`Str::of()` returns a `Stringable`</b>, which casts almost everywhere but not into a strict `string` type hint.",
+        "<b>`Str` is a convenience, not a validator</b>: `contains()` on a URL is not a security check.",
+        "<b>`Str` handles multibyte text</b>, where `substr()` and `strtoupper()` can cut a character in half.",
+        "<b>`Str::random()` is not for anything secret</b>; credentials use the framework's cryptographic helpers.",
       ],
       commonMistakes: [
-        "<b>Using Folio for a screen with real logic.</b> The logic ends up in a template with nowhere to test it.",
-        "<b>Choosing by fashion.</b> The framework your team does not know is the one that costs the most.",
-        "<b>Assuming Inertia needs an API.</b> It exists precisely so you do not build one.",
-        "<b>Committing the whole application to one approach.</b> Different pages can reasonably differ.",
-        "<b>Learning both as unrelated systems.</b> Everything that matters sits above the split and is shared.",
+        "<b>Using `Str::contains()` to validate a URL or a host.</b> A substring match is trivially bypassed.",
+        "<b>Passing a `Stringable` into a strict `string` parameter.</b> Call `toString()` at the boundary.",
+        "<b>Using `substr()` on user-supplied text.</b> A multibyte character can be cut in half.",
+        "<b>Generating a token with `Str::random()`.</b> Use the framework's cryptographic helpers instead.",
+        "<b>Chaining two operations that were already clear.</b> The fluent form pays off at four or five steps.",
       ],
       quiz: [
         {
-          question: "What does Folio provide?",
+          question: "Why prefer `Str::before($email, '@')` to the `substr`/`strpos` version?",
           options: [
-            "A component library",
-            "Page-based routing, where a file under `pages/` becomes a URL",
-            "A build tool",
-            "An API layer",
+            "It is faster",
+            "It states the intent, and does not depend on an argument order people get wrong",
+            "It handles null",
+            "It is required by Laravel",
           ],
           correctIndex: 1,
-          explanation: "It suits content pages; screens with logic want a controller.",
+          explanation: "The value is expressiveness, not capability.",
         },
         {
-          question: "Which row is the same for both Livewire and Inertia?",
+          question: "What does `Str::of()` change?",
           options: [
-            "Main language",
-            "Whether an API is required, and whether the result feels like a SPA",
-            "Amount of JavaScript",
-            "Where browser state lives",
+            "It makes strings immutable",
+            "The operations read in the order they happen, rather than inside out",
+            "It handles multibyte",
+            "It validates the string",
           ],
           correctIndex: 1,
-          explanation: "Neither needs an API, and both feel like a single-page application.",
+          explanation: "Which matters most on a chain of four or five steps.",
         },
         {
-          question: "What is the honest tiebreaker between them?",
+          question: "Is `Str::contains($url, 'example.com')` a safe host check?",
           options: [
-            "Performance",
-            "Which one the team already knows, because the unfamiliar option is the expensive one",
-            "Which is newer",
-            "Which has more components",
+            "Yes",
+            "No; `evil.com/?x=example.com` passes it",
+            "Only with `startsWith`",
+            "Only over HTTPS",
           ],
           correctIndex: 1,
-          explanation: "A fluent React team builds a better admin panel in Inertia than in something they are learning.",
+          explanation: "Parse the URL and check the host, or whitelist.",
         },
         {
-          question: "Why can one Laravel backend support two frontend models?",
+          question: "What does `Str::of($title)->slug()` return?",
           options: [
-            "It runs two applications",
-            "Routing, authentication, authorization, validation and Eloquent sit above the split and do not change",
-            "Both compile to the same output",
-            "Inertia wraps Livewire",
+            "A string",
+            "A `Stringable`, which casts in most places but not into a strict `string` type hint",
+            "A collection",
+            "An array of segments",
           ],
           correctIndex: 1,
-          explanation: "Only the last step differs: a Blade view or a JavaScript component.",
+          explanation: "`->toString()` at a strict boundary.",
+        },
+      ],
+    },
+    {
+      id: "helpers",
+      title: "Helpers — data_get, tap, retry & friends",
+      durationMinutes: 12,
+      explanation: "Small functions that replace patterns you would otherwise write out.\n\n---\n\n### 1. Basic — reaching into nested data\n\n```php\n$data = ['user' => ['profile' => ['name' => 'Rajan']]];\n```\n\n```php\n$data['user']['profile']['name'];\n```\n\nwhich works, and throws the moment any level is missing. <b>`data_get()` walks the path safely:</b>\n\n```php\ndata_get($data, 'user.profile.name');          // Rajan\ndata_get($data, 'user.profile.age', 0);        // 0, the default\n```\n\nIt works on arrays and objects alike, and supports `*` to reach across a list:\n\n```php\ndata_get($response, 'data.*.id');\n```\n\nWhich is why it belongs anywhere you handle a JSON response from somebody else: <b>you did not write that structure, so you cannot assume it.</b>\n\n`data_set()` is the other direction, creating the missing levels as it goes:\n\n```php\ndata_set($data, 'user.profile.age', 30);\n```\n\n---\n\n### 2. Intermediate — nulls, retries and guards\n\n<b>`optional()` exists for the days before PHP had a nullsafe operator:</b>\n\n```php\noptional($user->profile)->avatar;\n$user->profile?->avatar;          // prefer this\n```\n\n<b>Use the native operator in new code.</b> `optional()` is worth recognising in existing applications and worth not spreading further. It also has a closure form that occasionally earns its place, but the rule stands.\n\n<b>`retry()` retries an operation:</b>\n\n```php\nretry(3, fn () => callExternalService(), 100);\n```\n\n```text\nattempt 1 → fail → wait → attempt 2 → fail → wait → attempt 3\n```\n\nDay 21's caution applies exactly: <b>retry transient failures, and never a non-idempotent write.</b> A network blip is worth retrying; a validation error is not, and a payment without an idempotency key definitely is not.\n\n<b>`throw_if()` compresses a guard:</b>\n\n```php\nthrow_if($user->is_banned, BannedException::class, 'User is banned.');\n```\n\nagainst the three-line `if`. Useful for a run of guards at the top of a method; less useful for one, where a plain `if` reads better and the debugger stops somewhere sensible.\n\n---\n\n### 3. Advanced — `tap()` and `value()`\n\n<b>`tap()` runs a callback and returns the original value:</b>\n\n```php\n$user = tap(User::find($id), fn ($user) => $user->update(['active' => true]));\n```\n\n```text\nvalue\n ↓\nthe callback receives it\n ↓\nthe ORIGINAL value is returned\n```\n\nWhich matters because `update()` returns a boolean. Without `tap()`, that line is three statements and a variable that exists only to be returned:\n\n```php\n$user = User::find($id);\n$user->update(['active' => true]);\nreturn $user;\n```\n\n<b>`tap()` is at its best when a method returns the wrong thing and you want the subject back.</b>\n\n<b>`value()` resolves a value or calls a closure:</b>\n\n```php\nvalue('x');                     // 'x'\nvalue(fn () => expensive());    // the result\n```\n\nWhich looks pointless until you write an API that accepts either. <b>Every Laravel method taking \"a value or a closure\" uses this internally</b>, and it is the reason `when()`, `data_get()` defaults and cache callbacks all accept both without you thinking about it.\n\nAnd the closing judgement for the whole lesson. These helpers are worth using where they say something:\n\n```text\ndata_get     the structure is not yours to trust\ntap          you want the subject back\nretry        the failure is transient\nvalue        the API accepts either\n```\n\nAnd not worth using where they only save characters. <b>`throw_if()` around one condition, or `tap()` where a variable was fine, makes code shorter and slower to read</b>, which is the trade this whole day is about noticing.",
+      diagram: `Reaching into nested data
+
+  \$data['user']['profile']['name']
+
+  Works, and throws the moment a level is missing.
+
+    data_get(\$data, 'user.profile.name')       Rajan
+    data_get(\$data, 'user.profile.age', 0)     0, the default
+
+  Arrays and objects alike, and * across a list:
+
+    data_get(\$response, 'data.*.id')
+
+  Which is why it belongs anywhere you handle somebody
+  else's JSON: you did not write that structure, so you
+  cannot assume it.
+
+    data_set(\$data, 'user.profile.age', 30)
+
+  creates the missing levels as it goes.
+
+
+Nulls, retries, guards
+
+  optional(\$user->profile)->avatar      the old way
+  \$user->profile?->avatar               prefer this
+
+  optional() is worth RECOGNISING in existing code and
+  worth not spreading further.
+
+  retry(3, fn () => callExternalService(), 100)
+
+    attempt 1 → fail → wait → attempt 2 → fail → wait
+              → attempt 3
+
+  Day 21 applies exactly: retry TRANSIENT failures, and
+  never a non-idempotent write. A network blip, yes.
+  A validation error, no. A payment without an
+  idempotency key, definitely not.
+
+  throw_if(\$user->is_banned, BannedException::class, '...')
+
+  Good for a run of guards at the top of a method.
+  Less good for one, where a plain if reads better and
+  the debugger stops somewhere sensible.
+
+
+tap() and value()
+
+  \$user = tap(User::find(\$id), fn (\$u) => \$u->update([...]))
+
+    value
+     ↓
+    the callback receives it
+     ↓
+    the ORIGINAL value is returned
+
+  Which matters because update() returns a boolean.
+  Without tap(), that is three statements and a variable
+  that exists only to be returned.
+
+  tap() is at its best when a method returns the wrong
+  thing and you want the subject back.
+
+
+  value('x')                   'x'
+  value(fn () => expensive())  the result
+
+  Pointless until you write an API accepting either.
+  Every Laravel method taking "a value or a closure"
+  uses this — which is why when(), data_get() defaults
+  and cache callbacks all accept both.
+
+
+The judgement
+
+  Worth it where they SAY something:
+
+    data_get   the structure is not yours to trust
+    tap        you want the subject back
+    retry      the failure is transient
+    value      the API accepts either
+
+  Not worth it where they only save characters.
+
+  throw_if() around one condition, or tap() where a
+  variable was fine, makes code shorter and slower to
+  read — which is the trade this whole day is about
+  noticing.`,
+      codeExample: {
+        title: "The helpers worth reaching for",
+        code: `<?php
+
+// ---------- data_get / data_set ----------
+
+$response = Http::get('https://api.example.com/invoices')->json();
+
+// ❌ Throws the moment the API changes shape.
+$id = $response['data'][0]['customer']['id'];
+
+// ✓ You did not write this structure.
+$id = data_get($response, 'data.0.customer.id');
+
+$ids = data_get($response, 'data.*.id');          // across a list
+
+$page = data_get($response, 'meta.current_page', 1);   // a default
+
+// The other direction, creating levels as it goes.
+data_set($settings, 'notifications.email.invoices', true);
+
+
+<?php
+// ---------- Nulls ----------
+
+optional($user->profile)->avatar;    // the old way
+$user->profile?->avatar;             // prefer this in new code
+
+// Worth recognising in an existing codebase, and worth
+// not spreading further.
+
+
+<?php
+// ---------- retry ----------
+
+$response = retry(3, fn () => Http::get($url)->throw(), 100);
+
+// With a growing delay and a condition:
+retry(3,
+    fn () => $this->sync(),
+    fn (int $attempt) => $attempt * 200,
+    fn ($e) => $e instanceof ConnectionException,
+);
+
+// ❌ Day 21: the first attempt may have succeeded and
+//    its response been lost.
+retry(3, fn () => Http::post('/charge', ['amount' => 5000]));
+
+// ✓ Idempotency key, or do not retry the write.
+
+
+<?php
+// ---------- throw_if ----------
+
+// A run of guards, where the compression pays.
+throw_if($user->is_banned, BannedException::class, 'User is banned.');
+throw_if(! $user->hasVerifiedEmail(), UnverifiedException::class);
+throw_unless($invoice->isDraft(), NotDraftException::class);
+
+// For a single condition, this reads better and the
+// debugger stops somewhere useful:
+if ($user->is_banned) {
+    throw new BannedException('User is banned.');
+}
+
+
+<?php
+// ---------- tap ----------
+
+// update() returns a boolean, so without tap() this is
+// three statements and a variable that exists only to
+// be returned.
+$user = User::find($id);
+$user->update(['active' => true]);
+return $user;
+
+// ✓
+return tap(User::findOrFail($id), fn ($user) =>
+    $user->update(['active' => true])
+);
+
+// Also useful for a side effect inside an expression:
+return tap($invoice->lines()->create($data), function ($line) use ($invoice) {
+    $invoice->recalculateTotal();
+});
+
+// ❌ Where a variable was perfectly clear:
+return tap($user, fn ($u) => null);
+
+
+<?php
+// ---------- value ----------
+
+value('x');                        // 'x'
+value(fn () => expensiveThing());  // the result
+
+// Which is how every Laravel API that takes "a value or
+// a closure" works:
+
+Cache::remember('key', 3600, fn () => $this->report());
+data_get($data, 'missing', fn () => $this->default());
+$query->when($search, fn ($q) => $q->where(...));
+
+// Writing your own:
+public function setDefault(mixed $default): static
+{
+    $this->default = value($default);
+
+    return $this;
+}`,
+      },
+      keyTakeaways: [
+        "<b>`data_get()` walks a nested path safely</b>, on arrays or objects, with a default and `*` across lists.",
+        "<b>It belongs anywhere you handle somebody else's JSON</b>, because you cannot assume a structure you did not write.",
+        "`data_set()` writes into a nested path, creating the missing levels.",
+        "<b>Prefer PHP's `?->` over `optional()` in new code</b>, and recognise `optional()` in existing applications.",
+        "<b>`retry()` retries transient failures</b>, with the Day 21 caution: never a non-idempotent write.",
+        "<b>`throw_if()` compresses a guard</b>, and pays off for a run of them rather than a single condition.",
+        "<b>`tap()` runs a callback and returns the original value</b>, which is what you want when a method returns a boolean.",
+        "Without it, that line is three statements and a variable that exists only to be returned.",
+        "<b>`value()` resolves a value or calls a closure</b>, which is how every \"value or closure\" API in Laravel works.",
+        "<b>Use a helper where it says something, not where it only saves characters.</b>",
+      ],
+      commonMistakes: [
+        "<b>Indexing into an external API response directly.</b> A changed shape becomes an undefined-index error.",
+        "<b>Spreading `optional()` through new code.</b> `?->` is native, clearer and shorter.",
+        "<b>Retrying a write with no idempotency key.</b> The first attempt may have succeeded silently.",
+        "<b>Wrapping a single `if` in `throw_if()`.</b> It is shorter and slower to read, and the debugger stops elsewhere.",
+        "<b>Using `tap()` where a plain variable was clear.</b> The helper should earn its place.",
+      ],
+      quiz: [
+        {
+          question: "Why use `data_get()` on an external API response?",
+          options: [
+            "It is faster",
+            "You did not write that structure, so a missing level should be a default rather than an error",
+            "It caches the result",
+            "It validates the response",
+          ],
+          correctIndex: 1,
+          explanation: "It also supports `*` to reach across a list.",
+        },
+        {
+          question: "What should new code use instead of `optional($user->profile)`?",
+          options: [
+            "`data_get()`",
+            "PHP's nullsafe operator, `$user->profile?->avatar`",
+            "`tap()`",
+            "An if statement",
+          ],
+          correctIndex: 1,
+          explanation: "`optional()` is worth recognising, not spreading.",
+        },
+        {
+          question: "What does `tap()` return?",
+          options: [
+            "The callback's return value",
+            "The original value passed to it",
+            "A boolean",
+            "Null",
+          ],
+          correctIndex: 1,
+          explanation: "Which is why it suits a method like `update()` that returns a boolean.",
+        },
+        {
+          question: "What is `value()` for?",
+          options: [
+            "Caching a computed result",
+            "Accepting either a plain value or a closure, and resolving whichever it is",
+            "Validating a value",
+            "Extracting a field",
+          ],
+          correctIndex: 1,
+          explanation: "It is how every \"value or closure\" API in Laravel works internally.",
+        },
+      ],
+    },
+    {
+      id: "concurrency-and-contracts",
+      title: "Concurrency, contracts & expressing intent",
+      durationMinutes: 12,
+      explanation: "Two more abstractions, and then the judgement the whole day has been building towards.\n\n---\n\n### 1. Basic — concurrency\n\nThree independent pieces of work, done in turn:\n\n```text\nprofile  →  orders  →  notifications\n```\n\n```text\nProfile API       200ms\nOrders API        300ms\nNotifications     150ms\n            ────────────\nsequential        650ms\n```\n\nLaravel's `Concurrency` facade runs them together:\n\n```text\n          ┌→ profile\nRequest ──┼→ orders\n          └→ notifications\n```\n\n```text\nconcurrent   ≈ max(200, 300, 150)  ≈ 300ms\n```\n\nThe same idea as Day 21's `Http::pool()`, generalised: <b>independent work that spends its time waiting can wait at the same time.</b>\n\nAnd the condition is doing the work in that sentence.\n\n---\n\n### 2. Intermediate — when it does not help\n\n<b>Dependent work cannot be parallelised:</b>\n\n```text\ncreate the user\n      ↓\ncreate their profile\n```\n\nThe second needs the first's id. No amount of concurrency changes that; only a design change would.\n\nAnd the other half: <b>concurrency helps work that waits, not work that computes.</b>\n\n```text\nhelps                       does not help\n─────                       ─────────────\nexternal API calls          a tight PHP loop\nseveral independent         one query the database\n  queries                     runs sequentially anyway\nreading several files       work that is already fast\n```\n\nThree independent HTTP calls overlap because each is mostly waiting. Three heavy calculations do not, because they need the same processor.\n\n<b>And it is not free.</b> Each concurrent task has setup cost, so parallelising three things that take five milliseconds each makes the operation slower. Measure before and after; if you cannot state the improvement in milliseconds, you have added complexity for nothing.\n\n---\n\n### 3. Advanced — contracts\n\n<b>A <i>contract</i></b> is an interface Laravel defines for a capability:\n\n```php\nIlluminate\\Contracts\\Cache\\Repository\n```\n\n```text\nContract\n   │ interface\n   ▼\nimplementation\n```\n\nType-hint the contract rather than a concrete class:\n\n```php\npublic function __construct(private CacheRepository $cache) {}\n```\n\n```text\nyour class\n    ↓\nthe contract\n    ↓\nthe container\n    ↓\nRedis, or a file cache, or an array in a test\n```\n\n<b>Your class stops knowing which one it got</b>, which is what makes it replaceable and testable. Swapping Redis for something else, or using an array cache in tests, changes configuration rather than code.\n\nAnd then the caution, which matters more than the technique:\n\n```text\n❌ UserServiceInterface + UserService\n   UserRepositoryInterface + UserRepository\n   UserManagerInterface + UserManager\n```\n\n<b>An interface with exactly one implementation, that will only ever have one, is a file that adds indirection and nothing else.</b> Every reader now opens two files to follow one call.\n\nUse an abstraction when it buys something real:\n\n```text\nseveral implementations exist, or will\nan external boundary you want to fake in tests\nan architectural seam you have deliberately chosen\na framework capability, where the contract already exists\n```\n\nAnd not because interfaces sound senior.\n\n---\n\n### The judgement this day was about\n\nEvery abstraction today has the same shape: it is worth using when it <b>expresses intent</b>, and not worth using when it only saves characters.\n\n```text\nforeach ($users as $user) {\n    if ($user->active) { ... }\n}\n```\n\nsays what to do. \n\n```php\n$users->filter->active\n```\n\nsays <i>give me the active users</i>.\n\nBut a five-step chain with three closures spanning twenty lines says less than the loop it replaced, and that is the same judgement in the other direction.\n\n```text\nuse a collection chain when          a foreach is better when\n───────────────────────────          ───────────────────────\ntransforming, filtering,             the control flow is complex\ngrouping, mapping, aggregating       there are several side effects\nthe pipeline is the point            there are early exits\n                                     the state is complicated\n```\n\n<b>A collection is not better because it is shorter.</b> Readable code wins, and knowing which tool makes this particular code readable is the skill the whole day was for.",
+      diagram: `Concurrency
+
+  Three independent pieces of work, in turn:
+
+    profile → orders → notifications
+
+    Profile API      200ms
+    Orders API       300ms
+    Notifications    150ms
+                ────────────
+    sequential       650ms
+
+  Together:
+
+            ┌→ profile
+  Request ──┼→ orders
+            └→ notifications
+
+    concurrent ≈ max(200, 300, 150) ≈ 300ms
+
+  Day 21's Http::pool(), generalised: independent work
+  that spends its time WAITING can wait at the same time.
+
+
+When it does not help
+
+  Dependent work cannot be parallelised:
+
+    create the user → create their profile
+
+  The second needs the first's id. Only a design change
+  helps, not concurrency.
+
+  helps                      does not help
+  ─────                      ─────────────
+  external API calls         a tight PHP loop
+  several independent        one query the database
+    queries                    runs sequentially anyway
+  reading several files      work that is already fast
+
+  Three HTTP calls overlap because each is mostly
+  waiting. Three heavy calculations do not: they need
+  the same processor.
+
+  ⚠️  It is not free. Each task has setup cost, so
+      parallelising three five-millisecond operations
+      makes them slower. Measure. If you cannot state
+      the improvement in milliseconds, you added
+      complexity for nothing.
+
+
+Contracts
+
+  Illuminate\\Contracts\\Cache\\Repository
+
+    Contract → interface → implementation
+
+  __construct(private CacheRepository \$cache)
+
+    your class → the contract → the container
+               → Redis, a file cache, or an array in a test
+
+  Your class stops knowing which one it got, which is
+  what makes it replaceable and testable. Swapping the
+  implementation is configuration, not code.
+
+
+  ⚠️  And then the caution:
+
+    ❌ UserServiceInterface + UserService
+       UserRepositoryInterface + UserRepository
+       UserManagerInterface + UserManager
+
+  An interface with exactly one implementation, that
+  will only ever have one, is a file that adds
+  indirection and nothing else. Every reader now opens
+  two files to follow one call.
+
+  Use an abstraction when it buys something:
+
+    several implementations exist, or will
+    an external boundary you want to fake in tests
+    an architectural seam you deliberately chose
+    a framework capability, where the contract exists
+
+  Not because interfaces sound senior.
+
+
+The judgement this day was about
+
+  Every abstraction today has the same shape: worth it
+  when it EXPRESSES INTENT, not when it saves characters.
+
+    foreach (\$users as \$user) {
+        if (\$user->active) { ... }
+    }
+        says what to DO
+
+    \$users->filter->active
+        says give me the active users
+
+  But a five-step chain with three closures over twenty
+  lines says LESS than the loop it replaced. Same
+  judgement, other direction.
+
+  a chain, when                    a foreach, when
+  ─────────────                    ───────────────
+  transforming, filtering,         the control flow is complex
+  grouping, aggregating            several side effects
+  the pipeline is the point        early exits
+                                   complicated state
+
+  A collection is not better because it is shorter.
+  Readable code wins.`,
+      codeExample: {
+        title: "Concurrency, contracts, and the judgement",
+        code: `<?php
+
+use Illuminate\\Support\\Facades\\Concurrency;
+
+// ---------- Concurrency: independent, waiting work ----------
+
+// ❌ 200 + 300 + 150 = 650ms
+$profile       = $this->loadProfile($user);
+$orders        = $this->loadOrders($user);
+$notifications = $this->loadNotifications($user);
+
+// ✓ ≈ max(200, 300, 150) ≈ 300ms
+[$profile, $orders, $notifications] = Concurrency::run([
+    fn () => $this->loadProfile($user),
+    fn () => $this->loadOrders($user),
+    fn () => $this->loadNotifications($user),
+]);
+
+// Fire and forget, when nothing needs the result:
+Concurrency::defer([
+    fn () => $this->warmCache(),
+    fn () => $this->pingWebhook(),
+]);
+
+
+// ---------- When it does not help ----------
+
+// ❌ The second needs the first's id.
+$user    = User::create($data);
+$profile = $user->profile()->create($profileData);
+
+// ❌ Three heavy calculations need the same processor.
+Concurrency::run([
+    fn () => $this->computeA(),
+    fn () => $this->computeB(),
+]);
+
+// ❌ Three five-millisecond operations. Setup costs more
+//    than the saving.
+Concurrency::run([
+    fn () => Cache::get('a'),
+    fn () => Cache::get('b'),
+]);
+
+// Measure. If you cannot state the improvement in
+// milliseconds, you added complexity for nothing.
+
+
+<?php
+// ---------- Contracts ----------
+
+namespace App\\Services;
+
+use Illuminate\\Contracts\\Cache\\Repository as CacheRepository;
+
+class ReportService
+{
+    // ❌ Tied to one implementation.
+    // public function __construct(private RedisStore $cache) {}
+
+    // ✓ The container decides which one.
+    public function __construct(private CacheRepository $cache) {}
+
+    public function monthly(): array
+    {
+        return $this->cache->remember('reports.monthly', 3600,
+            fn () => $this->build());
+    }
+}
+
+// Redis in production, an array cache in tests, and this
+// class never knew the difference. That is configuration
+// rather than code.
+
+
+<?php
+// ---------- Where an interface is NOT worth it ----------
+
+// ❌ One implementation, and there will never be another.
+interface UserServiceInterface { public function create(array $data): User; }
+class UserService implements UserServiceInterface { }
+
+// Every reader now opens two files to follow one call.
+
+// ✓ An interface where there is a real boundary:
+interface PaymentGateway
+{
+    public function charge(Money $amount, string $token): Payment;
+}
+
+class StripeGateway implements PaymentGateway { }
+class FakeGateway implements PaymentGateway { }   // for tests
+
+// Two implementations, an external boundary, and a
+// reason to fake it. That interface earns its file.
+
+
+<?php
+// ---------- The judgement ----------
+
+// ✓ A pipeline: the chain IS the description.
+$result = collect($users)
+    ->filter->active
+    ->flatMap(fn ($user) => $user->orders
+        ->filter(fn ($o) => $o->status === 'paid' && $o->amount > 100)
+        ->map(fn ($o) => ['user' => $user->name, 'amount' => $o->amount]))
+    ->values();
+
+//   users → active only → their paid orders over 100
+//         → shaped → result
+
+
+// ✓ A loop: the control flow IS the point.
+foreach ($rows as $index => $row) {
+    if (! $this->valid($row)) {
+        $errors[$index] = 'Invalid row';
+        continue;
+    }
+
+    try {
+        $imported[] = $this->import($row);
+    } catch (DuplicateException $e) {
+        $skipped++;
+        continue;
+    }
+
+    if (count($imported) >= 1000) {
+        break;
+    }
+}
+
+// Early exits, several side effects, a counter and a
+// break. A chain would be shorter and say less.
+//
+// A collection is not better because it is shorter.`,
+      },
+      keyTakeaways: [
+        "<b>`Concurrency::run()` executes independent tasks together</b>, so the total is the slowest rather than the sum.",
+        "It is Day 21's `Http::pool()` generalised to any independent work.",
+        "<b>Dependent work cannot be parallelised</b>: the second step needing the first's result is a design fact.",
+        "<b>Concurrency helps work that waits, not work that computes</b>, because calculations share one processor.",
+        "<b>It is not free</b>, so parallelising several fast operations makes them slower; measure both ways.",
+        "<b>A contract is an interface for a capability</b>, and type-hinting it lets the container choose the implementation.",
+        "<b>Your class stops knowing which implementation it got</b>, which is what makes it replaceable and testable.",
+        "<b>An interface with exactly one implementation adds indirection and nothing else.</b>",
+        "Use an abstraction for several implementations, an external boundary, or a seam you deliberately chose.",
+        "<b>Every abstraction today is worth it when it expresses intent and not when it only saves characters.</b>",
+        "<b>Use a chain when the pipeline is the point and a loop when the control flow is.</b> Readable code wins.",
+      ],
+      commonMistakes: [
+        "<b>Parallelising dependent steps.</b> The second needs the first's result, so nothing overlaps.",
+        "<b>Using concurrency for CPU-bound work.</b> It helps waiting, not computing.",
+        "<b>Adding concurrency without measuring.</b> On fast operations the setup cost makes it slower.",
+        "<b>Creating an interface per class.</b> Two files to follow one call, for no benefit.",
+        "<b>Replacing every loop with a chain.</b> A chain with complex control flow says less than the loop did.",
+      ],
+      quiz: [
+        {
+          question: "When does concurrency help?",
+          options: [
+            "Any slow code",
+            "Independent work that spends its time waiting, such as several API calls",
+            "Tight PHP loops",
+            "Database writes",
+          ],
+          correctIndex: 1,
+          explanation: "Calculations share a processor; waiting can overlap.",
+        },
+        {
+          question: "Why can creating a user and their profile not be parallelised?",
+          options: [
+            "Laravel forbids it",
+            "The second needs the first's id, so it is dependent work",
+            "Both write to the database",
+            "It can be",
+          ],
+          correctIndex: 1,
+          explanation: "Only a design change would help, not concurrency.",
+        },
+        {
+          question: "What does type-hinting a contract buy you?",
+          options: [
+            "Better performance",
+            "The container chooses the implementation, so it can be swapped or faked in tests",
+            "Automatic validation",
+            "Shorter code",
+          ],
+          correctIndex: 1,
+          explanation: "Redis in production and an array cache in tests, with no code change.",
+        },
+        {
+          question: "When is a `foreach` better than a collection chain?",
+          options: [
+            "Never",
+            "When the control flow is the point: early exits, several side effects, complicated state",
+            "When the collection is small",
+            "When the items are arrays",
+          ],
+          correctIndex: 1,
+          explanation: "A collection is not better because it is shorter.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "What is the core difference between Livewire and Inertia?",
+      question: "Why should a placeholder live inside a translation rather than in a concatenation?",
       options: [
-        "One is faster",
-        "Where the interface's state lives: a PHP property on the server, or JavaScript state in the browser",
-        "Inertia requires a REST API",
-        "Livewire cannot paginate",
+        "It is shorter",
+        "Word order differs between languages, so each translation must own it",
+        "Concatenation is slower",
+        "Blade cannot concatenate",
       ],
       correctIndex: 1,
-      explanation: "Everything else you notice follows from that.",
+      explanation: "A translation is a whole sentence, not a fragment.",
     },
     {
-      question: "Does either approach require the API you built yesterday?",
+      question: "What is the practical difference between PHP and JSON translation files?",
       options: [
-        "Both do",
-        "Neither does; the frontend ships with the application",
-        "Only Inertia",
-        "Only Livewire",
+        "JSON is faster",
+        "JSON uses the English text as the key, so a missing translation shows readable English",
+        "PHP files cannot take parameters",
+        "JSON supports plurals only",
       ],
       correctIndex: 1,
-      explanation: "No tokens, no CORS, no versioning, no second deployment.",
+      explanation: "PHP files give grouping and structure instead.",
     },
     {
-      question: "Why does `@vite()` exist rather than a plain `<script src>`?",
+      question: "Why not write `if ($count === 1)` for pluralization?",
       options: [
-        "It minifies at runtime",
-        "It points at the dev server locally and at built, versioned files in production",
-        "It loads Tailwind",
-        "It is required by Blade",
+        "It is slower",
+        "Plural rules differ by language, and several have more than two forms",
+        "Laravel forbids it",
+        "It cannot be cached",
       ],
       correctIndex: 1,
-      explanation: "One directive that knows which environment it is in.",
+      explanation: "`trans_choice()` lets each translation define its own forms.",
     },
     {
-      question: "Why does Vite hash built filenames?",
+      question: "Which locale source should win?",
       options: [
-        "For security",
-        "A changed file gets a new URL, so a cached old version cannot be served",
-        "To compress them",
-        "For debugging",
+        "The `Accept-Language` header",
+        "The user's explicit choice",
+        "The server default",
+        "Whichever is checked first",
       ],
       correctIndex: 1,
-      explanation: "And unchanged files keep their name, so they stay cached.",
+      explanation: "Re-detecting overrules somebody who already told you.",
     },
     {
-      question: "Why does `wire:model` default to updating on blur?",
+      question: "What is the difference between `map()` and `filter()`?",
       options: [
-        "Blur events are more reliable",
-        "`.live` means a server request per keystroke",
-        "It is easier to implement",
-        "For accessibility",
+        "None",
+        "`map()` changes every item; `filter()` removes some and leaves the rest unchanged",
+        "`filter()` is faster",
+        "`map()` returns an array",
       ],
       correctIndex: 1,
-      explanation: "`.debounce` is what makes `.live` reasonable on a text input.",
+      explanation: "Knowing which you want is most of the skill.",
     },
     {
-      question: "Can you trust a Livewire public property inside an action?",
+      question: "What is wrong with `User::all()->filter(fn ($u) => $u->active)`?",
       options: [
-        "Yes, it comes from the server",
-        "No; the client can modify it, so authorize in the action as you would in a controller",
-        "Only if it is typed",
-        "Only for models",
+        "Nothing",
+        "Every row is fetched and PHP discards most of them; the database should filter",
+        "`filter()` does not work on models",
+        "It returns an array",
       ],
       correctIndex: 1,
-      explanation: "Public properties travel in both directions on every interaction.",
+      explanation: "If the condition can be a `WHERE` clause, it belongs in the query.",
     },
     {
-      question: "Why does a filter change usually need `resetPage()`?",
+      question: "Why does a filtered collection sometimes serialise as a JSON object?",
       options: [
-        "To clear the cache",
-        "Otherwise the user stays on page 5 of a now-shorter list, which is usually empty",
-        "To re-run validation",
-        "To reset the sort",
+        "A cast is missing",
+        "`filter()` preserves keys, so the indexes are no longer sequential",
+        "Collections always serialise as objects",
+        "It is a bug",
       ],
       correctIndex: 1,
-      explanation: "The symptom looks like search returning nothing.",
+      explanation: "`->values()` reindexes and restores the array shape.",
     },
     {
-      question: "What does an Inertia controller return after a successful POST?",
-      options: [
-        "JSON with the created model",
-        "A redirect, which Inertia follows",
-        "A 201 status",
-        "The page component",
-      ],
-      correctIndex: 1,
-      explanation: "Exactly as it would for a Blade form.",
-    },
-    {
-      question: "How do Laravel validation errors reach a React form?",
-      options: [
-        "You parse the 422 body",
-        "Inertia shares them automatically into `form.errors`, keyed by field",
-        "You duplicate the rules in JavaScript",
-        "Through a separate endpoint",
-      ],
-      correctIndex: 1,
-      explanation: "One source of truth for both rules and messages.",
-    },
-    {
-      question: "What does a partial reload with `only: ['posts']` avoid?",
-      options: [
-        "A full page load",
-        "Evaluating and returning the props you did not ask for, including their queries",
-        "Running the controller",
-        "Re-rendering React",
-      ],
-      correctIndex: 1,
-      explanation: "Closure props are only evaluated when they are requested.",
-    },
-    {
-      question: "What problem does Precognition solve?",
+      question: "What does a lazy collection solve?",
       options: [
         "Slow queries",
-        "Live frontend validation otherwise duplicating the server's rules into a second source of truth",
-        "Missing CSRF tokens",
-        "Large bundles",
+        "Holding every item in memory, which fails on a large result set",
+        "Missing eager loads",
+        "Duplicate values",
       ],
       correctIndex: 1,
-      explanation: "It asks Laravel to run the real rules before submission.",
+      explanation: "Values are produced one at a time, so memory does not grow with the rows.",
     },
     {
-      question: "Why can one Laravel backend support two completely different frontend models?",
+      question: "What is the main cost of a collection macro?",
       options: [
-        "It runs two applications",
-        "Routing, auth, validation and Eloquent sit above the split and do not change; only the last step differs",
-        "Inertia is built on Livewire",
-        "Both compile to the same output",
+        "Performance",
+        "Discoverability: nobody knows it exists, and it lives in a provider they will not open",
+        "Memory",
+        "It breaks type hints",
       ],
       correctIndex: 1,
-      explanation: "You are choosing how the browser drives one application.",
+      explanation: "A custom collection class keeps the methods next to the model.",
+    },
+    {
+      question: "Is `Str::contains($url, 'example.com')` a safe host check?",
+      options: [
+        "Yes",
+        "No; `evil.com/?x=example.com` passes it",
+        "Only with `startsWith`",
+        "Only over HTTPS",
+      ],
+      correctIndex: 1,
+      explanation: "Parse the URL and check the host, or whitelist.",
+    },
+    {
+      question: "What does `tap()` return?",
+      options: [
+        "The callback's return value",
+        "The original value passed to it",
+        "A boolean",
+        "Null",
+      ],
+      correctIndex: 1,
+      explanation: "Which is why it suits a method like `update()` that returns a boolean.",
+    },
+    {
+      question: "When does concurrency help?",
+      options: [
+        "Any slow code",
+        "Independent work that spends its time waiting, such as several API calls",
+        "Tight PHP loops",
+        "Database writes",
+      ],
+      correctIndex: 1,
+      explanation: "Calculations share a processor; waiting can overlap.",
+    },
+    {
+      question: "When is an interface worth creating?",
+      options: [
+        "For every service class",
+        "When there are several implementations, an external boundary, or a seam you deliberately chose",
+        "Whenever the class has dependencies",
+        "Never",
+      ],
+      correctIndex: 1,
+      explanation: "One implementation that will only ever be one is indirection and nothing else.",
+    },
+    {
+      question: "When is a `foreach` better than a collection chain?",
+      options: [
+        "Never",
+        "When the control flow is the point: early exits, several side effects, complicated state",
+        "When the collection is small",
+        "When the items are arrays",
+      ],
+      correctIndex: 1,
+      explanation: "A collection is not better because it is shorter.",
     },
   ],
   project: {
     name: "InvoiceHub",
-    goal: "Build the InvoiceHub invoice list twice, once in Livewire and once in Inertia with React, and be able to explain what is different and what is not.",
-    brief: "InvoiceHub's screens are plain Blade forms with full page reloads. Today they get a real interface, and you build it twice.\n\nThat is deliberate, and it is the whole exercise. Building it once teaches you a framework. <b>Building the same screen twice teaches you where the line between Laravel and the frontend actually is</b>, because everything that stays identical is the part that was never a frontend concern.\n\nThe screen is the same in both: search, a status filter, pagination, a loading state, an empty state and validation. Same query, same policy, same rules. Only the last step differs.\n\nWhen both work, do not stop. The questions at the end are the point of the day, and answering them is worth more than either implementation.",
+    goal: "Localize InvoiceHub into three languages and rewrite its ugliest reporting code, keeping only the rewrites that made it clearer.",
+    brief: "InvoiceHub speaks English in hard-coded strings, and somewhere in it is a report built from four nested loops that nobody wants to touch.\n\nToday fixes both, and the second half comes with a rule: <b>every rewrite has to be justified out loud.</b> Turning a loop into a chain because it is shorter is not a reason. Turning it into a chain because the transformation becomes visible is. You will rewrite several pieces of code today and you should deliberately keep at least one of them as a loop, because that judgement is the actual skill.\n\nFor the localization half, the test is not that the strings are translated. It is that somebody could add a fourth language by adding one file, with no code change anywhere.",
     steps: [
-      "Confirm Vite is running with `npm run dev`, then deliberately stop it and reload a page. Note what breaks and add that symptom to your notes, because you will see it again.",
-      "Run `npm run build`, look at the generated filenames in `public/build`, then change one line of CSS and build again. Write down what changed and why that matters after a deploy.",
-      "Build the Livewire version: a `SearchInvoices` component with `$search` and `$status` properties, a computed `invoices` property, and a Blade view.",
-      "Use `wire:model.live` with no debounce on the search box, open the network tab, and type \"invoice\". Count the requests. Then add `.debounce.300ms` and count again.",
-      "Add `updatedSearch()` calling `resetPage()`. Before adding it, filter while on page 3 and note exactly what the user sees.",
-      "Add `wire:loading` and an empty state. Confirm both appear at the right moments by throttling the network in your browser's dev tools.",
-      "Add a delete button with `wire:click` and `wire:confirm`. Then authorize it in the action, and write down why the id in that call cannot be trusted.",
-      "Now the Inertia version: a controller returning `Inertia::render('Invoices/Index', [...])` with `invoices` and `filters` props, and a React page in TypeScript.",
-      "Type the props properly. Then rename a field in `InvoiceResource` without updating the type, and note where the error appears and when.",
-      "Implement search in React with `router.get(..., { preserveState: true, replace: true })`. Compare what the network tab shows with the Livewire version.",
-      "Add a second expensive prop such as monthly totals. Make it a closure, add `only: ['invoices']` to the search visit, and confirm from your query log that the totals query no longer runs on every keystroke.",
-      "Defer that totals prop instead and note what the user sees first. Decide which of the two versions you would ship.",
-      "Build the invoice create form with `useForm`. Submit it invalid and confirm the errors arrive in `form.errors` without you writing any error handling.",
-      "Add Precognition to that form so validation runs as the user leaves each field. Then change one rule in the controller and confirm the frontend follows without a frontend change.",
-      "Put both versions behind different routes and view them side by side. Time a search on each with the network throttled, and record both numbers.",
-      "Now answer, in writing, for the Livewire version: where does the state live, what request does `wire:model` produce, when does PHP run, and how does validation reach Blade?",
-      "And for the Inertia version: where does the state live, what is a prop, what does a visit actually do, what does a partial reload change, and how does Laravel validation reach React?",
-      "Finally, list everything that was identical between the two implementations. That list is the answer to why one backend supports both.",
+      "Find every hard-coded user-facing string in InvoiceHub. Write down how many there are before you start; the number is usually a surprise.",
+      "Set up `lang/en`, `lang/ja` and `lang/ne`, and decide between PHP and JSON files. Write one sentence explaining the choice, then stick to it.",
+      "Move the invoice screens' strings into language files and replace them with `__()`. Confirm nothing in the codebase branches on a language any more.",
+      "Find a string built by concatenating a value, such as a greeting or a status line, and convert it to a placeholder. Then check whether the Japanese word order is actually the same, and note what you found.",
+      "Add plurals for a count that appears in the interface, such as \"3 invoices\". Use `trans_choice()` and give the Japanese file a single form.",
+      "Write a `SetLocale` middleware with the priority order: user preference, then URL or session, then `Accept-Language` whitelisted, then the fallback. Set a fallback locale in config.",
+      "Log in, switch to Japanese, then load a page in a browser sending `Accept-Language: en`. Confirm your choice wins, and say why that matters.",
+      "Remove one key from the Japanese file and load that page. Note what appears with and without a fallback locale configured.",
+      "Format one date and one currency amount for the active locale. Look at the Japanese page and note anything still obviously English.",
+      "Now the reporting half. Find the worst nested loop in the codebase, copy it into `NOTES.md` untouched, and write one sentence describing what it produces.",
+      "Rewrite it as a collection pipeline. Put both versions side by side and decide honestly which one communicates the intention better.",
+      "Check the rewrite for the two traps: is anything filtered in PHP that the database could filter, and does the result need `values()` before it becomes JSON?",
+      "Find a second loop with real control flow, such as an importer with error collection and an early exit. Attempt a chain, then keep the loop, and write down why.",
+      "Find one place that does something to every item and one that builds a result from every item. Make them `each()` and `map()` respectively, and note whether either was previously the wrong one.",
+      "Replace one repeated filter with a higher-order message, and one with a custom collection method on the model. Say which is more discoverable and why.",
+      "Take one report that loads a whole table into memory and rewrite it with `lazy()`. Measure peak memory before and after with `memory_get_peak_usage()`.",
+      "Find a place that indexes into an external API response directly and replace it with `data_get()`. Then break the response shape deliberately and confirm the failure is now a default rather than an error.",
+      "Find three or more independent calls in one request. Time them sequentially, then with `Concurrency::run()`, and record both numbers. If it is not faster, revert it and say so.",
+      "Finally, list every rewrite you made and whether it made the code clearer or only shorter. Revert anything in the second category.",
     ],
     acceptance: [
-      "Both versions of the invoice list work: search, status filter, pagination, loading state, empty state.",
-      "The Livewire search is debounced, and you recorded the request count before and after.",
-      "Filtering resets to page one, and you can describe what happened before you added it.",
-      "The Livewire delete action authorizes, and you can explain why the id it receives is untrusted.",
-      "The Inertia props are typed, and you saw where a renamed resource field surfaced as an error.",
-      "The Inertia search uses a partial reload, and your query log proves the expensive prop does not run on every keystroke.",
-      "The create form shows per-field validation errors with no error-handling code of your own.",
-      "Precognition validates against the controller's rules, and changing a rule changes the frontend behaviour with no frontend change.",
-      "You have timings for both versions under a throttled network.",
-      "You have written answers to the state, request and validation questions for both versions.",
-      "You have a list of everything that was identical, and can explain why that list is the point.",
+      "Every user-facing string in the invoice screens comes from a language file, and no code branches on the language.",
+      "Adding a fourth language requires adding files and nothing else.",
+      "A count in the interface pluralises correctly in English and reads correctly in Japanese.",
+      "A logged-in user's chosen locale beats their browser's, and you can explain why.",
+      "A missing translation falls back to English rather than showing a raw key.",
+      "Dates and currency are formatted for the active locale.",
+      "The rewritten report produces the same output as the original, and the original is preserved in `NOTES.md`.",
+      "Nothing is filtered, summed or sorted in PHP that the database could have done.",
+      "At least one loop was deliberately kept, with a written reason.",
+      "The lazy rewrite shows a measurable drop in peak memory, with both numbers recorded.",
+      "External API access uses `data_get()` and degrades to a default when the shape changes.",
+      "The concurrency change is either measurably faster, with numbers, or reverted.",
+      "Every rewrite is listed as \"clearer\" or \"only shorter\", and the second list is empty because you reverted them.",
     ],
     stretch: [
-      "Rewrite the Livewire component as a single-file Volt component and note which one you find easier to read.",
-      "Add a shadcn/ui table and dialog to the Inertia version, and write down what you now own that you did not before.",
-      "Add a Folio-routed public invoice-status page and explain why that page suits Folio and the invoice list does not.",
+      "Write a test that loads every translation key referenced in your Blade views and fails when one is missing from a language file.",
+      "Add an `InvoiceCollection` with `overdue()` and `totalOutstanding()`, and compare its discoverability with the equivalent global macros.",
+      "Put the locale in the URL as `/ja/invoices`, and write down what that makes possible that a session-only locale does not.",
     ],
   },
 };

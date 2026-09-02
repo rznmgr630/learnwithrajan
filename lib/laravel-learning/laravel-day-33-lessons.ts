@@ -2,2788 +2,2710 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_33_LESSONS: LessonDay = {
   day: 33,
-  title: "Caching & performance — measure, then optimise",
-  totalMinutes: 94,
+  title: "Deployment — CI/CD, workers, scheduler & zero downtime",
+  totalMinutes: 95,
   difficulty: "Advanced",
   lessons: [
     {
-      id: "cache-drivers",
-      title: "Cache drivers — file, database, Redis, Memcached, array",
+      id: "the-production-picture",
+      title: "What you are actually deploying",
       durationMinutes: 11,
-      explanation: "This elective is about making a Laravel application faster <b>without blindly adding caching everywhere</b>.\n\n```text\nslow application → measure → find the bottleneck\n→ fix the query or the code → cache only when useful → measure again\n```\n\n<b>Do not start with \"it's slow, add Redis\".</b> Start with \"why is it slow?\". Everything today serves that order, and the last lesson comes back to it.\n\n---\n\n### 1. Basic — one API, several backends\n\n```text\n            Cache API\n   ┌────┬─────────┬───────┬───────────┐\n  file database Redis Memcached array\n```\n\nYour code stays `Cache::get('key')` while the driver changes underneath. Same abstraction shape as Storage, Queue and Scout.\n\n<b>File</b> is the simplest: cache entries as files on disk. Fine for local development and a single small server.\n\n<b>Array</b> lives only for the current request and vanishes when it ends, which makes it the right driver for tests. <b>It is also why a cache bug can pass every test</b>: your test cache is empty every time, so a stale-value problem never appears.\n\n---\n\n### 2. Intermediate — where file and database fall down\n\n<b>File cache breaks the moment you have two servers:</b>\n\n```text\nserver A → its own cache\nserver B → a different cache\nserver C → a different cache\n```\n\nNothing is shared, so a user's next request may hit a server that never cached anything, and `Cache::forget()` on one server leaves the value alive on the other two. <b>That is not a slow cache, it is an inconsistent one</b>, which is worse.\n\nAnd it is the same failure you met on Day 30 with `onOneServer()` and isolation locks: <b>anything coordinating across servers needs shared storage</b>, and a file driver silently provides none.\n\n<b>Database cache</b> avoids running another service, which is genuinely convenient. But notice what you are doing:\n\n> <b>You are using the database to avoid database work.</b>\n\nIt helps when the cached thing is expensive to compute rather than expensive to read, and it stops helping at high throughput, where your cache reads become load on the system you were protecting.\n\n---\n\n### 3. Advanced — Redis, and separating workloads\n\n<b>Redis</b> is the usual production answer: memory-based, so reads are fast, and it does far more than caching:\n\n```text\ncache · queues · locks · sessions · counters · pub/sub · rate limiting\n```\n\n<b>Memcached</b> is also in-memory, deliberately narrower, and does caching only. Redis has the richer feature set, which is why it usually wins.\n\n<b>But that versatility is a trap.</b> If cache, queue, session and locks all share one Redis instance, then `cache:clear` can wipe your queued jobs, a cache-driven memory spike evicts your sessions, and one busy workload starves the others.\n\n<b>So separate them</b>, by connection or by instance:\n\n```text\nRedis: cache      evictable, allowed to lose data\nRedis: queue      persistent, must not lose data\nRedis: sessions   persistent-ish, losing it logs everyone out\n```\n\n<b>The critical setting is eviction.</b> A cache Redis should evict old keys when memory fills, which is exactly right. A queue Redis with the same policy <b>silently deletes jobs</b> under pressure, and you will not find out until somebody's invoice never sent.\n\nAnd one thing every driver shares: <b>a cache must be allowed to disappear.</b> If clearing it breaks your application, it was not a cache, it was a database with no backups.",
-      diagram: `The order this elective follows
+      explanation: "The shift this elective asks for:\n\n> <b>Deployment is not uploading Laravel files. It is making the whole application reliably runnable, observable, recoverable and updatable in production.</b>\n\n---\n\n### 1. Basic — the shape of a production system\n\n```text\n                internet\n                   ↓\n             load balancer\n           ┌───────┴───────┐\n       Laravel app 1   Laravel app 2\n           └───────┬───────┘\n                database\n           ┌───────┴───────┐\n         Redis             S3\n       ┌───┴───┐\n    workers  scheduler\n```\n\nAnd wrapped around all of it:\n\n```text\nlogging · monitoring · backups · CI/CD · secrets\n```\n\n<b>That is what you are deploying.</b> Not a folder of PHP.\n\n---\n\n### 2. Intermediate — the five layers\n\nRather than memorising a checklist, hold the layers:\n\n```text\n1 application     Laravel, PHP, built assets\n2 infrastructure  server, Cloud, Docker, AWS\n3 processes       web, queue workers, scheduler\n4 data            database, Redis, storage, backups\n5 operations      CI/CD, monitoring, logs, recovery\n```\n\n<b>Layer 3 is the one people forget</b>, and it is where the classic first-deploy failure lives: the site loads, and nothing else works. Emails never send, because no worker is running. Nightly reports never run, because nothing invokes the scheduler.\n\n<b>Nothing errors.</b> `dispatch()` returns successfully, the job sits in Redis, and everybody assumes it worked.\n\n---\n\n### 3. Advanced — what \"deployed\" actually means\n\n<b>A deploy is not successful because the website loads.</b> It is successful when the application, workers, scheduler, database, configuration, monitoring and recovery strategy all work.\n\nThat matters because <b>each of those fails silently and independently.</b> A broken web server is loud, and you find out in seconds. Everything else in that list is quiet:\n\n```text\nworker not running        jobs queue up, nothing errors\nscheduler not invoked     reports simply do not arrive\nconfig cached wrong       one integration returns null\nlogs on one server        you cannot see the other two\nno error tracking         users hit exceptions you never learn about\nbackups never restored    you find out during the incident\n```\n\n<b>So the useful question is not \"did it deploy?\" but \"how would I know if this part were broken?\"</b> If the answer is \"a customer would tell me\", that piece is not deployed, it is merely running.\n\nOne more framing worth carrying: <b>everything in this elective is about the second deploy, not the first.</b> Getting a Laravel app onto a server once is an afternoon. Doing it repeatedly, safely, while people are using it, with a way back when it goes wrong, is the actual job.",
+      diagram: `The shift
 
-    slow application
-        ↓
-    MEASURE
-        ↓
-    find the bottleneck
-        ↓
-    fix the query or the code
-        ↓
-    cache only when useful
-        ↓
-    measure again
+  Deployment is NOT uploading Laravel files.
 
-  Do NOT start with "it's slow, add Redis".
-  Start with "why is it slow?".
+  It is making the whole application reliably
+  RUNNABLE · OBSERVABLE · RECOVERABLE · UPDATABLE.
 
 
-One API, several backends
+A production system
 
-               Cache API
-      ┌────┬────────┬───────┬──────────┬───────┐
-     file  database  Redis  Memcached  array
+                    internet
+                       │
+                       ▼
+                 load balancer
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+        Laravel app 1       Laravel app 2
+             │                   │
+             └─────────┬─────────┘
+                       ▼
+                    database
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+           Redis                 S3
+             │
+       ┌─────┴─────┐
+       ▼           ▼
+    workers    scheduler
 
-    Cache::get('key')   stays the same
+  and around all of it:
 
-  FILE     simplest; files on disk
-           fine for local dev and one small server
+    logging · monitoring · backups · CI/CD · secrets
 
-  ARRAY    lives for one request, then vanishes
-           the right driver for tests
-
-    ⚠️  which is also why a cache bug passes every
-        test — your test cache is empty each time,
-        so a stale-value problem never appears
-
-
-  ⚠️  File cache breaks with two servers
-
-      server A → its own cache
-      server B → a different cache
-      server C → a different cache
-
-      Nothing shared. A user's next request may hit
-      a server that cached nothing, and forget() on
-      one leaves the value alive on the other two.
-
-        not a SLOW cache — an INCONSISTENT one,
-        which is worse
-
-      Same failure as Day 30's onOneServer() and
-      isolation locks: cross-server coordination
-      needs shared storage, and file provides none.
+  That is what you are deploying. Not a folder of PHP.
 
 
-  DATABASE cache
+The five layers
 
-    convenient — no extra service. But notice:
+    1  APPLICATION      Laravel, PHP, built assets
+    2  INFRASTRUCTURE   server, Cloud, Docker, AWS
+    3  PROCESSES        web, queue workers, scheduler
+    4  DATA             database, Redis, storage,
+                        backups
+    5  OPERATIONS       CI/CD, monitoring, logs,
+                        recovery
 
-      YOU ARE USING THE DATABASE TO AVOID DATABASE
-      WORK.
+  ⚠️  LAYER 3 IS THE ONE PEOPLE FORGET.
 
-    helps when the value is expensive to COMPUTE
-    stops helping at high throughput, where cache
-    reads become load on the system you were
-    protecting
+      The classic first-deploy failure: the site
+      loads, and nothing else works.
 
+        emails never send   → no worker running
+        reports never run   → nothing invokes the
+                              scheduler
 
-REDIS — the usual production answer
-
-    memory-based, and far more than a cache:
-
-      cache · queues · locks · sessions
-      counters · pub/sub · rate limiting
-
-    Memcached: also in-memory, deliberately narrower,
-    caching only
-
-  ⚠️  That versatility is a trap.
-
-      one Redis for everything means:
-        cache:clear can wipe queued jobs
-        a cache memory spike evicts sessions
-        one busy workload starves the others
-
-      Separate by connection or instance:
-
-        cache      evictable, allowed to lose data
-        queue      persistent, must NOT lose data
-        sessions   losing it logs everyone out
-
-  ⚠️  EVICTION is the critical setting.
-
-      cache Redis   evicts old keys when full  ✅
-      queue Redis   same policy SILENTLY DELETES JOBS
-
-      You find out when somebody's invoice never sent.
+      And NOTHING ERRORS. dispatch() returns
+      successfully, the job sits in Redis, everybody
+      assumes it worked.
 
 
-  And every driver shares one rule:
+What "deployed" actually means
 
-    A CACHE MUST BE ALLOWED TO DISAPPEAR.
+  Not successful because the website loads.
 
-    If clearing it breaks your application, it was
-    not a cache — it was a database with no backups.`,
+  Successful when the application, workers,
+  scheduler, database, configuration, monitoring AND
+  recovery all work.
+
+  Because each fails SILENTLY and INDEPENDENTLY:
+
+    a broken web server        loud, seconds
+    worker not running         jobs queue up, no error
+    scheduler not invoked      reports just do not
+                               arrive
+    config cached wrong        one integration returns
+                               null
+    logs on one server         you cannot see the
+                               other two
+    no error tracking          users hit exceptions
+                               you never learn about
+    backups never restored     you find out during the
+                               incident
+
+
+  THE USEFUL QUESTION
+
+    not "did it deploy?"
+    but "HOW WOULD I KNOW IF THIS PART WERE BROKEN?"
+
+    If the answer is "a customer would tell me", that
+    piece is not deployed. It is merely running.
+
+
+  And the framing for the whole elective:
+
+    this is about the SECOND deploy, not the first
+
+    getting Laravel onto a server once is an
+    afternoon; doing it repeatedly, safely, while
+    people are using it, with a way back when it goes
+    wrong, is the actual job.`,
       codeExample: {
-        title: "Drivers, separation and the settings that matter",
-        code: `# ---------- .env ----------
+        title: "The layers, and how you would know each one is broken",
+        code: `# ---------- Layer 1: application ----------
 
-CACHE_STORE=redis
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
+php artisan about                 # versions, cached state, drivers
+php --version
+node --version
 
-# Local / tests
-CACHE_STORE=array          # vanishes each request — right for tests,
-                           # and why cache bugs hide there
+# Would you know if it broke?  Yes — the site 500s.
 
 
-<?php
-// ---------- config/database.php: separate the workloads ----------
+# ---------- Layer 2: infrastructure ----------
 
-'redis' => [
-    'client' => env('REDIS_CLIENT', 'phpredis'),
+systemctl status nginx php8.4-fpm
+df -h                             # a full disk breaks everything, quietly
+free -m
 
-    // Evictable. Losing this is fine, by definition.
-    'cache' => [
-        'host'     => env('REDIS_HOST'),
-        'port'     => env('REDIS_PORT', 6379),
-        'database' => 1,
-    ],
-
-    // Must NOT lose data. A job deleted under memory
-    // pressure is an invoice that never sent.
-    'queue' => [
-        'host'     => env('REDIS_QUEUE_HOST', env('REDIS_HOST')),
-        'port'     => env('REDIS_PORT', 6379),
-        'database' => 2,
-    ],
-
-    // Losing this logs everyone out.
-    'sessions' => [
-        'host'     => env('REDIS_HOST'),
-        'database' => 3,
-    ],
-],
-
-// One instance for everything means cache:clear can wipe
-// your queued jobs, and a cache spike evicts sessions.
+# Would you know?  Disk filling up: only if something
+# watches it. This one bites at 3am.
 
 
-# ---------- The eviction policy, per instance ----------
+# ---------- Layer 3: processes — the forgotten layer ----------
 
-# Cache Redis — correct behaviour
-maxmemory 2gb
-maxmemory-policy allkeys-lru      # evict old keys when full
+systemctl status supervisor
+supervisorctl status              # are workers actually running?
+crontab -l                        # is the scheduler invoked at all?
 
-# Queue Redis — the same line here silently deletes jobs
-maxmemory 1gb
-maxmemory-policy noeviction       # refuse writes instead of losing data
+php artisan queue:monitor redis:default --max=100
+php artisan schedule:list
+
+# ⚠️ Would you know if the worker died?
+#    dispatch() still succeeds. Jobs pile up in Redis.
+#    Nothing errors. Nobody notices until a customer
+#    asks where their invoice went.
 
 
 <?php
-// ---------- Why file cache fails on two servers ----------
+// ---------- A health check that covers layer 3 ----------
 
-// Server A
-Cache::put('product:5', $product, now()->addHour());
+Route::get('/health', function () {
+    $checks = [
+        'database'  => fn () => DB::select('select 1') !== [],
+        'redis'     => fn () => Cache::store('redis')->get('health') !== false,
 
-// Server B — different disk, different cache
-Cache::get('product:5');            // null
+        // The queue is only healthy if something is DRAINING it
+        'queue'     => fn () => Redis::connection('queue')->llen('queues:default') < 1000,
 
-// Server A
-Cache::forget('product:5');         // B and C still serve the old value
+        // The scheduler writes this every minute
+        'scheduler' => fn () => Cache::get('scheduler:heartbeat')
+                                 && Cache::get('scheduler:heartbeat') > now()->subMinutes(5),
+    ];
 
-// Not a slow cache. An INCONSISTENT one, which is worse.
-// Same failure as Day 30's onOneServer() with a file driver.
-
-
-<?php
-// ---------- Database cache: using the database to avoid the database ----------
-
-php artisan make:cache-table
-php artisan migrate
-
-// CACHE_STORE=database
-//
-// Helps when the value is expensive to COMPUTE:
-Cache::remember('monthly-report', now()->addHours(6),
-    fn () => $this->reportBuilder->build());     // 8s of aggregation
-
-// Does not help when the value is expensive to READ:
-Cache::remember('user:5', now()->addHour(),
-    fn () => User::find(5));                     // you swapped one row read
-                                                 // for another row read
-
-
-<?php
-// ---------- The rule that tests everything ----------
-
-// Ask: can I run this right now, in production?
-php artisan cache:clear
-
-// If the answer is "no, that would break things", it is
-// not a cache. It is a database with no backups.
-
-// ✅ A cache
-$total = Cache::remember("team:{$team->id}:invoice-total", now()->addMinutes(10),
-    fn () => $team->invoices()->sum('total_cents'));
-
-// ❌ Not a cache — nothing else knows this value
-Cache::forever("user:{$user->id}:onboarding-step", 3);`,
-      },
-      keyTakeaways: [
-        "<b>The order is measure, find the bottleneck, fix the code or query, then cache.</b>",
-        "<b>One Cache API sits over file, database, Redis, Memcached and array drivers.</b>",
-        "<b>The array driver lives for one request</b>, which is right for tests and hides stale-cache bugs.",
-        "<b>File cache breaks with more than one server</b>: each has its own, and `forget()` only clears one.",
-        "<b>That is inconsistency, not slowness</b>, and it is the same shared-storage rule as Day 30's locks.",
-        "<b>Database cache means using the database to avoid database work.</b>",
-        "<b>It helps for expensive computation, not expensive reads</b>, and stops helping at high throughput.",
-        "<b>Redis is the usual production answer</b> and also does queues, locks, sessions, counters and rate limiting.",
-        "<b>That versatility is a trap</b>: one instance means `cache:clear` can wipe queued jobs.",
-        "<b>Separate cache, queue and session Redis by connection or instance.</b>",
-        "<b>Eviction policy is the critical difference</b>: a cache should evict, a queue must never.",
-        "<b>A cache must be allowed to disappear</b>, or it is a database with no backups.",
-      ],
-      commonMistakes: [
-        "<b>File cache on multiple servers.</b> Three different caches and a `forget()` that clears one.",
-        "<b>One Redis for everything.</b> `cache:clear` deletes jobs and a cache spike evicts sessions.",
-        "<b>`allkeys-lru` on a queue Redis.</b> Jobs vanish silently under memory pressure.",
-        "<b>Storing something only the cache knows.</b> That is not a cache, and clearing it loses data.",
-        "<b>Trusting tests with the array driver to catch cache bugs.</b> The cache is empty every time.",
-      ],
-      quiz: [
-        {
-          question: "Why is file cache a problem on multiple servers?",
-          options: [
-            "It is slow",
-            "Each server has its own cache, so nothing is shared and `forget()` only clears one",
-            "It cannot store objects",
-            "It has no TTL",
-          ],
-          correctIndex: 1,
-          explanation: "That is inconsistency, which is worse than slowness.",
-        },
-        {
-          question: "What is the catch with the database cache driver?",
-          options: [
-            "It has no TTL support",
-            "You are using the database to avoid database work, so it helps computation but not reads",
-            "It cannot be cleared",
-            "It is not supported in production",
-          ],
-          correctIndex: 1,
-          explanation: "At high throughput your cache reads become load on the system you were protecting.",
-        },
-        {
-          question: "Why separate cache and queue Redis instances?",
-          options: [
-            "For speed",
-            "`cache:clear` can wipe queued jobs, and a cache eviction policy silently deletes them",
-            "Laravel requires it",
-            "For monitoring",
-          ],
-          correctIndex: 1,
-          explanation: "A cache should evict; a queue must never.",
-        },
-        {
-          question: "What is the test for whether something is really a cache?",
-          options: [
-            "It has a TTL",
-            "You could run `cache:clear` in production right now without breaking anything",
-            "It uses Redis",
-            "It is under 1MB",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise it is a database with no backups.",
-        },
-      ],
-    },
-    {
-      id: "the-cache-api",
-      title: "get, put, remember, rememberForever & touch",
-      durationMinutes: 11,
-      explanation: "Five methods cover almost everything you will write.\n\n---\n\n### 1. Basic — get and put\n\n```php\n$value = Cache::get('users');          // null if missing\n$value = Cache::get('users', []);      // with a default\n\nCache::put('users', $users, now()->addMinutes(10));\n```\n\n<b>TTL</b> is time to live: after ten minutes the entry is no longer valid.\n\n```text\nkey → cache → value\n```\n\n---\n\n### 2. Intermediate — remember\n\nThe one you will use most:\n\n```php\n$users = Cache::remember('users', now()->addMinutes(10), fn () => User::all());\n```\n\n```text\ncache exists?\n  yes → return it\n  no  → run the closure → store the result → return it\n```\n\n<b>The expensive work happens only on a miss</b>, and the read-check-write logic you would otherwise write by hand is gone, along with the race between checking and writing.\n\n`rememberForever` has no expiry:\n\n```php\nCache::rememberForever('countries', fn () => Country::all());\n```\n\n<b>\"Forever\" does not mean \"never needs invalidating\".</b> It means you have taken responsibility for invalidating it yourself, and if you forget, the value is wrong until somebody runs `cache:clear`. <b>Use it only for genuinely static data</b>, and even then, ask what happens when it changes.\n\n---\n\n### 3. Advanced — TTL is a correctness decision\n\n<b>The TTL is how long you are willing to serve wrong data.</b> That is the whole question, and it is a business one rather than a technical one:\n\n```text\nan invoice total       seconds, or invalidate on write\na product listing      minutes\na country list         hours or days\n```\n\n<b>Ten minutes is not a default, it is a decision</b> that says a user may see a ten-minute-old figure. Sometimes that is fine. On a payment page it is not.\n\n<b>And a `remember` block is not automatically a win.</b> If the closure takes two milliseconds, you have replaced a fast query with a network round trip to Redis plus serialisation, and made the code harder to reason about. <b>Cache what is slow, not what is frequent.</b>\n\n`Cache::touch()` extends a TTL without rewriting the value:\n\n```text\nvalue: same    TTL: 5 minutes → 10 minutes\n```\n\nUseful when the value is still valid and you want to keep it alive, typically for something expensive to rebuild that is still being actively used.\n\nTwo practical points that cause real bugs.\n\n<b>Keys must include everything the value depends on.</b> A key of `dashboard` on a multi-tenant application serves one tenant's dashboard to everybody. It should be `dashboard:team:{id}:v2`, and the version suffix is how you invalidate a shape change without a deploy-time flush.\n\n<b>And do not cache `null` accidentally.</b> `Cache::remember` stores whatever the closure returns, including `null`, so a lookup that failed once keeps returning \"not found\" for the whole TTL. That is a cached outage.",
-      diagram: `get and put
-
-    Cache::get('users');           null if missing
-    Cache::get('users', []);       with a default
-
-    Cache::put('users', $users, now()->addMinutes(10));
-
-      key → cache → value
-
-    TTL = time to live. After 10 minutes the entry is
-    no longer valid.
-
-
-remember — the one you will use most
-
-    Cache::remember('users', now()->addMinutes(10),
-        fn () => User::all());
-
-              cache exists?
-                   │
-             ┌─────┴─────┐
-            YES          NO
-             │            │
-             ▼            ▼
-         return      run the closure
-         value            ↓
-                     store result
-                          ↓
-                     return result
-
-  The expensive work happens only on a miss, and the
-  read-check-write logic (and its race) is gone.
-
-
-rememberForever
-
-    Cache::rememberForever('countries',
-        fn () => Country::all());
-
-  ⚠️  "Forever" does not mean "never needs
-      invalidating".
-
-      It means YOU have taken responsibility for
-      invalidating it. Forget, and the value is wrong
-      until somebody runs cache:clear.
-
-      Genuinely static data only — and even then, ask
-      what happens when it changes.
-
-
-  ⚠️  THE TTL IS HOW LONG YOU ARE WILLING TO SERVE
-      WRONG DATA.
-
-      A business question, not a technical one:
-
-        an invoice total     seconds, or invalidate
-                             on write
-        a product listing    minutes
-        a country list       hours or days
-
-      Ten minutes is not a default. It is a decision
-      that a user may see a ten-minute-old figure.
-
-      Fine on a listing page. Not on a payment page.
-
-
-  ⚠️  A remember block is not automatically a win.
-
-      closure takes 2ms
-        → you replaced a fast query with a network
-          round trip plus serialisation, and made the
-          code harder to reason about
-
-      CACHE WHAT IS SLOW, NOT WHAT IS FREQUENT.
-
-
-Cache::touch()
-
-    value: unchanged      TTL: 5 min → 10 min
-
-  Extend the lifetime without rewriting the value.
-  For something expensive to rebuild that is still
-  actively used.
-
-
-Two bugs worth avoiding
-
-  KEYS must include everything the value depends on
-
-    'dashboard'                  ← serves one tenant's
-                                   dashboard to everyone
-    'dashboard:team:5:v2'        ← and the version
-                                   suffix invalidates a
-                                   shape change with no
-                                   deploy-time flush
-
-  Do not cache NULL by accident
-
-    remember() stores whatever the closure returns,
-    including null — so a lookup that failed once
-    keeps returning "not found" for the whole TTL
-
-      that is a CACHED OUTAGE`,
-      codeExample: {
-        title: "The five methods, and the traps in each",
-        code: `<?php
-// ---------- The basics ----------
-
-$users = Cache::get('users');                        // null if missing
-$users = Cache::get('users', []);                    // default
-
-Cache::put('users', $users, now()->addMinutes(10));
-Cache::add('lock:import', true, now()->addMinute());  // only if absent
-Cache::increment('views:post:5');
-
-
-<?php
-// ---------- remember: the workhorse ----------
-
-$total = Cache::remember(
-    "team:{$team->id}:invoice-total",
-    now()->addMinutes(10),
-    fn () => $team->invoices()->sum('total_cents'),
-);
-
-// Replaces this, including the race between the check
-// and the write:
-//
-//   if (Cache::has($key)) { return Cache::get($key); }
-//   $value = expensive();
-//   Cache::put($key, $value, $ttl);
-//   return $value;
-
-
-<?php
-// ---------- Keys must carry everything the value depends on ----------
-
-// ❌ One tenant's dashboard, served to everybody
-Cache::remember('dashboard', now()->addMinutes(5),
-    fn () => $this->build($user));
-
-// ✅ Scoped, and versioned
-Cache::remember(
-    "dashboard:team:{$user->team_id}:v2",
-    now()->addMinutes(5),
-    fn () => $this->build($user),
-);
-
-// The v2 suffix is how you invalidate a SHAPE change:
-// bump it, and every old entry is orphaned instantly —
-// no deploy-time flush, no stampede.
-
-
-<?php
-// ---------- ⚠️ The cached outage ----------
-
-// The API was down for ten seconds. Now "not found" is
-// cached for an hour.
-$profile = Cache::remember("profile:{$id}", now()->addHour(),
-    fn () => $this->api->fetchProfile($id));      // returned null
-
-// ✅ Decide what a miss means, and cache it differently
-$profile = Cache::get("profile:{$id}");
-
-if ($profile === null) {
-    $profile = $this->api->fetchProfile($id);
-
-    Cache::put(
-        "profile:{$id}",
-        $profile,
-        $profile ? now()->addHour() : now()->addSeconds(30),   // short negative TTL
-    );
-}
-
-
-<?php
-// ---------- TTL is a business decision ----------
-
-// Seconds, or invalidated on write — a stale total on a
-// payment page is a support ticket
-Cache::remember("invoice:{$id}:total", now()->addSeconds(30), $fn);
-
-// Minutes — a listing can lag
-Cache::remember('products:featured', now()->addMinutes(15), $fn);
-
-// Days — this genuinely does not change
-Cache::rememberForever('countries', fn () => Country::all());
-// ...and you still need a plan for the day it does.
-
-
-<?php
-// ---------- touch(): keep it alive without rebuilding ----------
-
-$report = Cache::get("report:{$id}");
-
-if ($report) {
-    Cache::touch("report:{$id}", now()->addMinutes(10));   // still valid, keep it
-}
-
-// Useful for something expensive to rebuild that is
-// still being actively used.
-
-
-<?php
-// ---------- Cache what is SLOW, not what is FREQUENT ----------
-
-// ❌ A 2ms query, replaced by a network round trip plus
-//    serialisation — and now harder to reason about
-Cache::remember("user:{$id}", now()->addMinutes(5),
-    fn () => User::find($id));
-
-// ✅ Eight seconds of aggregation
-Cache::remember("team:{$team->id}:annual-report", now()->addHours(6),
-    fn () => $this->reportBuilder->build($team));`,
-      },
-      keyTakeaways: [
-        "<b>`get` reads with an optional default; `put` writes with a TTL.</b>",
-        "<b>`remember` runs the closure only on a miss</b>, replacing read-check-write and its race.",
-        "<b>`rememberForever` means you have taken responsibility for invalidation</b>, not that none is needed.",
-        "<b>The TTL is how long you are willing to serve wrong data</b>, which is a business decision.",
-        "<b>Ten minutes is not a default</b>: fine on a listing, wrong on a payment page.",
-        "<b>Cache what is slow, not what is frequent.</b>",
-        "<b>Caching a 2ms query adds a network round trip and serialisation</b> for no gain.",
-        "<b>`Cache::touch()` extends a TTL without rewriting the value.</b>",
-        "<b>Keys must include everything the value depends on</b>, especially the tenant.",
-        "<b>A version suffix in the key invalidates a shape change instantly</b>, with no flush.",
-        "<b>`remember` caches `null` too</b>, so a failed lookup becomes a cached outage for the whole TTL.",
-      ],
-      commonMistakes: [
-        "<b>An unscoped key like `dashboard`.</b> One tenant's data served to everyone.",
-        "<b>Caching a null from a failed API call.</b> The outage now lasts as long as your TTL.",
-        "<b>Picking ten minutes because it looks reasonable.</b> Decide what staleness the page can tolerate.",
-        "<b>Caching fast queries.</b> You added a network hop and complexity to save nothing.",
-        "<b>Treating `rememberForever` as fire and forget.</b> It is wrong until somebody clears the cache.",
-      ],
-      quiz: [
-        {
-          question: "What does `Cache::remember` actually save you?",
-          options: [
-            "Memory",
-            "The read-check-write logic and its race, running the expensive closure only on a miss",
-            "Serialisation",
-            "The TTL",
-          ],
-          correctIndex: 1,
-          explanation: "It is the method you will reach for most.",
-        },
-        {
-          question: "How should you choose a TTL?",
-          options: [
-            "Ten minutes by default",
-            "By deciding how long you are willing to serve wrong data on that page",
-            "By query duration",
-            "By cache size",
-          ],
-          correctIndex: 1,
-          explanation: "A business decision, not a technical one.",
-        },
-        {
-          question: "What is a cached outage?",
-          options: [
-            "A Redis failure",
-            "`remember` storing the `null` from a failed lookup, so \"not found\" persists for the whole TTL",
-            "An expired key",
-            "A cache stampede",
-          ],
-          correctIndex: 1,
-          explanation: "Give negative results a much shorter TTL.",
-        },
-        {
-          question: "When is caching a query not worth it?",
-          options: [
-            "When it runs rarely",
-            "When it is already fast: you add a network round trip and serialisation to save nothing",
-            "When it returns many rows",
-            "When it uses a join",
-          ],
-          correctIndex: 1,
-          explanation: "Cache what is slow, not what is frequent.",
-        },
-      ],
-    },
-    {
-      id: "invalidation-tags-and-locks",
-      title: "Invalidation, cache tags & atomic locks",
-      durationMinutes: 12,
-      explanation: "Storing a value is easy. Knowing when it stopped being true is the hard part.\n\n---\n\n### 1. Basic — forget\n\n```php\nCache::forget('users');\n```\n\nThe standard flow:\n\n```text\nupdate the database → invalidate the cache\n```\n\n```text\nuser updated → DB update → Cache::forget(\"user:123\")\n```\n\n---\n\n### 2. Intermediate — why invalidation is hard\n\n```text\ndatabase: price = $100        cache: price = $100\n```\n\nSomebody changes the price:\n\n```text\ndatabase: price = $120        cache: price = $100\n```\n\n```text\ndatabase ≠ cache\n```\n\nTwo strategies:\n\n```text\nwrite → database → forget the cache      (recompute on next read)\nwrite → database → update the cache      (write-through)\n```\n\n<b>Forgetting is safer.</b> Updating means writing the value twice, and if the two writes disagree, or the second one fails after the first succeeded, you have cached something that was never true.\n\n<b>And the real difficulty is not one key, it is the other five.</b> Changing a price invalidates the product, the category listing, the search facet, the homepage block and the cached total. <b>Miss one and it stays wrong indefinitely</b>, which is why invalidation bugs are so long-lived: nothing errors, the page just quietly lies.\n\n---\n\n### 3. Advanced — tags and locks\n\n<b>Cache tags</b> group related entries:\n\n```text\nproducts\n ├── product:1\n ├── product:2\n └── product:3\n```\n\nSo you invalidate the group rather than tracking every key. <b>But not every driver supports tags</b>: file and database drivers do not, so a design built on tags cannot fall back to them. Check before you depend on it.\n\n<b>Atomic locks</b> solve a different problem. A popular key expires:\n\n```text\n100 requests → all miss → all run the expensive query\n```\n\n<b>That is a cache stampede</b>, and it is at its worst exactly when you can least afford it: the key expired because the page is popular, so a hundred copies of your slowest query arrive at once and the database falls over. <b>The cache expiring took the site down.</b>\n\nA lock serialises the rebuild:\n\n```text\nA obtains the lock → B, C, D wait\nA computes → A stores → A releases\nB, C, D read the cached value\n```\n\nThree things to get right.\n\n<b>Always set a lock timeout.</b> A process killed mid-rebuild without releasing leaves everyone waiting until it expires, which is the same 24-hour trap as Day 30's `withoutOverlapping()`.\n\n<b>Decide what waiters do.</b> Blocking is fine for a few seconds; beyond that, serving slightly stale data beats holding a hundred connections open.\n\n<b>And locks need shared storage.</b> On a file driver each server takes its own lock, so you have not prevented the stampede, you have made it three-way.",
-      diagram: `Invalidation
-
-    Cache::forget('users');
-
-    update the database → invalidate the cache
-
-      user updated → DB update
-                   → Cache::forget("user:123")
-
-
-Why it is hard
-
-    database: price = $100   cache: price = $100
-              ↓ someone edits
-    database: price = $120   cache: price = $100
-
-              database ≠ cache
-
-  Two strategies:
-
-    write → database → FORGET      recompute on read
-    write → database → UPDATE      write-through
-
-    Forgetting is SAFER: updating writes the value
-    twice, and if the two disagree — or the second
-    fails after the first succeeded — you have cached
-    something that was never true.
-
-  ⚠️  The real difficulty is not one key. It is the
-      other five.
-
-      changing a price invalidates:
-        the product · the category listing
-        the search facet · the homepage block
-        the cached total
-
-      Miss one and it stays wrong INDEFINITELY.
-
-      Which is why invalidation bugs are so
-      long-lived: nothing errors, the page just
-      quietly lies.
-
-
-Cache tags
-
-    products
-      ├── product:1
-      ├── product:2
-      └── product:3
-
-    invalidate the GROUP, not every key
-
-  ⚠️  Not every driver supports tags. File and
-      database do not — so a design built on tags
-      cannot fall back to them.
-
-
-Atomic locks — a different problem
-
-    a popular key expires
-
-      100 requests → all miss → all run the
-                                expensive query
-
-    THAT IS A CACHE STAMPEDE
-
-  And it is worst exactly when you can least afford
-  it: the key expired BECAUSE the page is popular, so
-  a hundred copies of your slowest query arrive at
-  once and the database falls over.
-
-    the cache EXPIRING took the site down
-
-  A lock serialises the rebuild:
-
-    A obtains the lock
-    B, C, D wait
-        ↓
-    A computes → stores → releases
-        ↓
-    B, C, D read the cached value
-
-
-Three things to get right
-
-  ALWAYS set a lock timeout
-
-    a process killed mid-rebuild without releasing
-    leaves everyone waiting until it expires
-
-    same trap as Day 30's withoutOverlapping()
-
-  Decide what WAITERS do
-
-    blocking is fine for a few seconds
-    beyond that, serving slightly stale data beats
-    holding a hundred connections open
-
-  Locks need SHARED STORAGE
-
-    on a file driver each server takes its own lock —
-    you have not prevented the stampede, you have
-    made it three-way`,
-      codeExample: {
-        title: "Invalidating on write, tagging groups, and stopping a stampede",
-        code: `<?php
-// ---------- Invalidate on write, in one place ----------
-
-class Product extends Model
-{
-    protected static function booted(): void
-    {
-        static::saved(fn (Product $p) => $p->flushCaches());
-        static::deleted(fn (Product $p) => $p->flushCaches());
-    }
-
-    public function flushCaches(): void
-    {
-        // It is never one key. This is the list you will
-        // forget to update in six months.
-        Cache::forget("product:{$this->id}");
-        Cache::forget("category:{$this->category_id}:products");
-        Cache::forget('homepage:featured');
-        Cache::forget("team:{$this->team_id}:catalogue-total");
-    }
-}
-
-// Miss one and it stays wrong indefinitely. Nothing
-// errors — the page just quietly lies.
-
-
-<?php
-// ---------- Tags: invalidate a group instead ----------
-
-// Requires Redis or Memcached. File and database
-// drivers do not support tags.
-Cache::tags(['products', "category:{$id}"])
-    ->remember("product:{$productId}", now()->addHour(), $fn);
-
-// One line replaces the list above
-Cache::tags(['products'])->flush();
-
-// ⚠️ Check driver support before designing around this.
-if (! Cache::supportsTags()) {
-    // your fallback has to exist
-}
-
-
-<?php
-// ---------- Forget vs update ----------
-
-// ✅ Safer: recompute on the next read
-DB::transaction(function () use ($product, $price) {
-    $product->update(['price_cents' => $price]);
-});
-Cache::forget("product:{$product->id}");
-
-// ⚠️ Write-through: the value is written twice, so a
-//    disagreement or a failed second write caches
-//    something that was never true
-$product->update(['price_cents' => $price]);
-Cache::put("product:{$product->id}", $product->fresh(), now()->addHour());
-
-
-<?php
-// ---------- The stampede, and the lock that stops it ----------
-
-// ❌ A popular key expires at 09:00. One hundred
-//    requests all miss, all run the eight-second query,
-//    and the database falls over.
-$report = Cache::remember('dashboard:global', now()->addMinutes(10),
-    fn () => $this->buildExpensiveReport());
-
-// ✅ One rebuild, everyone else waits for it
-$report = Cache::get('dashboard:global');
-
-if ($report === null) {
-    $lock = Cache::lock('dashboard:global:rebuild', 30);   // ← always a timeout
-
-    if ($lock->get()) {
+    $results = collect($checks)->map(function ($check) {
         try {
-            $report = $this->buildExpensiveReport();
-            Cache::put('dashboard:global', $report, now()->addMinutes(10));
-        } finally {
-            $lock->release();
+            return $check() ? 'ok' : 'failing';
+        } catch (Throwable $e) {
+            return 'error';
         }
-    } else {
-        // Decide what waiters do. Blocking for seconds is
-        // fine; holding 100 connections is not.
-        $lock->block(5);
-        $report = Cache::get('dashboard:global') ?? $this->staleFallback();
-    }
-}
+    });
+
+    return response()->json($results, $results->contains('ok') === false ? 503 : 200);
+});
+
+// routes/console.php — the heartbeat the check reads
+Schedule::call(fn () => Cache::put('scheduler:heartbeat', now(), now()->addMinutes(10)))
+    ->everyMinute();
+
+// Now "the scheduler stopped" is a failing health check
+// instead of a report nobody received.
+
+
+# ---------- Layer 4: data ----------
+
+php artisan migrate:status
+# When did the last backup run? When was it last RESTORED?
+
+
+# ---------- Layer 5: operations ----------
+
+# Are logs from all three servers in one place?
+# Does an exception reach a human?
+# Can you answer "which release introduced this?"
 
 
 <?php
-// ---------- Or: serve stale while one process rebuilds ----------
+// ---------- The question to ask of every piece ----------
 
-// Store with a longer TTL than the "freshness" window,
-// so there is always something to serve.
-$entry = Cache::get('dashboard:global');
-
-if ($entry && $entry['fresh_until'] > now()) {
-    return $entry['value'];                    // fresh
-}
-
-if ($entry && Cache::lock('dashboard:rebuild', 30)->get()) {
-    dispatch(new RebuildDashboard());          // refresh in the background
-}
-
-return $entry['value'] ?? $this->buildExpensiveReport();   // stale beats down
-
-
-<?php
-// ---------- Locks need shared storage ----------
-
-// CACHE_STORE=file, three servers:
-//   server A takes its own lock  → runs the query
-//   server B takes its own lock  → runs the query
-//   server C takes its own lock  → runs the query
+// For each item:  how would I know if this were broken?
 //
-// You did not prevent the stampede. You made it
-// three-way. Same rule as Day 30's isolation locks.`,
-      },
-      keyTakeaways: [
-        "<b>The standard flow is write to the database, then invalidate the cache.</b>",
-        "<b>Stale cache means the database and cache disagree</b>, and nothing errors while it happens.",
-        "<b>Forgetting is safer than updating</b>, because write-through writes the value twice.",
-        "<b>The hard part is the other five keys</b>: product, listing, facet, homepage block, total.",
-        "<b>A missed key stays wrong indefinitely</b>, which is why invalidation bugs live so long.",
-        "<b>Cache tags group related entries</b> so you can invalidate the group.",
-        "<b>File and database drivers do not support tags</b>, so a tag-based design cannot fall back to them.",
-        "<b>A cache stampede is a hundred requests all missing and all running the expensive query.</b>",
-        "<b>It happens at the worst moment</b>, because the key expired precisely because the page is popular.",
-        "<b>An atomic lock serialises the rebuild</b> so one process computes and the rest read the result.",
-        "<b>Always give a lock a timeout</b>, or a killed process blocks everyone until it expires.",
-        "<b>Locks need shared storage</b>, or each server takes its own and the stampede becomes three-way.",
-      ],
-      commonMistakes: [
-        "<b>Invalidating only the obvious key.</b> The listing and the totals stay wrong for weeks.",
-        "<b>Designing around tags without checking the driver.</b> File and database drivers do not support them.",
-        "<b>No lock on an expensive popular key.</b> Its expiry becomes an outage.",
-        "<b>A lock with no timeout.</b> One killed process blocks every request behind it.",
-        "<b>Locks on a file cache driver.</b> Each server locks itself and nothing is coordinated.",
-      ],
-      quiz: [
-        {
-          question: "Why is forgetting a key safer than updating it?",
-          options: [
-            "It is faster",
-            "Write-through writes the value twice, so a disagreement or failed second write caches something untrue",
-            "It uses less memory",
-            "It is not safer",
-          ],
-          correctIndex: 1,
-          explanation: "Forgetting makes the next read recompute from the source of truth.",
-        },
-        {
-          question: "What makes invalidation bugs so long-lived?",
-          options: [
-            "They throw silently",
-            "Nothing errors: a missed key just serves wrong data indefinitely",
-            "They only occur in production",
-            "Tags hide them",
-          ],
-          correctIndex: 1,
-          explanation: "One price change usually invalidates five different keys.",
-        },
-        {
-          question: "Why is a cache stampede worst on your most popular pages?",
-          options: [
-            "They have more data",
-            "The key expired because the page is popular, so a hundred copies of the slow query arrive at once",
-            "They use more memory",
-            "They have longer TTLs",
-          ],
-          correctIndex: 1,
-          explanation: "The cache expiring is what takes the site down.",
-        },
-        {
-          question: "What does an atomic lock need to work across servers?",
-          options: [
-            "A queue",
-            "Shared cache storage, or each server takes its own lock and nothing is coordinated",
-            "A database transaction",
-            "A longer TTL",
-          ],
-          correctIndex: 1,
-          explanation: "Same rule as Day 30's isolation locks.",
-        },
-      ],
-    },
-    {
-      id: "redis-pipelining-and-pubsub",
-      title: "Redis connections, pipelining & pub/sub",
-      durationMinutes: 11,
-      explanation: "Beyond `Cache::get`, Redis is a general-purpose tool you talk to directly.\n\n---\n\n### 1. Basic — connections\n\nRedis supports multiple logical connections and databases:\n\n```text\nLaravel\n  ├── cache Redis\n  ├── queue Redis\n  └── application Redis\n```\n\nSame reasoning as the first lesson: <b>separating workloads stops one from destroying another.</b> The application connection is for things you use Redis for deliberately, counters, leaderboards, sets, rather than as a cache.\n\n---\n\n### 2. Intermediate — pipelining\n\nWithout it, every command is a round trip:\n\n```text\nLaravel → Redis\nLaravel → Redis\nLaravel → Redis\nLaravel → Redis\n```\n\nWith pipelining:\n\n```text\nLaravel ──── batch ────→ Redis (many operations)\n```\n\n<b>The saving is network latency, not Redis time.</b> Redis handles a command in microseconds; the round trip takes a millisecond or so. So a thousand commands is roughly a second of waiting, almost all of it doing nothing, and pipelined it becomes a few milliseconds.\n\n<b>Which means the loop is the thing to look for</b>, not the individual call. `Cache::get` inside a `foreach` over five hundred items is five hundred round trips, and it is the exact same shape as the N+1 problem from Day 15, just against Redis instead of your database. <b>Use `Cache::many()` and `Cache::putMany()`</b>, which pipeline for you.\n\n---\n\n### 3. Advanced — pub/sub, and what it is not\n\n```text\npublisher → Redis channel → subscribers\n```\n\n```text\norder service → \"order.created\" → Redis\n   ├── email\n   ├── analytics\n   └── notifications\n```\n\n<b>The critical distinction:</b>\n\n> <b>Pub/sub is messaging, not storage.</b>\n\nA message is delivered to whoever is listening <b>at that moment</b> and then it is gone. No subscriber connected means nobody receives it, and there is no retry, no acknowledgement and no record that it happened. <b>A subscriber restarting during a deploy misses everything published during the restart</b>, silently.\n\nSo the rule is straightforward: <b>if losing the message matters, use a queue.</b> Day 26's queues persist jobs, retry them and record failures, which is exactly what pub/sub does not do.\n\nPub/sub is right for genuinely ephemeral fan-out: live dashboard updates, cache-invalidation signals between servers, presence pings. <b>Anything you would be upset to lose belongs on a queue</b>, and this is also why Day 28's broadcasting sits on top of a different mechanism when durability matters.\n\nOne last note: a Redis subscriber holds a connection open and blocks, so it is a long-running process with all the supervision needs of a queue worker, not something you start in a controller.",
-      diagram: `Connections — separate the workloads
-
-    Laravel
-      ├── cache Redis
-      ├── queue Redis
-      └── application Redis
-
-  Same reasoning as lesson 1: separating workloads
-  stops one destroying another.
-
-  The application connection is for what you use Redis
-  for DELIBERATELY — counters, leaderboards, sets —
-  rather than as a cache.
-
-
-Pipelining
-
-  Without:
-
-    Laravel → Redis
-    Laravel → Redis
-    Laravel → Redis
-    Laravel → Redis        ← a round trip each time
-
-  With:
-
-    Laravel ──── batch ────→ Redis
-                            many operations
-
-  ⚠️  The saving is NETWORK LATENCY, not Redis time.
-
-      Redis handles a command in microseconds.
-      The round trip takes ~1ms.
-
-        1,000 commands ≈ 1 second of waiting,
-        almost all of it doing nothing
-
-        pipelined ≈ a few milliseconds
-
-  So look for the LOOP, not the call:
-
-    Cache::get inside a foreach over 500 items
-      = 500 round trips
-
-    the exact shape of Day 15's N+1 — against Redis
-    instead of your database
-
-      Cache::many() · Cache::putMany()
-      pipeline for you
-
-
-Pub/sub
-
-    publisher → Redis channel → subscribers
-
-    order service → "order.created" → Redis
-                       ├── email
-                       ├── analytics
-                       └── notifications
-
-
-  ⚠️  THE CRITICAL DISTINCTION
-
-      PUB/SUB IS MESSAGING, NOT STORAGE.
-
-      Delivered to whoever is listening AT THAT
-      MOMENT, then gone.
-
-        no subscriber connected → nobody receives it
-        no retry
-        no acknowledgement
-        no record that it happened
-
-      A subscriber restarting during a deploy misses
-      everything published during the restart —
-      silently.
-
-
-  THE RULE
-
-    If losing the message matters, USE A QUEUE.
-
-    Day 26's queues persist, retry and record
-    failures. That is exactly what pub/sub does not
-    do.
-
-  Pub/sub is right for genuinely ephemeral fan-out:
-
-    live dashboard updates
-    cache-invalidation signals between servers
-    presence pings
-
-  Anything you would be upset to lose belongs on a
-  queue.
-
-
-  And a subscriber holds a connection open and blocks:
-  a long-running process with all the supervision
-  needs of a queue worker — not something you start in
-  a controller.`,
-      codeExample: {
-        title: "Pipelining a loop, and choosing pub/sub or a queue",
-        code: `<?php
-// ---------- The Redis N+1 ----------
-
-// ❌ 500 network round trips. ~500ms of pure waiting.
-foreach ($productIds as $id) {
-    $prices[$id] = Cache::get("product:{$id}:price");
-}
-
-// ✅ One round trip
-$keys   = collect($productIds)->map(fn ($id) => "product:{$id}:price");
-$prices = Cache::many($keys->all());
-
-// Same shape as Day 15's N+1, against Redis instead of
-// your database.
-
-
-<?php
-// ---------- Writing many ----------
-
-// ❌
-foreach ($products as $product) {
-    Cache::put("product:{$product->id}:price", $product->price_cents, 3600);
-}
-
-// ✅
-Cache::putMany(
-    $products->mapWithKeys(fn ($p) => ["product:{$p->id}:price" => $p->price_cents])->all(),
-    3600,
-);
-
-
-<?php
-// ---------- Raw pipelining, when you need Redis commands ----------
-
-Redis::pipeline(function ($pipe) use ($views) {
-    foreach ($views as $postId => $count) {
-        $pipe->incrby("views:post:{$postId}", $count);
-        $pipe->expire("views:post:{$postId}", 86400);
-    }
-});
-
-// 2,000 commands, one round trip.
-
-// transaction() when they must all apply together
-Redis::transaction(function ($tx) use ($from, $to, $amount) {
-    $tx->decrby("credits:{$from}", $amount);
-    $tx->incrby("credits:{$to}", $amount);
-});
-
-
-<?php
-// ---------- Separate connections ----------
-
-Redis::connection('cache')->get('key');
-Redis::connection('queue')->llen('queues:default');
-Redis::connection('default')->zadd('leaderboard', 950, "user:{$id}");
-
-
-<?php
-// ---------- ⚠️ Pub/sub: fire and forget, literally ----------
-
-// Publisher
-Redis::publish('dashboard.updated', json_encode([
-    'team_id' => $team->id,
-    'total'   => $total,
-]));
-
-// Subscriber — a long-running process, supervised like
-// a queue worker. Never started from a controller.
-class SubscribeToDashboard extends Command
-{
-    protected $signature = 'dashboard:subscribe';
-
-    public function handle(): int
-    {
-        Redis::subscribe(['dashboard.updated'], function (string $message) {
-            $this->broadcastToWebsocket(json_decode($message, true));
-        });
-
-        return self::SUCCESS;
-    }
-}
-
-// During a deploy this process restarts. Everything
-// published in those four seconds is gone. No retry,
-// no record, no error.
-
-
-<?php
-// ---------- The choice, made explicit ----------
-
-// ❌ Pub/sub for something that matters
-Redis::publish('invoice.paid', json_encode(['id' => $invoice->id]));
-// The listener was restarting. The receipt never sent.
-// Nothing failed. Nothing was logged.
-
-// ✅ A queue: persisted, retried, failures recorded
-SendPaymentReceipt::dispatch($invoice);
-
-// ✅ Pub/sub for genuinely ephemeral fan-out
-Redis::publish('presence.ping', json_encode(['user' => $user->id]));
-Redis::publish('cache.invalidate', json_encode(['key' => "product:{$id}"]));
-
-
-<?php
-// ---------- A useful non-cache use of Redis ----------
-
-Redis::zadd('leaderboard:weekly', $score, "user:{$user->id}");
-Redis::zrevrange('leaderboard:weekly', 0, 9, 'WITHSCORES');
-
-// Sorted sets, counters and sets are things Redis does
-// well that your database does awkwardly. That is the
-// "application" connection.`,
-      },
-      keyTakeaways: [
-        "<b>Redis supports separate connections and databases</b>, so cache, queue and application data stay apart.",
-        "<b>Pipelining batches commands into one round trip.</b>",
-        "<b>The saving is network latency</b>: Redis is microseconds, the round trip is a millisecond.",
-        "<b>A thousand un-pipelined commands is about a second of pure waiting.</b>",
-        "<b>Look for the loop, not the call.</b> `Cache::get` inside a `foreach` is Day 15's N+1 against Redis.",
-        "<b>`Cache::many()` and `Cache::putMany()` pipeline for you.</b>",
-        "<b>Pub/sub is messaging, not storage</b>: delivered to whoever is listening, then gone.",
-        "<b>No subscriber means nobody receives it</b>, with no retry, acknowledgement or record.",
-        "<b>A subscriber restarting during a deploy silently misses everything published.</b>",
-        "<b>If losing the message matters, use a queue</b>, which persists, retries and records failures.",
-        "<b>Pub/sub suits ephemeral fan-out</b>: live dashboard updates, invalidation signals, presence pings.",
-        "<b>A subscriber is a supervised long-running process</b>, never started from a controller.",
-      ],
-      commonMistakes: [
-        "<b>Cache calls inside a loop.</b> Hundreds of round trips, and the profile blames Redis rather than your loop.",
-        "<b>Using pub/sub for anything that matters.</b> A deploy-time restart drops messages silently.",
-        "<b>Expecting pub/sub retries.</b> There is no acknowledgement and no record it happened.",
-        "<b>One Redis connection for cache, queue and app data.</b> One workload's problem becomes everyone's.",
-        "<b>Starting a subscriber from a web request.</b> It blocks and holds a connection open.",
-      ],
-      quiz: [
-        {
-          question: "What does pipelining actually save?",
-          options: [
-            "Redis CPU time",
-            "Network round trips: Redis is microseconds per command, the round trip is a millisecond",
-            "Memory",
-            "Serialisation",
-          ],
-          correctIndex: 1,
-          explanation: "A thousand un-pipelined commands is about a second of waiting.",
-        },
-        {
-          question: "What pattern should you look for when profiling Redis usage?",
-          options: [
-            "Large values",
-            "Cache calls inside a loop, which is the N+1 shape against Redis",
-            "Long keys",
-            "Expired keys",
-          ],
-          correctIndex: 1,
-          explanation: "`Cache::many()` and `putMany()` pipeline it for you.",
-        },
-        {
-          question: "What is the critical property of Redis pub/sub?",
-          options: [
-            "It persists messages",
-            "It is messaging, not storage: no listener means the message is simply gone",
-            "It retries automatically",
-            "It acknowledges delivery",
-          ],
-          correctIndex: 1,
-          explanation: "A subscriber restarting during a deploy misses everything silently.",
-        },
-        {
-          question: "When should you use a queue instead of pub/sub?",
-          options: [
-            "For live dashboards",
-            "Whenever losing the message matters, since queues persist, retry and record failures",
-            "For presence pings",
-            "Never",
-          ],
-          correctIndex: 1,
-          explanation: "Pub/sub suits genuinely ephemeral fan-out only.",
-        },
-      ],
-    },
-    {
-      id: "query-optimization",
-      title: "Indexes, EXPLAIN, columns & N+1",
-      durationMinutes: 13,
-      explanation: "Before you cache anything, fix the thing you were about to cache.\n\n<b>Caching is not the first solution to a bad query.</b> It is a way to run a bad query less often, which leaves the bad query in place for every cache miss, every invalidation and every new page that needs the same data.\n\n---\n\n### 1. Basic — indexes\n\n```sql\nSELECT * FROM orders WHERE user_id = 123 ORDER BY created_at DESC;\n```\n\nWith no index on `user_id`, the database reads a great many rows to find a few.\n\n```text\nwithout   1M rows → scan → find matches\nwith      1M rows → index → jump to matches\n```\n\n```sql\nCREATE INDEX orders_user_id_index ON orders(user_id);\n```\n\n<b>An index frequently beats caching by more</b>, and it helps every query on that column rather than the one you remembered to wrap.\n\n---\n\n### 2. Intermediate — composite indexes and EXPLAIN\n\nFor:\n\n```sql\nWHERE user_id = ? AND status = ? ORDER BY created_at DESC\n```\n\nOne composite index beats three separate ones:\n\n```text\n(user_id, status, created_at)\n```\n\n<b>Order matters, and it is not arbitrary.</b> An index on `(user_id, status)` serves a query filtering on `user_id` alone; one on `(status, user_id)` does not. <b>Equality columns first, then the range or sort column</b>, and having `created_at` last is what lets the database skip sorting entirely.\n\nAnd then stop guessing:\n\n```sql\nEXPLAIN ANALYZE SELECT ...\n```\n\n```text\nindex scan or sequential scan?  rows examined vs returned?\njoin strategy?  sort cost?\n```\n\n<b>The number to look at is rows examined versus rows returned.</b> Examining 400,000 to return 20 tells you exactly what is wrong, and no amount of reading the query would have.\n\n<b>Indexes are not free.</b> Each one slows every insert and update and takes disk space, so an unused index is pure cost. Add them from real query patterns, not speculation.\n\n---\n\n### 3. Advanced — data volume and N+1\n\n<b>Select only what you need:</b>\n\n```php\nUser::select(['id', 'name'])->get();\n```\n\nInstead of pulling every column, you move less data and hydrate less:\n\n```text\nless I/O · less memory · less network · less hydration\n```\n\n<b>The hidden win is covering indexes.</b> If an index contains every column you selected, the database answers from the index and never touches the table at all.\n\n<b>And then N+1</b>, from Day 15:\n\n```php\n$posts = Post::all();\nforeach ($posts as $post) { echo $post->user->name; }   // 101 queries\n\n$posts = Post::with('user')->get();                      // 2 queries\n```\n\n<b>Caching is not the fix for N+1.</b> It hides it: the first request still runs 101 queries, every cache miss runs 101 queries, and the moment the data changes you are back to 101. <b>Fix the query architecture first</b>, then decide whether the two remaining queries are worth caching.\n\nOne more, because it is the version that bites in production: <b>a page that is fast on your machine and slow on production usually has an N+1 you cannot see at 50 rows.</b> Ten posts is eleven queries and feels fine. Ten thousand is unusable. Turn on `Model::preventLazyLoading()` in development and the problem announces itself instead of waiting.",
-      diagram: `Caching is not the fix for a bad query
-
-  It runs the bad query LESS OFTEN — leaving it in
-  place for every cache miss, every invalidation, and
-  every new page that needs the same data.
-
-
-Indexes
-
-    SELECT * FROM orders
-    WHERE user_id = 123
-    ORDER BY created_at DESC;
-
-    without   1M rows → scan → find matches
-    with      1M rows → index → jump to matches
-
-    CREATE INDEX orders_user_id_index ON orders(user_id);
-
-  Frequently beats caching by more — and helps EVERY
-  query on that column, not just the one you
-  remembered to wrap.
-
-
-Composite indexes
-
-    WHERE user_id = ? AND status = ?
-    ORDER BY created_at DESC
-
-      (user_id, status, created_at)
-
-  ⚠️  Order matters, and is not arbitrary.
-
-      (user_id, status)  serves a query on user_id
-                         alone
-      (status, user_id)  does not
-
-      EQUALITY columns first, then the range/sort
-      column. created_at last is what lets the
-      database skip sorting entirely.
-
-
-EXPLAIN — stop guessing
-
-    EXPLAIN ANALYZE SELECT ...
-
-      index scan or sequential scan?
-      rows examined vs rows RETURNED?
-      join strategy?  sort cost?
-
-  ⚠️  The number to look at is EXAMINED vs RETURNED.
-
-      examining 400,000 to return 20 tells you
-      exactly what is wrong — and no amount of
-      reading the query would have
-
-  And indexes are not free: each slows every insert
-  and update and costs disk. An unused index is pure
-  cost. Add them from real query patterns.
-
-
-Select only what you need
-
-    User::select(['id', 'name'])->get();
-
-      less I/O · less memory · less network
-      less hydration
-
-  The hidden win: a COVERING INDEX. If the index
-  contains every column you selected, the database
-  answers from the index and never touches the table.
-
-
-N+1 — Day 15, again
-
-    Post::all();
-    foreach → $post->user->name        101 queries
-
-    Post::with('user')->get();           2 queries
-
-  ⚠️  CACHING IS NOT THE FIX FOR N+1.
-
-      It hides it:
-        the first request still runs 101 queries
-        every cache miss runs 101 queries
-        the data changes → back to 101
-
-      Fix the query architecture FIRST. Then decide
-      whether the two remaining queries are worth
-      caching.
-
-
-  And the production version:
-
-    fast on your machine, slow in production
-      = an N+1 you cannot see at 50 rows
-
-      10 posts     → 11 queries, feels fine
-      10,000 posts → unusable
-
-    Model::preventLazyLoading() in development makes
-    it announce itself instead of waiting.`,
-      codeExample: {
-        title: "Index, explain, trim, and kill the N+1",
-        code: `<?php
-// ---------- The index ----------
-
-Schema::table('orders', function (Blueprint $table) {
-    // Equality first, then the sort column — so the
-    // database can skip sorting entirely
-    $table->index(['user_id', 'status', 'created_at']);
-});
-
-// This one composite index serves:
-//   WHERE user_id = ?
-//   WHERE user_id = ? AND status = ?
-//   WHERE user_id = ? AND status = ? ORDER BY created_at DESC
+//   web server        it 500s              ✅ loud
+//   queue worker      ???                  ⚠️ silent
+//   scheduler         ???                  ⚠️ silent
+//   config cache      one feature nulls    ⚠️ silent
+//   backups           ???                  ⚠️ silent
 //
-// It does NOT serve:
-//   WHERE status = ?          ← wrong leading column
-
-
-# ---------- EXPLAIN: ask, do not guess ----------
-
-EXPLAIN ANALYZE
-SELECT * FROM orders
-WHERE user_id = 123 AND status = 'paid'
-ORDER BY created_at DESC
-LIMIT 20;
-
-# Before
-#   Seq Scan on orders  (rows=412,000)
-#   Filter: (user_id = 123 AND status = 'paid')
-#   Rows Removed by Filter: 411,980
-#   Execution Time: 890 ms
-#
-#   ← 412,000 examined to return 20. That is the number.
-
-# After
-#   Index Scan using orders_user_id_status_created_at_index
-#   (rows=20)
-#   Execution Time: 0.8 ms
-
-
-<?php
-// ---------- Laravel-side profiling ----------
-
-DB::listen(function ($query) {
-    if ($query->time > 100) {
-        Log::warning('Slow query', [
-            'sql'      => $query->sql,
-            'bindings' => $query->bindings,
-            'time'     => $query->time,
-        ]);
-    }
-});
-
-// Or for one page, right now:
-DB::enableQueryLog();
-// ... the code ...
-dd(count(DB::getQueryLog()), DB::getQueryLog());
-
-
-<?php
-// ---------- Select only what you need ----------
-
-// ❌ Every column, including a 40KB description
-User::all();
-
-// ✅
-User::select(['id', 'name'])->get();
-
-// And if an index covers (id, name), the database
-// answers from the index and never reads the table.
-
-// The relation version, which people forget:
-Post::with(['user:id,name', 'comments:id,post_id,body'])->get();
-
-
-<?php
-// ---------- N+1: fix it, do not cache it ----------
-
-// ❌ 1 + 100 + 100 + 100 = 301 queries
-$posts = Post::latest()->get();
-
-foreach ($posts as $post) {
-    echo $post->user->name;
-
-    foreach ($post->comments as $comment) {
-        echo $comment->user->name;
-    }
-}
-
-// ❌❌ Worse: caching the symptom
-Cache::remember('posts-page', now()->addMinutes(5), function () {
-    // still 301 queries on every miss, and every
-    // invalidation, and the first request after a deploy
-});
-
-// ✅ 4 queries
-$posts = Post::with(['user', 'comments.user'])->latest()->get();
-
-// ✅ And when you only need a count
-$posts = Post::withCount('comments')->latest()->get();
-
-
-<?php
-// ---------- Make it impossible to reintroduce ----------
-
-// app/Providers/AppServiceProvider.php
-public function boot(): void
-{
-    Model::preventLazyLoading(! $this->app->isProduction());
-    Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
-}
-
-// Now a lazy load throws in development instead of
-// waiting to be slow in production, where 10,000 rows
-// makes the difference you could not see at 50.
-
-
-<?php
-// ---------- Chunk what you cannot trim ----------
-
-// ❌ 400,000 models in memory
-foreach (Order::all() as $order) { ... }
-
-// ✅
-Order::query()->chunkById(500, function ($orders) { ... });
-Order::query()->lazyById()->each(function ($order) { ... });`,
+// Anything answered "a customer would tell me" is not
+// deployed. It is merely running.`,
       },
       keyTakeaways: [
-        "<b>Caching a bad query runs it less often; it does not fix it.</b>",
-        "<b>An index turns a scan into a jump</b>, and helps every query on that column.",
-        "<b>A composite index beats three separate ones</b> for a multi-column filter.",
-        "<b>Column order matters</b>: equality columns first, then the range or sort column.",
-        "<b>`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.</b>",
-        "<b>`EXPLAIN ANALYZE` tells you what the database will actually do.</b>",
-        "<b>Rows examined versus rows returned is the number that matters.</b>",
-        "<b>Indexes are not free</b>: each slows writes and costs disk, so an unused one is pure cost.",
-        "<b>Selecting only needed columns cuts I/O, memory, network and hydration.</b>",
-        "<b>A covering index lets the database answer without touching the table.</b>",
-        "<b>Caching is not the fix for N+1</b>: every miss still runs all 101 queries.",
-        "<b>An N+1 invisible at 50 rows is fatal at 10,000</b>, so use `preventLazyLoading` in development.",
+        "<b>Deployment is making the application runnable, observable, recoverable and updatable</b>, not uploading files.",
+        "<b>A production system is a load balancer, app servers, database, Redis, storage, workers and a scheduler.</b>",
+        "<b>Logging, monitoring, backups, CI/CD and secrets wrap around all of it.</b>",
+        "<b>Five layers: application, infrastructure, processes, data, operations.</b>",
+        "<b>Processes is the forgotten layer</b>, and it is where the classic first-deploy failure lives.",
+        "<b>Without a worker, `dispatch()` still succeeds</b> and the job sits in Redis forever.",
+        "<b>Without something invoking the scheduler, reports simply do not arrive.</b>",
+        "<b>A deploy is successful when everything works, not when the website loads.</b>",
+        "<b>A broken web server is loud; everything else fails silently and independently.</b>",
+        "<b>The useful question is \"how would I know if this were broken?\"</b>",
+        "<b>If the answer is \"a customer would tell me\", it is running, not deployed.</b>",
+        "<b>This elective is about the second deploy</b>, not getting it online once.",
       ],
       commonMistakes: [
-        "<b>Caching the slow page instead of fixing the query.</b> Every miss pays the full cost.",
-        "<b>Guessing at query plans.</b> `EXPLAIN ANALYZE` answers in seconds what an afternoon of reading will not.",
-        "<b>Adding an index per column.</b> Three single-column indexes rarely beat one composite one.",
-        "<b>Getting composite column order wrong.</b> The index then serves fewer queries than you think.",
-        "<b>Indexing speculatively.</b> Unused indexes slow every write for nothing.",
-        "<b>`select *` everywhere.</b> You move and hydrate columns nobody reads.",
+        "<b>Treating a loading homepage as a successful deploy.</b> Workers and the scheduler may not exist.",
+        "<b>Assuming `dispatch()` working means jobs run.</b> It only means Redis accepted the job.",
+        "<b>No scheduler heartbeat.</b> The first sign is a report nobody received last week.",
+        "<b>Health checks that only test the web server.</b> They pass while half the system is dead.",
+        "<b>Deploying without a way back.</b> The first deploy is easy; the rollback is the job.",
       ],
       quiz: [
         {
-          question: "Why is caching not the answer to a slow query?",
+          question: "Which deployment layer is most often forgotten?",
           options: [
-            "It is too complex",
-            "It runs the bad query less often, leaving it for every miss, invalidation and new page",
-            "Caches are unreliable",
-            "It is the answer",
+            "Infrastructure",
+            "Processes: queue workers and the scheduler",
+            "Application",
+            "Data",
           ],
           correctIndex: 1,
-          explanation: "Fix the query, then decide whether it still needs caching.",
+          explanation: "The site loads and nothing else works, with no errors anywhere.",
         },
         {
-          question: "What order should a composite index use?",
+          question: "What happens when no queue worker is running?",
           options: [
-            "Alphabetical",
-            "Equality columns first, then the range or sort column",
-            "Most selective last",
-            "Any order",
+            "`dispatch()` throws",
+            "`dispatch()` succeeds, the job sits in Redis, and nothing errors",
+            "Laravel runs the job inline",
+            "The request fails",
           ],
           correctIndex: 1,
-          explanation: "`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.",
+          explanation: "Nobody notices until a customer asks where their email went.",
         },
         {
-          question: "What is the key number in an `EXPLAIN ANALYZE` output?",
+          question: "What makes a deployment successful?",
           options: [
-            "Total cost",
-            "Rows examined versus rows returned",
-            "Planning time",
-            "Buffer count",
+            "The website loads",
+            "Application, workers, scheduler, database, config, monitoring and recovery all work",
+            "Migrations ran",
+            "CI passed",
           ],
           correctIndex: 1,
-          explanation: "Examining 400,000 to return 20 tells you exactly what is wrong.",
+          explanation: "Every piece except the web server fails silently.",
         },
         {
-          question: "Why does an N+1 often only appear in production?",
+          question: "What is the useful question to ask of each production component?",
           options: [
-            "Different PHP version",
-            "Eleven queries at 50 rows feels fine; at 10,000 rows it is unusable",
-            "Caching is disabled there",
-            "The index is missing",
+            "Is it fast?",
+            "How would I know if this were broken?",
+            "Is it documented?",
+            "Does it scale?",
           ],
           correctIndex: 1,
-          explanation: "`preventLazyLoading` in development makes it announce itself.",
+          explanation: "\"A customer would tell me\" means it is running, not deployed.",
         },
       ],
     },
     {
-      id: "deployment-caches",
-      title: "Route, config, view & event caching",
-      durationMinutes: 11,
-      explanation: "A different kind of caching: not your data, but Laravel's own startup work.\n\n---\n\n### 1. Basic — the four\n\n```bash\nphp artisan route:cache\nphp artisan config:cache\nphp artisan view:cache\nphp artisan event:cache\n```\n\n```text\nroute files  → a compiled representation → faster bootstrap\nconfig files → one cached array          → faster config loading\nBlade views  → precompiled PHP           → no compilation per request\nlisteners    → a discovered map          → no discovery per boot\n```\n\n<b>These are deployment steps, not things you touch while developing.</b> In development they actively get in your way, because a cached route file means your new route does not exist until you clear it.\n\nOr all at once:\n\n```bash\nphp artisan optimize\nphp artisan optimize:clear\n```\n\n---\n\n### 2. Intermediate — the config rule\n\n<b>This is the one that causes real incidents:</b>\n\n> After config is cached, `env()` returns `null` outside config files.\n\n```text\nnot cached   env() reads .env, everywhere, and works\ncached       env() returns null anywhere except config/\n```\n\nSo a service class calling `env('STRIPE_KEY')` works perfectly in development and returns `null` in production, <b>the moment somebody runs `config:cache`</b>. Not at deploy time necessarily. Whenever that command next runs.\n\n<b>The rule is absolute: `env()` belongs in `config/` files only.</b> Everywhere else, `config('services.stripe.key')`. Grep for `env(` outside `config/` right now; on most codebases you will find some.\n\nAnd the sequel: <b>changing `.env` in production does nothing until you re-run `config:cache`.</b> People edit the file, restart nothing, and spend an hour wondering why the new API key is not being used.\n\n---\n\n### 3. Advanced — what breaks, and what the gain is\n\n<b>`route:cache` fails with closure routes.</b> A closure cannot be serialised, so the command errors out. That is a reason to use controller classes, which is where they belonged anyway.\n\n<b>And a cached route file that is stale is invisible.</b> Nothing warns you; the old routes just keep working. So caching must be part of the deploy script, not something a person remembers.\n\n<b>Be honest about the size of the win.</b> These save framework bootstrap time: a few milliseconds to perhaps twenty on a large application. <b>That is worth having and it is not going to fix a 1.8-second page.</b> If your page is slow, it is your queries, not Laravel's boot.\n\nWhere it does matter is <b>high request volume</b>, because you pay boot cost on every single request. Twenty milliseconds across a million requests a day is real.\n\n<b>The rule that ties it together:</b> caching must go in the deploy script, and clearing must happen before anything else in development. A half-cached deploy, config cached against the previous `.env`, is a genuinely confusing outage, because the code is right, the environment file is right, and the application disagrees with both.",
-      diagram: `Four deployment caches
+      id: "the-deploy-sequence",
+      title: "The deploy sequence, and why the order matters",
+      durationMinutes: 12,
+      explanation: "The commands are short. The order is the lesson.\n\n---\n\n### 1. Basic — the sequence\n\n```bash\ncomposer install --no-dev --optimize-autoloader\nphp artisan migrate --force\nphp artisan config:cache\nphp artisan route:cache\nphp artisan view:cache\n```\n\n```text\ncode → dependencies → configuration → routes → views → migrations → ready\n```\n\n<b>`--no-dev`</b> skips PHPUnit, Pest, debugging tools and development utilities, which cuts deployment size, install time and <b>attack surface</b>. That last one is the real argument: a debug toolbar or a database-browser package reachable in production is a genuine hole, and the only reliable way not to expose one is not to install it.\n\n<b>`--optimize-autoloader`</b> builds a class map so PHP stops scanning the filesystem to resolve classes.\n\n---\n\n### 2. Intermediate — what each cache does\n\n```text\nconfig:cache   config/*.php → one compiled array\nroute:cache    routes       → a compiled representation\nview:cache     Blade        → precompiled PHP\n```\n\nAll three remove per-request work. Day 32 covered the details, including the trap worth repeating here: <b>after `config:cache`, `env()` returns `null` outside config files</b>, and changing `.env` does nothing until you re-run it.\n\n`php artisan optimize` runs the set, and `optimize:clear` undoes it. <b>Reach for `optimize:clear` when a deploy behaves strangely</b>: stale caches are the most common cause of \"but the code is right\".\n\n<b>And treat the current Laravel documentation as the source of truth</b> for exactly what `optimize` covers, since it has changed between versions.\n\n---\n\n### 3. Advanced — the order, and the two ways it goes wrong\n\n<b>Caching must come after everything it depends on.</b> Cache config before pulling the new `.env` and you have cached the old values; the code is new, the environment file is new, and the application disagrees with both. <b>That is one of the most confusing outages you can create.</b>\n\nSo: <b>clear first, then build, then cache.</b>\n\n<b>The second problem is subtler and more dangerous: migrations and code do not deploy at the same instant.</b>\n\n```text\nmigrate first  → new schema, old code running against it\ncode first     → new code, old schema underneath it\n```\n\n<b>There is no ordering that avoids the gap</b>, only a choice of which side you are exposed on, which is why the next lesson exists. For now the rule: <b>a migration must be safe against the code currently running</b>, in whichever order you choose.\n\nTwo more things that belong in every deploy script and are usually missing.\n\n<b>`php artisan queue:restart`.</b> Workers hold the old code in memory and will keep running it indefinitely. A deploy that does not restart them has deployed the web tier only.\n\n<b>And a failure must stop the deploy.</b> A script that continues past a failed `composer install` will happily cache config, restart workers and swap traffic to a half-installed release. <b>`set -e` at the top of the script is the cheapest reliability you will ever buy.</b>",
+      diagram: `The sequence
 
-    php artisan route:cache
+    composer install --no-dev --optimize-autoloader
+    php artisan migrate --force
     php artisan config:cache
+    php artisan route:cache
     php artisan view:cache
-    php artisan event:cache
 
-    route files  → compiled representation
-                   → faster bootstrap
-    config files → one cached array
-                   → faster config loading
-    Blade views  → precompiled PHP
-                   → no compilation per request
-    listeners    → a discovered map
-                   → no discovery per boot
+    code → dependencies → configuration → routes
+         → views → migrations → ready
 
-  DEPLOYMENT steps. Not things you touch while
-  developing — a cached route file means your new
-  route does not exist until you clear it.
+  --no-dev
+    skips PHPUnit, Pest, debug tools, dev utilities
+      smaller · faster · SMALLER ATTACK SURFACE
+
+    that last one is the real argument: a debug
+    toolbar or database browser reachable in
+    production is a genuine hole, and the reliable
+    way not to expose one is not to install it
+
+  --optimize-autoloader
+    a class map, so PHP stops scanning the filesystem
+
+
+What each cache does
+
+    config:cache   config/*.php → one compiled array
+    route:cache    routes       → compiled form
+    view:cache     Blade        → precompiled PHP
+
+  ⚠️  After config:cache, env() returns null outside
+      config files — and changing .env does nothing
+      until you re-run it. (Day 32.)
 
     php artisan optimize
-    php artisan optimize:clear
+    php artisan optimize:clear    ← when a deploy
+                                    behaves strangely
+
+  Stale caches are the most common cause of
+  "but the code is right".
 
 
-  ⚠️  THE CONFIG RULE — the one that causes incidents
+  ⚠️  ORDER PROBLEM 1 — cache last
 
-      After config is cached, env() returns NULL
-      outside config files.
+      Cache config BEFORE pulling the new .env and
+      you have cached the OLD values.
 
-        not cached   env() reads .env everywhere,
-                     and works
-        cached       env() → null anywhere except
-                     config/
+        the code is new
+        the env file is new
+        the application disagrees with both
 
-      So a service calling env('STRIPE_KEY') works
-      perfectly in development and returns null in
-      production — the moment somebody runs
-      config:cache.
+      One of the most confusing outages you can make.
 
-      Not necessarily at deploy time. Whenever that
-      command next runs.
-
-    THE RULE IS ABSOLUTE
-
-      env()    in config/ files ONLY
-      config() everywhere else
-
-    Grep for env( outside config/ right now. Most
-    codebases have some.
-
-  And the sequel:
-
-    changing .env in production does NOTHING until
-    you re-run config:cache
-
-    people edit the file, restart nothing, and spend
-    an hour wondering why the new API key is ignored
+        CLEAR FIRST → BUILD → CACHE
 
 
-What breaks
+  ⚠️  ORDER PROBLEM 2 — the gap you cannot close
 
-  route:cache FAILS with closure routes
+      Migrations and code do not deploy at the same
+      instant.
 
-    a closure cannot be serialised — which is a
-    reason to use controller classes, where they
-    belonged anyway
+        migrate first → new schema, OLD code running
+                        against it
+        code first    → new code, OLD schema under it
 
-  A stale cached route file is INVISIBLE
+      There is NO ordering that avoids the gap. Only
+      a choice of which side you are exposed on.
 
-    nothing warns you; the old routes keep working
-    → caching belongs in the DEPLOY SCRIPT, not in
-      somebody's memory
+      → which is why the next lesson exists
 
-
-Be honest about the win
-
-    these save FRAMEWORK BOOTSTRAP time
-    a few ms, up to ~20ms on a large app
-
-    worth having. NOT going to fix a 1.8s page.
-
-    if your page is slow it is your QUERIES, not
-    Laravel's boot
-
-  Where it does matter: HIGH REQUEST VOLUME. You pay
-  boot cost on every request, and 20ms × 1M/day is
-  real.
+      The rule for now: a migration must be safe
+      against the code CURRENTLY RUNNING.
 
 
-  ⚠️  A half-cached deploy — config cached against
-      the PREVIOUS .env — is a genuinely confusing
-      outage: the code is right, the env file is
-      right, and the application disagrees with both.`,
+Two things usually missing
+
+  php artisan queue:restart
+
+    workers hold the old code in memory and keep
+    running it indefinitely — a deploy without this
+    has deployed the WEB TIER ONLY
+
+  A failure must STOP the deploy
+
+    a script that continues past a failed composer
+    install will cache config, restart workers and
+    swap traffic to a half-installed release
+
+      set -e  is the cheapest reliability you will
+      ever buy`,
       codeExample: {
-        title: "The deploy script, and the env() rule",
-        code: `# ---------- The deploy script ----------
+        title: "A deploy script that fails safely",
+        code: `#!/usr/bin/env bash
+set -euo pipefail          # ← stop on the FIRST failure.
+                           #   Without this, a failed composer
+                           #   install still ends with traffic
+                           #   pointed at a broken release.
 
-php artisan down --render="errors::503"
+cd /var/www/invoicehub
 
-git pull origin main
-composer install --no-dev --optimize-autoloader
+# ---------- 1. Code ----------
+git fetch --all
+git reset --hard origin/main
+
+# ---------- 2. Dependencies ----------
+composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+npm ci
+npm run build
+
+# ---------- 3. Clear BEFORE caching ----------
+# Cache config before the new .env is in place and you
+# have cached the old values. The code is new, the env
+# file is new, and the app disagrees with both.
+php artisan optimize:clear
+
+# ---------- 4. Database ----------
+# --force because CI has nobody to type "yes"
 php artisan migrate --force
 
-# Clear first, then cache — against the CURRENT .env
-php artisan optimize:clear
+# ---------- 5. Now cache, against the CURRENT state ----------
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-php artisan queue:restart        # workers hold old code in memory
-php artisan up
+# ---------- 6. Processes ----------
+# Workers hold the OLD code in memory. Without this you
+# have deployed the web tier only.
+php artisan queue:restart
 
-# A half-cached deploy — config cached against the
-# PREVIOUS .env — is a confusing outage: the code is
-# right, the env file is right, and the app disagrees
-# with both.
-
-
-<?php
-// ---------- ⚠️ The env() rule ----------
-
-// ❌ Works in development. Returns null in production
-//    the moment config:cache runs.
-class StripeGateway
-{
-    public function __construct()
-    {
-        $this->key = env('STRIPE_SECRET');      // null once cached
-    }
-}
-
-// ✅ config/services.php — the ONLY place env() belongs
-return [
-    'stripe' => [
-        'secret' => env('STRIPE_SECRET'),
-        'key'    => env('STRIPE_KEY'),
-    ],
-];
-
-// ✅ Everywhere else
-class StripeGateway
-{
-    public function __construct()
-    {
-        $this->key = config('services.stripe.secret');
-    }
-}
+# ---------- 7. Prove it ----------
+curl -fsS https://invoicehub.com/health > /dev/null
 
 
-# ---------- Find them now ----------
+# ---------- Why --no-dev is a security line, not a size one ----------
 
-grep -rn "env(" app/ routes/ database/ | grep -v "config/"
+# In dev:
+#   barryvdh/laravel-debugbar
+#   laravel/telescope
+#   a database browser package
+#
+# Any of those reachable in production is a real hole.
+# The reliable way not to expose one is NOT TO INSTALL IT.
 
-# Most codebases have at least one. Each is a
-# production null waiting for somebody to run
-# config:cache.
+composer install --no-dev
 
-
-<?php
-// ---------- route:cache and closures ----------
-
-// ❌ php artisan route:cache fails: closures cannot be
-//    serialised
-Route::get('/health', function () {
-    return response()->json(['ok' => true]);
-});
-
-// ✅
-Route::get('/health', HealthController::class);
-
-// Which is where it belonged anyway.
+# And keep them out of the autoloaded providers:
+# composer.json
+#   "extra": {
+#     "laravel": {
+#       "dont-discover": ["laravel/telescope"]
+#     }
+#   }
 
 
-# ---------- Changing .env in production ----------
+# ---------- --force, explained ----------
 
-# ❌ Edit .env, wonder why nothing changed
-vim .env
+php artisan migrate
+# > **Application In Production**
+# > Are you sure you wish to run this command? (yes/no)
+#
+# CI has nobody sitting there typing yes. --force says
+# "I know this is production; proceed."
 
-# ✅
-vim .env
-php artisan config:cache          # rebuild against the new values
-php artisan queue:restart         # workers cached the old config too
+php artisan migrate --force
+
+# And the one you should also know:
+php artisan migrate:status         # what has and has not run
+php artisan migrate --pretend      # print the SQL, change nothing
 
 
-# ---------- Local development: the opposite ----------
+# ---------- When a deploy behaves strangely ----------
 
 php artisan optimize:clear
+php artisan about                  # what is actually cached right now
 
-# A cached route file locally means your new route
-# genuinely does not exist. This is the first thing to
-# try when a route 404s for no reason.
+# Stale caches are the most common cause of
+# "but the code is right".
 
 
-# ---------- Honest numbers ----------
+# ---------- ⚠️ The failure this script prevents ----------
 
-# Before optimize:  bootstrap ≈ 25ms
-# After optimize:   bootstrap ≈  6ms
+# Without set -e:
 #
-# Real, and worth having on every request.
+#   composer install    ← fails, vendor/ is half-written
+#   migrate --force     ← runs anyway
+#   config:cache        ← caches a broken app
+#   queue:restart       ← workers boot the broken app
+#   [traffic switches]
 #
-# Your 1.8s page was 1.75s of queries. This changes
-# nothing about that. Fix the queries.
-#
-# Where it counts: 19ms × 1,000,000 requests/day.
-
-
-<?php
-// ---------- Verify what is actually cached ----------
-
-php artisan about        // shows which caches are active
-
-// Output includes:
-//   Config ............ CACHED
-//   Events ............ NOT CACHED
-//   Routes ............ CACHED
-//   Views ............. CACHED`,
+# Exit code 0. Deploy "successful". Site down.`,
       },
       keyTakeaways: [
-        "<b>`route:cache`, `config:cache`, `view:cache` and `event:cache` speed up framework bootstrap.</b>",
-        "<b>They are deployment steps</b>, and in development they get in your way.",
-        "<b>After config is cached, `env()` returns `null` outside config files.</b>",
-        "<b>So `env()` belongs in `config/` only, and `config()` everywhere else.</b>",
-        "<b>The failure appears whenever `config:cache` runs</b>, not necessarily at deploy time.",
-        "<b>Changing `.env` in production does nothing until you re-run `config:cache`.</b>",
-        "<b>`route:cache` fails on closure routes</b>, since closures cannot be serialised.",
-        "<b>A stale cached route file is invisible</b>: the old routes simply keep working.",
-        "<b>So caching belongs in the deploy script</b>, not in somebody's memory.",
-        "<b>The gain is a few milliseconds to about twenty of bootstrap time.</b>",
-        "<b>That will not fix a slow page</b>, which is almost always queries rather than boot.",
-        "<b>It matters most at high request volume</b>, since you pay boot cost on every request.",
+        "<b>The sequence is dependencies, migrations, then config, route and view caches.</b>",
+        "<b>`--no-dev` cuts size and install time, and more importantly attack surface.</b>",
+        "<b>A debug toolbar reachable in production is a real hole</b>, and not installing it is the reliable fix.",
+        "<b>`--optimize-autoloader` builds a class map</b> so PHP stops scanning the filesystem.",
+        "<b>`config:cache` compiles config, `route:cache` compiles routes, `view:cache` precompiles Blade.</b>",
+        "<b>After `config:cache`, `env()` is `null` outside config files</b>, and `.env` edits need a re-cache.",
+        "<b>`optimize:clear` is the first thing to try when a deploy behaves strangely.</b>",
+        "<b>Clear first, build, then cache</b>, or you cache against the previous environment.",
+        "<b>Migrations and code never deploy at the same instant</b>, so there is always a gap.",
+        "<b>A migration must be safe against the code currently running</b>, in either order.",
+        "<b>`queue:restart` is required</b>, or workers keep running the old code indefinitely.",
+        "<b>`set -e` stops a failed step from becoming a successful-looking broken deploy.</b>",
       ],
       commonMistakes: [
-        "<b>Calling `env()` outside config files.</b> It returns `null` the moment config is cached.",
-        "<b>Editing `.env` in production without re-caching.</b> Nothing changes and nobody knows why.",
-        "<b>Caching routes with closures still in the file.</b> The command fails during deploy.",
-        "<b>Caching before clearing.</b> You cache against the previous environment values.",
-        "<b>Expecting these to fix a slow page.</b> Twenty milliseconds against 1.8 seconds of queries.",
-        "<b>Forgetting `queue:restart`.</b> Workers keep running the old code and old config.",
+        "<b>Caching config before pulling the new environment.</b> The application disagrees with both new files.",
+        "<b>Installing dev dependencies in production.</b> Debug tools become an attack surface.",
+        "<b>Forgetting `queue:restart`.</b> Workers run last week's code until somebody notices.",
+        "<b>A deploy script with no `set -e`.</b> It reports success while swapping to a broken release.",
+        "<b>Running `migrate` without `--force` in CI.</b> It waits for a confirmation nobody will type.",
+        "<b>Assuming migration order avoids the code/schema gap.</b> It only moves which side is exposed.",
       ],
       quiz: [
         {
-          question: "What happens to `env()` after `config:cache` runs?",
+          question: "What is the strongest argument for `--no-dev`?",
           options: [
-            "Nothing",
-            "It returns `null` anywhere outside config files",
-            "It reads from the cache",
-            "It throws an exception",
+            "Faster installs",
+            "Attack surface: debug and database-browser packages reachable in production are real holes",
+            "Smaller repository",
+            "Composer requires it",
           ],
           correctIndex: 1,
-          explanation: "So `env()` belongs in `config/` only, and `config()` everywhere else.",
+          explanation: "The reliable way not to expose one is not to install it.",
         },
         {
-          question: "Why does changing `.env` in production appear to do nothing?",
+          question: "Why must caching come last in the deploy script?",
           options: [
-            "The file is read-only",
-            "Config is cached, so the values are not re-read until `config:cache` runs again",
-            "Laravel ignores it",
-            "It needs a reboot",
+            "It is slow",
+            "Caching before the new code and `.env` are in place caches the previous values",
+            "Laravel requires it",
+            "It does not matter",
           ],
           correctIndex: 1,
-          explanation: "And workers need `queue:restart` too.",
+          explanation: "The code is new, the env file is new, and the application disagrees with both.",
         },
         {
-          question: "Why does `route:cache` fail on some applications?",
+          question: "What is the unavoidable problem with migration ordering?",
           options: [
-            "Too many routes",
-            "Closure routes cannot be serialised",
-            "Missing middleware",
-            "Duplicate names",
+            "Migrations are slow",
+            "Code and schema never deploy at the same instant, so one side always runs against the other's version",
+            "`--force` is dangerous",
+            "There is none",
           ],
           correctIndex: 1,
-          explanation: "Use controller classes instead, which is where they belonged.",
+          explanation: "The migration must be safe against the code currently running.",
         },
         {
-          question: "How much do these caches actually save?",
+          question: "What does `set -e` prevent in a deploy script?",
           options: [
-            "Most of the page time",
-            "A few milliseconds to about twenty of bootstrap, which matters at volume but will not fix a slow page",
-            "Nothing measurable",
-            "Half the response time",
+            "Slow deploys",
+            "A failed step being followed by caching, worker restarts and a traffic switch to a broken release",
+            "Permission errors",
+            "Migration conflicts",
           ],
           correctIndex: 1,
-          explanation: "A 1.8-second page is queries, not boot.",
+          explanation: "Otherwise the script exits 0 and reports success.",
         },
       ],
     },
     {
-      id: "octane",
-      title: "Octane — long-running workers & shared state",
-      durationMinutes: 12,
-      explanation: "Octane changes the execution model PHP has had since the beginning, and that change is both the gain and the danger.\n\n---\n\n### 1. Basic — the shift\n\n<b>Traditional PHP:</b>\n\n```text\nrequest → boot Laravel → execute → response → process ends\n```\n\nEvery request rebuilds the entire framework, then throws it away.\n\n<b>Octane:</b>\n\n```text\nLaravel boots once → request 1 → request 2 → request 3 → …\n```\n\nThe application stays in memory. <b>You stop paying for boot on every request</b>, which is where the gain comes from.\n\nIt runs on <b>FrankenPHP</b> or <b>Swoole</b>, and the server matters far less than the idea: <b>keep the application alive between requests.</b>\n\n---\n\n### 2. Intermediate — why this is dangerous\n\nTraditional PHP forgives a lot, because everything is destroyed at the end of the request. Under Octane it is not.\n\n```php\nclass Something\n{\n    public static array $data = [];\n}\n```\n\n```text\nrequest 1 → static state changes\nrequest 2 → same process → the state is still there\n```\n\n<b>That is a state leak between users.</b> And it is worse than a normal bug, because the symptom is one customer seeing another's data, intermittently, on a server that has been up for a while, which is close to impossible to reproduce locally.\n\n<b>The pattern to look for is anything holding a request-specific value beyond the request:</b> static properties, singletons that captured the current user, a container binding resolved with a request in its constructor, a config value mutated at runtime, a global set once.\n\n<b>Singletons are the sharp one.</b> A singleton resolved during request 1 keeps whatever it captured, so a service that took `Auth::user()` in its constructor serves request 2 with request 1's user.\n\n---\n\n### 3. Advanced — memory, and whether you need it\n\n```text\ntraditional  request → memory allocated → process ends → released\nOctane       request → allocated → worker stays alive → request 2 → 3 → 4\n```\n\nA leak that was invisible now accumulates:\n\n```text\n100 MB → 150 MB → 250 MB → 500 MB → the worker dies\n```\n\n<b>Set a max-requests limit</b> so workers recycle, which turns a slow leak into a non-event. That is a mitigation and not a fix: <b>find the leak</b>, because a worker restarting every fifty requests has given back most of what Octane bought you.\n\n<b>And be clear about whether you need it.</b> Octane removes boot cost, which is the twenty milliseconds from the last lesson. <b>If your page takes 1.8 seconds, Octane makes it 1.78 seconds</b> and introduces a class of bug you have never debugged before.\n\nSo the honest positioning: <b>Octane is the last item on the list, not the first.</b> It is for applications that have already fixed their queries, already cache well, and are now bound by framework overhead at high volume. Reaching for it before that is choosing the hardest optimisation to get the smallest win, and paying for it in state bugs.",
-      diagram: `The shift
+      id: "migrations-and-zero-downtime",
+      title: "Migrations in production & expand-contract",
+      durationMinutes: 13,
+      explanation: "The senior-level deployment problem, and the one that actually causes outages.\n\n---\n\n### 1. Basic — schema is part of the release\n\nDeploying code is not enough:\n\n```text\nversion 1: users\nversion 2: users, posts\n```\n\n```text\nnew code + new schema = the new version\n```\n\n```bash\nphp artisan migrate --force\n```\n\n<b>`--force` exists because CI has nobody to type \"yes\"</b> at the production confirmation prompt.\n\n---\n\n### 2. Intermediate — the two versions running at once\n\nHere is the problem. Version A expects:\n\n```text\nusers.name\n```\n\nVersion B expects:\n\n```text\nusers.full_name\n```\n\nYou rename the column. But during a rolling deploy, <b>both versions are running</b>:\n\n```text\nserver 1: version A → SELECT name → the column is gone → 500\nserver 2: version B → SELECT full_name → fine\n```\n\n<b>Half your traffic is now erroring</b>, and it stays that way until every server has the new code, which on a slow deploy is minutes.\n\n<b>And this is not only about rolling deploys.</b> A queue worker still running the old code hits exactly the same problem, and a worker that was mid-job when you migrated fails on a column that vanished underneath it.\n\n---\n\n### 3. Advanced — expand and contract\n\nThe fix is to split one breaking change into <b>several safe deploys</b>:\n\n```text\n1 EXPAND    add full_name, keep name\n2 DEPLOY    code writes both, reads full_name with a fallback\n3 MIGRATE   backfill name → full_name\n4 CONTRACT  a later deploy removes name\n```\n\n<b>At every point, both the old and new code work.</b> That is the whole property, and it is what makes zero-downtime deploys possible at all.\n\n<b>The cost is honest: four deploys instead of one</b>, spread across days. People skip it because it feels like ceremony, and then discover why it exists during an incident.\n\n<b>Three rules that follow from the same principle.</b>\n\n<b>Every migration must be safe against the code currently running.</b> Adding a nullable column is always safe. Dropping, renaming or adding a `NOT NULL` column without a default is never safe in one step.\n\n<b>Separate schema changes from data changes.</b> A migration that backfills a million rows holds a transaction open, and on MySQL a long `ALTER` can lock the table entirely while your deploy sits waiting. <b>Backfill in a chunked command or a queued job</b>, not in the migration.\n\n<b>And a migration must be reversible in practice, not just in `down()`.</b> `down()` that drops a column you spent a day backfilling is not a rollback, it is a second outage. <b>The real rollback plan for a bad deploy is deploying the previous code</b>, which only works if the schema still supports it, which is exactly what expand-contract guarantees.",
+      diagram: `Schema is part of the release
 
-  TRADITIONAL PHP
+    version 1: users
+    version 2: users, posts
 
-    request → boot Laravel → execute → response
-            → process ends
+    new code + new schema = the new version
 
-    every request rebuilds the framework, then
-    throws it away
-
-  OCTANE
-
-    Laravel boots ONCE
-        ↓
-    request 1 → request 2 → request 3 → request 4 …
-
-    the application stays in memory
-    you stop paying boot cost per request
-
-    runs on FrankenPHP or Swoole — the server matters
-    far less than the idea:
-
-      KEEP THE APPLICATION ALIVE BETWEEN REQUESTS
+    php artisan migrate --force
+                        └─ CI has nobody to type "yes"
 
 
-  ⚠️  Why this is dangerous
+  ⚠️  THE PROBLEM: two versions running at once
 
-      Traditional PHP forgives a lot, because
-      everything is destroyed at the end of the
-      request. Octane does not.
+      version A expects   users.name
+      version B expects   users.full_name
 
-        class Something {
-            public static array $data = [];
-        }
+      You rename the column. During a rolling deploy:
 
-        request 1 → static state changes
-        request 2 → same process
-                  → the state is STILL THERE
+        server 1  version A → SELECT name
+                            → column gone → 500
+        server 2  version B → SELECT full_name → fine
 
-      THAT IS A STATE LEAK BETWEEN USERS.
+      HALF YOUR TRAFFIC IS ERRORING, and stays that
+      way until every server has the new code.
 
-      Worse than a normal bug: the symptom is one
-      customer seeing another's data, intermittently,
-      on a server that has been up a while — close to
-      impossible to reproduce locally.
-
-  The pattern: anything holding a request-specific
-  value BEYOND the request
-
-    static properties
-    singletons that captured the current user
-    container bindings resolved with a request
-    config mutated at runtime
-    globals set once
-
-  ⚠️  Singletons are the sharp one.
-
-      resolved during request 1, it keeps what it
-      captured — a service that took Auth::user() in
-      its constructor serves request 2 with request
-      1's user
+      And not only rolling deploys: a queue worker on
+      the old code hits the same thing, and a worker
+      mid-job fails on a column that vanished
+      underneath it.
 
 
-Memory
+EXPAND AND CONTRACT
 
-    traditional  request → allocated → process ends
-                                     → released
+  Split one breaking change into several SAFE deploys:
 
-    Octane       request → allocated
-                 worker stays alive
-                 → request 2 → 3 → 4 …
+    1  EXPAND     add full_name, KEEP name
+    2  DEPLOY     code writes both, reads full_name
+                  with a fallback
+    3  MIGRATE    backfill name → full_name
+    4  CONTRACT   a later deploy removes name
 
-    a leak that was invisible now accumulates:
+  At EVERY point, both old and new code work.
 
-      100 MB → 150 MB → 250 MB → 500 MB → 💥
+  That property is what makes zero-downtime deploys
+  possible at all.
 
-  Set a MAX-REQUESTS limit so workers recycle. That
-  turns a slow leak into a non-event.
-
-  It is a mitigation, not a fix — a worker restarting
-  every 50 requests has given back most of what
-  Octane bought you. FIND THE LEAK.
+  The cost is honest: four deploys instead of one,
+  across days. People skip it because it feels like
+  ceremony — then discover why it exists during an
+  incident.
 
 
-  ⚠️  Do you need it?
+Three rules from the same principle
 
-      Octane removes BOOT COST — the ~20ms from the
-      last lesson.
+  Every migration must be safe against the code
+  CURRENTLY RUNNING
 
-        a 1.8s page becomes a 1.78s page
+    ✅ always safe
+         add a NULLABLE column
+         add a new table
+         add an index (concurrently)
 
-      and introduces a class of bug you have never
-      debugged before.
+    ❌ never safe in one step
+         drop a column
+         rename a column
+         add NOT NULL with no default
+         change a column type
 
-    OCTANE IS THE LAST ITEM ON THE LIST, NOT THE
-    FIRST.
+  Separate SCHEMA changes from DATA changes
 
-    For applications that have already fixed their
-    queries, already cache well, and are now bound by
-    framework overhead at high volume.
+    a migration backfilling a million rows holds a
+    transaction open — and on MySQL a long ALTER can
+    lock the table while your deploy waits
 
-    Reaching for it earlier is choosing the hardest
-    optimisation for the smallest win, and paying in
-    state bugs.`,
+      backfill in a chunked command or queued job,
+      NOT in the migration
+
+  A migration must be reversible IN PRACTICE
+
+    down() that drops a column you spent a day
+    backfilling is not a rollback — it is a second
+    outage
+
+    ⚠️  The real rollback for a bad deploy is
+        DEPLOYING THE PREVIOUS CODE.
+
+        Which only works if the schema still supports
+        it — exactly what expand-contract guarantees.`,
       codeExample: {
-        title: "The state leaks Octane exposes",
-        code: `# ---------- Running it ----------
+        title: "Renaming a column without an outage",
+        code: `<?php
+// ---------- ❌ The one-step rename ----------
 
-composer require laravel/octane
-php artisan octane:install --server=frankenphp
+Schema::table('users', function (Blueprint $table) {
+    $table->renameColumn('name', 'full_name');
+});
 
-php artisan octane:start --workers=4 --max-requests=500
-#                                     └─ recycle workers,
-#                                        so a slow leak
-#                                        is a non-event
+// Deploy it and every server still running the old code
+// 500s on SELECT name. So does every queue worker. So
+// does the job that was mid-flight.
 
-php artisan octane:reload      # after a deploy — workers
-                               # hold the old code in memory
 
+// ==========================================================
+// DEPLOY 1 — EXPAND. Add, never remove.
+// ==========================================================
+
+Schema::table('users', function (Blueprint $table) {
+    $table->string('full_name')->nullable();     // nullable = always safe
+});
+
+// Old code: untouched, still reads name.
+// New code: not deployed yet.
+
+
+// ==========================================================
+// DEPLOY 2 — code that understands BOTH
+// ==========================================================
 
 <?php
-// ---------- ❌ Static state: one customer's data, served to another ----------
 
-class TenantContext
+class User extends Model
 {
-    public static ?Team $current = null;      // survives the request
-
-    public static function set(Team $team): void
+    // Read the new column, fall back to the old
+    public function getDisplayNameAttribute(): string
     {
-        static::$current = $team;
+        return $this->full_name ?? $this->name;
+    }
+
+    // Write both, so rows created now are correct either way
+    public function setDisplayNameAttribute(string $value): void
+    {
+        $this->attributes['full_name'] = $value;
+        $this->attributes['name']      = $value;
     }
 }
 
-// Request 1 (team 5) sets it.
-// Request 2 (team 9) reads it before setting it.
-// Team 9 sees team 5's data. Intermittently. On a server
-// that has been up a while.
+// Now old servers and new servers both work. That is the
+// property the whole technique exists for.
 
+
+// ==========================================================
+// DEPLOY 3 — backfill, in a COMMAND, not a migration
+// ==========================================================
 
 <?php
-// ---------- ❌ A singleton that captured the request ----------
 
-$this->app->singleton(ReportBuilder::class, function ($app) {
-    return new ReportBuilder(
-        user: auth()->user(),          // ← frozen at first resolution
-        team: request()->route('team'),
-    );
+class BackfillFullNames extends Command
+{
+    protected $signature = 'users:backfill-full-name';
+
+    public function handle(): int
+    {
+        $bar = $this->output->createProgressBar(
+            User::whereNull('full_name')->count()
+        );
+
+        User::whereNull('full_name')
+            ->chunkById(500, function ($users) use ($bar) {
+                foreach ($users as $user) {
+                    $user->updateQuietly(['full_name' => $user->name]);
+                    $bar->advance();
+                }
+            });
+
+        $bar->finish();
+
+        return self::SUCCESS;
+    }
+}
+
+// A migration doing this holds a transaction open across a
+// million rows, and your deploy waits behind it.
+
+
+// ==========================================================
+// DEPLOY 4 — CONTRACT. Days later, once nothing reads it.
+// ==========================================================
+
+<?php
+
+// First: prove nothing reads it. Log any access for a week.
+Schema::table('users', function (Blueprint $table) {
+    $table->dropColumn('name');
 });
 
-// Resolved during request 1. Every later request gets
-// request 1's user.
-
-// ✅ Resolve per request
-$this->app->bind(ReportBuilder::class, fn () => new ReportBuilder());
-
-// ✅ Or take the dependency at call time
-class ReportBuilder
-{
-    public function buildFor(User $user, Team $team): Report { ... }
-}
+// And remove the accessor/mutator in the same release.
 
 
 <?php
-// ---------- ❌ Mutating config at runtime ----------
+// ---------- Safe vs unsafe, as a checklist ----------
 
-public function handle(Request $request, Closure $next)
-{
-    config(['mail.from.address' => $request->user()->team->from_address]);
+// ✅ Safe against running code
+$table->string('nickname')->nullable();
+$table->index(['team_id', 'status']);           // concurrently on PG
+Schema::create('audit_logs', ...);
 
-    return $next($request);       // and it stays that way for the worker
-}
+// ❌ Unsafe in one step — needs expand-contract
+$table->dropColumn('name');
+$table->renameColumn('name', 'full_name');
+$table->string('email')->nullable(false);       // existing NULLs fail
+$table->integer('total')->change();             // type change, table lock
 
-// ✅ Pass it where it is needed
-Mail::to($user)->send((new InvoiceMail($invoice))->from($team->from_address));
+
+# ---------- The commands worth knowing ----------
+
+php artisan migrate --force
+php artisan migrate --pretend        # print the SQL, run nothing
+php artisan migrate:status           # what has and has not run
+
+# ⚠️ NOT a production rollback strategy:
+php artisan migrate:rollback
+#
+# down() dropping a column you spent a day backfilling is
+# a second outage. The real rollback is deploying the
+# PREVIOUS CODE — which only works if the schema still
+# supports it.`,
+      },
+      keyTakeaways: [
+        "<b>Schema changes are part of the release</b>: new code plus new schema is the new version.",
+        "<b>`--force` exists because CI cannot answer the production confirmation prompt.</b>",
+        "<b>During a deploy, two versions of your code run at once.</b>",
+        "<b>A renamed column breaks every server still running the old code</b>, and half your traffic errors.",
+        "<b>Queue workers hit the same problem</b>, including jobs already in flight.",
+        "<b>Expand-contract splits one breaking change into several safe deploys.</b>",
+        "<b>Expand, deploy dual-reading code, backfill, then contract later.</b>",
+        "<b>At every step both old and new code work</b>, which is the entire property.",
+        "<b>Adding a nullable column is always safe</b>; dropping, renaming or adding `NOT NULL` never is.",
+        "<b>Separate schema changes from data changes</b>: backfill in a chunked command, not a migration.",
+        "<b>A long migration holds a transaction open</b> and can lock the table while the deploy waits.",
+        "<b>The real rollback is deploying the previous code</b>, which requires the schema to still support it.",
+      ],
+      commonMistakes: [
+        "<b>Renaming a column in one migration.</b> Every server on the old code starts erroring.",
+        "<b>Adding a `NOT NULL` column with no default.</b> Existing rows fail the constraint immediately.",
+        "<b>Backfilling inside a migration.</b> The transaction holds, the table locks, the deploy hangs.",
+        "<b>Relying on `migrate:rollback` in production.</b> Dropping a backfilled column is a second outage.",
+        "<b>Forgetting workers when reasoning about versions.</b> They run old code long after the deploy.",
+        "<b>Contracting too early.</b> Something still read that column, and now it 500s.",
+      ],
+      quiz: [
+        {
+          question: "Why is renaming a column in one migration dangerous?",
+          options: [
+            "It is slow",
+            "Both code versions run during a deploy, so servers on the old code query a column that no longer exists",
+            "Renames are not supported",
+            "It loses data",
+          ],
+          correctIndex: 1,
+          explanation: "Queue workers on old code hit the same failure.",
+        },
+        {
+          question: "What are the four steps of expand-contract?",
+          options: [
+            "Backup, migrate, deploy, verify",
+            "Expand the schema, deploy dual-reading code, backfill the data, contract later",
+            "Deploy, migrate, rollback, retry",
+            "Test, build, deploy, monitor",
+          ],
+          correctIndex: 1,
+          explanation: "At every step both old and new code work.",
+        },
+        {
+          question: "Why backfill in a command rather than a migration?",
+          options: [
+            "Migrations cannot update data",
+            "A migration holds a transaction open across every row and can lock the table while the deploy waits",
+            "Commands are faster",
+            "It is a style preference",
+          ],
+          correctIndex: 1,
+          explanation: "Chunk it, and keep schema changes separate from data changes.",
+        },
+        {
+          question: "What is the real rollback strategy for a bad deploy?",
+          options: [
+            "`migrate:rollback`",
+            "Deploying the previous code, which requires the schema to still support it",
+            "Restoring a backup",
+            "Maintenance mode",
+          ],
+          correctIndex: 1,
+          explanation: "Expand-contract is what guarantees the old code still runs.",
+        },
+      ],
+    },
+    {
+      id: "platforms",
+      title: "Cloud, Forge & Vapor",
+      durationMinutes: 11,
+      explanation: "Three first-party paths, solving three different problems.\n\n---\n\n### 1. Basic — the three\n\n<b>Laravel Cloud</b> is a managed application platform:\n\n```text\nyou → Laravel Cloud → managed infrastructure → your application\n```\n\nYou focus on code, environment and deploys rather than configuring servers.\n\n<b>Laravel Forge</b> manages servers you own:\n\n```text\nyour AWS / DigitalOcean account → server → Forge → your application\n```\n\nForge provisions and configures; the server, the bill and the responsibility are yours.\n\n<b>Laravel Vapor</b> is serverless on AWS:\n\n```text\nLaravel → Vapor → AWS serverless\n```\n\nYou stop asking which server is running Laravel.\n\n---\n\n### 2. Intermediate — the mental models\n\n```text\nCloud   a managed Laravel platform\nForge   manage your own servers\nVapor   serverless Laravel on AWS\n```\n\n<b>None is universally best.</b> The choice comes from team expertise, control, cost, scaling, infrastructure requirements and operational complexity.\n\n<b>The most useful axis is where the responsibility sits.</b> Forge gives you the most control and hands you everything that comes with it: OS updates, disk space, security patches, the 3am reboot. Cloud takes most of that away and takes some control with it. <b>Both are valid; pretending the responsibility disappears is not.</b>\n\n---\n\n### 3. Advanced — what actually decides it\n\n<b>Serverless is not a hosting choice, it is an architecture choice.</b> Vapor removes servers and changes the rules:\n\n```text\nno local filesystem you can rely on   → everything goes to S3\nexecution time limits                 → long jobs must be split\ncold starts                           → first request after idle is slow\ndatabase connections                  → many short-lived functions exhaust a pool\n```\n\nAn application written assuming a persistent local disk and unlimited execution time does not simply move to Vapor. <b>It gets rewritten to move to Vapor</b>, which is fine if you know that going in and a nasty surprise if you do not.\n\n<b>The honest test for Forge is whether somebody owns the server.</b> Not \"can we manage it\", but is there a named person who patches it, watches the disk and gets woken at 3am? <b>A server nobody owns is the single most common source of production incidents</b>, because it works fine right up until it does not.\n\n<b>And cost inverts with traffic.</b> Serverless is cheap when traffic is spiky or low and expensive when it is constant and high; a fixed server is the reverse. So the question is not \"which is cheaper\" but <b>\"cheaper at what traffic shape\"</b>, and the answer changes as you grow.\n\nOne last practical point: <b>everything in this elective still applies on every platform.</b> A managed platform runs your workers and scheduler for you, but you still have to configure them, and \"it is managed\" has never once meant nobody had to think about backups.\n\nA little more concreteness on each.\n\n<b>What Forge actually manages</b>, which is the answer to \"why not just set up a server myself\": Nginx and PHP-FPM, Let's Encrypt certificates with automatic renewal before they expire, a firewall open only on 22, 80 and 443, one-click PHP version upgrades, database and Redis installation, a `forge` deploy user with sane permissions, and Supervisor for your workers. <b>The expiring certificate is the one that catches people</b>, because it works for ninety days and then does not.\n\nForge also has <b>Quick Deploy</b>, which runs the deploy script on every push to the connected branch. Convenient on staging, and a decision on production: it means a merge is a deploy, with no human between them.\n\n<b>Vapor is driven by a CLI and one file:</b>\n\n```bash\ncomposer global require laravel/vapor-cli\nvapor deploy production\nvapor rollback production\n```\n\n```yaml\nid: 12345\nname: invoicehub\nenvironments:\n  production:\n    runtime: php-8.4:al2\n    memory: 1024\n    cli-memory: 512\n    timeout: 60\n    queues: [default, emails]\n    build:\n      - 'composer install --no-dev --optimize-autoloader'\n      - 'npm ci && npm run build'\n    deploy:\n      - 'php artisan migrate --force'\n```\n\n<b>Note `timeout`.</b> Lambda's ceiling is fifteen minutes and a web request's is far lower, which is the execution limit from earlier expressed as a number you have to design around.",
+      diagram: `The three
+
+  LARAVEL CLOUD — a managed platform
+
+    you → Laravel Cloud
+        → managed infrastructure
+        → your application
+
+    focus on code, environment and deploys
+
+  LARAVEL FORGE — servers you own
+
+    your AWS / DigitalOcean account
+        → server → Forge → your application
+
+    Forge provisions and configures.
+    The server, the bill and the responsibility are
+    YOURS.
+
+  LARAVEL VAPOR — serverless on AWS
+
+    Laravel → Vapor → AWS serverless
+
+    you stop asking which server runs Laravel
+
+
+The mental models
+
+    Cloud   a managed Laravel platform
+    Forge   manage your own servers
+    Vapor   serverless Laravel on AWS
+
+  None is universally best. It comes from team
+  expertise · control · cost · scaling ·
+  infrastructure requirements · operational
+  complexity.
+
+  The most useful axis: WHERE THE RESPONSIBILITY
+  SITS.
+
+    Forge   most control — and OS updates, disk
+            space, security patches, the 3am reboot
+    Cloud   takes most of that away, and some
+            control with it
+
+  Both valid. Pretending the responsibility
+  disappears is not.
+
+
+  ⚠️  SERVERLESS IS AN ARCHITECTURE CHOICE, NOT A
+      HOSTING CHOICE.
+
+      Vapor removes servers and changes the rules:
+
+        no reliable local filesystem
+          → everything goes to S3
+        execution time limits
+          → long jobs must be split
+        cold starts
+          → first request after idle is slow
+        database connections
+          → many short-lived functions exhaust a pool
+
+      An app assuming a persistent disk and unlimited
+      execution time does not MOVE to Vapor. It gets
+      REWRITTEN to move to Vapor.
+
+      Fine if you know going in. Nasty if you do not.
+
+
+  The honest test for Forge
+
+    not "can we manage a server"
+    but "is there a NAMED PERSON who patches it,
+        watches the disk, and gets woken at 3am?"
+
+    A server nobody owns is the most common source of
+    production incidents — it works fine right up
+    until it does not.
+
+
+  Cost inverts with traffic
+
+    serverless    cheap when spiky or low
+                  expensive when constant and high
+    fixed server  the reverse
+
+    So: not "which is cheaper" but CHEAPER AT WHAT
+    TRAFFIC SHAPE — and the answer changes as you
+    grow.
+
+
+  And everything in this elective still applies on
+  every platform. A managed platform runs your
+  workers and scheduler — you still configure them,
+  and "it is managed" has never meant nobody thinks
+  about backups.`,
+      codeExample: {
+        title: "What each platform changes about your code",
+        code: `# ---------- Forge: you own a server ----------
+
+# Forge provisions nginx, PHP-FPM, MySQL, Redis,
+# certificates, and a deploy script.
+#
+# You own:
+#   OS updates          unattended-upgrades
+#   disk space          the classic 3am failure
+#   security patches
+#   backups
+#   the pager
+#
+# The test is not "can we manage it" but
+# "who is the named person?"
+
+
+# ---------- Cloud: managed ----------
+
+# You configure the application, environment and
+# processes. Infrastructure is somebody else's job.
+#
+# You still configure:
+#   worker processes and counts
+#   the scheduler
+#   environment variables
+#   backup retention
+#
+# "It is managed" has never meant nobody thinks about
+# backups.
 
 
 <?php
-// ---------- Octane's own hooks ----------
+// ---------- ⚠️ Vapor changes your CODE ----------
 
-// config/octane.php
-'listeners' => [
-    RequestReceived::class => [
-        // ...
+// 1. No reliable local filesystem
+// ❌
+Storage::disk('local')->put("invoices/{$id}.pdf", $pdf);
+$path = storage_path('app/exports/report.csv');
+
+// ✅
+Storage::disk('s3')->put("invoices/{$id}.pdf", $pdf);
+
+// FILESYSTEM_DISK=s3 everywhere, including temp files
+
+
+// 2. Execution time limits
+// ❌ A job that takes eleven minutes
+class GenerateAnnualReport implements ShouldQueue
+{
+    public $timeout = 900;
+}
+
+// ✅ Split it
+Bus::batch(
+    $teams->map(fn ($team) => new GenerateTeamReport($team))
+)->then(fn () => new CombineReports())->dispatch();
+
+
+// 3. Cold starts
+// The first request after idle pays framework boot.
+// Which is where Day 32's config/route/view caches stop
+// being an optimisation and become a requirement.
+
+
+// 4. Database connections
+// Many short-lived functions each open a connection and
+// exhaust the pool. RDS Proxy exists for exactly this.
+
+
+<?php
+// ---------- Written portably, it runs anywhere ----------
+
+// ❌ Assumes a server
+$pdf = storage_path("app/invoices/{$invoice->id}.pdf");
+exec("wkhtmltopdf {$html} {$pdf}");
+Mail::to($user)->send(new InvoiceMail($invoice, $pdf));
+
+// ✅ Runs on Forge, Cloud or Vapor unchanged
+$pdf = $this->pdfService->render($invoice);      // no local path assumed
+Storage::disk('invoices')->put("{$invoice->id}.pdf", $pdf);
+SendInvoiceEmail::dispatch($invoice);            // queued, bounded
+
+
+# ---------- Cost, by traffic shape ----------
+
+# Spiky / low traffic
+#   serverless   pay per request        ✅
+#   fixed server pay for idle capacity  ❌
+#
+# Constant / high traffic
+#   serverless   pay per request, and there are many  ❌
+#   fixed server amortised over everything            ✅
+#
+# The answer changes as you grow. Model it again then.
+
+
+# ---------- Whichever you choose, these still exist ----------
+
+# workers running        → layer 3
+# scheduler invoked      → layer 3
+# logs aggregated        → layer 5
+# errors tracked         → layer 5
+# backups, restored once → layer 4
+#
+# The platform changes WHO configures them, never
+# WHETHER they are needed.`,
+      },
+      keyTakeaways: [
+        "<b>Cloud is a managed Laravel platform; Forge manages servers you own; Vapor is serverless on AWS.</b>",
+        "<b>None is universally best</b>: expertise, control, cost, scaling and operational complexity decide.",
+        "<b>The useful axis is where responsibility sits</b>, and it never disappears entirely.",
+        "<b>Forge gives the most control and hands you OS updates, disk space, patches and the pager.</b>",
+        "<b>Serverless is an architecture choice, not a hosting choice.</b>",
+        "<b>Vapor removes the reliable local filesystem</b>, so everything goes to S3.",
+        "<b>Execution limits mean long jobs must be split</b>, and cold starts make boot caches a requirement.",
+        "<b>Many short-lived functions can exhaust a database connection pool.</b>",
+        "<b>An app assuming a local disk gets rewritten to move to Vapor</b>, not simply moved.",
+        "<b>The test for Forge is whether a named person owns the server</b>, not whether the team could.",
+        "<b>Cost inverts with traffic shape</b>: serverless suits spiky, fixed servers suit constant.",
+        "<b>Workers, scheduler, logs, errors and backups exist on every platform.</b>",
+      ],
+      commonMistakes: [
+        "<b>Choosing a platform on price alone.</b> Cost inverts depending on traffic shape.",
+        "<b>Moving to Vapor without auditing filesystem use.</b> Local paths fail in ways that are hard to trace.",
+        "<b>Assuming long jobs survive serverless.</b> Execution limits mean they need splitting.",
+        "<b>Running Forge with no named owner for the server.</b> The disk fills and nobody is watching.",
+        "<b>Thinking \"managed\" means backups are handled.</b> It changes who configures them, not whether they exist.",
+      ],
+      quiz: [
+        {
+          question: "What is the mental model for Forge?",
+          options: [
+            "A managed platform",
+            "It manages servers you own, so the server, bill and responsibility stay yours",
+            "Serverless on AWS",
+            "A CI system",
+          ],
+          correctIndex: 1,
+          explanation: "Including OS updates, disk space, patches and the pager.",
+        },
+        {
+          question: "Why is Vapor an architecture choice rather than a hosting one?",
+          options: [
+            "It is AWS-only",
+            "No reliable local filesystem, execution limits, cold starts and connection limits change your code",
+            "It is more expensive",
+            "It requires Docker",
+          ],
+          correctIndex: 1,
+          explanation: "An app assuming a local disk gets rewritten to move there.",
+        },
+        {
+          question: "What is the honest test for choosing Forge?",
+          options: [
+            "Whether the team knows Linux",
+            "Whether a named person patches the server, watches the disk and gets woken at 3am",
+            "Whether AWS is already in use",
+            "Traffic volume",
+          ],
+          correctIndex: 1,
+          explanation: "A server nobody owns is a common source of incidents.",
+        },
+        {
+          question: "How does cost compare between serverless and fixed servers?",
+          options: [
+            "Serverless is always cheaper",
+            "It inverts with traffic shape: serverless suits spiky and low, fixed suits constant and high",
+            "Fixed is always cheaper",
+            "They are the same",
+          ],
+          correctIndex: 1,
+          explanation: "And the answer changes as you grow, so model it again.",
+        },
+      ],
+    },
+    {
+      id: "docker-deployment",
+      title: "Docker & multi-stage builds",
+      durationMinutes: 11,
+      explanation: "An explicit environment instead of a hopeful one.\n\n---\n\n### 1. Basic — what Docker gives you\n\n```text\ndeveloper machine → Docker image → production\n```\n\nInstead of:\n\n```text\n\"hopefully production has the same PHP version\"\n```\n\nyou write it down:\n\n```text\nPHP version · extensions · Composer · Node / build tools · system dependencies\n```\n\n<b>The value is that the environment is code</b>, reviewed in a pull request like everything else, rather than a set of decisions somebody made on a server two years ago and did not record.\n\n---\n\n### 2. Intermediate — multi-stage builds\n\nA naive image contains everything you needed to build it:\n\n```text\nPHP · Composer · Node · npm · dev dependencies · build tools · source\n```\n\nA multi-stage build separates the two:\n\n```text\n        docker build\n   ┌─────────┴─────────┐\nbuild stage       production stage\nNode, npm         PHP runtime\nComposer          Laravel\nassets            production deps\n   └──── artifacts ────→\n```\n\n```text\ninstall and compile → copy only what runtime needs\n```\n\n<b>The image gets smaller</b>, which speeds deploys, and <b>it gets safer</b>, which matters more: an image with no Composer, no npm and no source-map-producing toolchain is an image with far less for an attacker to work with. Same argument as `--no-dev`, one level down.\n\n---\n\n### 3. Advanced — what people get wrong\n\n<b>Do not put secrets in the image.</b> A build argument, a copied `.env`, a hardcoded key: all of them are baked into a layer, and layers are readable by anybody who can pull the image. <b>Secrets are injected at runtime, always.</b>\n\n<b>An image is per commit, not per environment.</b> Build once, tag it with the commit, and run <b>the same image</b> in staging and production with different environment variables. Building separately per environment means you tested something you did not ship.\n\n<b>And a container is one process.</b> Your web container should not also run the queue worker and cron, because then a worker crash takes your web tier with it and you cannot scale the two independently:\n\n```text\nweb container       php-fpm / FrankenPHP\nworker container    queue:work\nscheduler container schedule:work\n```\n\n<b>Same image, three commands.</b> Which is exactly Day 33's layer 3, made explicit.\n\n<b>Two more traps.</b> Docker's layer cache means <b>copying your whole source before `composer install` reinstalls dependencies on every code change</b>: copy `composer.json` and `composer.lock` first. And <b>logs must go to stdout</b>, not to a file inside the container, because that file dies with the container and takes your only evidence with it.\n\n<b>One thing Docker is already doing for you: Laravel Sail.</b>\n\n```bash\ncurl -s \"https://laravel.build/my-app?with=mysql,redis\" | bash\n\nalias sail='./vendor/bin/sail'\nsail up -d\nsail artisan migrate\nsail npm run dev\n```\n\nSail is a Compose file giving every developer the same PHP, MySQL and Redis without installing any of it. <b>It is a development tool and not a deployment strategy</b>: the image carries Xdebug and development dependencies on purpose, which is everything the last section said to keep out of production. Sail for local, your own multi-stage Dockerfile for production.\n\nA few things the minimal example above leaves out.\n\n<b>PHP-FPM does not speak HTTP.</b> A `php-fpm` container needs Nginx or Caddy in front of it, in its own container, or you use FrankenPHP, which is a web server and PHP in one and avoids the question.\n\n<b>And a production Compose file says what happens when things go wrong:</b>\n\n```yaml\nrestart: unless-stopped\nhealthcheck:\n  test: [\"CMD\", \"curl\", \"-f\", \"http://localhost/health\"]\n  interval: 30s\nvolumes:\n  - storage:/var/www/storage\n```\n\n<b>Without `restart`, a crashed container stays dead</b>, and without a named volume for `storage`, every deploy discards whatever was written there.\n\nBeyond a single host, Compose stops being enough and <b>Kubernetes</b> is the usual next step: many servers, scheduling, rolling deploys and health-based restarts. It is a large subject and a large operational commitment, and most Laravel applications never need it.",
+      diagram: `What Docker gives you
+
+    developer machine → Docker image → production
+
+  Instead of:
+
+    "hopefully production has the same PHP version"
+
+  You write it down:
+
+    PHP version · extensions · Composer
+    Node / build tools · system dependencies
+
+  The value: THE ENVIRONMENT IS CODE, reviewed in a
+  PR — rather than decisions somebody made on a
+  server two years ago and did not record.
+
+
+Multi-stage builds
+
+  A naive image contains everything you needed to
+  BUILD it:
+
+    PHP · Composer · Node · npm · dev dependencies
+    build tools · source
+
+  Multi-stage separates them:
+
+                 docker build
+                      │
+            ┌─────────┴─────────┐
+            ▼                   ▼
+       build stage        production stage
+       Node / npm          PHP runtime
+       Composer            Laravel
+       assets              production deps
+            │
+            └──── artifacts ────→
+
+    install and compile → copy only what RUNTIME needs
+
+  Smaller (faster deploys) and SAFER (which matters
+  more): no Composer, no npm, no toolchain is far
+  less for an attacker to work with.
+
+  Same argument as --no-dev, one level down.
+
+
+What people get wrong
+
+  ⚠️  NEVER put secrets in the image.
+
+      a build arg · a copied .env · a hardcoded key
+
+      All baked into a LAYER — and layers are
+      readable by anyone who can pull the image.
+
+        secrets are injected at RUNTIME, always
+
+  ⚠️  An image is per COMMIT, not per ENVIRONMENT.
+
+      build once → tag with the commit
+      run THE SAME IMAGE in staging and production
+      with different env vars
+
+      Building per environment means you tested
+      something you did not ship.
+
+  ⚠️  A container is ONE PROCESS.
+
+      web container        php-fpm / FrankenPHP
+      worker container     queue:work
+      scheduler container  schedule:work
+
+      Same image, three commands.
+
+      Put all three in one and a worker crash takes
+      your web tier with it — and you cannot scale
+      them independently.
+
+      This is layer 3, made explicit.
+
+  ⚠️  Layer cache: copy composer.json and
+      composer.lock BEFORE the source, or every code
+      change reinstalls every dependency.
+
+  ⚠️  Logs go to STDOUT, not a file inside the
+      container — that file dies with the container
+      and takes your evidence with it.`,
+      codeExample: {
+        title: "A multi-stage Dockerfile, and three containers from one image",
+        code: `# ---------- Stage 1: frontend assets ----------
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci                             # cached unless these two change
+COPY resources/ resources/
+COPY vite.config.js ./
+RUN npm run build
+
+
+# ---------- Stage 2: PHP dependencies ----------
+FROM composer:2 AS vendor
+
+WORKDIR /app
+# composer.json/lock FIRST, so a code change does not
+# reinstall every dependency
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+
+COPY . .
+RUN composer dump-autoload --optimize --no-dev
+
+
+# ---------- Stage 3: runtime. Only what running needs. ----------
+FROM php:8.4-fpm-alpine AS production
+
+RUN apk add --no-cache postgresql-dev icu-dev \\
+    && docker-php-ext-install pdo_pgsql opcache intl bcmath
+
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/
+
+WORKDIR /var/www
+
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=assets /app/public/build ./public/build
+COPY . .
+
+# No Composer. No npm. No build toolchain. No dev
+# dependencies. Far less for an attacker to work with.
+
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+# ⚠️ No secrets here. Not as ARG, not as a copied .env.
+#    Layers are readable by anyone who can pull the image.
+
+CMD ["php-fpm"]
+
+
+# ---------- One image, three processes ----------
+
+# docker-compose.yml
+services:
+  web:
+    image: invoicehub:\${GIT_SHA}
+    command: php-fpm
+    environment: [APP_ENV, DB_HOST, REDIS_HOST]
+
+  worker:
+    image: invoicehub:\${GIT_SHA}         # ← the same image
+    command: php artisan queue:work redis --tries=3 --max-time=3600
+    deploy: { replicas: 4 }
+
+  scheduler:
+    image: invoicehub:\${GIT_SHA}         # ← the same image
+    command: php artisan schedule:work
+
+# A container is one process. All three in one and a
+# worker crash takes your web tier down — and you cannot
+# scale them separately.
+
+
+# ---------- Build once, run everywhere ----------
+
+docker build -t invoicehub:\${GIT_SHA} .
+docker push registry/invoicehub:\${GIT_SHA}
+
+# staging     runs invoicehub:abc123 with staging env vars
+# production  runs invoicehub:abc123 with production env vars
+#
+# The SAME image. Build per environment and you tested
+# something you did not ship.
+
+
+# ---------- Secrets at runtime ----------
+
+# ❌ Baked into a layer, forever
+ARG STRIPE_SECRET
+ENV STRIPE_SECRET=\${STRIPE_SECRET}
+COPY .env .env
+
+# ✅ Injected when it runs
+docker run --env-file /etc/invoicehub/production.env invoicehub:abc123
+
+
+<?php
+// ---------- Logs to stdout ----------
+
+// config/logging.php
+'default' => env('LOG_CHANNEL', 'stderr'),
+
+'channels' => [
+    'stderr' => [
+        'driver'    => 'monolog',
+        'handler'   => StreamHandler::class,
+        'with'      => ['stream' => 'php://stderr'],
+        'formatter' => JsonFormatter::class,      // for log aggregation
     ],
 ],
 
-// Reset anything that must not survive a request
-'flush' => [
-    TenantContext::class,
-],
-
-// And the container bindings to rebuild each request
-'warm' => [...],
-
-
-<?php
-// ---------- Finding a leak ----------
-
-Route::get('/octane-memory', fn () => [
-    'mb'       => round(memory_get_usage(true) / 1048576, 1),
-    'peak_mb'  => round(memory_get_peak_usage(true) / 1048576, 1),
-    'requests' => app('octane.requests') ?? null,
-]);
-
-// Watch it across a few hundred requests. Flat is
-// healthy. Climbing means something is accumulating —
-// usually a static array, a growing collection on a
-// singleton, or an event listener registered per request.
-
-
-<?php
-// ---------- ⚠️ Registering listeners per request ----------
-
-// ❌ Under Octane this adds another listener every request
-public function boot(): void
-{
-    Event::listen(InvoicePaid::class, fn ($e) => $this->log($e));
-}
-// Request 500 fires the listener 500 times.
-
-// ✅ Register once, in a service provider that boots once
-
-
-# ---------- Where Octane belongs on the list ----------
-
-# 1. measure
-# 2. fix the code
-# 3. fix the queries
-# 4. add indexes
-# 5. fix N+1
-# 6. reduce payload
-# 7. add caching
-# 8. Redis / CDN
-# 9. Octane          ← here. Not before.
-#
-# A 1.8s page becomes 1.78s, and you have inherited a
-# class of bug you have never debugged.`,
+// A log file inside the container dies with the
+// container, taking your only evidence with it.`,
       },
       keyTakeaways: [
-        "<b>Traditional PHP boots Laravel per request and discards it; Octane boots once and stays alive.</b>",
-        "<b>The gain is eliminating boot cost on every request.</b>",
-        "<b>It runs on FrankenPHP or Swoole</b>, and the idea matters more than the server.",
-        "<b>Static properties now survive between requests</b>, which is a state leak between users.",
-        "<b>The symptom is one customer seeing another's data, intermittently</b>, on a long-lived worker.",
-        "<b>Look for anything holding request-specific values beyond the request.</b>",
-        "<b>Singletons are the sharp edge</b>: one resolved with `Auth::user()` serves everyone that user.",
-        "<b>Config mutated at runtime stays mutated for the worker's lifetime.</b>",
-        "<b>Memory leaks accumulate instead of being freed at the end of the request.</b>",
-        "<b>Set a max-requests limit so workers recycle</b>, which is mitigation rather than a fix.",
-        "<b>Octane removes boot cost, so a 1.8-second page becomes 1.78 seconds.</b>",
-        "<b>It is the last item on the optimisation list, not the first.</b>",
+        "<b>Docker makes the environment explicit and reviewable</b> instead of a set of undocumented server decisions.",
+        "<b>A naive image ships everything you needed to build it</b>: Composer, npm, dev dependencies, toolchain.",
+        "<b>A multi-stage build compiles in one stage and copies only artifacts into the runtime stage.</b>",
+        "<b>Smaller images deploy faster, and safer images matter more</b>: less for an attacker to work with.",
+        "<b>Never put secrets in an image.</b> Layers are readable by anybody who can pull it.",
+        "<b>Secrets are injected at runtime, always.</b>",
+        "<b>An image is per commit, not per environment</b>: run the same image everywhere with different variables.",
+        "<b>Building per environment means you tested something you did not ship.</b>",
+        "<b>A container is one process</b>: separate web, worker and scheduler containers from one image.",
+        "<b>Combining them means a worker crash takes down your web tier</b> and you cannot scale independently.",
+        "<b>Copy `composer.json` and `composer.lock` before the source</b>, or every code change reinstalls everything.",
+        "<b>Logs go to stdout</b>, because a file inside the container dies with it.",
       ],
       commonMistakes: [
-        "<b>Static properties holding request data.</b> Request two reads request one's values.",
-        "<b>Singletons capturing the authenticated user.</b> Every later request gets the first one's identity.",
-        "<b>Mutating config in middleware.</b> The change persists for the whole worker.",
-        "<b>Registering event listeners per request.</b> Request 500 fires the listener 500 times.",
-        "<b>Reaching for Octane before fixing queries.</b> The smallest win for the hardest debugging.",
-        "<b>No max-requests limit.</b> A slow leak eventually kills the worker under load.",
+        "<b>Copying `.env` into the image.</b> The secret is in a layer anybody who pulls it can read.",
+        "<b>Building a different image per environment.</b> You shipped something you never tested.",
+        "<b>Running web, worker and cron in one container.</b> One crash takes everything and nothing scales.",
+        "<b>Copying source before `composer install`.</b> Every code change invalidates the dependency layer.",
+        "<b>Writing logs to a file in the container.</b> The evidence dies with the container.",
+        "<b>Shipping the build toolchain to production.</b> Same mistake as installing dev dependencies.",
       ],
       quiz: [
         {
-          question: "What does Octane change?",
+          question: "What does a multi-stage build achieve?",
           options: [
-            "How queries run",
-            "The execution model: Laravel boots once and stays in memory across requests",
-            "The cache driver",
-            "How Blade compiles",
+            "Faster builds only",
+            "The runtime image contains only what running needs, not Composer, npm or the toolchain",
+            "Automatic secrets",
+            "Multiple environments",
           ],
           correctIndex: 1,
-          explanation: "You stop paying boot cost on every request.",
+          explanation: "Smaller and safer, which is the same argument as `--no-dev`.",
         },
         {
-          question: "Why are static properties dangerous under Octane?",
+          question: "Why must secrets never go in an image?",
           options: [
-            "They use more memory",
-            "They survive between requests, so one user's data can be served to another",
-            "They are slower",
-            "They cannot be serialised",
+            "They increase size",
+            "They are baked into a layer, and layers are readable by anybody who can pull the image",
+            "Docker strips them",
+            "They expire",
           ],
           correctIndex: 1,
-          explanation: "The symptom is intermittent and nearly impossible to reproduce locally.",
+          explanation: "Inject them at runtime instead.",
         },
         {
-          question: "What is the risk with a singleton under Octane?",
+          question: "Why build one image and run it in every environment?",
           options: [
-            "It is rebuilt too often",
-            "It keeps whatever it captured at first resolution, such as the authenticated user",
-            "It cannot be injected",
-            "It leaks database connections",
+            "To save build time",
+            "Building per environment means you tested something you did not ship",
+            "Docker requires it",
+            "For smaller images",
           ],
           correctIndex: 1,
-          explanation: "Bind per request, or take dependencies at call time.",
+          explanation: "Same image, different environment variables.",
         },
         {
-          question: "Where does Octane belong in the optimisation order?",
+          question: "Why separate web, worker and scheduler containers?",
           options: [
-            "First, for the biggest win",
-            "Last, after queries, indexes, N+1 and caching are already handled",
-            "Second, after indexes",
-            "It is not an optimisation",
+            "For smaller images",
+            "A container is one process: combined, a worker crash takes the web tier and nothing scales independently",
+            "Docker cannot run two processes",
+            "For logging",
           ],
           correctIndex: 1,
-          explanation: "It removes boot cost, so a 1.8-second page becomes 1.78 seconds.",
+          explanation: "Same image, three different commands.",
         },
       ],
     },
     {
-      id: "measure-response-caching-and-the-hierarchy",
-      title: "Response caching, CDNs & measuring first",
-      durationMinutes: 13,
-      explanation: "The last two tools, and then the rule that governs all of them.\n\n---\n\n### 1. Basic — response caching and CDNs\n\nSometimes you can cache the entire response:\n\n```text\nnormal   request → Laravel → database → Eloquent → Blade → response\ncached   request → response cache → the whole response\n```\n\nExtremely fast, and <b>extremely dangerous when the response is personalised.</b> Cache a page with a \"Hi, Rajan\" header and the next visitor is greeted as Rajan. <b>Response caching belongs on genuinely public pages</b>, and the cache key must include everything that varies the output: locale, currency, device, feature flags.\n\n<b>A CDN</b> puts content near users:\n\n```text\nwithout   Tokyo user → US server → response\nwith      Tokyo user → Tokyo edge → cached content\n```\n\nGreat for images, CSS, JavaScript, video and cacheable responses. <b>And the win is latency, not compute</b>: a round trip to another continent costs 150ms or more before your server does anything at all, which is often larger than everything you have optimised so far.\n\n---\n\n### 2. Intermediate — measure first\n\n<b>This is the most important idea in the elective.</b>\n\nDo not say \"Redis will make it faster\". Measure.\n\n```text\nslow page → measure → database? or PHP?\n→ slow query / expensive code → fix → measure again\n```\n\nWhat to look at:\n\n```text\nresponse time · query count · query duration · memory\nCPU · external API calls · cache hit rate · N+1\n```\n\n<b>Numbers, before and after:</b>\n\n```text\nbefore   1.8s · 152 queries · 80 MB\nafter    420ms · 12 queries · 35 MB\n```\n\n<b>Without the before, you have an opinion.</b> With it you have evidence, and you also find out when a change made things worse, which happens more than people admit.\n\n<b>Telescope</b> answers \"what happened in this request?\" and shows you the 152 queries. <b>Pulse</b> answers \"how is the application doing?\". <b>Nightwatch</b> is production monitoring. Day 30 covered all three.\n\n---\n\n### 3. Advanced — the hierarchy\n\n```text\n1 measure\n2 fix algorithm and code problems\n3 fix database queries\n4 add indexes\n5 fix N+1\n6 reduce payload and data\n7 add caching\n8 add Redis / CDN\n9 consider Octane\n```\n\n<b>Do not jump to 8 or 9.</b> The order is deliberate: each step is cheaper, safer and larger than the ones below it. Caching at step 7 is where most people start, and it is the first step that adds a whole category of new bugs, invalidation, staleness, stampedes, rather than removing work.\n\n<b>The rule that separates senior performance work from cargo cult:</b>\n\n> <b>Do not optimise what you have not measured.</b>\n\nA slow page with 150 queries does not need Octane. <b>It needs those 150 queries to become 10</b>, and once they are, you may find you did not need anything else on the list.\n\nOne final honesty check: <b>every item from step 7 down adds operational complexity you carry forever</b>, more services, more failure modes, more things to reason about. Steps 2 to 6 remove work permanently and make the code simpler. <b>That asymmetry is why the order is what it is.</b>",
-      diagram: `Response caching
+      id: "zero-downtime-and-atomic-releases",
+      title: "Zero downtime, atomic releases & maintenance mode",
+      durationMinutes: 12,
+      explanation: "How to replace a running application without anybody noticing.\n\n---\n\n### 1. Basic — the naive deploy\n\n```text\nstop A → deploy B → start B\n```\n\nUsers get:\n\n```text\n💥 downtime\n```\n\nAnd it is worse than the outage window suggests, because <b>the site is also broken during the deploy itself</b>: half the files are the new version and half are the old, so a request landing mid-`git pull` gets an application that has never existed.\n\nWhat you want:\n\n```text\nversion A serving users\n  → build version B\n  → health checks\n  → switch traffic\n  → version B\n```\n\n---\n\n### 2. Intermediate — atomic releases\n\nBuild the release somewhere else entirely, then move a symlink:\n\n```text\n/releases/\n   2026-09-02-001\n   2026-09-02-002\n   2026-09-02-003\n/current → 2026-09-02-003\n```\n\n```text\nbuild the new release → prepare it → point current at it\n```\n\n<b>The switch is one symlink update, which is atomic.</b> There is no moment where half the application is new: requests see release 002 or release 003, never a mixture.\n\nAnd rollback becomes trivial:\n\n```text\ncurrent → the previous release\n```\n\n<b>That is the real prize.</b> A rollback that takes one second and no build is a rollback you will actually use at 3am, rather than debugging live because redeploying feels too slow.\n\nThe pieces that must be <b>shared</b> across releases rather than copied: `.env`, `storage/`, and anything users uploaded. Symlink those in, or every deploy loses your files.\n\n---\n\n### 3. Advanced — maintenance mode, and its trap\n\n```bash\nphp artisan down --render=\"errors::503\"\nphp artisan up\n```\n\n<b>Maintenance mode is for work that genuinely requires unavailability</b>, and mature deployments prefer zero downtime instead.\n\nA <b>secret bypass</b> lets you verify a deploy while everyone else sees the maintenance page:\n\n```text\nnormal user → maintenance page\nsecret URL  → the application\n```\n\n<b>Treat the secret as sensitive.</b> It is an authentication bypass with a friendly name, and one pasted into a group chat is now shared with everybody in it.\n\n<b>And the trap that catches people:</b> `php artisan down` writes a file that `php artisan up` deletes, so <b>if your deploy fails between the two, the site stays down until somebody notices and runs `up` by hand.</b> A failing script plus a naive `set -e` gives you exactly that.\n\n```text\ndown → deploy fails → the script exits → still down\n```\n\nUse a trap that always runs `up`, or use atomic releases and skip maintenance mode entirely.\n\n<b>One last piece: health checks must check more than the homepage.</b> A check that only confirms a 200 will happily promote a release whose database credentials are wrong, because the homepage is cached. <b>Check the database, the cache and the queue before you switch traffic</b>, or the switch is a guess.\n\nEverything above is what <b>Envoyer</b> does as a product: it deploys to a new directory, runs your steps, and flips the symlink, with one-click rollback to any previous release.\n\n```text\nForge      manages the SERVER\nEnvoyer    manages the RELEASE\n```\n\nThey are separate products because they solve separate problems, and that distinction is the useful part whether or not you buy either one: <b>provisioning and releasing are different jobs</b>, and a deploy script that does both is usually doing one of them badly.",
+      diagram: `The naive deploy
 
-    normal   request → Laravel → database → Eloquent
-                     → Blade → response
+    stop A → deploy B → start B
 
-    cached   request → response cache
-                     → the whole response
+         💥 downtime
 
-  Extremely fast — and extremely dangerous when the
-  response is PERSONALISED.
+  Worse than the window suggests: the site is broken
+  DURING the deploy too — half the files are new, half
+  old, and a request landing mid-git-pull gets an
+  application that has never existed.
 
-  ⚠️  Cache a page with a "Hi, Rajan" header and the
-      next visitor is greeted as Rajan.
+  What you want:
 
-      Public pages only, and the key must include
-      everything that varies the output: locale,
-      currency, device, feature flags.
-
-
-CDN
-
-    without   Tokyo user → US server → response
-    with      Tokyo user → Tokyo edge → cached content
-
-    images · CSS · JS · video · cacheable responses
-
-  The win is LATENCY, not compute: a cross-continent
-  round trip costs 150ms+ before your server does
-  anything — often more than everything you have
-  optimised so far.
+    version A serving users
+        ↓
+    build version B
+        ↓
+    health checks
+        ↓
+    switch traffic
+        ↓
+    version B
 
 
-  ⚠️  MEASURE FIRST — the most important idea here
+Atomic releases
 
-      Do not say "Redis will make it faster".
+    /releases/
+       2026-09-02-001
+       2026-09-02-002
+       2026-09-02-003
+    /current → 2026-09-02-003
 
-              slow page
-                  ↓
-               MEASURE
-                  ↓
-          ┌───────┴───────┐
-          ▼               ▼
-       database          PHP
-          │               │
-      slow query    expensive code
-          └───────┬───────┘
-                  ▼
-                 FIX
-                  ↓
-            MEASURE AGAIN
+    build the new release → prepare it
+                          → point current at it
 
-    What to look at:
+  The switch is ONE SYMLINK UPDATE, which is atomic.
 
-      response time · query count · query duration
-      memory · CPU · external API calls
-      cache hit rate · N+1
+    no moment where half the app is new
+    requests see 002 or 003, never a mixture
 
-    Numbers, before and after:
+  And rollback:
 
-      before   1.8s  · 152 queries · 80 MB
-      after    420ms ·  12 queries · 35 MB
+    current → the previous release
 
-    Without the BEFORE you have an opinion. With it
-    you have evidence — and you find out when a
-    change made things worse, which happens more than
-    people admit.
+  ⚠️  THAT IS THE REAL PRIZE.
 
-      Telescope   what happened in THIS request?
-      Pulse       how is the application doing?
-      Nightwatch  production monitoring
+      A rollback that takes one second and no build is
+      a rollback you will actually USE at 3am — rather
+      than debugging live because redeploying feels
+      too slow.
+
+  Shared across releases, never copied:
+
+    .env · storage/ · user uploads
+
+    symlink them in, or every deploy loses your files
 
 
-THE HIERARCHY
+Maintenance mode
 
-    1  measure
-    2  fix algorithm and code problems
-    3  fix database queries
-    4  add indexes
-    5  fix N+1
-    6  reduce payload and data
-    7  add caching
-    8  add Redis / CDN
-    9  consider Octane
+    php artisan down --render="errors::503"
+    php artisan up
 
-  Do NOT jump to 8 or 9.
+  For work that GENUINELY requires unavailability.
+  Mature deployments prefer zero downtime instead.
 
-  The order is deliberate: each step is cheaper,
-  safer and larger than the ones below it.
+  Secret bypass:
 
-  Caching at 7 is where most people START — and it is
-  the first step that ADDS a category of bugs
-  (invalidation, staleness, stampedes) rather than
-  removing work.
+    normal user → maintenance page
+    secret URL  → the application
+
+  ⚠️  Treat the secret as sensitive. It is an
+      authentication bypass with a friendly name, and
+      one pasted into a group chat is shared with
+      everybody in it.
 
 
-  THE RULE
+  ⚠️  THE TRAP
 
-    DO NOT OPTIMISE WHAT YOU HAVE NOT MEASURED.
+      down writes a file. up deletes it.
 
-    A slow page with 150 queries does not need
-    Octane. It needs those 150 queries to become 10 —
-    and once they are, you may not need anything else
-    on the list.
+      If your deploy fails between the two, THE SITE
+      STAYS DOWN until somebody notices and runs up
+      by hand.
+
+        down → deploy fails → script exits → still down
+
+      A failing script plus a naive set -e gives you
+      exactly that.
+
+      Use a trap that always runs up — or use atomic
+      releases and skip maintenance mode entirely.
 
 
-  The asymmetry behind the order:
+  Health checks must check MORE THAN THE HOMEPAGE.
 
-    steps 2–6   REMOVE work permanently, and make
-                the code simpler
+    a 200-only check will happily promote a release
+    whose database credentials are wrong, because the
+    homepage is cached
 
-    steps 7–9   ADD operational complexity you carry
-                forever: more services, more failure
-                modes, more to reason about`,
+    check database + cache + queue before switching,
+    or the switch is a guess.`,
       codeExample: {
-        title: "Measuring, then response caching, in that order",
-        code: `<?php
-// ---------- 1. MEASURE. Always first. ----------
+        title: "Atomic releases, and maintenance mode that cannot strand you",
+        code: `#!/usr/bin/env bash
+set -euo pipefail
 
-// The crudest version, and often enough
-DB::enableQueryLog();
-$start = microtime(true);
+APP=/var/www/invoicehub
+RELEASE="\${APP}/releases/\$(date +%Y%m%d%H%M%S)"
 
-$response = $this->buildPage();
+# ---------- 1. Build the new release elsewhere ----------
+mkdir -p "\$RELEASE"
+git clone --depth 1 --branch main git@github.com:acme/invoicehub.git "\$RELEASE"
 
-dd([
-    'ms'      => round((microtime(true) - $start) * 1000),
-    'queries' => count(DB::getQueryLog()),
-    'memory'  => round(memory_get_peak_usage(true) / 1048576, 1) . ' MB',
-]);
+cd "\$RELEASE"
+composer install --no-dev --optimize-autoloader --no-interaction
+npm ci && npm run build
 
-// Before: ['ms' => 1834, 'queries' => 152, 'memory' => '80 MB']
+# ---------- 2. Share what must survive a deploy ----------
+ln -sfn "\${APP}/shared/.env"    "\${RELEASE}/.env"
+rm -rf "\${RELEASE}/storage"
+ln -sfn "\${APP}/shared/storage" "\${RELEASE}/storage"
+
+# Copy these and every deploy loses your uploads.
+
+# ---------- 3. Prepare it, while the OLD release serves ----------
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# ---------- 4. Prove it before promoting it ----------
+php artisan about > /dev/null
+php -r "require 'vendor/autoload.php';" 
+
+# ---------- 5. The switch: one atomic symlink ----------
+ln -sfn "\$RELEASE" "\${APP}/current"
+sudo systemctl reload php8.4-fpm
+
+# No moment where half the app is new. Requests see the
+# old release or the new one, never a mixture.
+
+# ---------- 6. Processes ----------
+php artisan queue:restart
+
+# ---------- 7. Verify, and keep the last five ----------
+curl -fsS https://invoicehub.com/health | grep -q '"database":"ok"'
+
+ls -1dt "\${APP}"/releases/* | tail -n +6 | xargs rm -rf
+
+
+# ---------- Rollback: one second, no build ----------
+
+ln -sfn "\${APP}/releases/20260902100000" "\${APP}/current"
+sudo systemctl reload php8.4-fpm
+php artisan queue:restart
+
+# This is the real prize. A rollback this cheap is one
+# you will actually use at 3am, instead of debugging
+# live because redeploying feels too slow.
+
+
+# ---------- ⚠️ Maintenance mode that cannot strand you ----------
+
+# ❌ Deploy fails between these two lines and the site
+#    stays down until a human notices
+php artisan down
+./deploy.sh              # fails, script exits
+php artisan up           # never runs
+
+# ✅ Always come back up, whatever happens
+set -euo pipefail
+trap 'php artisan up' EXIT
+
+php artisan down --render="errors::503" --retry=60
+./deploy.sh
 
 
 <?php
-// ---------- A middleware that records it for every request ----------
+// ---------- The secret bypass ----------
 
-class RecordPerformance
-{
-    public function handle(Request $request, Closure $next)
-    {
-        DB::enableQueryLog();
-        $start = microtime(true);
+php artisan down --secret="a-long-random-string-nobody-guesses"
 
-        $response = $next($request);
-
-        $ms      = (microtime(true) - $start) * 1000;
-        $queries = count(DB::getQueryLog());
-
-        if ($ms > 500 || $queries > 30) {
-            Log::warning('Slow request', [
-                'route'   => $request->route()?->getName(),
-                'ms'      => round($ms),
-                'queries' => $queries,
-                'memory'  => round(memory_get_peak_usage(true) / 1048576, 1),
-            ]);
-        }
-
-        return $response;
-    }
-}
-
-// Now "the dashboard feels slow" becomes a log line with
-// a query count in it.
-
-
-<?php
-// ---------- 2–6. Fix, then measure again ----------
-
-// $posts = Post::latest()->get();          // 152 queries
-$posts = Post::with(['user', 'comments.user'])
-    ->select(['id', 'user_id', 'title', 'created_at'])
-    ->latest()
-    ->limit(20)
-    ->get();
-
-// After: ['ms' => 420, 'queries' => 12, 'memory' => '35 MB']
+// Visit https://invoicehub.com/a-long-random-string...
+// once, and your browser is let through while everyone
+// else sees the maintenance page.
 //
-// Now you have evidence. And you would also have seen
-// it if the change made things WORSE.
+// ⚠️ It is an authentication bypass with a friendly
+//    name. One pasted into a group chat is shared with
+//    everybody in it. Generate a new one each deploy.
+
+php artisan down --secret=$(openssl rand -hex 32)
 
 
 <?php
-// ---------- 7–8. Only now: response caching ----------
+// ---------- A health check worth gating a deploy on ----------
 
-class CacheResponse
-{
-    public function handle(Request $request, Closure $next)
-    {
-        // Never cache a personalised response. "Hi, Rajan"
-        // served to the next visitor is the classic
-        // version of this bug.
-        if ($request->user() || ! $request->isMethod('GET')) {
-            return $next($request);
-        }
+// ❌ Promotes a release whose DB credentials are wrong,
+//    because the homepage is cached
+curl -fsS https://invoicehub.com/ > /dev/null
 
-        // The key must carry everything that varies output
-        $key = 'response:' . sha1(implode('|', [
-            $request->fullUrl(),
-            app()->getLocale(),
-            $request->header('X-Currency', 'GBP'),
-        ]));
-
-        return Cache::remember($key, now()->addMinutes(10),
-            fn () => $next($request));
-    }
-}
-
-
-# ---------- CDN: the latency win ----------
-
-# Without: Tokyo → US origin  ≈ 150ms round trip,
-#          before your server does anything
-#
-# With:    Tokyo → Tokyo edge ≈ 10ms
-#
-# Often larger than everything you optimised in PHP.
-
-Cache-Control: public, max-age=31536000, immutable   # hashed assets
-Cache-Control: public, s-maxage=300, max-age=0       # cacheable HTML
-
-
-<?php
-// ---------- The hierarchy, as a checklist ----------
-
-// 1. measure                    ← you are here
-// 2. fix code / algorithms
-// 3. fix queries
-// 4. add indexes
-// 5. fix N+1
-// 6. reduce payload
-// 7. add caching                ← first step that ADDS bugs
-// 8. Redis / CDN
-// 9. Octane
-//
-// 152 queries → 12 is step 5.
-// Octane would have made 1.834s into 1.814s.
-
-
-<?php
-// ---------- Prove it in a test, so it stays fixed ----------
-
-it('renders the dashboard in under 15 queries', function () {
-    $user = User::factory()->has(Post::factory()->count(30))->create();
-
-    DB::enableQueryLog();
-
-    $this->actingAs($user)->get('/dashboard')->assertOk();
-
-    expect(count(DB::getQueryLog()))->toBeLessThan(15);
+// ✅
+Route::get('/health', function () {
+    return response()->json([
+        'database' => rescue(fn () => DB::select('select 1') && 'ok', 'failing'),
+        'cache'    => rescue(fn () => Cache::put('h', 1, 10) && 'ok', 'failing'),
+        'queue'    => rescue(fn () => Queue::size() !== null ? 'ok' : 'failing', 'failing'),
+        'release'  => config('app.release'),
+    ]);
 });
 
-// An N+1 reintroduced in six months now turns a test
-// red instead of a page slow.`,
+// curl -fsS .../health | grep -q '"database":"ok"'
+//
+// Without it, the traffic switch is a guess.`,
       },
       keyTakeaways: [
-        "<b>Response caching returns the whole response</b> without touching Laravel's normal pipeline.",
-        "<b>It is dangerous for personalised pages</b>: one user's greeting served to the next visitor.",
-        "<b>The cache key must include everything that varies output</b>: locale, currency, device, flags.",
-        "<b>A CDN wins latency, not compute</b>, and a cross-continent round trip can exceed all your PHP work.",
-        "<b>Measuring first is the most important idea in the elective.</b>",
-        "<b>Track response time, query count, query duration, memory, CPU, external calls and cache hit rate.</b>",
-        "<b>Without a before number you have an opinion, not evidence.</b>",
-        "<b>Telescope shows one request; Pulse shows application health; Nightwatch monitors production.</b>",
-        "<b>The order is measure, code, queries, indexes, N+1, payload, caching, Redis/CDN, Octane.</b>",
-        "<b>Caching is step seven and the first that adds bugs</b> rather than removing work.",
-        "<b>Do not optimise what you have not measured.</b>",
-        "<b>A 150-query page needs 10 queries, not Octane.</b>",
-        "<b>Steps two to six remove work permanently; steps seven onward add complexity you carry forever.</b>",
+        "<b>Stop, deploy, start gives downtime</b>, and the site is broken mid-deploy as files are replaced.",
+        "<b>A request landing mid-`git pull` gets an application that never existed.</b>",
+        "<b>Atomic releases build in a new directory and switch a symlink</b>, which is instantaneous.",
+        "<b>There is no moment where half the application is new.</b>",
+        "<b>Rollback becomes one symlink change</b>, with no rebuild.",
+        "<b>That cheap rollback is the real prize</b>, because you will actually use it at 3am.",
+        "<b>`.env`, `storage/` and uploads must be shared, not copied</b>, or every deploy loses files.",
+        "<b>Maintenance mode is for work that genuinely requires unavailability.</b>",
+        "<b>The secret bypass is an authentication bypass</b>, so treat it as sensitive and rotate it.",
+        "<b>If a deploy fails between `down` and `up`, the site stays down</b> until somebody notices.",
+        "<b>Use a trap that always runs `up`</b>, or use atomic releases and skip maintenance mode.",
+        "<b>Health checks must test database, cache and queue</b>, or the traffic switch is a guess.",
       ],
       commonMistakes: [
-        "<b>Caching a personalised response.</b> The next visitor sees somebody else's page.",
-        "<b>A response cache key missing locale or currency.</b> Everyone gets the first visitor's version.",
-        "<b>Optimising without a baseline.</b> You cannot tell improvement from regression.",
-        "<b>Starting at caching or Octane.</b> The smallest wins, the most new bugs, the query still broken.",
-        "<b>Never re-measuring.</b> Some optimisations make things slower and nobody notices.",
-        "<b>No test locking in the query count.</b> The N+1 comes back within a year.",
+        "<b>Deploying by pulling into the live directory.</b> The site is broken while files are replaced.",
+        "<b>Copying `storage/` into each release.</b> Every deploy loses user uploads.",
+        "<b>`down` without a trap.</b> A failed deploy leaves the site in maintenance mode indefinitely.",
+        "<b>Sharing the maintenance secret in chat.</b> It is a bypass, and now everybody has it.",
+        "<b>Health checks that only fetch the homepage.</b> A cached page hides broken credentials.",
+        "<b>Keeping no previous releases.</b> You have removed the rollback you were counting on.",
       ],
       quiz: [
         {
-          question: "When is response caching unsafe?",
+          question: "Why is deploying into the live directory worse than the downtime window suggests?",
           options: [
-            "For static pages",
-            "For personalised responses, where one user's page is served to the next visitor",
-            "For JSON",
-            "For GET requests",
+            "It is slower",
+            "The site is broken during the deploy: half new files, half old, an application that never existed",
+            "Permissions break",
+            "Git is slow",
           ],
           correctIndex: 1,
-          explanation: "The key must also carry locale, currency and anything else that varies output.",
+          explanation: "Atomic releases make the switch instantaneous instead.",
         },
         {
-          question: "What does a CDN primarily save?",
+          question: "What is the real prize of atomic releases?",
           options: [
-            "Server CPU",
-            "Latency: a cross-continent round trip costs more than most of your PHP optimisation",
-            "Database queries",
-            "Memory",
+            "Faster deploys",
+            "A rollback that is one symlink and no rebuild, which you will actually use under pressure",
+            "Smaller disk usage",
+            "Simpler scripts",
           ],
           correctIndex: 1,
-          explanation: "150ms before your server does anything at all.",
+          explanation: "Otherwise people debug live because redeploying feels too slow.",
         },
         {
-          question: "Why measure before optimising?",
+          question: "What happens if a deploy fails between `down` and `up`?",
           options: [
-            "For reporting",
-            "Without a baseline you have an opinion, and you cannot tell an improvement from a regression",
-            "To pick a cache driver",
-            "It is not necessary",
+            "Laravel recovers automatically",
+            "The site stays in maintenance mode until somebody notices and runs `up` by hand",
+            "The deploy retries",
+            "Nothing",
           ],
           correctIndex: 1,
-          explanation: "Some optimisations make things slower.",
+          explanation: "A trap that always runs `up` prevents it.",
         },
         {
-          question: "What does a slow page with 150 queries need?",
+          question: "Why must a health check test more than the homepage?",
           options: [
-            "Octane",
-            "Those 150 queries to become 10, which is step five, not step nine",
-            "Redis",
-            "A CDN",
+            "For completeness",
+            "A cached homepage returns 200 even when database credentials are wrong, so the switch is a guess",
+            "For monitoring",
+            "It does not need to",
           ],
           correctIndex: 1,
-          explanation: "Octane would turn 1.834 seconds into 1.814 seconds.",
+          explanation: "Check database, cache and queue before promoting.",
+        },
+      ],
+    },
+    {
+      id: "workers-and-scheduler",
+      title: "Queue workers, Supervisor & the scheduler",
+      durationMinutes: 12,
+      explanation: "Layer 3, in detail. This is the part of the deploy that fails silently.\n\n---\n\n### 1. Basic — a worker must exist\n\n```text\nweb request → dispatch job → queue → worker → handle()\n```\n\nWithout a worker running:\n\n```text\ndispatch()  succeeds\njob         never processed\n```\n\n<b>Nothing errors.</b> The controller returns 200, Redis holds the job, and the email is simply never sent. This is the single most common \"my deploy worked\" failure.\n\n---\n\n### 2. Intermediate — Supervisor\n\nWorkers crash. They run out of memory, hit an unexpected failure, or get killed:\n\n```text\nworker 💥 → 😴 → nobody notices\n```\n\nSupervisor watches and restarts them:\n\n```text\nworker dies → Supervisor notices → restart → worker running\n```\n\n<b>Which is not optional</b>, because a worker exiting is normal rather than exceptional: `--max-time` and `--max-jobs` make workers exit deliberately, so something must start them again.\n\nAnd the scheduler needs a trigger:\n\n```text\ncron (every minute) → Laravel scheduler → your scheduled tasks\n```\n\n<b>Laravel's scheduler does not run itself.</b> One cron entry calls `schedule:run` every minute, and Laravel decides which tasks are due. Miss that entry and every `Schedule::command(...)` you wrote does nothing, forever, silently.\n\n---\n\n### 3. Advanced — the parts that bite\n\n<b>Workers hold your code in memory.</b> A deploy that does not run `queue:restart` leaves workers running last week's code indefinitely, and the symptom is jobs behaving like the old version while the website behaves like the new one.\n\n<b>`queue:restart` is a signal, not a kill.</b> It tells workers to exit gracefully after the current job, and Supervisor starts fresh ones. So a worker mid-job finishes it, which is exactly what you want, and also means the restart is not instant.\n\n<b>Set `--max-time` or `--max-jobs`.</b> A worker running for weeks accumulates memory and stale state, and this is the queue version of the Octane problem from Day 32: long-lived processes make leaks matter. Recycling turns a slow leak into a non-event.\n\n<b>Give each queue its own workers.</b> One pool processing both `emails` and `reports` means an hour of report generation blocks every email behind it. Separate pools, sized separately.\n\n<b>And the scheduler needs its own protections</b>, all from Day 29: `withoutOverlapping()` with an explicit expiry, `onOneServer()` for multi-server setups, and a failure hook, because a scheduled command failing silently is a report nobody notices missing for a month.\n\n<b>The unifying point:</b> a worker and a scheduler are processes, and processes need monitoring. <b>Queue depth is the metric</b>: rising steadily means workers are dead or too few, and it is the earliest signal you will get.",
+      diagram: `A worker must exist
+
+    web request → dispatch job → queue → worker
+                → handle()
+
+  Without one:
+
+    dispatch()   succeeds
+    job          never processed
+
+  ⚠️  NOTHING ERRORS. The controller returns 200,
+      Redis holds the job, the email is never sent.
+
+      The single most common "my deploy worked"
+      failure.
+
+
+Supervisor
+
+  Workers crash — out of memory, unexpected failure,
+  killed:
+
+    worker 💥 → 😴 → nobody notices
+
+  Supervisor watches:
+
+    worker dies → Supervisor notices → restart
+                → worker running
+
+  Not optional: a worker EXITING IS NORMAL.
+  --max-time and --max-jobs make workers exit
+  deliberately, so something must start them again.
+
+
+The scheduler needs a trigger
+
+    cron (every minute)
+        ↓
+    Laravel scheduler
+        ↓
+    your scheduled tasks
+
+  ⚠️  Laravel's scheduler DOES NOT RUN ITSELF.
+
+      One cron entry calls schedule:run every minute;
+      Laravel decides what is due.
+
+      Miss it and every Schedule::command() you wrote
+      does nothing. Forever. Silently.
+
+
+The parts that bite
+
+  Workers hold your CODE IN MEMORY
+
+    no queue:restart → workers run last week's code
+    indefinitely
+
+    symptom: jobs behave like the old version while
+    the website behaves like the new one
+
+  queue:restart is a SIGNAL, not a kill
+
+    workers exit gracefully AFTER the current job,
+    and Supervisor starts fresh ones
+
+    so a mid-job worker finishes — which is what you
+    want, and also means it is not instant
+
+  Set --max-time or --max-jobs
+
+    a worker running for weeks accumulates memory and
+    stale state
+
+    the queue version of Day 32's Octane problem:
+    long-lived processes make leaks matter
+
+    recycling turns a slow leak into a non-event
+
+  Give each queue its OWN workers
+
+    one pool doing 'emails' and 'reports' means an
+    hour of report generation blocks every email
+    behind it
+
+  The scheduler needs Day 29's protections
+
+    withoutOverlapping() with an explicit expiry
+    onOneServer() on multi-server setups
+    a failure hook
+
+    a scheduled command failing silently is a report
+    nobody notices missing for a month
+
+
+  THE UNIFYING POINT
+
+    a worker and a scheduler are PROCESSES, and
+    processes need MONITORING
+
+    QUEUE DEPTH is the metric: rising steadily means
+    workers are dead or too few, and it is the
+    earliest signal you will get`,
+      codeExample: {
+        title: "Supervisor, cron, and the monitoring that catches a dead worker",
+        code: `# ---------- /etc/supervisor/conf.d/invoicehub.conf ----------
+
+# Separate pools per queue. One pool doing both means an
+# hour of report generation blocks every email behind it.
+
+[program:invoicehub-emails]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/invoicehub/current/artisan queue:work redis
+    --queue=emails
+    --tries=3
+    --backoff=10,60,300
+    --max-time=3600          ; recycle hourly — a long-lived
+    --max-jobs=1000          ; process makes leaks matter
+    --sleep=3
+autostart=true
+autorestart=true             ; ← the whole point of Supervisor
+user=www-data
+numprocs=4
+redirect_stderr=true
+stdout_logfile=/var/log/invoicehub/worker-emails.log
+stopwaitsecs=3600            ; let a job finish before killing
+
+[program:invoicehub-reports]
+command=php /var/www/invoicehub/current/artisan queue:work redis
+    --queue=reports --tries=1 --timeout=1800 --max-time=3600
+numprocs=2
+; ...
+
+supervisorctl reread && supervisorctl update
+supervisorctl status
+
+
+# ---------- The one cron entry the scheduler needs ----------
+
+* * * * * cd /var/www/invoicehub/current && php artisan schedule:run >> /dev/null 2>&1
+
+# ⚠️ Laravel's scheduler does not run itself. Miss this
+#    line and every Schedule::command() you wrote does
+#    nothing, forever, silently.
+
+# In a container, a scheduler container instead:
+#   command: php artisan schedule:work
+
+
+<?php
+// ---------- routes/console.php, with Day 29's protections ----------
+
+use Illuminate\\Support\\Facades\\Schedule;
+
+Schedule::command('reports:generate')
+    ->dailyAt('02:00')
+    ->withoutOverlapping(50)                  // ← minutes, not the 24h default
+    ->onOneServer()                           // ← needs a shared cache
+    ->pingOnFailure('https://healthchecks.io/ping/xxx/fail');
+
+// The heartbeat that proves the scheduler is alive at all
+Schedule::call(fn () => Cache::put('scheduler:heartbeat', now(), now()->addMinutes(10)))
+    ->everyMinute();
+
+
+# ---------- Deploy: workers hold old code ----------
+
+php artisan queue:restart
+
+# A signal, not a kill. Workers finish the current job,
+# exit gracefully, and Supervisor starts fresh ones on
+# the new code.
+#
+# Without it: jobs behave like last week while the
+# website behaves like today.
+
+
+<?php
+// ---------- Monitoring: queue depth is the metric ----------
+
+Schedule::call(function () {
+    $depth = Queue::connection('redis')->size('emails');
+
+    if ($depth > 1000) {
+        // Rising steadily = workers dead or too few.
+        // This is the earliest signal you will get.
+        Notification::route('slack', config('services.slack.ops'))
+            ->notify(new QueueBacklog('emails', $depth));
+    }
+
+    // And the scheduler proving it ran at all
+    $beat = Cache::get('scheduler:heartbeat');
+
+    if (! $beat || $beat->lt(now()->subMinutes(5))) {
+        Log::critical('Scheduler heartbeat missing');
+    }
+})->everyFiveMinutes();
+
+// Built in:
+php artisan queue:monitor redis:emails --max=1000
+php artisan queue:failed
+php artisan queue:retry all
+
+
+<?php
+// ---------- Failed jobs need a human, not a table ----------
+
+// app/Providers/AppServiceProvider.php
+Queue::failing(function (JobFailed $event) {
+    Log::error('Job failed', [
+        'connection' => $event->connectionName,
+        'job'        => $event->job->resolveName(),
+        'exception'  => $event->exception->getMessage(),
+    ]);
+});
+
+// Otherwise failed_jobs quietly fills up and nobody
+// reads it until somebody asks where their invoice went.
+
+
+# ---------- The check that catches all of it ----------
+
+supervisorctl status              # are workers running?
+crontab -l                        # is the scheduler triggered?
+php artisan queue:monitor redis:emails --max=100
+php artisan schedule:list         # is what you meant scheduled?`,
+      },
+      keyTakeaways: [
+        "<b>Without a worker, `dispatch()` succeeds and the job is never processed</b>, with no error anywhere.",
+        "<b>Supervisor restarts workers that crash</b>, and a worker exiting is normal, not exceptional.",
+        "<b>`--max-time` and `--max-jobs` make workers exit deliberately</b>, so something must restart them.",
+        "<b>Laravel's scheduler does not run itself</b>: one cron entry calls `schedule:run` every minute.",
+        "<b>Miss that entry and every scheduled task does nothing, forever, silently.</b>",
+        "<b>Workers hold your code in memory</b>, so a deploy without `queue:restart` runs last week's code.",
+        "<b>`queue:restart` is a graceful signal</b>: workers finish the current job, then exit.",
+        "<b>Recycle workers</b>, since long-lived processes make memory leaks matter, as with Octane.",
+        "<b>Give each queue its own worker pool</b>, or slow jobs block fast ones behind them.",
+        "<b>The scheduler needs `withoutOverlapping()`, `onOneServer()` and a failure hook.</b>",
+        "<b>Workers and schedulers are processes, and processes need monitoring.</b>",
+        "<b>Queue depth is the metric</b>: rising steadily means workers are dead or too few.",
+      ],
+      commonMistakes: [
+        "<b>Deploying with no worker running.</b> Every queued email silently never sends.",
+        "<b>No cron entry for `schedule:run`.</b> Every scheduled task you wrote does nothing.",
+        "<b>Forgetting `queue:restart`.</b> Jobs run last week's code while the site runs today's.",
+        "<b>One worker pool for every queue.</b> An hour-long report blocks all your emails.",
+        "<b>Workers that never recycle.</b> Memory grows until the process is killed under load.",
+        "<b>No queue-depth alert.</b> The earliest available signal goes unwatched.",
+      ],
+      quiz: [
+        {
+          question: "What happens when no worker is running?",
+          options: [
+            "`dispatch()` throws",
+            "It succeeds, the job sits in the queue, and nothing errors anywhere",
+            "The job runs inline",
+            "Laravel warns you",
+          ],
+          correctIndex: 1,
+          explanation: "The most common \"my deploy worked\" failure.",
         },
         {
-          question: "Why is caching placed at step seven rather than first?",
+          question: "Why is Supervisor not optional?",
           options: [
-            "It is slow to set up",
-            "It is the first step that adds bugs, invalidation, staleness and stampedes, instead of removing work",
-            "It requires Redis",
-            "It only helps reads",
+            "Laravel requires it",
+            "Workers exit as normal behaviour, from crashes and from `--max-time`, so something must restart them",
+            "It handles the scheduler",
+            "It manages memory",
           ],
           correctIndex: 1,
-          explanation: "Steps two to six remove work permanently and simplify the code.",
+          explanation: "A worker exiting is expected, not exceptional.",
+        },
+        {
+          question: "Why does the scheduler need a cron entry?",
+          options: [
+            "For logging",
+            "Laravel's scheduler does not run itself; cron calls `schedule:run` every minute",
+            "To set the timezone",
+            "It does not",
+          ],
+          correctIndex: 1,
+          explanation: "Without it, every scheduled task silently never runs.",
+        },
+        {
+          question: "Why give each queue its own worker pool?",
+          options: [
+            "For monitoring",
+            "A shared pool lets an hour-long report block every quick email behind it",
+            "Redis requires it",
+            "For memory limits",
+          ],
+          correctIndex: 1,
+          explanation: "Separate pools, sized separately.",
+        },
+      ],
+    },
+    {
+      id: "secrets-cicd-logs-and-backups",
+      title: "Secrets, CI/CD, logs, errors & backups",
+      durationMinutes: 13,
+      explanation: "Layer 5: the things that decide whether you can survive a bad day.\n\n---\n\n### 1. Basic — secrets\n\nConfiguration comes from the environment, never from code:\n\n```text\n❌ $password = 'my-production-password';\n✅ environment → Laravel config → application\n```\n\n```text\nAPP_ENV · APP_KEY · DB_HOST · DB_PASSWORD · REDIS_HOST · AWS_ACCESS_KEY_ID\n```\n\n<b>Never commit `.env`, API keys, database passwords, cloud credentials or AI provider keys.</b>\n\nAnd the rule people get wrong:\n\n> <b>Once a secret is exposed, rotate it.</b>\n\nDeleting it from the latest commit is not enough. <b>It is in the history, in every clone, in every fork, and quite possibly already scraped</b>, because bots watch public commits for exactly this. Removing the commit changes nothing about who already has the key.\n\n---\n\n### 2. Intermediate — CI/CD\n\n```text\npush → CI → tests → lint → build → deploy\n```\n\n```text\ndeveloper → git push → GitHub Actions\n   ├── tests\n   ├── Pint\n   └── build\n        ↓\n     deploy\n```\n\n<b>The point is the gate, not the automation.</b>\n\n```text\npush broken code → deploy → 💥\npush broken code → tests fail → deployment stops\n```\n\nA reasonable pipeline: checkout, PHP dependencies, frontend dependencies, Pint, tests, build assets, deploy, migrate, restart workers.\n\n> <b>Do not deploy code that has not passed your automated quality gates.</b>\n\n<b>And CI is also where deploys stop being a person's ritual.</b> A deploy that lives in somebody's terminal history is a deploy that goes wrong the week they are away, which is Day 29's Envoy argument arriving again.\n\n---\n\n### 3. Advanced — logs, errors and backups\n\n<b>Do not rely on `storage/logs/laravel.log` on one server.</b>\n\n```text\nserver A → logs        worker A → logs\nserver B → logs        worker B → logs\n```\n\nWith three servers, <b>you have a one-in-three chance of looking at the right machine</b>, and no way to follow a request that crossed two of them. Aggregate centrally, and log JSON so it is searchable.\n\n<b>Logs tell you what happened; error tracking tells you what is affecting users.</b>\n\n```text\nwhich errors, how often, which release introduced it, what stack trace\n```\n\n<b>That last one is why you tag releases in your error tracker</b>: \"started 40 minutes ago\" plus \"release abc123\" is a diagnosis, where a log file is an archaeology project.\n\n<b>Backups.</b> Your database is not a backup. Consider frequency, retention, off-site storage, encryption and restore testing.\n\n> <b>A backup you have never successfully restored is not a backup strategy.</b>\n\n<b>Untested backups fail in specific, boring ways</b>: the job silently stopped three months ago, the file is truncated, the dump excluded a table, nobody has the decryption key. You find out on the day it matters, and by then the answer is no.\n\n<b>So restore one, on a schedule</b>, into a scratch database, and check a row count. Then you know two numbers that matter: <b>how much data you would lose, and how long recovery takes.</b> Without a rehearsal, both are guesses.\n\nThree practical notes on the pipeline itself.\n\n<b>The CI job needs an environment before it can run anything:</b>\n\n```yaml\n- run: cp .env.example .env\n- run: php artisan key:generate\n```\n\nWithout `APP_KEY`, every test that touches encryption or sessions fails for a reason that has nothing to do with your code. And a `services:` block needs a health check, or the first test connects before MySQL is listening:\n\n```yaml\noptions: --health-cmd=\"mysqladmin ping\" --health-interval=10s\n```\n\n<b>Deploying does not have to mean SSH.</b> Forge and Vapor both give you a trigger:\n\n```yaml\n- run: curl -fsS \"${{ secrets.FORGE_DEPLOY_URL }}\"\n- run: vapor deploy production      # with VAPOR_API_TOKEN in the environment\n```\n\nWhich keeps your deploy key out of CI entirely: the webhook URL is a secret, and it can only do one thing.\n\n<b>And do not commit `public/build/`.</b> Build artifacts in git produce a merge conflict on every branch that touched the frontend, and hide whether the deployed assets match the source. Add it to `.gitignore` and build in CI.",
+      diagram: `Secrets
+
+    ❌  $password = 'my-production-password';
+    ✅  environment → Laravel config → application
+
+    APP_ENV · APP_KEY · DB_HOST · DB_PASSWORD
+    REDIS_HOST · AWS_ACCESS_KEY_ID
+
+  Never commit: .env · API keys · database passwords
+  cloud credentials · AI provider keys
+
+  ⚠️  ONCE A SECRET IS EXPOSED, ROTATE IT.
+
+      Deleting it from the latest commit is not
+      enough. It is in the history, in every clone,
+      in every fork — and quite possibly already
+      scraped, because bots watch public commits for
+      exactly this.
+
+      Removing the commit changes nothing about who
+      already has the key.
+
+
+CI/CD
+
+    push → CI → tests → lint → build → deploy
+
+    developer → git push → GitHub Actions
+                   ├── tests
+                   ├── Pint
+                   └── build
+                        ↓
+                     deploy
+
+  The point is the GATE, not the automation:
+
+    push broken code → deploy → 💥
+    push broken code → tests fail → DEPLOY STOPS
+
+  A reasonable pipeline:
+
+    checkout → PHP deps → frontend deps → Pint
+    → tests → build assets → deploy → migrate
+    → restart workers
+
+    Do not deploy code that has not passed your
+    automated quality gates.
+
+  And CI is where deploys stop being a PERSON'S
+  RITUAL. A deploy in somebody's terminal history
+  goes wrong the week they are away.
+
+
+Logs
+
+    server A → logs        worker A → logs
+    server B → logs        worker B → logs
+
+  ⚠️  With three servers you have a one-in-three
+      chance of looking at the right machine — and no
+      way to follow a request that crossed two.
+
+              log system
+             /     |     \\
+        server A  server B  worker
+
+    aggregate centrally, and log JSON so it is
+    searchable
+
+
+Error tracking
+
+    logs            "what happened?"
+    error tracking  "what is affecting USERS?"
+
+      which errors · how often
+      WHICH RELEASE INTRODUCED IT · stack trace
+
+  Tag releases in your error tracker: "started 40
+  minutes ago" + "release abc123" is a DIAGNOSIS.
+  A log file is an archaeology project.
+
+
+Backups
+
+  Your database is not a backup.
+
+    frequency · retention · off-site · encryption
+    RESTORE TESTING
+
+  ⚠️  A BACKUP YOU HAVE NEVER SUCCESSFULLY RESTORED
+      IS NOT A BACKUP STRATEGY.
+
+      Untested backups fail in boring, specific ways:
+
+        the job silently stopped three months ago
+        the file is truncated
+        the dump excluded a table
+        nobody has the decryption key
+
+      You find out on the day it matters, and by then
+      the answer is no.
+
+  Restore one on a SCHEDULE, into a scratch database,
+  and check a row count.
+
+  Then you know the two numbers that matter:
+
+    how much data you would LOSE
+    how long RECOVERY takes
+
+  Without a rehearsal, both are guesses.`,
+      codeExample: {
+        title: "A pipeline, structured logs, and a backup you have actually restored",
+        code: `# ---------- .github/workflows/deploy.yml ----------
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env: { MYSQL_ROOT_PASSWORD: root, MYSQL_DATABASE: testing }
+      redis:
+        image: redis:7
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.4' }
+
+      - run: composer install --prefer-dist --no-interaction
+      - run: npm ci
+
+      # The gate. Nothing below runs if these fail.
+      - run: ./vendor/bin/pint --test
+      - run: ./vendor/bin/phpstan analyse
+      - run: php artisan test
+
+      - run: npm run build
+
+  deploy:
+    needs: test              # ← the whole point
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: \${{ secrets.DEPLOY_HOST }}
+          key:  \${{ secrets.DEPLOY_KEY }}
+          script: /var/www/invoicehub/deploy.sh
+
+# Broken code now stops at "tests fail" instead of at
+# "production 💥". And the deploy is no longer a ritual
+# only one person can perform.
+
+
+# ---------- ⚠️ A committed secret ----------
+
+# ❌ Not enough
+git rm --cached .env
+git commit -m "remove .env"
+
+# It is still in the history, in every clone, in every
+# fork — and bots watch public commits for exactly this.
+
+# ✅ The only thing that works
+#   1. rotate the key at the provider, immediately
+#   2. then clean the history if you want to
+#   3. add a scanner so it cannot happen again
+#
+# .gitignore
+.env
+.env.*
+!.env.example
+
+
+<?php
+// ---------- Structured logs, to stdout, with context ----------
+
+// config/logging.php
+'channels' => [
+    'stack' => [
+        'driver'   => 'stack',
+        'channels' => ['stderr'],
+    ],
+    'stderr' => [
+        'driver'    => 'monolog',
+        'handler'   => StreamHandler::class,
+        'with'      => ['stream' => 'php://stderr'],
+        'formatter' => JsonFormatter::class,     // searchable
+    ],
+],
+
+// Context that makes a log line findable across servers
+Log::withContext([
+    'request_id' => Str::uuid(),
+    'user_id'    => auth()->id(),
+    'release'    => config('app.release'),
+    'server'     => gethostname(),
+]);
+
+// With three servers you otherwise have a one-in-three
+// chance of looking at the right machine.
+
+
+<?php
+// ---------- Error tracking, tagged by release ----------
+
+// The release tag is what turns "an error" into a
+// diagnosis: "started 40 minutes ago, release abc123".
+Sentry::configureScope(function ($scope) {
+    $scope->setTag('release', config('app.release'));
+    $scope->setTag('server', gethostname());
+});
+
+// And failed jobs are errors too — not a table nobody reads
+Queue::failing(fn (JobFailed $e) => report($e->exception));
+
+
+# ---------- Backups, and the part everyone skips ----------
+
+# The backup
+0 3 * * * pg_dump invoicehub | gzip | age -r "\$KEY" \\
+    | aws s3 cp - s3://backups/invoicehub/\$(date +\\%F).sql.gz.age
+
+# ⚠️ The restore rehearsal. This is what makes it a
+#    strategy rather than a hope.
+0 5 * * 0 /usr/local/bin/verify-restore.sh
+
+
+#!/usr/bin/env bash
+# verify-restore.sh
+set -euo pipefail
+
+LATEST=$(aws s3 ls s3://backups/invoicehub/ | sort | tail -1 | awk '{print $4}')
+
+aws s3 cp "s3://backups/invoicehub/\${LATEST}" - \\
+  | age -d -i /etc/age/key | gunzip | psql restore_test
+
+ROWS=$(psql restore_test -tAc "select count(*) from invoices")
+
+if [ "\$ROWS" -lt 1000 ]; then
+    echo "Restore produced \${ROWS} invoices. Backup is not usable." >&2
+    exit 1                              # ← a real alert
+fi
+
+echo "Restore verified: \${ROWS} invoices from \${LATEST}."
+
+# Now you know the two numbers that matter:
+#   how much data you would lose   (backup age)
+#   how long recovery takes        (this script's runtime)
+#
+# Without the rehearsal, both are guesses — and untested
+# backups fail in boring ways: the job stopped three
+# months ago, the file is truncated, a table was
+# excluded, nobody has the key.`,
+      },
+      keyTakeaways: [
+        "<b>Configuration comes from the environment, never hardcoded.</b>",
+        "<b>Never commit `.env`, API keys, database passwords or cloud credentials.</b>",
+        "<b>Once a secret is exposed, rotate it</b>: deleting the commit changes nothing.",
+        "<b>It is in the history, every clone and every fork</b>, and bots scrape public commits for keys.",
+        "<b>CI/CD's point is the gate</b>: broken code stops at failing tests instead of in production.",
+        "<b>A pipeline runs Pint, tests and a build before deploying, migrating and restarting workers.</b>",
+        "<b>CI also stops deploys being one person's ritual</b>, which fails the week they are away.",
+        "<b>Do not rely on one server's log file</b>: with three servers you are guessing which to read.",
+        "<b>Aggregate logs centrally and log JSON</b>, with a request ID, user, release and hostname.",
+        "<b>Logs say what happened; error tracking says what is affecting users and which release caused it.</b>",
+        "<b>A backup you have never restored is not a backup strategy.</b>",
+        "<b>Rehearse a restore on a schedule</b>, so you know how much data you lose and how long recovery takes.",
+      ],
+      commonMistakes: [
+        "<b>Removing a committed secret without rotating it.</b> Everyone who cloned the repo still has it.",
+        "<b>Deploying without a test gate.</b> CI that does not block is just a slower notification.",
+        "<b>Deploying from one person's terminal.</b> It breaks the week they are on holiday.",
+        "<b>Logs on individual servers.</b> You cannot follow a request that crossed two of them.",
+        "<b>No release tag in error tracking.</b> \"Which deploy caused this\" becomes archaeology.",
+        "<b>Backups nobody has restored.</b> They fail in boring ways, and you find out on the worst day.",
+      ],
+      quiz: [
+        {
+          question: "What must you do when a secret is committed?",
+          options: [
+            "Delete the commit",
+            "Rotate it, because it is in the history, every clone and every fork, and may already be scraped",
+            "Rewrite the branch",
+            "Add it to `.gitignore`",
+          ],
+          correctIndex: 1,
+          explanation: "Removing the commit changes nothing about who already has the key.",
+        },
+        {
+          question: "What is the point of CI/CD?",
+          options: [
+            "Faster deploys",
+            "The gate: broken code stops at failing tests instead of reaching production",
+            "Automatic rollbacks",
+            "Smaller images",
+          ],
+          correctIndex: 1,
+          explanation: "And it stops deploys being one person's ritual.",
+        },
+        {
+          question: "Why is a single server's log file insufficient?",
+          options: [
+            "It grows too large",
+            "With three servers you are guessing which one to read, and cannot follow a request across two",
+            "Laravel rotates it",
+            "It is not readable",
+          ],
+          correctIndex: 1,
+          explanation: "Aggregate centrally with a request ID and release tag.",
+        },
+        {
+          question: "What makes a backup an actual strategy?",
+          options: [
+            "Daily frequency",
+            "Having successfully restored one, so you know how much data you lose and how long recovery takes",
+            "Off-site storage",
+            "Encryption",
+          ],
+          correctIndex: 1,
+          explanation: "Untested backups fail in boring ways on the worst possible day.",
+        },
+        {
+          question: "What does error tracking give you that logs do not?",
+          options: [
+            "More detail",
+            "Which errors affect users, how often, and which release introduced them",
+            "Longer retention",
+            "Faster search",
+          ],
+          correctIndex: 1,
+          explanation: "The release tag turns an error into a diagnosis.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "Why is file cache a problem on multiple servers?",
+      question: "Which deployment layer is most often forgotten?",
+      options: [
+        "Infrastructure",
+        "Processes: queue workers and the scheduler",
+        "Application",
+        "Data",
+      ],
+      correctIndex: 1,
+      explanation: "The site loads and nothing else works, with no errors anywhere.",
+    },
+    {
+      question: "What happens when no queue worker is running?",
+      options: [
+        "`dispatch()` throws",
+        "It succeeds, the job sits in the queue, and nothing errors",
+        "The job runs inline",
+        "The request fails",
+      ],
+      correctIndex: 1,
+      explanation: "The most common \"my deploy worked\" failure.",
+    },
+    {
+      question: "What is the useful question to ask of each production component?",
+      options: [
+        "Is it fast?",
+        "How would I know if this were broken?",
+        "Is it documented?",
+        "Does it scale?",
+      ],
+      correctIndex: 1,
+      explanation: "\"A customer would tell me\" means it is running, not deployed.",
+    },
+    {
+      question: "What is the strongest argument for `composer install --no-dev`?",
+      options: [
+        "Faster installs",
+        "Attack surface: debug and database-browser packages reachable in production are real holes",
+        "Smaller repository",
+        "Composer requires it",
+      ],
+      correctIndex: 1,
+      explanation: "The reliable way not to expose one is not to install it.",
+    },
+    {
+      question: "Why must caching come last in a deploy script?",
       options: [
         "It is slow",
-        "Each server has its own cache, so nothing is shared and `forget()` clears only one",
-        "It cannot store objects",
-        "It has no TTL",
-      ],
-      correctIndex: 1,
-      explanation: "That is inconsistency, which is worse than slowness.",
-    },
-    {
-      question: "What is the catch with the database cache driver?",
-      options: [
-        "No TTL support",
-        "You use the database to avoid database work, so it helps computation but not reads",
-        "It cannot be cleared",
-        "It is unsupported in production",
-      ],
-      correctIndex: 1,
-      explanation: "At high throughput the cache reads become load on the system you were protecting.",
-    },
-    {
-      question: "Why separate cache and queue Redis instances?",
-      options: [
-        "For speed",
-        "`cache:clear` can wipe queued jobs, and a cache eviction policy silently deletes them",
+        "Caching before the new code and `.env` are in place caches the previous values",
         "Laravel requires it",
+        "It does not matter",
+      ],
+      correctIndex: 1,
+      explanation: "The code is new, the env file is new, and the application disagrees with both.",
+    },
+    {
+      question: "What does `set -e` prevent in a deploy script?",
+      options: [
+        "Slow deploys",
+        "A failed step being followed by caching, worker restarts and a switch to a broken release",
+        "Permission errors",
+        "Migration conflicts",
+      ],
+      correctIndex: 1,
+      explanation: "Otherwise the script exits 0 and reports success.",
+    },
+    {
+      question: "Why does `migrate` need `--force` in CI?",
+      options: [
+        "It is faster",
+        "Laravel prompts for confirmation in production and CI has nobody to answer",
+        "It skips checks",
+        "It runs migrations twice",
+      ],
+      correctIndex: 1,
+      explanation: "It says explicitly: I know this is production, proceed.",
+    },
+    {
+      question: "Why is renaming a column in one migration dangerous?",
+      options: [
+        "It is slow",
+        "Both code versions run during a deploy, so old servers query a column that no longer exists",
+        "Renames are unsupported",
+        "It loses data",
+      ],
+      correctIndex: 1,
+      explanation: "Queue workers on old code hit the same failure.",
+    },
+    {
+      question: "What are the four steps of expand-contract?",
+      options: [
+        "Backup, migrate, deploy, verify",
+        "Expand the schema, deploy dual-reading code, backfill the data, contract later",
+        "Deploy, migrate, rollback, retry",
+        "Test, build, deploy, monitor",
+      ],
+      correctIndex: 1,
+      explanation: "At every step both old and new code work.",
+    },
+    {
+      question: "Why backfill in a command rather than a migration?",
+      options: [
+        "Migrations cannot update data",
+        "A migration holds a transaction across every row and can lock the table while the deploy waits",
+        "Commands are faster",
+        "Style preference",
+      ],
+      correctIndex: 1,
+      explanation: "Keep schema changes separate from data changes.",
+    },
+    {
+      question: "What is the real rollback strategy for a bad deploy?",
+      options: [
+        "`migrate:rollback`",
+        "Deploying the previous code, which requires the schema to still support it",
+        "Restoring a backup",
+        "Maintenance mode",
+      ],
+      correctIndex: 1,
+      explanation: "Expand-contract is what guarantees the old code still runs.",
+    },
+    {
+      question: "What is the mental model for Laravel Forge?",
+      options: [
+        "A managed platform",
+        "It manages servers you own, so the server, bill and responsibility stay yours",
+        "Serverless on AWS",
+        "A CI system",
+      ],
+      correctIndex: 1,
+      explanation: "Including OS updates, disk space, patches and the pager.",
+    },
+    {
+      question: "Why is Vapor an architecture choice rather than a hosting one?",
+      options: [
+        "It is AWS-only",
+        "No reliable local filesystem, execution limits, cold starts and connection limits change your code",
+        "It costs more",
+        "It requires Docker",
+      ],
+      correctIndex: 1,
+      explanation: "An app assuming a local disk gets rewritten to move there.",
+    },
+    {
+      question: "How does cost compare between serverless and fixed servers?",
+      options: [
+        "Serverless is always cheaper",
+        "It inverts with traffic shape: serverless suits spiky and low, fixed suits constant and high",
+        "Fixed is always cheaper",
+        "They are identical",
+      ],
+      correctIndex: 1,
+      explanation: "And the answer changes as you grow.",
+    },
+    {
+      question: "What does a multi-stage Docker build achieve?",
+      options: [
+        "Faster builds only",
+        "The runtime image contains only what running needs, not Composer, npm or the toolchain",
+        "Automatic secrets",
+        "Multiple environments",
+      ],
+      correctIndex: 1,
+      explanation: "Smaller and safer, the same argument as `--no-dev`.",
+    },
+    {
+      question: "Why must secrets never go into a Docker image?",
+      options: [
+        "They increase size",
+        "They are baked into a layer, and layers are readable by anybody who can pull the image",
+        "Docker strips them",
+        "They expire",
+      ],
+      correctIndex: 1,
+      explanation: "Inject them at runtime instead.",
+    },
+    {
+      question: "Why run the same image in staging and production?",
+      options: [
+        "To save build time",
+        "Building per environment means you tested something you did not ship",
+        "Docker requires it",
+        "For smaller images",
+      ],
+      correctIndex: 1,
+      explanation: "Same image, different environment variables.",
+    },
+    {
+      question: "Why separate web, worker and scheduler containers?",
+      options: [
+        "Smaller images",
+        "A container is one process: combined, a worker crash takes the web tier and nothing scales separately",
+        "Docker cannot run two processes",
+        "For logging",
+      ],
+      correctIndex: 1,
+      explanation: "Same image, three different commands.",
+    },
+    {
+      question: "Why is deploying into the live directory worse than the downtime window suggests?",
+      options: [
+        "It is slower",
+        "The site is broken during the deploy: half new files, half old, an application that never existed",
+        "Permissions break",
+        "Git is slow",
+      ],
+      correctIndex: 1,
+      explanation: "Atomic releases make the switch instantaneous.",
+    },
+    {
+      question: "What is the real prize of atomic releases?",
+      options: [
+        "Faster deploys",
+        "A rollback that is one symlink and no rebuild, which you will actually use under pressure",
+        "Less disk usage",
+        "Simpler scripts",
+      ],
+      correctIndex: 1,
+      explanation: "Otherwise people debug live because redeploying feels too slow.",
+    },
+    {
+      question: "What happens if a deploy fails between `down` and `up`?",
+      options: [
+        "Laravel recovers",
+        "The site stays in maintenance mode until somebody notices and runs `up` by hand",
+        "The deploy retries",
+        "Nothing",
+      ],
+      correctIndex: 1,
+      explanation: "A trap that always runs `up` prevents it.",
+    },
+    {
+      question: "Why must a health check test more than the homepage?",
+      options: [
+        "Completeness",
+        "A cached homepage returns 200 even with broken database credentials, so the switch is a guess",
+        "For monitoring",
+        "It need not",
+      ],
+      correctIndex: 1,
+      explanation: "Check database, cache and queue before promoting.",
+    },
+    {
+      question: "Why is Supervisor not optional?",
+      options: [
+        "Laravel requires it",
+        "Workers exit as normal behaviour, from crashes and from `--max-time`, so something must restart them",
+        "It runs the scheduler",
+        "It manages memory",
+      ],
+      correctIndex: 1,
+      explanation: "A worker exiting is expected, not exceptional.",
+    },
+    {
+      question: "Why does the scheduler need a cron entry?",
+      options: [
+        "For logging",
+        "Laravel's scheduler does not run itself; cron calls `schedule:run` every minute",
+        "To set the timezone",
+        "It does not",
+      ],
+      correctIndex: 1,
+      explanation: "Without it, every scheduled task silently never runs.",
+    },
+    {
+      question: "Why must a deploy run `queue:restart`?",
+      options: [
+        "To clear the queue",
+        "Workers hold the old code in memory and keep running it indefinitely",
+        "To reset failures",
         "For monitoring",
       ],
       correctIndex: 1,
-      explanation: "A cache should evict; a queue must never.",
+      explanation: "Jobs otherwise behave like last week while the site behaves like today.",
     },
     {
-      question: "What is the test for whether something is really a cache?",
+      question: "Why give each queue its own worker pool?",
       options: [
-        "It has a TTL",
-        "You could run `cache:clear` in production right now without breaking anything",
-        "It uses Redis",
-        "It is small",
+        "For monitoring",
+        "A shared pool lets an hour-long report block every quick email behind it",
+        "Redis requires it",
+        "For memory limits",
       ],
       correctIndex: 1,
-      explanation: "Otherwise it is a database with no backups.",
+      explanation: "Separate pools, sized separately.",
     },
     {
-      question: "What does `Cache::remember` save you?",
+      question: "What must you do when a secret is committed?",
       options: [
-        "Memory",
-        "The read-check-write logic and its race, running the closure only on a miss",
-        "Serialisation",
-        "The TTL",
+        "Delete the commit",
+        "Rotate it, because it is in the history, every clone and every fork, and may already be scraped",
+        "Rewrite the branch",
+        "Add it to `.gitignore`",
       ],
       correctIndex: 1,
-      explanation: "It is the method you will use most.",
+      explanation: "Removing the commit changes nothing about who already has the key.",
     },
     {
-      question: "How should you choose a TTL?",
+      question: "What is the point of CI/CD?",
       options: [
-        "Ten minutes by default",
-        "By deciding how long you are willing to serve wrong data on that page",
-        "By query duration",
-        "By cache size",
+        "Faster deploys",
+        "The gate: broken code stops at failing tests instead of reaching production",
+        "Automatic rollbacks",
+        "Smaller images",
       ],
       correctIndex: 1,
-      explanation: "A business decision, not a technical one.",
+      explanation: "And it stops deploys being one person's ritual.",
     },
     {
-      question: "What is a cached outage?",
+      question: "Why is a single server's log file insufficient?",
       options: [
-        "A Redis failure",
-        "`remember` storing the `null` from a failed lookup, so \"not found\" persists for the whole TTL",
-        "An expired key",
-        "A stampede",
+        "It grows too large",
+        "With three servers you are guessing which to read, and cannot follow a request across two",
+        "Laravel rotates it",
+        "It is not readable",
       ],
       correctIndex: 1,
-      explanation: "Give negative results a much shorter TTL.",
+      explanation: "Aggregate centrally with a request ID and release tag.",
     },
     {
-      question: "When is caching a query not worth it?",
+      question: "What makes a backup an actual strategy?",
       options: [
-        "When it runs rarely",
-        "When it is already fast: you add a network round trip and serialisation to save nothing",
-        "When it returns many rows",
-        "When it joins",
+        "Daily frequency",
+        "Having successfully restored one, so you know how much data you lose and how long recovery takes",
+        "Off-site storage",
+        "Encryption",
       ],
       correctIndex: 1,
-      explanation: "Cache what is slow, not what is frequent.",
-    },
-    {
-      question: "Why is forgetting a key safer than updating it?",
-      options: [
-        "It is faster",
-        "Write-through writes the value twice, so a disagreement or failed write caches something untrue",
-        "It uses less memory",
-        "It is not safer",
-      ],
-      correctIndex: 1,
-      explanation: "Forgetting makes the next read recompute from the source of truth.",
-    },
-    {
-      question: "What makes invalidation bugs so long-lived?",
-      options: [
-        "They throw quietly",
-        "Nothing errors: a missed key just serves wrong data indefinitely",
-        "They only occur in production",
-        "Tags hide them",
-      ],
-      correctIndex: 1,
-      explanation: "One price change usually invalidates five different keys.",
-    },
-    {
-      question: "Why is a cache stampede worst on popular pages?",
-      options: [
-        "They have more data",
-        "The key expired because the page is popular, so a hundred copies of the slow query arrive at once",
-        "They use more memory",
-        "They have longer TTLs",
-      ],
-      correctIndex: 1,
-      explanation: "The cache expiring is what takes the site down.",
-    },
-    {
-      question: "What does an atomic lock need to work across servers?",
-      options: [
-        "A queue",
-        "Shared cache storage, or each server takes its own lock and nothing is coordinated",
-        "A transaction",
-        "A longer TTL",
-      ],
-      correctIndex: 1,
-      explanation: "Same rule as Day 30's isolation locks.",
-    },
-    {
-      question: "What does Redis pipelining save?",
-      options: [
-        "Redis CPU",
-        "Network round trips: Redis is microseconds per command, the round trip is a millisecond",
-        "Memory",
-        "Serialisation",
-      ],
-      correctIndex: 1,
-      explanation: "A thousand un-pipelined commands is about a second of waiting.",
-    },
-    {
-      question: "What is the critical property of Redis pub/sub?",
-      options: [
-        "It persists messages",
-        "It is messaging, not storage: no listener means the message is simply gone",
-        "It retries",
-        "It acknowledges delivery",
-      ],
-      correctIndex: 1,
-      explanation: "A subscriber restarting during a deploy misses everything silently.",
-    },
-    {
-      question: "When should you use a queue rather than pub/sub?",
-      options: [
-        "For live dashboards",
-        "Whenever losing the message matters, since queues persist, retry and record failures",
-        "For presence pings",
-        "Never",
-      ],
-      correctIndex: 1,
-      explanation: "Pub/sub suits genuinely ephemeral fan-out only.",
-    },
-    {
-      question: "Why is caching not the answer to a slow query?",
-      options: [
-        "It is complex",
-        "It runs the bad query less often, leaving it for every miss, invalidation and new page",
-        "Caches are unreliable",
-        "It is the answer",
-      ],
-      correctIndex: 1,
-      explanation: "Fix the query, then decide whether it still needs caching.",
-    },
-    {
-      question: "What order should a composite index use?",
-      options: [
-        "Alphabetical",
-        "Equality columns first, then the range or sort column",
-        "Least selective first",
-        "Any order",
-      ],
-      correctIndex: 1,
-      explanation: "`(user_id, status)` serves a `user_id`-only query; `(status, user_id)` does not.",
-    },
-    {
-      question: "What is the key number in an `EXPLAIN ANALYZE` output?",
-      options: [
-        "Total cost",
-        "Rows examined versus rows returned",
-        "Planning time",
-        "Buffer count",
-      ],
-      correctIndex: 1,
-      explanation: "Examining 400,000 to return 20 tells you exactly what is wrong.",
-    },
-    {
-      question: "Why does an N+1 often only appear in production?",
-      options: [
-        "Different PHP version",
-        "Eleven queries at 50 rows feels fine; at 10,000 rows it is unusable",
-        "Caching is off there",
-        "The index is missing",
-      ],
-      correctIndex: 1,
-      explanation: "`preventLazyLoading` in development makes it announce itself.",
-    },
-    {
-      question: "What happens to `env()` after `config:cache` runs?",
-      options: [
-        "Nothing",
-        "It returns `null` anywhere outside config files",
-        "It reads from the cache",
-        "It throws",
-      ],
-      correctIndex: 1,
-      explanation: "`env()` belongs in `config/` only; `config()` everywhere else.",
-    },
-    {
-      question: "Why does editing `.env` in production appear to do nothing?",
-      options: [
-        "The file is read-only",
-        "Config is cached, so values are not re-read until `config:cache` runs again",
-        "Laravel ignores it",
-        "It needs a reboot",
-      ],
-      correctIndex: 1,
-      explanation: "And workers need `queue:restart` too.",
-    },
-    {
-      question: "How much do the deployment caches actually save?",
-      options: [
-        "Most of the page time",
-        "A few milliseconds to about twenty of bootstrap, which matters at volume but will not fix a slow page",
-        "Nothing measurable",
-        "Half the response time",
-      ],
-      correctIndex: 1,
-      explanation: "A 1.8-second page is queries, not boot.",
-    },
-    {
-      question: "Why are static properties dangerous under Octane?",
-      options: [
-        "They use more memory",
-        "They survive between requests, so one user's data can be served to another",
-        "They are slower",
-        "They cannot be serialised",
-      ],
-      correctIndex: 1,
-      explanation: "The symptom is intermittent and nearly impossible to reproduce locally.",
-    },
-    {
-      question: "What is the risk with a singleton under Octane?",
-      options: [
-        "It rebuilds too often",
-        "It keeps whatever it captured at first resolution, such as the authenticated user",
-        "It cannot be injected",
-        "It leaks connections",
-      ],
-      correctIndex: 1,
-      explanation: "Bind per request, or take dependencies at call time.",
-    },
-    {
-      question: "Where does Octane belong in the optimisation order?",
-      options: [
-        "First",
-        "Last, after queries, indexes, N+1 and caching are handled",
-        "Second",
-        "It is not an optimisation",
-      ],
-      correctIndex: 1,
-      explanation: "It removes boot cost, so a 1.8-second page becomes 1.78 seconds.",
-    },
-    {
-      question: "When is response caching unsafe?",
-      options: [
-        "For static pages",
-        "For personalised responses, where one user's page is served to the next visitor",
-        "For JSON",
-        "For GET requests",
-      ],
-      correctIndex: 1,
-      explanation: "The key must also carry locale, currency and anything else that varies output.",
-    },
-    {
-      question: "What does a CDN primarily save?",
-      options: [
-        "Server CPU",
-        "Latency: a cross-continent round trip can cost more than all your PHP optimisation",
-        "Queries",
-        "Memory",
-      ],
-      correctIndex: 1,
-      explanation: "150ms before your server does anything at all.",
-    },
-    {
-      question: "Why measure before optimising?",
-      options: [
-        "For reporting",
-        "Without a baseline you have an opinion, and cannot tell an improvement from a regression",
-        "To pick a driver",
-        "It is unnecessary",
-      ],
-      correctIndex: 1,
-      explanation: "Some optimisations make things slower.",
-    },
-    {
-      question: "What does a slow page with 150 queries need?",
-      options: [
-        "Octane",
-        "Those 150 queries to become 10, which is step five, not step nine",
-        "Redis",
-        "A CDN",
-      ],
-      correctIndex: 1,
-      explanation: "Octane would turn 1.834 seconds into 1.814 seconds.",
-    },
-    {
-      question: "Why is caching step seven rather than step one?",
-      options: [
-        "It is slow to set up",
-        "It is the first step that adds bugs, invalidation, staleness and stampedes, rather than removing work",
-        "It needs Redis",
-        "It only helps reads",
-      ],
-      correctIndex: 1,
-      explanation: "Steps two to six remove work permanently and simplify the code.",
+      explanation: "Untested backups fail in boring ways on the worst possible day.",
     },
   ],
   project: {
-    name: "InvoiceHub — profile a slow page and halve the queries",
-    goal: "Build a deliberately slow dashboard, measure it properly, then work down the hierarchy step by step, recording the numbers after each change so you can see which step actually mattered.",
+    name: "InvoiceHub — deploy it, then break it on purpose",
+    goal: "Deploy the whole system with a worker and a scheduler running, then prove each layer works by killing it one piece at a time and recording how you found out.",
     brief:
-      "The self-check is to take a slow page, profile it, and cut the query count by half. <b>Halving it is easy. The exercise is proving which change did it</b>, because the whole elective is about not guessing.\n\nBuild the slow page first, on purpose:\n\n```php\n$invoices = Invoice::latest()->get();\n\nforeach ($invoices as $invoice) {\n    echo $invoice->client->name;\n\n    foreach ($invoice->lines as $line) {\n        echo $line->product->name;\n    }\n}\n```\n\nWhich gives you roughly:\n\n```text\n1 query   → invoices\nN queries → clients\nN queries → lines\nN queries → products\n```\n\nThen work the hierarchy in order, measuring after every single step:\n\n```text\n1 measure → 2 code → 3 queries → 4 indexes → 5 N+1\n→ 6 payload → 7 caching → 8 Redis/CDN → 9 Octane\n```\n\n<b>The deliverable is a table with one row per step</b>: query count, response time, memory. By the end you will be able to point at the row where the page actually got fast, and it will not be the caching row.",
+      "The self-check is to deploy the app with a worker and a scheduler. <b>Deploying is the easy half.</b> The hard half is that everything except the web server fails silently, so a deploy that looks perfect can have a dead worker and a scheduler nobody ever triggered.\n\nSo this project has two parts. Build it, then <b>break each piece deliberately and write down how long it took you to notice</b>. Anything you only noticed by looking directly at it is not monitored, it is just running.\n\nWhat has to be true at the end:\n\n```text\nweb        GET / → 200\nqueue      request → dispatch → worker → job executes\nscheduler  cron → schedule:run → a task runs on its own\ndatabase   deploy → migrate --force → schema updated\nCI/CD      push → tests → Pint → build → deploy\nsafety     .env uncommitted · backups · logs · error tracking\n```\n\nAnd the principle you are implementing:\n\n> <b>A deployment is successful when the application, workers, scheduler, database, configuration, monitoring and recovery all work, not when the website loads.</b>",
     steps: [
-      "Seed real volume: 300 invoices, each with 5 lines, across 40 clients and 60 products. A page that is fast at 20 rows teaches you nothing, and that gap is the whole reason N+1 hides until production.",
-      "Build the deliberately slow dashboard exactly as above, with no eager loading, `select *`, and a total computed in PHP by looping. Add a second slow element: a per-client outstanding balance calculated inside the loop.",
-      "MEASURE THE BASELINE before touching anything. Record response time, query count, slowest single query, and peak memory. Write these four numbers down before you read further, because you cannot recover a baseline afterwards.",
-      "Add a middleware that logs route, milliseconds, query count and peak memory for every request over a threshold. This is the tool you will use for the rest of the project and, more usefully, for the rest of your career.",
-      "Step 2, code: find anything computing in PHP that the database should do. Replace the looped total with a `sum()` and the per-client balance with `withSum`. Measure. Record.",
-      "Step 3 and 4, queries and indexes: run `EXPLAIN ANALYZE` on your slowest query. Note rows examined versus rows returned before adding anything. Add the composite index the query actually needs, with equality columns first. Re-run `EXPLAIN`, and record both numbers.",
-      "Step 5, N+1: add the eager loads. Measure. <b>This is the row where the page gets fast</b>, and the point of recording everything is that you will be able to see that.",
-      "Step 6, payload: select only the columns the page renders, including on the relations (`with('client:id,name')`). Add pagination. Measure and record memory in particular.",
-      "Turn on `Model::preventLazyLoading()` in development, then write a test asserting the dashboard renders in under fifteen queries. That test is what stops the N+1 coming back in six months.",
-      "Step 7, caching: only now, cache one genuinely expensive thing, such as a monthly aggregate that takes real time to compute. Give it a key scoped by team and a version suffix, invalidate it on invoice save, and pick a TTL by deciding how stale the number may be.",
-      "Add an atomic lock around that cache rebuild with a timeout, then prove the stampede is real: clear the key and fire fifty concurrent requests with and without the lock, watching the query log both times.",
-      "Write the table: nine rows, four columns, one line each on what changed. Then answer two questions in writing. Which single step produced the biggest improvement? And how much would Octane have saved you, given your final numbers?",
+      "Pick a platform and write down why in one sentence: Forge if a named person will own the server, Cloud if nobody will, Vapor only if you have audited your filesystem and job durations first.",
+      "Write a deploy script that starts with `set -euo pipefail`, then: pull, `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `optimize:clear`, `migrate --force`, the four caches, `queue:restart`, and a health-check curl at the end. Clear before caching, and cache last.",
+      "Make it atomic: build into `/releases/<timestamp>`, symlink `.env` and `storage/` from a shared directory, and switch `/current` at the end. Then write a `rollback.sh` that switches the symlink back and reloads. Time it. If it is over five seconds you will not use it at 3am.",
+      "Build a health endpoint that checks database, cache, queue depth and a scheduler heartbeat, and returns 503 if any fail. Gate your deploy on it. A homepage 200 will happily promote a release with wrong database credentials.",
+      "Set up Supervisor with two separate worker pools, `emails` and `reports`, with `--max-time=3600`, `--tries=3`, sensible `--backoff`, `autorestart=true` and a `stopwaitsecs` long enough for your longest job. Run `supervisorctl status` and confirm both pools are up.",
+      "Add the single cron entry calling `schedule:run` every minute. Then add a scheduler heartbeat task writing to the cache every minute, plus one real task using `withoutOverlapping(50)`, `onOneServer()` and a failure ping.",
+      "Set up CI: checkout, dependencies, Pint, PHPStan, tests, build, and a deploy job with `needs: test`. Push something that fails Pint and confirm the deploy does not run. That one experiment is the whole point of CI.",
+      "Configure structured JSON logging to stdout with request ID, user ID, release and hostname in the context. Add error tracking with the release tagged, and register a `Queue::failing` handler so failed jobs reach a human rather than a table.",
+      "Set up backups with encryption and off-site storage. Then write the restore script: pull the latest backup, decrypt, load into a scratch database, count rows, and exit non-zero if the count is implausible. Run it manually once and record how long it took.",
+      "Do an expand-contract migration for real. Rename a column across four deploys: add nullable, deploy dual-reading code, backfill in a chunked command, then drop the old column. Deploy each step separately and confirm the site works between each.",
+      "NOW BREAK IT, one at a time, restoring between each. (1) Stop the workers and dispatch a job. (2) Comment out the cron entry. (3) Deploy without `queue:restart` and change a job's behaviour. (4) Put a wrong database password in `.env` and deploy. (5) Delete the latest backup file and run your restore script. For each, record what you saw, how you found out, and how long it took.",
+      "Write the table: five failures, how you detected each, and detection time. Then fix whatever you only found by looking directly at it, because that piece is not monitored.",
     ],
     acceptance: [
-      "A baseline exists with all four numbers, recorded before any change.",
-      "A performance-logging middleware records route, duration, query count and peak memory for slow requests.",
-      "`EXPLAIN ANALYZE` output is recorded before and after the index, including rows examined versus returned.",
-      "The composite index puts equality columns first, and you can say which queries it does not serve.",
-      "Query count is at least halved, and in practice cut by far more than half.",
-      "Selected columns are explicit, on the model and on eager-loaded relations, and the page is paginated.",
-      "`preventLazyLoading` is on in development, and a test asserts the dashboard stays under fifteen queries.",
-      "Exactly one thing is cached, and it is genuinely expensive to compute rather than merely frequent.",
-      "The cache key is scoped by team and versioned, and invalidation happens on write.",
-      "The cache rebuild is protected by a lock with a timeout, and you have query-log evidence of the stampede with and without it.",
-      "The results table has one row per step with all four numbers.",
-      "You can name the single step that mattered most, and estimate what Octane would have saved.",
+      "The deploy script uses `set -euo pipefail`, clears before caching, caches last, and ends with a health check.",
+      "Releases are atomic, `.env` and `storage/` are shared rather than copied, and rollback is a symlink switch under five seconds.",
+      "The health endpoint checks database, cache, queue depth and scheduler heartbeat, and the deploy is gated on it.",
+      "Two Supervisor worker pools run with `autorestart`, a max lifetime and a graceful stop timeout, verified with `supervisorctl status`.",
+      "One cron entry invokes `schedule:run`, a heartbeat proves it, and the real task has overlap, one-server and failure protection.",
+      "CI runs Pint, static analysis and tests, and a deliberately failing push demonstrably does not deploy.",
+      "Logs are structured JSON on stdout with request ID, release and hostname, and failed jobs reach a human.",
+      "Backups are encrypted and off-site, and a restore script has been run successfully at least once with a recorded duration.",
+      "The expand-contract rename was done across four separate deploys, with the site working between each.",
+      "All five deliberate failures are documented with what you saw, how you detected it, and how long it took.",
+      "Anything detected only by looking directly at it now has monitoring.",
+      "`.env` is not in the repository, and `git log -p` contains no secrets.",
     ],
     stretch: [
-      "Deliberately cache a personalised value with an unscoped key, log in as two different users, and watch one see the other's data. That is thirty seconds of work and the clearest possible memory of why keys carry the tenant.",
-      "Run the same page with `CACHE_STORE=file` on two local processes writing to different directories, invalidate on one, and confirm the other keeps serving the old value. That is the multi-server failure, reproduced on your laptop.",
-      "Cache a value returned from a deliberately failing API call and watch the failure persist for the full TTL. Then add a short negative TTL and confirm the recovery time drops from an hour to thirty seconds.",
-      "Add `config:cache` to a local deploy script, then move one `env()` call from a config file into a service class and watch it return null. Put it back, and grep your whole codebase for `env(` outside `config/`.",
-      "Install Octane locally, add a static property that stores the current user, and hit the page as two different users. The bug you see is the one that is nearly impossible to find in production.",
-      "Add a `Cache::many()` version of a loop that currently calls `Cache::get()` per item, and time both. The gap is Day 15's N+1, measured against Redis.",
+      "Run `php artisan down` and then make your deploy script fail. Watch the site stay down. Add the `trap 'php artisan up' EXIT` line and repeat. That is thirty seconds of work and one of the most common self-inflicted outages there is.",
+      "Do a rolling deploy across two servers with a breaking migration in one step. Watch half your traffic error while the other half works. Then redo it with expand-contract and confirm neither half breaks.",
+      "Generate a maintenance secret, use it to verify a deploy while the site is down for everyone else, then rotate it. Note that it is an authentication bypass and decide where it will live in your process.",
+      "Commit a fake API key to a scratch repository, push it, then try to remove it with `git rm --cached`. Clone the repo fresh and find the key still in the history. That is why the answer is rotation.",
+      "Measure your recovery numbers properly: restore the backup and record how much data would have been lost given the backup age, and how long the restore took end to end. Those two numbers are what an incident actually costs you.",
+      "Containerise it: a multi-stage Dockerfile, one image, three containers (web, worker, scheduler) from the same tag. Then run the same image locally with different environment variables and confirm it behaves identically.",
     ],
   },
 };

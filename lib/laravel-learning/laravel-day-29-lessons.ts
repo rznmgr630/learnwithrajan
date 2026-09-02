@@ -2,2502 +2,2577 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_29_LESSONS: LessonDay = {
   day: 29,
-  title: "Testing — Pest, feature tests, fakes & coverage",
-  totalMinutes: 94,
+  title: "Artisan, tooling & code quality",
+  totalMinutes: 93,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "pest-and-environment",
-      title: "Pest, PHPUnit & the test environment",
+      id: "artisan-as-an-interface",
+      title: "Artisan as your application's operational interface",
       durationMinutes: 11,
-      explanation: "Twenty-eight days of building. Today is about proving any of it works.\n\n```text\ncode → test → run the behaviour → assert → pass or fail\n```\n\n---\n\n### 1. Basic — two syntaxes, one runner\n\nLaravel supports both, and Pest is built on PHPUnit:\n\n```php\n// PHPUnit\npublic function test_user_can_create_post(): void\n{\n    $response = $this->postJson('/api/posts', ['title' => 'Hello']);\n\n    $response->assertStatus(201);\n}\n```\n\n```php\n// Pest\nit('allows a user to create a post', function () {\n    $response = $this->postJson('/api/posts', ['title' => 'Hello']);\n\n    $response->assertStatus(201);\n});\n```\n\nSame runner, same assertions, less ceremony. And the name is the real difference: <b>`test_user_can_create_post` is a method name pretending to be a sentence</b>, while `it('allows a user to create a post')` is a sentence.\n\nWhich matters because <b>a failing test's name is the first thing you read</b>, often months later, and \"allows a user to create a post\" tells you what broke where `testPostStore` does not.\n\n<b>The advice is not that one is better.</b> It is: pick one and keep the suite consistent, because two styles in one project means two ways to find, name and read everything. <b>Pest for a new project</b>, PHPUnit if the codebase already is.\n\n---\n\n### 2. Intermediate — the environment\n\n```text\ndevelopment environment  ≠  testing environment\n```\n\nTests get their own configuration: their own database, cache, mail, queue and filesystem.\n\n<b>And the reason is not tidiness.</b> `RefreshDatabase` from a later lesson wipes the database between tests. Point it at your development database and your seeded work is gone; point it at production and the sentence finishes itself.\n\n```text\n❌ php artisan test  →  production database\n```\n\nThat is configured in `phpunit.xml`, which sets the environment to `testing` and overrides what tests should not share:\n\n```text\nDB_CONNECTION      an in-memory SQLite, or a separate database\nCACHE_STORE        array\nMAIL_MAILER        array\nQUEUE_CONNECTION   sync\nSESSION_DRIVER     array\n```\n\n<b>Every one of those makes tests faster and isolated</b>, and `array` drivers mean nothing survives a test.\n\n---\n\n### 3. Advanced — the decisions inside that config\n\nTwo worth understanding rather than copying.\n\n<b>SQLite in memory is fast and is not your database.</b> A suite running on `:memory:` is seconds rather than minutes, and it will not catch a MySQL-specific problem: a JSON column, a strict-mode error, a full-text index, a difference in how a date sorts. If production is MySQL, <b>run the suite against MySQL somewhere</b>, even if the fast local loop uses SQLite.\n\n<b>And `QUEUE_CONNECTION=sync` means jobs run inline.</b> Which makes tests simple and hides the queue: nothing is serialised, nothing is retried, and a job that cannot be serialised passes every test. Day 26's warning, arriving in the test suite.\n\nOne more thing worth setting early: <b>tests must not reach the network.</b> An unfaked HTTP call in a test is a test that fails when a third party has an outage, and passes for reasons unrelated to your code. Later lessons cover the fakes; the configuration decision is to make the default no.\n\nAnd the practical loop:\n\n```bash\nphp artisan test\nphp artisan test --filter=invoice\nphp artisan test tests/Feature/InvoiceTest.php\n```\n\n<b>A suite you do not run is not a safety net</b>, so the thing to optimise first is how long it takes and how often you run it.\n\nGetting Pest onto a project that does not have it:\n\n```bash\ncomposer require pestphp/pest --dev --with-all-dependencies\ncomposer require pestphp/pest-plugin-laravel --dev\nphp artisan pest:install\n```\n\nAnd generating tests:\n\n```bash\nphp artisan make:test InvoiceTest --pest          # tests/Feature\nphp artisan make:test InvoiceTotalTest --pest --unit\n```\n\n<b>`beforeEach()` is Pest's shared setup</b>, running before every test in the file:\n\n```php\nbeforeEach(function () {\n    $this->user = User::factory()->create();\n});\n\nit('lists invoices', function () {\n    $this->actingAs($this->user)->get('/invoices')->assertOk();\n});\n```\n\n`test()` is an alias for `it()`, for names that do not read well after \"it\".",
-      diagram: `Two syntaxes, one runner
+      explanation: "Everything so far has been the application. Today is everything <b>around</b> it.\n\n```text\nLaravel application\n  ├── Artisan      developer & operational commands\n  ├── Prompts      interactive CLI\n  ├── Pint         code style\n  ├── Telescope    local debugging\n  ├── Pulse        application health\n  ├── Nightwatch   production monitoring\n  ├── Boost / MCP  AI-assisted development\n  ├── Envoy        remote tasks\n  └── Pennant      feature flags\n```\n\nThe question underneath all of it: <b>how do I make this application easier to develop, debug, operate, monitor and evolve?</b>\n\n---\n\n### 1. Basic — what Artisan is\n\n```text\nterminal → Artisan → your Laravel application\n```\n\nYou have used it for thirty days:\n\n```bash\nphp artisan migrate\nphp artisan queue:work\nphp artisan make:model User\nphp artisan test\n```\n\n<b>The shift today is seeing it as more than a generator.</b> Your app has an HTTP interface for users. Artisan is the interface for <b>you</b>: the operator. Reprocess failed payments, backfill a column, export a client's data, retry a stuck sync. Every one of those either becomes a command or becomes a database query somebody runs by hand at 2am.\n\n```bash\nphp artisan make:command SendDailyReports\n```\n\nThree pieces matter: <b>`$signature`</b>, <b>`$description`</b>, <b>`handle()`</b>.\n\n---\n\n### 2. Intermediate — closure commands and calling from code\n\nTiny commands can live in `routes/console.php` as closures. <b>Good for genuinely small things</b>: printing a value, flipping a flag. Anything with real logic wants a class, because a closure cannot be tested with `$this->artisan(...)` as comfortably and has nowhere to inject dependencies.\n\nOne command can call another:\n\n```php\n$this->call('reports:generate', ['--force' => true]);\nArtisan::call('cache:clear');\n```\n\n<b>Useful, and easy to abuse.</b>\n\n---\n\n### 3. Advanced — where the logic actually belongs\n\nThe anti-pattern:\n\n```text\n❌ Controller → Artisan::call('users:process') → business logic\n```\n\n<b>That is a shell command as your service layer.</b> You lose type safety, you lose the return value, exceptions arrive as exit codes, and it cannot be tested without booting the console kernel.\n\nThe shape you want:\n\n```text\nController ─┐\nCommand   ──┼→ Service → business logic\nJob       ──┘\n```\n\n<b>The command is an entry point, not a home.</b> Same rule you learned for controllers on Day 8, and for jobs on Day 25: the thin thing takes input and hands off. That is what makes the same logic reachable from HTTP, from the scheduler and from a queue without being written three times.\n\nAnd Laravel 13 adds a local-development runner:\n\n```bash\nphp artisan dev        # tabbed UI: server, queue, Vite, Reverb, logs\nphp artisan dev:list    # what processes this project defines\n```\n\n<b>Which matters more than it sounds</b>, because a modern Laravel app needs four or five processes running at once, and the classic failure is forgetting one. Your queue does nothing, and you spend twenty minutes debugging a job that was never picked up.\n\nFour smaller things that belong here.\n\n<b>Registration is automatic.</b> Laravel 11 removed `Console/Kernel.php` and its `$commands` array: anything in `app/Console/Commands` is discovered. Other directories are added in `bootstrap/app.php`:\n\n```php\n->withCommands([__DIR__.'/../app/Domain/Billing/Commands'])\n```\n\n<b>`php artisan list` is the index</b>, and your `$description` is what it prints. Which is why the `noun:verb` convention matters: `invoices:send`, `invoices:purge` and `invoices:mark-overdue` group together in that listing, where `send-invoices` and `purge_old` scatter.\n\n<b>`Artisan::call()` has a companion:</b>\n\n```php\nArtisan::call('invoices:overdue');\n$output = Artisan::output();      // what it printed, as a string\n```\n\nAnd `Artisan::queue()` pushes a command onto the queue instead of running it inline:\n\n```php\nArtisan::queue('reports:generate', ['--month' => '2026-09'])\n    ->onQueue('reports');\n```\n\n<b>Finally, authentication does not work the way you expect here.</b> `Auth::login()` in a command is meaningless, because there is no session and no request. Take a user id as an argument and load the model:\n\n```php\n$user = User::findOrFail($this->argument('user'));\n```\n\nAnything that needs to act as somebody, such as a policy check, gets the user passed to it explicitly. In tests, `$this->actingAs($user)->artisan('...')` sets it for you.",
+      diagram: `The layer around the application
 
-  PHPUnit
-    public function test_user_can_create_post(): void
+  Laravel application
+    ├── Artisan      developer & operational commands
+    ├── Prompts      interactive CLI
+    ├── Pint         code style
+    ├── Telescope    local debugging
+    ├── Pulse        application health
+    ├── Nightwatch   production monitoring
+    ├── Boost / MCP  AI-assisted development
+    ├── Envoy        remote tasks
+    └── Pennant      feature flags
 
-  Pest
-    it('allows a user to create a post', function () { ... })
+  The question underneath all of it:
 
-  Same runner, same assertions, less ceremony.
-
-  The NAME is the real difference:
-
-    test_user_can_create_post
-      a method name pretending to be a sentence
-
-    it('allows a user to create a post')
-      a sentence
-
-  A failing test's name is the first thing you read,
-  often months later. "allows a user to create a post"
-  tells you what broke. testPostStore does not.
-
-  The advice is not that one is better. Pick one and
-  keep the suite consistent: two styles is two ways to
-  find, name and read everything.
-
-    new project      Pest
-    existing PHPUnit stay with it
+    how do I make this easier to develop, debug,
+    operate, monitor and evolve?
 
 
-The environment
+Artisan is an INTERFACE
 
-    development environment  ≠  testing environment
+    terminal → Artisan → your application
 
-  Tests get their own database, cache, mail, queue and
-  filesystem.
+  Your app has an HTTP interface for USERS.
+  Artisan is the interface for YOU, the operator.
 
-  ⚠️  And the reason is not tidiness. RefreshDatabase
-      WIPES the database between tests. Point it at your
-      development database and your seeded work is gone.
-      Point it at production and the sentence finishes
-      itself.
+    reprocess failed payments
+    backfill a column
+    export a client's data
+    retry a stuck sync
 
-    ❌ php artisan test  →  production database
+  Each of those either becomes a command, or becomes
+  a database query somebody runs by hand at 2am.
 
-  phpunit.xml sets APP_ENV=testing and overrides:
+    php artisan make:command SendDailyReports
 
-    DB_CONNECTION      in-memory SQLite, or a separate db
-    CACHE_STORE        array
-    MAIL_MAILER        array
-    QUEUE_CONNECTION   sync
-    SESSION_DRIVER     array
-
-  array drivers mean nothing survives a test.
+      $signature      $description      handle()
 
 
-Two decisions inside that config
+Closure commands
 
-  SQLite in memory is FAST and is NOT your database.
+    routes/console.php
 
-    seconds instead of minutes — and it will not catch a
-    MySQL-specific problem: a JSON column, a strict-mode
-    error, a full-text index, a date sorting differently.
+    fine for genuinely small things — printing a
+    value, flipping a flag
 
-    If production is MySQL, run the suite against MySQL
-    somewhere, even if the fast local loop is SQLite.
-
-  QUEUE_CONNECTION=sync means jobs run INLINE.
-
-    Simple, and it hides the queue: nothing is
-    serialised, nothing is retried, and a job that
-    cannot be serialised passes every test.
-
-    Day 26's warning, arriving in the test suite.
-
-  And: tests must not reach the NETWORK. An unfaked HTTP
-  call fails when a third party has an outage and passes
-  for reasons unrelated to your code.
+    anything with real logic wants a class: nowhere
+    to inject dependencies, harder to test
 
 
-The loop
+Where the logic belongs
 
-    php artisan test
-    php artisan test --filter=invoice
-    php artisan test tests/Feature/InvoiceTest.php
+    ❌  Controller
+          ↓
+        Artisan::call('users:process')
+          ↓
+        business logic
 
-  A suite you do not run is not a safety net. Optimise
-  how long it takes and how often you run it.`,
+        A shell command as your service layer. No
+        type safety, no return value, exceptions
+        arrive as exit codes, untestable without
+        the console kernel.
+
+    ✅  Controller ─┐
+        Command   ──┼→  Service  →  business logic
+        Job       ──┘
+
+  The command is an ENTRY POINT, not a home. Same
+  rule as controllers (Day 8) and jobs (Day 25).
+
+  That is what makes one piece of logic reachable
+  from HTTP, the scheduler and a queue without being
+  written three times.
+
+
+Laravel 13 local runner
+
+    php artisan dev        tabbed UI
+    php artisan dev:list   what this project defines
+
+  ┌──────────┬─────────┬─────────┬────────┐
+  │ Server   │ Queue   │ Vite    │ Reverb │
+  └──────────┴─────────┴─────────┴────────┘
+
+  A modern app needs 4–5 processes at once, and the
+  classic failure is forgetting one: your queue does
+  nothing and you debug a job that was never picked
+  up.`,
       codeExample: {
-        title: "Pest, PHPUnit and phpunit.xml",
+        title: "Commands as entry points",
         code: `<?php
-// ---------- PHPUnit ----------
+// ---------- The operational interface ----------
 
-namespace Tests\\Feature;
+php artisan make:command RetryFailedPayments
 
-use Tests\\TestCase;
+// app/Console/Commands/RetryFailedPayments.php
+namespace App\\Console\\Commands;
 
-class PostTest extends TestCase
+use App\\Services\\PaymentRetrier;
+use Illuminate\\Console\\Command;
+
+class RetryFailedPayments extends Command
 {
-    public function test_user_can_create_post(): void
-    {
-        $response = $this->postJson('/api/posts', ['title' => 'Hello']);
+    protected $signature = 'payments:retry {--since=24}';
 
-        $response->assertStatus(201);
+    protected $description = 'Retry payments that failed in the last N hours';
+
+    // The service is injected — same class the controller uses
+    public function handle(PaymentRetrier $retrier): int
+    {
+        $result = $retrier->retrySince(
+            now()->subHours((int) $this->option('since'))
+        );
+
+        $this->info("Retried {$result->attempted}, recovered {$result->succeeded}.");
+
+        return $result->failed === 0 ? self::SUCCESS : self::FAILURE;
     }
+}
+
+// Without this command, "retry the failed payments" is
+// a database query somebody runs by hand at 2am.
+
+
+<?php
+// ---------- One service, three entry points ----------
+
+// app/Services/PaymentRetrier.php — where the logic lives
+final class PaymentRetrier
+{
+    public function retrySince(CarbonInterface $since): RetryResult
+    {
+        // ...
+    }
+}
+
+// 1. HTTP
+class PaymentRetryController
+{
+    public function store(PaymentRetrier $retrier)
+    {
+        return response()->json($retrier->retrySince(now()->subDay()));
+    }
+}
+
+// 2. Console — the command above
+
+// 3. Scheduler / queue
+Schedule::job(new RetryPaymentsJob())->hourly();
+
+// Written once. Reachable from all three.
+
+
+<?php
+// ---------- The anti-pattern ----------
+
+// ❌ A shell command as your service layer
+class PaymentRetryController
+{
+    public function store()
+    {
+        Artisan::call('payments:retry', ['--since' => 24]);
+
+        return response()->noContent();
+    }
+}
+// No return value you can use. Exceptions arrive as an
+// exit code. Untestable without the console kernel.
+
+
+<?php
+// ---------- Calling a command from a command ----------
+
+public function handle(): int
+{
+    $this->call('reports:generate', ['--force' => true]);
+    $this->callSilently('cache:clear');       // no output
+
+    return self::SUCCESS;
 }
 
 
 <?php
-// ---------- Pest ----------
+// ---------- Closure commands: routes/console.php ----------
 
-it('allows a user to create a post', function () {
-    $response = $this->postJson('/api/posts', ['title' => 'Hello']);
+use Illuminate\\Support\\Facades\\Schedule;
 
-    $response->assertStatus(201);
-});
+Artisan::command('invoices:count', function () {
+    $this->info(Invoice::count() . ' invoices.');
+})->purpose('Print the invoice count');
 
-// Same runner. Same assertions. And the name is a
-// sentence rather than a method name pretending to be
-// one — which is what you read when it fails.
-
-
-<?php
-// tests/Pest.php — shared setup, once
-uses(Tests\\TestCase::class, Illuminate\\Foundation\\Testing\\RefreshDatabase::class)
-    ->in('Feature');
+// Fine. But the moment it needs a dependency or a test,
+// make it a class.
 
 
-// ---------- phpunit.xml ----------
-//
-// <php>
-//     <env name="APP_ENV" value="testing"/>
-//
-//     <!-- Not your development database. RefreshDatabase
-//          wipes this between tests. -->
-//     <env name="DB_CONNECTION" value="sqlite"/>
-//     <env name="DB_DATABASE" value=":memory:"/>
-//
-//     <!-- Nothing survives a test. -->
-//     <env name="CACHE_STORE" value="array"/>
-//     <env name="SESSION_DRIVER" value="array"/>
-//     <env name="MAIL_MAILER" value="array"/>
-//
-//     <!-- Jobs run inline, which hides the queue. -->
-//     <env name="QUEUE_CONNECTION" value="sync"/>
-//
-//     <!-- No broadcasting from tests. -->
-//     <env name="BROADCAST_CONNECTION" value="null"/>
-// </php>
+# ---------- Laravel 13 local runner ----------
 
+php artisan dev
+# ┌──────────┬─────────┬─────────┬────────┬──────┐
+# │ Server   │ Queue   │ Vite    │ Reverb │ Logs │
+# └──────────┴─────────┴─────────┴────────┴──────┘
 
-# ---------- Fast locally, honest in CI ----------
-
-# Local: SQLite in memory. Seconds, not minutes.
-php artisan test
-
-# CI: the database production actually uses, because
-# SQLite will not catch a JSON column, a strict-mode
-# error, a full-text index, or a date sorting differently.
-#
-# .github/workflows/ci.yml
-#   services:
-#     mysql:
-#       image: mysql:8
-#   env:
-#     DB_CONNECTION: mysql
-
-
-# ---------- The loop ----------
-
-php artisan test
-php artisan test --filter=invoice
-php artisan test tests/Feature/InvoiceTest.php
-php artisan test --parallel
-
-# A suite you do not run is not a safety net.
-
-
-<?php
-// ---------- What sync hides ----------
-
-// QUEUE_CONNECTION=sync runs jobs inline, so:
-//
-//   nothing is serialised   → a job holding a closure
-//                             passes every test
-//   nothing is retried      → the retry path is untested
-//   nothing is queued       → assertPushed finds nothing
-//
-// Queue::fake() is how you test dispatching, and a job's
-// own test can call handle() directly.`,
+php artisan dev:list
+# What this project actually defines, so you stop
+# debugging a job that no worker was running.`,
       },
       keyTakeaways: [
-        "<b>`php artisan make:test X --pest`</b> generates a feature test, and `--unit` a unit one.",
-        "<b>`beforeEach()` is Pest's shared setup</b>, and `test()` is an alias for `it()`.",
-        "<b>Pest is built on PHPUnit</b>, so both share a runner and the same assertions.",
-        "<b>Pest's test name is a sentence</b>, which is what you read when a test fails months later.",
-        "<b>Pick one style and keep the suite consistent</b>: Pest for a new project, PHPUnit if the codebase already is.",
-        "<b>The testing environment is separate</b>, with its own database, cache, mail, queue and filesystem.",
-        "<b>That is not tidiness</b>: `RefreshDatabase` wipes the database, so pointing it anywhere real destroys data.",
-        "`phpunit.xml` sets `APP_ENV=testing` and overrides drivers so nothing survives a test.",
-        "<b>In-memory SQLite is fast and is not your database</b>, and will not catch MySQL-specific problems.",
-        "<b>Run the suite against the real database somewhere</b>, even if the fast local loop uses SQLite.",
-        "<b>`QUEUE_CONNECTION=sync` runs jobs inline</b>, hiding serialisation, retries and the queue entirely.",
-        "<b>Tests must not reach the network</b>, or they fail during somebody else's outage.",
-        "<b>A suite you do not run is not a safety net</b>, so speed and frequency matter.",
+        "<b>Artisan is your application's operational interface</b>, the way HTTP is its user interface.",
+        "<b>Anything you would otherwise do by hand in the database should be a command</b>: backfills, retries, exports.",
+        "<b>`make:command` gives you three pieces</b>: `$signature`, `$description` and `handle()`.",
+        "<b>Closure commands in `routes/console.php` suit genuinely tiny tasks</b>, and nothing with dependencies.",
+        "<b>A command is an entry point, not a home for logic</b>, exactly like a controller or a job.",
+        "<b>Controller, command and job should all call the same service</b>, so the logic exists once.",
+        "<b>Never call Artisan from a controller as your service layer</b>: no return value, exceptions become exit codes.",
+        "<b>`php artisan dev` runs the whole local process set</b> in one tabbed UI, and `dev:list` shows what exists.",
+        "<b>The classic local failure is a forgotten process</b>, then twenty minutes debugging a job nobody was running.",
       ],
       commonMistakes: [
-        "<b>Running tests against the development database.</b> `RefreshDatabase` deletes everything in it.",
-        "<b>Mixing Pest and PHPUnit styles.</b> Two ways to find, name and read every test.",
-        "<b>Trusting SQLite to represent MySQL.</b> JSON columns, strict mode and full-text indexes all differ.",
-        "<b>Assuming `sync` tests the queue.</b> Nothing is serialised, so an unserialisable job passes.",
-        "<b>Letting tests make real HTTP calls.</b> They fail during outages and pass for unrelated reasons.",
+        "<b>Treating Artisan as only a code generator.</b> It is the interface you operate the application through.",
+        "<b>Putting business logic inside `handle()`.</b> Nothing else can reuse it and it is awkward to test.",
+        "<b>Calling `Artisan::call` from a controller.</b> You have made a shell command into your service layer.",
+        "<b>Writing substantial closure commands.</b> No dependency injection and harder to test.",
+        "<b>Doing operational fixes by hand in the database.</b> Unrepeatable, unreviewable and unlogged.",
       ],
       quiz: [
         {
-          question: "What is the practical difference between Pest and PHPUnit?",
+          question: "What is the most useful way to think about Artisan?",
           options: [
-            "Pest is a different runner",
-            "Pest is built on PHPUnit with less ceremony, and its test names read as sentences",
-            "PHPUnit cannot test HTTP",
-            "Pest has different assertions",
+            "A code generator",
+            "Your application's operational interface, the way HTTP is its user interface",
+            "A migration runner",
+            "A testing tool",
           ],
           correctIndex: 1,
-          explanation: "The name is what you read when a test fails months later.",
+          explanation: "Backfills, retries and exports belong there rather than in a hand-run query.",
         },
         {
-          question: "Why must tests use a separate database?",
+          question: "Where should a command's business logic live?",
           options: [
-            "For speed only",
-            "`RefreshDatabase` wipes it between tests, so anything real would be destroyed",
-            "Laravel requires it",
-            "To allow parallel runs",
+            "In `handle()`",
+            "In a service the controller, command and job all call",
+            "In a closure in `routes/console.php`",
+            "In the model",
           ],
           correctIndex: 1,
-          explanation: "Pointing it at development loses your seeded work; production is worse.",
+          explanation: "The command is an entry point, so the logic exists once and is reachable three ways.",
         },
         {
-          question: "What does in-memory SQLite not catch?",
-          options: [
-            "Validation errors",
-            "MySQL-specific behaviour: JSON columns, strict mode, full-text indexes, date sorting",
-            "Authorization failures",
-            "Missing routes",
-          ],
-          correctIndex: 1,
-          explanation: "Run the suite against the real database somewhere too.",
-        },
-        {
-          question: "What does `QUEUE_CONNECTION=sync` hide in tests?",
-          options: [
-            "Validation",
-            "Serialisation, retries and the queue itself, so an unserialisable job passes",
-            "Authorization",
-            "Database writes",
-          ],
-          correctIndex: 1,
-          explanation: "`Queue::fake()` is how you test that something was dispatched.",
-        },
-      ],
-    },
-    {
-      id: "unit-vs-feature",
-      title: "Unit tests, feature tests & what to test",
-      durationMinutes: 11,
-      explanation: "Two kinds of test, and most Laravel advice gets the ratio backwards.\n\n```text\nunit test     → isolated logic\nfeature test  → real application behaviour\n```\n\n---\n\n### 1. Basic — a unit test\n\nA unit test runs one piece of logic with no framework around it:\n\n```php\nclass PriceCalculator\n{\n    public function calculate(int $price, int $tax): int\n    {\n        return $price + $tax;\n    }\n}\n```\n\n```text\ninput → class → output\n```\n\n`100 + 10 = 110`, with <b>no HTTP, no database, no authentication, no routes</b>. Which makes it fast, precise and completely silent about whether the application works.\n\n---\n\n### 2. Intermediate — a feature test\n\nA feature test drives the real stack:\n\n```text\nHTTP request → route → middleware → controller → service → database → response\n```\n\nOne test proves:\n\n```text\nauthenticated user → POST /posts → post created → 201 → database contains it\n```\n\n<b>That is closer to the real application than any unit test can be</b>, because the route, the middleware, the validation, the authorization, the controller and the database all had to work together.\n\nAnd this is why <b>feature tests should be your primary weapon in Laravel</b>. In many languages the pyramid says \"mostly unit tests\", because wiring up the framework in a test is expensive. Laravel makes it nearly free: `$this->postJson(...)` boots the whole application. <b>So the thing that is usually expensive is cheap here</b>, and the ratio should follow.\n\n---\n\n### 3. Advanced — test behaviour, not implementation\n\nThe rule that decides whether a suite helps or hurts:\n\n```text\n❌ \"the controller calls the service's store method\"\n✅ \"the user creates a post and the database contains it\"\n```\n\n<b>The first one fails when you refactor.</b> Move the logic from the controller into an action class, and the behaviour is identical while the test is red. Now the suite is punishing you for improving the code, which is the opposite of a safety net.\n\n<b>The second one survives every refactor</b> that keeps the behaviour, and fails only when the behaviour actually breaks. That is the entire point.\n\nA useful way to hear it: <b>a test should read like a sentence a non-programmer would care about.</b> \"An unauthorised user cannot delete somebody else's invoice\" is a sentence your client would care about; \"`InvoiceController@destroy` calls `authorize`\" is not.\n\nWhen a unit test <b>is</b> the right tool: pure logic with real branching. A tax calculator, a date-range splitter, a state machine, a proration formula. <b>Twelve edge cases through an HTTP request is twelve slow tests</b>; through a class it is twelve fast ones. The split is not \"unit for small things\" but <b>unit where the logic has many cases and no dependencies</b>.\n\n<b>And `expect()` is Pest's assertion vocabulary</b>, which is worth learning properly because it is what unit tests are written in:\n\n```php\nexpect($total)->toBe(3000);              // identical, ===\nexpect($invoice)->toEqual($other);       // equal, ==\nexpect($user->deleted_at)->toBeNull();\nexpect($result)->toBeTrue();\nexpect($lines)->toHaveCount(3);\nexpect($data)->toHaveKeys(['id', 'total']);\nexpect($name)->toBeString();\nexpect($total)->toBeGreaterThan(0);\nexpect($invoice)->toBeInstanceOf(Invoice::class);\nexpect($statuses)->toContain('overdue');\nexpect($user->email)->not->toBe('old@example.com');\n```\n\n<b>`toBe()` is strict and `toEqual()` is loose</b>, which is the distinction that catches people: `toBe('3000')` fails against the integer `3000`, and that is usually the bug you wanted caught.\n\nExceptions get their own matcher, and it is the only reasonable way to test a failure outside HTTP:\n\n```php\nexpect(fn () => $total->forLines([], -1))\n    ->toThrow(InvalidArgumentException::class, 'Tax rate must be positive');\n```\n\nAnd expectations chain into properties, which reads well on a model:\n\n```php\nexpect($user)->not->toBeNull()\n    ->name->toBe('Rajan')\n    ->invoices->toHaveCount(2);\n```\n\nOne more piece of Pest worth knowing: <b>datasets run one test against many inputs</b>, with names that appear in the failure output:\n\n```php\nit('rejects a bad reference', function (string $value) {\n    // ...\n})->with([\n    'empty'    => [''],\n    'too long' => [str_repeat('a', 300)],\n    'symbols'  => ['<script>'],\n]);\n```\n\nWhich is how you cover twelve edge cases without writing twelve tests, and still know which one failed.",
-      diagram: `Two kinds of test
-
-  UNIT
-    input → class → output
-
-    PriceCalculator: 100 + 10 = 110
-
-    no HTTP, no database, no auth, no routes
-    fast, precise, and completely silent about
-    whether the APPLICATION works
-
-
-  FEATURE
-    HTTP request
-       ↓
-    route → middleware → controller → service → database
-       ↓
-    response
-
-    authenticated user
-       ↓  POST /posts
-    post created
-       ↓
-    201  +  database contains it
-
-    Route, middleware, validation, authorization,
-    controller and database ALL had to work.
-
-
-Why the Laravel ratio is different
-
-  In many languages the pyramid says "mostly unit
-  tests" — because wiring the framework into a test
-  is expensive.
-
-  Laravel makes it nearly free:
-
-    $this->postJson(...)   boots the whole application
-
-  So the usually-expensive thing is cheap here, and
-  the ratio should follow:
-
-    feature tests are your primary weapon
-
-
-The rule that decides everything
-
-    ❌  "the controller calls the service's store method"
-    ✅  "the user creates a post and the database has it"
-
-  The first FAILS WHEN YOU REFACTOR. Move the logic
-  into an action class: behaviour identical, test red.
-  The suite is now punishing you for improving the
-  code — the opposite of a safety net.
-
-  The second survives every refactor that keeps the
-  behaviour, and fails only when behaviour breaks.
-
-  A test should read like a sentence a non-programmer
-  would care about:
-
-    ✅  "an unauthorised user cannot delete someone
-         else's invoice"
-    ❌  "InvoiceController@destroy calls authorize"
-
-
-When a unit test IS the right tool
-
-  Pure logic with real branching:
-    tax calculator · date-range splitter
-    state machine  · proration formula
-
-  12 edge cases through HTTP = 12 slow tests
-  12 edge cases through a class = 12 fast ones
-
-  The split is not "unit for small things" — it is
-  unit where the logic has MANY CASES and NO
-  DEPENDENCIES.`,
-      codeExample: {
-        title: "Unit and feature, and testing behaviour",
-        code: `<?php
-// ---------- A unit test: pure logic, no framework ----------
-
-// app/Support/InvoiceTotal.php
-final class InvoiceTotal
-{
-    public function forLines(array $lines, float $taxRate): int
-    {
-        $subtotal = array_sum(array_map(
-            fn (array $line) => $line['quantity'] * $line['unit_price'],
-            $lines,
-        ));
-
-        return (int) round($subtotal * (1 + $taxRate));
-    }
-}
-
-// tests/Unit/InvoiceTotalTest.php
-it('adds tax to the line subtotal', function () {
-    $total = new InvoiceTotal();
-
-    expect($total->forLines([
-        ['quantity' => 2, 'unit_price' => 1000],
-        ['quantity' => 1, 'unit_price' => 500],
-    ], 0.20))->toBe(3000);
-});
-
-it('rounds half up', function () {
-    expect((new InvoiceTotal())->forLines(
-        [['quantity' => 1, 'unit_price' => 101]],
-        0.15,
-    ))->toBe(116);
-});
-
-// Twelve edge cases here are twelve fast tests.
-// Twelve edge cases through HTTP are twelve slow ones.
-
-
-<?php
-// ---------- A feature test: the real stack ----------
-
-// tests/Feature/CreateInvoiceTest.php
-it('lets an authenticated user create an invoice', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->postJson('/api/invoices', [
-        'client_id' => Client::factory()->create()->id,
-        'due_on'    => '2026-10-01',
-    ]);
-
-    $response->assertCreated();
-
-    $this->assertDatabaseHas('invoices', [
-        'user_id' => $user->id,
-        'due_on'  => '2026-10-01',
-    ]);
-});
-
-// Route + middleware + validation + authorization +
-// controller + database, proven in one test.
-
-
-<?php
-// ---------- Behaviour, not implementation ----------
-
-// ❌ Fails the moment you refactor, even though nothing broke
-it('calls the service', function () {
-    $this->mock(InvoiceService::class)
-        ->shouldReceive('store')
-        ->once();
-
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/invoices', [...]);
-});
-// Move the logic into an action class → behaviour
-// identical, test red. The suite is punishing you for
-// improving the code.
-
-// ✅ Survives every refactor that keeps the behaviour
-it('stores the invoice', function () {
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/invoices', ['due_on' => '2026-10-01', ...])
-        ->assertCreated();
-
-    $this->assertDatabaseHas('invoices', ['due_on' => '2026-10-01']);
-});
-
-
-<?php
-// ---------- The sentence test ----------
-//
-// Would a non-programmer care about this sentence?
-//
-//   ✅ "an unauthorised user cannot delete someone
-//       else's invoice"
-//   ❌ "InvoiceController@destroy calls authorize"
-//
-// If the answer is no, you are testing implementation.
-
-it('does not let one user delete another user\\'s invoice', function () {
-    $invoice = Invoice::factory()->create();
-
-    $this->actingAs(User::factory()->create())
-        ->deleteJson("/api/invoices/{$invoice->id}")
-        ->assertForbidden();
-
-    $this->assertDatabaseHas('invoices', ['id' => $invoice->id]);
-});`,
-      },
-      keyTakeaways: [
-        "<b>`expect()` is Pest's assertion vocabulary</b>: `toBe`, `toEqual`, `toBeNull`, `toHaveCount`, `toHaveKeys`, `toContain`.",
-        "<b>`toBe()` is strict and `toEqual()` is loose</b>, so `toBe('3000')` fails against the integer `3000`.",
-        "<b>`toThrow()` is how you test a failure outside HTTP</b>, and takes a class and optionally a message.",
-        "<b>A dataset runs one test against many named inputs</b>, so twelve edge cases stay one test with twelve labels.",
-        "<b>A unit test runs isolated logic</b>: input, class, output, with no HTTP, database, auth or routes.",
-        "<b>A feature test drives the real stack</b>: request, route, middleware, controller, database, response.",
-        "<b>Feature tests are Laravel's primary weapon</b>, because booting the app in a test is nearly free here.",
-        "<b>That is why the usual pyramid advice inverts</b>: elsewhere framework wiring is expensive, here it is one method call.",
-        "<b>Test behaviour, not implementation.</b> \"The database contains the post\", not \"the controller called store\".",
-        "<b>Implementation tests fail when you refactor</b>, punishing you for improving code that still works.",
-        "<b>A good test reads like a sentence a non-programmer would care about.</b>",
-        "<b>Reach for a unit test where logic has many cases and no dependencies</b>: calculators, state machines, date maths.",
-        "<b>Twelve edge cases through HTTP is twelve slow tests</b>; through a class it is twelve fast ones.",
-      ],
-      commonMistakes: [
-        "<b>Writing mostly unit tests because a pyramid diagram said so.</b> Laravel makes feature tests cheap.",
-        "<b>Asserting that a controller called a method.</b> The test goes red on refactor while behaviour is fine.",
-        "<b>Testing only the happy path.</b> The failure paths are where the bugs live.",
-        "<b>Pushing every calculator edge case through an HTTP request.</b> Slow, and the failure points nowhere useful.",
-      ],
-      quiz: [
-        {
-          question: "Why are feature tests the primary tool in Laravel specifically?",
-          options: [
-            "Unit tests do not work in PHP",
-            "Booting the whole app in a test is nearly free here, so the usually-expensive thing is cheap",
-            "They run faster than unit tests",
-            "Laravel cannot test classes in isolation",
-          ],
-          correctIndex: 1,
-          explanation: "`$this->postJson(...)` runs the entire stack in one call.",
-        },
-        {
-          question: "What is wrong with asserting that a controller called a service method?",
-          options: [
-            "Nothing, it is precise",
-            "It fails when you refactor even though behaviour is unchanged, punishing you for improving the code",
-            "Mocks are not supported",
-            "It is too slow",
-          ],
-          correctIndex: 1,
-          explanation: "Behaviour assertions survive refactors; implementation assertions do not.",
-        },
-        {
-          question: "When is a unit test the right choice?",
-          options: [
-            "For anything small",
-            "Where the logic has many cases and no dependencies: calculators, state machines, date maths",
-            "Never in Laravel",
-            "For controllers",
-          ],
-          correctIndex: 1,
-          explanation: "Twelve edge cases are twelve fast tests instead of twelve slow HTTP ones.",
-        },
-        {
-          question: "What is a good sanity check for a test's name?",
-          options: [
-            "It names the class under test",
-            "It reads like a sentence a non-programmer would care about",
-            "It includes the HTTP method",
-            "It is under 40 characters",
-          ],
-          correctIndex: 1,
-          explanation: "If a client would not care about the sentence, you are testing implementation.",
-        },
-      ],
-    },
-    {
-      id: "http-tests",
-      title: "HTTP tests, assertions & query helpers",
-      durationMinutes: 11,
-      explanation: "Laravel gives you the whole HTTP layer in one method call.\n\n---\n\n### 1. Basic — making requests\n\nFor Blade applications:\n\n```php\n$this->get('/posts');\n$this->post('/posts', [...]);\n$this->put('/posts/1', [...]);\n$this->delete('/posts/1');\n```\n\nFor APIs, the JSON variants:\n\n```php\n$this->getJson('/api/posts');\n$this->postJson('/api/posts', [...]);\n$this->putJson('/api/posts/1', [...]);\n$this->deleteJson('/api/posts/1');\n```\n\n<b>The `Json` suffix is not cosmetic.</b> It sets `Accept: application/json`, which is what makes Laravel return a `422` with a JSON error body instead of a redirect back to a form. Use `post()` on an API route and your validation assertions will look bizarre, because you are testing the Blade path.\n\nAnd none of this starts a web server. It builds a request object, runs it through the kernel in-process and hands you the response, which is why these tests are fast.\n\n---\n\n### 2. Intermediate — assertions\n\n```php\n$response->assertStatus(200);\n$response->assertOk();          // same thing, reads better\n```\n\nThe named ones cover almost everything:\n\n```text\nassertOk()            200\nassertCreated()       201\nassertNoContent()     204\nassertRedirect()      302\nassertUnauthorized()  401   not logged in\nassertForbidden()     403   logged in, not allowed\nassertNotFound()      404\nassertUnprocessable() 422   validation failed\n```\n\n<b>Those last three are where the meaning lives.</b> 401 and 403 are different failures: one is \"who are you\", the other is \"I know who you are and no\". A test that accepts either is not testing your authorization.\n\nAssertions chain, and each one that fails prints the response, so a red test usually tells you what happened without adding a `dump()`:\n\n```php\n$this->getJson('/api/invoices')\n    ->assertOk()\n    ->assertJsonCount(3, 'data');\n```\n\n---\n\n### 3. Advanced — query strings\n\nHalf your API surface is query parameters: filters, sorting, pagination, search. Laravel 13 adds helpers so you can test them as data rather than by hand-building URLs:\n\n```text\nGET /posts?search=laravel&sort=latest\n```\n\n<b>The problem with string-building is that it hides encoding bugs.</b> A search term with a space, a plus sign or a `&` in it goes through a different code path than `?search=laravel`, and that is exactly where filter endpoints break. Building the query as an array and letting the framework encode it tests the real thing.\n\nAnd the deeper point: <b>asserting `200` on a filtered endpoint tests almost nothing.</b> An endpoint that ignores every filter you send returns `200` all day. The assertion has to be that the filter <b>changed the result</b>: three invoices exist, one is overdue, the overdue filter returns exactly one. <b>Create data that would fail if the filter were a no-op</b>, or the test is decoration.\n\nFor Blade responses rather than JSON, the assertions look at the rendered page and the view behind it:\n\n```php\n$response->assertSee('Invoice INV-001');\n$response->assertDontSee('internal note');\n$response->assertSeeInOrder(['Draft', 'Sent', 'Paid']);\n\n$response->assertViewIs('invoices.index');\n$response->assertViewHas('invoices');\n$response->assertViewHas('invoices', fn ($i) => $i->count() === 3);\n```\n\n<b>`assertViewHas` is the more useful half</b>, because it checks what the controller passed rather than what the template happened to render, so it does not break when somebody changes the markup.\n\nAnd the debugging tool you will reach for constantly:\n\n```php\n$this->withoutExceptionHandling();\n```\n\n<b>Without it, a test that hits an exception shows you a 500 response.</b> With it, the actual exception is thrown, with the real message and stack trace. A failing test that says \"expected 200, got 500\" tells you nothing; one line turns it into the error.",
-      diagram: `Making requests
-
-  Blade                      API
-    $this->get(...)            $this->getJson(...)
-    $this->post(...)           $this->postJson(...)
-    $this->put(...)            $this->putJson(...)
-    $this->delete(...)         $this->deleteJson(...)
-
-  ⚠️  The Json suffix is NOT cosmetic.
-
-      It sets Accept: application/json — which is what
-      makes Laravel return 422 + JSON errors instead of
-      a redirect back to a form.
-
-      Use post() on an API route and your validation
-      assertions look bizarre: you are testing the
-      Blade path.
-
-  And no web server starts. A request object runs
-  through the kernel in-process. That is the speed.
-
-
-Assertions
-
-    assertOk()              200
-    assertCreated()         201
-    assertNoContent()       204
-    assertRedirect()        302
-    assertUnauthorized()    401   who are you?
-    assertForbidden()       403   I know you. No.
-    assertNotFound()        404
-    assertUnprocessable()   422   validation failed
-
-  401 and 403 are DIFFERENT failures. A test that
-  accepts either is not testing your authorization.
-
-  They chain, and a failing one prints the response:
-
-    $this->getJson('/api/invoices')
-        ->assertOk()
-        ->assertJsonCount(3, 'data');
-
-
-Query strings — Laravel 13 helpers
-
-    GET /posts?search=laravel&sort=latest
-
-  Hand-building URLs hides ENCODING bugs. A search
-  term with a space, a +, or an & takes a different
-  path than ?search=laravel — which is exactly where
-  filter endpoints break.
-
-  Pass the query as an array; let the framework encode.
-
-
-  ⚠️  The bigger trap:
-
-      Asserting 200 on a filtered endpoint tests
-      NOTHING. An endpoint that ignores every filter
-      returns 200 all day.
-
-    ❌  ->assertOk()
-
-    ✅  3 invoices exist, 1 is overdue
-        ?filter=overdue returns exactly 1
-
-      Create data that would FAIL if the filter were
-      a no-op. Otherwise the test is decoration.`,
-      codeExample: {
-        title: "Requests, assertions and query parameters",
-        code: `<?php
-// ---------- Blade vs API ----------
-
-// Blade: redirect + session errors
-$this->post('/invoices', ['due_on' => '']);       // → 302 back
-
-// API: JSON + 422
-$this->postJson('/api/invoices', ['due_on' => '']); // → 422 JSON
-
-// The Json suffix sets Accept: application/json.
-// Get it wrong and you are testing the other path.
-
-
-<?php
-// ---------- Status assertions carry meaning ----------
-
-it('rejects a guest', function () {
-    $this->getJson('/api/invoices')->assertUnauthorized();   // 401
-});
-
-it('rejects a user who does not own the invoice', function () {
-    $invoice = Invoice::factory()->create();
-
-    $this->actingAs(User::factory()->create())
-        ->getJson("/api/invoices/{$invoice->id}")
-        ->assertForbidden();                                  // 403
-});
-
-// 401 = who are you. 403 = I know you, and no.
-// A test that accepts either is not testing authorization.
-
-
-<?php
-// ---------- Chaining, and readable failures ----------
-
-$this->actingAs($user)
-    ->getJson('/api/invoices')
-    ->assertOk()
-    ->assertJsonCount(3, 'data')
-    ->assertJsonPath('data.0.status', 'draft');
-
-// Each failed assertion prints the response body, so a
-// red test usually explains itself without a dump().
-
-
-<?php
-// ---------- Query parameters as DATA ----------
-
-it('filters invoices by status', function () {
-    $user = User::factory()->create();
-
-    // Data that would FAIL the test if the filter did nothing
-    Invoice::factory()->count(2)->for($user)->create(['status' => 'paid']);
-    Invoice::factory()->for($user)->create(['status' => 'overdue']);
-
-    $this->actingAs($user)
-        ->getJson('/api/invoices?' . http_build_query([
-            'status' => 'overdue',
-            'sort'   => 'latest',
-        ]))
-        ->assertOk()
-        ->assertJsonCount(1, 'data')            // ← the real assertion
-        ->assertJsonPath('data.0.status', 'overdue');
-});
-
-// ❌ ->assertOk() alone would pass on an endpoint that
-//    ignores the filter entirely.
-
-
-<?php
-// ---------- Encoding is where filters break ----------
-
-it('handles a search term with spaces and symbols', function () {
-    $user = User::factory()->create();
-    Invoice::factory()->for($user)->create(['reference' => 'ACME & Co #12']);
-    Invoice::factory()->for($user)->create(['reference' => 'Other']);
-
-    $this->actingAs($user)
-        ->getJson('/api/invoices?' . http_build_query(['search' => 'ACME & Co']))
-        ->assertOk()
-        ->assertJsonCount(1, 'data');
-});
-
-// Hand-writing "?search=ACME & Co" into the URL string
-// tests a different request than the one a browser sends.
-
-
-<?php
-// ---------- Headers, when they matter ----------
-
-$this->withHeaders(['X-Tenant' => 'acme'])
-    ->getJson('/api/invoices')
-    ->assertOk();
-
-$this->withToken($token)->getJson('/api/invoices')->assertOk();`,
-      },
-      keyTakeaways: [
-        "<b>`assertSee`, `assertViewIs` and `assertViewHas` cover Blade responses</b>, and `assertViewHas` survives markup changes.",
-        "<b>`withoutExceptionHandling()` turns \"expected 200, got 500\" into the actual exception.</b>",
-        "<b>`get`/`post` for Blade, `getJson`/`postJson` for APIs</b>, and the suffix decides which code path runs.",
-        "<b>The `Json` variants set `Accept: application/json`</b>, which is what turns a redirect into a `422` with JSON errors.",
-        "<b>No web server starts</b>: the request runs through the kernel in-process, which is why these tests are fast.",
-        "<b>Named assertions carry meaning</b>: `assertOk`, `assertCreated`, `assertForbidden`, `assertUnprocessable`.",
-        "<b>401 and 403 are different failures</b>, so a test that accepts either is not testing authorization.",
-        "<b>Assertions chain</b>, and a failing one prints the response, so red tests usually explain themselves.",
-        "<b>Build query strings as data</b>, because hand-written URLs hide the encoding bugs that break filters.",
-        "<b>Asserting `200` on a filtered endpoint tests nothing.</b> Assert that the filter changed the result.",
-        "<b>Create data that would fail if the filter were a no-op</b>, or the test is decoration.",
-      ],
-      commonMistakes: [
-        "<b>Using `post()` on an API route.</b> You get a redirect, not a `422`, and the validation assertions make no sense.",
-        "<b>Accepting 401 or 403 interchangeably.</b> They mean different things and only one is correct.",
-        "<b>Asserting only the status on a filter endpoint.</b> An endpoint ignoring every filter still returns `200`.",
-        "<b>Seeding data where every row matches the filter.</b> The test passes whether or not filtering works.",
-        "<b>Hand-writing query strings with spaces and symbols.</b> That is not the request a browser sends.",
-      ],
-      quiz: [
-        {
-          question: "What does the `Json` suffix on `postJson` actually change?",
-          options: [
-            "It encodes the body as JSON only",
-            "It sets `Accept: application/json`, so failures return `422` with JSON errors instead of a redirect",
-            "It speeds up the request",
-            "It skips middleware",
-          ],
-          correctIndex: 1,
-          explanation: "Without it you are exercising the Blade redirect path.",
-        },
-        {
-          question: "Why is asserting `200` on a filtered endpoint not enough?",
-          options: [
-            "`200` is the wrong status",
-            "An endpoint that ignores every filter still returns `200`, so the assertion proves nothing",
-            "Filters always return `204`",
-            "It is enough",
-          ],
-          correctIndex: 1,
-          explanation: "Assert that the filter changed the result set.",
-        },
-        {
-          question: "Why build query strings as data rather than by hand?",
-          options: [
-            "It is shorter",
-            "Hand-written URLs hide encoding bugs, and spaces or `&` in a term are exactly where filters break",
-            "Laravel rejects string URLs",
-            "It avoids middleware",
-          ],
-          correctIndex: 1,
-          explanation: "Let the framework encode, so you test the request a browser sends.",
-        },
-        {
-          question: "What is the difference between 401 and 403?",
-          options: [
-            "They are interchangeable",
-            "401 is \"who are you\", 403 is \"I know who you are and you may not\"",
-            "401 is for APIs, 403 for Blade",
-            "403 means the route is missing",
-          ],
-          correctIndex: 1,
-          explanation: "A test accepting either is not testing authorization.",
-        },
-      ],
-    },
-    {
-      id: "json-session-and-validation-assertions",
-      title: "JSON, session & validation assertions",
-      durationMinutes: 12,
-      explanation: "Status codes tell you the request survived. These tell you it did the right thing.\n\n---\n\n### 1. Basic — asserting on JSON\n\nGiven this response:\n\n```json\n{\n    \"data\": { \"id\": 10, \"title\": \"Laravel\" }\n}\n```\n\n`assertJson` checks a subset:\n\n```php\n$response->assertJson([\n    'data' => ['title' => 'Laravel'],\n]);\n```\n\n<b>Subset matching is the useful part.</b> You do not have to know the `id`, the timestamps or anything else the response carries, so the test does not break when you add a field.\n\n---\n\n### 2. Intermediate — path and structure\n\n`assertJsonPath` targets one place with dot notation:\n\n```php\n$response->assertJsonPath('data.title', 'Laravel');\n$response->assertJsonPath('data.0.status', 'overdue');\n```\n\n```text\nJSON → data → title → expected value\n```\n\n<b>And it is strict where `assertJson` is loose</b>: `assertJsonPath('data.total', 3000)` fails if the API returns the string `\"3000\"`. Which is the bug you want caught, because a client doing arithmetic on that value will silently get string concatenation.\n\n`assertJsonStructure` checks the shape and ignores the values:\n\n```php\n$response->assertJsonStructure([\n    'data' => ['id', 'title', 'created_at'],\n]);\n```\n\nThat answers a different question: <b>does the API return what clients expect?</b> Values change per test; the contract should not. It is the closest thing to a schema test, and the one that catches an accidentally renamed field.\n\n<b>Use both.</b> Structure proves the contract, path proves the values, and neither alone is enough.\n\n---\n\n### 3. Advanced — sessions and validation\n\nFor Blade forms, the result lands in the session rather than the body:\n\n```php\n$response->assertSessionHas('success');\n$response->assertSessionHasErrors(['email', 'title']);\n```\n\nFor APIs, the same failure is a `422`:\n\n```php\n$response->assertUnprocessable()\n    ->assertJsonValidationErrors(['email', 'title']);\n```\n\n<b>And validation deserves real tests, because validation is part of your contract.</b> It is the layer that decides what your database is allowed to contain. An untested rule is a rule that can be deleted during a refactor without a single test turning red, and the first sign is bad data in production.\n\nTwo assertions that catch the opposite mistake:\n\n```php\n$response->assertSessionHasNoErrors();\n$response->assertJsonMissingValidationErrors(['name']);\n```\n\n<b>Over-strict validation is a real bug too.</b> A rule rejecting a legitimate value blocks users, and nothing fails until somebody complains. Asserting that a valid edge case is <b>accepted</b> is as important as asserting an invalid one is rejected.\n\nOne more habit worth building: <b>assert what is not there.</b>\n\n```php\n$response->assertJsonMissing(['password_hash']);\n$response->assertJsonMissingPath('data.internal_notes');\n```\n\nA leaked field passes every positive assertion you have written. Day 16's API Resources decide what goes out; <b>this is the test that proves it.</b>",
-      diagram: `assertJson — subset matching
-
-    {"data": {"id": 10, "title": "Laravel"}}
-
-    ->assertJson(['data' => ['title' => 'Laravel']])
-
-  You do not need to know the id or the timestamps.
-  Add a field later and the test still passes.
-
-
-assertJsonPath — one place, strictly
-
-    ->assertJsonPath('data.title', 'Laravel')
-    ->assertJsonPath('data.0.status', 'overdue')
-
-    JSON → data → title → expected value
-
-  ⚠️  STRICT where assertJson is loose:
-
-      assertJsonPath('data.total', 3000)
-        fails if the API returns "3000"
-
-      Which is the bug you WANT caught — a client
-      doing arithmetic on that gets string
-      concatenation instead.
-
-
-assertJsonStructure — the contract
-
-    ->assertJsonStructure(['data' => ['id','title','created_at']])
-
-  Shape, not values. Values change per test; the
-  contract should not.
-
-  The closest thing to a schema test, and what catches
-  an accidentally renamed field.
-
-    structure → the contract
-    path      → the values
-    neither alone is enough
-
-
-Blade vs API failure
-
-  BLADE                        API
-    302 back                     422
-    ->assertSessionHasErrors       ->assertUnprocessable
-        (['email','title'])        ->assertJsonValidationErrors
-    ->assertSessionHas('success')       (['email','title'])
-
-
-Validation is part of your CONTRACT
-
-  It decides what your database is allowed to contain.
-
-  An untested rule can be deleted in a refactor without
-  one test going red. The first sign is bad data in
-  production.
-
-  And over-strict validation is a real bug too:
-
-    ->assertSessionHasNoErrors()
-    ->assertJsonMissingValidationErrors(['name'])
-
-  A rule rejecting a legitimate value blocks users, and
-  nothing fails until somebody complains.
-
-
-Assert what is NOT there
-
-    ->assertJsonMissing(['password_hash'])
-    ->assertJsonMissingPath('data.internal_notes')
-
-  A leaked field passes every positive assertion you
-  have written. Day 16's Resources decide what goes
-  out; this is the test that proves it.`,
-      codeExample: {
-        title: "JSON, structure, session and validation",
-        code: `<?php
-// ---------- Subset, path, structure ----------
-
-it('returns the invoice', function () {
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)->create(['reference' => 'INV-001']);
-
-    $response = $this->actingAs($user)->getJson("/api/invoices/{$invoice->id}");
-
-    // subset: ignores id, timestamps, anything added later
-    $response->assertJson(['data' => ['reference' => 'INV-001']]);
-
-    // path: strict — "3000" would FAIL against 3000
-    $response->assertJsonPath('data.total_cents', 3000);
-
-    // structure: the contract, independent of values
-    $response->assertJsonStructure([
-        'data' => ['id', 'reference', 'total_cents', 'status', 'created_at'],
-    ]);
-});
-
-
-<?php
-// ---------- Assert what must NOT be there ----------
-
-it('never exposes internal fields', function () {
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->getJson("/api/invoices/{$invoice->id}")
-        ->assertJsonMissingPath('data.internal_notes')
-        ->assertJsonMissingPath('data.cost_price_cents');
-});
-
-// A leaked field passes every positive assertion you
-// have written. This is the one that catches it.
-
-
-<?php
-// ---------- Blade: session assertions ----------
-
-it('shows errors when the form is empty', function () {
-    $this->actingAs(User::factory()->create())
-        ->post('/invoices', ['reference' => '', 'due_on' => ''])
-        ->assertRedirect()
-        ->assertSessionHasErrors(['reference', 'due_on']);
-});
-
-it('flashes success on a valid submission', function () {
-    $this->actingAs(User::factory()->create())
-        ->post('/invoices', ['reference' => 'INV-002', 'due_on' => '2026-10-01'])
-        ->assertRedirect()
-        ->assertSessionHasNoErrors()
-        ->assertSessionHas('success');
-});
-
-
-<?php
-// ---------- API: validation assertions ----------
-
-it('rejects an invoice with no due date', function () {
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/invoices', ['reference' => 'INV-003'])
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors(['due_on']);
-});
-
-
-<?php
-// ---------- Over-strict validation is a bug too ----------
-
-it('accepts a reference containing a slash', function () {
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/invoices', [
-            'reference' => 'INV/2026/003',      // legitimate
-            'due_on'    => '2026-10-01',
-        ])
-        ->assertCreated()
-        ->assertJsonMissingValidationErrors(['reference']);
-});
-
-// Nothing fails when a rule is too strict — until a
-// user complains. Assert that valid edge cases pass.
-
-
-<?php
-// ---------- Fluent JSON, for bigger payloads ----------
-
-use Illuminate\\Testing\\Fluent\\AssertableJson;
-
-$response->assertJson(fn (AssertableJson $json) =>
-    $json->has('data', 3)
-         ->first(fn (AssertableJson $invoice) =>
-             $invoice->where('status', 'overdue')
-                     ->missing('internal_notes')
-                     ->etc()
-         )
-);`,
-      },
-      keyTakeaways: [
-        "<b>`assertJson` matches a subset</b>, so the test survives new fields being added to the response.",
-        "<b>`assertJsonPath` targets one value with dot notation</b> and is strict about type.",
-        "<b>That strictness is the point</b>: `\"3000\"` instead of `3000` breaks clients doing arithmetic.",
-        "<b>`assertJsonStructure` checks the shape</b>, which is the contract clients depend on.",
-        "<b>Use structure and path together</b>: one proves the contract, the other proves the values.",
-        "<b>Blade failures land in the session</b> (`assertSessionHasErrors`), API failures are `422` (`assertJsonValidationErrors`).",
-        "<b>Validation is part of your contract</b>, because it decides what the database may contain.",
-        "<b>An untested rule can vanish in a refactor</b> with no test going red, and bad data is the first sign.",
-        "<b>Over-strict validation is also a bug</b>, so assert that legitimate edge cases are accepted.",
-        "<b>Assert what is not there</b> too, since a leaked field passes every positive assertion.",
-      ],
-      commonMistakes: [
-        "<b>Only asserting status codes.</b> A `200` with the wrong body is still a broken endpoint.",
-        "<b>Comparing the entire response.</b> The test breaks every time you add a harmless field.",
-        "<b>Never testing that a valid edge case is accepted.</b> Over-strict rules block users silently.",
-        "<b>Skipping validation tests.</b> A deleted rule turns nothing red until production data goes bad.",
-        "<b>Never asserting absent fields.</b> A leaked secret satisfies every assertion you wrote.",
-      ],
-      quiz: [
-        {
-          question: "Why is `assertJson` matching a subset useful?",
-          options: [
-            "It runs faster",
-            "The test does not break when unrelated fields are added to the response",
-            "It ignores types",
-            "It works on arrays only",
-          ],
-          correctIndex: 1,
-          explanation: "You assert what you care about, not the whole payload.",
-        },
-        {
-          question: "What does `assertJsonStructure` check that `assertJsonPath` does not?",
-          options: [
-            "The status code",
-            "The shape of the response, independent of the values, which is the contract clients depend on",
-            "The headers",
-            "The database",
-          ],
-          correctIndex: 1,
-          explanation: "It catches an accidentally renamed field.",
-        },
-        {
-          question: "Why test that valid edge cases are accepted?",
-          options: [
-            "It is not necessary",
-            "Over-strict validation blocks real users and nothing fails until somebody complains",
-            "To increase coverage",
-            "To test the database",
-          ],
-          correctIndex: 1,
-          explanation: "The failure mode is silent, unlike a rule that is too loose.",
-        },
-        {
-          question: "Why assert that a field is missing from a response?",
-          options: [
-            "For speed",
-            "A leaked field passes every positive assertion you wrote, so nothing else catches it",
-            "It is required by API Resources",
-            "To validate the structure",
-          ],
-          correctIndex: 1,
-          explanation: "Resources decide what goes out; this test proves it.",
-        },
-      ],
-    },
-    {
-      id: "auth-and-database-testing",
-      title: "actingAs, RefreshDatabase & database assertions",
-      durationMinutes: 12,
-      explanation: "Two things every feature test needs: a logged-in user, and a database that does not remember the last test.\n\n---\n\n### 1. Basic — `actingAs`\n\nYou do not want every test performing a real login:\n\n```php\n$user = User::factory()->create();\n\n$this->actingAs($user);\n```\n\n```text\nuser → actingAs() → authenticated request\n```\n\nThat sets the authenticated user directly, skipping the login form, the password hash and the session round-trip. <b>Which is correct, because the login flow is not what this test is about</b>: it gets its own test, once, and every other test starts from \"a user is logged in\".\n\nFor a specific guard or Sanctum ability:\n\n```php\n$this->actingAs($user, 'api');\nSanctum::actingAs($user, ['invoices:read']);\n```\n\n---\n\n### 2. Intermediate — `RefreshDatabase`\n\nWithout isolation, tests contaminate each other:\n\n```text\nTest A  creates User 1\nTest B  expects no users  →  FAIL\n```\n\nAnd worse than the failure is the <b>order dependence</b>: the suite passes alone, fails in CI, passes again on a rerun. `RefreshDatabase` fixes it:\n\n```php\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n```\n\n```text\ntest starts → fresh database → run → cleanup\n```\n\nIt migrates once, then wraps every test in a transaction that is rolled back at the end. So it is <b>fast</b>, despite the name suggesting a full rebuild each time.\n\n`DatabaseTransactions` does the transaction part without the migration step, for a database you maintain yourself:\n\n```text\nBEGIN → run test → ROLLBACK\n```\n\n<b>The goal is identical:</b> tests must not leak state into one another.\n\n---\n\n### 3. Advanced — asserting on the database\n\n```php\n$this->assertDatabaseHas('invoices', ['reference' => 'INV-001']);\n$this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);\n$this->assertDatabaseCount('invoices', 3);\n$this->assertSoftDeleted($invoice);\n```\n\n<b>This is what proves persistence actually happened.</b> A `201` means the controller returned a status; it does not mean a row exists. A transaction that silently rolled back, a mass-assignment guard dropping a field, a save inside a conditional that never ran: all of them return `201`.\n\nAnd the sharpest one is `assertDatabaseMissing` after a delete, because <b>a delete that quietly does nothing looks exactly like a delete that worked</b> from the response side.\n\nTwo traps.\n\n<b>Soft deletes break `assertDatabaseMissing`.</b> The row is still there with `deleted_at` set, so the assertion fails on a delete that worked perfectly. Use `assertSoftDeleted` when the model soft-deletes, and `assertDatabaseMissing` when it does not. <b>Getting this backwards is how people conclude soft deletes are broken.</b>\n\n<b>And the transaction rollback hides one class of bug.</b> Because each test rolls back, code that depends on data being committed, a `DB::afterCommit` callback or a queued job reading the row from another connection, behaves differently than in production. It is the price of the speed, and worth knowing when a test passes and production does not.\n\nThree more, each for a specific situation.\n\n<b>`actingAs($user, 'sanctum')`</b> authenticates against a named guard, which is what an API test needs when the default guard is the web one.\n\n<b>`withoutMiddleware()`</b> disables middleware for a test, so you can exercise a controller without fighting through everything in front of it. <b>Use it sparingly</b>: the middleware is part of the behaviour, and a test that skips it proves less than it appears to.\n\n<b>`LazilyRefreshDatabase`</b> migrates only when a test actually touches the database. On a suite with a long migration history and many pure unit tests, that is a real saving, and it behaves identically otherwise.",
-      diagram: `actingAs — skip the login flow
-
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    user → actingAs() → authenticated request
-
-  No login form, no password hash, no session
-  round-trip. Correct, because the login flow is not
-  what this test is about: it gets its OWN test, once.
-
-    $this->actingAs($user, 'api');
-    Sanctum::actingAs($user, ['invoices:read']);
-
-
-Isolation — the failure it prevents
-
-    Test A  creates User 1
-    Test B  expects no users     →  FAIL
-
-  Worse than the failure is the ORDER DEPENDENCE:
-  passes alone, fails in CI, passes on a rerun.
-
-  RefreshDatabase
-
-    test starts → fresh database → run → cleanup
-
-    migrates ONCE, then wraps each test in a
-    transaction and rolls it back. Fast, despite
-    the name.
-
-  DatabaseTransactions
-
-    BEGIN → run test → ROLLBACK
-
-    the transaction part without the migration step.
-
-  Same goal: tests must not leak state into each other.
-
-
-Asserting the database
-
-    assertDatabaseHas('invoices', ['reference' => 'INV-001'])
-    assertDatabaseMissing('invoices', ['id' => $id])
-    assertDatabaseCount('invoices', 3)
-    assertSoftDeleted($invoice)
-
-  ⚠️  A 201 means the CONTROLLER returned a status.
-      It does not mean a row exists.
-
-      A rolled-back transaction, a mass-assignment
-      guard dropping a field, a save inside a
-      conditional that never ran — all return 201.
-
-  And a delete that quietly does nothing looks exactly
-  like one that worked, from the response side.
-
-
-Two traps
-
-  Soft deletes break assertDatabaseMissing
-
-      row still there, deleted_at set
-        ❌ assertDatabaseMissing  → fails on a
-                                    delete that WORKED
-        ✅ assertSoftDeleted
-
-    Getting this backwards is how people conclude
-    soft deletes are broken.
-
-  Rollback hides commit-dependent behaviour
-
-      DB::afterCommit callbacks and queued jobs
-      reading the row from another connection behave
-      differently than in production.
-
-      The price of the speed. Worth knowing when a
-      test passes and production does not.`,
-      codeExample: {
-        title: "Authentication, isolation and database assertions",
-        code: `<?php
-// ---------- tests/Pest.php: isolation for every feature test ----------
-
-uses(
-    Tests\\TestCase::class,
-    Illuminate\\Foundation\\Testing\\RefreshDatabase::class,
-)->in('Feature');
-
-
-<?php
-// ---------- actingAs ----------
-
-it('lists only the current user\\'s invoices', function () {
-    $user  = User::factory()->create();
-    $other = User::factory()->create();
-
-    Invoice::factory()->count(2)->for($user)->create();
-    Invoice::factory()->count(3)->for($other)->create();
-
-    $this->actingAs($user)
-        ->getJson('/api/invoices')
-        ->assertOk()
-        ->assertJsonCount(2, 'data');
-});
-
-// The login flow gets its own test, once:
-it('logs a user in with the right password', function () {
-    $user = User::factory()->create(['password' => Hash::make('secret-pass')]);
-
-    $this->post('/login', ['email' => $user->email, 'password' => 'secret-pass'])
-        ->assertRedirect('/dashboard');
-
-    $this->assertAuthenticatedAs($user);
-});
-
-// Guards and abilities
-$this->actingAs($user, 'api');
-Sanctum::actingAs($user, ['invoices:read']);
-
-
-<?php
-// ---------- 201 is not proof ----------
-
-it('actually persists the invoice', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->postJson('/api/invoices', [
-        'reference' => 'INV-001',
-        'due_on'    => '2026-10-01',
-    ])->assertCreated();
-
-    // The assertion that matters
-    $this->assertDatabaseHas('invoices', [
-        'reference' => 'INV-001',
-        'user_id'   => $user->id,
-    ]);
-});
-
-// Without the second assertion this passes when a
-// $fillable guard silently drops 'reference'.
-
-
-<?php
-// ---------- Delete: soft vs hard ----------
-
-// Hard delete
-it('removes the row', function () {
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->deleteJson("/api/invoices/{$invoice->id}")
-        ->assertNoContent();
-
-    $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
-});
-
-// Soft delete — assertDatabaseMissing would FAIL here,
-// on a delete that worked perfectly.
-it('soft deletes the invoice', function () {
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->deleteJson("/api/invoices/{$invoice->id}")
-        ->assertNoContent();
-
-    $this->assertSoftDeleted($invoice);
-    $this->assertDatabaseCount('invoices', 1);   // the row is still there
-});
-
-
-<?php
-// ---------- Counts catch the opposite bug ----------
-
-it('does not create duplicates on a repeated submit', function () {
-    $user    = User::factory()->create();
-    $payload = ['reference' => 'INV-009', 'due_on' => '2026-10-01'];
-
-    $this->actingAs($user)->postJson('/api/invoices', $payload)->assertCreated();
-    $this->actingAs($user)->postJson('/api/invoices', $payload)->assertUnprocessable();
-
-    $this->assertDatabaseCount('invoices', 1);
-});`,
-      },
-      keyTakeaways: [
-        "<b>`actingAs($user, 'sanctum')` authenticates against a named guard</b>, which API tests need.",
-        "<b>`withoutMiddleware()` skips middleware</b>, and proves less than it appears to, so use it sparingly.",
-        "<b>`LazilyRefreshDatabase` migrates only when a test touches the database</b>, which is faster on long suites.",
-        "<b>`actingAs($user)` authenticates directly</b>, skipping the login form, hashing and session round-trip.",
-        "<b>The login flow gets its own test once</b>, and every other test starts from a logged-in user.",
-        "<b>`Sanctum::actingAs($user, [...])`</b> sets abilities for token-scoped API tests.",
-        "<b>`RefreshDatabase` gives each test a clean database</b>, migrating once and rolling back per test.",
-        "<b>The real danger without it is order dependence</b>: passes alone, fails in CI, passes on rerun.",
-        "<b>`DatabaseTransactions` is the same idea without the migration step</b>, for a database you maintain.",
-        "<b>`assertDatabaseHas` is what proves persistence</b>, because a `201` only proves the controller returned one.",
-        "<b>A dropped `$fillable` field or a rolled-back transaction still returns `201`.</b>",
-        "<b>Use `assertSoftDeleted` for soft-deleting models</b>, since `assertDatabaseMissing` fails on a correct delete.",
-        "<b>Rollback hides commit-dependent behaviour</b> like `DB::afterCommit` and cross-connection queue reads.",
-      ],
-      commonMistakes: [
-        "<b>Logging in through the form in every test.</b> Slow, and it retests the login flow hundreds of times.",
-        "<b>Skipping `RefreshDatabase`.</b> You get order-dependent tests that pass locally and fail in CI.",
-        "<b>Asserting only the status after a write.</b> A `201` with no row is a passing test and a broken feature.",
-        "<b>Using `assertDatabaseMissing` on a soft-deleting model.</b> It fails on a delete that worked.",
-        "<b>Forgetting counts.</b> Duplicate rows satisfy `assertDatabaseHas` perfectly.",
-      ],
-      quiz: [
-        {
-          question: "Why use `actingAs` instead of posting to the login route?",
-          options: [
-            "The login route cannot be tested",
-            "The login flow is not what the test is about, and it gets its own test once",
-            "`actingAs` is more accurate",
-            "Sessions do not work in tests",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise every test retests login and runs slower for it.",
-        },
-        {
-          question: "What is the worst symptom of missing test isolation?",
-          options: [
-            "Slow tests",
-            "Order dependence: the suite passes alone, fails in CI, passes on rerun",
-            "Migration errors",
-            "Higher memory use",
-          ],
-          correctIndex: 1,
-          explanation: "Intermittent failures are far more expensive than consistent ones.",
-        },
-        {
-          question: "Why is `assertCreated()` not enough after a write?",
-          options: [
-            "It is enough",
-            "It proves the controller returned a status, not that a row exists",
-            "`201` is the wrong status",
-            "It only checks headers",
-          ],
-          correctIndex: 1,
-          explanation: "A dropped fillable field or a rolled-back transaction still returns `201`.",
-        },
-        {
-          question: "Which assertion belongs after deleting a soft-deleting model?",
-          options: [
-            "`assertDatabaseMissing`",
-            "`assertSoftDeleted`, since the row still exists with `deleted_at` set",
-            "`assertDatabaseCount(0)`",
-            "`assertNoContent` only",
-          ],
-          correctIndex: 1,
-          explanation: "`assertDatabaseMissing` fails on a delete that worked correctly.",
-        },
-      ],
-    },
-    {
-      id: "factories-and-time",
-      title: "Factories in tests & controlling time",
-      durationMinutes: 11,
-      explanation: "Two things that decide whether a test is readable and whether it is reliable.\n\n---\n\n### 1. Basic — factories\n\nDay 17's factories exist for this:\n\n```php\n// instead of\nUser::create(['name' => 'John', 'email' => 'john@example.com', ...]);\n\n// this\n$user = User::factory()->create();\nUser::factory()->count(10)->create();\n$user = User::factory()->has(Invoice::factory()->count(3))->create();\n```\n\n<b>The saving is not typing.</b> A hand-written `create` breaks every time you add a non-nullable column, in every test that used it. A factory has one definition, so a new column is one edit.\n\n---\n\n### 2. Intermediate — test data should tell the story\n\n```text\n❌ create 17 random users, 43 random posts, 8 random comments\n✅ create an authenticated user\n   create another user\n   create a post owned by the authenticated user\n```\n\n<b>The first is a test you cannot read.</b> When it fails, you have no idea which of the 43 posts mattered, and the numbers were chosen so the assertion happened to pass.\n\nThe second is the scenario in three lines, and every row exists <b>because the assertion needs it.</b> A useful check: <b>if you can delete a row and the test still passes, that row was noise.</b>\n\nSo state the interesting values explicitly and let the factory handle the rest:\n\n```php\nInvoice::factory()->for($user)->create(['status' => 'overdue']);\n```\n\nThat line says what the test is about. `'overdue'` is in the test because the assertion is about overdue invoices; the reference, the amount and the dates are noise the factory can invent.\n\n---\n\n### 3. Advanced — controlling time\n\nTime-dependent code is untestable unless you control the clock:\n\n```php\n$this->travel(5)->days();\n$this->travelTo(now()->setDate(2026, 9, 1));\n$this->freezeTime();\n$this->travelBack();\n```\n\n<b>Why freeze?</b> Consider:\n\n```php\n$expiresAt = now()->addDays(7);\n```\n\nAssert the exact timestamp against the real clock and the test fails whenever the two `now()` calls land on either side of a second boundary. <b>That is a flaky test</b>, and flaky tests are worse than missing ones: people learn to rerun until green, and then a real failure gets rerun too.\n\nFrozen, it is deterministic:\n\n```text\nfreeze at 2026-09-01 10:00 → expires at 2026-09-08 10:00\n```\n\nAnd travel is how you test anything with a deadline without waiting for it:\n\n```text\ncreate an invoice due in 7 days\ntravel 8 days\nassert it is now overdue\n```\n\nWhich covers <b>subscriptions, expirations, scheduled tasks, password reset tokens, trials and reports</b>: all the logic that is otherwise impossible to test honestly.\n\n<b>One trap.</b> Time travel moves PHP's clock, not the database's. `now()` obeys it; `CURRENT_TIMESTAMP` in a default or a raw query does not. If a test travels a year forward and a `created_at` still says today, the database wrote that value.",
-      diagram: `Factories
-
-    ❌ User::create(['name' => ..., 'email' => ..., ...])
-    ✅ User::factory()->create()
-       User::factory()->count(10)->create()
-       User::factory()->has(Invoice::factory()->count(3))->create()
-
-  The saving is not typing. A hand-written create()
-  breaks in EVERY test when you add a non-nullable
-  column. A factory has one definition.
-
-
-Test data should tell the story
-
-    ❌  17 random users
-        43 random posts
-        8 random comments
-
-        Unreadable. When it fails you have no idea
-        which of the 43 posts mattered — and the
-        numbers were chosen so it happened to pass.
-
-    ✅  an authenticated user
-        another user
-        a post owned by the authenticated user
-
-        The scenario, in three lines.
-
-  The check:
-
-    if you can DELETE a row and the test still
-    passes, that row was noise
-
-  State the interesting value, let the factory
-  invent the rest:
-
-    Invoice::factory()->for($user)->create(['status' => 'overdue'])
-                                            └─ the test is about this
-    reference, amount, dates → noise
-
-
-Controlling time
-
-    $this->freezeTime();
-    $this->travel(5)->days();
-    $this->travelTo(now()->setDate(2026, 9, 1));
-    $this->travelBack();
-
-  Why freeze?
-
-    $expiresAt = now()->addDays(7);
-
-    Two now() calls either side of a second boundary
-    and the assertion fails. That is a FLAKY test —
-    worse than a missing one, because people learn to
-    rerun until green, and then rerun the real
-    failure too.
-
-    frozen at 2026-09-01 10:00
-      → expires at 2026-09-08 10:00     deterministic
-
-  Travel tests deadlines without waiting:
-
-    create invoice due in 7 days
-      ↓  travel 8 days
-    assert it is overdue
-
-  Covers subscriptions · expirations · scheduled tasks
-  reset tokens · trials · reports
-
-
-  ⚠️  Travel moves PHP's clock, NOT the database's.
-
-      now()              obeys it
-      CURRENT_TIMESTAMP  does not
-
-      A created_at still saying today after travelling
-      a year means the DATABASE wrote that value.`,
-      codeExample: {
-        title: "Readable data and a controlled clock",
-        code: `<?php
-// ---------- Data that tells the story ----------
-
-// ❌ Unreadable, and the numbers were reverse-engineered
-//    from whatever made the assertion pass
-it('lists invoices', function () {
-    User::factory()->count(17)->create();
-    Invoice::factory()->count(43)->create();
-
-    $this->actingAs(User::first())->getJson('/api/invoices')->assertOk();
-});
-
-// ✅ Every row exists because the assertion needs it
-it('lists only the invoices the user owns', function () {
-    $user  = User::factory()->create();
-    $other = User::factory()->create();
-
-    Invoice::factory()->count(2)->for($user)->create();
-    Invoice::factory()->for($other)->create();       // must NOT appear
-
-    $this->actingAs($user)
-        ->getJson('/api/invoices')
-        ->assertOk()
-        ->assertJsonCount(2, 'data');
-});
-
-// Delete any of those three lines and the test stops
-// proving something. That is the check.
-
-
-<?php
-// ---------- Say what matters, let the factory invent the rest ----------
-
-Invoice::factory()->for($user)->create(['status' => 'overdue']);
-//                                       ↑ the test is about this
-// reference, amount, dates → noise the factory handles
-
-Invoice::factory()
-    ->for($user)
-    ->has(LineItem::factory()->count(3))
-    ->create(['status' => 'draft']);
-
-
-<?php
-// ---------- Freeze: kill the flake ----------
-
-it('expires a reset token seven days out', function () {
-    $this->freezeTime();                       // deterministic from here
-
-    $token = PasswordResetToken::issueFor(User::factory()->create());
-
-    expect($token->expires_at->toDateTimeString())
-        ->toBe(now()->addDays(7)->toDateTimeString());
-});
-
-// Without freezeTime the two now() calls can land on
-// either side of a second boundary. That test fails
-// roughly never — which is the worst frequency.
-
-
-<?php
-// ---------- Travel: test a deadline without waiting for it ----------
-
-it('marks an invoice overdue once the due date passes', function () {
-    $user = User::factory()->create();
-
-    $invoice = Invoice::factory()->for($user)->create([
-        'due_on' => now()->addDays(7),
-        'status' => 'sent',
-    ]);
-
-    $this->travel(8)->days();
-
-    Artisan::call('invoices:mark-overdue');
-
-    expect($invoice->fresh()->status)->toBe('overdue');
-});
-
-it('does not mark it overdue a day early', function () {
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)
-        ->create(['due_on' => now()->addDays(7), 'status' => 'sent']);
-
-    $this->travel(6)->days();
-    Artisan::call('invoices:mark-overdue');
-
-    expect($invoice->fresh()->status)->toBe('sent');
-});
-
-// Both sides of the boundary. One alone passes with a
-// command that marks everything, or nothing.
-
-
-<?php
-// ---------- The trap: the database has its own clock ----------
-
-$this->travel(1)->years();
-
-Invoice::factory()->create();
-
-// now()              → 2027   (PHP's clock moved)
-// CURRENT_TIMESTAMP  → 2026   (the database's did not)
-//
-// A created_at still showing today after travelling a
-// year means the DATABASE wrote that column, not Eloquent.
-
-
-<?php
-// ---------- Scoped travel ----------
-
-$this->travel(5)->days(function () {
-    // only inside this closure
-    expect(now()->toDateString())->toBe('2026-09-06');
-});
-
-$this->travelBack();   // or let the test teardown do it`,
-      },
-      keyTakeaways: [
-        "<b>Factories keep tests short and survive schema changes</b>, because there is one definition to update.",
-        "<b>Test data should tell the story of the scenario</b>, not fill the database with noise.",
-        "<b>If deleting a row leaves the test passing, that row was noise.</b>",
-        "<b>State the interesting value explicitly</b> and let the factory invent the rest.",
-        "<b>`freezeTime()` makes timestamp assertions deterministic</b>, killing the second-boundary flake.",
-        "<b>Flaky tests are worse than missing ones</b>, because people learn to rerun until green.",
-        "<b>`travel()` tests deadlines without waiting for them</b>: expiry, trials, overdue, scheduled work.",
-        "<b>Test both sides of a time boundary</b>, since one side alone passes on a command that does nothing.",
-        "<b>Time travel moves PHP's clock, not the database's</b>, so `CURRENT_TIMESTAMP` defaults ignore it.",
-      ],
-      commonMistakes: [
-        "<b>Creating 40 random rows to test a list.</b> Unreadable when it fails, and the count was reverse-engineered.",
-        "<b>Hand-writing `create([...])` in every test.</b> One new column breaks all of them.",
-        "<b>Asserting exact timestamps against the real clock.</b> A test that fails once a month is the worst kind.",
-        "<b>Only testing after the deadline passes.</b> A command that marks everything overdue passes too.",
-        "<b>Expecting travel to move database defaults.</b> `CURRENT_TIMESTAMP` uses the database's own clock.",
-      ],
-      quiz: [
-        {
-          question: "What is the real saving from using factories in tests?",
-          options: [
-            "Less typing",
-            "One definition to update, so a new non-nullable column does not break every test",
-            "Faster inserts",
-            "Automatic assertions",
-          ],
-          correctIndex: 1,
-          explanation: "Hand-written `create` calls scatter the schema across the suite.",
-        },
-        {
-          question: "How do you tell whether a test's data is noise?",
-          options: [
-            "Count the rows",
-            "Delete a row: if the test still passes, that row was noise",
-            "Check the factory",
-            "Run it twice",
-          ],
-          correctIndex: 1,
-          explanation: "Every row should exist because an assertion needs it.",
-        },
-        {
-          question: "Why is `freezeTime()` worth using for expiry logic?",
-          options: [
-            "It speeds the test up",
-            "Two `now()` calls either side of a second boundary make the assertion intermittently fail",
-            "It is required by Carbon",
-            "It resets the database",
-          ],
-          correctIndex: 1,
-          explanation: "A test that fails roughly never is the worst kind to debug.",
-        },
-        {
-          question: "What does time travel not affect?",
-          options: [
-            "`now()`",
-            "The database's clock, so `CURRENT_TIMESTAMP` defaults still use the real time",
-            "Carbon instances",
-            "Scheduled tasks",
-          ],
-          correctIndex: 1,
-          explanation: "A timestamp that ignores your travel was written by the database.",
-        },
-      ],
-    },
-    {
-      id: "fakes",
-      title: "Faking mail, queues, events, storage & HTTP",
-      durationMinutes: 13,
-      explanation: "One rule underneath this whole lesson:\n\n<b>Ordinary tests do not call real external services.</b>\n\nNot because it is slow, though it is. Because a test that sends real email eventually emails a customer, a test that hits a real API fails during somebody else's outage, and a test that writes to real S3 leaves files behind. <b>None of those failures are about your code.</b>\n\nLaravel gives every facade a fake.\n\n---\n\n### 1. Basic — the shape is always the same\n\n```php\nMail::fake();          // swap the real thing\n// ... run the code ...\nMail::assertSent(WelcomeEmail::class);   // assert on the recording\n```\n\n```text\nfake it → run → assert what it recorded\n```\n\nThe fake replaces the driver and records every call instead of performing it. Nothing is sent, dispatched, written or requested.\n\n---\n\n### 2. Intermediate — the ones you will use\n\n```php\nMail::fake();          Mail::assertSent(InvoiceMail::class);\nQueue::fake();         Queue::assertPushed(SendInvoice::class);\nBus::fake();           Bus::assertBatched(...);\nEvent::fake();         Event::assertDispatched(InvoicePaid::class);\nNotification::fake();  Notification::assertSentTo($user, InvoicePaid::class);\nStorage::fake('public'); Storage::disk('public')->assertExists('avatars/photo.jpg');\nHttp::fake();          Http::assertSent(fn ($r) => $r->url() === '...');\n```\n\n<b>`Queue::fake()` changes what you are testing</b>, and that is the point: it proves the job was <b>dispatched</b> with the right payload, without running it. The job's own behaviour gets its own test, calling `handle()` directly. Two small tests instead of one big one that fails for two different reasons.\n\n<b>`Storage::fake()` gives you a real in-memory disk</b>, so uploads genuinely work and you assert on the result:\n\n```php\n$file = UploadedFile::fake()->image('avatar.jpg');\n```\n\n<b>`Http::fake()` is the one that pays for itself</b>, because you can finally test the failure paths. Stripe returning 500, a timeout, a 422, a malformed body: impossible to trigger against the real API, trivial to fake. And those are exactly the paths that break in production.\n\n---\n\n### 3. Advanced — the sharp edges\n\n<b>`Event::fake()` stops listeners from running.</b> That is what you want when asserting an event fired, and a trap the rest of the time: fake events and the listener that creates the audit row never runs, so the test that expects the row fails for a reason unrelated to the code. Use `Event::fake([InvoicePaid::class])` to fake one event and leave the others alone.\n\n<b>`Http::fake()` with no arguments returns an empty 200 for everything.</b> Which silently passes a request to a URL you did not intend, including a typo. Fake specific URLs and add `Http::preventStrayRequests()` so an unfaked call throws instead of quietly succeeding.\n\n<b>And every fake tests intent, not delivery.</b> `Mail::assertSent` proves your code asked to send. It says nothing about SMTP credentials, a bounced address or a spam filter. <b>Fakes prove your application is correct; they do not prove the email arrived.</b> That gap is real, and it belongs in a staging check rather than the suite.\n\nThe fakes also assert absence, which is the underused half:\n\n```php\nMail::assertNothingSent();\nHttp::assertNothingSent();\nQueue::assertNotPushed(ChargeCard::class);\n```\n\n<b>Not charging a card twice is a requirement</b>, and `assertNotPushed` is the only thing that tests it.\n\nEach fake has more assertions than its headline one, and the variants are where the precision is:\n\n```php\nQueue::assertPushedOn('emails', SendInvoice::class);   // the right queue\nEvent::assertDispatchedTimes(InvoicePaid::class, 1);   // exactly once\nEvent::assertNotDispatched(InvoiceDeleted::class);\nNotification::assertSentToTimes($user, InvoicePaid::class, 1);\nMail::assertNothingQueued();\nStorage::disk('public')->assertExists('logos/acme.png');\nStorage::disk('public')->assertMissing('logos/old.png');\n```\n\n<b>The `Times` variants are the ones that catch duplicates</b>, which `assertPushed` cannot: a job dispatched twice satisfies it perfectly, and \"we charged the card twice\" is exactly the bug you wanted a test for.",
-      diagram: `The rule
-
-    Ordinary tests do NOT call real external services.
-
-  Not mainly for speed. Because:
-
-    a test that sends real email eventually emails
-    a customer
-
-    a test that hits a real API fails during someone
-    else's outage
-
-    a test that writes to real S3 leaves files behind
-
-  None of those failures are about your code.
-
-
-The shape, always
-
-    Mail::fake();                     ← swap the real thing
-    ... run the code ...
-    Mail::assertSent(WelcomeEmail::class);   ← assert the recording
-
-    fake it → run → assert what it recorded
-
-
-The fakes
-
-    Mail::fake()          assertSent / assertNothingSent
-    Queue::fake()         assertPushed / assertNotPushed
-    Bus::fake()           assertDispatched / assertBatched
-    Event::fake()         assertDispatched
-    Notification::fake()  assertSentTo
-    Storage::fake('s3')   disk()->assertExists
-    Http::fake()          assertSent / preventStrayRequests
-
-  Queue::fake() CHANGES what you test, on purpose:
-
-    proves the job was DISPATCHED with the right payload
-    the job's behaviour gets its own test → handle()
-
-    two small tests, not one that fails for two reasons
-
-  Http::fake() is the one that pays for itself:
-
-    500 · timeout · 422 · malformed body
-    impossible against the real API, trivial to fake
-    — and exactly what breaks in production
-
-
-Sharp edges
-
-  ⚠️  Event::fake() STOPS LISTENERS RUNNING.
-
-      Right when asserting an event fired. Wrong the
-      rest of the time: the listener that writes the
-      audit row never runs, and the test fails for a
-      reason unrelated to the code.
-
-        Event::fake([InvoicePaid::class])   ← fake one
-
-  ⚠️  Http::fake() with no arguments returns an empty
-      200 for EVERYTHING — including a URL you did not
-      intend, including a typo.
-
-        Http::preventStrayRequests()   ← unfaked = throw
-
-  ⚠️  Fakes test INTENT, not DELIVERY.
-
-      assertSent proves your code asked to send.
-      It says nothing about SMTP credentials, a
-      bounced address, or a spam filter.
-
-      That gap belongs in a staging check.
-
-
-The underused half — asserting absence
-
-    Mail::assertNothingSent();
-    Http::assertNothingSent();
-    Queue::assertNotPushed(ChargeCard::class);
-
-  Not charging a card twice is a REQUIREMENT, and
-  assertNotPushed is the only thing that tests it.`,
-      codeExample: {
-        title: "Every fake, and the traps",
-        code: `<?php
-// ---------- Queue: dispatched, with the right payload ----------
-
-it('queues the invoice email on send', function () {
-    Queue::fake();
-
-    $user    = User::factory()->create();
-    $invoice = Invoice::factory()->for($user)->create(['status' => 'draft']);
-
-    $this->actingAs($user)
-        ->postJson("/api/invoices/{$invoice->id}/send")
-        ->assertOk();
-
-    Queue::assertPushed(SendInvoiceEmail::class, fn ($job) =>
-        $job->invoice->is($invoice)
-    );
-});
-
-// The job's own behaviour is a separate, smaller test:
-it('marks the invoice sent when the job runs', function () {
-    $invoice = Invoice::factory()->create(['status' => 'draft']);
-
-    (new SendInvoiceEmail($invoice))->handle();
-
-    expect($invoice->fresh()->status)->toBe('sent');
-});
-
-
-<?php
-// ---------- Mail and Notification ----------
-
-it('mails the client', function () {
-    Mail::fake();
-
-    $invoice = Invoice::factory()->create();
-    (new SendInvoiceEmail($invoice))->handle();
-
-    Mail::assertSent(InvoiceMail::class, fn ($mail) =>
-        $mail->hasTo($invoice->client->email)
-    );
-});
-
-it('notifies the owner when payment lands', function () {
-    Notification::fake();
-
-    $invoice = Invoice::factory()->create();
-    event(new InvoicePaid($invoice));
-
-    Notification::assertSentTo($invoice->user, InvoicePaidNotification::class);
-});
-
-
-<?php
-// ---------- Storage: a real in-memory disk ----------
-
-it('stores the uploaded logo', function () {
-    Storage::fake('public');
-
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/settings/logo', [
-            'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
-        ])
-        ->assertOk();
-
-    expect(Storage::disk('public')->allFiles('logos'))->toHaveCount(1);
-});
-
-
-<?php
-// ---------- Http: finally testable failure paths ----------
-
-it('marks the invoice paid when the gateway succeeds', function () {
-    Http::fake([
-        'api.stripe.com/*' => Http::response(['status' => 'succeeded'], 200),
-    ]);
-
-    $invoice = Invoice::factory()->create();
-    (new ChargeInvoice($invoice))->handle();
-
-    expect($invoice->fresh()->status)->toBe('paid');
-});
-
-it('leaves the invoice unpaid when the gateway is down', function () {
-    Http::fake(['api.stripe.com/*' => Http::response('', 500)]);
-
-    $invoice = Invoice::factory()->create(['status' => 'sent']);
-    (new ChargeInvoice($invoice))->handle();
-
-    expect($invoice->fresh()->status)->toBe('sent');
-});
-
-it('handles a timeout', function () {
-    Http::fake(fn () => throw new ConnectionException('timed out'));
-    // ...
-});
-
-// 500, timeout, 422, malformed body — impossible against
-// the real API, and exactly what breaks in production.
-
-
-<?php
-// ---------- Trap 1: Event::fake() silences listeners ----------
-
-// ❌ The audit listener never runs, so this fails for a
-//    reason that has nothing to do with the code
-it('writes an audit row', function () {
-    Event::fake();
-    event(new InvoicePaid($invoice));
-    $this->assertDatabaseHas('audit_logs', [...]);   // FAILS
-});
-
-// ✅ Fake only what you are asserting on
-Event::fake([InvoicePaid::class]);
-
-
-<?php
-// ---------- Trap 2: a bare Http::fake() passes typos ----------
-
-Http::fake();                      // empty 200 for EVERYTHING
-Http::preventStrayRequests();      // unfaked call → throws
-
-Http::fake([
-    'api.stripe.com/*' => Http::response(['status' => 'succeeded']),
-]);
-Http::preventStrayRequests();
-
-
-<?php
-// ---------- Assert absence ----------
-
-it('does not charge a card that is already paid', function () {
-    Queue::fake();
-
-    $invoice = Invoice::factory()->create(['status' => 'paid']);
-
-    $this->actingAs($invoice->user)
-        ->postJson("/api/invoices/{$invoice->id}/charge")
-        ->assertUnprocessable();
-
-    Queue::assertNotPushed(ChargeInvoice::class);
-});
-
-it('sends nothing when validation fails', function () {
-    Mail::fake();
-
-    $this->actingAs(User::factory()->create())
-        ->postJson('/api/invoices', [])
-        ->assertUnprocessable();
-
-    Mail::assertNothingSent();
-});`,
-      },
-      keyTakeaways: [
-        "<b>The `Times` variants catch duplicates</b>: `assertDispatchedTimes`, `assertSentToTimes`, which `assertPushed` cannot.",
-        "<b>`Queue::assertPushedOn()` proves the routing</b>, not merely that something was dispatched.",
-        "<b>Ordinary tests must not call real external services</b>, or they eventually email a customer or fail during an outage.",
-        "<b>Every fake has the same shape</b>: fake it, run the code, assert on what it recorded.",
-        "<b>`Queue::fake()` proves the job was dispatched with the right payload</b>, and the job gets its own test.",
-        "<b>That split matters</b>: two small tests instead of one that fails for two different reasons.",
-        "<b>`Storage::fake()` is a real in-memory disk</b>, so uploads work and you assert on the stored file.",
-        "<b>`Http::fake()` makes failure paths testable</b>: 500, timeout, 422, malformed body.",
-        "<b>`Event::fake()` stops listeners running</b>, so anything a listener does silently disappears.",
-        "<b>Fake one event with `Event::fake([X::class])`</b> when other listeners still need to run.",
-        "<b>A bare `Http::fake()` returns 200 for every URL</b>, so add `preventStrayRequests()`.",
-        "<b>Fakes test intent, not delivery</b>: `assertSent` says nothing about SMTP, bounces or spam filters.",
-        "<b>Assert absence too.</b> `assertNotPushed` is the only thing testing that you do not charge twice.",
-      ],
-      commonMistakes: [
-        "<b>Letting a test hit a real API.</b> It fails during someone else's outage and passes for unrelated reasons.",
-        "<b>Blanket `Event::fake()` in a test that depends on a listener.</b> The listener never runs.",
-        "<b>Bare `Http::fake()` with no `preventStrayRequests()`.</b> A typo'd URL quietly returns 200.",
-        "<b>Reading `assertSent` as proof the email arrived.</b> It proves your code asked to send it.",
-        "<b>Only asserting things happened.</b> Not charging twice is a requirement and needs its own assertion.",
-      ],
-      quiz: [
-        {
-          question: "Why does `Queue::fake()` change what a test proves?",
-          options: [
-            "It makes jobs faster",
-            "It proves the job was dispatched with the right payload; the job's behaviour gets its own test",
-            "It runs jobs twice",
-            "It disables the queue driver",
-          ],
-          correctIndex: 1,
-          explanation: "Two small tests beat one failing for two different reasons.",
-        },
-        {
-          question: "What is the trap with `Event::fake()`?",
+          question: "What is wrong with `Artisan::call` from a controller?",
           options: [
             "It is slow",
-            "It stops listeners running, so anything a listener does silently disappears",
-            "It only fakes queued events",
-            "It requires a database",
+            "No usable return value, exceptions arrive as exit codes, and it is untestable without the console kernel",
+            "It is not allowed",
+            "It bypasses middleware",
           ],
           correctIndex: 1,
-          explanation: "`Event::fake([X::class])` fakes one event and leaves the rest alone.",
+          explanation: "That is a shell command standing in for a service layer.",
         },
         {
-          question: "Why add `Http::preventStrayRequests()`?",
+          question: "What problem does `php artisan dev` solve?",
           options: [
-            "It speeds up tests",
-            "A bare `Http::fake()` returns an empty 200 for every URL, including a typo",
-            "It enables real requests",
-            "It is required for `assertSent`",
+            "Slow builds",
+            "A modern app needs several processes at once, and forgetting one wastes debugging time",
+            "Missing migrations",
+            "Code style",
           ],
           correctIndex: 1,
-          explanation: "Unfaked calls should throw, not quietly succeed.",
-        },
-        {
-          question: "What does `Mail::assertSent` actually prove?",
-          options: [
-            "The email arrived",
-            "Your code asked to send it, which says nothing about SMTP, bounces or spam filters",
-            "The mail driver works",
-            "The template rendered in a browser",
-          ],
-          correctIndex: 1,
-          explanation: "Fakes test intent, not delivery.",
+          explanation: "`dev:list` shows what the project defines.",
         },
       ],
     },
     {
-      id: "mocking-console-dusk-and-coverage",
-      title: "Mocks, console, Dusk, coverage & the pyramid",
-      durationMinutes: 13,
-      explanation: "The rest of the toolbox, and the judgement about how much of it to use.\n\n---\n\n### 1. Basic — mock vs fake\n\n```text\nFake  a simplified working implementation\n      Storage, Mail, Http\n\nMock  a controlled dependency, where you check the interaction\n      called? how many times? with what arguments?\n```\n\nMocking replaces a dependency and lets you dictate its behaviour:\n\n```text\nOrderService → PaymentGateway\n\ncharge() must be called once, with $100, and returns success\n```\n\n<b>The distinction matters because they fail differently.</b> A fake fails when your code produces the wrong result. A mock fails when your code makes the wrong <b>calls</b>, which is the implementation-detail trap from lesson 2 wearing a different hat.\n\n<b>So do not mock everything.</b> Over-mocking produces a suite that passes while the application is broken, because you have replaced everything that could actually fail. When a fake exists, prefer the fake.\n\nA <b>partial mock</b> is the compromise: keep the real class, replace one method. Right when most of the behaviour is worth exercising but one part is expensive or external.\n\n---\n\n### 2. Intermediate — processes and console\n\nIf your application shells out, `Process::fake()` applies the same idea:\n\n```text\nProcess::run(...) → fake process → the result you specified\n```\n\nUseful for CLI tools, image processing, FFmpeg, Python scripts. <b>And the reason is not only speed:</b> the real command may not exist on CI, and its output differs by version and platform.\n\nArtisan commands are testable too:\n\n```php\n$this->artisan('reports:generate')\n    ->expectsOutput('Report generated.')\n    ->assertExitCode(0);\n\n$this->artisan('invoices:purge')\n    ->expectsConfirmation('Delete 12 invoices?', 'no')\n    ->assertExitCode(1);\n```\n\n<b>Commands are the most-forgotten code in a codebase.</b> They run at 3am with nobody watching, they often do destructive things, and they are the last thing anyone tests. That combination is why the exit code matters: a scheduled command failing silently with exit `0` is a broken pipeline nobody notices for a month.\n\n---\n\n### 3. Advanced — Dusk, coverage and the shape of a suite\n\n<b>Dusk</b> drives a real browser:\n\n```text\nreal browser → click → type → submit → the browser sees the result\n```\n\nUse it for what only a browser can prove: JavaScript, frontend integration, a critical end-to-end path. <b>Do not build your suite from it</b>, because browser tests are slow, need a driver, and are the flakiest thing you can own. A handful covering login and checkout is worth a great deal; two hundred is a suite nobody trusts.\n\n<b>Coverage</b> measures which lines ran, not whether they were checked:\n\n```text\n70% coverage ≠ the application is 70% correct\n```\n\n<b>You can have 100% line coverage with no assertions at all.</b> Every line executed, nothing verified. So chasing a number produces the tests that are easy to write, which are rarely the tests that catch bugs.\n\nBetter questions: <b>are the critical workflows tested? Authorization rules? Validation failures? Destructive operations? The important integrations? The edge cases?</b> A thoughtful 75% beats a decorative 95%.\n\n<b>Parallel testing</b> is how a large suite stays usable:\n\n```text\n1,000 tests → 10 minutes → split across workers → minutes\n```\n\nEach worker gets its own database, so it only works if your tests are genuinely isolated. <b>Parallel runs are an isolation test you did not write.</b>\n\nAnd the pyramid, adjusted for Laravel:\n\n```text\nfew    browser tests\nmany   feature tests\nmany   unit tests, where logic has branches\n```\n\n<b>Now the mindset.</b> Not \"I need tests for my controller\" but <b>\"what behaviour must never break?\"</b>\n\nA good feature test covers most of this in one pass:\n\n```text\nrequest → authentication → authorization → validation\n       → business logic → database → event/job → response\n```\n\nAnd the rule that matters more than any tool on this page: <b>test the happy path and the important failure paths.</b> A senior engineer does not prove \"a user can create a post\". They prove a user can create one, invalid data is rejected, guests are rejected, the wrong user is rejected, the database state is right, the side effects happened, and no external service was touched. <b>That is the difference between having tests and having a safety net.</b>\n\nOne last kind of test, cheap enough to be worth adding today. <b>Architecture tests assert rules about the codebase itself:</b>\n\n```php\narch('no debug statements')\n    ->expect(['dd', 'dump', 'ray', 'var_dump'])\n    ->not->toBeUsed();\n\narch('models stay in Models')\n    ->expect('App\\\\Models')\n    ->toOnlyBeUsedIn(['App\\\\Http', 'App\\\\Services', 'App\\\\Jobs']);\n```\n\n<b>The first one alone pays for itself</b>, because a `dd()` reaching production is a class of incident that no amount of care prevents and one line of test does.\n\nAnd text prompts are assertable too, not just confirmations:\n\n```php\n$this->artisan('user:create')\n    ->expectsQuestion('What is their name?', 'Rajan')\n    ->expectsQuestion('Email address?', 'rajan@example.com')\n    ->expectsOutput('Created rajan@example.com.')\n    ->assertExitCode(0);\n```\n\n<b>Which is how you test an interactive command without a terminal</b>, and the only way to cover the prompting path at all.",
-      diagram: `Mock vs fake
+      id: "signature-arguments-and-options",
+      title: "The signature: arguments & options",
+      durationMinutes: 11,
+      explanation: "The signature is the command's whole public interface, written in one string.\n\n---\n\n### 1. Basic — the two kinds of input\n\n```php\nprotected $signature = 'reports:send {user} {--force}';\n```\n\n```bash\nphp artisan reports:send 123 --force\n```\n\n```text\nreports:send\n  ├── argument  user     positional\n  └── option    --force  named flag\n```\n\n<b>Arguments are positional, options are named.</b> That is the whole distinction, and it is the thing people mix up:\n\n```text\n{email}     argument\n{--force}   option\n```\n\nRead them in `handle()`:\n\n```php\n$email = $this->argument('email');\n$force = $this->option('force');\n```\n\n---\n\n### 2. Intermediate — the full syntax\n\n```php\n{user}                    required argument\n{user?}                   optional argument\n{user=1}                  default value\n{users*}                  array, one or more\n\n{--force}                 boolean flag\n{--queue=}                option that takes a value\n{--queue=default}         with a default\n{--Q|queue=}              with a shortcut\n\n{user : The user ID}      description, shown in help\n```\n\n<b>Optional arguments are what let one command work at two scopes:</b>\n\n```bash\nphp artisan reports:send        # everybody\nphp artisan reports:send 123    # one user\n```\n\nWhich is genuinely useful, and also the shape of a bad accident. <b>A command whose argument-less form does the destructive thing to everything</b> is one missing argument away from disaster. If the broad form is dangerous, make it explicit: `--all` should be a flag you type, not the default you get by forgetting.\n\n<b>Always write descriptions.</b> `{user : The user to send the report to}` is what `php artisan help reports:send` prints, and the person reading it at 3am is probably you.\n\n---\n\n### 3. Advanced — the signature is an API\n\n<b>Once a command is in a deploy script, a cron entry or a runbook, its signature is a contract.</b> Renaming an option breaks a scheduled task that has been running fine for a year, and nothing tells you until the job silently fails or, worse, runs with a default you did not intend.\n\nSo treat changes the way you would treat an API: <b>add options, avoid renaming them</b>, and if you must, keep the old name working for a release.\n\nTwo more habits.\n\n<b>Validate input in `handle()`, not in your head.</b> `$this->argument('user')` returns a string, always. `'abc'` becomes `0` if you cast it carelessly, and `User::find(0)` returns null, and now the branch you did not write runs.\n\n<b>And return an exit code.</b>\n\n```php\nreturn self::SUCCESS;   // 0\nreturn self::FAILURE;   // 1\n```\n\n<b>Falling off the end of `handle()` returns 0</b>, which tells the scheduler, your CI and your monitoring that everything is fine. A command that fails with exit `0` is a broken pipeline nobody notices, which is the same warning Day 28 gave about testing exit codes, arriving from the other side.\n\nOne form not mentioned above: <b>an option can repeat</b>, which is the option equivalent of `{users*}`:\n\n```php\n{--user=*}\n```\n\n```bash\nphp artisan reports:send --user=1 --user=2 --user=3\n```\n\n`$this->option('user')` returns `[1, 2, 3]`, and an empty array when none were passed. <b>Empty rather than null</b>, which means `foreach` is safe and a `?? []` is not needed.",
+      diagram: `Two kinds of input
 
-  FAKE   a simplified working implementation
-           Storage · Mail · Http
-           fails when your code produces the WRONG RESULT
+    protected $signature = 'reports:send {user} {--force}';
 
-  MOCK   a controlled dependency, checking interaction
-           called? how many times? with what arguments?
-           fails when your code makes the WRONG CALLS
+    php artisan reports:send 123 --force
 
-    OrderService → PaymentGateway
-      charge() once, with $100, returns success
+      reports:send
+        ├── argument   user      POSITIONAL
+        └── option     --force   NAMED
 
-  ⚠️  A mock is the implementation-detail trap wearing
-      a different hat. Over-mocking gives a suite that
-      passes while the app is broken — you replaced
-      everything that could fail.
+    {email}      argument
+    {--force}    option
 
-      When a fake exists, prefer the fake.
-
-  PARTIAL MOCK   real class + one method replaced
-                 most behaviour worth exercising, one
-                 part expensive or external
+    $this->argument('email');
+    $this->option('force');
 
 
-Processes and console
+The full syntax
 
-    Process::run(...) → fake process → your result
+    {user}                required argument
+    {user?}               optional
+    {user=1}              default
+    {users*}              array, one or more
 
-    Not only speed: the real command may not exist on
-    CI, and its output differs by version and platform.
+    {--force}             boolean flag
+    {--queue=}            takes a value
+    {--queue=default}     with a default
+    {--Q|queue=}          with a shortcut
 
-    $this->artisan('reports:generate')
-        ->expectsOutput('Report generated.')
-        ->assertExitCode(0);
-
-    $this->artisan('invoices:purge')
-        ->expectsConfirmation('Delete 12 invoices?', 'no')
-        ->assertExitCode(1);
-
-  ⚠️  Commands are the most-forgotten code you own.
-      They run at 3am, unwatched, often destructively,
-      and are tested last.
-
-      A scheduled command failing silently with exit 0
-      is a broken pipeline nobody notices for a month.
+    {user : The user ID}  description → shown in help
 
 
-Dusk
+Optional arguments = two scopes, one command
 
-    real browser → click → type → submit → sees result
+    php artisan reports:send          everybody
+    php artisan reports:send 123      one user
 
-    For what only a browser proves: JavaScript,
-    frontend integration, one critical end-to-end path.
+  ⚠️  And the shape of a bad accident.
 
-    Do NOT build the suite from it. Slow, needs a
-    driver, flakiest thing you can own.
+      A command whose argument-LESS form does the
+      destructive thing to EVERYTHING is one missing
+      argument away from disaster.
 
-      a handful covering login and checkout  → valuable
-      two hundred                            → nobody
-                                                trusts it
+      If the broad form is dangerous:
 
-
-Coverage
-
-    70% coverage  ≠  the application is 70% correct
-
-  You can have 100% LINE COVERAGE WITH NO ASSERTIONS.
-  Every line ran; nothing was verified.
-
-  Chasing the number produces the tests that are easy
-  to write — rarely the ones that catch bugs.
-
-  Better questions:
-    critical workflows?    authorization rules?
-    validation failures?   destructive operations?
-    important integrations?  edge cases?
-
-  A thoughtful 75% beats a decorative 95%.
+        --all should be a flag you TYPE, not the
+        default you get by forgetting
 
 
-Parallel
+The signature is an API
 
-    1,000 tests → 10 min
-         │
-    ┌────┼────┐
-    ▼    ▼    ▼
-   w1   w2   w3      each with its OWN database
+  Once it is in a deploy script, a cron entry or a
+  runbook, it is a CONTRACT.
 
-  Only works if tests are genuinely isolated — a
-  parallel run is an isolation test you did not write.
+    rename an option
+      ↓
+    a scheduled task that ran fine for a year breaks
+      ↓
+    silently, or worse: runs with a default you did
+    not intend
 
-
-The pyramid, Laravel-adjusted
-
-           ▲
-          / \\
-         / Dusk \\        few
-        /--------\\
-       / Feature  \\      many
-      /------------\\
-     /    Unit      \\    many, where logic branches
-    /----------------\\
+    add options · avoid renaming · keep old names
+    working for a release
 
 
-The mindset
+Two habits
 
-    not  "I need tests for my controller"
-    but  "what behaviour must NEVER break?"
+  Validate input — argument() ALWAYS returns a string
 
-  One good feature test covers:
+    'abc' → (int) → 0 → User::find(0) → null
+      → the branch you never wrote now runs
 
-    request → authentication → authorization
-      → validation → business logic → database
-      → event/job → response
+  Return an exit code
 
-  The rule that outranks every tool here:
+    return self::SUCCESS;   // 0
+    return self::FAILURE;   // 1
 
-    TEST THE HAPPY PATH + THE IMPORTANT FAILURE PATHS
+  ⚠️  Falling off the end of handle() returns 0.
 
-  A senior engineer does not prove "a user can create
-  a post". They prove:
-
-    a user can create one
-      + invalid data is rejected
-      + guests are rejected
-      + the wrong user is rejected
-      + database state is right
-      + side effects happened
-      + no external service was touched
-
-  That is the difference between having tests and
-  having a safety net.`,
+      Which tells the scheduler, CI and monitoring
+      that everything is fine. A command failing with
+      exit 0 is a pipeline nobody notices.`,
       codeExample: {
-        title: "Mocks, commands, Dusk and the full-stack test",
+        title: "Signatures, validation and exit codes",
         code: `<?php
-// ---------- Mock: when no fake exists ----------
+// ---------- A signature that documents itself ----------
 
-it('charges the gateway once with the invoice total', function () {
-    $this->mock(PaymentGateway::class, function ($mock) {
-        $mock->shouldReceive('charge')
-             ->once()
-             ->with(3000, 'usd')
-             ->andReturn(new ChargeResult(succeeded: true));
-    });
+class SendReports extends Command
+{
+    protected $signature = 'reports:send
+                            {user? : Send for one user, or omit for all}
+                            {--since=7 : How many days back to include}
+                            {--Q|queue=reports : Queue to dispatch on}
+                            {--force : Skip the confirmation}';
 
-    $invoice = Invoice::factory()->create(['total_cents' => 3000]);
-    (new ChargeInvoice($invoice))->handle();
+    protected $description = 'Send activity reports';
 
-    expect($invoice->fresh()->status)->toBe('paid');
-});
+    public function handle(ReportSender $sender): int
+    {
+        // argument() ALWAYS returns a string
+        $userId = $this->argument('user');
 
-// Note the second assertion. Without it this only proves
-// a method was called — the implementation-detail trap.
+        if ($userId !== null && ! ctype_digit($userId)) {
+            $this->error('The user argument must be a numeric ID.');
 
+            return self::INVALID;          // exit 2
+        }
 
-<?php
-// ---------- Partial mock: real class, one method replaced ----------
+        $since = (int) $this->option('since');
 
-$this->partialMock(InvoiceReport::class, function ($mock) {
-    $mock->shouldReceive('renderPdf')->andReturn('fake-pdf-bytes');
-});
-// Every other method runs for real.
+        if ($since < 1) {
+            $this->error('--since must be at least 1.');
 
+            return self::INVALID;
+        }
 
-<?php
-// ---------- Process ----------
+        $result = $sender->send(
+            userId: $userId ? (int) $userId : null,
+            since: now()->subDays($since),
+            queue: $this->option('queue'),
+        );
 
-it('converts the uploaded logo', function () {
-    Process::fake([
-        'convert *' => Process::result(output: 'done', exitCode: 0),
-    ]);
+        $this->info("Queued {$result->count} reports.");
 
-    (new ConvertLogo('logo.png'))->handle();
-
-    Process::assertRan(fn ($process) => str_contains($process->command, 'convert'));
-});
-
-// The real binary may not exist on CI, and its output
-// differs by version and platform.
+        return $result->failed === 0 ? self::SUCCESS : self::FAILURE;
+    }
+}
 
 
 <?php
-// ---------- Console commands ----------
+// ---------- The accident waiting to happen ----------
 
-it('reports how many invoices it marked overdue', function () {
-    Invoice::factory()->count(3)->create([
-        'due_on' => now()->subDay(),
-        'status' => 'sent',
-    ]);
+// ❌ Forget the argument, delete everything
+protected $signature = 'invoices:purge {client?}';
 
-    $this->artisan('invoices:mark-overdue')
-        ->expectsOutput('Marked 3 invoices overdue.')
-        ->assertExitCode(0);
-});
+public function handle(): int
+{
+    Invoice::when($this->argument('client'), fn ($q, $id) =>
+        $q->where('client_id', $id)
+    )->delete();                       // no client → ALL invoices
 
-it('exits non-zero when the purge is declined', function () {
-    Invoice::factory()->count(12)->create(['status' => 'draft']);
+    return self::SUCCESS;
+}
 
-    $this->artisan('invoices:purge')
-        ->expectsConfirmation('Delete 12 invoices?', 'no')
-        ->assertExitCode(1);
+// ✅ The broad form must be typed, not defaulted into
+protected $signature = 'invoices:purge {client?} {--all}';
 
-    $this->assertDatabaseCount('invoices', 12);
-});
+public function handle(): int
+{
+    $client = $this->argument('client');
 
-// Exit codes matter: a scheduled command failing
-// silently with 0 is a pipeline nobody notices for
-// a month.
+    if (! $client && ! $this->option('all')) {
+        $this->error('Pass a client ID, or --all to purge everything.');
 
+        return self::INVALID;
+    }
 
-<?php
-// ---------- Dusk: reserved for what only a browser proves ----------
-
-// tests/Browser/CreateInvoiceTest.php
-$this->browse(function (Browser $browser) use ($user) {
-    $browser->loginAs($user)
-            ->visit('/invoices/create')
-            ->type('reference', 'INV-100')
-            ->click('@add-line-item')          // JavaScript
-            ->type('lines[0][description]', 'Design work')
-            ->press('Save')
-            ->assertSee('INV-100');
-});
-
-// A handful of these. Not two hundred.
+    // ...
+}
 
 
 <?php
-// ---------- What one good feature test covers ----------
+// ---------- Array arguments ----------
 
-it('creates an invoice, queues the email and touches nothing external', function () {
-    Queue::fake();
-    Http::fake();
-    Http::preventStrayRequests();
+protected $signature = 'invoices:resend {ids*}';
 
-    $user   = User::factory()->create();
-    $client = Client::factory()->for($user)->create();
-
-    $this->actingAs($user)
-        ->postJson('/api/invoices', [
-            'client_id' => $client->id,
-            'due_on'    => '2026-10-01',
-            'lines'     => [['description' => 'Design', 'quantity' => 2, 'unit_price' => 1500]],
-        ])
-        ->assertCreated()
-        ->assertJsonPath('data.total_cents', 3000)
-        ->assertJsonMissingPath('data.internal_notes');
-
-    $this->assertDatabaseHas('invoices', ['user_id' => $user->id, 'total_cents' => 3000]);
-    $this->assertDatabaseCount('invoice_lines', 1);
-
-    Queue::assertPushed(SendInvoiceEmail::class);
-    Http::assertNothingSent();
-});
-
-// request → auth → authorization → validation →
-// business logic → database → job → response,
-// in one test.
+// php artisan invoices:resend 1 2 3
+$ids = $this->argument('ids');       // ['1', '2', '3']
 
 
-# ---------- Parallel ----------
+<?php
+// ---------- Exit codes are what the scheduler reads ----------
 
-php artisan test --parallel
-php artisan test --parallel --recreate-databases
+public function handle(): int
+{
+    $failed = 0;
 
-# Each worker gets its own database. It only works if
-# your tests are isolated — a parallel run is an
-# isolation test you did not write.
+    foreach (Invoice::overdue()->cursor() as $invoice) {
+        try {
+            $this->reminder->send($invoice);
+        } catch (Throwable $e) {
+            report($e);
+            $failed++;
+        }
+    }
 
-php artisan test --coverage --min=75
-# A thoughtful 75% beats a decorative 95%.`,
+    if ($failed > 0) {
+        $this->error("{$failed} reminders failed.");
+
+        return self::FAILURE;          // ← monitoring sees this
+    }
+
+    return self::SUCCESS;
+}
+
+// Falling off the end returns 0, and a command failing
+// with exit 0 is a broken pipeline nobody notices.
+
+
+# ---------- What descriptions buy you ----------
+
+php artisan help reports:send
+# Arguments:
+#   user   Send for one user, or omit for all
+# Options:
+#   --since[=SINCE]  How many days back to include [default: "7"]
+#
+# The person reading this at 3am is probably you.`,
       },
       keyTakeaways: [
-        "<b>`arch()` tests assert rules about the codebase</b>, and \"no `dd()` anywhere\" alone pays for itself.",
-        "<b>A fake is a working simplified implementation; a mock is a controlled dependency you assert calls on.</b>",
-        "<b>They fail differently</b>: a fake fails on the wrong result, a mock on the wrong calls.",
-        "<b>Over-mocking gives a suite that passes while the app is broken</b>, so prefer a fake when one exists.",
-        "<b>A partial mock keeps the real class and replaces one method</b>, for one expensive or external part.",
-        "<b>`Process::fake()` avoids depending on a binary</b> that may not exist on CI or may differ by version.",
-        "<b>Artisan commands are testable</b> with `expectsOutput`, `expectsConfirmation` and `assertExitCode`.",
-        "<b>Commands are the most-forgotten code you own</b>: unwatched, often destructive, tested last.",
-        "<b>Dusk drives a real browser</b> and belongs on a handful of critical paths, never the whole suite.",
-        "<b>Coverage measures lines executed, not behaviour verified</b>, and 100% with no assertions is possible.",
-        "<b>Ask what is covered, not what percentage</b>: workflows, authorization, validation, destructive operations.",
-        "<b>Parallel runs need genuine isolation</b>, so they double as an isolation test you never wrote.",
-        "<b>Test the happy path and the important failure paths</b>, which is what turns tests into a safety net.",
+        "<b>Arguments are positional, options are named flags</b>: `{email}` versus `{--force}`.",
+        "<b>Read them with `$this->argument()` and `$this->option()`</b>, and both come back as strings.",
+        "<b>`{user?}` optional, `{user=1}` default, `{users*}` array, `{--queue=}` option with a value.</b>",
+        "<b>Optional arguments let one command work at two scopes</b>, per-record and global.",
+        "<b>That is also an accident shape</b>: a destructive command whose argument-less form hits everything.",
+        "<b>Make the broad, dangerous form an explicit `--all`</b>, never the default you get by forgetting.",
+        "<b>Write descriptions in the signature</b>, because that is what `php artisan help` prints.",
+        "<b>Once a command is in a cron entry or runbook, its signature is a contract.</b>",
+        "<b>Renaming an option breaks a scheduled task silently</b>, or worse, runs it with an unintended default.",
+        "<b>Validate input</b>, since `'abc'` cast to int becomes `0` and `find(0)` returns null.",
+        "<b>Return `self::SUCCESS` or `self::FAILURE`</b>, because falling off the end returns 0 and hides failures.",
       ],
       commonMistakes: [
-        "<b>Mocking everything.</b> You replace all the code that could fail, so the suite proves nothing.",
-        "<b>Asserting only that a mocked method was called.</b> That is an implementation test in disguise.",
-        "<b>Never testing Artisan commands.</b> They run unwatched at 3am and often delete things.",
-        "<b>Ignoring exit codes.</b> A scheduled command failing with exit `0` breaks a pipeline invisibly.",
-        "<b>Building a suite out of Dusk tests.</b> Slow, flaky, and eventually nobody trusts a red run.",
-        "<b>Chasing a coverage number.</b> It produces the easy tests, not the ones that catch bugs.",
+        "<b>Confusing arguments and options.</b> `{--email}` is a flag; `{email}` is positional.",
+        "<b>A destructive command that defaults to everything.</b> One forgotten argument and the data is gone.",
+        "<b>Omitting descriptions.</b> `php artisan help` is then useless to the person on call.",
+        "<b>Renaming an option that a cron entry uses.</b> The scheduled task fails or silently uses a default.",
+        "<b>Never returning an exit code.</b> Everything looks green while the command fails nightly.",
       ],
       quiz: [
         {
-          question: "Why prefer a fake over a mock when both are available?",
+          question: "What is the difference between `{email}` and `{--email=}`?",
           options: [
-            "Fakes are faster",
-            "A mock asserts on calls, which is an implementation test, and over-mocking replaces everything that could fail",
-            "Mocks do not work in Laravel",
-            "Fakes give better coverage",
+            "Nothing",
+            "The first is a positional argument, the second a named option that takes a value",
+            "The first is optional",
+            "The second is faster",
           ],
           correctIndex: 1,
-          explanation: "A fake fails on the wrong result; a mock fails on the wrong calls.",
+          explanation: "Arguments are positional; options are named.",
         },
         {
-          question: "Why do Artisan command tests matter more than people assume?",
+          question: "Why is `{client?}` risky on a destructive command?",
           options: [
-            "They are quick to write",
-            "Commands run unwatched, often do destructive things, and a silent exit `0` hides a broken pipeline",
-            "They increase coverage",
-            "They replace feature tests",
+            "Optional arguments are unsupported",
+            "Forgetting the argument runs the destructive action against everything",
+            "It breaks the scheduler",
+            "It cannot be validated",
           ],
           correctIndex: 1,
-          explanation: "The exit code is what a scheduler acts on.",
+          explanation: "Make the broad form an explicit `--all` instead.",
         },
         {
-          question: "What does 100% line coverage guarantee?",
+          question: "Why treat a command signature like an API?",
           options: [
-            "The application is correct",
-            "Nothing on its own, since every line can run with no assertions at all",
-            "All branches are covered",
-            "No bugs in production",
+            "It is not one",
+            "Cron entries, deploy scripts and runbooks depend on it, so a rename breaks them silently",
+            "Laravel enforces it",
+            "For code style",
           ],
           correctIndex: 1,
-          explanation: "Coverage measures execution, not verification.",
+          explanation: "Add options, avoid renaming, keep old names working for a release.",
         },
         {
-          question: "What extra thing does running tests in parallel reveal?",
+          question: "What happens if `handle()` returns nothing?",
           options: [
-            "Slow queries",
-            "Whether your tests are genuinely isolated, since each worker gets its own database",
-            "Memory leaks",
-            "Missing migrations",
+            "It throws",
+            "It exits 0, telling the scheduler and monitoring that a failed run succeeded",
+            "It exits 1",
+            "Laravel warns you",
           ],
           correctIndex: 1,
-          explanation: "It is an isolation test you never wrote.",
+          explanation: "Return `self::FAILURE` so the failure is visible.",
+        },
+      ],
+    },
+    {
+      id: "prompts",
+      title: "Laravel Prompts — text, select, confirm & search",
+      durationMinutes: 12,
+      explanation: "A command with six required options is a command nobody can run without reading the source.\n\n```bash\n❌ php artisan user:create --name=... --email=... --role=... --team=...\n```\n\nPrompts asks instead:\n\n```text\nName:   Rajan\nEmail:  rajan@example.com\nAdmin?  Yes\n```\n\n---\n\n### 1. Basic — `text()` and `select()`\n\n```php\nuse function Laravel\\Prompts\\{text, select, confirm, search};\n\n$name = text(label: 'What is your name?');\n```\n\n```text\nWhat is your name? › Rajan\n```\n\n`select()` for a known set:\n\n```php\n$env = select(\n    label: 'Environment?',\n    options: ['local', 'staging', 'production'],\n);\n```\n\n```text\nChoose environment:\n❯ local\n  staging\n  production\n```\n\n<b>This is not just nicer, it is safer.</b> A free-text environment accepts `prod`, `Production` and `porduction`, and you now need validation for input that never had to be free-form. <b>A select cannot produce an invalid value.</b>\n\n---\n\n### 2. Intermediate — `confirm()` and `search()`\n\n```php\n$ok = confirm(label: 'Delete 100 users?', default: false);\n```\n\n```text\nDelete 100 users?\n○ Yes\n● No\n```\n\n<b>Note `default: false`.</b> On a destructive command the safe answer must be the one you get from hitting enter without reading, because that is what a tired person does.\n\n`search()` for a large set:\n\n```text\nChoose user: > raj\n  Rajan\n  Rajesh\n  Rajiv\n```\n\nIt queries as you type, so <b>you never build a select list of ten thousand users</b>, and the person running it does not need to know the ID.\n\nEvery prompt takes `validate:`, which is where you stop bad input at the door rather than three steps into `handle()`.\n\n---\n\n### 3. Advanced — the thing that breaks in production\n\n<b>Prompts need a terminal. The scheduler does not have one.</b>\n\n```text\nyou, interactively → prompt appears → you answer\ncron / CI / deploy → no TTY → the command hangs or throws\n```\n\nThis is the failure people hit: a command that works beautifully by hand, scheduled nightly, and every run sits waiting for an answer nobody will ever type. Or in CI, fails with no useful message.\n\n<b>So an interactive command needs a non-interactive path.</b> Two mechanisms:\n\n```php\nif ($this->option('no-interaction')) { ... }\n\n$name = $this->option('name') ?? text(label: 'Name?');\n```\n\n<b>The pattern: options are the real interface, prompts fill in what was not passed.</b> Then `php artisan user:create --name=X --email=Y -n` works in a script, and `php artisan user:create` works for a human, and it is the same command.\n\n<b>And on destructive commands, `--force` must skip the confirm.</b> Otherwise your deploy script hangs on a safety prompt, and somebody eventually deletes the safety prompt to fix the deploy.\n\nOne more: `$this->confirm()` and `$this->ask()` still exist from older Laravel, and `$this->components->askWith...` sits between them. <b>Prompts is what to use in new code</b>, but you will meet the old helpers in existing commands and they behave the same way about TTYs.\n\nThe older helpers are still there, and you will meet them in existing commands:\n\n```php\n$name  = $this->ask('What is their name?');\n$name  = $this->ask('Name?', 'Rajan');           // with a default\n$ok    = $this->confirm('Delete 12 invoices?', false);\n$role  = $this->choice('Role?', ['member', 'admin'], 'member');\n$secret = $this->secret('API key?');             // not echoed\n```\n\n<b>They behave identically about TTYs</b>, so everything above applies to them too. Prompts is what to write in new code; these are what to recognise.",
+      diagram: `The problem
+
+    ❌ php artisan user:create --name=... --email=...
+                              --role=... --team=...
+
+       Nobody runs this without reading the source.
+
+    ✅ Name:   Rajan
+       Email:  rajan@example.com
+       Admin?  Yes
+
+
+The prompts
+
+  text()      What is your name? › Rajan
+
+  select()    Choose environment:
+              ❯ local
+                staging
+                production
+
+    Not just nicer — SAFER. Free text accepts
+    'prod', 'Production', 'porduction', and now you
+    need validation for input that never had to be
+    free-form.
+
+    A select CANNOT produce an invalid value.
+
+  confirm()   Delete 100 users?
+              ○ Yes
+              ● No
+
+    ⚠️  default: false on anything destructive.
+
+        The safe answer must be what you get from
+        hitting enter without reading — because that
+        is what a tired person does.
+
+  search()    Choose user: > raj
+                Rajan
+                Rajiv
+
+    Queries as you type. No select list of 10,000
+    users, and no need to know the ID.
+
+  Every prompt takes validate: — stop bad input at
+  the door, not three steps into handle().
+
+
+⚠️  The thing that breaks in production
+
+    PROMPTS NEED A TERMINAL. THE SCHEDULER HAS NONE.
+
+    you, interactively  → prompt → you answer
+    cron / CI / deploy  → no TTY → hangs, or throws
+
+  A command that works beautifully by hand, scheduled
+  nightly, sits every night waiting for an answer
+  nobody will type.
+
+
+The pattern that fixes it
+
+    OPTIONS are the real interface.
+    PROMPTS fill in what was not passed.
+
+    $name = $this->option('name') ?? text(label: 'Name?');
+
+    php artisan user:create --name=X --email=Y -n   script
+    php artisan user:create                        human
+
+    same command
+
+  And on destructive commands --force must skip the
+  confirm — otherwise your deploy hangs on a safety
+  prompt, and somebody deletes the safety prompt to
+  fix the deploy.`,
+      codeExample: {
+        title: "Interactive for humans, scriptable for cron",
+        code: `<?php
+
+namespace App\\Console\\Commands;
+
+use App\\Services\\UserCreator;
+use Illuminate\\Console\\Command;
+
+use function Laravel\\Prompts\\{text, select, confirm, search};
+
+class CreateUser extends Command
+{
+    // Options ARE the interface. Prompts fill the gaps.
+    protected $signature = 'user:create
+                            {--name=}
+                            {--email=}
+                            {--role=}
+                            {--force : Skip confirmation}';
+
+    public function handle(UserCreator $creator): int
+    {
+        $name = $this->option('name') ?? text(
+            label: 'What is their name?',
+            required: true,
+        );
+
+        $email = $this->option('email') ?? text(
+            label: 'Email address?',
+            validate: fn (string $value) => match (true) {
+                ! filter_var($value, FILTER_VALIDATE_EMAIL) => 'Not a valid email.',
+                User::where('email', $value)->exists()      => 'Already taken.',
+                default                                     => null,
+            },
+        );
+
+        // A select cannot produce an invalid value
+        $role = $this->option('role') ?? select(
+            label: 'Role?',
+            options: ['member', 'manager', 'admin'],
+            default: 'member',
+        );
+
+        $creator->create($name, $email, $role);
+
+        $this->info("Created {$email} as {$role}.");
+
+        return self::SUCCESS;
+    }
+}
+
+// Human:  php artisan user:create
+// Script: php artisan user:create --name=A --email=b@c.d --role=admin -n
+
+
+<?php
+// ---------- Destructive: safe default + --force ----------
+
+class PurgeInvoices extends Command
+{
+    protected $signature = 'invoices:purge {--all} {--force}';
+
+    public function handle(): int
+    {
+        $count = Invoice::draft()->count();
+
+        // --force is what lets a deploy script run this.
+        // Without it, the script hangs on the prompt — and
+        // then somebody deletes the prompt to fix the deploy.
+        if (! $this->option('force')) {
+            $confirmed = confirm(
+                label: "Delete {$count} draft invoices?",
+                default: false,            // ← enter = No
+            );
+
+            if (! $confirmed) {
+                $this->comment('Cancelled.');
+
+                return self::SUCCESS;
+            }
+        }
+
+        Invoice::draft()->delete();
+        $this->info("Deleted {$count} invoices.");
+
+        return self::SUCCESS;
+    }
+}
+
+
+<?php
+// ---------- search(): a large set, queried as you type ----------
+
+$clientId = search(
+    label: 'Which client?',
+    placeholder: 'Start typing a name…',
+    options: fn (string $value) => strlen($value) > 1
+        ? Client::where('name', 'like', "%{$value}%")
+            ->limit(10)
+            ->pluck('name', 'id')
+            ->all()
+        : [],
+);
+
+// No select list of 10,000 clients, and the operator
+// never needs to know the ID.
+
+
+<?php
+// ---------- Multi-select and password ----------
+
+use function Laravel\\Prompts\\{multiselect, password};
+
+$abilities = multiselect(
+    label: 'Token abilities?',
+    options: ['invoices:read', 'invoices:write', 'clients:read'],
+    default: ['invoices:read'],
+);
+
+$secret = password(label: 'API key?');   // not echoed
+
+
+<?php
+// ---------- Guarding the no-TTY case explicitly ----------
+
+public function handle(): int
+{
+    if (! $this->input->isInteractive() && ! $this->option('email')) {
+        $this->error('--email is required when running non-interactively.');
+
+        return self::INVALID;       // fails fast instead of hanging
+    }
+
+    // ...
+}`,
+      },
+      keyTakeaways: [
+        "<b>Prompts replaces a wall of required options</b> with questions a person can answer.",
+        "<b>`select()` is safer than free text</b>, because an invalid value is not expressible.",
+        "<b>`confirm()` on a destructive command must default to no</b>, since enter-without-reading is what happens.",
+        "<b>`search()` queries as you type</b>, so a huge set needs no giant list and no IDs.",
+        "<b>Every prompt takes `validate:`</b>, stopping bad input at the door.",
+        "<b>Prompts need a TTY, and cron, CI and deploy scripts do not have one.</b>",
+        "<b>A prompting command run by the scheduler hangs</b>, every night, waiting for an answer nobody types.",
+        "<b>Make options the real interface and let prompts fill the gaps</b>, so one command serves humans and scripts.",
+        "<b>`--force` must skip the confirmation</b>, or the deploy hangs and somebody removes the safety prompt.",
+        "<b>Fail fast when non-interactive input is missing</b> rather than waiting on a prompt that cannot appear.",
+      ],
+      commonMistakes: [
+        "<b>Scheduling a command that prompts.</b> It hangs nightly with no output anyone reads.",
+        "<b>Defaulting a destructive confirm to yes.</b> Enter-without-reading then deletes the data.",
+        "<b>Prompting with no option equivalent.</b> The command cannot be used from a script at all.",
+        "<b>Building a select list from a huge table.</b> `search()` exists for exactly that.",
+        "<b>Validating after the prompts.</b> The operator answers five questions before learning the second was wrong.",
+      ],
+      quiz: [
+        {
+          question: "Why is `select()` safer than asking for free text?",
+          options: [
+            "It is faster",
+            "An invalid value is not expressible, so input that never had to be free-form cannot be wrong",
+            "It validates automatically",
+            "It works without a TTY",
+          ],
+          correctIndex: 1,
+          explanation: "Free text accepts `prod`, `Production` and typos alike.",
         },
         {
-          question: "What separates a test suite from a safety net?",
+          question: "What happens when the scheduler runs a command that prompts?",
           options: [
-            "The number of tests",
-            "Covering the happy path and the important failure paths: invalid data, guests, wrong user, side effects",
-            "Using Pest",
-            "High coverage",
+            "It uses defaults",
+            "There is no TTY, so it hangs or throws, every run, with nobody watching",
+            "It skips the prompt",
+            "It fails with a clear error",
           ],
           correctIndex: 1,
-          explanation: "\"A user can create a post\" alone proves very little.",
+          explanation: "Options must be able to supply everything the prompts ask for.",
+        },
+        {
+          question: "Why should a destructive `confirm()` default to no?",
+          options: [
+            "Convention",
+            "Enter-without-reading is what a tired person does, so the safe answer must be the default",
+            "Laravel requires it",
+            "It is faster",
+          ],
+          correctIndex: 1,
+          explanation: "The default should be the outcome you can recover from.",
+        },
+        {
+          question: "What is the pattern that makes a command work for both humans and scripts?",
+          options: [
+            "Two commands",
+            "Options are the real interface, and prompts fill in what was not passed",
+            "Always prompt",
+            "Never prompt",
+          ],
+          correctIndex: 1,
+          explanation: "`$this->option('name') ?? text(...)`.",
+        },
+      ],
+    },
+    {
+      id: "output-progress-and-tables",
+      title: "Output: spinners, progress bars, tables & exit codes",
+      durationMinutes: 11,
+      explanation: "A command that prints nothing looks identical to a command that has crashed.\n\n---\n\n### 1. Basic — the output levels\n\n```php\n$this->info('Import started.');\n$this->warn('3 records skipped.');\n$this->error('Import failed.');\n$this->line('Plain text.');\n$this->comment('Cancelled.');\n```\n\n```text\nINFO     Import started.\nWARNING  3 records skipped.\nERROR    Import failed.\n```\n\n<b>These are not just colours.</b> `error()` writes to <b>stderr</b>, the others to stdout, which is what lets a cron entry redirect real failures somewhere different from routine chatter, and what stops your error text being swallowed by a pipe.\n\n---\n\n### 2. Intermediate — spinner vs progress bar\n\nThe rule is simply <b>whether you know the total</b>:\n\n```text\nunknown duration  →  spinner    ⠋ Processing...\nknown total       →  progress   ████████░░░░ 80%\n```\n\n```php\n$result = spin(\n    callback: fn () => $api->fetchAll(),\n    message: 'Fetching from the API…',\n);\n\n$users = progress(\n    label: 'Processing users',\n    steps: User::all(),\n    callback: fn (User $user) => $this->process($user),\n);\n```\n\n<b>Without either, the operator's question is \"did it freeze?\"</b>, and the answer they act on is Ctrl-C, halfway through a job that was working.\n\n<b>And a progress bar over `all()` is a memory problem</b> the moment the table is large. Use `chunkById` or `cursor` and drive the bar manually, or you have taught the operator patience while running the machine out of RAM.\n\n---\n\n### 3. Advanced — tables and what \"done\" should say\n\n```php\n$this->table(\n    ['ID', 'Name', 'Email'],\n    User::limit(10)->get(['id', 'name', 'email'])->toArray(),\n);\n```\n\n```text\n+----+-------+-------------------+\n| ID | Name  | Email             |\n+----+-------+-------------------+\n| 1  | Rajan | rajan@example.com |\n+----+-------+-------------------+\n```\n\nBetter than concatenating strings, and it stays aligned when a value is long.\n\n<b>Now the part most commands get wrong: the summary.</b>\n\n```text\n❌ Done.\n✅ Processed 50 users. 47 updated, 3 skipped (missing email).\n```\n\n<b>\"Done\" is not a result, it is a reassurance.</b> The second line tells the operator whether to investigate, and it is what gets pasted into an incident channel. If the command skipped things, <b>say how many and why</b>, because a silent skip is a bug that hides for months.\n\nTwo more.\n\n<b>Respect verbosity.</b> `-v`, `-vv`, `-vvv` are what the operator turns on when something is wrong:\n\n```php\nif ($this->output->isVerbose()) {\n    $this->line(\"Skipped {$user->id}: no email\");\n}\n```\n\nPer-record output at normal verbosity buries the summary in ten thousand lines.\n\n<b>And what you print is not what your monitoring reads.</b> The exit code is. A command that prints `ERROR` in red and returns 0 is a green scheduled task with red text nobody is looking at.\n\nFor a bounded set there is a shorthand that handles start, advance and finish for you:\n\n```php\n$this->withProgressBar($invoices, function (Invoice $invoice) {\n    $this->sender->send($invoice);\n});\n\n$this->newLine(2);\n```\n\n<b>The `newLine()` afterwards is not optional</b>: a finished bar leaves the cursor at the end of its line, so your summary prints on top of it. Use the manual `createProgressBar()` when you are chunking and the bar has to advance from inside a callback.",
+      diagram: `Output levels
+
+    $this->info('Import started.');
+    $this->warn('3 records skipped.');
+    $this->error('Import failed.');
+    $this->line('Plain text.');
+    $this->comment('Cancelled.');
+
+      INFO     Import started.
+      WARNING  3 records skipped.
+      ERROR    Import failed.
+
+  Not just colours: error() writes to STDERR, the
+  rest to stdout. That is what lets cron redirect
+  real failures elsewhere, and stops your error text
+  being swallowed by a pipe.
+
+
+Spinner vs progress — do you know the total?
+
+    unknown duration  →  spinner
+                         ⠋ Processing...
+
+    known total       →  progress bar
+                         ████████░░░░ 80%
+
+  Without either, the operator's question is
+  "did it freeze?" — and the answer they act on is
+  Ctrl-C, halfway through a job that was working.
+
+  ⚠️  progress(steps: User::all()) loads the whole
+      table. Use chunkById/cursor and advance the bar
+      manually, or you have taught the operator
+      patience while running the machine out of RAM.
+
+
+Tables
+
+    +----+-------+-------------------+
+    | ID | Name  | Email             |
+    +----+-------+-------------------+
+    | 1  | Rajan | rajan@example.com |
+    +----+-------+-------------------+
+
+  Beats concatenating strings, and stays aligned when
+  a value is long.
+
+
+The summary most commands get wrong
+
+    ❌  Done.
+
+    ✅  Processed 50 users.
+        47 updated, 3 skipped (missing email).
+
+  "Done" is a reassurance, not a result.
+
+  The second line tells the operator whether to
+  investigate — and it is what gets pasted into an
+  incident channel.
+
+  If it skipped things, say HOW MANY and WHY. A
+  silent skip is a bug that hides for months.
+
+
+Verbosity
+
+    -v  -vv  -vvv    what the operator turns on when
+                     something is wrong
+
+    if ($this->output->isVerbose()) {
+        $this->line("Skipped {$user->id}: no email");
+    }
+
+  Per-record output at normal verbosity buries the
+  summary under ten thousand lines.
+
+
+  ⚠️  What you PRINT is not what monitoring READS.
+
+      The exit code is. A command that prints ERROR
+      in red and returns 0 is a green scheduled task
+      with red text nobody is looking at.`,
+      codeExample: {
+        title: "Progress, tables and a summary worth reading",
+        code: `<?php
+
+use function Laravel\\Prompts\\{progress, spin, table};
+
+class ProcessUsers extends Command
+{
+    protected $signature = 'users:process {--chunk=200}';
+
+    public function handle(UserProcessor $processor): int
+    {
+        $total = User::pending()->count();
+
+        if ($total === 0) {
+            $this->info('Nothing to process.');
+
+            return self::SUCCESS;
+        }
+
+        $updated = 0;
+        $skipped = [];
+
+        $bar = $this->output->createProgressBar($total);
+        $bar->start();
+
+        // chunkById, not all() — the bar should not cost
+        // you the whole table in memory
+        User::pending()->chunkById((int) $this->option('chunk'), function ($users) use (&$updated, &$skipped, $bar) {
+            foreach ($users as $user) {
+                if (! $user->email) {
+                    $skipped[] = $user;
+
+                    // Per-record detail only when asked for it
+                    if ($this->output->isVerbose()) {
+                        $this->line("  skipped {$user->id}: no email");
+                    }
+                } else {
+                    $this->processor->process($user);
+                    $updated++;
+                }
+
+                $bar->advance();
+            }
+        });
+
+        $bar->finish();
+        $this->newLine(2);
+
+        // ❌ $this->info('Done.');
+        // ✅ A result the operator can act on
+        $this->info("Processed {$total} users. {$updated} updated, "
+            . count($skipped) . ' skipped.');
+
+        if ($skipped !== []) {
+            $this->warn('Skipped users (missing email):');
+
+            $this->table(
+                ['ID', 'Name', 'Created'],
+                collect($skipped)->take(10)->map(fn ($u) => [
+                    $u->id, $u->name, $u->created_at->toDateString(),
+                ])->all(),
+            );
+
+            return self::FAILURE;      // ← what monitoring reads
+        }
+
+        return self::SUCCESS;
+    }
+}
+
+
+<?php
+// ---------- Prompts' progress helper, for a bounded set ----------
+
+$results = progress(
+    label: 'Sending invoices',
+    steps: $invoices,                    // already in memory
+    callback: fn (Invoice $invoice) => $this->sender->send($invoice),
+);
+
+
+<?php
+// ---------- spin(): duration unknown ----------
+
+$response = spin(
+    callback: fn () => Http::timeout(120)->get($endpoint),
+    message: 'Waiting for the export to build…',
+);
+
+// Without it: a blank terminal, and an operator who
+// hits Ctrl-C on a job that was working fine.
+
+
+<?php
+// ---------- stdout vs stderr ----------
+
+$this->info('Routine progress.');    // stdout
+$this->error('Real failure.');       // stderr
+
+// crontab:
+// 0 2 * * * php artisan users:process >> /var/log/users.log 2>> /var/log/users.err
+//
+// Failures land somewhere you can alert on, separately
+// from the nightly chatter.
+
+
+<?php
+// ---------- Verbosity levels ----------
+
+$this->output->isQuiet();        // -q
+$this->output->isVerbose();      // -v
+$this->output->isVeryVerbose();  // -vv
+$this->output->isDebug();        // -vvv
+
+// Or let Laravel do it:
+$this->line('detail', verbosity: OutputInterface::VERBOSITY_VERBOSE);`,
+      },
+      keyTakeaways: [
+        "<b>`info`, `warn`, `error`, `line` and `comment` are the output levels</b>, and `error` writes to stderr.",
+        "<b>That split lets cron alert on real failures</b> separately from routine output.",
+        "<b>Spinner when the duration is unknown, progress bar when you know the total.</b>",
+        "<b>Without either, the operator assumes it froze</b> and hits Ctrl-C on a working job.",
+        "<b>Do not build a progress bar over `all()`</b>: use `chunkById` or `cursor` and advance manually.",
+        "<b>`$this->table()` keeps structured output aligned</b>, unlike concatenated strings.",
+        "<b>\"Done\" is a reassurance, not a result.</b> Print counts and reasons.",
+        "<b>Always report what was skipped and why</b>, because a silent skip hides for months.",
+        "<b>Put per-record detail behind `-v`</b>, or the summary drowns in ten thousand lines.",
+        "<b>Monitoring reads the exit code, not your text</b>, so red output with exit `0` is a green task.",
+      ],
+      commonMistakes: [
+        "<b>A long command with no output.</b> Indistinguishable from a hang, and it gets killed.",
+        "<b>`progress(steps: Model::all())` on a large table.</b> You bought a nice bar with all your memory.",
+        "<b>Ending with `Done.`</b> The operator learns nothing and has nothing to paste anywhere.",
+        "<b>Printing a line per record at normal verbosity.</b> The summary is now unfindable.",
+        "<b>Printing an error and returning 0.</b> Monitoring sees a successful run.",
+      ],
+      quiz: [
+        {
+          question: "Why does it matter that `error()` writes to stderr?",
+          options: [
+            "It is faster",
+            "Cron and CI can route real failures separately from routine output, and pipes will not swallow it",
+            "It shows in red",
+            "It stops the command",
+          ],
+          correctIndex: 1,
+          explanation: "Stream choice is what alerting hooks into.",
+        },
+        {
+          question: "When is a spinner the right choice over a progress bar?",
+          options: [
+            "Always",
+            "When you do not know the total amount of work, only that something is happening",
+            "For short commands",
+            "For destructive commands",
+          ],
+          correctIndex: 1,
+          explanation: "Known total means a progress bar.",
+        },
+        {
+          question: "What is wrong with `progress(steps: User::all())`?",
+          options: [
+            "Nothing",
+            "It loads the whole table into memory, so the bar costs you RAM proportional to the data",
+            "The bar is inaccurate",
+            "It cannot show a label",
+          ],
+          correctIndex: 1,
+          explanation: "Chunk and advance the bar manually.",
+        },
+        {
+          question: "Why is `Done.` a poor final message?",
+          options: [
+            "It is too short",
+            "It gives the operator nothing to act on: no counts, no skips, no reasons",
+            "It is not coloured",
+            "It should be a table",
+          ],
+          correctIndex: 1,
+          explanation: "A silent skip is a bug that hides for months.",
+        },
+      ],
+    },
+    {
+      id: "isolatable-and-scheduled-commands",
+      title: "Isolatable commands & scheduling",
+      durationMinutes: 11,
+      explanation: "A command that is safe to run once is not automatically safe to run twice at the same time.\n\n---\n\n### 1. Basic — the overlap problem\n\n```text\nServer A → reports:generate\nServer B → reports:generate\n```\n\nBoth start the same expensive job. Depending on what it does, you get double emails, double charges, duplicate rows, or two processes fighting over the same records.\n\n<b>And this is not hypothetical the moment you have two application servers</b>, because most people put the same crontab on both.\n\nThe fix:\n\n```php\nclass GenerateReports extends Command implements Isolatable\n{\n    // ...\n}\n```\n\n```bash\nphp artisan reports:generate --isolated\n```\n\n```text\ncommand starts → acquire lock → another instance? → blocked\n```\n\nThe lock lives in your <b>cache</b>, so it works across servers only if the cache is shared. <b>A file or array cache driver gives each server its own lock and no protection at all</b>, which is the quiet way this fails.\n\n---\n\n### 2. Intermediate — what to isolate\n\n```text\nimports · reports · billing · data sync · cleanup\n```\n\nThe test: <b>would running this twice concurrently be wrong?</b> If yes, isolate it.\n\nAnd choose the exit behaviour deliberately:\n\n```bash\n--isolated          exits 0 when already running\n--isolated=1        exits 1 instead\n```\n\n<b>Exit 0 is right for a scheduled task</b>, where \"the previous run is still going\" is normal and should not page anyone. <b>Exit 1 is right in a deploy script</b>, where you need to know the migration you asked for did not happen.\n\n---\n\n### 3. Advanced — scheduling, and the two ways this bites\n\nDay 26 covered the scheduler. The joins are:\n\n```text\nSchedule → Artisan command → Service → Job → Queue\n```\n\n```php\nSchedule::command('reports:generate')\n    ->dailyAt('02:00')\n    ->withoutOverlapping()\n    ->onOneServer()\n    ->emailOutputOnFailure('ops@example.com');\n```\n\n<b>`withoutOverlapping()` and `onOneServer()` solve two different problems</b>, and people reach for one thinking it does both:\n\n```text\nwithoutOverlapping()  the same server, run overlapping runs\nonOneServer()         several servers, all firing at 02:00\n```\n\n<b>You usually want both</b>, and `onOneServer()` also needs a shared cache.\n\nAnd the trap that outlives all of this: <b>`withoutOverlapping()` has a default expiry of 24 hours.</b> If a run is killed without releasing its lock, the task does not run again until that expires. The symptom is a report that stopped arriving a day ago and a scheduler that looks perfectly healthy. Set an expiry matching how long the task should ever take:\n\n```php\n->withoutOverlapping(30)   // minutes\n```\n\n<b>The last piece is that a command's exit code is what the scheduler acts on</b>, which is where Day 28 and lesson 2 meet: `emailOutputOnFailure` and `pingOnFailure` only fire on a non-zero exit. A command that catches everything and returns `self::SUCCESS` is a scheduled task that can never alert.",
+      diagram: `The overlap problem
+
+    Server A → reports:generate
+    Server B → reports:generate
+
+  Both start the same expensive job:
+    double emails · double charges · duplicate rows
+    two processes fighting over the same records
+
+  Not hypothetical the moment you have two app
+  servers — most people put the same crontab on both.
+
+
+Isolatable
+
+    class GenerateReports extends Command
+        implements Isolatable
+
+    php artisan reports:generate --isolated
+
+    command starts → acquire lock
+                   → another instance? → BLOCKED
+
+  ⚠️  The lock lives in your CACHE.
+
+      A file or array driver gives each server its
+      OWN lock, and therefore no protection. That is
+      the quiet way this fails.
+
+  Exit behaviour, chosen deliberately:
+
+    --isolated      exits 0 when already running
+                    → right for a SCHEDULED task
+                      ("still going" should not page)
+
+    --isolated=1    exits 1 instead
+                    → right in a DEPLOY script
+                      (you need to know it didn't run)
+
+  What to isolate — would running this twice
+  concurrently be WRONG?
+
+    imports · reports · billing · sync · cleanup
+
+
+Scheduling
+
+    Schedule → Artisan command → Service → Job → Queue
+
+    Schedule::command('reports:generate')
+        ->dailyAt('02:00')
+        ->withoutOverlapping(30)
+        ->onOneServer()
+        ->emailOutputOnFailure('ops@example.com');
+
+
+Two different problems, often confused
+
+    withoutOverlapping()   the SAME server, runs
+                           overlapping in time
+
+    onOneServer()          SEVERAL servers all firing
+                           at 02:00
+
+    You usually want both. onOneServer() also needs a
+    shared cache.
+
+
+  ⚠️  withoutOverlapping() defaults to a 24-HOUR expiry.
+
+      A run killed without releasing its lock blocks
+      the task for a day.
+
+      Symptom: a report that stopped arriving
+      yesterday, and a scheduler that looks perfectly
+      healthy.
+
+        ->withoutOverlapping(30)   ← minutes
+
+
+  The exit code is what the scheduler ACTS on.
+
+    emailOutputOnFailure / pingOnFailure fire only on
+    a NON-ZERO exit.
+
+    A command that catches everything and returns
+    SUCCESS can never alert.`,
+      codeExample: {
+        title: "Isolation, scheduling and the locks that bite",
+        code: `<?php
+
+namespace App\\Console\\Commands;
+
+use Illuminate\\Console\\Command;
+use Illuminate\\Contracts\\Console\\Isolatable;
+
+class GenerateReports extends Command implements Isolatable
+{
+    protected $signature = 'reports:generate {--month=}';
+
+    // How long the lock survives if this process is killed
+    public function isolationLockExpiresAt(): DateTimeInterface
+    {
+        return now()->addMinutes(30);
+    }
+
+    public function handle(ReportBuilder $builder): int
+    {
+        $result = $builder->buildFor($this->option('month') ?? now()->subMonth());
+
+        $this->info("Built {$result->count} reports.");
+
+        return $result->failed === 0 ? self::SUCCESS : self::FAILURE;
+    }
+}
+
+// php artisan reports:generate --isolated     exits 0 if running
+// php artisan reports:generate --isolated=1   exits 1 if running
+
+
+<?php
+// ---------- routes/console.php ----------
+
+use Illuminate\\Support\\Facades\\Schedule;
+
+Schedule::command('reports:generate')
+    ->dailyAt('02:00')
+    ->withoutOverlapping(30)              // ← minutes, not the 24h default
+    ->onOneServer()                       // ← needs a shared cache
+    ->emailOutputOnFailure('ops@example.com');
+
+// withoutOverlapping()  same server, runs overlapping in time
+// onOneServer()         several servers firing at 02:00
+//
+// They solve different problems. You usually want both.
+
+
+<?php
+// ---------- The 24-hour lock, and its symptom ----------
+
+// ❌ Default expiry
+Schedule::command('invoices:sync')->hourly()->withoutOverlapping();
+//
+// The 03:00 run is OOM-killed. The lock is never
+// released. The task does not run again until 03:00
+// TOMORROW — and the scheduler reports no errors,
+// because it never tried.
+
+// ✅ Expiry matched to how long the task should ever take
+Schedule::command('invoices:sync')->hourly()->withoutOverlapping(50);
+
+
+# ---------- Why the cache driver decides whether this works ----------
+
+# .env on server A and server B
+CACHE_STORE=file        # ❌ each server has its own lock → no protection
+CACHE_STORE=redis       # ✅ one shared lock
+
+# Same for onOneServer(). Silent failure either way:
+# nothing errors, both servers just run.
+
+
+<?php
+// ---------- Failure has to be visible ----------
+
+// ❌ Nothing can ever alert on this
+public function handle(): int
+{
+    try {
+        $this->builder->build();
+    } catch (Throwable $e) {
+        report($e);
+        $this->error('Failed.');
+    }
+
+    return self::SUCCESS;      // ← scheduler sees success
+}
+
+// ✅
+public function handle(): int
+{
+    try {
+        $this->builder->build();
+    } catch (Throwable $e) {
+        report($e);
+        $this->error("Failed: {$e->getMessage()}");
+
+        return self::FAILURE;
+    }
+
+    return self::SUCCESS;
+}
+
+Schedule::command('reports:generate')
+    ->dailyAt('02:00')
+    ->pingOnFailure('https://healthchecks.io/ping/xxx/fail');
+
+
+<?php
+// ---------- Seeing what is actually scheduled ----------
+
+// php artisan schedule:list
+// php artisan schedule:test          run one task interactively
+// php artisan schedule:work          run the scheduler locally`,
+      },
+      keyTakeaways: [
+        "<b>Two servers with the same crontab run the same command twice</b>, at the same moment.",
+        "<b>`Isolatable` plus `--isolated` takes a lock</b> so a second instance is blocked.",
+        "<b>The lock lives in the cache</b>, so a file or array driver gives each server its own and protects nothing.",
+        "<b>`--isolated` exits 0 when blocked, `--isolated=1` exits 1</b>: scheduled tasks want the first, deploys the second.",
+        "<b>Isolate anything where running twice concurrently would be wrong</b>: imports, reports, billing, sync, cleanup.",
+        "<b>`withoutOverlapping()` guards runs overlapping in time on one server.</b>",
+        "<b>`onOneServer()` guards several servers firing the same schedule</b>, and also needs a shared cache.",
+        "<b>`withoutOverlapping()` defaults to a 24-hour expiry</b>, so a killed run blocks the task for a day.",
+        "<b>The symptom is a task that quietly stopped</b> while the scheduler reports no errors.",
+        "<b>The scheduler acts on the exit code</b>, so a command that catches everything and returns success can never alert.",
+      ],
+      commonMistakes: [
+        "<b>Assuming one crontab.</b> Two app servers means two runs unless you say otherwise.",
+        "<b>Using `onOneServer()` with a file cache.</b> No shared lock, no protection, and no error.",
+        "<b>Leaving `withoutOverlapping()` at its default expiry.</b> One killed run silences the task for 24 hours.",
+        "<b>Thinking `withoutOverlapping()` covers multiple servers.</b> That is `onOneServer()`.",
+        "<b>Swallowing exceptions and returning success.</b> `emailOutputOnFailure` never fires.",
+      ],
+      quiz: [
+        {
+          question: "Where does an isolation lock live, and why does that matter?",
+          options: [
+            "In the database",
+            "In the cache, so a file or array driver gives each server its own lock and no protection",
+            "In a lock file on disk, shared automatically",
+            "In the session",
+          ],
+          correctIndex: 1,
+          explanation: "Cross-server isolation requires a shared cache like Redis.",
+        },
+        {
+          question: "What is the difference between `withoutOverlapping()` and `onOneServer()`?",
+          options: [
+            "They are the same",
+            "The first stops runs overlapping in time on one server; the second stops several servers running the same schedule",
+            "The first is for queues",
+            "The second is deprecated",
+          ],
+          correctIndex: 1,
+          explanation: "Different problems, and you usually want both.",
+        },
+        {
+          question: "What happens when a task with default `withoutOverlapping()` is killed mid-run?",
+          options: [
+            "The lock releases immediately",
+            "The lock survives for 24 hours, so the task silently does not run again until it expires",
+            "The scheduler reports an error",
+            "The next run kills the lock",
+          ],
+          correctIndex: 1,
+          explanation: "Pass an expiry in minutes that matches the task's realistic maximum.",
+        },
+        {
+          question: "Why can a scheduled command that catches every exception never alert?",
+          options: [
+            "Exceptions are not logged",
+            "`emailOutputOnFailure` and `pingOnFailure` fire only on a non-zero exit code",
+            "The scheduler ignores output",
+            "It does alert",
+          ],
+          correctIndex: 1,
+          explanation: "Return `self::FAILURE` after reporting the error.",
+        },
+      ],
+    },
+    {
+      id: "pint-and-code-style",
+      title: "Pint & automating code style",
+      durationMinutes: 11,
+      explanation: "The cheapest quality win in a codebase, and the one teams argue about longest.\n\n---\n\n### 1. Basic — what Pint is\n\n<b>Laravel Pint</b> is an opinionated PHP code-style fixer built on PHP-CS-Fixer, shipped with Laravel:\n\n```bash\n./vendor/bin/pint\n```\n\nIt rewrites your files: spacing, braces, import ordering, trailing commas, alignment. <b>Not a linter that complains, a fixer that fixes.</b> Which matters, because a tool that only reports style problems creates a chore, and a tool that fixes them creates a habit.\n\n```bash\n./vendor/bin/pint --test    # report, change nothing (CI)\n./vendor/bin/pint --dirty   # only files changed in git\n./vendor/bin/pint -v        # show what rules fired\n```\n\n---\n\n### 2. Intermediate — why this is worth automating\n\nFive developers, five habits:\n\n```text\ndifferent indentation · different spacing · different conventions\n```\n\n```text\nDeveloper A ─┐\nDeveloper B ─┼→ Pint → consistent code\nDeveloper C ─┘\n```\n\n<b>The real cost is not ugliness, it is diff noise.</b> A pull request where twelve of fifteen changed lines are whitespace is a pull request nobody reviews properly, and the one real change is hiding in it. <b>Reviewers have a fixed budget of attention</b>, and style burns it before they reach anything that matters.\n\nThe principle:\n\n> <b>Code style should be automated, not debated in every PR.</b>\n\nAnd it holds even if you dislike a specific rule. <b>A consistent style you mildly disagree with beats an inconsistent one you chose</b>, because the value is in the consistency, not the choices.\n\n---\n\n### 3. Advanced — where to run it, and the trap\n\nConfigure a preset in `pint.json`:\n\n```json\n{ \"preset\": \"laravel\" }\n```\n\n<b>Pick the preset once, early, and stop.</b> Changing it later rewrites every file, and now `git blame` on your whole codebase points at one style commit. If you must, do it in a single commit that touches nothing else, and add it to `.git-blame-ignore-revs`.\n\nWhere to run it, in order of how much friction each adds:\n\n```text\neditor on save     zero friction, per-developer\npre-commit hook    catches it before it exists\nCI --test          the only one that is enforcement\n```\n\n<b>CI is the one that actually holds</b>, because hooks are local and someone always has them off. But a CI check with no local fixer is a bad trade: the feedback arrives minutes later, on a build, for something the developer could have fixed in a keystroke.\n\n<b>The trap: introducing Pint to an existing codebase.</b> Running it across everything produces a diff of thousands of lines that will conflict with every open branch and destroy `git blame`. Better: `pint --dirty` in CI so only <b>changed</b> files must be clean, and the codebase converges as it is touched.\n\nAnd the boundary worth naming: <b>Pint formats, it does not find bugs.</b> Static analysis (PHPStan, Larastan) is the tool for \"this method can return null and you did not check\". Different job, and the one that catches the thing Pint never will.",
+      diagram: `What Pint is
+
+    ./vendor/bin/pint
+
+  An opinionated fixer built on PHP-CS-Fixer, shipped
+  with Laravel. It REWRITES files: spacing, braces,
+  import order, trailing commas, alignment.
+
+  Not a linter that complains. A fixer that fixes.
+
+    a tool that REPORTS style problems → a chore
+    a tool that FIXES them             → a habit
+
+    ./vendor/bin/pint --test    report only (CI)
+    ./vendor/bin/pint --dirty   changed files only
+    ./vendor/bin/pint -v        show which rules fired
+
+
+Why automate it
+
+    Developer A ─┐
+    Developer B ─┼→  Pint  →  consistent code
+    Developer C ─┘
+
+  The real cost is not ugliness. It is DIFF NOISE.
+
+    a PR where 12 of 15 changed lines are whitespace
+      ↓
+    nobody reviews it properly
+      ↓
+    the one real change is hiding in it
+
+  Reviewers have a fixed budget of attention, and
+  style burns it before they reach anything important.
+
+    Code style should be AUTOMATED, not debated in
+    every PR.
+
+  Holds even for rules you dislike: a consistent style
+  you mildly disagree with beats an inconsistent one
+  you chose. The value is the consistency.
+
+
+Where to run it
+
+    editor on save    zero friction, per-developer
+    pre-commit hook   catches it before it exists
+    CI --test         the only one that is ENFORCEMENT
+
+  CI is what holds — hooks are local and someone
+  always has them off.
+
+  But CI with no local fixer is a bad trade: feedback
+  arrives minutes later, on a build, for something a
+  keystroke would have fixed.
+
+
+  ⚠️  Introducing Pint to an existing codebase.
+
+      Running it over everything:
+        a thousand-line diff
+        conflicts with every open branch
+        git blame points at one style commit
+
+      Better: pint --dirty in CI. Only CHANGED files
+      must be clean, and the codebase converges as it
+      is touched.
+
+      Same for changing the preset later — one commit
+      that touches nothing else, added to
+      .git-blame-ignore-revs.
+
+
+The boundary
+
+    Pint             formats
+    PHPStan/Larastan finds bugs
+
+    "this method can return null and you did not
+     check" is not a style problem, and Pint will
+     never see it.`,
+      codeExample: {
+        title: "Pint locally, in hooks and in CI",
+        code: `# ---------- The commands ----------
+
+./vendor/bin/pint                 # fix everything
+./vendor/bin/pint --test          # report only, exit 1 if dirty
+./vendor/bin/pint --dirty         # only files changed vs git
+./vendor/bin/pint -v              # which rules fired, per file
+./vendor/bin/pint app/Services    # a path
+
+
+# ---------- pint.json: pick a preset once ----------
+
+{
+    "preset": "laravel",
+    "rules": {
+        "declare_strict_types": true,
+        "ordered_imports": { "sort_algorithm": "alpha" },
+        "no_unused_imports": true
+    },
+    "exclude": ["database/migrations"]
+}
+
+# Changing the preset later rewrites every file and
+# points git blame at one commit. If you must:
+#   one commit, nothing else in it, then
+#   echo <sha> >> .git-blame-ignore-revs
+
+
+# ---------- composer.json: make it discoverable ----------
+
+"scripts": {
+    "lint":     "pint",
+    "lint:test": "pint --test",
+    "check":    ["@lint:test", "@php artisan test"]
+}
+
+# composer check — one command a new developer can find
+
+
+# ---------- Pre-commit hook (.git/hooks/pre-commit) ----------
+
+#!/bin/sh
+./vendor/bin/pint --dirty
+git add $(git diff --name-only --cached --diff-filter=ACM | grep '\\.php$')
+
+# Local, so someone always has it off. Convenience,
+# not enforcement.
+
+
+# ---------- CI: the part that actually holds ----------
+
+# .github/workflows/ci.yml
+- name: Check code style
+  run: ./vendor/bin/pint --test --dirty
+
+- name: Static analysis
+  run: ./vendor/bin/phpstan analyse
+
+- name: Tests
+  run: php artisan test
+
+# --dirty in CI is what lets you adopt Pint on an
+# existing codebase without a thousand-line diff:
+# only files this PR touched have to be clean.
+
+
+# ---------- Different jobs ----------
+
+# Pint     → formatting
+#   spacing, braces, import order, trailing commas
+#
+# PHPStan  → correctness
+#   "getUser() can return null and line 42 calls ->name on it"
+#
+# Tests    → behaviour
+#   "an unauthorised user cannot delete this invoice"
+#
+# Three tools, three questions. None substitutes for
+# another.
+
+
+<?php
+// ---------- What Pint will never catch ----------
+
+public function ownerName(Invoice $invoice): string
+{
+    return $invoice->user->name;      // user() can be null
+}
+
+// Perfectly formatted. Fatal in production.
+// That is PHPStan's job, not Pint's.`,
+      },
+      keyTakeaways: [
+        "<b>Pint is a fixer, not a linter</b>, and that difference turns a chore into a habit.",
+        "<b>`--test` reports without changing, `--dirty` limits to files changed in git.</b>",
+        "<b>The real cost of inconsistent style is diff noise</b>, not ugliness.",
+        "<b>A PR that is mostly whitespace does not get reviewed properly</b>, and reviewer attention is finite.",
+        "<b>Style should be automated, not debated in every PR.</b>",
+        "<b>A consistent style you mildly dislike beats an inconsistent one you chose</b>, because consistency is the value.",
+        "<b>Pick a preset once and early</b>, since changing it rewrites every file and wrecks `git blame`.",
+        "<b>Editor on save, pre-commit hook, CI `--test`</b>, in increasing order of enforcement.",
+        "<b>CI is the only real enforcement</b>, but CI without a local fixer wastes minutes on a keystroke fix.",
+        "<b>Use `--dirty` to adopt Pint on an existing codebase</b> so it converges instead of exploding.",
+        "<b>Pint formats; PHPStan finds bugs.</b> Perfectly formatted code can still be fatally wrong.",
+      ],
+      commonMistakes: [
+        "<b>Running Pint over an old codebase in one go.</b> Every open branch conflicts and blame is destroyed.",
+        "<b>Debating style rules in code review.</b> That is what the preset is for.",
+        "<b>CI style checks with no local fixer.</b> The feedback loop is minutes instead of instant.",
+        "<b>Changing the preset casually.</b> One commit rewrites the entire history's blame.",
+        "<b>Expecting Pint to catch bugs.</b> Formatting and correctness are different tools.",
+      ],
+      quiz: [
+        {
+          question: "What is the practical cost of inconsistent code style?",
+          options: [
+            "It looks bad",
+            "Diff noise: a PR that is mostly whitespace does not get reviewed properly",
+            "Slower execution",
+            "Merge conflicts only",
+          ],
+          correctIndex: 1,
+          explanation: "Reviewer attention is finite and style spends it first.",
+        },
+        {
+          question: "How should you introduce Pint to an existing codebase?",
+          options: [
+            "Run it over everything in one commit",
+            "Use `--dirty` so only changed files must be clean, letting the codebase converge",
+            "Skip CI enforcement",
+            "Write a custom preset",
+          ],
+          correctIndex: 1,
+          explanation: "A full run conflicts with every open branch and destroys `git blame`.",
+        },
+        {
+          question: "Why is a pre-commit hook not enforcement?",
+          options: [
+            "It is too slow",
+            "Hooks are local, and someone always has them disabled",
+            "It cannot run Pint",
+            "It only runs on staged files",
+          ],
+          correctIndex: 1,
+          explanation: "CI running `pint --test` is the check that actually holds.",
+        },
+        {
+          question: "What does Pint not do?",
+          options: [
+            "Fix spacing",
+            "Find bugs, such as a method returning null that the caller does not check",
+            "Order imports",
+            "Run in CI",
+          ],
+          correctIndex: 1,
+          explanation: "That is static analysis: PHPStan or Larastan.",
+        },
+      ],
+    },
+    {
+      id: "telescope-pulse-nightwatch",
+      title: "Telescope, Pulse & Nightwatch — seeing inside",
+      durationMinutes: 13,
+      explanation: "Three tools that answer three different questions, and the names do not tell you which is which.\n\n```text\nTelescope   → detailed debugging, locally\nPulse       → application health, at a glance\nNightwatch  → monitoring and observability, in production\n```\n\n---\n\n### 1. Basic — Telescope\n\n<b>Telescope</b> records what happens inside a request and shows it to you:\n\n```text\nrequests · queries · jobs · mail · notifications\nexceptions · cache · events · commands · logs\n```\n\nInstead of \"something is slow\", you get:\n\n```text\nGET /dashboard\n  Query 1\n  Query 2\n  ...\n  Query 101\n```\n\n<b>And you have seen that number before.</b> That is the N+1 from Day 15, and Telescope is where you actually notice it, because 101 queries and 3 queries look identical from the browser.\n\nThe other two payoffs:\n\n<b>Jobs.</b> Dispatched, processing, completed, failed, with the payload and the exception. Queue debugging without it is reading log lines and guessing.\n\n<b>Mail.</b> Instead of \"did that actually send?\", you open the entry and read the rendered email. Invaluable while building mailables, notifications, password resets and verification flows.\n\n---\n\n### 2. Intermediate — the production warning\n\n<b>Telescope is a local development tool.</b> It records everything, which means:\n\n```text\nevery request → rows in the database\nevery query   → rows in the database\nevery job     → rows in the database\n```\n\nOn a busy production app that is enormous write volume and a table that grows without limit. <b>And it records request payloads</b>, so your Telescope database now contains passwords, tokens and personal data with a UI in front of it.\n\nIf you run it in production at all: restrict the gate to specific users, sample rather than record everything, prune aggressively, and never expose it publicly. <b>The common outcome of ignoring this is a Telescope table larger than the entire application database.</b>\n\n---\n\n### 3. Advanced — Pulse, Nightwatch and the real distinction\n\n<b>Pulse</b> is health at a glance, and it is safe in production because it aggregates rather than records: slow queries, slow jobs, slow routes, busiest users, cache hit rates, queue depth.\n\n```text\nTelescope  one request, in full detail\nPulse      all requests, summarised\n```\n\n<b>Nightwatch</b> is monitoring and observability: the layer that tells you something is wrong before a user does, and keeps history so you can ask what changed.\n\nThe progression is really about a change in your relationship to the app:\n\n```text\n\"I am building this\"        → Telescope\n\"is it healthy right now?\"  → Pulse\n\"people depend on this\"     → Nightwatch\n```\n\n<b>And the honest summary of all three: none of them is alerting.</b> A dashboard tells you what happened when you look at it, and nobody is looking at 3am. <b>The thing that wakes somebody up is a monitor with a threshold</b>, and the thing that tells you what broke is these tools, afterwards.\n\nSo the useful pairing is: <b>alerting says something is wrong, observability says what.</b> Teams that buy only the second one find out from their customers.",
+      diagram: `Three tools, three questions
+
+    Telescope    detailed debugging, LOCALLY
+    Pulse        application health, at a glance
+    Nightwatch   monitoring / observability, PRODUCTION
+
+
+Telescope — what it records
+
+    requests · queries · jobs · mail · notifications
+    exceptions · cache · events · commands · logs
+
+  Instead of "something is slow":
+
+    GET /dashboard
+      Query 1
+      Query 2
+      ...
+      Query 101      ← the N+1 from Day 15
+
+  101 queries and 3 queries look IDENTICAL from the
+  browser. This is where you notice.
+
+  Jobs      dispatched → processing → completed/failed
+            with payload and exception
+
+  Mail      stop wondering "did that send?" — open it
+            and read the rendered email
+
+            mailables · notifications · password
+            resets · verification
+
+
+  ⚠️  Telescope is a LOCAL tool.
+
+      every request  → rows in the database
+      every query    → rows in the database
+      every job      → rows in the database
+
+      On a busy app: enormous write volume and a table
+      that grows without limit.
+
+      And it records REQUEST PAYLOADS — so the
+      Telescope database now holds passwords, tokens
+      and personal data, with a UI in front of it.
+
+      If you run it in production: gate it to named
+      users, sample, prune aggressively, never expose
+      it publicly.
+
+      The common outcome of ignoring this is a
+      Telescope table bigger than the entire
+      application database.
+
+
+Pulse — aggregate, so it is production-safe
+
+    slow queries · slow jobs · slow routes
+    busiest users · cache hit rate · queue depth
+
+    Telescope   ONE request, in full detail
+    Pulse       ALL requests, summarised
+
+
+Nightwatch — monitoring and observability
+
+  Tells you something is wrong before a user does,
+  and keeps history so you can ask what changed.
+
+
+The progression is about your relationship to the app
+
+    "I am building this"        →  Telescope
+    "is it healthy right now?"  →  Pulse
+    "people depend on this"     →  Nightwatch
+
+
+  ⚠️  None of these is ALERTING.
+
+      A dashboard tells you what happened WHEN YOU
+      LOOK, and nobody is looking at 3am.
+
+        alerting        → something is wrong
+        observability   → what is wrong
+
+      Teams that buy only the second one find out
+      from their customers.`,
+      codeExample: {
+        title: "Installing, gating and pruning",
+        code: `# ---------- Telescope: local only ----------
+
+composer require laravel/telescope --dev
+php artisan telescope:install
+php artisan migrate
+
+# --dev matters. In composer.json:
+#   "extra": { "laravel": { "dont-discover": ["laravel/telescope"] } }
+# then register it only in AppServiceProvider when local.
+
+
+<?php
+// app/Providers/AppServiceProvider.php
+
+public function register(): void
+{
+    if ($this->app->environment('local')) {
+        $this->app->register(TelescopeServiceProvider::class);
+    }
+}
+
+
+<?php
+// app/Providers/TelescopeServiceProvider.php
+
+public function boot(): void
+{
+    // If you DO run it in production, this is the line
+    // that stands between a debugger and a data leak
+    Gate::define('viewTelescope', fn ($user) => in_array($user->email, [
+        'rajan@example.com',
+    ]));
+
+    // Sample instead of recording everything
+    Telescope::filter(function (IncomingEntry $entry) {
+        if ($this->app->environment('local')) {
+            return true;
+        }
+
+        return $entry->isReportableException()
+            || $entry->isFailedRequest()
+            || $entry->isFailedJob()
+            || $entry->isSlowQuery();
+    });
+
+    // Never store these
+    Telescope::hideRequestParameters(['_token', 'password', 'password_confirmation']);
+    Telescope::hideRequestHeaders(['authorization', 'cookie', 'x-api-key']);
+}
+
+
+# ---------- Pruning is not optional ----------
+
+php artisan telescope:prune                 # older than 24h
+php artisan telescope:prune --hours=48
+
+# routes/console.php
+Schedule::command('telescope:prune --hours=48')->daily();
+
+
+<?php
+// ---------- Finding the N+1 with Telescope, then fixing it ----------
+
+// Telescope shows: GET /dashboard — 101 queries
+foreach (Invoice::all() as $invoice) {
+    echo $invoice->client->name;      // 1 + 100
+}
+
+// Fixed — Telescope now shows 2
+foreach (Invoice::with('client')->get() as $invoice) {
+    echo $invoice->client->name;
+}
+
+// And make it impossible to reintroduce (Day 15):
+// AppServiceProvider::boot()
+Model::preventLazyLoading(! $this->app->isProduction());
+
+
+# ---------- Pulse: aggregate, safe in production ----------
+
+composer require laravel/pulse
+php artisan pulse:install
+php artisan migrate
+
+# config/pulse.php — recorders you care about
+# Slow queries, slow jobs, slow requests, queue depth,
+# cache hits, exceptions, user activity.
+
+
+<?php
+// Gate Pulse too — it shows your slowest queries and
+// busiest users
+Gate::define('viewPulse', fn ($user) => $user->isAdmin());
+
+// Ignore noise so the dashboard stays readable
+'recorders' => [
+    SlowQueries::class => [
+        'threshold' => 500,          // ms
+        'ignore'    => ['/telescope_entries/'],
+    ],
+],
+
+
+# ---------- Where the boundary is ----------
+
+# Telescope   one request, everything about it
+# Pulse       all requests, summarised
+# Nightwatch  history, trends, and knowing before a user tells you
+#
+# None of them pages anybody. That is a monitor with a
+# threshold — a healthcheck ping, an uptime service, an
+# alert rule:
+
+Schedule::command('reports:generate')
+    ->dailyAt('02:00')
+    ->pingOnFailure('https://healthchecks.io/ping/xxx/fail');`,
+      },
+      keyTakeaways: [
+        "<b>Telescope is detailed local debugging</b>: requests, queries, jobs, mail, exceptions, cache, logs.",
+        "<b>It is where you actually see an N+1</b>, because 101 queries look the same as 3 from the browser.",
+        "<b>Its job and mail panels are the payoff</b> when building queues, mailables and verification flows.",
+        "<b>Telescope records everything</b>, so on a busy app it is huge write volume and unbounded growth.",
+        "<b>It also records request payloads</b>, meaning passwords and tokens land in a database with a UI.",
+        "<b>If you run it in production: gate it, filter it, hide sensitive parameters and prune on a schedule.</b>",
+        "<b>Pulse aggregates rather than records</b>, which is what makes it production-safe.",
+        "<b>Telescope is one request in detail; Pulse is all requests summarised.</b>",
+        "<b>Nightwatch is monitoring and observability</b>, for when people depend on the application.",
+        "<b>None of the three is alerting.</b> A dashboard only tells you something when you look at it.",
+        "<b>Alerting says something is wrong; observability says what.</b> You need both.",
+      ],
+      commonMistakes: [
+        "<b>Leaving Telescope enabled in production unfiltered.</b> The entries table outgrows the application database.",
+        "<b>Not hiding request parameters.</b> Passwords and API keys sit in a browsable UI.",
+        "<b>Never pruning.</b> Growth is unbounded and eventually the disk decides for you.",
+        "<b>Treating a dashboard as alerting.</b> Nobody is looking at 3am.",
+        "<b>Using Pulse to debug one request.</b> It aggregates; Telescope is the detail view.",
+      ],
+      quiz: [
+        {
+          question: "What makes Telescope dangerous in production?",
+          options: [
+            "It is slow to load",
+            "It records everything including request payloads, so growth is unbounded and secrets land in a browsable UI",
+            "It requires Redis",
+            "It disables the queue",
+          ],
+          correctIndex: 1,
+          explanation: "Gate it, filter it, hide parameters and prune on a schedule.",
+        },
+        {
+          question: "What is the difference between Telescope and Pulse?",
+          options: [
+            "Pulse is newer",
+            "Telescope shows one request in full detail; Pulse aggregates all requests into health metrics",
+            "Pulse is local only",
+            "They are the same tool",
+          ],
+          correctIndex: 1,
+          explanation: "Aggregation is what makes Pulse production-safe.",
+        },
+        {
+          question: "Which problem does Telescope make obvious that a browser never will?",
+          options: [
+            "A 500 error",
+            "An N+1, because 101 queries and 3 queries look identical from the outside",
+            "A missing route",
+            "A CSS bug",
+          ],
+          correctIndex: 1,
+          explanation: "Then `preventLazyLoading` stops it coming back.",
+        },
+        {
+          question: "Why is none of these three tools a replacement for alerting?",
+          options: [
+            "They are too slow",
+            "A dashboard only tells you something when you look at it, and nobody is looking at 3am",
+            "They do not record errors",
+            "They only work locally",
+          ],
+          correctIndex: 1,
+          explanation: "Alerting says something is wrong; observability says what.",
+        },
+      ],
+    },
+    {
+      id: "boost-envoy-pennant-and-the-map",
+      title: "Boost, Envoy, Pennant & where everything belongs",
+      durationMinutes: 13,
+      explanation: "Three more tools, and then the map that ties the whole day together.\n\n---\n\n### 1. Basic — Boost and MCP\n\n<b>Laravel Boost</b> gives AI coding agents Laravel-aware context and tools. <b>MCP</b> is the standard protocol those agents use to talk to tools.\n\n```text\nold:      developer → read docs → search code → write code\nagentic:  developer → agent → Laravel-aware tools →\n          inspect → modify → test\n```\n\nThe shift is that the agent can <b>look at your actual application</b> rather than guessing from training data: your routes, your schema, your installed version.\n\n<b>And the skill is not \"let AI write everything\".</b> It is giving the agent enough project context and enough constraints that its changes are safe. The engineer still owns architecture, security, correctness, testing and trade-offs. <b>Generated code needs the same review and the same tests as any other code</b>, and Day 28 is what makes reviewing it tractable: a suite that goes red is worth more than a careful read of a diff you did not write.\n\n---\n\n### 2. Intermediate — Envoy and Pennant\n\n<b>Envoy</b> runs tasks on remote servers over SSH:\n\n```text\nlocal machine → Envoy → SSH → server → commands\n```\n\nDeploys, restarting workers, clearing caches, running migrations. <b>The value is turning a runbook into a file.</b> A deploy that lives in someone's shell history is a deploy that goes wrong the week they are on holiday.\n\n<b>Pennant</b> is feature flags:\n\n```text\nnew dashboard → Pennant → enabled?\n                          yes → new UI\n                          no  → old UI\n```\n\n---\n\n### 3. Advanced — why flags change how you ship\n\nWithout flags:\n\n```text\ndeploy → 100% of users, immediately\n```\n\nWith them:\n\n```text\ndeploy → internal users → test → 10% → monitor → 100%\n```\n\n<b>The real move is separating deployment from release.</b> Code ships dark, and turning it on is a config change rather than a deploy. Which means <b>your rollback is a toggle, not a redeploy</b>, and that difference is minutes versus seconds while something is actively broken.\n\nIt also lets you merge continuously instead of holding a long-lived branch for a month, which is where the worst merge conflicts of your life come from.\n\n<b>The cost is real:</b> every flag is a branch in your code and, in principle, a doubling of what you must test. Flags that are never removed become permanent complexity, and a codebase with forty stale flags has paths nobody has executed in a year. <b>Delete a flag once it is at 100%</b>, and treat that as part of shipping the feature, not a tidy-up for later.\n\n---\n\n### The map\n\n```text\n                  Laravel\n       ┌─────────────┼─────────────┐\n   Development    Operations    Production\n   Artisan        Envoy         Nightwatch\n   Pint           Scheduler     Pulse\n   Telescope      Queues\n   Boost\n```\n\nAnd the structural one, which is the actual lesson of the whole day:\n\n```text\n              Laravel application\n   ┌────────────────┼────────────────┐\nHTTP/API         Artisan         Scheduler\nControllers      Commands           Jobs\n   └────────────────┼────────────────┘\n              Application logic\n         ┌───────────┼───────────┐\n     Database      Queue       Events\n```\n\n<b>Three doors into one room.</b> Controllers, commands and scheduled jobs are all thin entry points to the same logic, and the senior skill is knowing which door a piece of functionality needs and then using this tooling to make it <b>testable, observable, maintainable and safe to operate</b>.",
+      diagram: `Boost and MCP
+
+    old       developer → read docs → search code
+                        → write code
+
+    agentic   developer → agent → Laravel-aware tools
+                        → inspect → modify → test
+
+  The shift: the agent can look at your ACTUAL
+  application — your routes, your schema, your
+  version — instead of guessing from training data.
+
+  The skill is not "let AI write everything". It is
+  giving the agent enough context and enough
+  CONSTRAINTS that its changes are safe.
+
+    engineer still owns:
+      architecture · security · correctness
+      testing · trade-offs
+
+  Generated code needs the same review and the same
+  tests. Day 28 is what makes that tractable: a suite
+  that goes red beats a careful read of a diff you did
+  not write.
+
+
+Envoy
+
+    local machine → Envoy → SSH → server → commands
+
+    deploy · restart workers · clear caches · migrate
+
+  The value is turning a RUNBOOK INTO A FILE.
+
+  A deploy that lives in someone's shell history is a
+  deploy that goes wrong the week they are on holiday.
+
+
+Pennant — feature flags
+
+    new dashboard → Pennant → enabled?
+                                yes → new UI
+                                no  → old UI
+
+  Without flags:
+
+    deploy → 100% of users, immediately
+
+  With them:
+
+    deploy → internal users → test → 10%
+           → monitor → 100%
+
+  The real move: DEPLOYMENT separated from RELEASE.
+
+    code ships dark
+    turning it on is a config change, not a deploy
+    rollback is a TOGGLE, not a redeploy
+      → seconds instead of minutes, while something
+        is actively broken
+
+  Also lets you merge continuously instead of holding
+  a branch for a month — the source of the worst merge
+  conflicts of your life.
+
+  ⚠️  The cost is real.
+
+      Every flag is a branch in your code and, in
+      principle, a doubling of what you must test.
+
+      Forty stale flags = paths nobody has executed
+      in a year.
+
+      Delete a flag at 100%. That is part of shipping
+      the feature, not a tidy-up for later.
+
+
+The tooling map
+
+                    Laravel
+                       │
+       ┌───────────────┼───────────────┐
+       ▼               ▼               ▼
+   Development     Operations      Production
+       │               │               │
+    Artisan         Envoy          Nightwatch
+    Pint            Scheduler      Pulse
+    Telescope       Queues
+    Boost
+
+
+The structural map — the day's real lesson
+
+                Laravel application
+                        │
+     ┌──────────────────┼──────────────────┐
+     ▼                  ▼                  ▼
+  HTTP/API           Artisan           Scheduler
+     │                  │                  │
+  Controllers        Commands             Jobs
+     │                  │                  │
+     └──────────────────┼──────────────────┘
+                        ▼
+                Application logic
+                        │
+           ┌────────────┼────────────┐
+           ▼            ▼            ▼
+        Database      Queue       Events
+
+  Three doors into one room.
+
+  The senior skill is knowing which door a piece of
+  functionality needs — and then using this tooling
+  to make it testable, observable, maintainable and
+  safe to operate.`,
+      codeExample: {
+        title: "Envoy tasks, Pennant flags and the three doors",
+        code: `# ---------- Envoy.blade.php: the runbook as a file ----------
+
+@servers(['web' => 'deploy@invoicehub.com'])
+
+@setup
+    $repo = 'git@github.com:acme/invoicehub.git';
+    $path = '/var/www/invoicehub';
+@endsetup
+
+@task('deploy', ['on' => 'web'])
+    cd {{ $path }}
+    php artisan down --render="errors::503"
+
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan migrate --force
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+
+    php artisan queue:restart
+    php artisan up
+@endtask
+
+@task('workers:restart', ['on' => 'web'])
+    cd {{ $path }} && php artisan queue:restart
+@endtask
+
+# envoy run deploy
+#
+# A deploy in someone's shell history goes wrong the
+# week they are on holiday.
+
+
+<?php
+// ---------- Pennant ----------
+
+// app/Providers/AppServiceProvider.php
+use Laravel\\Pennant\\Feature;
+
+Feature::define('new-invoice-editor', fn (User $user) => match (true) {
+    $user->isInternal()      => true,
+    $user->team->is_beta     => true,
+    default                  => Lottery::odds(1, 10),   // 10%
+});
+
+// In a controller
+if (Feature::active('new-invoice-editor')) {
+    return view('invoices.editor-v2');
+}
+
+return view('invoices.editor');
+
+// In Blade
+// @feature('new-invoice-editor')
+//     <x-invoice-editor-v2 />
+// @else
+//     <x-invoice-editor />
+// @endfeature
+
+
+<?php
+// ---------- Deployment separated from release ----------
+
+// 1. Merge and deploy with the flag off — code ships dark
+// 2. Feature::activateForEveryone / for a segment
+// 3. Watch Pulse
+// 4. Broaden
+//
+// And when it breaks:
+Feature::deactivateForEveryone('new-invoice-editor');
+// A toggle. Seconds, not a redeploy.
+
+
+<?php
+// ---------- Removing a flag is part of shipping ----------
+
+// At 100% for a week with no issues:
+//   1. delete the old branch of the code
+//   2. delete the Feature::define
+//   3. php artisan pennant:purge new-invoice-editor
+//
+// Forty stale flags means forty code paths nobody has
+// executed in a year.
+
+
+<?php
+// ---------- The three doors, one room ----------
+
+// The room
+final class InvoiceIssuer
+{
+    public function issue(Invoice $invoice): void { /* ... */ }
+}
+
+// Door 1: HTTP
+class InvoiceIssueController
+{
+    public function store(Invoice $invoice, InvoiceIssuer $issuer)
+    {
+        $this->authorize('update', $invoice);
+        $issuer->issue($invoice);
+
+        return response()->noContent();
+    }
+}
+
+// Door 2: Artisan
+class IssueInvoices extends Command
+{
+    protected $signature = 'invoices:issue {invoice}';
+
+    public function handle(InvoiceIssuer $issuer): int
+    {
+        $issuer->issue(Invoice::findOrFail($this->argument('invoice')));
+
+        return self::SUCCESS;
+    }
+}
+
+// Door 3: Scheduler → queue
+Schedule::command('invoices:issue-due')->dailyAt('06:00')->onOneServer();
+
+// Same logic. Tested once. Observable in Telescope,
+// summarised in Pulse, deployed by Envoy, rolled out
+// by Pennant.`,
+      },
+      keyTakeaways: [
+        "<b>Boost gives coding agents Laravel-aware context</b>, and MCP is the protocol they use to reach tools.",
+        "<b>The agent can inspect your real routes, schema and version</b> rather than guessing from training data.",
+        "<b>The skill is supplying context and constraints</b>, not delegating judgement.",
+        "<b>Generated code needs the same review and tests</b>, and a red suite beats reading a diff you did not write.",
+        "<b>Envoy turns a deploy runbook into a file</b>, so it does not live in one person's shell history.",
+        "<b>Pennant flags separate deployment from release</b>: code ships dark and is switched on by config.",
+        "<b>Rollback becomes a toggle rather than a redeploy</b>, which is seconds instead of minutes.",
+        "<b>Flags also let you merge continuously</b> instead of holding a branch that becomes a merge nightmare.",
+        "<b>Every flag is a branch and a testing cost</b>, so deleting one at 100% is part of shipping the feature.",
+        "<b>Controllers, commands and scheduled jobs are three doors into the same room.</b>",
+        "<b>The senior skill is choosing the door</b>, then using this tooling to make it testable, observable and safe to operate.",
+      ],
+      commonMistakes: [
+        "<b>Shipping agent-written code without tests or review.</b> The engineer still owns correctness.",
+        "<b>Keeping deploys in a shell history.</b> Unrepeatable, unreviewable and person-dependent.",
+        "<b>Never removing flags.</b> Forty stale ones means code paths nobody has run in a year.",
+        "<b>Treating a flag as free.</b> Each one doubles the paths you should be testing.",
+        "<b>Writing the same logic in a controller, a command and a job.</b> Three copies that drift apart.",
+      ],
+      quiz: [
+        {
+          question: "What is the real shift Boost and MCP enable?",
+          options: [
+            "AI writes the whole application",
+            "The agent can inspect your actual routes, schema and version instead of guessing from training data",
+            "Faster autocomplete",
+            "Automatic deployment",
+          ],
+          correctIndex: 1,
+          explanation: "The engineer still owns architecture, security, correctness and testing.",
+        },
+        {
+          question: "What is the main value of Envoy?",
+          options: [
+            "Faster SSH",
+            "It turns a deploy runbook into a reviewable file rather than one person's shell history",
+            "It replaces the scheduler",
+            "It monitors servers",
+          ],
+          correctIndex: 1,
+          explanation: "Reproducible operations do not depend on who is on holiday.",
+        },
+        {
+          question: "What does a feature flag fundamentally separate?",
+          options: [
+            "Frontend from backend",
+            "Deployment from release, so rollback is a toggle rather than a redeploy",
+            "Testing from production",
+            "Queues from jobs",
+          ],
+          correctIndex: 1,
+          explanation: "Code ships dark and is switched on by config.",
+        },
+        {
+          question: "Why must flags be removed once fully rolled out?",
+          options: [
+            "Pennant limits them",
+            "Each is a branch and a testing cost, and stale flags become paths nobody has executed in a year",
+            "They slow the app",
+            "They expire automatically",
+          ],
+          correctIndex: 1,
+          explanation: "Deleting the flag is part of shipping the feature.",
+        },
+        {
+          question: "What is the structural lesson of the day?",
+          options: [
+            "Use every tool",
+            "Controllers, commands and scheduled jobs are three thin doors into the same application logic",
+            "Artisan replaces controllers",
+            "Feature flags replace testing",
+          ],
+          correctIndex: 1,
+          explanation: "Pick the door, then make the room testable, observable and safe to operate.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "Why must the testing environment use its own database?",
+      question: "What is the most useful way to think about Artisan?",
       options: [
-        "For speed",
-        "`RefreshDatabase` wipes it between tests, so pointing it at development or production destroys data",
-        "Laravel refuses to run otherwise",
-        "To allow migrations",
+        "A code generator",
+        "Your application's operational interface, the way HTTP is its user interface",
+        "A migration runner",
+        "A local development server",
       ],
       correctIndex: 1,
-      explanation: "The isolation is not tidiness, it is data safety.",
+      explanation: "Backfills, retries and exports belong there rather than in a hand-run query.",
     },
     {
-      question: "What does in-memory SQLite fail to catch?",
+      question: "Where should a command's business logic live?",
       options: [
-        "Missing routes",
-        "MySQL-specific behaviour: JSON columns, strict mode, full-text indexes, date sorting",
-        "Validation errors",
-        "Authorization failures",
+        "In `handle()`",
+        "In a service that the controller, command and job all call",
+        "In the model",
+        "In a closure command",
       ],
       correctIndex: 1,
-      explanation: "Run the suite against the real engine somewhere, even if local runs use SQLite.",
+      explanation: "The command is an entry point, so the logic exists once.",
     },
     {
-      question: "Why are feature tests Laravel's primary tool rather than unit tests?",
+      question: "What is wrong with calling `Artisan::call` from a controller?",
       options: [
-        "Unit tests are unsupported",
-        "Booting the whole app in a test is nearly free here, so the usually-expensive thing is cheap",
-        "They run faster",
-        "They give better coverage numbers",
-      ],
-      correctIndex: 1,
-      explanation: "`$this->postJson(...)` exercises the entire stack in one call.",
-    },
-    {
-      question: "What is the problem with asserting that a controller called a service method?",
-      options: [
-        "It is too slow",
-        "It fails on refactors that keep behaviour identical, punishing you for improving the code",
-        "Mockery cannot do it",
         "Nothing",
+        "No usable return value, exceptions arrive as exit codes, and it needs the console kernel to test",
+        "It is slower",
+        "It bypasses middleware",
       ],
       correctIndex: 1,
-      explanation: "Assert behaviour, which survives refactors and fails only when something really breaks.",
+      explanation: "That makes a shell command into your service layer.",
     },
     {
-      question: "What does the `Json` suffix on `postJson` change?",
+      question: "What is the difference between `{email}` and `{--email=}`?",
       options: [
-        "Only the request body encoding",
-        "It sets `Accept: application/json`, turning a redirect into a `422` with JSON errors",
-        "It skips middleware",
-        "It speeds up the request",
+        "Nothing",
+        "A positional argument versus a named option that takes a value",
+        "The first is optional",
+        "The second is required",
       ],
       correctIndex: 1,
-      explanation: "Without it you exercise the Blade redirect path instead.",
+      explanation: "Arguments are positional; options are named.",
     },
     {
-      question: "Why is `assertOk()` alone insufficient on a filtered endpoint?",
+      question: "Why is `{client?}` risky on a destructive command?",
       options: [
-        "`200` is wrong for filters",
-        "An endpoint that ignores every filter still returns `200`",
-        "Filters return `204`",
-        "It is sufficient",
+        "Optional arguments are unsupported",
+        "Forgetting the argument runs the destructive action against everything",
+        "It cannot be validated",
+        "It breaks help output",
       ],
       correctIndex: 1,
-      explanation: "Seed data that would fail if the filter were a no-op, then assert the result changed.",
+      explanation: "The broad form should be an explicit `--all` you have to type.",
     },
     {
-      question: "What does `assertJsonStructure` prove that `assertJsonPath` does not?",
+      question: "What happens when `handle()` returns nothing?",
       options: [
-        "The values are correct",
-        "The shape of the response, which is the contract clients depend on",
-        "The status code",
-        "The database state",
+        "It throws",
+        "It exits 0, so a failed run looks successful to the scheduler and monitoring",
+        "It exits 1",
+        "Laravel warns you",
       ],
       correctIndex: 1,
-      explanation: "It catches an accidentally renamed field regardless of values.",
+      explanation: "Return `self::FAILURE` so alerting can fire.",
     },
     {
-      question: "Why assert that a legitimate edge case passes validation?",
-      options: [
-        "For coverage",
-        "Over-strict rules block real users and nothing fails until somebody complains",
-        "Laravel requires it",
-        "To test the database",
-      ],
-      correctIndex: 1,
-      explanation: "The failure mode is silent, unlike a rule that is too loose.",
-    },
-    {
-      question: "Why is `assertCreated()` not proof that a record was saved?",
-      options: [
-        "It is proof",
-        "It proves the controller returned a status; a dropped fillable field or a rolled-back transaction still returns `201`",
-        "`201` means queued",
-        "It only checks headers",
-      ],
-      correctIndex: 1,
-      explanation: "`assertDatabaseHas` is what proves persistence.",
-    },
-    {
-      question: "Which assertion follows deleting a soft-deleting model?",
-      options: [
-        "`assertDatabaseMissing`",
-        "`assertSoftDeleted`, because the row remains with `deleted_at` set",
-        "`assertDatabaseCount(0)`",
-        "`assertNoContent` only",
-      ],
-      correctIndex: 1,
-      explanation: "`assertDatabaseMissing` fails on a delete that worked perfectly.",
-    },
-    {
-      question: "What is the sign that a test's data contains noise?",
-      options: [
-        "It uses factories",
-        "You can delete a row and the test still passes",
-        "It creates more than three records",
-        "It uses `count()`",
-      ],
-      correctIndex: 1,
-      explanation: "Every row should exist because an assertion needs it.",
-    },
-    {
-      question: "Why use `freezeTime()` when asserting an expiry timestamp?",
+      question: "Why is `select()` safer than free-text input?",
       options: [
         "It is faster",
-        "Two `now()` calls either side of a second boundary make the test intermittently fail",
-        "Carbon requires it",
-        "It resets the database",
+        "An invalid value is not expressible, so input that never had to be free-form cannot be wrong",
+        "It validates automatically",
+        "It works without a terminal",
       ],
       correctIndex: 1,
-      explanation: "A flaky test is worse than a missing one, because people learn to rerun until green.",
+      explanation: "Free text accepts `prod`, `Production` and typos alike.",
     },
     {
-      question: "What does time travel not move?",
+      question: "What happens when the scheduler runs a command that prompts?",
       options: [
-        "`now()`",
-        "The database's clock, so `CURRENT_TIMESTAMP` defaults keep the real time",
-        "Carbon instances",
-        "Queued jobs",
+        "It uses the defaults",
+        "There is no TTY, so it hangs or throws, every night, with nobody watching",
+        "It skips the prompts",
+        "It fails with a clear message",
       ],
       correctIndex: 1,
-      explanation: "A timestamp ignoring your travel was written by the database, not Eloquent.",
+      explanation: "Options must be able to supply everything the prompts ask for.",
     },
     {
-      question: "What does `Queue::fake()` let you separate?",
+      question: "What pattern makes one command work for both humans and scripts?",
       options: [
-        "Validation from authorization",
-        "That the job was dispatched with the right payload, from what the job does when it runs",
-        "The queue from the database",
-        "Nothing useful",
+        "Two separate commands",
+        "Options are the real interface, and prompts fill in what was not passed",
+        "Always prompt",
+        "Never prompt",
       ],
       correctIndex: 1,
-      explanation: "Two small tests instead of one failing for two different reasons.",
+      explanation: "`$this->option('name') ?? text(...)`, plus `--force` to skip confirmations.",
     },
     {
-      question: "What is the danger of a blanket `Event::fake()`?",
+      question: "Why must a destructive `confirm()` default to no?",
       options: [
-        "It is slow",
-        "Listeners stop running, so anything a listener does silently disappears",
-        "Events are dispatched twice",
-        "It needs a queue worker",
+        "Convention",
+        "Enter-without-reading is what a tired operator does, so the safe answer must be the default",
+        "Laravel requires it",
+        "It is faster",
       ],
       correctIndex: 1,
-      explanation: "`Event::fake([X::class])` fakes one event and leaves the others alone.",
+      explanation: "The default should be the outcome you can recover from.",
     },
     {
-      question: "Why pair `Http::fake()` with `preventStrayRequests()`?",
+      question: "Spinner or progress bar?",
       options: [
-        "To allow real requests",
-        "A bare `Http::fake()` returns an empty `200` for every URL, including a typo",
-        "It is required for `assertSent`",
-        "It speeds up tests",
+        "Always a spinner",
+        "Spinner when the duration is unknown, progress bar when you know the total",
+        "Always a progress bar",
+        "Neither for short commands",
       ],
       correctIndex: 1,
-      explanation: "An unfaked call should throw rather than quietly succeed.",
+      explanation: "Without either, the operator assumes it froze and hits Ctrl-C.",
     },
     {
-      question: "What does `Mail::assertSent` actually prove?",
+      question: "What is wrong with `progress(steps: User::all())`?",
       options: [
-        "The email was delivered",
-        "Your code asked to send it, which says nothing about SMTP, bounces or spam filters",
-        "The mailer is configured",
-        "The template renders",
+        "Nothing",
+        "It loads the whole table into memory, so the bar costs RAM proportional to the data",
+        "The bar is inaccurate",
+        "It cannot show a label",
       ],
       correctIndex: 1,
-      explanation: "Fakes test intent, not delivery.",
+      explanation: "Chunk and advance the bar manually.",
     },
     {
-      question: "Why does over-mocking hurt a suite?",
+      question: "Why is `Done.` a poor final message?",
       options: [
-        "Mocks are slow",
-        "You replace everything that could actually fail, so the tests pass while the app is broken",
-        "Mockery is unsupported",
-        "It reduces coverage",
+        "Too short",
+        "It gives the operator no counts, no skips and no reasons, so nothing to act on",
+        "It is not coloured",
+        "It should be a table",
       ],
       correctIndex: 1,
-      explanation: "When a fake exists, prefer the fake.",
+      explanation: "A silent skip is a bug that hides for months.",
     },
     {
-      question: "Why do Artisan command tests matter disproportionately?",
+      question: "Why does it matter that `error()` writes to stderr?",
       options: [
-        "They are easy to write",
-        "Commands run unwatched, often destructively, and a silent exit `0` hides a broken pipeline",
-        "They replace feature tests",
-        "They boost coverage",
+        "It is faster",
+        "Cron and CI can route real failures separately from routine output",
+        "It shows in red",
+        "It halts the command",
       ],
       correctIndex: 1,
-      explanation: "The exit code is what the scheduler acts on.",
+      explanation: "Stream choice is what alerting hooks into.",
     },
     {
-      question: "What does 100% line coverage guarantee on its own?",
+      question: "Where does an isolation lock live?",
       options: [
-        "Correctness",
-        "Nothing, since every line can execute with no assertions at all",
-        "Full branch coverage",
-        "No production bugs",
+        "In the database",
+        "In the cache, so a file or array driver gives each server its own lock and no protection",
+        "In a shared lock file",
+        "In the session",
       ],
       correctIndex: 1,
-      explanation: "Coverage measures execution, not verification.",
+      explanation: "Cross-server isolation needs a shared cache such as Redis.",
     },
     {
-      question: "What does a parallel test run additionally reveal?",
+      question: "What is the difference between `withoutOverlapping()` and `onOneServer()`?",
       options: [
-        "Slow queries",
-        "Whether your tests are genuinely isolated, since each worker gets its own database",
-        "Memory leaks",
-        "Missing routes",
+        "They are identical",
+        "The first stops runs overlapping in time on one server; the second stops several servers running the same schedule",
+        "The first is for queues",
+        "The second is deprecated",
       ],
       correctIndex: 1,
-      explanation: "It is an isolation test you never wrote.",
+      explanation: "Different problems, and you usually want both.",
     },
     {
-      question: "What turns a set of tests into a safety net?",
+      question: "What is the trap in `withoutOverlapping()`'s default?",
       options: [
-        "Volume",
-        "Covering the happy path plus the important failure paths: invalid data, guests, wrong user, side effects",
-        "Using Pest",
-        "A high coverage percentage",
+        "It never expires",
+        "The lock lasts 24 hours, so a killed run silently blocks the task for a day",
+        "It expires in one minute",
+        "It requires Redis",
       ],
       correctIndex: 1,
-      explanation: "\"A user can create a post\" alone proves very little.",
+      explanation: "Pass an expiry in minutes matching the task's realistic maximum.",
+    },
+    {
+      question: "What is the practical cost of inconsistent code style?",
+      options: [
+        "It looks bad",
+        "Diff noise: a PR that is mostly whitespace does not get reviewed properly",
+        "Slower execution",
+        "Merge conflicts only",
+      ],
+      correctIndex: 1,
+      explanation: "Reviewer attention is finite and style spends it first.",
+    },
+    {
+      question: "How should Pint be introduced to an existing codebase?",
+      options: [
+        "One full run over everything",
+        "With `--dirty`, so only changed files must be clean and the codebase converges",
+        "Only in the editor",
+        "With a custom preset",
+      ],
+      correctIndex: 1,
+      explanation: "A full run conflicts with every open branch and destroys `git blame`.",
+    },
+    {
+      question: "What does Pint not do?",
+      options: [
+        "Fix spacing",
+        "Find bugs, such as a method returning null that the caller never checks",
+        "Order imports",
+        "Run in CI",
+      ],
+      correctIndex: 1,
+      explanation: "That is static analysis: PHPStan or Larastan.",
+    },
+    {
+      question: "What makes Telescope dangerous in production?",
+      options: [
+        "It is slow to load",
+        "It records everything including request payloads, so growth is unbounded and secrets land in a browsable UI",
+        "It requires Redis",
+        "It disables queues",
+      ],
+      correctIndex: 1,
+      explanation: "Gate it, filter it, hide parameters and prune on a schedule.",
+    },
+    {
+      question: "What is the difference between Telescope and Pulse?",
+      options: [
+        "Pulse is newer",
+        "Telescope shows one request in full detail; Pulse aggregates all requests into health metrics",
+        "Pulse is local only",
+        "They are the same",
+      ],
+      correctIndex: 1,
+      explanation: "Aggregation is what makes Pulse production-safe.",
+    },
+    {
+      question: "Why is a dashboard not alerting?",
+      options: [
+        "It is too slow",
+        "It only tells you something when you look at it, and nobody is looking at 3am",
+        "It does not record errors",
+        "It works only locally",
+      ],
+      correctIndex: 1,
+      explanation: "Alerting says something is wrong; observability says what.",
+    },
+    {
+      question: "What do feature flags fundamentally separate?",
+      options: [
+        "Frontend from backend",
+        "Deployment from release, so rollback is a toggle rather than a redeploy",
+        "Testing from production",
+        "Queues from jobs",
+      ],
+      correctIndex: 1,
+      explanation: "Code ships dark and is switched on by config.",
+    },
+    {
+      question: "Why must a flag be removed once it is at 100%?",
+      options: [
+        "Pennant limits them",
+        "Each flag is a branch and a testing cost, and stale ones become paths nobody has run in a year",
+        "They slow the app",
+        "They expire on their own",
+      ],
+      correctIndex: 1,
+      explanation: "Removing the flag is part of shipping the feature.",
+    },
+    {
+      question: "What is the structural lesson tying the day together?",
+      options: [
+        "Install every tool",
+        "Controllers, commands and scheduled jobs are three thin doors into the same application logic",
+        "Artisan replaces controllers",
+        "Feature flags replace tests",
+      ],
+      correctIndex: 1,
+      explanation: "Pick the door, then make the room testable, observable and safe to operate.",
     },
   ],
   project: {
-    name: "InvoiceHub — the CRUD test that would catch a real bug",
-    goal: "Write one feature test file covering the whole invoice lifecycle, then prove it works by breaking the application seven times and watching a different test go red each time.",
+    name: "InvoiceHub — a command safe enough to schedule",
+    goal: "Build `invoices:process` with Prompts, a progress bar and isolation, then prove it by running it four ways: interactively, from a script, twice at once, and from the scheduler.",
     brief:
-      "You have twenty-eight days of InvoiceHub and no tests. Today you write the file that lets you refactor any of it without fear.\n\nThe self-check is a full CRUD flow including a failed validation case, and this project takes it one step further. <b>Writing a passing test proves nothing.</b> A test that passes when the code is correct and also passes when the code is broken is decoration. So the acceptance criteria here are not \"the tests pass\" but <b>\"each deliberate break turns exactly one test red\"</b>.\n\nThe endpoints:\n\n```text\nPOST   /api/invoices\nGET    /api/invoices\nGET    /api/invoices/{invoice}\nPUT    /api/invoices/{invoice}\nDELETE /api/invoices/{invoice}\n```\n\nAnd the flow one test file should prove:\n\n```text\n                    Invoice CRUD\n                         │\n        ┌────────────────┼────────────────┐\n        ▼                ▼                ▼\n     CREATE            READ             UPDATE\n   valid data         200 OK          new values\n        │                │                │\n        ▼                ▼                ▼\n    database         correct row      database updated\n\n     DELETE                INVALID CREATE\n        │                        │\n        ▼                        ▼\n  row gone / soft            422 + errors\n\n     WRONG USER              GUEST\n        │                      │\n        ▼                      ▼\n       403                    401\n```\n\nBy the end you are testing CRUD plus validation plus authentication plus authorization plus database state plus side effects, which is what makes a feature test worth its runtime.",
+      "The self-check asks for an Artisan command that uses Prompts and shows a progress bar. That is the easy half. The hard half is that <b>the same command has to survive being run by cron</b>, where there is no terminal, nobody is watching and a second copy may already be running.\n\nMost interactive commands fail the moment they are scheduled. They hang on a prompt that cannot appear, or two servers run them at once, or they fail and return exit 0 so nothing alerts. <b>Your command has to work all four ways with no code changes</b>, which is what makes it an operational tool rather than a demo.\n\nThe target experience:\n\n```text\n$ php artisan invoices:process\n\nWhat should we do?\n❯ Send reminders for overdue invoices\n  Recalculate totals\n  Mark overdue\n\nProcess 50 invoices?\n❯ Yes\n\nProcessing invoices...\n████████████████████████████████ 100%\n\nProcessed 50 invoices. 47 reminded, 3 skipped (no client email).\n```\n\nAnd the same command in a crontab:\n\n```bash\nphp artisan invoices:process --action=remind --force -n --isolated\n```\n\nSame code. No prompts, no hang, a real exit code.",
     steps: [
-      "Set up. Confirm `phpunit.xml` points at a test database and not your development one, and that `CACHE_STORE`, `SESSION_DRIVER` and `MAIL_MAILER` are `array`. Add `RefreshDatabase` to every feature test in `tests/Pest.php`.",
-      "Create `tests/Feature/InvoiceCrudTest.php` with a helper that creates an authenticated user and returns it, so every test starts from `actingAs` rather than the login form.",
-      "CREATE. Post valid data, assert `assertCreated()`, then `assertDatabaseHas` for the row with the correct `user_id`. Both assertions, not just the status.",
-      "VALIDATION. Post an empty payload and assert `assertUnprocessable()` plus `assertJsonValidationErrors` naming every field you expect. Then post a legitimate awkward value (a reference with a slash, an amount of zero if that is allowed) and assert it is accepted with `assertJsonMissingValidationErrors`.",
-      "READ. Create three invoices for your user and two for another, then assert the index returns exactly three. Assert the show endpoint returns the right one and `assertJsonStructure` for the contract, plus `assertJsonMissingPath` for any internal field that must never leak.",
-      "UPDATE. Put new values, assert success, then `assertDatabaseHas` with the new values and `assertDatabaseMissing` with the old reference. Proving the change landed is not the same as proving the response said so.",
-      "DELETE. Assert the response, then `assertSoftDeleted` if the model soft-deletes or `assertDatabaseMissing` if it does not. Add `assertDatabaseCount` so a delete that removes two rows also fails.",
-      "AUTHORIZATION. User B tries to show, update and delete User A's invoice and gets `403` each time, and the row is unchanged afterwards. Then a guest hits the index and gets `401`. Four short tests.",
-      "SIDE EFFECTS. Add `Queue::fake()` to the create test and assert the invoice email job was pushed. Add `Http::fake()` and `Http::preventStrayRequests()` and assert `Http::assertNothingSent()` on the paths that should touch nothing external.",
-      "TIME. Freeze time and assert the due date is exactly what you expect. Then travel past the due date, run your overdue command, and assert the status changed. Add the mirror test that travels only partway and asserts it did not.",
-      "NOW BREAK IT, one change at a time, reverting each before the next. Comment out a validation rule. Delete the `authorize` call. Change `assertDatabaseHas`'s column in the controller so the field is never saved. Remove the model's `$fillable` entry for one field. Make the delete a no-op. Return a leaked internal field from the API Resource. Make the overdue command mark everything overdue regardless of date. Record which test went red for each.",
-      "Write up the seven breaks in a comment block or a short note: the break, the test that caught it, and the failure message. Any break that turned nothing red is a missing test, so write it now.",
+      "Create the command with `make:command ProcessInvoices` and give it a signature where <b>every prompt has an option equivalent</b>: `{--action=}`, `{--limit=}`, `{--force}`. Write a description for each, then run `php artisan help invoices:process` and read it as if you were on call.",
+      "Extract the actual work into a service class first, before writing any of the command body. `handle()` should read as: gather input, call the service, report the result. If you cannot describe `handle()` in three lines, the logic is in the wrong place.",
+      "Add the prompts, each guarded by its option: `$this->option('action') ?? select(...)`. Use `select()` for the action so an invalid value cannot be typed, and add `validate:` to anything free-form.",
+      "Add the confirmation with `default: false` and skip it entirely when `--force` is passed. Print the count in the question, so the operator sees `Process 50 invoices?` rather than `Are you sure?`.",
+      "Add the progress bar over `chunkById`, not `all()`. Track counts as you go: processed, succeeded, skipped, and the reason for each skip.",
+      "Write a real summary: the totals, and a `$this->table()` of the first ten skipped records with the reason. Put per-record output behind `$this->output->isVerbose()`.",
+      "Return `self::SUCCESS` only when nothing failed, `self::FAILURE` when something did, and `self::INVALID` when the input was wrong. Then run `php artisan invoices:process --action=nonsense; echo $?` and confirm you get a non-zero code.",
+      "Implement `Isolatable` and set `isolationLockExpiresAt()` to something matching the realistic maximum runtime, not 24 hours. Confirm your cache driver is shared, because a file driver gives you no protection at all.",
+      "Schedule it with `->withoutOverlapping(30)`, `->onOneServer()` and `->pingOnFailure(...)` or `->emailOutputOnFailure(...)`. Then run `php artisan schedule:list` and check that what you see matches what you meant.",
+      "Write tests. One asserting the output and exit code on the happy path, one asserting `expectsConfirmation('...', 'no')` cancels and changes nothing, one asserting a bad `--action` returns a non-zero exit, and one asserting `--force` skips the confirmation entirely.",
+      "NOW RUN IT FOUR WAYS. (1) Interactively, and answer the prompts. (2) Fully non-interactive with `-n` and every option supplied, and confirm it does not hang. (3) In two terminals at once with `--isolated`, and confirm the second is blocked. (4) Via `php artisan schedule:test`, and confirm it completes with no terminal.",
+      "Run `./vendor/bin/pint --dirty` and add it plus your tests to a `composer check` script. Then open Telescope, run the command, and find your command's entry alongside the queries it ran.",
     ],
     acceptance: [
-      "Every test uses `actingAs`, and the login flow is tested exactly once, in its own file.",
-      "Every write assertion has two halves: the HTTP status and a database assertion.",
-      "The validation test asserts both that invalid data is rejected and that a legitimate awkward value is accepted.",
-      "Guests get `401` and non-owners get `403`, and the two are asserted separately, never interchangeably.",
-      "The delete test uses `assertSoftDeleted` or `assertDatabaseMissing` correctly for the model, plus a count.",
-      "No test touches a real external service, and `Http::preventStrayRequests()` is on.",
-      "Time-dependent assertions are frozen or travelled, never compared against the live clock.",
-      "All seven deliberate breaks turn at least one test red, and you can name which one for each.",
-      "Deleting any factory row from a test causes a test to fail, proving no row is noise.",
-      "The suite passes with `php artisan test --parallel`, proving the tests are genuinely isolated.",
+      "`php artisan help invoices:process` explains every argument and option without reading the source.",
+      "`handle()` is under fifteen lines and contains no business logic.",
+      "Every prompt has an option equivalent, so the command runs fully non-interactively with `-n`.",
+      "The confirmation defaults to no, states the count, and is skipped by `--force`.",
+      "The progress bar runs over chunked results, and memory does not scale with the table size.",
+      "The final line reports totals and skip reasons, and per-record detail appears only under `-v`.",
+      "A failed run returns a non-zero exit code, verified with `echo $?`.",
+      "Running two copies concurrently with `--isolated` blocks the second one.",
+      "`schedule:list` shows the task with overlap protection, one-server protection and a failure hook.",
+      "Four tests pass: happy path, declined confirmation, invalid input, and `--force`.",
+      "`./vendor/bin/pint --test --dirty` is clean and the tests pass via one `composer check`.",
     ],
     stretch: [
-      "Run `php artisan test --coverage` and note the number. Then find one uncovered branch that matters, such as a destructive path or an authorization edge, and cover it. Note that the number barely moved and the suite got meaningfully better.",
-      "Write a unit test for whatever calculates the invoice total, with at least six cases: zero lines, one line, rounding, a discount, tax, and a negative adjustment if you allow one. Time it against the same coverage through HTTP.",
-      "Add one Dusk test for the create-invoice screen if it uses JavaScript to add line items. Time it, and compare against the feature test covering the same endpoint. That ratio is why the pyramid has a narrow top.",
-      "Add `Process::fake()` coverage if InvoiceHub shells out for PDF generation, and assert the command that ran rather than the file that appeared.",
+      "Add a `--dry-run` flag that does everything except write, and print what would have changed. Then notice that this is the flag you will actually reach for first, every time you run it in production.",
+      "Put the whole feature behind a Pennant flag, roll it out to internal users only, and then write down how you would turn it off at 3am. If the answer involves a deploy, the flag is not doing its job.",
+      "Break the isolation deliberately: set `CACHE_STORE=file`, run two copies with `--isolated`, and watch both run. That silent failure is the one worth having seen once.",
+      "Write an Envoy task that runs this command on a server, and compare it with the shell command you would otherwise type. Note which one you could hand to somebody else.",
+      "Add a Pulse recorder or a custom Telescope tag for the command, then run it and find it in the dashboard. Ask yourself what you would have wanted recorded if this had failed at 2am.",
     ],
   },
 };

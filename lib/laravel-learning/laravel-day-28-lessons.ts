@@ -2,2418 +2,2502 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 
 export const LARAVEL_DAY_28_LESSONS: LessonDay = {
   day: 28,
-  title: "Broadcasting & real time — Reverb, channels & Echo",
-  totalMinutes: 92,
+  title: "Testing — Pest, feature tests, fakes & coverage",
+  totalMinutes: 94,
   difficulty: "Intermediate",
   lessons: [
     {
-      id: "what-is-broadcasting",
-      title: "Broadcasting & WebSockets",
+      id: "pest-and-environment",
+      title: "Pest, PHPUnit & the test environment",
       durationMinutes: 11,
-      explanation: "Every day so far has had the browser asking and the server answering. Today the server gets to speak first.\n\n> <b>From \"the browser asks for updates\" to \"the server pushes them when something happens\".</b>\n\n---\n\n### 1. Basic — why HTTP cannot do this\n\nHTTP is a question and an answer:\n\n```text\nBrowser  →  GET /notifications  →  Laravel\nBrowser  ←  the response        ←  Laravel\n```\n\nAnd then it is over. If something changes five seconds later, <b>the browser has no way to find out</b>, because nothing is connecting the two any more.\n\nThe workaround is asking repeatedly:\n\n```text\nGET /notifications\n   wait\nGET /notifications\n   wait\nGET /notifications\n```\n\nWhich works, and is wasteful in a specific way worth understanding: <b>almost every request returns nothing new.</b> Poll every five seconds and you have made 720 requests an hour per user to deliver perhaps three notifications, and the news is still up to five seconds late.\n\n---\n\n### 2. Intermediate — a connection that stays open\n\n<b>A <i>WebSocket</i></b> is a connection that stays open, and either side can send at any time:\n\n```text\nHTTP                    WebSocket\n────                    ─────────\nBrowser → Server        Browser ═══════ Server\nBrowser ← Server              persistent\n(closed)                 either side may send\n```\n\nSo the arrangement becomes:\n\n```text\nLaravel\n   ↓ event\nWebSocket server\n   ↓\npersistent connection\n   ↓\nbrowser\n```\n\nThe server sends the moment something happens, and the browser is not asking about anything.\n\n<b>Which changes the resource question rather than removing it.</b> Polling costs requests; WebSockets cost <i>connections</i>. Ten thousand idle users are ten thousand open sockets sitting in memory, doing nothing, and that is a different scaling problem with different answers.\n\nWhat it makes possible:\n\n```text\nlive notifications · chat · online users\nlive dashboards · typing indicators\nreal-time collaboration · order status\n```\n\n---\n\n### 3. Advanced — when it is worth it\n\nBroadcasting adds a server to run, a connection to maintain, a client library, an authorization layer and a reconnection story. So the honest question is whether the thing you are building genuinely needs it.\n\n```text\nreal time                        not real time\n─────────                        ─────────────\nchat, collaboration              a dashboard refreshed\n  — seconds matter                 every minute\nsomebody is watching             a status that changes\n  right now                        once a day\nseveral people see the           the user triggered it and\n  same thing                       can wait for the response\n```\n\n<b>Two cheaper options are worth knowing before reaching for WebSockets.</b>\n\nA slow poll is fine for a lot of things. A dashboard fetching every thirty seconds costs 120 requests an hour and no infrastructure, and nobody notices the delay.\n\nAnd for a one-way stream from server to browser, <b>server-sent events</b> do that over ordinary HTTP with no extra server. They are less capable than WebSockets and enough for a progress bar or a notification feed.\n\nThe test worth applying: <b>would a five-second delay make this feature wrong, or just slightly less nice?</b> Chat is wrong. A notification bell is slightly less nice.\n\nAnd the piece that connects to yesterday: <b>broadcasting is a delivery mechanism, not a source of truth.</b> The event still happened, the database still recorded it, and a user who reloads the page must see the same thing. A UI that only knows what arrived over the socket is broken for anybody who was disconnected, which is everybody, sometimes.",
-      diagram: `Why HTTP cannot do this
+      explanation: "Twenty-eight days of building. Today is about proving any of it works.\n\n```text\ncode → test → run the behaviour → assert → pass or fail\n```\n\n---\n\n### 1. Basic — two syntaxes, one runner\n\nLaravel supports both, and Pest is built on PHPUnit:\n\n```php\n// PHPUnit\npublic function test_user_can_create_post(): void\n{\n    $response = $this->postJson('/api/posts', ['title' => 'Hello']);\n\n    $response->assertStatus(201);\n}\n```\n\n```php\n// Pest\nit('allows a user to create a post', function () {\n    $response = $this->postJson('/api/posts', ['title' => 'Hello']);\n\n    $response->assertStatus(201);\n});\n```\n\nSame runner, same assertions, less ceremony. And the name is the real difference: <b>`test_user_can_create_post` is a method name pretending to be a sentence</b>, while `it('allows a user to create a post')` is a sentence.\n\nWhich matters because <b>a failing test's name is the first thing you read</b>, often months later, and \"allows a user to create a post\" tells you what broke where `testPostStore` does not.\n\n<b>The advice is not that one is better.</b> It is: pick one and keep the suite consistent, because two styles in one project means two ways to find, name and read everything. <b>Pest for a new project</b>, PHPUnit if the codebase already is.\n\n---\n\n### 2. Intermediate — the environment\n\n```text\ndevelopment environment  ≠  testing environment\n```\n\nTests get their own configuration: their own database, cache, mail, queue and filesystem.\n\n<b>And the reason is not tidiness.</b> `RefreshDatabase` from a later lesson wipes the database between tests. Point it at your development database and your seeded work is gone; point it at production and the sentence finishes itself.\n\n```text\n❌ php artisan test  →  production database\n```\n\nThat is configured in `phpunit.xml`, which sets the environment to `testing` and overrides what tests should not share:\n\n```text\nDB_CONNECTION      an in-memory SQLite, or a separate database\nCACHE_STORE        array\nMAIL_MAILER        array\nQUEUE_CONNECTION   sync\nSESSION_DRIVER     array\n```\n\n<b>Every one of those makes tests faster and isolated</b>, and `array` drivers mean nothing survives a test.\n\n---\n\n### 3. Advanced — the decisions inside that config\n\nTwo worth understanding rather than copying.\n\n<b>SQLite in memory is fast and is not your database.</b> A suite running on `:memory:` is seconds rather than minutes, and it will not catch a MySQL-specific problem: a JSON column, a strict-mode error, a full-text index, a difference in how a date sorts. If production is MySQL, <b>run the suite against MySQL somewhere</b>, even if the fast local loop uses SQLite.\n\n<b>And `QUEUE_CONNECTION=sync` means jobs run inline.</b> Which makes tests simple and hides the queue: nothing is serialised, nothing is retried, and a job that cannot be serialised passes every test. Day 25's warning, arriving in the test suite.\n\nOne more thing worth setting early: <b>tests must not reach the network.</b> An unfaked HTTP call in a test is a test that fails when a third party has an outage, and passes for reasons unrelated to your code. Later lessons cover the fakes; the configuration decision is to make the default no.\n\nAnd the practical loop:\n\n```bash\nphp artisan test\nphp artisan test --filter=invoice\nphp artisan test tests/Feature/InvoiceTest.php\n```\n\n<b>A suite you do not run is not a safety net</b>, so the thing to optimise first is how long it takes and how often you run it.\n\nGetting Pest onto a project that does not have it:\n\n```bash\ncomposer require pestphp/pest --dev --with-all-dependencies\ncomposer require pestphp/pest-plugin-laravel --dev\nphp artisan pest:install\n```\n\nAnd generating tests:\n\n```bash\nphp artisan make:test InvoiceTest --pest          # tests/Feature\nphp artisan make:test InvoiceTotalTest --pest --unit\n```\n\n<b>`beforeEach()` is Pest's shared setup</b>, running before every test in the file:\n\n```php\nbeforeEach(function () {\n    $this->user = User::factory()->create();\n});\n\nit('lists invoices', function () {\n    $this->actingAs($this->user)->get('/invoices')->assertOk();\n});\n```\n\n`test()` is an alias for `it()`, for names that do not read well after \"it\".",
+      diagram: `Two syntaxes, one runner
 
-    Browser  →  GET /notifications  →  Laravel
-    Browser  ←  the response        ←  Laravel
-    (closed)
+  PHPUnit
+    public function test_user_can_create_post(): void
 
-  Something changes five seconds later and the browser
-  has no way to find out. Nothing connects them any more.
+  Pest
+    it('allows a user to create a post', function () { ... })
 
-  The workaround:
+  Same runner, same assertions, less ceremony.
 
-    GET /notifications
-       wait
-    GET /notifications
-       wait
-    GET /notifications
+  The NAME is the real difference:
 
-  Wasteful in a specific way: almost every request
-  returns NOTHING NEW. Every five seconds is 720
-  requests an hour per user to deliver perhaps three
-  notifications — and the news is still up to five
-  seconds late.
+    test_user_can_create_post
+      a method name pretending to be a sentence
 
+    it('allows a user to create a post')
+      a sentence
 
-A connection that stays open
+  A failing test's name is the first thing you read,
+  often months later. "allows a user to create a post"
+  tells you what broke. testPostStore does not.
 
-  HTTP                    WebSocket
-  ────                    ─────────
-  Browser → Server        Browser ═══════ Server
-  Browser ← Server              persistent
-  (closed)                 either side may send
+  The advice is not that one is better. Pick one and
+  keep the suite consistent: two styles is two ways to
+  find, name and read everything.
 
-    Laravel
-       ↓ event
-    WebSocket server
-       ↓
-    persistent connection
-       ↓
-    browser
-
-  The server sends the moment something happens.
-
-  ⚠️  This changes the resource question rather than
-      removing it. Polling costs REQUESTS. WebSockets
-      cost CONNECTIONS: ten thousand idle users are ten
-      thousand open sockets in memory, doing nothing.
-
-  What it makes possible:
-
-    live notifications · chat · online users
-    live dashboards · typing indicators
-    real-time collaboration · order status
+    new project      Pest
+    existing PHPUnit stay with it
 
 
-When it is worth it
+The environment
 
-  It adds a server to run, a connection to maintain, a
-  client library, an authorization layer and a
-  reconnection story.
+    development environment  ≠  testing environment
 
-  real time                     not real time
-  ─────────                     ─────────────
-  chat, collaboration           a dashboard refreshed
-    — seconds matter              every minute
-  somebody is watching          a status that changes
-    right now                     once a day
-  several people see the        the user triggered it
-    same thing                    and can wait
+  Tests get their own database, cache, mail, queue and
+  filesystem.
 
+  ⚠️  And the reason is not tidiness. RefreshDatabase
+      WIPES the database between tests. Point it at your
+      development database and your seeded work is gone.
+      Point it at production and the sentence finishes
+      itself.
 
-  Two cheaper options first:
+    ❌ php artisan test  →  production database
 
-    A slow poll. A dashboard fetching every thirty
-    seconds is 120 requests an hour and no
-    infrastructure, and nobody notices.
+  phpunit.xml sets APP_ENV=testing and overrides:
 
-    Server-sent events. One-way, server to browser, over
-    ordinary HTTP with no extra server. Less capable,
-    and enough for a progress bar or a feed.
+    DB_CONNECTION      in-memory SQLite, or a separate db
+    CACHE_STORE        array
+    MAIL_MAILER        array
+    QUEUE_CONNECTION   sync
+    SESSION_DRIVER     array
 
-
-  The test:
-
-    would a five-second delay make this feature WRONG,
-    or just slightly less nice?
-
-      chat              wrong
-      notification bell slightly less nice
+  array drivers mean nothing survives a test.
 
 
-  And: broadcasting is a DELIVERY MECHANISM, not a
-  source of truth. The event happened, the database
-  recorded it, and a reload must show the same thing.
+Two decisions inside that config
 
-  A UI that only knows what arrived over the socket is
-  broken for anybody who was disconnected — which is
-  everybody, sometimes.`,
+  SQLite in memory is FAST and is NOT your database.
+
+    seconds instead of minutes — and it will not catch a
+    MySQL-specific problem: a JSON column, a strict-mode
+    error, a full-text index, a date sorting differently.
+
+    If production is MySQL, run the suite against MySQL
+    somewhere, even if the fast local loop is SQLite.
+
+  QUEUE_CONNECTION=sync means jobs run INLINE.
+
+    Simple, and it hides the queue: nothing is
+    serialised, nothing is retried, and a job that
+    cannot be serialised passes every test.
+
+    Day 25's warning, arriving in the test suite.
+
+  And: tests must not reach the NETWORK. An unfaked HTTP
+  call fails when a third party has an outage and passes
+  for reasons unrelated to your code.
+
+
+The loop
+
+    php artisan test
+    php artisan test --filter=invoice
+    php artisan test tests/Feature/InvoiceTest.php
+
+  A suite you do not run is not a safety net. Optimise
+  how long it takes and how often you run it.`,
       codeExample: {
-        title: "Polling, and what replaces it",
-        code: `// ---------- Polling: what most applications start with ----------
-
-setInterval(async () => {
-    const res = await fetch('/api/notifications/unread-count');
-    const { count } = await res.json();
-
-    setUnread(count);
-}, 5000);
-
-// 720 requests an hour, per user, to deliver perhaps
-// three notifications. And the news is still up to five
-// seconds old.
-
-
-// ---------- Broadcasting: the server speaks first ----------
-
-Echo.private('user.' + userId)
-    .listen('NotificationCreated', (event) => {
-        setUnread((n) => n + 1);
-    });
-
-// One connection. Zero requests. Delivered the moment it
-// happens.
-
-
-<?php
-// ---------- The trade ----------
-
-// Polling costs REQUESTS.
-//   10,000 users × 720/hour = 7.2 million requests
-//   almost all returning nothing new
-//
-// WebSockets cost CONNECTIONS.
-//   10,000 users = 10,000 open sockets held in memory,
-//   doing nothing most of the time
-//
-// A different scaling problem, not an absent one.
-
-
-<?php
-// ---------- Cheaper options, first ----------
-
-// A slow poll: no infrastructure, and nobody notices.
-// setInterval(fetchStats, 30000);   // 120 requests/hour
-
-// Server-sent events: one-way, over ordinary HTTP.
-Route::get('/progress/{job}', function (string $job) {
-    return response()->eventStream(function () use ($job) {
-        while (! Cache::get("job:{$job}:done")) {
-            yield Cache::get("job:{$job}:progress", 0);
-
-            sleep(1);
-        }
-    });
-});
-
-// Enough for a progress bar. No WebSocket server.
-
-
-<?php
-// ---------- Delivery, not truth ----------
-
-// ❌ The UI only knows what arrived over the socket.
-//    Anybody who was disconnected sees nothing, and a
-//    reload shows an empty bell.
-
-// ✓ The socket updates a UI that could have been built
-//   from the database anyway.
-public function index(Request $request)
-{
-    return [
-        'notifications' => $request->user()
-            ->unreadNotifications()
-            ->latest()
-            ->take(10)
-            ->get(),
-    ];
-}
-
-// The page loads its state over HTTP, and the socket
-// keeps it current. A reload must show the same thing.`,
-      },
-      keyTakeaways: [
-        "<b>HTTP is a question and an answer</b>, so a browser cannot learn about a change made after the response.",
-        "<b>Polling asks repeatedly</b>, and almost every request returns nothing new.",
-        "Five-second polling is 720 requests an hour per user, and the news is still up to five seconds late.",
-        "<b>A WebSocket is a connection that stays open</b>, and either side can send at any time.",
-        "<b>Polling costs requests; WebSockets cost connections</b>, so the scaling problem changes rather than disappearing.",
-        "It enables chat, live notifications, presence, collaborative editing and live dashboards.",
-        "<b>Broadcasting adds a server, a client library, an authorization layer and a reconnection story.</b>",
-        "<b>A slow poll or server-sent events are cheaper</b>, and enough for a dashboard or a progress bar.",
-        "<b>The test is whether a five-second delay would make the feature wrong</b>, or merely slightly less nice.",
-        "<b>Broadcasting is delivery, not truth</b>: the page must still be correct after a reload for somebody who was disconnected.",
-      ],
-      commonMistakes: [
-        "<b>Reaching for WebSockets for a dashboard refreshed once a minute.</b> A poll costs nothing to operate.",
-        "<b>Assuming real time removes the load.</b> Ten thousand idle connections are held open in memory.",
-        "<b>Building a UI only from socket messages.</b> A disconnected user sees an empty page and a reload shows nothing.",
-        "<b>Forgetting the reconnection story.</b> Connections drop, and the UI must recover its state when they do.",
-        "<b>Treating a broadcast as the record of what happened.</b> The database is still the source of truth.",
-      ],
-      quiz: [
-        {
-          question: "Why can't a normal HTTP page learn about a later change?",
-          options: [
-            "The browser caches it",
-            "The request and response completed, so nothing connects the two any more",
-            "Laravel closes the session",
-            "It can",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why polling exists, and why it asks repeatedly.",
-        },
-        {
-          question: "What is wasteful about polling?",
-          options: [
-            "It is slow to write",
-            "Almost every request returns nothing new, and the news is still delayed",
-            "It cannot be authenticated",
-            "It breaks caching",
-          ],
-          correctIndex: 1,
-          explanation: "720 requests an hour per user to deliver perhaps three notifications.",
-        },
-        {
-          question: "What does broadcasting cost that polling does not?",
-          options: [
-            "More requests",
-            "Open connections held in memory, one per connected user",
-            "More database queries",
-            "Nothing",
-          ],
-          correctIndex: 1,
-          explanation: "A different scaling problem, not an absent one.",
-        },
-        {
-          question: "Why must a real-time UI still load its state over HTTP?",
-          options: [
-            "For SEO",
-            "Somebody who was disconnected has missed messages, and a reload must show the same thing",
-            "WebSockets cannot send objects",
-            "It does not",
-          ],
-          correctIndex: 1,
-          explanation: "Broadcasting is delivery; the database is the source of truth.",
-        },
-      ],
-    },
-    {
-      id: "reverb-and-services",
-      title: "Reverb, Pusher & Ably",
-      durationMinutes: 10,
-      explanation: "Something has to hold those connections open, and it is not your web server.\n\n---\n\n### 1. Basic — the extra server\n\nPHP answers a request and exits. <b>It cannot hold ten thousand connections open</b>, because that is not what it does.\n\nSo real-time Laravel has a second server in the picture:\n\n```text\nLaravel\n   ↓ broadcast\nWebSocket server\n   ↓ persistent connections\nbrowsers\n```\n\n<b>Laravel Reverb is Laravel's own WebSocket server</b>, written for this and run by you:\n\n```text\nLaravel  →  Reverb  →  browser\n```\n\nIts job is exactly two things: <b>hold the connections, and deliver broadcasts to the right ones.</b> It does not run your application code, touch your database, or know anything about your models.\n\n---\n\n### 2. Intermediate — or somebody else's server\n\nPusher and Ably do the same job as a managed service:\n\n```text\nLaravel  →  Pusher / Ably  →  browser\n```\n\n```text\nReverb                    Pusher / Ably\n──────                    ─────────────\nyou run it                they run it\nno per-message cost       priced per connection\n                            and message\nyour infrastructure       their infrastructure\nyou handle scaling        scaling is included\nyou handle uptime         uptime is their problem\n```\n\n<b>Neither is the right answer.</b> The decision is made by:\n\n```text\ntraffic · infrastructure you already run\ncost at your volume · operational appetite\nscaling needs · how much downtime hurts\n```\n\nA team already running Redis and comfortable with a process manager will find Reverb straightforward. A team without an operations story will find a managed service worth its price on the first outage.\n\n<b>And the switch is a configuration change</b>, because the application code broadcasts through the same abstraction either way. Which means \"start managed, move to Reverb when the bill justifies it\" is a legitimate plan rather than a rewrite.\n\n---\n\n### 3. Advanced — what running it involves\n\nIf you do run Reverb, it is another long-running process, with everything that implies from Day 26:\n\n```text\nit must be started            a process manager\nit must be restarted          on deploy\nit must be watched            when it dies, real time\n                                silently stops\n```\n\n<b>The failure mode is quiet</b>, and worth naming: when the WebSocket server is down, the page still loads, the buttons still work, and nothing updates live. Nobody gets an error, and the bug report is \"it feels laggy sometimes\".\n\nTwo more operational facts.\n\n<b>It needs its own port, and that port has to be reachable</b> through whatever sits in front of your application. A reverse proxy that does not know about WebSocket upgrades will refuse the connection, and the browser reports something unhelpful.\n\n<b>And it needs TLS in production for the same reason your site does.</b> A page served over HTTPS cannot open an insecure WebSocket; browsers refuse it. So the certificate story applies to the socket as well as the site.\n\nThe practical shape most applications land on:\n\n```text\nlocal        Reverb, started alongside the app\nsmall app    a managed service, and no operations at all\nlarger app   Reverb, with a process manager and monitoring\n```\n\nAnd whichever you pick, <b>the thing to check first when real time stops working is whether the server is running at all.</b>",
-      diagram: `The extra server
-
-  PHP answers a request and exits. It cannot hold ten
-  thousand connections open, because that is not what
-  it does.
-
-    Laravel
-       ↓ broadcast
-    WebSocket server
-       ↓ persistent connections
-    browsers
-
-  Laravel Reverb is Laravel's own WebSocket server:
-
-    Laravel  →  Reverb  →  browser
-
-  Its job is exactly two things: hold the connections,
-  and deliver broadcasts to the right ones. It does not
-  run your application code, touch your database, or
-  know anything about your models.
-
-
-Or somebody else's server
-
-    Laravel  →  Pusher / Ably  →  browser
-
-  Reverb                   Pusher / Ably
-  ──────                   ─────────────
-  you run it               they run it
-  no per-message cost      priced per connection
-                             and message
-  your infrastructure      their infrastructure
-  you handle scaling       scaling included
-  you handle uptime        uptime is their problem
-
-  Neither is the right answer. The decision is:
-
-    traffic · infrastructure you already run
-    cost at your volume · operational appetite
-    scaling needs · how much downtime hurts
-
-  A team already running Redis will find Reverb
-  straightforward. A team with no operations story will
-  find a managed service worth its price on the first
-  outage.
-
-  And the switch is a CONFIGURATION change, because the
-  application broadcasts through the same abstraction.
-  "Start managed, move to Reverb when the bill justifies
-  it" is a plan, not a rewrite.
-
-
-Running it
-
-  Another long-running process, with everything Day 26
-  implies:
-
-    it must be started      a process manager
-    it must be restarted    on deploy
-    it must be watched      when it dies, real time
-                              silently stops
-
-  ⚠️  The failure mode is QUIET. The page loads, the
-      buttons work, and nothing updates live. Nobody
-      gets an error, and the bug report is "it feels
-      laggy sometimes".
-
-  Two more:
-
-    It needs its own PORT, reachable through whatever
-    sits in front of your app. A reverse proxy that does
-    not know about WebSocket upgrades refuses the
-    connection, and the browser reports something
-    unhelpful.
-
-    It needs TLS in production. A page served over HTTPS
-    cannot open an insecure WebSocket; browsers refuse.
-    The certificate story applies to the socket too.
-
-
-  local       Reverb, started alongside the app
-  small app   a managed service, no operations at all
-  larger app  Reverb, with a process manager and
-              monitoring
-
-  And whichever you pick: when real time stops working,
-  check whether the server is running at all.`,
-      codeExample: {
-        title: "Configuring a broadcaster",
-        code: `# ---------- Reverb: you run it ----------
-
-composer require laravel/reverb
-php artisan install:broadcasting
-
-# .env
-BROADCAST_CONNECTION=reverb
-
-REVERB_APP_ID=123456
-REVERB_APP_KEY=local-key
-REVERB_APP_SECRET=local-secret
-REVERB_HOST=localhost
-REVERB_PORT=8080
-REVERB_SCHEME=http
-
-# What the browser connects to. In production these are
-# your public host and 443, over wss.
-VITE_REVERB_APP_KEY="\${REVERB_APP_KEY}"
-VITE_REVERB_HOST="\${REVERB_HOST}"
-VITE_REVERB_PORT="\${REVERB_PORT}"
-VITE_REVERB_SCHEME="\${REVERB_SCHEME}"
-
-
-# Start it, and leave it running.
-php artisan reverb:start
-
-# Locally, alongside everything else:
-#   php artisan serve
-#   php artisan queue:work
-#   php artisan reverb:start
-#   npm run dev
-
-
-# ---------- Or a managed service ----------
-
-BROADCAST_CONNECTION=pusher
-
-PUSHER_APP_ID=...
-PUSHER_APP_KEY=...
-PUSHER_APP_SECRET=...
-PUSHER_APP_CLUSTER=eu
-
-# The application code does not change. The switch is a
-# configuration change, which makes "start managed, move
-# to Reverb later" a plan rather than a rewrite.
-
-
-<?php
-// config/broadcasting.php
-
-'default' => env('BROADCAST_CONNECTION', 'null'),
-
-'connections' => [
-    'reverb' => [
-        'driver' => 'reverb',
-        'key'    => env('REVERB_APP_KEY'),
-        'secret' => env('REVERB_APP_SECRET'),
-        'app_id' => env('REVERB_APP_ID'),
-        'options' => [
-            'host'   => env('REVERB_HOST'),
-            'port'   => env('REVERB_PORT', 443),
-            'scheme' => env('REVERB_SCHEME', 'https'),
-        ],
-    ],
-
-    'pusher' => ['driver' => 'pusher', /* ... */],
-
-    // Tests, and any environment with no real time.
-    'null' => ['driver' => 'null'],
-],
-
-
-# ---------- In production: another process to keep alive ----------
-
-# /etc/supervisor/conf.d/reverb.conf
-
-[program:reverb]
-command=php /var/www/artisan reverb:start
-autostart=true
-autorestart=true
-user=www-data
-redirect_stderr=true
-stdout_logfile=/var/log/reverb.log
-
-# When this dies, the page still loads, the buttons still
-# work, and nothing updates live. Nobody gets an error.
-
-
-# ---------- The proxy has to allow the upgrade ----------
-
-# nginx
-location /app {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "Upgrade";
-    proxy_set_header Host $host;
-}
-
-# Without the Upgrade headers the connection is refused,
-# and the browser reports something unhelpful.
-
-# And a page on HTTPS cannot open an insecure socket:
-# browsers refuse it, so the socket needs TLS too.`,
-      },
-      keyTakeaways: [
-        "<b>PHP answers a request and exits</b>, so it cannot hold thousands of connections open.",
-        "<b>Real-time Laravel needs a second server</b> whose only job is holding connections and delivering broadcasts.",
-        "<b>Reverb is Laravel's own WebSocket server</b>, run by you, and it never touches your application code or database.",
-        "<b>Pusher and Ably do the same job as a managed service</b>, priced per connection and message.",
-        "<b>Neither is right by default</b>: it depends on traffic, cost at your volume, and your appetite for operations.",
-        "<b>Switching between them is a configuration change</b>, so starting managed and moving later is a real plan.",
-        "<b>Reverb is another long-running process</b> needing a process manager, restarts on deploy, and monitoring.",
-        "<b>Its failure mode is quiet</b>: the page works and nothing updates live, with no error anywhere.",
-        "<b>It needs its own port, reachable through your proxy</b>, which must allow the WebSocket upgrade.",
-        "<b>A page on HTTPS cannot open an insecure socket</b>, so TLS applies to the socket too.",
-      ],
-      commonMistakes: [
-        "<b>Expecting the web server to hold WebSocket connections.</b> That is a separate long-running process.",
-        "<b>Running Reverb by hand.</b> When it dies, real time stops silently and nothing reports it.",
-        "<b>Forgetting the proxy's upgrade headers.</b> The connection is refused with an unhelpful browser error.",
-        "<b>Serving the page over HTTPS and the socket over plain WebSocket.</b> Browsers refuse the mixed connection.",
-        "<b>Debugging broadcast code when real time stops.</b> Check whether the WebSocket server is running first.",
-      ],
-      quiz: [
-        {
-          question: "Why does broadcasting need a separate server?",
-          options: [
-            "For security",
-            "PHP answers a request and exits, so it cannot hold connections open",
-            "To reduce database load",
-            "Laravel requires it",
-          ],
-          correctIndex: 1,
-          explanation: "The WebSocket server's job is holding connections and delivering broadcasts.",
-        },
-        {
-          question: "What is the difference between Reverb and Pusher?",
-          options: [
-            "Reverb supports more channels",
-            "You run Reverb yourself; Pusher is managed and priced per connection and message",
-            "Pusher is faster",
-            "Reverb only works locally",
-          ],
-          correctIndex: 1,
-          explanation: "And switching between them is a configuration change.",
-        },
-        {
-          question: "What happens when the WebSocket server dies?",
-          options: [
-            "The site returns a 500",
-            "The page still works and nothing updates live, with no error anywhere",
-            "Requests queue up",
-            "Laravel restarts it",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why it needs a process manager and monitoring.",
-        },
-        {
-          question: "Why must the WebSocket use TLS in production?",
-          options: [
-            "For performance",
-            "A page served over HTTPS cannot open an insecure WebSocket; browsers refuse it",
-            "Reverb requires it",
-            "To allow authentication",
-          ],
-          correctIndex: 1,
-          explanation: "The certificate story applies to the socket as well as the site.",
-        },
-      ],
-    },
-    {
-      id: "broadcasting-events",
-      title: "ShouldBroadcast & shaping the payload",
-      durationMinutes: 12,
-      explanation: "Yesterday's events, with one interface added.\n\n---\n\n### 1. Basic — an event that leaves the server\n\n```php\nclass OrderShipped implements ShouldBroadcast\n{\n}\n```\n\n```text\nsomething happens\n      ↓\nShouldBroadcast\n      ↓\nbroadcast\n      ↓\nWebSocket\n      ↓\nsubscribed clients\n```\n\n<b>That is genuinely the whole change.</b> Yesterday's `OrderShipped` had listeners inside your application; adding the interface means it also leaves the building.\n\nWhich is a nice piece of design: <b>the same event can have server-side listeners and browser subscribers</b>, and neither knows about the other. A `PaymentReceived` event can send a receipt, write an audit row, and update somebody's screen, from one dispatch.\n\n<b>`ShouldBroadcast` queues the broadcast</b>, so the request does not wait for the WebSocket server. Which means a queue worker must be running, and \"my events are not arriving\" is very often that.\n\n---\n\n### 2. Intermediate — `ShouldBroadcastNow`\n\n```php\nclass OrderShipped implements ShouldBroadcastNow\n{\n}\n```\n\n```text\nShouldBroadcast      → queue → broadcast\nShouldBroadcastNow   → broadcast, in the request\n```\n\n<b>Do not reach for this by default.</b> It sends during the request, so the user waits for the WebSocket server, and an unavailable one becomes a failed request for whatever they were actually doing.\n\nIt earns its place in two cases: a chat message, where a queue round trip is a visible delay in a conversation, and a local setup with no worker running, where it is a debugging convenience rather than a design choice.\n\n<b>For everything else, the queue is right</b>, and a hundred milliseconds later is real time enough.\n\n---\n\n### 3. Advanced — what actually goes over the wire\n\nBy default, <b>the event's public properties are serialised and sent.</b> Which is where this goes wrong:\n\n```php\nclass NotificationCreated implements ShouldBroadcast\n{\n    public function __construct(public User $user, public Notification $notification) {}\n}\n```\n\nThat sends the whole user model to the browser: the email, the internal flags, the columns added by a migration last week. <b>Anybody who can subscribe to that channel can read all of it</b>, and unlike an API response, nobody reviewed it.\n\n```php\npublic function broadcastWith(): array\n{\n    return [\n        'id'      => $this->notification->id,\n        'message' => $this->notification->message,\n    ];\n}\n```\n\n<b>This is Day 16's API Resource argument, in a place people forget to apply it.</b> A broadcast is a public interface: send what the client needs and nothing else.\n\n```text\n❌ the User model                ✓ { \"id\": 123,\n     id · email · internal        \"message\": \"...\" }\n     flags · everything else\n```\n\nThree more details worth knowing.\n\n<b>The event name on the wire is the class name</b>, which is what the client listens for. `broadcastAs()` renames it, and is worth using so that renaming a PHP class does not break a deployed frontend.\n\n<b>`broadcastWhen()` can cancel a broadcast</b>, which is useful when the same event is dispatched in cases that should not always reach the browser.\n\n<b>And the broadcaster does not include the sender by default.</b> `toOthers()` excludes the connection that caused the event, which is what stops the person who sent a chat message seeing it twice: once from their own optimistic update, once from the socket.\n\nAnd since `ShouldBroadcast` puts the broadcast on a queue, it can be given its own:\n\n```php\npublic function broadcastQueue(): string\n{\n    return 'broadcasts';\n}\n```\n\n<b>Worth doing, because real time behind a slow queue is not real time.</b> A broadcast waiting behind a batch of PDF generation arrives a minute late, which is indistinguishable from broken.",
-      diagram: `An event that leaves the server
-
-    class OrderShipped implements ShouldBroadcast
-
-    something happens → ShouldBroadcast → broadcast
-                      → WebSocket → subscribed clients
-
-  That is the whole change. Yesterday's event had
-  listeners inside the application; the interface means
-  it also leaves the building.
-
-  Which is nice design: the SAME event can have
-  server-side listeners AND browser subscribers, and
-  neither knows about the other.
-
-    PaymentReceived → sends a receipt
-                    → writes an audit row
-                    → updates somebody's screen
-
-  from one dispatch.
-
-  ⚠️  ShouldBroadcast QUEUES the broadcast, so a worker
-      must be running. "My events are not arriving" is
-      very often that.
-
-
-ShouldBroadcastNow
-
-    ShouldBroadcast      → queue → broadcast
-    ShouldBroadcastNow   → broadcast, in the request
-
-  Do not reach for it by default. It sends during the
-  request, so the user waits for the WebSocket server —
-  and an unavailable one becomes a failed request for
-  whatever they were actually doing.
-
-  It earns its place twice:
-
-    a chat message, where a queue round trip is a
-      visible delay in a conversation
-    a local setup with no worker, as a debugging
-      convenience
-
-  Otherwise the queue is right, and a hundred
-  milliseconds later is real time enough.
-
-
-What goes over the wire
-
-  By default, the event's PUBLIC PROPERTIES are
-  serialised and sent.
-
-    public function __construct(
-        public User \$user,
-        public Notification \$notification,
-    ) {}
-
-  That sends the whole user model to the browser: the
-  email, the internal flags, the columns added by a
-  migration last week.
-
-  ⚠️  Anybody who can subscribe to that channel reads all
-      of it — and unlike an API response, nobody reviewed
-      it.
-
-    public function broadcastWith(): array
-    {
-        return [
-            'id'      => \$this->notification->id,
-            'message' => \$this->notification->message,
-        ];
-    }
-
-  Day 16's API Resource argument, in a place people
-  forget to apply it. A broadcast is a PUBLIC INTERFACE.
-
-    ❌ the User model            ✓ { "id": 123,
-       id · email · internal        "message": "..." }
-       flags · everything else
-
-
-Three details
-
-  The event name on the wire is the CLASS NAME, which is
-  what the client listens for. broadcastAs() renames it,
-  so renaming a PHP class does not break a deployed
-  frontend.
-
-  broadcastWhen() can cancel a broadcast, for an event
-  dispatched in cases that should not always reach the
-  browser.
-
-  toOthers() excludes the connection that caused the
-  event — which stops the person who sent a chat message
-  seeing it twice: once optimistically, once from the
-  socket.`,
-      codeExample: {
-        title: "Broadcasting an event, carefully",
+        title: "Pest, PHPUnit and phpunit.xml",
         code: `<?php
+// ---------- PHPUnit ----------
 
-namespace App\\Events;
+namespace Tests\\Feature;
 
-use App\\Models\\Notification;
-use Illuminate\\Broadcasting\\PrivateChannel;
-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;
-use Illuminate\\Foundation\\Events\\Dispatchable;
+use Tests\\TestCase;
 
-class NotificationCreated implements ShouldBroadcast
+class PostTest extends TestCase
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public function __construct(public Notification $notification) {}
-
-    public function broadcastOn(): array
+    public function test_user_can_create_post(): void
     {
-        return [new PrivateChannel('user.' . $this->notification->user_id)];
-    }
+        $response = $this->postJson('/api/posts', ['title' => 'Hello']);
 
-    // The name the client listens for. Without this it is
-    // the fully qualified class name, so renaming the PHP
-    // class breaks a deployed frontend.
-    public function broadcastAs(): string
-    {
-        return 'notification.created';
-    }
-
-    // What actually crosses the wire. Without this, every
-    // public property is serialised and sent.
-    public function broadcastWith(): array
-    {
-        return [
-            'id'         => $this->notification->id,
-            'message'    => $this->notification->message,
-            'created_at' => $this->notification->created_at->toIso8601String(),
-        ];
-    }
-
-    // Not every dispatch needs to reach the browser.
-    public function broadcastWhen(): bool
-    {
-        return $this->notification->is_visible;
+        $response->assertStatus(201);
     }
 }
 
 
 <?php
-// ---------- What happens without broadcastWith() ----------
+// ---------- Pest ----------
 
-// ❌ The whole user model goes to the browser: the email,
-//    the internal flags, and the columns a migration
-//    added last week.
-class NotificationCreated implements ShouldBroadcast
-{
-    public function __construct(
-        public User $user,
-        public Notification $notification,
-    ) {}
-}
+it('allows a user to create a post', function () {
+    $response = $this->postJson('/api/posts', ['title' => 'Hello']);
 
-// Anybody who can subscribe to that channel reads all of
-// it, and unlike an API response nobody reviewed it.
+    $response->assertStatus(201);
+});
+
+// Same runner. Same assertions. And the name is a
+// sentence rather than a method name pretending to be
+// one — which is what you read when it fails.
+
+
+<?php
+// tests/Pest.php — shared setup, once
+uses(Tests\\TestCase::class, Illuminate\\Foundation\\Testing\\RefreshDatabase::class)
+    ->in('Feature');
+
+
+// ---------- phpunit.xml ----------
 //
-// This is Day 16's resource argument, in the place people
-// forget to apply it.
-
-
-<?php
-// ---------- Queued, or now ----------
-
-// ✓ The default. The request does not wait for the
-//   WebSocket server.
-class OrderShipped implements ShouldBroadcast {}
-
-// A worker must be running. "My events are not arriving"
-// is very often that.
-
-// Occasionally right: a chat message, where a queue round
-// trip is a visible delay in a conversation.
-class MessageSent implements ShouldBroadcastNow {}
-
-// ❌ Everything else. The user waits for the WebSocket
-//    server, and an outage there fails a request about
-//    something else.
-
-
-<?php
-// ---------- One dispatch, two audiences ----------
-
-PaymentReceived::dispatch($payment);
-
-// Server side, from yesterday:
-//   SendReceipt (queued listener)
-//   RecordAuditEntry (inline listener)
+// <php>
+//     <env name="APP_ENV" value="testing"/>
 //
-// Browser side, from today:
-//   ShouldBroadcast → the customer's screen updates
+//     <!-- Not your development database. RefreshDatabase
+//          wipes this between tests. -->
+//     <env name="DB_CONNECTION" value="sqlite"/>
+//     <env name="DB_DATABASE" value=":memory:"/>
 //
-// Neither knows about the other.
-
-
-<?php
-// ---------- toOthers ----------
-
-// The sender already updated their own UI optimistically.
-// Without this they see the message twice.
-broadcast(new MessageSent($message))->toOthers();
-
-// Requires the client to send its socket id with the
-// request, which Echo does automatically.`,
-      },
-      keyTakeaways: [
-        "<b>`ShouldBroadcast` on an event sends it out over the WebSocket</b>, and that is the whole change.",
-        "<b>The same event can have server-side listeners and browser subscribers</b>, and neither knows about the other.",
-        "<b>`ShouldBroadcast` queues the broadcast</b>, so a worker must be running for events to arrive.",
-        "<b>`ShouldBroadcastNow` broadcasts during the request</b>, so an unavailable WebSocket server fails the request.",
-        "It suits a chat message, and local debugging, and not much else.",
-        "<b>By default every public property of the event is serialised and sent to the browser.</b>",
-        "<b>`broadcastWith()` shapes the payload</b>, which is Day 16's resource argument applied to a public interface.",
-        "<b>`broadcastAs()` names the event on the wire</b>, so renaming a PHP class does not break a deployed frontend.",
-        "<b>`broadcastWhen()` cancels a broadcast</b> for dispatches that should not reach the browser.",
-        "<b>`toOthers()` excludes the connection that caused the event</b>, which stops the sender seeing their own message twice.",
-      ],
-      commonMistakes: [
-        "<b>Broadcasting an event with a model as a public property.</b> The entire record goes to the browser unreviewed.",
-        "<b>Using `ShouldBroadcastNow` by default.</b> The user waits for the WebSocket server on every request.",
-        "<b>Forgetting the queue worker.</b> `ShouldBroadcast` queues, so nothing arrives until something processes it.",
-        "<b>Relying on the class name as the wire name.</b> A rename or a namespace move breaks the deployed frontend.",
-        "<b>Omitting `toOthers()` on a chat message.</b> The sender sees their own message twice.",
-      ],
-      quiz: [
-        {
-          question: "What does adding `ShouldBroadcast` to an event do?",
-          options: [
-            "Replaces its listeners",
-            "Sends it over the WebSocket as well as running its listeners",
-            "Queues its listeners",
-            "Makes it synchronous",
-          ],
-          correctIndex: 1,
-          explanation: "The same event can have server-side listeners and browser subscribers.",
-        },
-        {
-          question: "What is sent to the browser without `broadcastWith()`?",
-          options: [
-            "Nothing",
-            "Every public property of the event, serialised in full",
-            "Only the event name",
-            "The model's id",
-          ],
-          correctIndex: 1,
-          explanation: "Which sends a whole user model, including columns nobody reviewed.",
-        },
-        {
-          question: "When is `ShouldBroadcastNow` appropriate?",
-          options: [
-            "Always, for lower latency",
-            "For a chat message where a queue round trip is a visible delay, and for local debugging",
-            "When no queue exists in production",
-            "For large payloads",
-          ],
-          correctIndex: 1,
-          explanation: "Otherwise the user waits for the WebSocket server during their request.",
-        },
-        {
-          question: "What does `toOthers()` prevent?",
-          options: [
-            "Unauthorized subscribers",
-            "The connection that caused the event receiving it back",
-            "Duplicate broadcasts",
-            "Queued delivery",
-          ],
-          correctIndex: 1,
-          explanation: "The sender already updated their own UI optimistically.",
-        },
-      ],
-    },
-    {
-      id: "channels",
-      title: "Channels — public, private & presence",
-      durationMinutes: 12,
-      explanation: "A broadcast has to go somewhere. Channels are where.\n\n---\n\n### 1. Basic — three kinds\n\n```text\nPublic     anyone may subscribe\nPrivate    authorized users only\nPresence   authorized users, and everybody knows who is there\n```\n\n<b>The channel is the addressing</b>: an event broadcast on `user.42` reaches whoever is subscribed to `user.42`, and nobody else.\n\n<b>Public channels</b> require nothing:\n\n```text\nBrowser A ─┐\nBrowser B ─┼→  announcements\nBrowser C ─┘\n```\n\nWhich suits information anybody could see anyway: a public status page, a live scoreboard, a site-wide announcement.\n\n<b>And the rule that follows is absolute: nothing user-specific goes on a public channel.</b> Not \"unlikely to be guessed\", not \"they would need the id\". A public channel is readable by anybody who knows its name, and names are not secrets.\n\n---\n\n### 2. Intermediate — private channels\n\n```text\nprivate-user.123\n```\n\nSubscribing to one asks your application for permission:\n\n```text\nBrowser\n   ↓ subscribe to private-user.123\nLaravel authorization\n   ↓ allowed?\nthe connection joins the channel\n```\n\n<b>This is the one you will use most</b>, because most real-time updates belong to somebody: their notifications, their orders, their invoices.\n\nThe naming convention that follows from that:\n\n```text\nprivate-user.{id}       one person's own events\nprivate-team.{id}       everybody on a team\nprivate-order.{id}      everybody watching one order\npresence-chat.{id}      a room, and who is in it\n```\n\n<b>The channel name is a scope</b>, and choosing it is a design decision rather than a naming one. `private-user.42` and `private-team.7` deliver different things to different sets of people, and getting that wrong is how somebody sees an update they should not.\n\n---\n\n### 3. Advanced — presence channels\n\n<b>A presence channel is a private channel that also tracks who is connected:</b>\n\n```text\nchat.room.123\n\n🟢 Rajan\n🟢 Alice\n🟢 Bob\n```\n\nWhen you join, you learn who is already there. When somebody else joins or leaves, you are told.\n\n```text\nyou join      →  here:    the current members\nsomeone joins →  joining: that member\nsomeone leaves→  leaving: that member\n```\n\nWhich is what builds an online-users list, a collaborative cursor display, or a \"three people are viewing this\" indicator, without any of it being stored anywhere.\n\nThree things worth knowing before relying on it.\n\n<b>Presence data is whatever your authorization callback returns</b>, and it is visible to every other member. Returning the whole user model puts their email in front of everybody in the room. Return a name and an id.\n\n<b>Presence is connection state, not truth.</b> A closed laptop lid, a dropped connection or a tab in the background can all mean somebody appears present when they are not, and appears absent when they are. Treat it as a hint, not a fact, and never as authorization for anything.\n\n<b>And one person can be several members.</b> Two tabs is two connections, so a naive count shows Rajan twice. Deduplicating by user id is on you.\n\nSo the choice, in one place:\n\n```text\nis the information public anyway?     →  a public channel\nis it somebody's, or a group's?       →  a private channel\ndo the members need to know who\n  else is here?                        →  a presence channel\n```",
-      diagram: `Three kinds
-
-  Public     anyone may subscribe
-  Private    authorized users only
-  Presence   authorized users, and everybody knows
-             who is there
-
-  The channel is the ADDRESSING: an event broadcast on
-  user.42 reaches whoever subscribed to user.42.
-
-
-Public
-
-    Browser A ─┐
-    Browser B ─┼→  announcements
-    Browser C ─┘
-
-  Suits information anybody could see anyway: a public
-  status page, a live scoreboard, a site-wide notice.
-
-  ⚠️  And the rule is absolute: NOTHING user-specific on
-      a public channel. Not "unlikely to be guessed",
-      not "they would need the id".
-
-      A public channel is readable by anybody who knows
-      its name, and names are not secrets.
-
-
-Private
-
-    private-user.123
-
-    Browser
-       ↓ subscribe to private-user.123
-    Laravel authorization
-       ↓ allowed?
-    the connection joins the channel
-
-  The one you will use most, because most real-time
-  updates belong to somebody.
-
-    private-user.{id}     one person's own events
-    private-team.{id}     everybody on a team
-    private-order.{id}    everybody watching one order
-    presence-chat.{id}    a room, and who is in it
-
-  The channel name is a SCOPE, and choosing it is a
-  design decision rather than a naming one.
-  private-user.42 and private-team.7 deliver different
-  things to different people, and getting it wrong is
-  how somebody sees an update they should not.
-
-
-Presence
-
-    chat.room.123
-
-    🟢 Rajan
-    🟢 Alice
-    🟢 Bob
-
-    you join       →  here:    the current members
-    someone joins  →  joining: that member
-    someone leaves →  leaving: that member
-
-  Builds an online list, collaborative cursors, or
-  "three people are viewing this" — none of it stored.
-
-
-  Three things before relying on it:
-
-    Presence data is whatever your authorization
-    callback RETURNS, and every other member sees it.
-    Returning the user model puts their email in front
-    of the room. Return a name and an id.
-
-    Presence is CONNECTION STATE, not truth. A closed
-    laptop, a dropped connection or a background tab can
-    all make somebody appear present when they are not.
-    A hint, never authorization.
-
-    One person can be several members. Two tabs is two
-    connections, so a naive count shows Rajan twice.
-    Deduplicating by user id is on you.
-
-
-The choice
-
-  public anyway?                   →  public channel
-  somebody's, or a group's?        →  private channel
-  do members need to know who
-    else is here?                   →  presence channel`,
-      codeExample: {
-        title: "Choosing a channel",
-        code: `<?php
-
-use Illuminate\\Broadcasting\\Channel;
-use Illuminate\\Broadcasting\\PresenceChannel;
-use Illuminate\\Broadcasting\\PrivateChannel;
-
-// ---------- Public: information anybody could see ----------
-
-class SiteStatusChanged implements ShouldBroadcast
-{
-    public function broadcastOn(): array
-    {
-        return [new Channel('status')];
-    }
-
-    public function broadcastWith(): array
-    {
-        return ['status' => $this->status];   // nothing personal
-    }
-}
-
-// ❌ Never this. A public channel is readable by anybody
-//    who knows its name, and names are not secrets.
-class NotificationCreated implements ShouldBroadcast
-{
-    public function broadcastOn(): array
-    {
-        return [new Channel('user.' . $this->userId)];
-    }
-}
-
-
-<?php
-// ---------- Private: the one you will use most ----------
-
-class NotificationCreated implements ShouldBroadcast
-{
-    public function broadcastOn(): array
-    {
-        return [new PrivateChannel('user.' . $this->notification->user_id)];
-    }
-}
-
-// The channel name is a scope, and choosing it is a
-// design decision:
-
-class InvoicePaid implements ShouldBroadcast
-{
-    public function broadcastOn(): array
-    {
-        return [
-            // The customer sees their own invoice.
-            new PrivateChannel('user.' . $this->invoice->customer_id),
-
-            // The finance team sees every invoice.
-            new PrivateChannel('team.finance'),
-        ];
-    }
-}
-
-
-<?php
-// ---------- Presence: private, plus who is here ----------
-
-class MessageSent implements ShouldBroadcast
-{
-    public function broadcastOn(): array
-    {
-        return [new PresenceChannel('chat.room.' . $this->message->room_id)];
-    }
-}
-
-// The client gets here / joining / leaving for free,
-// which is what builds an online-users list without
-// storing anything.
-
-
-<?php
-// ---------- What presence exposes ----------
-
-// routes/channels.php
-
-// ❌ Every member of the room now sees this user's email,
-//    and whatever else the model carries.
-Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
-    return $user->rooms->contains($roomId) ? $user : false;
-});
-
-// ✓ A name and an id.
-Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
-    if (! $user->rooms->contains($roomId)) {
-        return false;
-    }
-
-    return ['id' => $user->id, 'name' => $user->name];
-});
-
-
-// ---------- One person, several connections ----------
-
-// Two tabs is two members. A naive count shows Rajan twice.
-
-const online = members.filter(
-    (m, i, all) => all.findIndex((x) => x.id === m.id) === i
-);
-
-// And presence is connection state, not truth: a closed
-// laptop or a background tab makes somebody look absent
-// when they are not. A hint, never authorization.`,
-      },
-      keyTakeaways: [
-        "<b>A channel is the addressing</b>: a broadcast reaches whoever subscribed to that channel name.",
-        "<b>Public channels require no authorization</b>, and suit information anybody could see anyway.",
-        "<b>Nothing user-specific ever goes on a public channel</b>, because names are not secrets.",
-        "<b>Private channels ask your application for permission before a connection joins.</b>",
-        "They are what most real-time updates need, because most updates belong to somebody.",
-        "<b>The channel name is a scope</b>, so `private-user.42` and `private-team.7` are a design decision.",
-        "<b>A presence channel is a private channel that also tracks who is connected</b>, with here, joining and leaving.",
-        "<b>Presence data is whatever the authorization callback returns</b>, and every member sees it: return a name and an id.",
-        "<b>Presence is connection state, not truth</b>, so treat it as a hint and never as authorization.",
-        "<b>One person with two tabs is two members</b>, so deduplicating by user id is your job.",
-      ],
-      commonMistakes: [
-        "<b>Putting a user's notifications on a public channel.</b> Anybody who guesses the name reads them.",
-        "<b>Returning the user model from a presence authorization callback.</b> Their email goes to everybody in the room.",
-        "<b>Trusting presence as a fact.</b> A closed laptop or a background tab makes it wrong in both directions.",
-        "<b>Counting presence members without deduplicating.</b> Two tabs shows the same person twice.",
-        "<b>Choosing a channel name without thinking about scope.</b> A team channel delivers to more people than you meant.",
-      ],
-      quiz: [
-        {
-          question: "What may go on a public broadcast channel?",
-          options: [
-            "Anything, since the name is hard to guess",
-            "Only information anybody could see anyway",
-            "User notifications with an id in the name",
-            "Anything encrypted",
-          ],
-          correctIndex: 1,
-          explanation: "A public channel is readable by anybody who knows its name.",
-        },
-        {
-          question: "What does a private channel add?",
-          options: [
-            "Encryption",
-            "An authorization check before a connection may join",
-            "A member list",
-            "Queued delivery",
-          ],
-          correctIndex: 1,
-          explanation: "Which is why most real-time updates use one.",
-        },
-        {
-          question: "What does a presence channel add over a private one?",
-          options: [
-            "Encryption",
-            "Knowledge of who is connected, with here, joining and leaving events",
-            "Guaranteed delivery",
-            "Message history",
-          ],
-          correctIndex: 1,
-          explanation: "Which builds an online-users list without storing anything.",
-        },
-        {
-          question: "Why should a presence authorization callback not return the user model?",
-          options: [
-            "It is slower",
-            "Whatever it returns is visible to every other member of the channel",
-            "It breaks serialisation",
-            "Laravel rejects it",
-          ],
-          correctIndex: 1,
-          explanation: "Return a name and an id, not an email and every other column.",
-        },
-      ],
-    },
-    {
-      id: "channel-authorization",
-      title: "Channel authorization",
-      durationMinutes: 11,
-      explanation: "The security boundary that only exists in real-time applications.\n\n---\n\n### 1. Basic — a third question\n\nDay 19 and Day 20 gave you two:\n\n```text\nAuthentication          who are you?\nAuthorization           may you do this?\n```\n\nBroadcasting adds a third:\n\n```text\nChannel authorization   may you LISTEN to this?\n```\n\nAnd it is genuinely separate. <b>Being logged in says nothing about which channels you may join</b>, exactly as being logged in said nothing about which invoices you may read.\n\nThe rules live in `routes/channels.php`:\n\n```php\nBroadcast::channel('user.{userId}', function ($user, $userId) {\n    return $user->id === (int) $userId;\n});\n```\n\n```text\nUser 123\n   ↓ subscribe to user.123\nis the authenticated user 123?\n   ↓\nyes → allow      no → deny\n```\n\n<b>Return `true` to allow and `false` to deny</b>, and the callback receives the authenticated user plus whatever the channel name captured.\n\n---\n\n### 2. Intermediate — the cast that matters\n\n```php\nreturn $user->id === (int) $userId;\n```\n\n<b>That cast is not decoration.</b> The channel segment arrives as a string, so `$user->id === $userId` compares an integer to a string and is always false, and every subscription silently fails.\n\nWhich produces the most confusing symptom in this topic: <b>everything is configured correctly and no events ever arrive.</b> No error, no log line, just nothing, because the subscription was refused and the browser did not tell you.\n\nUse `(int)` and a strict comparison, or `==` deliberately, and know which you chose.\n\nAnd the authorization itself should reuse what you already have:\n\n```php\nBroadcast::channel('order.{order}', function ($user, Order $order) {\n    return $user->can('view', $order);\n});\n```\n\n<b>Model binding works here</b>, and so do the policies from Day 20. A channel authorizing differently from the page showing the same data is a bug waiting to be found by somebody who should not have seen an update.\n\n---\n\n### 3. Advanced — what this actually protects\n\nIt is worth being concrete about the attack, because it is easy to treat channel names as obscure enough.\n\nA logged-in user opens the browser console and subscribes to:\n\n```text\nprivate-user.456\nprivate-team.99\nprivate-admin\n```\n\n<b>Nothing stops them trying.</b> The channel name is in the JavaScript, the pattern is obvious, and changing a number is not a skill. Without an authorization callback, they now receive every event you broadcast to those channels, live, and nothing in your logs looks unusual.\n\nSo three rules.\n\n<b>Every private and presence channel needs a callback.</b> A channel with no matching rule is denied by default, which is the right default and also means a typo in the pattern silently blocks a legitimate channel. Check both directions.\n\n<b>Authorize the thing, not the shape.</b> `user.{id}` matching the current user is easy; `team.{id}` needs \"is this user in that team\", and `order.{id}` needs the policy. The pattern matching is not the check.\n\n<b>And remember the payload is the other half.</b> A correctly authorized channel carrying an over-broad payload leaks anyway, which is the previous lesson's point arriving from a different direction. <b>Authorization decides who listens; `broadcastWith()` decides what they hear.</b> Both have to be right.",
-      diagram: `A third question
-
-    Authentication          who are you?           Day 19
-    Authorization           may you do this?       Day 20
-    Channel authorization   may you LISTEN?        today
-
-  Genuinely separate. Being logged in says nothing about
-  which channels you may join — exactly as it said
-  nothing about which invoices you may read.
-
-    // routes/channels.php
-    Broadcast::channel('user.{userId}', function (\$user, \$userId) {
-        return \$user->id === (int) \$userId;
-    });
-
-    User 123 → subscribe to user.123
-             → is the authenticated user 123?
-             → yes: allow    no: deny
-
-
-The cast that matters
-
-    return \$user->id === (int) \$userId;
-
-  ⚠️  Not decoration. The segment arrives as a STRING, so
-
-        \$user->id === \$userId
-
-      compares an integer to a string, is always false,
-      and every subscription silently fails.
-
-  Which is the most confusing symptom in this topic:
-  everything is configured correctly and no events ever
-  arrive. No error, no log line, just nothing.
-
-
-Reuse what you have
-
-    Broadcast::channel('order.{order}', function (\$user, Order \$order) {
-        return \$user->can('view', \$order);
-    });
-
-  Model binding works here, and so do Day 20's policies.
-
-  A channel authorizing differently from the page showing
-  the same data is a bug waiting to be found by somebody
-  who should not have seen an update.
-
-
-What this actually protects
-
-  A logged-in user opens the console and subscribes to:
-
-    private-user.456
-    private-team.99
-    private-admin
-
-  Nothing stops them trying. The channel name is in the
-  JavaScript, the pattern is obvious, and changing a
-  number is not a skill.
-
-  Without a callback they receive every event you
-  broadcast there, live, and nothing in your logs looks
-  unusual.
-
-
-Three rules
-
-  Every private and presence channel needs a callback.
-  A channel with no matching rule is denied — the right
-  default, and also why a typo in the pattern silently
-  blocks a legitimate channel. Check both directions.
-
-  Authorize the THING, not the shape. user.{id} matching
-  the current user is easy; team.{id} needs "is this user
-  in that team"; order.{id} needs the policy. Pattern
-  matching is not the check.
-
-  The payload is the other half. A correctly authorized
-  channel carrying an over-broad payload leaks anyway.
-
-    authorization  →  WHO listens
-    broadcastWith  →  WHAT they hear
-
-  Both have to be right.`,
-      codeExample: {
-        title: "routes/channels.php, done properly",
-        code: `<?php
-// routes/channels.php
-
-use App\\Models\\Order;
-use App\\Models\\Team;
-use Illuminate\\Support\\Facades\\Broadcast;
-
-// ---------- The simplest one, and its trap ----------
-
-Broadcast::channel('user.{userId}', function ($user, $userId) {
-    // ⚠️ The cast is essential. The segment is a STRING,
-    //    so without it this is always false and every
-    //    subscription silently fails.
-    return $user->id === (int) $userId;
-});
-
-
-// ---------- Reuse the policies ----------
-
-Broadcast::channel('order.{order}', function ($user, Order $order) {
-    // Model binding works here. So does Day 20.
-    return $user->can('view', $order);
-});
-
-// A channel authorizing differently from the page showing
-// the same data is how somebody sees an update they
-// should not have.
-
-
-// ---------- Authorize the thing, not the shape ----------
-
-// ❌ Any logged-in user can join any team's channel.
-Broadcast::channel('team.{teamId}', function ($user, $teamId) {
-    return true;
-});
-
-// ✓
-Broadcast::channel('team.{teamId}', function ($user, $teamId) {
-    return $user->teams()->whereKey($teamId)->exists();
-});
-
-
-// ---------- Presence: return only what the room should see ----------
-
-Broadcast::channel('chat.room.{roomId}', function ($user, $roomId) {
-    if (! $user->rooms()->whereKey($roomId)->exists()) {
-        return false;
-    }
-
-    // Every other member sees this.
-    return ['id' => $user->id, 'name' => $user->name];
-});
-
-
-<?php
-// ---------- What it prevents ----------
-
-// A logged-in user, in the browser console:
+//     <!-- Nothing survives a test. -->
+//     <env name="CACHE_STORE" value="array"/>
+//     <env name="SESSION_DRIVER" value="array"/>
+//     <env name="MAIL_MAILER" value="array"/>
 //
-//   Echo.private('user.456').listen(...)
-//   Echo.private('team.99').listen(...)
-//   Echo.private('admin').listen(...)
+//     <!-- Jobs run inline, which hides the queue. -->
+//     <env name="QUEUE_CONNECTION" value="sync"/>
 //
-// The channel names are in the JavaScript and the
-// pattern is obvious. Changing a number is not a skill.
-//
-// Without a callback they receive every event broadcast
-// there, live, and nothing in your logs looks unusual.
+//     <!-- No broadcasting from tests. -->
+//     <env name="BROADCAST_CONNECTION" value="null"/>
+// </php>
 
 
-<?php
-// ---------- Both halves ----------
+# ---------- Fast locally, honest in CI ----------
 
-// Authorization decides WHO listens:
-Broadcast::channel('order.{order}', fn ($user, Order $order) =>
-    $user->can('view', $order));
+# Local: SQLite in memory. Seconds, not minutes.
+php artisan test
 
-// broadcastWith() decides WHAT they hear:
-public function broadcastWith(): array
-{
-    return [
-        'id'     => $this->order->id,
-        'status' => $this->order->status,
-        // not the customer's address, not the internal notes
-    ];
-}
-
-// A correctly authorized channel with an over-broad
-// payload still leaks.
-
-
-# ---------- When nothing arrives ----------
-
-# 1. Is the WebSocket server running?
-# 2. Is a queue worker running?      (ShouldBroadcast queues)
-# 3. Does the channel have a callback in routes/channels.php?
-# 4. Does that callback return true?  (check the cast)
-# 5. Does the channel name in Echo match broadcastOn()?
+# CI: the database production actually uses, because
+# SQLite will not catch a JSON column, a strict-mode
+# error, a full-text index, or a date sorting differently.
 #
-# Four and five are silent failures. Nothing logs them.`,
-      },
-      keyTakeaways: [
-        "<b>Channel authorization is a third question</b>, after authentication and authorization: may you listen to this?",
-        "<b>Being logged in says nothing about which channels you may join.</b>",
-        "Rules live in `routes/channels.php`, returning `true` to allow and `false` to deny.",
-        "<b>The channel segment arrives as a string</b>, so a strict comparison without a cast is always false.",
-        "<b>That produces the topic's most confusing symptom</b>: everything looks right and no events ever arrive.",
-        "<b>Model binding and Day 20's policies work in channel callbacks</b>, and should be reused.",
-        "A channel authorizing differently from the page showing the same data is a leak waiting to happen.",
-        "<b>A logged-in user can try any channel name from the console</b>, and the names are in your JavaScript.",
-        "<b>A channel with no callback is denied</b>, which is right, and means a typo silently blocks a real channel.",
-        "<b>Authorization decides who listens; `broadcastWith()` decides what they hear.</b> Both have to be right.",
-      ],
-      commonMistakes: [
-        "<b>Comparing `$user->id === $userId` without a cast.</b> Every subscription fails silently.",
-        "<b>Returning `true` from a channel callback to make it work.</b> Any logged-in user now joins any channel.",
-        "<b>Authorizing the pattern rather than the thing.</b> Matching `team.{id}` is not checking membership.",
-        "<b>Authorizing the channel differently from the page.</b> Somebody sees live what they cannot see on load.",
-        "<b>Getting authorization right and the payload wrong.</b> The channel is correct and it still leaks.",
-      ],
-      quiz: [
-        {
-          question: "What does channel authorization answer?",
-          options: [
-            "Who are you?",
-            "May you listen to this channel?",
-            "May you edit this record?",
-            "Is the connection secure?",
-          ],
-          correctIndex: 1,
-          explanation: "A separate question from both authentication and authorization.",
-        },
-        {
-          question: "Why does `$user->id === $userId` fail in a channel callback?",
-          options: [
-            "The user is not loaded",
-            "The channel segment is a string, so a strict comparison with an integer is always false",
-            "The callback runs too early",
-            "It does not fail",
-          ],
-          correctIndex: 1,
-          explanation: "And the symptom is silent: no events ever arrive, with no error.",
-        },
-        {
-          question: "What happens to a private channel with no callback?",
-          options: [
-            "Anybody may join",
-            "The subscription is denied",
-            "Only admins may join",
-            "It falls back to public",
-          ],
-          correctIndex: 1,
-          explanation: "The right default, and also why a typo in the pattern silently blocks a real channel.",
-        },
-        {
-          question: "Is correct channel authorization enough?",
-          options: [
-            "Yes",
-            "No; the payload still has to be shaped, or an authorized listener hears too much",
-            "Yes, if the channel is private",
-            "Only with presence channels",
-          ],
-          correctIndex: 1,
-          explanation: "Authorization decides who listens; `broadcastWith()` decides what they hear.",
-        },
-      ],
-    },
-    {
-      id: "echo",
-      title: "Laravel Echo & the complete flow",
-      durationMinutes: 12,
-      explanation: "The server can broadcast. Something in the browser has to listen.\n\n---\n\n### 1. Basic — the client half\n\n<b>Laravel Echo</b> is the JavaScript library that connects, subscribes and hands you events:\n\n```text\nLaravel → Reverb → WebSocket → Echo → React / Vue / Livewire\n```\n\n```js\nEcho.private('user.' + userId)\n    .listen('.notification.created', (event) => {\n        // update the UI\n    });\n```\n\n<b>Echo handles the parts you would otherwise write badly:</b> opening the connection, authenticating private channels against your application, reconnecting when the network drops, and resubscribing afterwards.\n\nThat last one matters more than it sounds. Connections drop constantly: a phone changing network, a laptop waking up, a proxy timing out. <b>Reconnection is not an edge case, it is Tuesday</b>, and Echo doing it means you do not.\n\n---\n\n### 2. Intermediate — the whole flow\n\nWorth memorising, because debugging means finding which step failed:\n\n```text\n1. something happens\n        ↓\n2. a Laravel event is created\n        ↓\n3. it implements ShouldBroadcast\n        ↓\n4. Laravel queues the broadcast\n        ↓\n5. a worker sends it to Reverb\n        ↓\n6. Reverb delivers it over the WebSocket\n        ↓\n7. Echo receives it\n        ↓\n8. JavaScript updates the UI\n```\n\n<b>Eight steps, and any one of them can be the reason nothing happens.</b> Which is why the checklist matters: is the server running, is a worker running, is the channel authorized, does the event name match.\n\nThat last one catches everybody. <b>The dot prefix in `.notification.created` means \"this is the exact name\"</b>; without it, Echo prepends your application namespace and listens for something else. A `broadcastAs()` name needs the dot; a bare class name does not.\n\n---\n\n### 3. Advanced — the two frontends\n\n<b>Livewire can listen without you writing JavaScript:</b>\n\n```php\n#[On('echo-private:user.{userId},.notification.created')]\npublic function onNotification(array $event): void\n{\n    $this->unread++;\n}\n```\n\n```text\nbroadcast → Livewire component → state changes → the UI re-renders\n```\n\nWhich fits Day 24's model exactly: the state lives on the server, so a broadcast updating it re-renders the component. <b>For a notification bell in a Livewire application, that is the whole feature.</b>\n\n<b>In React or Vue, the listener updates your own state:</b>\n\n```text\nWebSocket event → Echo listener → setState → re-render\n```\n\nAnd there the details matter more, because you own the lifecycle:\n\n<b>Leave the channel when the component unmounts.</b> Otherwise you accumulate subscriptions, and a listener holding a stale closure updates state that no longer exists.\n\n<b>Update from the previous state, not a captured one.</b> `setUnread(n => n + 1)` is correct where `setUnread(unread + 1)` uses whatever `unread` was when the listener was created.\n\n<b>And reconcile after a reconnect.</b> Messages sent while disconnected never arrive, so the UI is quietly missing things until a reload. Refetching on reconnect is what stops that, and it is the practical form of \"broadcasting is delivery, not truth\".\n\nThe install line, since Echo is not bundled:\n\n```bash\nnpm install --save-dev laravel-echo pusher-js\n```\n\n<b>`pusher-js` is needed even for Reverb</b>, because Reverb speaks the Pusher protocol. That surprises people who assumed a self-hosted server needs no Pusher package.\n\nAnd one convention worth knowing before you wire up a bell. <b>Broadcast notifications go out on a channel Laravel names for you</b>, derived from the model class:\n\n```text\nApp.Models.User.{id}\n```\n\nSo listening on your own `user.{id}` receives nothing, and everything looks broken while both halves are individually correct. Notifications also have their own listener:\n\n```js\nEcho.private(`App.Models.User.${userId}`)\n    .notification((notification) => {\n        bell.increment(notification.type);\n    });\n```\n\n<b>`.notification()` fires for any notification broadcast to that user</b>, rather than for one named event, which is exactly what a notification bell wants.",
-      diagram: `The client half
-
-    Laravel → Reverb → WebSocket → Echo
-            → React / Vue / Livewire
-
-    Echo.private('user.' + userId)
-        .listen('.notification.created', (event) => { ... });
-
-  Echo handles what you would otherwise write badly:
-  opening the connection, authenticating private channels
-  against your application, reconnecting when the network
-  drops, and resubscribing afterwards.
-
-  ⚠️  That last one matters. Connections drop constantly:
-      a phone changing network, a laptop waking, a proxy
-      timing out.
-
-      Reconnection is not an edge case. It is Tuesday.
+# .github/workflows/ci.yml
+#   services:
+#     mysql:
+#       image: mysql:8
+#   env:
+#     DB_CONNECTION: mysql
 
 
-The whole flow
+# ---------- The loop ----------
 
-    1. something happens
-            ↓
-    2. a Laravel event is created
-            ↓
-    3. it implements ShouldBroadcast
-            ↓
-    4. Laravel queues the broadcast
-            ↓
-    5. a worker sends it to Reverb
-            ↓
-    6. Reverb delivers it over the WebSocket
-            ↓
-    7. Echo receives it
-            ↓
-    8. JavaScript updates the UI
+php artisan test
+php artisan test --filter=invoice
+php artisan test tests/Feature/InvoiceTest.php
+php artisan test --parallel
 
-  Eight steps, and any one can be why nothing happens.
-
-    is the server running?
-    is a worker running?
-    is the channel authorized?
-    does the event NAME match?
-
-  ⚠️  The dot prefix in '.notification.created' means
-      "this is the exact name". Without it, Echo prepends
-      your application namespace and listens for
-      something else.
-
-      A broadcastAs() name needs the dot.
-      A bare class name does not.
-
-
-Two frontends
-
-  Livewire, with no JavaScript of yours:
-
-    #[On('echo-private:user.{userId},.notification.created')]
-    public function onNotification(array \$event): void
-    {
-        \$this->unread++;
-    }
-
-    broadcast → component → state changes → re-render
-
-  Day 24's model exactly: the state lives on the server,
-  so a broadcast updating it re-renders the component.
-  For a notification bell, that is the whole feature.
-
-
-  React or Vue, where you own the lifecycle:
-
-    WebSocket event → Echo listener → setState → re-render
-
-    Leave the channel on unmount. Otherwise subscriptions
-    accumulate and a stale closure updates state that no
-    longer exists.
-
-    Update from the PREVIOUS state:
-      setUnread(n => n + 1)      ✓
-      setUnread(unread + 1)      ✗ captured at subscribe time
-
-    Reconcile after a reconnect. Messages sent while
-    disconnected never arrive, so the UI is quietly
-    missing things until a reload.
-
-    That is the practical form of "broadcasting is
-    delivery, not truth".`,
-      codeExample: {
-        title: "Listening, in Livewire and in React",
-        code: `// resources/js/echo.js
-
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT,
-    forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
-
-
-// ---------- Listening ----------
-
-Echo.private('user.' + userId)
-    .listen('.notification.created', (event) => {
-        console.log(event.id, event.message);
-    });
-
-// The dot prefix says "this is the exact name". Without
-// it, Echo prepends your application namespace and
-// listens for something that never arrives.
-//
-//   broadcastAs('notification.created')  →  '.notification.created'
-//   no broadcastAs()                     →  'NotificationCreated'
+# A suite you do not run is not a safety net.
 
 
 <?php
-// ---------- Livewire: no JavaScript of yours ----------
+// ---------- What sync hides ----------
 
-namespace App\\Livewire;
-
-use Livewire\\Attributes\\On;
-use Livewire\\Component;
-
-class NotificationBell extends Component
-{
-    public int $unread = 0;
-
-    public function mount(): void
-    {
-        // The state is loaded over HTTP, and the socket
-        // keeps it current.
-        $this->unread = auth()->user()->unreadNotifications()->count();
-    }
-
-    #[On('echo-private:user.{userId},.notification.created')]
-    public function onNotification(array $event): void
-    {
-        $this->unread++;
-    }
-
-    public function render()
-    {
-        return view('livewire.notification-bell');
-    }
-}
-?>
-
-{{-- 🔔 {{ $unread }} --}}
-
-
-// ---------- React: you own the lifecycle ----------
-
-import { useEffect, useState } from 'react';
-
-export function NotificationBell({ userId, initialUnread }) {
-    const [unread, setUnread] = useState(initialUnread);
-
-    useEffect(() => {
-        const channel = window.Echo.private('user.' + userId);
-
-        channel.listen('.notification.created', () => {
-            // ✓ From the previous state. Using unread + 1
-            //   would use whatever it was when this
-            //   listener was created.
-            setUnread((n) => n + 1);
-        });
-
-        // Reconnecting means messages were missed, so
-        // refetch rather than assuming the count is right.
-        const refetch = async () => {
-            const res = await fetch('/api/notifications/unread-count');
-            const { count } = await res.json();
-            setUnread(count);
-        };
-
-        window.Echo.connector.pusher.connection.bind('connected', refetch);
-
-        // ✓ Leave on unmount, or subscriptions accumulate
-        //   and stale closures update state that is gone.
-        return () => {
-            window.Echo.leave('user.' + userId);
-        };
-    }, [userId]);
-
-    return <span>🔔 {unread}</span>;
-}
-
-
-// ---------- Presence ----------
-
-window.Echo.join('chat.room.' + roomId)
-    .here((members) => setOnline(members))
-    .joining((member) => setOnline((m) => [...m, member]))
-    .leaving((member) => setOnline((m) => m.filter((x) => x.id !== member.id)))
-    .listen('.message.sent', (event) => appendMessage(event));
-
-
-// ---------- When nothing arrives, in order ----------
-
-// 1. Is Reverb running?
-// 2. Is a queue worker running?
-// 3. Does routes/channels.php authorize this channel?
-// 4. Does the callback return true?  (the (int) cast)
-// 5. Does the listened name match broadcastAs()?  (the dot)
+// QUEUE_CONNECTION=sync runs jobs inline, so:
 //
-// Steps 3, 4 and 5 fail silently.`,
+//   nothing is serialised   → a job holding a closure
+//                             passes every test
+//   nothing is retried      → the retry path is untested
+//   nothing is queued       → assertPushed finds nothing
+//
+// Queue::fake() is how you test dispatching, and a job's
+// own test can call handle() directly.`,
       },
       keyTakeaways: [
-        "<b>Laravel Echo is the client library</b> that connects, subscribes, authenticates and hands you events.",
-        "<b>It handles reconnection and resubscription</b>, which matters because connections drop constantly.",
-        "<b>The flow has eight steps</b>, and debugging means working out which one failed.",
-        "The checklist is: server running, worker running, channel authorized, callback true, event name matching.",
-        "<b>A leading dot means the exact event name</b>; without it Echo prepends your application namespace.",
-        "<b>Livewire can listen with an `#[On]` attribute</b>, updating server-side state and re-rendering.",
-        "That fits Day 24's model exactly, and is the whole feature for a notification bell.",
-        "<b>In React you own the lifecycle</b>: leave the channel on unmount or subscriptions accumulate.",
-        "<b>Update from the previous state</b>, because a listener captures whatever the value was when it was created.",
-        "<b>Refetch after a reconnect</b>, because messages sent while disconnected never arrive.",
+        "<b>`php artisan make:test X --pest`</b> generates a feature test, and `--unit` a unit one.",
+        "<b>`beforeEach()` is Pest's shared setup</b>, and `test()` is an alias for `it()`.",
+        "<b>Pest is built on PHPUnit</b>, so both share a runner and the same assertions.",
+        "<b>Pest's test name is a sentence</b>, which is what you read when a test fails months later.",
+        "<b>Pick one style and keep the suite consistent</b>: Pest for a new project, PHPUnit if the codebase already is.",
+        "<b>The testing environment is separate</b>, with its own database, cache, mail, queue and filesystem.",
+        "<b>That is not tidiness</b>: `RefreshDatabase` wipes the database, so pointing it anywhere real destroys data.",
+        "`phpunit.xml` sets `APP_ENV=testing` and overrides drivers so nothing survives a test.",
+        "<b>In-memory SQLite is fast and is not your database</b>, and will not catch MySQL-specific problems.",
+        "<b>Run the suite against the real database somewhere</b>, even if the fast local loop uses SQLite.",
+        "<b>`QUEUE_CONNECTION=sync` runs jobs inline</b>, hiding serialisation, retries and the queue entirely.",
+        "<b>Tests must not reach the network</b>, or they fail during somebody else's outage.",
+        "<b>A suite you do not run is not a safety net</b>, so speed and frequency matter.",
       ],
       commonMistakes: [
-        "<b>Omitting the leading dot with `broadcastAs()`.</b> Echo listens for a namespaced name that never arrives.",
-        "<b>Not leaving the channel on unmount.</b> Subscriptions accumulate and stale closures update dead state.",
-        "<b>Using the captured value in a state update.</b> The count is wrong after the second event.",
-        "<b>Ignoring reconnection.</b> The UI silently misses everything sent while the socket was down.",
-        "<b>Debugging the JavaScript first.</b> Check the server, the worker and the channel callback before the client.",
+        "<b>Running tests against the development database.</b> `RefreshDatabase` deletes everything in it.",
+        "<b>Mixing Pest and PHPUnit styles.</b> Two ways to find, name and read every test.",
+        "<b>Trusting SQLite to represent MySQL.</b> JSON columns, strict mode and full-text indexes all differ.",
+        "<b>Assuming `sync` tests the queue.</b> Nothing is serialised, so an unserialisable job passes.",
+        "<b>Letting tests make real HTTP calls.</b> They fail during outages and pass for unrelated reasons.",
       ],
       quiz: [
         {
-          question: "What does Echo handle for you?",
+          question: "What is the practical difference between Pest and PHPUnit?",
           options: [
-            "Broadcasting events",
-            "Connecting, authenticating private channels, reconnecting and resubscribing",
-            "Channel authorization rules",
-            "Queueing broadcasts",
+            "Pest is a different runner",
+            "Pest is built on PHPUnit with less ceremony, and its test names read as sentences",
+            "PHPUnit cannot test HTTP",
+            "Pest has different assertions",
           ],
           correctIndex: 1,
-          explanation: "Reconnection especially, because connections drop constantly.",
+          explanation: "The name is what you read when a test fails months later.",
         },
         {
-          question: "What does a leading dot in `.notification.created` mean?",
+          question: "Why must tests use a separate database?",
           options: [
-            "A private channel",
-            "The exact event name, with no application namespace prepended",
-            "A presence channel",
-            "A wildcard",
+            "For speed only",
+            "`RefreshDatabase` wipes it between tests, so anything real would be destroyed",
+            "Laravel requires it",
+            "To allow parallel runs",
           ],
           correctIndex: 1,
-          explanation: "A `broadcastAs()` name needs it; a bare class name does not.",
+          explanation: "Pointing it at development loses your seeded work; production is worse.",
         },
         {
-          question: "Why leave the channel when a React component unmounts?",
+          question: "What does in-memory SQLite not catch?",
           options: [
-            "To free the WebSocket",
-            "Otherwise subscriptions accumulate and stale closures update state that no longer exists",
-            "Echo requires it",
-            "To trigger a reconnect",
+            "Validation errors",
+            "MySQL-specific behaviour: JSON columns, strict mode, full-text indexes, date sorting",
+            "Authorization failures",
+            "Missing routes",
           ],
           correctIndex: 1,
-          explanation: "In Livewire the component's lifecycle handles it for you.",
+          explanation: "Run the suite against the real database somewhere too.",
         },
         {
-          question: "Why refetch after a reconnect?",
+          question: "What does `QUEUE_CONNECTION=sync` hide in tests?",
           options: [
-            "To re-authenticate",
-            "Messages sent while disconnected never arrive, so the UI is quietly out of date",
-            "Echo clears its state",
-            "To reset the counter",
+            "Validation",
+            "Serialisation, retries and the queue itself, so an unserialisable job passes",
+            "Authorization",
+            "Database writes",
           ],
           correctIndex: 1,
-          explanation: "The practical form of \"broadcasting is delivery, not truth\".",
+          explanation: "`Queue::fake()` is how you test that something was dispatched.",
         },
       ],
     },
     {
-      id: "presence-whispers-and-models",
-      title: "Presence in practice, whispers & model broadcasting",
+      id: "unit-vs-feature",
+      title: "Unit tests, feature tests & what to test",
       durationMinutes: 11,
-      explanation: "Three features that look similar and answer different questions.\n\n---\n\n### 1. Basic — who is online\n\nA presence channel gives the client three things:\n\n```text\nyou join       →  here:     everybody currently connected\nsomeone joins  →  joining:  that member\nsomeone leaves →  leaving:  that member\n```\n\n```text\nChat Room #123\n\n🟢 Rajan\n🟢 Alice\n🟢 Bob\n```\n\n<b>Which is the entire online-users feature</b>, with nothing stored, nothing polled and no `last_seen_at` column that is always slightly wrong.\n\nAnd that comparison is worth making. The database version needs a heartbeat, a threshold, a cleanup job, and a decision about what \"online\" means. The presence version knows, because the connection either exists or it does not.\n\nThe cost is what the last lesson said: <b>connection state is not truth</b>, so treat presence as \"probably here\" rather than a fact.\n\n---\n\n### 2. Intermediate — whispers\n\n\"Alice is typing\" does not need your server:\n\n```text\n❌ Alice → Laravel → database → broadcast → Bob\n✓ Alice ──────── WebSocket ────────→ Bob\n```\n\n<b>A <i>client event</i>, or whisper, goes browser to browser through the WebSocket server</b>, without touching PHP at all:\n\n```js\nchannel.whisper('typing', { name: user.name });\nchannel.listenForWhisper('typing', (e) => showTyping(e.name));\n```\n\nWhich matters because a typing indicator fires on every keystroke. Routing that through Laravel is a request per character, and the information is worthless one second later.\n\n```text\nwhispers suit          whispers do not suit\n─────────────          ────────────────────\ntyping indicators      anything you store\ncursor positions       anything you authorize\nlive selections        anything that must be true\ntemporary UI state     anything another user acts on\n```\n\n<b>The rule: a whisper never becomes a fact.</b> It is unvalidated data from one browser to another, and your server never saw it. A chat message sent as a whisper is a message that does not exist anywhere, arrives only for people currently connected, and can say anything the sender's console types.\n\n---\n\n### 3. Advanced — model broadcasting\n\nLaravel can broadcast Eloquent changes automatically:\n\n```text\nPost updated → model broadcasting → WebSocket → clients\n```\n\nWhich is genuinely convenient for a real-time CRUD screen, and worth being careful with.\n\n<b>The problem is that it broadcasts changes, not meaning.</b> Yesterday's distinction again: `updated` fires for a title edit, a view-count increment, a nightly backfill and a migration script. All of them reach the browser, and the client has to work out which mattered.\n\n<b>And every column goes.</b> A model broadcast carries the model, so the internal fields, the flags and whatever a migration added last week are on the wire, exactly as the payload lesson warned.\n\nSo the judgement:\n\n```text\nmodel broadcasting suits        a domain event suits\n────────────────────────        ────────────────────\nan internal admin screen        anything user-facing\na prototype                     anything meaningful\na table that mirrors rows       anything you shape\n                                anything an import might touch\n```\n\n<b>The question to ask is the same one as yesterday: what does the client actually need to know?</b>\n\nA browser rarely needs \"a row changed\". It needs \"this order shipped\", which is a different sentence, fires in fewer cases, and carries three fields instead of thirty.",
-      diagram: `Who is online
+      explanation: "Two kinds of test, and most Laravel advice gets the ratio backwards.\n\n```text\nunit test     → isolated logic\nfeature test  → real application behaviour\n```\n\n---\n\n### 1. Basic — a unit test\n\nA unit test runs one piece of logic with no framework around it:\n\n```php\nclass PriceCalculator\n{\n    public function calculate(int $price, int $tax): int\n    {\n        return $price + $tax;\n    }\n}\n```\n\n```text\ninput → class → output\n```\n\n`100 + 10 = 110`, with <b>no HTTP, no database, no authentication, no routes</b>. Which makes it fast, precise and completely silent about whether the application works.\n\n---\n\n### 2. Intermediate — a feature test\n\nA feature test drives the real stack:\n\n```text\nHTTP request → route → middleware → controller → service → database → response\n```\n\nOne test proves:\n\n```text\nauthenticated user → POST /posts → post created → 201 → database contains it\n```\n\n<b>That is closer to the real application than any unit test can be</b>, because the route, the middleware, the validation, the authorization, the controller and the database all had to work together.\n\nAnd this is why <b>feature tests should be your primary weapon in Laravel</b>. In many languages the pyramid says \"mostly unit tests\", because wiring up the framework in a test is expensive. Laravel makes it nearly free: `$this->postJson(...)` boots the whole application. <b>So the thing that is usually expensive is cheap here</b>, and the ratio should follow.\n\n---\n\n### 3. Advanced — test behaviour, not implementation\n\nThe rule that decides whether a suite helps or hurts:\n\n```text\n❌ \"the controller calls the service's store method\"\n✅ \"the user creates a post and the database contains it\"\n```\n\n<b>The first one fails when you refactor.</b> Move the logic from the controller into an action class, and the behaviour is identical while the test is red. Now the suite is punishing you for improving the code, which is the opposite of a safety net.\n\n<b>The second one survives every refactor</b> that keeps the behaviour, and fails only when the behaviour actually breaks. That is the entire point.\n\nA useful way to hear it: <b>a test should read like a sentence a non-programmer would care about.</b> \"An unauthorised user cannot delete somebody else's invoice\" is a sentence your client would care about; \"`InvoiceController@destroy` calls `authorize`\" is not.\n\nWhen a unit test <b>is</b> the right tool: pure logic with real branching. A tax calculator, a date-range splitter, a state machine, a proration formula. <b>Twelve edge cases through an HTTP request is twelve slow tests</b>; through a class it is twelve fast ones. The split is not \"unit for small things\" but <b>unit where the logic has many cases and no dependencies</b>.\n\n<b>And `expect()` is Pest's assertion vocabulary</b>, which is worth learning properly because it is what unit tests are written in:\n\n```php\nexpect($total)->toBe(3000);              // identical, ===\nexpect($invoice)->toEqual($other);       // equal, ==\nexpect($user->deleted_at)->toBeNull();\nexpect($result)->toBeTrue();\nexpect($lines)->toHaveCount(3);\nexpect($data)->toHaveKeys(['id', 'total']);\nexpect($name)->toBeString();\nexpect($total)->toBeGreaterThan(0);\nexpect($invoice)->toBeInstanceOf(Invoice::class);\nexpect($statuses)->toContain('overdue');\nexpect($user->email)->not->toBe('old@example.com');\n```\n\n<b>`toBe()` is strict and `toEqual()` is loose</b>, which is the distinction that catches people: `toBe('3000')` fails against the integer `3000`, and that is usually the bug you wanted caught.\n\nExceptions get their own matcher, and it is the only reasonable way to test a failure outside HTTP:\n\n```php\nexpect(fn () => $total->forLines([], -1))\n    ->toThrow(InvalidArgumentException::class, 'Tax rate must be positive');\n```\n\nAnd expectations chain into properties, which reads well on a model:\n\n```php\nexpect($user)->not->toBeNull()\n    ->name->toBe('Rajan')\n    ->invoices->toHaveCount(2);\n```\n\nOne more piece of Pest worth knowing: <b>datasets run one test against many inputs</b>, with names that appear in the failure output:\n\n```php\nit('rejects a bad reference', function (string $value) {\n    // ...\n})->with([\n    'empty'    => [''],\n    'too long' => [str_repeat('a', 300)],\n    'symbols'  => ['<script>'],\n]);\n```\n\nWhich is how you cover twelve edge cases without writing twelve tests, and still know which one failed.",
+      diagram: `Two kinds of test
 
-    you join       →  here:     everybody connected
-    someone joins  →  joining:  that member
-    someone leaves →  leaving:  that member
+  UNIT
+    input → class → output
 
-    Chat Room #123
-    🟢 Rajan  🟢 Alice  🟢 Bob
+    PriceCalculator: 100 + 10 = 110
 
-  The entire online-users feature, with nothing stored,
-  nothing polled, and no last_seen_at column that is
-  always slightly wrong.
-
-  The database version needs a heartbeat, a threshold, a
-  cleanup job, and a decision about what "online" means.
-  The presence version knows: the connection exists or
-  it does not.
-
-  ⚠️  And connection state is not truth. "Probably here",
-      not a fact.
+    no HTTP, no database, no auth, no routes
+    fast, precise, and completely silent about
+    whether the APPLICATION works
 
 
-Whispers
+  FEATURE
+    HTTP request
+       ↓
+    route → middleware → controller → service → database
+       ↓
+    response
 
-  "Alice is typing" does not need your server.
+    authenticated user
+       ↓  POST /posts
+    post created
+       ↓
+    201  +  database contains it
 
-    ❌ Alice → Laravel → database → broadcast → Bob
-    ✓ Alice ──────── WebSocket ────────→ Bob
-
-    channel.whisper('typing', { name: user.name })
-    channel.listenForWhisper('typing', (e) => ...)
-
-  Which matters because a typing indicator fires on every
-  keystroke. Routing that through Laravel is a request
-  per character, for information worthless one second
-  later.
-
-  suit                     do not suit
-  ────                     ───────────
-  typing indicators        anything you store
-  cursor positions         anything you authorize
-  live selections          anything that must be true
-  temporary UI state       anything another user acts on
-
-  ⚠️  A whisper never becomes a FACT. It is unvalidated
-      data from one browser to another, and your server
-      never saw it.
-
-      A chat message sent as a whisper exists nowhere,
-      arrives only for people currently connected, and
-      can say whatever the sender's console types.
+    Route, middleware, validation, authorization,
+    controller and database ALL had to work.
 
 
-Model broadcasting
+Why the Laravel ratio is different
 
-    Post updated → model broadcasting → WebSocket → clients
+  In many languages the pyramid says "mostly unit
+  tests" — because wiring the framework into a test
+  is expensive.
 
-  Convenient for a real-time CRUD screen, and worth care.
+  Laravel makes it nearly free:
 
-  ⚠️  It broadcasts CHANGES, not MEANING.
+    $this->postJson(...)   boots the whole application
 
-      updated fires for a title edit, a view-count
-      increment, a nightly backfill and a migration
-      script. All of them reach the browser, and the
-      client works out which mattered.
+  So the usually-expensive thing is cheap here, and
+  the ratio should follow:
 
-  ⚠️  And every column goes. The model is the payload, so
-      internal fields and whatever a migration added last
-      week are on the wire.
+    feature tests are your primary weapon
 
 
-  model broadcasting suits    a domain event suits
-  ────────────────────────    ────────────────────
-  an internal admin screen    anything user-facing
-  a prototype                 anything meaningful
-  a table mirroring rows      anything you shape
-                              anything an import touches
+The rule that decides everything
+
+    ❌  "the controller calls the service's store method"
+    ✅  "the user creates a post and the database has it"
+
+  The first FAILS WHEN YOU REFACTOR. Move the logic
+  into an action class: behaviour identical, test red.
+  The suite is now punishing you for improving the
+  code — the opposite of a safety net.
+
+  The second survives every refactor that keeps the
+  behaviour, and fails only when behaviour breaks.
+
+  A test should read like a sentence a non-programmer
+  would care about:
+
+    ✅  "an unauthorised user cannot delete someone
+         else's invoice"
+    ❌  "InvoiceController@destroy calls authorize"
 
 
-  The question is yesterday's:
+When a unit test IS the right tool
 
-    what does the client actually need to KNOW?
+  Pure logic with real branching:
+    tax calculator · date-range splitter
+    state machine  · proration formula
 
-  A browser rarely needs "a row changed". It needs
-  "this order shipped" — a different sentence, firing
-  in fewer cases, carrying three fields instead of
-  thirty.`,
+  12 edge cases through HTTP = 12 slow tests
+  12 edge cases through a class = 12 fast ones
+
+  The split is not "unit for small things" — it is
+  unit where the logic has MANY CASES and NO
+  DEPENDENCIES.`,
       codeExample: {
-        title: "Presence, whispers, and what not to automate",
-        code: `// ---------- Presence: the whole online feature ----------
+        title: "Unit and feature, and testing behaviour",
+        code: `<?php
+// ---------- A unit test: pure logic, no framework ----------
 
-const channel = window.Echo.join('chat.room.' + roomId);
-
-channel
-    .here((members) => setOnline(members))
-    .joining((member) => setOnline((m) => [...m, member]))
-    .leaving((member) => setOnline((m) => m.filter((x) => x.id !== member.id)));
-
-// Nothing stored. No heartbeat. No last_seen_at column
-// that is always slightly wrong, and no cleanup job.
-//
-// The database version needs all four, plus a decision
-// about what "online" means.
-
-
-// ---------- Whispers: browser to browser ----------
-
-// ❌ A request per keystroke, for information that is
-//    worthless one second later.
-input.addEventListener('input', () => {
-    fetch('/api/typing', { method: 'POST' });
-});
-
-// ✓ Straight through the WebSocket. PHP never sees it.
-input.addEventListener('input', () => {
-    channel.whisper('typing', { id: user.id, name: user.name });
-});
-
-channel.listenForWhisper('typing', (e) => {
-    showTypingIndicator(e.name);
-    clearAfter(2000);
-});
-
-
-// ---------- What a whisper must never be ----------
-
-// ❌ This message exists nowhere. It arrives only for
-//    people currently connected, and it can say whatever
-//    the sender's console types.
-channel.whisper('message', { body: text });
-
-// ✓ A message is a fact. It goes through the server,
-//   which validates it, stores it, and broadcasts it.
-await fetch('/api/messages', {
-    method: 'POST',
-    body: JSON.stringify({ room_id: roomId, body: text }),
-});
-
-
-<?php
-// ---------- Model broadcasting ----------
-
-use Illuminate\\Database\\Eloquent\\BroadcastsEvents;
-
-class Post extends Model
+// app/Support/InvoiceTotal.php
+final class InvoiceTotal
 {
-    use BroadcastsEvents;
-
-    public function broadcastOn(string $event): array
+    public function forLines(array $lines, float $taxRate): int
     {
-        return [new PrivateChannel('team.' . $this->team_id)];
+        $subtotal = array_sum(array_map(
+            fn (array $line) => $line['quantity'] * $line['unit_price'],
+            $lines,
+        ));
+
+        return (int) round($subtotal * (1 + $taxRate));
     }
 }
 
-// Convenient. And it broadcasts CHANGES, not meaning:
-//
-//   a title edit                   → broadcast
-//   a view-count increment         → broadcast
-//   a nightly backfill of 50,000   → 50,000 broadcasts
-//   a migration script             → broadcast
-//
-// All of them reach the browser, carrying every column.
+// tests/Unit/InvoiceTotalTest.php
+it('adds tax to the line subtotal', function () {
+    $total = new InvoiceTotal();
+
+    expect($total->forLines([
+        ['quantity' => 2, 'unit_price' => 1000],
+        ['quantity' => 1, 'unit_price' => 500],
+    ], 0.20))->toBe(3000);
+});
+
+it('rounds half up', function () {
+    expect((new InvoiceTotal())->forLines(
+        [['quantity' => 1, 'unit_price' => 101]],
+        0.15,
+    ))->toBe(116);
+});
+
+// Twelve edge cases here are twelve fast tests.
+// Twelve edge cases through HTTP are twelve slow ones.
 
 
 <?php
-// ---------- The alternative ----------
+// ---------- A feature test: the real stack ----------
 
-// A sentence rather than a row change.
-class OrderShipped implements ShouldBroadcast
-{
-    public function __construct(public Order $order) {}
+// tests/Feature/CreateInvoiceTest.php
+it('lets an authenticated user create an invoice', function () {
+    $user = User::factory()->create();
 
-    public function broadcastOn(): array
-    {
-        return [new PrivateChannel('user.' . $this->order->user_id)];
-    }
+    $response = $this->actingAs($user)->postJson('/api/invoices', [
+        'client_id' => Client::factory()->create()->id,
+        'due_on'    => '2026-10-01',
+    ]);
 
-    public function broadcastAs(): string
-    {
-        return 'order.shipped';
-    }
+    $response->assertCreated();
 
-    // Three fields, not thirty.
-    public function broadcastWith(): array
-    {
-        return [
-            'id'          => $this->order->id,
-            'status'      => $this->order->status,
-            'shipped_at'  => $this->order->shipped_at->toIso8601String(),
-        ];
-    }
-}
+    $this->assertDatabaseHas('invoices', [
+        'user_id' => $user->id,
+        'due_on'  => '2026-10-01',
+    ]);
+});
 
-// Fires when an order actually ships, and not when a
-// backfill touches the row.
+// Route + middleware + validation + authorization +
+// controller + database, proven in one test.
 
 
 <?php
-// ---------- Deduplicating presence ----------
+// ---------- Behaviour, not implementation ----------
 
-// Two tabs is two members. A naive count shows Rajan twice.
-// And presence is connection state: a closed laptop makes
-// somebody look absent when they are not.
+// ❌ Fails the moment you refactor, even though nothing broke
+it('calls the service', function () {
+    $this->mock(InvoiceService::class)
+        ->shouldReceive('store')
+        ->once();
+
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/invoices', [...]);
+});
+// Move the logic into an action class → behaviour
+// identical, test red. The suite is punishing you for
+// improving the code.
+
+// ✅ Survives every refactor that keeps the behaviour
+it('stores the invoice', function () {
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/invoices', ['due_on' => '2026-10-01', ...])
+        ->assertCreated();
+
+    $this->assertDatabaseHas('invoices', ['due_on' => '2026-10-01']);
+});
+
+
+<?php
+// ---------- The sentence test ----------
 //
-// A hint. Never authorization.`,
+// Would a non-programmer care about this sentence?
+//
+//   ✅ "an unauthorised user cannot delete someone
+//       else's invoice"
+//   ❌ "InvoiceController@destroy calls authorize"
+//
+// If the answer is no, you are testing implementation.
+
+it('does not let one user delete another user\\'s invoice', function () {
+    $invoice = Invoice::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->deleteJson("/api/invoices/{$invoice->id}")
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('invoices', ['id' => $invoice->id]);
+});`,
       },
       keyTakeaways: [
-        "<b>A presence channel gives you here, joining and leaving</b>, which is the whole online-users feature.",
-        "<b>Nothing is stored</b>: no heartbeat, no threshold, no cleanup job, no `last_seen_at` that is always slightly wrong.",
-        "<b>A whisper goes browser to browser through the WebSocket server</b>, without touching PHP at all.",
-        "It suits typing indicators, cursors and live selections, where a request per keystroke would be absurd.",
-        "<b>A whisper never becomes a fact</b>: it is unvalidated, unstored, and only reaches people currently connected.",
-        "<b>A chat message sent as a whisper exists nowhere</b> and can say whatever the sender's console types.",
-        "<b>Model broadcasting sends Eloquent changes automatically</b>, which suits an internal screen or a prototype.",
-        "<b>It broadcasts changes, not meaning</b>: a backfill of fifty thousand rows is fifty thousand broadcasts.",
-        "<b>And it carries every column</b>, so internal fields go over the wire.",
-        "<b>Ask what the client needs to know</b>: \"this order shipped\" beats \"a row changed\" in every dimension.",
+        "<b>`expect()` is Pest's assertion vocabulary</b>: `toBe`, `toEqual`, `toBeNull`, `toHaveCount`, `toHaveKeys`, `toContain`.",
+        "<b>`toBe()` is strict and `toEqual()` is loose</b>, so `toBe('3000')` fails against the integer `3000`.",
+        "<b>`toThrow()` is how you test a failure outside HTTP</b>, and takes a class and optionally a message.",
+        "<b>A dataset runs one test against many named inputs</b>, so twelve edge cases stay one test with twelve labels.",
+        "<b>A unit test runs isolated logic</b>: input, class, output, with no HTTP, database, auth or routes.",
+        "<b>A feature test drives the real stack</b>: request, route, middleware, controller, database, response.",
+        "<b>Feature tests are Laravel's primary weapon</b>, because booting the app in a test is nearly free here.",
+        "<b>That is why the usual pyramid advice inverts</b>: elsewhere framework wiring is expensive, here it is one method call.",
+        "<b>Test behaviour, not implementation.</b> \"The database contains the post\", not \"the controller called store\".",
+        "<b>Implementation tests fail when you refactor</b>, punishing you for improving code that still works.",
+        "<b>A good test reads like a sentence a non-programmer would care about.</b>",
+        "<b>Reach for a unit test where logic has many cases and no dependencies</b>: calculators, state machines, date maths.",
+        "<b>Twelve edge cases through HTTP is twelve slow tests</b>; through a class it is twelve fast ones.",
       ],
       commonMistakes: [
-        "<b>Building online status with a `last_seen_at` column and a cleanup job.</b> A presence channel already knows.",
-        "<b>Sending a typing indicator through the server.</b> That is a request per keystroke for disposable information.",
-        "<b>Sending a chat message as a whisper.</b> It is unvalidated, unstored, and invisible to anybody who reconnects.",
-        "<b>Enabling model broadcasting on a table an import touches.</b> A backfill becomes tens of thousands of broadcasts.",
-        "<b>Broadcasting the model instead of a shaped payload.</b> Every column reaches the browser.",
+        "<b>Writing mostly unit tests because a pyramid diagram said so.</b> Laravel makes feature tests cheap.",
+        "<b>Asserting that a controller called a method.</b> The test goes red on refactor while behaviour is fine.",
+        "<b>Testing only the happy path.</b> The failure paths are where the bugs live.",
+        "<b>Pushing every calculator edge case through an HTTP request.</b> Slow, and the failure points nowhere useful.",
       ],
       quiz: [
         {
-          question: "What does a presence channel replace?",
+          question: "Why are feature tests the primary tool in Laravel specifically?",
           options: [
-            "A queue",
-            "A `last_seen_at` column with a heartbeat, a threshold and a cleanup job",
-            "Channel authorization",
-            "Polling for messages",
+            "Unit tests do not work in PHP",
+            "Booting the whole app in a test is nearly free here, so the usually-expensive thing is cheap",
+            "They run faster than unit tests",
+            "Laravel cannot test classes in isolation",
           ],
           correctIndex: 1,
-          explanation: "The connection either exists or it does not.",
+          explanation: "`$this->postJson(...)` runs the entire stack in one call.",
         },
         {
-          question: "What is a whisper?",
+          question: "What is wrong with asserting that a controller called a service method?",
           options: [
-            "A queued broadcast",
-            "A client event sent browser to browser through the WebSocket, never reaching PHP",
-            "A private channel message",
-            "A presence update",
+            "Nothing, it is precise",
+            "It fails when you refactor even though behaviour is unchanged, punishing you for improving the code",
+            "Mocks are not supported",
+            "It is too slow",
           ],
           correctIndex: 1,
-          explanation: "Which is why a typing indicator does not cost a request per keystroke.",
+          explanation: "Behaviour assertions survive refactors; implementation assertions do not.",
         },
         {
-          question: "Why must a chat message not be sent as a whisper?",
+          question: "When is a unit test the right choice?",
           options: [
-            "Whispers are slower",
-            "It is unvalidated, unstored, and only reaches people currently connected",
-            "Whispers cannot carry text",
-            "It would be duplicated",
+            "For anything small",
+            "Where the logic has many cases and no dependencies: calculators, state machines, date maths",
+            "Never in Laravel",
+            "For controllers",
           ],
           correctIndex: 1,
-          explanation: "A whisper never becomes a fact.",
+          explanation: "Twelve edge cases are twelve fast tests instead of twelve slow HTTP ones.",
         },
         {
-          question: "What is the risk of model broadcasting?",
+          question: "What is a good sanity check for a test's name?",
+          options: [
+            "It names the class under test",
+            "It reads like a sentence a non-programmer would care about",
+            "It includes the HTTP method",
+            "It is under 40 characters",
+          ],
+          correctIndex: 1,
+          explanation: "If a client would not care about the sentence, you are testing implementation.",
+        },
+      ],
+    },
+    {
+      id: "http-tests",
+      title: "HTTP tests, assertions & query helpers",
+      durationMinutes: 11,
+      explanation: "Laravel gives you the whole HTTP layer in one method call.\n\n---\n\n### 1. Basic — making requests\n\nFor Blade applications:\n\n```php\n$this->get('/posts');\n$this->post('/posts', [...]);\n$this->put('/posts/1', [...]);\n$this->delete('/posts/1');\n```\n\nFor APIs, the JSON variants:\n\n```php\n$this->getJson('/api/posts');\n$this->postJson('/api/posts', [...]);\n$this->putJson('/api/posts/1', [...]);\n$this->deleteJson('/api/posts/1');\n```\n\n<b>The `Json` suffix is not cosmetic.</b> It sets `Accept: application/json`, which is what makes Laravel return a `422` with a JSON error body instead of a redirect back to a form. Use `post()` on an API route and your validation assertions will look bizarre, because you are testing the Blade path.\n\nAnd none of this starts a web server. It builds a request object, runs it through the kernel in-process and hands you the response, which is why these tests are fast.\n\n---\n\n### 2. Intermediate — assertions\n\n```php\n$response->assertStatus(200);\n$response->assertOk();          // same thing, reads better\n```\n\nThe named ones cover almost everything:\n\n```text\nassertOk()            200\nassertCreated()       201\nassertNoContent()     204\nassertRedirect()      302\nassertUnauthorized()  401   not logged in\nassertForbidden()     403   logged in, not allowed\nassertNotFound()      404\nassertUnprocessable() 422   validation failed\n```\n\n<b>Those last three are where the meaning lives.</b> 401 and 403 are different failures: one is \"who are you\", the other is \"I know who you are and no\". A test that accepts either is not testing your authorization.\n\nAssertions chain, and each one that fails prints the response, so a red test usually tells you what happened without adding a `dump()`:\n\n```php\n$this->getJson('/api/invoices')\n    ->assertOk()\n    ->assertJsonCount(3, 'data');\n```\n\n---\n\n### 3. Advanced — query strings\n\nHalf your API surface is query parameters: filters, sorting, pagination, search. Laravel 13 adds helpers so you can test them as data rather than by hand-building URLs:\n\n```text\nGET /posts?search=laravel&sort=latest\n```\n\n<b>The problem with string-building is that it hides encoding bugs.</b> A search term with a space, a plus sign or a `&` in it goes through a different code path than `?search=laravel`, and that is exactly where filter endpoints break. Building the query as an array and letting the framework encode it tests the real thing.\n\nAnd the deeper point: <b>asserting `200` on a filtered endpoint tests almost nothing.</b> An endpoint that ignores every filter you send returns `200` all day. The assertion has to be that the filter <b>changed the result</b>: three invoices exist, one is overdue, the overdue filter returns exactly one. <b>Create data that would fail if the filter were a no-op</b>, or the test is decoration.\n\nFor Blade responses rather than JSON, the assertions look at the rendered page and the view behind it:\n\n```php\n$response->assertSee('Invoice INV-001');\n$response->assertDontSee('internal note');\n$response->assertSeeInOrder(['Draft', 'Sent', 'Paid']);\n\n$response->assertViewIs('invoices.index');\n$response->assertViewHas('invoices');\n$response->assertViewHas('invoices', fn ($i) => $i->count() === 3);\n```\n\n<b>`assertViewHas` is the more useful half</b>, because it checks what the controller passed rather than what the template happened to render, so it does not break when somebody changes the markup.\n\nAnd the debugging tool you will reach for constantly:\n\n```php\n$this->withoutExceptionHandling();\n```\n\n<b>Without it, a test that hits an exception shows you a 500 response.</b> With it, the actual exception is thrown, with the real message and stack trace. A failing test that says \"expected 200, got 500\" tells you nothing; one line turns it into the error.",
+      diagram: `Making requests
+
+  Blade                      API
+    $this->get(...)            $this->getJson(...)
+    $this->post(...)           $this->postJson(...)
+    $this->put(...)            $this->putJson(...)
+    $this->delete(...)         $this->deleteJson(...)
+
+  ⚠️  The Json suffix is NOT cosmetic.
+
+      It sets Accept: application/json — which is what
+      makes Laravel return 422 + JSON errors instead of
+      a redirect back to a form.
+
+      Use post() on an API route and your validation
+      assertions look bizarre: you are testing the
+      Blade path.
+
+  And no web server starts. A request object runs
+  through the kernel in-process. That is the speed.
+
+
+Assertions
+
+    assertOk()              200
+    assertCreated()         201
+    assertNoContent()       204
+    assertRedirect()        302
+    assertUnauthorized()    401   who are you?
+    assertForbidden()       403   I know you. No.
+    assertNotFound()        404
+    assertUnprocessable()   422   validation failed
+
+  401 and 403 are DIFFERENT failures. A test that
+  accepts either is not testing your authorization.
+
+  They chain, and a failing one prints the response:
+
+    $this->getJson('/api/invoices')
+        ->assertOk()
+        ->assertJsonCount(3, 'data');
+
+
+Query strings — Laravel 13 helpers
+
+    GET /posts?search=laravel&sort=latest
+
+  Hand-building URLs hides ENCODING bugs. A search
+  term with a space, a +, or an & takes a different
+  path than ?search=laravel — which is exactly where
+  filter endpoints break.
+
+  Pass the query as an array; let the framework encode.
+
+
+  ⚠️  The bigger trap:
+
+      Asserting 200 on a filtered endpoint tests
+      NOTHING. An endpoint that ignores every filter
+      returns 200 all day.
+
+    ❌  ->assertOk()
+
+    ✅  3 invoices exist, 1 is overdue
+        ?filter=overdue returns exactly 1
+
+      Create data that would FAIL if the filter were
+      a no-op. Otherwise the test is decoration.`,
+      codeExample: {
+        title: "Requests, assertions and query parameters",
+        code: `<?php
+// ---------- Blade vs API ----------
+
+// Blade: redirect + session errors
+$this->post('/invoices', ['due_on' => '']);       // → 302 back
+
+// API: JSON + 422
+$this->postJson('/api/invoices', ['due_on' => '']); // → 422 JSON
+
+// The Json suffix sets Accept: application/json.
+// Get it wrong and you are testing the other path.
+
+
+<?php
+// ---------- Status assertions carry meaning ----------
+
+it('rejects a guest', function () {
+    $this->getJson('/api/invoices')->assertUnauthorized();   // 401
+});
+
+it('rejects a user who does not own the invoice', function () {
+    $invoice = Invoice::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->getJson("/api/invoices/{$invoice->id}")
+        ->assertForbidden();                                  // 403
+});
+
+// 401 = who are you. 403 = I know you, and no.
+// A test that accepts either is not testing authorization.
+
+
+<?php
+// ---------- Chaining, and readable failures ----------
+
+$this->actingAs($user)
+    ->getJson('/api/invoices')
+    ->assertOk()
+    ->assertJsonCount(3, 'data')
+    ->assertJsonPath('data.0.status', 'draft');
+
+// Each failed assertion prints the response body, so a
+// red test usually explains itself without a dump().
+
+
+<?php
+// ---------- Query parameters as DATA ----------
+
+it('filters invoices by status', function () {
+    $user = User::factory()->create();
+
+    // Data that would FAIL the test if the filter did nothing
+    Invoice::factory()->count(2)->for($user)->create(['status' => 'paid']);
+    Invoice::factory()->for($user)->create(['status' => 'overdue']);
+
+    $this->actingAs($user)
+        ->getJson('/api/invoices?' . http_build_query([
+            'status' => 'overdue',
+            'sort'   => 'latest',
+        ]))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')            // ← the real assertion
+        ->assertJsonPath('data.0.status', 'overdue');
+});
+
+// ❌ ->assertOk() alone would pass on an endpoint that
+//    ignores the filter entirely.
+
+
+<?php
+// ---------- Encoding is where filters break ----------
+
+it('handles a search term with spaces and symbols', function () {
+    $user = User::factory()->create();
+    Invoice::factory()->for($user)->create(['reference' => 'ACME & Co #12']);
+    Invoice::factory()->for($user)->create(['reference' => 'Other']);
+
+    $this->actingAs($user)
+        ->getJson('/api/invoices?' . http_build_query(['search' => 'ACME & Co']))
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});
+
+// Hand-writing "?search=ACME & Co" into the URL string
+// tests a different request than the one a browser sends.
+
+
+<?php
+// ---------- Headers, when they matter ----------
+
+$this->withHeaders(['X-Tenant' => 'acme'])
+    ->getJson('/api/invoices')
+    ->assertOk();
+
+$this->withToken($token)->getJson('/api/invoices')->assertOk();`,
+      },
+      keyTakeaways: [
+        "<b>`assertSee`, `assertViewIs` and `assertViewHas` cover Blade responses</b>, and `assertViewHas` survives markup changes.",
+        "<b>`withoutExceptionHandling()` turns \"expected 200, got 500\" into the actual exception.</b>",
+        "<b>`get`/`post` for Blade, `getJson`/`postJson` for APIs</b>, and the suffix decides which code path runs.",
+        "<b>The `Json` variants set `Accept: application/json`</b>, which is what turns a redirect into a `422` with JSON errors.",
+        "<b>No web server starts</b>: the request runs through the kernel in-process, which is why these tests are fast.",
+        "<b>Named assertions carry meaning</b>: `assertOk`, `assertCreated`, `assertForbidden`, `assertUnprocessable`.",
+        "<b>401 and 403 are different failures</b>, so a test that accepts either is not testing authorization.",
+        "<b>Assertions chain</b>, and a failing one prints the response, so red tests usually explain themselves.",
+        "<b>Build query strings as data</b>, because hand-written URLs hide the encoding bugs that break filters.",
+        "<b>Asserting `200` on a filtered endpoint tests nothing.</b> Assert that the filter changed the result.",
+        "<b>Create data that would fail if the filter were a no-op</b>, or the test is decoration.",
+      ],
+      commonMistakes: [
+        "<b>Using `post()` on an API route.</b> You get a redirect, not a `422`, and the validation assertions make no sense.",
+        "<b>Accepting 401 or 403 interchangeably.</b> They mean different things and only one is correct.",
+        "<b>Asserting only the status on a filter endpoint.</b> An endpoint ignoring every filter still returns `200`.",
+        "<b>Seeding data where every row matches the filter.</b> The test passes whether or not filtering works.",
+        "<b>Hand-writing query strings with spaces and symbols.</b> That is not the request a browser sends.",
+      ],
+      quiz: [
+        {
+          question: "What does the `Json` suffix on `postJson` actually change?",
+          options: [
+            "It encodes the body as JSON only",
+            "It sets `Accept: application/json`, so failures return `422` with JSON errors instead of a redirect",
+            "It speeds up the request",
+            "It skips middleware",
+          ],
+          correctIndex: 1,
+          explanation: "Without it you are exercising the Blade redirect path.",
+        },
+        {
+          question: "Why is asserting `200` on a filtered endpoint not enough?",
+          options: [
+            "`200` is the wrong status",
+            "An endpoint that ignores every filter still returns `200`, so the assertion proves nothing",
+            "Filters always return `204`",
+            "It is enough",
+          ],
+          correctIndex: 1,
+          explanation: "Assert that the filter changed the result set.",
+        },
+        {
+          question: "Why build query strings as data rather than by hand?",
+          options: [
+            "It is shorter",
+            "Hand-written URLs hide encoding bugs, and spaces or `&` in a term are exactly where filters break",
+            "Laravel rejects string URLs",
+            "It avoids middleware",
+          ],
+          correctIndex: 1,
+          explanation: "Let the framework encode, so you test the request a browser sends.",
+        },
+        {
+          question: "What is the difference between 401 and 403?",
+          options: [
+            "They are interchangeable",
+            "401 is \"who are you\", 403 is \"I know who you are and you may not\"",
+            "401 is for APIs, 403 for Blade",
+            "403 means the route is missing",
+          ],
+          correctIndex: 1,
+          explanation: "A test accepting either is not testing authorization.",
+        },
+      ],
+    },
+    {
+      id: "json-session-and-validation-assertions",
+      title: "JSON, session & validation assertions",
+      durationMinutes: 12,
+      explanation: "Status codes tell you the request survived. These tell you it did the right thing.\n\n---\n\n### 1. Basic — asserting on JSON\n\nGiven this response:\n\n```json\n{\n    \"data\": { \"id\": 10, \"title\": \"Laravel\" }\n}\n```\n\n`assertJson` checks a subset:\n\n```php\n$response->assertJson([\n    'data' => ['title' => 'Laravel'],\n]);\n```\n\n<b>Subset matching is the useful part.</b> You do not have to know the `id`, the timestamps or anything else the response carries, so the test does not break when you add a field.\n\n---\n\n### 2. Intermediate — path and structure\n\n`assertJsonPath` targets one place with dot notation:\n\n```php\n$response->assertJsonPath('data.title', 'Laravel');\n$response->assertJsonPath('data.0.status', 'overdue');\n```\n\n```text\nJSON → data → title → expected value\n```\n\n<b>And it is strict where `assertJson` is loose</b>: `assertJsonPath('data.total', 3000)` fails if the API returns the string `\"3000\"`. Which is the bug you want caught, because a client doing arithmetic on that value will silently get string concatenation.\n\n`assertJsonStructure` checks the shape and ignores the values:\n\n```php\n$response->assertJsonStructure([\n    'data' => ['id', 'title', 'created_at'],\n]);\n```\n\nThat answers a different question: <b>does the API return what clients expect?</b> Values change per test; the contract should not. It is the closest thing to a schema test, and the one that catches an accidentally renamed field.\n\n<b>Use both.</b> Structure proves the contract, path proves the values, and neither alone is enough.\n\n---\n\n### 3. Advanced — sessions and validation\n\nFor Blade forms, the result lands in the session rather than the body:\n\n```php\n$response->assertSessionHas('success');\n$response->assertSessionHasErrors(['email', 'title']);\n```\n\nFor APIs, the same failure is a `422`:\n\n```php\n$response->assertUnprocessable()\n    ->assertJsonValidationErrors(['email', 'title']);\n```\n\n<b>And validation deserves real tests, because validation is part of your contract.</b> It is the layer that decides what your database is allowed to contain. An untested rule is a rule that can be deleted during a refactor without a single test turning red, and the first sign is bad data in production.\n\nTwo assertions that catch the opposite mistake:\n\n```php\n$response->assertSessionHasNoErrors();\n$response->assertJsonMissingValidationErrors(['name']);\n```\n\n<b>Over-strict validation is a real bug too.</b> A rule rejecting a legitimate value blocks users, and nothing fails until somebody complains. Asserting that a valid edge case is <b>accepted</b> is as important as asserting an invalid one is rejected.\n\nOne more habit worth building: <b>assert what is not there.</b>\n\n```php\n$response->assertJsonMissing(['password_hash']);\n$response->assertJsonMissingPath('data.internal_notes');\n```\n\nA leaked field passes every positive assertion you have written. Day 16's API Resources decide what goes out; <b>this is the test that proves it.</b>",
+      diagram: `assertJson — subset matching
+
+    {"data": {"id": 10, "title": "Laravel"}}
+
+    ->assertJson(['data' => ['title' => 'Laravel']])
+
+  You do not need to know the id or the timestamps.
+  Add a field later and the test still passes.
+
+
+assertJsonPath — one place, strictly
+
+    ->assertJsonPath('data.title', 'Laravel')
+    ->assertJsonPath('data.0.status', 'overdue')
+
+    JSON → data → title → expected value
+
+  ⚠️  STRICT where assertJson is loose:
+
+      assertJsonPath('data.total', 3000)
+        fails if the API returns "3000"
+
+      Which is the bug you WANT caught — a client
+      doing arithmetic on that gets string
+      concatenation instead.
+
+
+assertJsonStructure — the contract
+
+    ->assertJsonStructure(['data' => ['id','title','created_at']])
+
+  Shape, not values. Values change per test; the
+  contract should not.
+
+  The closest thing to a schema test, and what catches
+  an accidentally renamed field.
+
+    structure → the contract
+    path      → the values
+    neither alone is enough
+
+
+Blade vs API failure
+
+  BLADE                        API
+    302 back                     422
+    ->assertSessionHasErrors       ->assertUnprocessable
+        (['email','title'])        ->assertJsonValidationErrors
+    ->assertSessionHas('success')       (['email','title'])
+
+
+Validation is part of your CONTRACT
+
+  It decides what your database is allowed to contain.
+
+  An untested rule can be deleted in a refactor without
+  one test going red. The first sign is bad data in
+  production.
+
+  And over-strict validation is a real bug too:
+
+    ->assertSessionHasNoErrors()
+    ->assertJsonMissingValidationErrors(['name'])
+
+  A rule rejecting a legitimate value blocks users, and
+  nothing fails until somebody complains.
+
+
+Assert what is NOT there
+
+    ->assertJsonMissing(['password_hash'])
+    ->assertJsonMissingPath('data.internal_notes')
+
+  A leaked field passes every positive assertion you
+  have written. Day 16's Resources decide what goes
+  out; this is the test that proves it.`,
+      codeExample: {
+        title: "JSON, structure, session and validation",
+        code: `<?php
+// ---------- Subset, path, structure ----------
+
+it('returns the invoice', function () {
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)->create(['reference' => 'INV-001']);
+
+    $response = $this->actingAs($user)->getJson("/api/invoices/{$invoice->id}");
+
+    // subset: ignores id, timestamps, anything added later
+    $response->assertJson(['data' => ['reference' => 'INV-001']]);
+
+    // path: strict — "3000" would FAIL against 3000
+    $response->assertJsonPath('data.total_cents', 3000);
+
+    // structure: the contract, independent of values
+    $response->assertJsonStructure([
+        'data' => ['id', 'reference', 'total_cents', 'status', 'created_at'],
+    ]);
+});
+
+
+<?php
+// ---------- Assert what must NOT be there ----------
+
+it('never exposes internal fields', function () {
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->getJson("/api/invoices/{$invoice->id}")
+        ->assertJsonMissingPath('data.internal_notes')
+        ->assertJsonMissingPath('data.cost_price_cents');
+});
+
+// A leaked field passes every positive assertion you
+// have written. This is the one that catches it.
+
+
+<?php
+// ---------- Blade: session assertions ----------
+
+it('shows errors when the form is empty', function () {
+    $this->actingAs(User::factory()->create())
+        ->post('/invoices', ['reference' => '', 'due_on' => ''])
+        ->assertRedirect()
+        ->assertSessionHasErrors(['reference', 'due_on']);
+});
+
+it('flashes success on a valid submission', function () {
+    $this->actingAs(User::factory()->create())
+        ->post('/invoices', ['reference' => 'INV-002', 'due_on' => '2026-10-01'])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success');
+});
+
+
+<?php
+// ---------- API: validation assertions ----------
+
+it('rejects an invoice with no due date', function () {
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/invoices', ['reference' => 'INV-003'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['due_on']);
+});
+
+
+<?php
+// ---------- Over-strict validation is a bug too ----------
+
+it('accepts a reference containing a slash', function () {
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/invoices', [
+            'reference' => 'INV/2026/003',      // legitimate
+            'due_on'    => '2026-10-01',
+        ])
+        ->assertCreated()
+        ->assertJsonMissingValidationErrors(['reference']);
+});
+
+// Nothing fails when a rule is too strict — until a
+// user complains. Assert that valid edge cases pass.
+
+
+<?php
+// ---------- Fluent JSON, for bigger payloads ----------
+
+use Illuminate\\Testing\\Fluent\\AssertableJson;
+
+$response->assertJson(fn (AssertableJson $json) =>
+    $json->has('data', 3)
+         ->first(fn (AssertableJson $invoice) =>
+             $invoice->where('status', 'overdue')
+                     ->missing('internal_notes')
+                     ->etc()
+         )
+);`,
+      },
+      keyTakeaways: [
+        "<b>`assertJson` matches a subset</b>, so the test survives new fields being added to the response.",
+        "<b>`assertJsonPath` targets one value with dot notation</b> and is strict about type.",
+        "<b>That strictness is the point</b>: `\"3000\"` instead of `3000` breaks clients doing arithmetic.",
+        "<b>`assertJsonStructure` checks the shape</b>, which is the contract clients depend on.",
+        "<b>Use structure and path together</b>: one proves the contract, the other proves the values.",
+        "<b>Blade failures land in the session</b> (`assertSessionHasErrors`), API failures are `422` (`assertJsonValidationErrors`).",
+        "<b>Validation is part of your contract</b>, because it decides what the database may contain.",
+        "<b>An untested rule can vanish in a refactor</b> with no test going red, and bad data is the first sign.",
+        "<b>Over-strict validation is also a bug</b>, so assert that legitimate edge cases are accepted.",
+        "<b>Assert what is not there</b> too, since a leaked field passes every positive assertion.",
+      ],
+      commonMistakes: [
+        "<b>Only asserting status codes.</b> A `200` with the wrong body is still a broken endpoint.",
+        "<b>Comparing the entire response.</b> The test breaks every time you add a harmless field.",
+        "<b>Never testing that a valid edge case is accepted.</b> Over-strict rules block users silently.",
+        "<b>Skipping validation tests.</b> A deleted rule turns nothing red until production data goes bad.",
+        "<b>Never asserting absent fields.</b> A leaked secret satisfies every assertion you wrote.",
+      ],
+      quiz: [
+        {
+          question: "Why is `assertJson` matching a subset useful?",
+          options: [
+            "It runs faster",
+            "The test does not break when unrelated fields are added to the response",
+            "It ignores types",
+            "It works on arrays only",
+          ],
+          correctIndex: 1,
+          explanation: "You assert what you care about, not the whole payload.",
+        },
+        {
+          question: "What does `assertJsonStructure` check that `assertJsonPath` does not?",
+          options: [
+            "The status code",
+            "The shape of the response, independent of the values, which is the contract clients depend on",
+            "The headers",
+            "The database",
+          ],
+          correctIndex: 1,
+          explanation: "It catches an accidentally renamed field.",
+        },
+        {
+          question: "Why test that valid edge cases are accepted?",
+          options: [
+            "It is not necessary",
+            "Over-strict validation blocks real users and nothing fails until somebody complains",
+            "To increase coverage",
+            "To test the database",
+          ],
+          correctIndex: 1,
+          explanation: "The failure mode is silent, unlike a rule that is too loose.",
+        },
+        {
+          question: "Why assert that a field is missing from a response?",
+          options: [
+            "For speed",
+            "A leaked field passes every positive assertion you wrote, so nothing else catches it",
+            "It is required by API Resources",
+            "To validate the structure",
+          ],
+          correctIndex: 1,
+          explanation: "Resources decide what goes out; this test proves it.",
+        },
+      ],
+    },
+    {
+      id: "auth-and-database-testing",
+      title: "actingAs, RefreshDatabase & database assertions",
+      durationMinutes: 12,
+      explanation: "Two things every feature test needs: a logged-in user, and a database that does not remember the last test.\n\n---\n\n### 1. Basic — `actingAs`\n\nYou do not want every test performing a real login:\n\n```php\n$user = User::factory()->create();\n\n$this->actingAs($user);\n```\n\n```text\nuser → actingAs() → authenticated request\n```\n\nThat sets the authenticated user directly, skipping the login form, the password hash and the session round-trip. <b>Which is correct, because the login flow is not what this test is about</b>: it gets its own test, once, and every other test starts from \"a user is logged in\".\n\nFor a specific guard or Sanctum ability:\n\n```php\n$this->actingAs($user, 'api');\nSanctum::actingAs($user, ['invoices:read']);\n```\n\n---\n\n### 2. Intermediate — `RefreshDatabase`\n\nWithout isolation, tests contaminate each other:\n\n```text\nTest A  creates User 1\nTest B  expects no users  →  FAIL\n```\n\nAnd worse than the failure is the <b>order dependence</b>: the suite passes alone, fails in CI, passes again on a rerun. `RefreshDatabase` fixes it:\n\n```php\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n```\n\n```text\ntest starts → fresh database → run → cleanup\n```\n\nIt migrates once, then wraps every test in a transaction that is rolled back at the end. So it is <b>fast</b>, despite the name suggesting a full rebuild each time.\n\n`DatabaseTransactions` does the transaction part without the migration step, for a database you maintain yourself:\n\n```text\nBEGIN → run test → ROLLBACK\n```\n\n<b>The goal is identical:</b> tests must not leak state into one another.\n\n---\n\n### 3. Advanced — asserting on the database\n\n```php\n$this->assertDatabaseHas('invoices', ['reference' => 'INV-001']);\n$this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);\n$this->assertDatabaseCount('invoices', 3);\n$this->assertSoftDeleted($invoice);\n```\n\n<b>This is what proves persistence actually happened.</b> A `201` means the controller returned a status; it does not mean a row exists. A transaction that silently rolled back, a mass-assignment guard dropping a field, a save inside a conditional that never ran: all of them return `201`.\n\nAnd the sharpest one is `assertDatabaseMissing` after a delete, because <b>a delete that quietly does nothing looks exactly like a delete that worked</b> from the response side.\n\nTwo traps.\n\n<b>Soft deletes break `assertDatabaseMissing`.</b> The row is still there with `deleted_at` set, so the assertion fails on a delete that worked perfectly. Use `assertSoftDeleted` when the model soft-deletes, and `assertDatabaseMissing` when it does not. <b>Getting this backwards is how people conclude soft deletes are broken.</b>\n\n<b>And the transaction rollback hides one class of bug.</b> Because each test rolls back, code that depends on data being committed, a `DB::afterCommit` callback or a queued job reading the row from another connection, behaves differently than in production. It is the price of the speed, and worth knowing when a test passes and production does not.\n\nThree more, each for a specific situation.\n\n<b>`actingAs($user, 'sanctum')`</b> authenticates against a named guard, which is what an API test needs when the default guard is the web one.\n\n<b>`withoutMiddleware()`</b> disables middleware for a test, so you can exercise a controller without fighting through everything in front of it. <b>Use it sparingly</b>: the middleware is part of the behaviour, and a test that skips it proves less than it appears to.\n\n<b>`LazilyRefreshDatabase`</b> migrates only when a test actually touches the database. On a suite with a long migration history and many pure unit tests, that is a real saving, and it behaves identically otherwise.",
+      diagram: `actingAs — skip the login flow
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    user → actingAs() → authenticated request
+
+  No login form, no password hash, no session
+  round-trip. Correct, because the login flow is not
+  what this test is about: it gets its OWN test, once.
+
+    $this->actingAs($user, 'api');
+    Sanctum::actingAs($user, ['invoices:read']);
+
+
+Isolation — the failure it prevents
+
+    Test A  creates User 1
+    Test B  expects no users     →  FAIL
+
+  Worse than the failure is the ORDER DEPENDENCE:
+  passes alone, fails in CI, passes on a rerun.
+
+  RefreshDatabase
+
+    test starts → fresh database → run → cleanup
+
+    migrates ONCE, then wraps each test in a
+    transaction and rolls it back. Fast, despite
+    the name.
+
+  DatabaseTransactions
+
+    BEGIN → run test → ROLLBACK
+
+    the transaction part without the migration step.
+
+  Same goal: tests must not leak state into each other.
+
+
+Asserting the database
+
+    assertDatabaseHas('invoices', ['reference' => 'INV-001'])
+    assertDatabaseMissing('invoices', ['id' => $id])
+    assertDatabaseCount('invoices', 3)
+    assertSoftDeleted($invoice)
+
+  ⚠️  A 201 means the CONTROLLER returned a status.
+      It does not mean a row exists.
+
+      A rolled-back transaction, a mass-assignment
+      guard dropping a field, a save inside a
+      conditional that never ran — all return 201.
+
+  And a delete that quietly does nothing looks exactly
+  like one that worked, from the response side.
+
+
+Two traps
+
+  Soft deletes break assertDatabaseMissing
+
+      row still there, deleted_at set
+        ❌ assertDatabaseMissing  → fails on a
+                                    delete that WORKED
+        ✅ assertSoftDeleted
+
+    Getting this backwards is how people conclude
+    soft deletes are broken.
+
+  Rollback hides commit-dependent behaviour
+
+      DB::afterCommit callbacks and queued jobs
+      reading the row from another connection behave
+      differently than in production.
+
+      The price of the speed. Worth knowing when a
+      test passes and production does not.`,
+      codeExample: {
+        title: "Authentication, isolation and database assertions",
+        code: `<?php
+// ---------- tests/Pest.php: isolation for every feature test ----------
+
+uses(
+    Tests\\TestCase::class,
+    Illuminate\\Foundation\\Testing\\RefreshDatabase::class,
+)->in('Feature');
+
+
+<?php
+// ---------- actingAs ----------
+
+it('lists only the current user\\'s invoices', function () {
+    $user  = User::factory()->create();
+    $other = User::factory()->create();
+
+    Invoice::factory()->count(2)->for($user)->create();
+    Invoice::factory()->count(3)->for($other)->create();
+
+    $this->actingAs($user)
+        ->getJson('/api/invoices')
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+});
+
+// The login flow gets its own test, once:
+it('logs a user in with the right password', function () {
+    $user = User::factory()->create(['password' => Hash::make('secret-pass')]);
+
+    $this->post('/login', ['email' => $user->email, 'password' => 'secret-pass'])
+        ->assertRedirect('/dashboard');
+
+    $this->assertAuthenticatedAs($user);
+});
+
+// Guards and abilities
+$this->actingAs($user, 'api');
+Sanctum::actingAs($user, ['invoices:read']);
+
+
+<?php
+// ---------- 201 is not proof ----------
+
+it('actually persists the invoice', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->postJson('/api/invoices', [
+        'reference' => 'INV-001',
+        'due_on'    => '2026-10-01',
+    ])->assertCreated();
+
+    // The assertion that matters
+    $this->assertDatabaseHas('invoices', [
+        'reference' => 'INV-001',
+        'user_id'   => $user->id,
+    ]);
+});
+
+// Without the second assertion this passes when a
+// $fillable guard silently drops 'reference'.
+
+
+<?php
+// ---------- Delete: soft vs hard ----------
+
+// Hard delete
+it('removes the row', function () {
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->deleteJson("/api/invoices/{$invoice->id}")
+        ->assertNoContent();
+
+    $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+});
+
+// Soft delete — assertDatabaseMissing would FAIL here,
+// on a delete that worked perfectly.
+it('soft deletes the invoice', function () {
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->deleteJson("/api/invoices/{$invoice->id}")
+        ->assertNoContent();
+
+    $this->assertSoftDeleted($invoice);
+    $this->assertDatabaseCount('invoices', 1);   // the row is still there
+});
+
+
+<?php
+// ---------- Counts catch the opposite bug ----------
+
+it('does not create duplicates on a repeated submit', function () {
+    $user    = User::factory()->create();
+    $payload = ['reference' => 'INV-009', 'due_on' => '2026-10-01'];
+
+    $this->actingAs($user)->postJson('/api/invoices', $payload)->assertCreated();
+    $this->actingAs($user)->postJson('/api/invoices', $payload)->assertUnprocessable();
+
+    $this->assertDatabaseCount('invoices', 1);
+});`,
+      },
+      keyTakeaways: [
+        "<b>`actingAs($user, 'sanctum')` authenticates against a named guard</b>, which API tests need.",
+        "<b>`withoutMiddleware()` skips middleware</b>, and proves less than it appears to, so use it sparingly.",
+        "<b>`LazilyRefreshDatabase` migrates only when a test touches the database</b>, which is faster on long suites.",
+        "<b>`actingAs($user)` authenticates directly</b>, skipping the login form, hashing and session round-trip.",
+        "<b>The login flow gets its own test once</b>, and every other test starts from a logged-in user.",
+        "<b>`Sanctum::actingAs($user, [...])`</b> sets abilities for token-scoped API tests.",
+        "<b>`RefreshDatabase` gives each test a clean database</b>, migrating once and rolling back per test.",
+        "<b>The real danger without it is order dependence</b>: passes alone, fails in CI, passes on rerun.",
+        "<b>`DatabaseTransactions` is the same idea without the migration step</b>, for a database you maintain.",
+        "<b>`assertDatabaseHas` is what proves persistence</b>, because a `201` only proves the controller returned one.",
+        "<b>A dropped `$fillable` field or a rolled-back transaction still returns `201`.</b>",
+        "<b>Use `assertSoftDeleted` for soft-deleting models</b>, since `assertDatabaseMissing` fails on a correct delete.",
+        "<b>Rollback hides commit-dependent behaviour</b> like `DB::afterCommit` and cross-connection queue reads.",
+      ],
+      commonMistakes: [
+        "<b>Logging in through the form in every test.</b> Slow, and it retests the login flow hundreds of times.",
+        "<b>Skipping `RefreshDatabase`.</b> You get order-dependent tests that pass locally and fail in CI.",
+        "<b>Asserting only the status after a write.</b> A `201` with no row is a passing test and a broken feature.",
+        "<b>Using `assertDatabaseMissing` on a soft-deleting model.</b> It fails on a delete that worked.",
+        "<b>Forgetting counts.</b> Duplicate rows satisfy `assertDatabaseHas` perfectly.",
+      ],
+      quiz: [
+        {
+          question: "Why use `actingAs` instead of posting to the login route?",
+          options: [
+            "The login route cannot be tested",
+            "The login flow is not what the test is about, and it gets its own test once",
+            "`actingAs` is more accurate",
+            "Sessions do not work in tests",
+          ],
+          correctIndex: 1,
+          explanation: "Otherwise every test retests login and runs slower for it.",
+        },
+        {
+          question: "What is the worst symptom of missing test isolation?",
+          options: [
+            "Slow tests",
+            "Order dependence: the suite passes alone, fails in CI, passes on rerun",
+            "Migration errors",
+            "Higher memory use",
+          ],
+          correctIndex: 1,
+          explanation: "Intermittent failures are far more expensive than consistent ones.",
+        },
+        {
+          question: "Why is `assertCreated()` not enough after a write?",
+          options: [
+            "It is enough",
+            "It proves the controller returned a status, not that a row exists",
+            "`201` is the wrong status",
+            "It only checks headers",
+          ],
+          correctIndex: 1,
+          explanation: "A dropped fillable field or a rolled-back transaction still returns `201`.",
+        },
+        {
+          question: "Which assertion belongs after deleting a soft-deleting model?",
+          options: [
+            "`assertDatabaseMissing`",
+            "`assertSoftDeleted`, since the row still exists with `deleted_at` set",
+            "`assertDatabaseCount(0)`",
+            "`assertNoContent` only",
+          ],
+          correctIndex: 1,
+          explanation: "`assertDatabaseMissing` fails on a delete that worked correctly.",
+        },
+      ],
+    },
+    {
+      id: "factories-and-time",
+      title: "Factories in tests & controlling time",
+      durationMinutes: 11,
+      explanation: "Two things that decide whether a test is readable and whether it is reliable.\n\n---\n\n### 1. Basic — factories\n\nDay 17's factories exist for this:\n\n```php\n// instead of\nUser::create(['name' => 'John', 'email' => 'john@example.com', ...]);\n\n// this\n$user = User::factory()->create();\nUser::factory()->count(10)->create();\n$user = User::factory()->has(Invoice::factory()->count(3))->create();\n```\n\n<b>The saving is not typing.</b> A hand-written `create` breaks every time you add a non-nullable column, in every test that used it. A factory has one definition, so a new column is one edit.\n\n---\n\n### 2. Intermediate — test data should tell the story\n\n```text\n❌ create 17 random users, 43 random posts, 8 random comments\n✅ create an authenticated user\n   create another user\n   create a post owned by the authenticated user\n```\n\n<b>The first is a test you cannot read.</b> When it fails, you have no idea which of the 43 posts mattered, and the numbers were chosen so the assertion happened to pass.\n\nThe second is the scenario in three lines, and every row exists <b>because the assertion needs it.</b> A useful check: <b>if you can delete a row and the test still passes, that row was noise.</b>\n\nSo state the interesting values explicitly and let the factory handle the rest:\n\n```php\nInvoice::factory()->for($user)->create(['status' => 'overdue']);\n```\n\nThat line says what the test is about. `'overdue'` is in the test because the assertion is about overdue invoices; the reference, the amount and the dates are noise the factory can invent.\n\n---\n\n### 3. Advanced — controlling time\n\nTime-dependent code is untestable unless you control the clock:\n\n```php\n$this->travel(5)->days();\n$this->travelTo(now()->setDate(2026, 9, 1));\n$this->freezeTime();\n$this->travelBack();\n```\n\n<b>Why freeze?</b> Consider:\n\n```php\n$expiresAt = now()->addDays(7);\n```\n\nAssert the exact timestamp against the real clock and the test fails whenever the two `now()` calls land on either side of a second boundary. <b>That is a flaky test</b>, and flaky tests are worse than missing ones: people learn to rerun until green, and then a real failure gets rerun too.\n\nFrozen, it is deterministic:\n\n```text\nfreeze at 2026-09-01 10:00 → expires at 2026-09-08 10:00\n```\n\nAnd travel is how you test anything with a deadline without waiting for it:\n\n```text\ncreate an invoice due in 7 days\ntravel 8 days\nassert it is now overdue\n```\n\nWhich covers <b>subscriptions, expirations, scheduled tasks, password reset tokens, trials and reports</b>: all the logic that is otherwise impossible to test honestly.\n\n<b>One trap.</b> Time travel moves PHP's clock, not the database's. `now()` obeys it; `CURRENT_TIMESTAMP` in a default or a raw query does not. If a test travels a year forward and a `created_at` still says today, the database wrote that value.",
+      diagram: `Factories
+
+    ❌ User::create(['name' => ..., 'email' => ..., ...])
+    ✅ User::factory()->create()
+       User::factory()->count(10)->create()
+       User::factory()->has(Invoice::factory()->count(3))->create()
+
+  The saving is not typing. A hand-written create()
+  breaks in EVERY test when you add a non-nullable
+  column. A factory has one definition.
+
+
+Test data should tell the story
+
+    ❌  17 random users
+        43 random posts
+        8 random comments
+
+        Unreadable. When it fails you have no idea
+        which of the 43 posts mattered — and the
+        numbers were chosen so it happened to pass.
+
+    ✅  an authenticated user
+        another user
+        a post owned by the authenticated user
+
+        The scenario, in three lines.
+
+  The check:
+
+    if you can DELETE a row and the test still
+    passes, that row was noise
+
+  State the interesting value, let the factory
+  invent the rest:
+
+    Invoice::factory()->for($user)->create(['status' => 'overdue'])
+                                            └─ the test is about this
+    reference, amount, dates → noise
+
+
+Controlling time
+
+    $this->freezeTime();
+    $this->travel(5)->days();
+    $this->travelTo(now()->setDate(2026, 9, 1));
+    $this->travelBack();
+
+  Why freeze?
+
+    $expiresAt = now()->addDays(7);
+
+    Two now() calls either side of a second boundary
+    and the assertion fails. That is a FLAKY test —
+    worse than a missing one, because people learn to
+    rerun until green, and then rerun the real
+    failure too.
+
+    frozen at 2026-09-01 10:00
+      → expires at 2026-09-08 10:00     deterministic
+
+  Travel tests deadlines without waiting:
+
+    create invoice due in 7 days
+      ↓  travel 8 days
+    assert it is overdue
+
+  Covers subscriptions · expirations · scheduled tasks
+  reset tokens · trials · reports
+
+
+  ⚠️  Travel moves PHP's clock, NOT the database's.
+
+      now()              obeys it
+      CURRENT_TIMESTAMP  does not
+
+      A created_at still saying today after travelling
+      a year means the DATABASE wrote that value.`,
+      codeExample: {
+        title: "Readable data and a controlled clock",
+        code: `<?php
+// ---------- Data that tells the story ----------
+
+// ❌ Unreadable, and the numbers were reverse-engineered
+//    from whatever made the assertion pass
+it('lists invoices', function () {
+    User::factory()->count(17)->create();
+    Invoice::factory()->count(43)->create();
+
+    $this->actingAs(User::first())->getJson('/api/invoices')->assertOk();
+});
+
+// ✅ Every row exists because the assertion needs it
+it('lists only the invoices the user owns', function () {
+    $user  = User::factory()->create();
+    $other = User::factory()->create();
+
+    Invoice::factory()->count(2)->for($user)->create();
+    Invoice::factory()->for($other)->create();       // must NOT appear
+
+    $this->actingAs($user)
+        ->getJson('/api/invoices')
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+});
+
+// Delete any of those three lines and the test stops
+// proving something. That is the check.
+
+
+<?php
+// ---------- Say what matters, let the factory invent the rest ----------
+
+Invoice::factory()->for($user)->create(['status' => 'overdue']);
+//                                       ↑ the test is about this
+// reference, amount, dates → noise the factory handles
+
+Invoice::factory()
+    ->for($user)
+    ->has(LineItem::factory()->count(3))
+    ->create(['status' => 'draft']);
+
+
+<?php
+// ---------- Freeze: kill the flake ----------
+
+it('expires a reset token seven days out', function () {
+    $this->freezeTime();                       // deterministic from here
+
+    $token = PasswordResetToken::issueFor(User::factory()->create());
+
+    expect($token->expires_at->toDateTimeString())
+        ->toBe(now()->addDays(7)->toDateTimeString());
+});
+
+// Without freezeTime the two now() calls can land on
+// either side of a second boundary. That test fails
+// roughly never — which is the worst frequency.
+
+
+<?php
+// ---------- Travel: test a deadline without waiting for it ----------
+
+it('marks an invoice overdue once the due date passes', function () {
+    $user = User::factory()->create();
+
+    $invoice = Invoice::factory()->for($user)->create([
+        'due_on' => now()->addDays(7),
+        'status' => 'sent',
+    ]);
+
+    $this->travel(8)->days();
+
+    Artisan::call('invoices:mark-overdue');
+
+    expect($invoice->fresh()->status)->toBe('overdue');
+});
+
+it('does not mark it overdue a day early', function () {
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)
+        ->create(['due_on' => now()->addDays(7), 'status' => 'sent']);
+
+    $this->travel(6)->days();
+    Artisan::call('invoices:mark-overdue');
+
+    expect($invoice->fresh()->status)->toBe('sent');
+});
+
+// Both sides of the boundary. One alone passes with a
+// command that marks everything, or nothing.
+
+
+<?php
+// ---------- The trap: the database has its own clock ----------
+
+$this->travel(1)->years();
+
+Invoice::factory()->create();
+
+// now()              → 2027   (PHP's clock moved)
+// CURRENT_TIMESTAMP  → 2026   (the database's did not)
+//
+// A created_at still showing today after travelling a
+// year means the DATABASE wrote that column, not Eloquent.
+
+
+<?php
+// ---------- Scoped travel ----------
+
+$this->travel(5)->days(function () {
+    // only inside this closure
+    expect(now()->toDateString())->toBe('2026-09-06');
+});
+
+$this->travelBack();   // or let the test teardown do it`,
+      },
+      keyTakeaways: [
+        "<b>Factories keep tests short and survive schema changes</b>, because there is one definition to update.",
+        "<b>Test data should tell the story of the scenario</b>, not fill the database with noise.",
+        "<b>If deleting a row leaves the test passing, that row was noise.</b>",
+        "<b>State the interesting value explicitly</b> and let the factory invent the rest.",
+        "<b>`freezeTime()` makes timestamp assertions deterministic</b>, killing the second-boundary flake.",
+        "<b>Flaky tests are worse than missing ones</b>, because people learn to rerun until green.",
+        "<b>`travel()` tests deadlines without waiting for them</b>: expiry, trials, overdue, scheduled work.",
+        "<b>Test both sides of a time boundary</b>, since one side alone passes on a command that does nothing.",
+        "<b>Time travel moves PHP's clock, not the database's</b>, so `CURRENT_TIMESTAMP` defaults ignore it.",
+      ],
+      commonMistakes: [
+        "<b>Creating 40 random rows to test a list.</b> Unreadable when it fails, and the count was reverse-engineered.",
+        "<b>Hand-writing `create([...])` in every test.</b> One new column breaks all of them.",
+        "<b>Asserting exact timestamps against the real clock.</b> A test that fails once a month is the worst kind.",
+        "<b>Only testing after the deadline passes.</b> A command that marks everything overdue passes too.",
+        "<b>Expecting travel to move database defaults.</b> `CURRENT_TIMESTAMP` uses the database's own clock.",
+      ],
+      quiz: [
+        {
+          question: "What is the real saving from using factories in tests?",
+          options: [
+            "Less typing",
+            "One definition to update, so a new non-nullable column does not break every test",
+            "Faster inserts",
+            "Automatic assertions",
+          ],
+          correctIndex: 1,
+          explanation: "Hand-written `create` calls scatter the schema across the suite.",
+        },
+        {
+          question: "How do you tell whether a test's data is noise?",
+          options: [
+            "Count the rows",
+            "Delete a row: if the test still passes, that row was noise",
+            "Check the factory",
+            "Run it twice",
+          ],
+          correctIndex: 1,
+          explanation: "Every row should exist because an assertion needs it.",
+        },
+        {
+          question: "Why is `freezeTime()` worth using for expiry logic?",
+          options: [
+            "It speeds the test up",
+            "Two `now()` calls either side of a second boundary make the assertion intermittently fail",
+            "It is required by Carbon",
+            "It resets the database",
+          ],
+          correctIndex: 1,
+          explanation: "A test that fails roughly never is the worst kind to debug.",
+        },
+        {
+          question: "What does time travel not affect?",
+          options: [
+            "`now()`",
+            "The database's clock, so `CURRENT_TIMESTAMP` defaults still use the real time",
+            "Carbon instances",
+            "Scheduled tasks",
+          ],
+          correctIndex: 1,
+          explanation: "A timestamp that ignores your travel was written by the database.",
+        },
+      ],
+    },
+    {
+      id: "fakes",
+      title: "Faking mail, queues, events, storage & HTTP",
+      durationMinutes: 13,
+      explanation: "One rule underneath this whole lesson:\n\n<b>Ordinary tests do not call real external services.</b>\n\nNot because it is slow, though it is. Because a test that sends real email eventually emails a customer, a test that hits a real API fails during somebody else's outage, and a test that writes to real S3 leaves files behind. <b>None of those failures are about your code.</b>\n\nLaravel gives every facade a fake.\n\n---\n\n### 1. Basic — the shape is always the same\n\n```php\nMail::fake();          // swap the real thing\n// ... run the code ...\nMail::assertSent(WelcomeEmail::class);   // assert on the recording\n```\n\n```text\nfake it → run → assert what it recorded\n```\n\nThe fake replaces the driver and records every call instead of performing it. Nothing is sent, dispatched, written or requested.\n\n---\n\n### 2. Intermediate — the ones you will use\n\n```php\nMail::fake();          Mail::assertSent(InvoiceMail::class);\nQueue::fake();         Queue::assertPushed(SendInvoice::class);\nBus::fake();           Bus::assertBatched(...);\nEvent::fake();         Event::assertDispatched(InvoicePaid::class);\nNotification::fake();  Notification::assertSentTo($user, InvoicePaid::class);\nStorage::fake('public'); Storage::disk('public')->assertExists('avatars/photo.jpg');\nHttp::fake();          Http::assertSent(fn ($r) => $r->url() === '...');\n```\n\n<b>`Queue::fake()` changes what you are testing</b>, and that is the point: it proves the job was <b>dispatched</b> with the right payload, without running it. The job's own behaviour gets its own test, calling `handle()` directly. Two small tests instead of one big one that fails for two different reasons.\n\n<b>`Storage::fake()` gives you a real in-memory disk</b>, so uploads genuinely work and you assert on the result:\n\n```php\n$file = UploadedFile::fake()->image('avatar.jpg');\n```\n\n<b>`Http::fake()` is the one that pays for itself</b>, because you can finally test the failure paths. Stripe returning 500, a timeout, a 422, a malformed body: impossible to trigger against the real API, trivial to fake. And those are exactly the paths that break in production.\n\n---\n\n### 3. Advanced — the sharp edges\n\n<b>`Event::fake()` stops listeners from running.</b> That is what you want when asserting an event fired, and a trap the rest of the time: fake events and the listener that creates the audit row never runs, so the test that expects the row fails for a reason unrelated to the code. Use `Event::fake([InvoicePaid::class])` to fake one event and leave the others alone.\n\n<b>`Http::fake()` with no arguments returns an empty 200 for everything.</b> Which silently passes a request to a URL you did not intend, including a typo. Fake specific URLs and add `Http::preventStrayRequests()` so an unfaked call throws instead of quietly succeeding.\n\n<b>And every fake tests intent, not delivery.</b> `Mail::assertSent` proves your code asked to send. It says nothing about SMTP credentials, a bounced address or a spam filter. <b>Fakes prove your application is correct; they do not prove the email arrived.</b> That gap is real, and it belongs in a staging check rather than the suite.\n\nThe fakes also assert absence, which is the underused half:\n\n```php\nMail::assertNothingSent();\nHttp::assertNothingSent();\nQueue::assertNotPushed(ChargeCard::class);\n```\n\n<b>Not charging a card twice is a requirement</b>, and `assertNotPushed` is the only thing that tests it.\n\nEach fake has more assertions than its headline one, and the variants are where the precision is:\n\n```php\nQueue::assertPushedOn('emails', SendInvoice::class);   // the right queue\nEvent::assertDispatchedTimes(InvoicePaid::class, 1);   // exactly once\nEvent::assertNotDispatched(InvoiceDeleted::class);\nNotification::assertSentToTimes($user, InvoicePaid::class, 1);\nMail::assertNothingQueued();\nStorage::disk('public')->assertExists('logos/acme.png');\nStorage::disk('public')->assertMissing('logos/old.png');\n```\n\n<b>The `Times` variants are the ones that catch duplicates</b>, which `assertPushed` cannot: a job dispatched twice satisfies it perfectly, and \"we charged the card twice\" is exactly the bug you wanted a test for.",
+      diagram: `The rule
+
+    Ordinary tests do NOT call real external services.
+
+  Not mainly for speed. Because:
+
+    a test that sends real email eventually emails
+    a customer
+
+    a test that hits a real API fails during someone
+    else's outage
+
+    a test that writes to real S3 leaves files behind
+
+  None of those failures are about your code.
+
+
+The shape, always
+
+    Mail::fake();                     ← swap the real thing
+    ... run the code ...
+    Mail::assertSent(WelcomeEmail::class);   ← assert the recording
+
+    fake it → run → assert what it recorded
+
+
+The fakes
+
+    Mail::fake()          assertSent / assertNothingSent
+    Queue::fake()         assertPushed / assertNotPushed
+    Bus::fake()           assertDispatched / assertBatched
+    Event::fake()         assertDispatched
+    Notification::fake()  assertSentTo
+    Storage::fake('s3')   disk()->assertExists
+    Http::fake()          assertSent / preventStrayRequests
+
+  Queue::fake() CHANGES what you test, on purpose:
+
+    proves the job was DISPATCHED with the right payload
+    the job's behaviour gets its own test → handle()
+
+    two small tests, not one that fails for two reasons
+
+  Http::fake() is the one that pays for itself:
+
+    500 · timeout · 422 · malformed body
+    impossible against the real API, trivial to fake
+    — and exactly what breaks in production
+
+
+Sharp edges
+
+  ⚠️  Event::fake() STOPS LISTENERS RUNNING.
+
+      Right when asserting an event fired. Wrong the
+      rest of the time: the listener that writes the
+      audit row never runs, and the test fails for a
+      reason unrelated to the code.
+
+        Event::fake([InvoicePaid::class])   ← fake one
+
+  ⚠️  Http::fake() with no arguments returns an empty
+      200 for EVERYTHING — including a URL you did not
+      intend, including a typo.
+
+        Http::preventStrayRequests()   ← unfaked = throw
+
+  ⚠️  Fakes test INTENT, not DELIVERY.
+
+      assertSent proves your code asked to send.
+      It says nothing about SMTP credentials, a
+      bounced address, or a spam filter.
+
+      That gap belongs in a staging check.
+
+
+The underused half — asserting absence
+
+    Mail::assertNothingSent();
+    Http::assertNothingSent();
+    Queue::assertNotPushed(ChargeCard::class);
+
+  Not charging a card twice is a REQUIREMENT, and
+  assertNotPushed is the only thing that tests it.`,
+      codeExample: {
+        title: "Every fake, and the traps",
+        code: `<?php
+// ---------- Queue: dispatched, with the right payload ----------
+
+it('queues the invoice email on send', function () {
+    Queue::fake();
+
+    $user    = User::factory()->create();
+    $invoice = Invoice::factory()->for($user)->create(['status' => 'draft']);
+
+    $this->actingAs($user)
+        ->postJson("/api/invoices/{$invoice->id}/send")
+        ->assertOk();
+
+    Queue::assertPushed(SendInvoiceEmail::class, fn ($job) =>
+        $job->invoice->is($invoice)
+    );
+});
+
+// The job's own behaviour is a separate, smaller test:
+it('marks the invoice sent when the job runs', function () {
+    $invoice = Invoice::factory()->create(['status' => 'draft']);
+
+    (new SendInvoiceEmail($invoice))->handle();
+
+    expect($invoice->fresh()->status)->toBe('sent');
+});
+
+
+<?php
+// ---------- Mail and Notification ----------
+
+it('mails the client', function () {
+    Mail::fake();
+
+    $invoice = Invoice::factory()->create();
+    (new SendInvoiceEmail($invoice))->handle();
+
+    Mail::assertSent(InvoiceMail::class, fn ($mail) =>
+        $mail->hasTo($invoice->client->email)
+    );
+});
+
+it('notifies the owner when payment lands', function () {
+    Notification::fake();
+
+    $invoice = Invoice::factory()->create();
+    event(new InvoicePaid($invoice));
+
+    Notification::assertSentTo($invoice->user, InvoicePaidNotification::class);
+});
+
+
+<?php
+// ---------- Storage: a real in-memory disk ----------
+
+it('stores the uploaded logo', function () {
+    Storage::fake('public');
+
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/settings/logo', [
+            'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
+        ])
+        ->assertOk();
+
+    expect(Storage::disk('public')->allFiles('logos'))->toHaveCount(1);
+});
+
+
+<?php
+// ---------- Http: finally testable failure paths ----------
+
+it('marks the invoice paid when the gateway succeeds', function () {
+    Http::fake([
+        'api.stripe.com/*' => Http::response(['status' => 'succeeded'], 200),
+    ]);
+
+    $invoice = Invoice::factory()->create();
+    (new ChargeInvoice($invoice))->handle();
+
+    expect($invoice->fresh()->status)->toBe('paid');
+});
+
+it('leaves the invoice unpaid when the gateway is down', function () {
+    Http::fake(['api.stripe.com/*' => Http::response('', 500)]);
+
+    $invoice = Invoice::factory()->create(['status' => 'sent']);
+    (new ChargeInvoice($invoice))->handle();
+
+    expect($invoice->fresh()->status)->toBe('sent');
+});
+
+it('handles a timeout', function () {
+    Http::fake(fn () => throw new ConnectionException('timed out'));
+    // ...
+});
+
+// 500, timeout, 422, malformed body — impossible against
+// the real API, and exactly what breaks in production.
+
+
+<?php
+// ---------- Trap 1: Event::fake() silences listeners ----------
+
+// ❌ The audit listener never runs, so this fails for a
+//    reason that has nothing to do with the code
+it('writes an audit row', function () {
+    Event::fake();
+    event(new InvoicePaid($invoice));
+    $this->assertDatabaseHas('audit_logs', [...]);   // FAILS
+});
+
+// ✅ Fake only what you are asserting on
+Event::fake([InvoicePaid::class]);
+
+
+<?php
+// ---------- Trap 2: a bare Http::fake() passes typos ----------
+
+Http::fake();                      // empty 200 for EVERYTHING
+Http::preventStrayRequests();      // unfaked call → throws
+
+Http::fake([
+    'api.stripe.com/*' => Http::response(['status' => 'succeeded']),
+]);
+Http::preventStrayRequests();
+
+
+<?php
+// ---------- Assert absence ----------
+
+it('does not charge a card that is already paid', function () {
+    Queue::fake();
+
+    $invoice = Invoice::factory()->create(['status' => 'paid']);
+
+    $this->actingAs($invoice->user)
+        ->postJson("/api/invoices/{$invoice->id}/charge")
+        ->assertUnprocessable();
+
+    Queue::assertNotPushed(ChargeInvoice::class);
+});
+
+it('sends nothing when validation fails', function () {
+    Mail::fake();
+
+    $this->actingAs(User::factory()->create())
+        ->postJson('/api/invoices', [])
+        ->assertUnprocessable();
+
+    Mail::assertNothingSent();
+});`,
+      },
+      keyTakeaways: [
+        "<b>The `Times` variants catch duplicates</b>: `assertDispatchedTimes`, `assertSentToTimes`, which `assertPushed` cannot.",
+        "<b>`Queue::assertPushedOn()` proves the routing</b>, not merely that something was dispatched.",
+        "<b>Ordinary tests must not call real external services</b>, or they eventually email a customer or fail during an outage.",
+        "<b>Every fake has the same shape</b>: fake it, run the code, assert on what it recorded.",
+        "<b>`Queue::fake()` proves the job was dispatched with the right payload</b>, and the job gets its own test.",
+        "<b>That split matters</b>: two small tests instead of one that fails for two different reasons.",
+        "<b>`Storage::fake()` is a real in-memory disk</b>, so uploads work and you assert on the stored file.",
+        "<b>`Http::fake()` makes failure paths testable</b>: 500, timeout, 422, malformed body.",
+        "<b>`Event::fake()` stops listeners running</b>, so anything a listener does silently disappears.",
+        "<b>Fake one event with `Event::fake([X::class])`</b> when other listeners still need to run.",
+        "<b>A bare `Http::fake()` returns 200 for every URL</b>, so add `preventStrayRequests()`.",
+        "<b>Fakes test intent, not delivery</b>: `assertSent` says nothing about SMTP, bounces or spam filters.",
+        "<b>Assert absence too.</b> `assertNotPushed` is the only thing testing that you do not charge twice.",
+      ],
+      commonMistakes: [
+        "<b>Letting a test hit a real API.</b> It fails during someone else's outage and passes for unrelated reasons.",
+        "<b>Blanket `Event::fake()` in a test that depends on a listener.</b> The listener never runs.",
+        "<b>Bare `Http::fake()` with no `preventStrayRequests()`.</b> A typo'd URL quietly returns 200.",
+        "<b>Reading `assertSent` as proof the email arrived.</b> It proves your code asked to send it.",
+        "<b>Only asserting things happened.</b> Not charging twice is a requirement and needs its own assertion.",
+      ],
+      quiz: [
+        {
+          question: "Why does `Queue::fake()` change what a test proves?",
+          options: [
+            "It makes jobs faster",
+            "It proves the job was dispatched with the right payload; the job's behaviour gets its own test",
+            "It runs jobs twice",
+            "It disables the queue driver",
+          ],
+          correctIndex: 1,
+          explanation: "Two small tests beat one failing for two different reasons.",
+        },
+        {
+          question: "What is the trap with `Event::fake()`?",
           options: [
             "It is slow",
-            "It broadcasts every change and every column, including backfills and internal fields",
-            "It cannot use private channels",
-            "It bypasses authorization",
+            "It stops listeners running, so anything a listener does silently disappears",
+            "It only fakes queued events",
+            "It requires a database",
           ],
           correctIndex: 1,
-          explanation: "A domain event says what happened, in fewer cases, with fewer fields.",
+          explanation: "`Event::fake([X::class])` fakes one event and leaves the rest alone.",
+        },
+        {
+          question: "Why add `Http::preventStrayRequests()`?",
+          options: [
+            "It speeds up tests",
+            "A bare `Http::fake()` returns an empty 200 for every URL, including a typo",
+            "It enables real requests",
+            "It is required for `assertSent`",
+          ],
+          correctIndex: 1,
+          explanation: "Unfaked calls should throw, not quietly succeed.",
+        },
+        {
+          question: "What does `Mail::assertSent` actually prove?",
+          options: [
+            "The email arrived",
+            "Your code asked to send it, which says nothing about SMTP, bounces or spam filters",
+            "The mail driver works",
+            "The template rendered in a browser",
+          ],
+          correctIndex: 1,
+          explanation: "Fakes test intent, not delivery.",
         },
       ],
     },
     {
-      id: "scaling-security-and-choosing",
-      title: "Scaling, security & what belongs in real time",
+      id: "mocking-console-dusk-and-coverage",
+      title: "Mocks, console, Dusk, coverage & the pyramid",
       durationMinutes: 13,
-      explanation: "The operational and architectural half, and the question the day exists to answer.\n\n---\n\n### 1. Basic — broadcasting is not queueing\n\nTwo things that both involve \"later\" and answer different questions:\n\n```text\nQueue           when should the SERVER do this work?\n                  Job → Queue → Worker\n\nBroadcasting    how should the server tell a CLIENT?\n                  Event → WebSocket → Browser\n```\n\n<b>A queue moves work off the request. Broadcasting moves information to a browser.</b> Neither substitutes for the other, and they usually appear together:\n\n```text\nbusiness event → queued broadcast → Reverb → browser\n```\n\nAnd the comparison with polling, stated once:\n\n```text\npolling                    broadcasting\n───────                    ────────────\nmany requests, mostly      one connection, held open\n  returning nothing\nup to N seconds late       immediate\nno extra infrastructure    a WebSocket server to run\ncosts requests             costs connections\n```\n\n---\n\n### 2. Intermediate — scaling\n\nOne server is simple:\n\n```text\n         Reverb\n        /  |  \\\n   Browser Browser Browser\n```\n\nA hundred thousand connections is not:\n\n```text\n            Load Balancer\n           /      |      \\\n     Reverb 1  Reverb 2  Reverb 3\n           \\      |      /\n           shared infrastructure\n```\n\nAnd that last line is the whole problem. <b>A user connected to Reverb 2 must receive an event broadcast to Reverb 1</b>, which means the instances need something between them. Without it, half your users silently miss half the events, and which half depends on load balancing.\n\nThe things to think about are different from scaling PHP:\n\n```text\nconnection count      each one costs memory, permanently\nnetwork bandwidth     not requests per second\nevent throughput      fan-out multiplies: one event to\n                        10,000 subscribers is 10,000 sends\nsticky sessions       a reconnect must be able to land\n                        anywhere\nfailure recovery      when an instance dies, its\n                        connections reconnect at once\n```\n\n<b>WebSocket systems are not \"add another PHP server\".</b> A web server is stateless and interchangeable; a WebSocket server holds state that matters, and losing it is visible to users.\n\n---\n\n### 3. Advanced — security, and the question\n\nThe security point, restated because it is the one that goes wrong:\n\n```text\nauthenticated  ≠  authorized for every channel\n```\n\nUser 123 must not be able to subscribe to `private-user.456`, `private-admin` or `private-company.999`, and the only thing stopping them is your callback.\n\nFour things to control:\n\n```text\nchannel authorization   who may listen\nbroadcast payloads      what they hear\npresence data           what members see about each other\nclient events           what browsers may send each other\n```\n\n<b>All four, because getting three right still leaks.</b>\n\n---\n\n### The question this day exists for\n\nNot \"how do I use Echo\". It is:\n\n> <b>What should be an HTTP response, what should be a queued job, what should be a domain event, and what genuinely needs pushing to a browser?</b>\n\n```text\nthe user asked for it and can wait\n                                    →  an HTTP response\n\nthe user should not wait for it     →  a queued job\n\nsomething happened, and several\n  things should follow               →  a domain event\n\nsomebody else's screen must change\n  without them asking                →  broadcasting\n\nit is transient and nobody stores it →  a whisper\n\na five-second delay is acceptable    →  a poll, and no\n                                          infrastructure\n```\n\nAnd the shape they combine into:\n\n```text\nuser creates a notification\n        ↓\ndomain event\n        ↓\nqueue\n        ↓\nbroadcast\n        ↓\nReverb\n        ↓\nEcho\n        ↓\nthe bell updates\n```\n\n<b>Six steps, five of which are days you have already done.</b> Broadcasting is the last one, and it only earns its place when somebody else's screen has to change without them asking for it.\n\nOne concrete detail on that shared infrastructure, because it is the actionable part: <b>the layer between Reverb nodes is Redis pub/sub.</b> Each node subscribes, so an event published on node A reaches the connections held by node B. Without it, two Reverb processes are two separate applications, and which one a user reaches decides what they see.",
-      diagram: `Broadcasting is not queueing
+      explanation: "The rest of the toolbox, and the judgement about how much of it to use.\n\n---\n\n### 1. Basic — mock vs fake\n\n```text\nFake  a simplified working implementation\n      Storage, Mail, Http\n\nMock  a controlled dependency, where you check the interaction\n      called? how many times? with what arguments?\n```\n\nMocking replaces a dependency and lets you dictate its behaviour:\n\n```text\nOrderService → PaymentGateway\n\ncharge() must be called once, with $100, and returns success\n```\n\n<b>The distinction matters because they fail differently.</b> A fake fails when your code produces the wrong result. A mock fails when your code makes the wrong <b>calls</b>, which is the implementation-detail trap from lesson 2 wearing a different hat.\n\n<b>So do not mock everything.</b> Over-mocking produces a suite that passes while the application is broken, because you have replaced everything that could actually fail. When a fake exists, prefer the fake.\n\nA <b>partial mock</b> is the compromise: keep the real class, replace one method. Right when most of the behaviour is worth exercising but one part is expensive or external.\n\n---\n\n### 2. Intermediate — processes and console\n\nIf your application shells out, `Process::fake()` applies the same idea:\n\n```text\nProcess::run(...) → fake process → the result you specified\n```\n\nUseful for CLI tools, image processing, FFmpeg, Python scripts. <b>And the reason is not only speed:</b> the real command may not exist on CI, and its output differs by version and platform.\n\nArtisan commands are testable too:\n\n```php\n$this->artisan('reports:generate')\n    ->expectsOutput('Report generated.')\n    ->assertExitCode(0);\n\n$this->artisan('invoices:purge')\n    ->expectsConfirmation('Delete 12 invoices?', 'no')\n    ->assertExitCode(1);\n```\n\n<b>Commands are the most-forgotten code in a codebase.</b> They run at 3am with nobody watching, they often do destructive things, and they are the last thing anyone tests. That combination is why the exit code matters: a scheduled command failing silently with exit `0` is a broken pipeline nobody notices for a month.\n\n---\n\n### 3. Advanced — Dusk, coverage and the shape of a suite\n\n<b>Dusk</b> drives a real browser:\n\n```text\nreal browser → click → type → submit → the browser sees the result\n```\n\nUse it for what only a browser can prove: JavaScript, frontend integration, a critical end-to-end path. <b>Do not build your suite from it</b>, because browser tests are slow, need a driver, and are the flakiest thing you can own. A handful covering login and checkout is worth a great deal; two hundred is a suite nobody trusts.\n\n<b>Coverage</b> measures which lines ran, not whether they were checked:\n\n```text\n70% coverage ≠ the application is 70% correct\n```\n\n<b>You can have 100% line coverage with no assertions at all.</b> Every line executed, nothing verified. So chasing a number produces the tests that are easy to write, which are rarely the tests that catch bugs.\n\nBetter questions: <b>are the critical workflows tested? Authorization rules? Validation failures? Destructive operations? The important integrations? The edge cases?</b> A thoughtful 75% beats a decorative 95%.\n\n<b>Parallel testing</b> is how a large suite stays usable:\n\n```text\n1,000 tests → 10 minutes → split across workers → minutes\n```\n\nEach worker gets its own database, so it only works if your tests are genuinely isolated. <b>Parallel runs are an isolation test you did not write.</b>\n\nAnd the pyramid, adjusted for Laravel:\n\n```text\nfew    browser tests\nmany   feature tests\nmany   unit tests, where logic has branches\n```\n\n<b>Now the mindset.</b> Not \"I need tests for my controller\" but <b>\"what behaviour must never break?\"</b>\n\nA good feature test covers most of this in one pass:\n\n```text\nrequest → authentication → authorization → validation\n       → business logic → database → event/job → response\n```\n\nAnd the rule that matters more than any tool on this page: <b>test the happy path and the important failure paths.</b> A senior engineer does not prove \"a user can create a post\". They prove a user can create one, invalid data is rejected, guests are rejected, the wrong user is rejected, the database state is right, the side effects happened, and no external service was touched. <b>That is the difference between having tests and having a safety net.</b>\n\nOne last kind of test, cheap enough to be worth adding today. <b>Architecture tests assert rules about the codebase itself:</b>\n\n```php\narch('no debug statements')\n    ->expect(['dd', 'dump', 'ray', 'var_dump'])\n    ->not->toBeUsed();\n\narch('models stay in Models')\n    ->expect('App\\\\Models')\n    ->toOnlyBeUsedIn(['App\\\\Http', 'App\\\\Services', 'App\\\\Jobs']);\n```\n\n<b>The first one alone pays for itself</b>, because a `dd()` reaching production is a class of incident that no amount of care prevents and one line of test does.\n\nAnd text prompts are assertable too, not just confirmations:\n\n```php\n$this->artisan('user:create')\n    ->expectsQuestion('What is their name?', 'Rajan')\n    ->expectsQuestion('Email address?', 'rajan@example.com')\n    ->expectsOutput('Created rajan@example.com.')\n    ->assertExitCode(0);\n```\n\n<b>Which is how you test an interactive command without a terminal</b>, and the only way to cover the prompting path at all.",
+      diagram: `Mock vs fake
 
-  Queue         when should the SERVER do this work?
-                  Job → Queue → Worker
+  FAKE   a simplified working implementation
+           Storage · Mail · Http
+           fails when your code produces the WRONG RESULT
 
-  Broadcasting  how should the server tell a CLIENT?
-                  Event → WebSocket → Browser
+  MOCK   a controlled dependency, checking interaction
+           called? how many times? with what arguments?
+           fails when your code makes the WRONG CALLS
 
-  Neither substitutes for the other, and they usually
-  appear together:
+    OrderService → PaymentGateway
+      charge() once, with $100, returns success
 
-    business event → queued broadcast → Reverb → browser
+  ⚠️  A mock is the implementation-detail trap wearing
+      a different hat. Over-mocking gives a suite that
+      passes while the app is broken — you replaced
+      everything that could fail.
 
+      When a fake exists, prefer the fake.
 
-  polling                   broadcasting
-  ───────                   ────────────
-  many requests, mostly     one connection, held open
-    returning nothing
-  up to N seconds late      immediate
-  no extra infrastructure   a WebSocket server to run
-  costs requests            costs connections
-
-
-Scaling
-
-  One server:
-
-             Reverb
-            /  |  \\
-       Browser Browser Browser
-
-  A hundred thousand connections:
-
-              Load Balancer
-             /      |      \\
-       Reverb 1  Reverb 2  Reverb 3
-             \\      |      /
-             shared infrastructure
-
-  ⚠️  That last line is the whole problem. A user on
-      Reverb 2 must receive an event broadcast to
-      Reverb 1.
-
-      Without something between the instances, half your
-      users silently miss half the events — and which
-      half depends on load balancing.
-
-  Different from scaling PHP:
-
-    connection count    each costs memory, permanently
-    bandwidth           not requests per second
-    event throughput    fan-out multiplies: one event to
-                          10,000 subscribers is 10,000 sends
-    sticky sessions     a reconnect must land somewhere valid
-    failure recovery    when an instance dies, its
-                          connections all reconnect at once
-
-  A web server is stateless and interchangeable. A
-  WebSocket server holds state that matters, and losing
-  it is visible to users.
+  PARTIAL MOCK   real class + one method replaced
+                 most behaviour worth exercising, one
+                 part expensive or external
 
 
-Security
+Processes and console
 
-    authenticated  ≠  authorized for every channel
+    Process::run(...) → fake process → your result
 
-  User 123 must not reach private-user.456,
-  private-admin, or private-company.999 — and the only
-  thing stopping them is your callback.
+    Not only speed: the real command may not exist on
+    CI, and its output differs by version and platform.
 
-  Four things to control:
+    $this->artisan('reports:generate')
+        ->expectsOutput('Report generated.')
+        ->assertExitCode(0);
 
-    channel authorization   who may listen
-    broadcast payloads      what they hear
-    presence data           what members see about each other
-    client events           what browsers may send each other
+    $this->artisan('invoices:purge')
+        ->expectsConfirmation('Delete 12 invoices?', 'no')
+        ->assertExitCode(1);
 
-  All four. Getting three right still leaks.
+  ⚠️  Commands are the most-forgotten code you own.
+      They run at 3am, unwatched, often destructively,
+      and are tested last.
 
-
-The question this day exists for
-
-  Not "how do I use Echo", but:
-
-    the user asked and can wait        →  an HTTP response
-    the user should not wait           →  a queued job
-    something happened, and several
-      things should follow              →  a domain event
-    somebody ELSE's screen must
-      change without them asking        →  broadcasting
-    transient, nobody stores it        →  a whisper
-    a five-second delay is fine        →  a poll, and no
-                                            infrastructure
+      A scheduled command failing silently with exit 0
+      is a broken pipeline nobody notices for a month.
 
 
-  And the shape they combine into:
+Dusk
 
-    user creates a notification
-            ↓
-    domain event          Day 27
-            ↓
-    queue                 Day 26
-            ↓
-    broadcast             today
-            ↓
-    Reverb
-            ↓
-    Echo
-            ↓
-    the bell updates
+    real browser → click → type → submit → sees result
 
-  Six steps, five of which are days you have done.
+    For what only a browser proves: JavaScript,
+    frontend integration, one critical end-to-end path.
 
-  Broadcasting is the last one, and it earns its place
-  only when somebody else's screen must change without
-  them asking.`,
+    Do NOT build the suite from it. Slow, needs a
+    driver, flakiest thing you can own.
+
+      a handful covering login and checkout  → valuable
+      two hundred                            → nobody
+                                                trusts it
+
+
+Coverage
+
+    70% coverage  ≠  the application is 70% correct
+
+  You can have 100% LINE COVERAGE WITH NO ASSERTIONS.
+  Every line ran; nothing was verified.
+
+  Chasing the number produces the tests that are easy
+  to write — rarely the ones that catch bugs.
+
+  Better questions:
+    critical workflows?    authorization rules?
+    validation failures?   destructive operations?
+    important integrations?  edge cases?
+
+  A thoughtful 75% beats a decorative 95%.
+
+
+Parallel
+
+    1,000 tests → 10 min
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+   w1   w2   w3      each with its OWN database
+
+  Only works if tests are genuinely isolated — a
+  parallel run is an isolation test you did not write.
+
+
+The pyramid, Laravel-adjusted
+
+           ▲
+          / \\
+         / Dusk \\        few
+        /--------\\
+       / Feature  \\      many
+      /------------\\
+     /    Unit      \\    many, where logic branches
+    /----------------\\
+
+
+The mindset
+
+    not  "I need tests for my controller"
+    but  "what behaviour must NEVER break?"
+
+  One good feature test covers:
+
+    request → authentication → authorization
+      → validation → business logic → database
+      → event/job → response
+
+  The rule that outranks every tool here:
+
+    TEST THE HAPPY PATH + THE IMPORTANT FAILURE PATHS
+
+  A senior engineer does not prove "a user can create
+  a post". They prove:
+
+    a user can create one
+      + invalid data is rejected
+      + guests are rejected
+      + the wrong user is rejected
+      + database state is right
+      + side effects happened
+      + no external service was touched
+
+  That is the difference between having tests and
+  having a safety net.`,
       codeExample: {
-        title: "The whole flow, and where each piece belongs",
+        title: "Mocks, commands, Dusk and the full-stack test",
         code: `<?php
-// ---------- The combination, in order ----------
+// ---------- Mock: when no fake exists ----------
 
-// 1. The business action.
-public function store(Request $request)
-{
-    $notification = Notification::create($request->validated());
+it('charges the gateway once with the invoice total', function () {
+    $this->mock(PaymentGateway::class, function ($mock) {
+        $mock->shouldReceive('charge')
+             ->once()
+             ->with(3000, 'usd')
+             ->andReturn(new ChargeResult(succeeded: true));
+    });
 
-    // 2. A domain event: Day 27.
-    NotificationCreated::dispatch($notification);
+    $invoice = Invoice::factory()->create(['total_cents' => 3000]);
+    (new ChargeInvoice($invoice))->handle();
 
-    return response()->noContent();
-}
+    expect($invoice->fresh()->status)->toBe('paid');
+});
 
-
-// 3. The event broadcasts, on a queue: Day 26 and today.
-class NotificationCreated implements ShouldBroadcast
-{
-    public function __construct(public Notification $notification) {}
-
-    public function broadcastOn(): array
-    {
-        return [new PrivateChannel('user.' . $this->notification->user_id)];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'notification.created';
-    }
-
-    public function broadcastWith(): array
-    {
-        return [
-            'id'      => $this->notification->id,
-            'message' => $this->notification->message,
-        ];
-    }
-}
-
-// 4. routes/channels.php decides who may listen.
-Broadcast::channel('user.{userId}', fn ($user, $userId) =>
-    $user->id === (int) $userId);
-
-// 5, 6, 7, 8. Reverb, the socket, Echo, the bell.
+// Note the second assertion. Without it this only proves
+// a method was called — the implementation-detail trap.
 
 
 <?php
-// ---------- Queue or broadcast? ----------
+// ---------- Partial mock: real class, one method replaced ----------
 
-// A queue answers: when should the SERVER do this work?
-SendWelcomeEmail::dispatch($user);
-
-// Broadcasting answers: how should the server tell a CLIENT?
-NotificationCreated::dispatch($notification);   // ShouldBroadcast
-
-// Neither replaces the other. Most real features use both.
+$this->partialMock(InvoiceReport::class, function ($mock) {
+    $mock->shouldReceive('renderPdf')->andReturn('fake-pdf-bytes');
+});
+// Every other method runs for real.
 
 
 <?php
-// ---------- Choosing, per feature ----------
+// ---------- Process ----------
 
-// The user asked, and can wait: an HTTP response.
-return response()->json($invoice);
+it('converts the uploaded logo', function () {
+    Process::fake([
+        'convert *' => Process::result(output: 'done', exitCode: 0),
+    ]);
 
-// The user should not wait: a queued job.
-GenerateInvoicePdf::dispatch($invoice);
+    (new ConvertLogo('logo.png'))->handle();
 
-// Several things should follow: a domain event.
-InvoicePaid::dispatch($invoice);
+    Process::assertRan(fn ($process) => str_contains($process->command, 'convert'));
+});
 
-// Somebody ELSE's screen must change: broadcasting.
-class InvoicePaid implements ShouldBroadcast {}
-
-// Transient, and nobody stores it: a whisper.
-// channel.whisper('typing', { name });
-
-// A five-second delay is acceptable: a poll, and no
-// infrastructure at all.
-// setInterval(fetchStats, 30000);
+// The real binary may not exist on CI, and its output
+// differs by version and platform.
 
 
 <?php
-// ---------- Security: all four, not three ----------
+// ---------- Console commands ----------
 
-// 1. Who may listen.
-Broadcast::channel('team.{teamId}', fn ($user, $teamId) =>
-    $user->teams()->whereKey($teamId)->exists());
+it('reports how many invoices it marked overdue', function () {
+    Invoice::factory()->count(3)->create([
+        'due_on' => now()->subDay(),
+        'status' => 'sent',
+    ]);
 
-// 2. What they hear.
-public function broadcastWith(): array
-{
-    return ['id' => $this->order->id, 'status' => $this->order->status];
-}
+    $this->artisan('invoices:mark-overdue')
+        ->expectsOutput('Marked 3 invoices overdue.')
+        ->assertExitCode(0);
+});
 
-// 3. What presence members see about each other.
-Broadcast::channel('chat.{room}', fn ($user, $room) =>
-    ['id' => $user->id, 'name' => $user->name]);
+it('exits non-zero when the purge is declined', function () {
+    Invoice::factory()->count(12)->create(['status' => 'draft']);
 
-// 4. What browsers may whisper to each other: nothing
-//    that another user acts on as if it were true.
+    $this->artisan('invoices:purge')
+        ->expectsConfirmation('Delete 12 invoices?', 'no')
+        ->assertExitCode(1);
+
+    $this->assertDatabaseCount('invoices', 12);
+});
+
+// Exit codes matter: a scheduled command failing
+// silently with 0 is a pipeline nobody notices for
+// a month.
 
 
-# ---------- Scaling: the line that matters ----------
+<?php
+// ---------- Dusk: reserved for what only a browser proves ----------
 
-#             Load Balancer
-#            /      |      \\
-#      Reverb 1  Reverb 2  Reverb 3
-#            \\      |      /
-#            shared infrastructure
-#
-# A user on Reverb 2 must receive an event broadcast to
-# Reverb 1. Without something between them, half your
-# users miss half the events, silently.
-#
-# And the numbers to watch are not requests per second:
-#   connections held · bandwidth · fan-out
-#   reconnection storms when an instance dies`,
+// tests/Browser/CreateInvoiceTest.php
+$this->browse(function (Browser $browser) use ($user) {
+    $browser->loginAs($user)
+            ->visit('/invoices/create')
+            ->type('reference', 'INV-100')
+            ->click('@add-line-item')          // JavaScript
+            ->type('lines[0][description]', 'Design work')
+            ->press('Save')
+            ->assertSee('INV-100');
+});
+
+// A handful of these. Not two hundred.
+
+
+<?php
+// ---------- What one good feature test covers ----------
+
+it('creates an invoice, queues the email and touches nothing external', function () {
+    Queue::fake();
+    Http::fake();
+    Http::preventStrayRequests();
+
+    $user   = User::factory()->create();
+    $client = Client::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/invoices', [
+            'client_id' => $client->id,
+            'due_on'    => '2026-10-01',
+            'lines'     => [['description' => 'Design', 'quantity' => 2, 'unit_price' => 1500]],
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.total_cents', 3000)
+        ->assertJsonMissingPath('data.internal_notes');
+
+    $this->assertDatabaseHas('invoices', ['user_id' => $user->id, 'total_cents' => 3000]);
+    $this->assertDatabaseCount('invoice_lines', 1);
+
+    Queue::assertPushed(SendInvoiceEmail::class);
+    Http::assertNothingSent();
+});
+
+// request → auth → authorization → validation →
+// business logic → database → job → response,
+// in one test.
+
+
+# ---------- Parallel ----------
+
+php artisan test --parallel
+php artisan test --parallel --recreate-databases
+
+# Each worker gets its own database. It only works if
+# your tests are isolated — a parallel run is an
+# isolation test you did not write.
+
+php artisan test --coverage --min=75
+# A thoughtful 75% beats a decorative 95%.`,
       },
       keyTakeaways: [
-        "<b>A queue decides when the server does work; broadcasting decides how the server tells a client.</b>",
-        "Neither replaces the other, and a real feature usually uses both.",
-        "<b>Polling costs requests and is late; broadcasting costs connections and infrastructure.</b>",
-        "<b>Several WebSocket servers need shared infrastructure between them</b>, or users miss events depending on which they hit.",
-        "<b>The numbers to watch are connections, bandwidth and fan-out</b>, not requests per second.",
-        "<b>One event to ten thousand subscribers is ten thousand sends</b>, which is a different shape of load.",
-        "<b>A WebSocket server holds state that matters</b>, so it is not interchangeable the way a web server is.",
-        "<b>Authenticated does not mean authorized for every channel</b>, and only your callback stops a user trying.",
-        "<b>Control all four: authorization, payloads, presence data and client events.</b> Three out of four still leaks.",
-        "<b>Ask what should be a response, a job, an event, or a push</b>, rather than how to use Echo.",
-        "<b>Broadcasting earns its place when somebody else's screen must change without them asking.</b>",
+        "<b>`arch()` tests assert rules about the codebase</b>, and \"no `dd()` anywhere\" alone pays for itself.",
+        "<b>A fake is a working simplified implementation; a mock is a controlled dependency you assert calls on.</b>",
+        "<b>They fail differently</b>: a fake fails on the wrong result, a mock on the wrong calls.",
+        "<b>Over-mocking gives a suite that passes while the app is broken</b>, so prefer a fake when one exists.",
+        "<b>A partial mock keeps the real class and replaces one method</b>, for one expensive or external part.",
+        "<b>`Process::fake()` avoids depending on a binary</b> that may not exist on CI or may differ by version.",
+        "<b>Artisan commands are testable</b> with `expectsOutput`, `expectsConfirmation` and `assertExitCode`.",
+        "<b>Commands are the most-forgotten code you own</b>: unwatched, often destructive, tested last.",
+        "<b>Dusk drives a real browser</b> and belongs on a handful of critical paths, never the whole suite.",
+        "<b>Coverage measures lines executed, not behaviour verified</b>, and 100% with no assertions is possible.",
+        "<b>Ask what is covered, not what percentage</b>: workflows, authorization, validation, destructive operations.",
+        "<b>Parallel runs need genuine isolation</b>, so they double as an isolation test you never wrote.",
+        "<b>Test the happy path and the important failure paths</b>, which is what turns tests into a safety net.",
       ],
       commonMistakes: [
-        "<b>Treating broadcasting as an alternative to queues.</b> They answer different questions and usually appear together.",
-        "<b>Running several WebSocket servers with nothing between them.</b> Events reach only the instance that received them.",
-        "<b>Planning capacity in requests per second.</b> Connections and fan-out are what actually limit you.",
-        "<b>Securing the channel and not the payload.</b> An authorized listener still hears too much.",
-        "<b>Reaching for real time when a thirty-second poll would do.</b> That is a server to run for a delay nobody notices.",
+        "<b>Mocking everything.</b> You replace all the code that could fail, so the suite proves nothing.",
+        "<b>Asserting only that a mocked method was called.</b> That is an implementation test in disguise.",
+        "<b>Never testing Artisan commands.</b> They run unwatched at 3am and often delete things.",
+        "<b>Ignoring exit codes.</b> A scheduled command failing with exit `0` breaks a pipeline invisibly.",
+        "<b>Building a suite out of Dusk tests.</b> Slow, flaky, and eventually nobody trusts a red run.",
+        "<b>Chasing a coverage number.</b> It produces the easy tests, not the ones that catch bugs.",
       ],
       quiz: [
         {
-          question: "What is the difference between a queue and broadcasting?",
+          question: "Why prefer a fake over a mock when both are available?",
           options: [
-            "None",
-            "A queue decides when the server does work; broadcasting decides how it tells a client",
-            "Broadcasting is faster",
-            "Queues are for background work only",
+            "Fakes are faster",
+            "A mock asserts on calls, which is an implementation test, and over-mocking replaces everything that could fail",
+            "Mocks do not work in Laravel",
+            "Fakes give better coverage",
           ],
           correctIndex: 1,
-          explanation: "Most real features use both, in sequence.",
+          explanation: "A fake fails on the wrong result; a mock fails on the wrong calls.",
         },
         {
-          question: "Why do several WebSocket servers need shared infrastructure?",
+          question: "Why do Artisan command tests matter more than people assume?",
           options: [
-            "For authentication",
-            "A user connected to one must receive events broadcast to another",
-            "To balance load",
-            "For TLS termination",
+            "They are quick to write",
+            "Commands run unwatched, often do destructive things, and a silent exit `0` hides a broken pipeline",
+            "They increase coverage",
+            "They replace feature tests",
           ],
           correctIndex: 1,
-          explanation: "Without it, users silently miss events depending on where they landed.",
+          explanation: "The exit code is what a scheduler acts on.",
         },
         {
-          question: "What limits a WebSocket system?",
+          question: "What does 100% line coverage guarantee?",
           options: [
-            "Requests per second",
-            "Connections held, bandwidth, and fan-out per event",
-            "Database queries",
-            "PHP workers",
+            "The application is correct",
+            "Nothing on its own, since every line can run with no assertions at all",
+            "All branches are covered",
+            "No bugs in production",
           ],
           correctIndex: 1,
-          explanation: "One event to ten thousand subscribers is ten thousand sends.",
+          explanation: "Coverage measures execution, not verification.",
         },
         {
-          question: "When does broadcasting earn its place?",
+          question: "What extra thing does running tests in parallel reveal?",
           options: [
-            "Whenever data changes",
-            "When somebody else's screen must change without them asking",
-            "For any slow work",
-            "For anything a user waits on",
+            "Slow queries",
+            "Whether your tests are genuinely isolated, since each worker gets its own database",
+            "Memory leaks",
+            "Missing migrations",
           ],
           correctIndex: 1,
-          explanation: "Otherwise a response, a job, or a poll is the right answer.",
+          explanation: "It is an isolation test you never wrote.",
+        },
+        {
+          question: "What separates a test suite from a safety net?",
+          options: [
+            "The number of tests",
+            "Covering the happy path and the important failure paths: invalid data, guests, wrong user, side effects",
+            "Using Pest",
+            "High coverage",
+          ],
+          correctIndex: 1,
+          explanation: "\"A user can create a post\" alone proves very little.",
         },
       ],
     },
   ],
   finalQuiz: [
     {
-      question: "Why can a normal HTTP page not learn about a later change?",
+      question: "Why must the testing environment use its own database?",
       options: [
-        "The browser caches it",
-        "The request and response completed, so nothing connects the two any more",
-        "Sessions expire",
-        "It can",
+        "For speed",
+        "`RefreshDatabase` wipes it between tests, so pointing it at development or production destroys data",
+        "Laravel refuses to run otherwise",
+        "To allow migrations",
       ],
       correctIndex: 1,
-      explanation: "Which is why polling exists, and why it asks repeatedly.",
+      explanation: "The isolation is not tidiness, it is data safety.",
     },
     {
-      question: "What does broadcasting cost that polling does not?",
+      question: "What does in-memory SQLite fail to catch?",
       options: [
-        "More requests",
-        "Open connections held in memory, one per connected user",
-        "More database queries",
+        "Missing routes",
+        "MySQL-specific behaviour: JSON columns, strict mode, full-text indexes, date sorting",
+        "Validation errors",
+        "Authorization failures",
+      ],
+      correctIndex: 1,
+      explanation: "Run the suite against the real engine somewhere, even if local runs use SQLite.",
+    },
+    {
+      question: "Why are feature tests Laravel's primary tool rather than unit tests?",
+      options: [
+        "Unit tests are unsupported",
+        "Booting the whole app in a test is nearly free here, so the usually-expensive thing is cheap",
+        "They run faster",
+        "They give better coverage numbers",
+      ],
+      correctIndex: 1,
+      explanation: "`$this->postJson(...)` exercises the entire stack in one call.",
+    },
+    {
+      question: "What is the problem with asserting that a controller called a service method?",
+      options: [
+        "It is too slow",
+        "It fails on refactors that keep behaviour identical, punishing you for improving the code",
+        "Mockery cannot do it",
         "Nothing",
       ],
       correctIndex: 1,
-      explanation: "A different scaling problem, not an absent one.",
+      explanation: "Assert behaviour, which survives refactors and fails only when something really breaks.",
     },
     {
-      question: "Why does broadcasting need a separate server?",
+      question: "What does the `Json` suffix on `postJson` change?",
       options: [
-        "For security",
-        "PHP answers a request and exits, so it cannot hold connections open",
-        "To reduce load",
+        "Only the request body encoding",
+        "It sets `Accept: application/json`, turning a redirect into a `422` with JSON errors",
+        "It skips middleware",
+        "It speeds up the request",
+      ],
+      correctIndex: 1,
+      explanation: "Without it you exercise the Blade redirect path instead.",
+    },
+    {
+      question: "Why is `assertOk()` alone insufficient on a filtered endpoint?",
+      options: [
+        "`200` is wrong for filters",
+        "An endpoint that ignores every filter still returns `200`",
+        "Filters return `204`",
+        "It is sufficient",
+      ],
+      correctIndex: 1,
+      explanation: "Seed data that would fail if the filter were a no-op, then assert the result changed.",
+    },
+    {
+      question: "What does `assertJsonStructure` prove that `assertJsonPath` does not?",
+      options: [
+        "The values are correct",
+        "The shape of the response, which is the contract clients depend on",
+        "The status code",
+        "The database state",
+      ],
+      correctIndex: 1,
+      explanation: "It catches an accidentally renamed field regardless of values.",
+    },
+    {
+      question: "Why assert that a legitimate edge case passes validation?",
+      options: [
+        "For coverage",
+        "Over-strict rules block real users and nothing fails until somebody complains",
         "Laravel requires it",
+        "To test the database",
       ],
       correctIndex: 1,
-      explanation: "Reverb, Pusher or Ably do that job.",
+      explanation: "The failure mode is silent, unlike a rule that is too loose.",
     },
     {
-      question: "What is sent to the browser without `broadcastWith()`?",
+      question: "Why is `assertCreated()` not proof that a record was saved?",
       options: [
-        "Nothing",
-        "Every public property of the event, serialised in full",
-        "Only the event name",
-        "The model id",
+        "It is proof",
+        "It proves the controller returned a status; a dropped fillable field or a rolled-back transaction still returns `201`",
+        "`201` means queued",
+        "It only checks headers",
       ],
       correctIndex: 1,
-      explanation: "Which sends a whole user model, including columns nobody reviewed.",
+      explanation: "`assertDatabaseHas` is what proves persistence.",
     },
     {
-      question: "When is `ShouldBroadcastNow` appropriate?",
+      question: "Which assertion follows deleting a soft-deleting model?",
       options: [
-        "Always",
-        "A chat message where a queue round trip is a visible delay, and local debugging",
-        "Whenever the payload is small",
-        "In production only",
+        "`assertDatabaseMissing`",
+        "`assertSoftDeleted`, because the row remains with `deleted_at` set",
+        "`assertDatabaseCount(0)`",
+        "`assertNoContent` only",
       ],
       correctIndex: 1,
-      explanation: "Otherwise the user waits for the WebSocket server during their request.",
+      explanation: "`assertDatabaseMissing` fails on a delete that worked perfectly.",
     },
     {
-      question: "What may go on a public channel?",
+      question: "What is the sign that a test's data contains noise?",
       options: [
-        "Anything with an unguessable name",
-        "Only information anybody could see anyway",
-        "User notifications",
-        "Anything, if the payload is small",
+        "It uses factories",
+        "You can delete a row and the test still passes",
+        "It creates more than three records",
+        "It uses `count()`",
       ],
       correctIndex: 1,
-      explanation: "A public channel is readable by anybody who knows its name.",
+      explanation: "Every row should exist because an assertion needs it.",
     },
     {
-      question: "Why does `$user->id === $userId` fail in a channel callback?",
+      question: "Why use `freezeTime()` when asserting an expiry timestamp?",
       options: [
-        "The user is not loaded",
-        "The channel segment is a string, so the strict comparison is always false",
-        "The callback runs too early",
-        "It does not fail",
+        "It is faster",
+        "Two `now()` calls either side of a second boundary make the test intermittently fail",
+        "Carbon requires it",
+        "It resets the database",
       ],
       correctIndex: 1,
-      explanation: "And it fails silently: no events arrive, with no error anywhere.",
+      explanation: "A flaky test is worse than a missing one, because people learn to rerun until green.",
     },
     {
-      question: "What does a presence channel add over a private one?",
+      question: "What does time travel not move?",
       options: [
-        "Encryption",
-        "Knowledge of who is connected, with here, joining and leaving",
-        "Guaranteed delivery",
-        "Message history",
+        "`now()`",
+        "The database's clock, so `CURRENT_TIMESTAMP` defaults keep the real time",
+        "Carbon instances",
+        "Queued jobs",
       ],
       correctIndex: 1,
-      explanation: "Which builds an online-users list without storing anything.",
+      explanation: "A timestamp ignoring your travel was written by the database, not Eloquent.",
     },
     {
-      question: "Why should a presence callback not return the user model?",
+      question: "What does `Queue::fake()` let you separate?",
       options: [
-        "It is slow",
-        "Whatever it returns is visible to every other member of the channel",
-        "It cannot be serialised",
-        "Laravel rejects it",
+        "Validation from authorization",
+        "That the job was dispatched with the right payload, from what the job does when it runs",
+        "The queue from the database",
+        "Nothing useful",
       ],
       correctIndex: 1,
-      explanation: "Return a name and an id.",
+      explanation: "Two small tests instead of one failing for two different reasons.",
     },
     {
-      question: "What does a leading dot mean in `.order.shipped`?",
-      options: [
-        "A private channel",
-        "The exact event name, with no application namespace prepended",
-        "A presence channel",
-        "A wildcard",
-      ],
-      correctIndex: 1,
-      explanation: "A `broadcastAs()` name needs it; a bare class name does not.",
-    },
-    {
-      question: "Why must a real-time UI refetch after reconnecting?",
-      options: [
-        "To re-authenticate",
-        "Messages sent while disconnected never arrive, so the UI is quietly out of date",
-        "Echo clears its state",
-        "It does not need to",
-      ],
-      correctIndex: 1,
-      explanation: "Broadcasting is delivery, not truth.",
-    },
-    {
-      question: "Why must a chat message not be sent as a whisper?",
-      options: [
-        "Whispers are slower",
-        "It is unvalidated, unstored, and reaches only people currently connected",
-        "Whispers cannot carry text",
-        "It would arrive twice",
-      ],
-      correctIndex: 1,
-      explanation: "A whisper never becomes a fact.",
-    },
-    {
-      question: "What is the risk of model broadcasting?",
+      question: "What is the danger of a blanket `Event::fake()`?",
       options: [
         "It is slow",
-        "It broadcasts every change and every column, including backfills and internal fields",
-        "It bypasses authorization",
-        "It cannot use private channels",
+        "Listeners stop running, so anything a listener does silently disappears",
+        "Events are dispatched twice",
+        "It needs a queue worker",
       ],
       correctIndex: 1,
-      explanation: "A domain event says what happened, in fewer cases, with fewer fields.",
+      explanation: "`Event::fake([X::class])` fakes one event and leaves the others alone.",
     },
     {
-      question: "Why do several WebSocket servers need shared infrastructure?",
+      question: "Why pair `Http::fake()` with `preventStrayRequests()`?",
       options: [
-        "For TLS",
-        "A user connected to one must receive events broadcast to another",
-        "To authenticate channels",
-        "For load balancing only",
+        "To allow real requests",
+        "A bare `Http::fake()` returns an empty `200` for every URL, including a typo",
+        "It is required for `assertSent`",
+        "It speeds up tests",
       ],
       correctIndex: 1,
-      explanation: "Without it, users miss events depending on which instance they hit.",
+      explanation: "An unfaked call should throw rather than quietly succeed.",
     },
     {
-      question: "When does broadcasting earn its place?",
+      question: "What does `Mail::assertSent` actually prove?",
       options: [
-        "Whenever data changes",
-        "When somebody else's screen must change without them asking",
-        "For any slow work",
-        "For anything a user is waiting on",
+        "The email was delivered",
+        "Your code asked to send it, which says nothing about SMTP, bounces or spam filters",
+        "The mailer is configured",
+        "The template renders",
       ],
       correctIndex: 1,
-      explanation: "Otherwise a response, a job, or a poll is the right answer.",
+      explanation: "Fakes test intent, not delivery.",
+    },
+    {
+      question: "Why does over-mocking hurt a suite?",
+      options: [
+        "Mocks are slow",
+        "You replace everything that could actually fail, so the tests pass while the app is broken",
+        "Mockery is unsupported",
+        "It reduces coverage",
+      ],
+      correctIndex: 1,
+      explanation: "When a fake exists, prefer the fake.",
+    },
+    {
+      question: "Why do Artisan command tests matter disproportionately?",
+      options: [
+        "They are easy to write",
+        "Commands run unwatched, often destructively, and a silent exit `0` hides a broken pipeline",
+        "They replace feature tests",
+        "They boost coverage",
+      ],
+      correctIndex: 1,
+      explanation: "The exit code is what the scheduler acts on.",
+    },
+    {
+      question: "What does 100% line coverage guarantee on its own?",
+      options: [
+        "Correctness",
+        "Nothing, since every line can execute with no assertions at all",
+        "Full branch coverage",
+        "No production bugs",
+      ],
+      correctIndex: 1,
+      explanation: "Coverage measures execution, not verification.",
+    },
+    {
+      question: "What does a parallel test run additionally reveal?",
+      options: [
+        "Slow queries",
+        "Whether your tests are genuinely isolated, since each worker gets its own database",
+        "Memory leaks",
+        "Missing routes",
+      ],
+      correctIndex: 1,
+      explanation: "It is an isolation test you never wrote.",
+    },
+    {
+      question: "What turns a set of tests into a safety net?",
+      options: [
+        "Volume",
+        "Covering the happy path plus the important failure paths: invalid data, guests, wrong user, side effects",
+        "Using Pest",
+        "A high coverage percentage",
+      ],
+      correctIndex: 1,
+      explanation: "\"A user can create a post\" alone proves very little.",
     },
   ],
   project: {
-    name: "InvoiceHub",
-    goal: "Make InvoiceHub's notification bell update without a refresh, then break it in the five ways it breaks in production and be able to name each one.",
-    brief: "Yesterday's notification bell needs a page reload to change. Today it updates the moment something happens, and the interesting part is not getting that working.\n\n<b>It is knowing why it stops.</b> Real time fails quietly: no error, no log line, no broken page, just nothing arriving. So this day is built around deliberately causing each of the five failures and recognising the symptom, because in production you will only ever see the symptom.\n\nYou will need four things running at once: the application, a queue worker, Reverb, and Vite. Anything that stops working, check those four first.\n\nAnd one rule for the whole day: <b>the page must still be correct after a reload for somebody who was disconnected.</b> If the bell is only right because the socket was connected the whole time, it is not finished.",
+    name: "InvoiceHub — the CRUD test that would catch a real bug",
+    goal: "Write one feature test file covering the whole invoice lifecycle, then prove it works by breaking the application seven times and watching a different test go red each time.",
+    brief:
+      "You have twenty-eight days of InvoiceHub and no tests. Today you write the file that lets you refactor any of it without fear.\n\nThe self-check is a full CRUD flow including a failed validation case, and this project takes it one step further. <b>Writing a passing test proves nothing.</b> A test that passes when the code is correct and also passes when the code is broken is decoration. So the acceptance criteria here are not \"the tests pass\" but <b>\"each deliberate break turns exactly one test red\"</b>.\n\nThe endpoints:\n\n```text\nPOST   /api/invoices\nGET    /api/invoices\nGET    /api/invoices/{invoice}\nPUT    /api/invoices/{invoice}\nDELETE /api/invoices/{invoice}\n```\n\nAnd the flow one test file should prove:\n\n```text\n                    Invoice CRUD\n                         │\n        ┌────────────────┼────────────────┐\n        ▼                ▼                ▼\n     CREATE            READ             UPDATE\n   valid data         200 OK          new values\n        │                │                │\n        ▼                ▼                ▼\n    database         correct row      database updated\n\n     DELETE                INVALID CREATE\n        │                        │\n        ▼                        ▼\n  row gone / soft            422 + errors\n\n     WRONG USER              GUEST\n        │                      │\n        ▼                      ▼\n       403                    401\n```\n\nBy the end you are testing CRUD plus validation plus authentication plus authorization plus database state plus side effects, which is what makes a feature test worth its runtime.",
     steps: [
-      "Install broadcasting and Reverb, start it, and confirm from the browser's network tab that a WebSocket connection is open before writing any application code.",
-      "Make `NotificationCreated` implement `ShouldBroadcast`, broadcasting on a private channel scoped to the recipient. Add `broadcastAs()` and explain in a comment why the class name is a bad wire name.",
-      "Look at what the browser receives with no `broadcastWith()`. Write down every field that arrived, then add `broadcastWith()` and compare.",
-      "Add the channel authorization callback. Deliberately omit the `(int)` cast first, watch nothing arrive, and write down what the browser and the logs told you. Which was nothing.",
-      "Wire up Echo and update the bell. Get it incrementing without a refresh, in whichever of Livewire or React your application uses.",
-      "From the browser console, subscribe to another user's private channel. Confirm you are refused, then temporarily make the callback return `true` and confirm you now receive their notifications. Put it back.",
-      "Now break it five ways, one at a time, and record the symptom for each: stop Reverb; stop the queue worker; remove the channel callback; misspell the event name in Echo; drop the `(int)` cast.",
-      "For each of those five, write the one-line diagnostic you would use to identify it in production. That list is the deliverable.",
-      "Reload the page with the socket disconnected and confirm the bell still shows the right count, because the page loads its state over HTTP.",
-      "Now disconnect, create three notifications from another session, reconnect, and see what the bell shows. Then add a refetch on reconnect and try again.",
-      "Add a presence channel to an invoice detail page so viewers can see who else is looking at it. Return only a name and an id from the callback, and check what a second browser sees.",
-      "Open the same invoice in two tabs as the same user and count the presence members. Fix the duplicate.",
-      "Add a whisper for \"someone is editing this invoice\", firing on input. Confirm in the network tab that no HTTP request is made per keystroke.",
-      "Try sending something through a whisper that should be a fact, such as a comment, then write down three reasons it is wrong.",
-      "Finally, list every real-time feature you built and answer for each: could this have been a poll, and what would that have cost? Anything where the honest answer is yes, say so.",
+      "Set up. Confirm `phpunit.xml` points at a test database and not your development one, and that `CACHE_STORE`, `SESSION_DRIVER` and `MAIL_MAILER` are `array`. Add `RefreshDatabase` to every feature test in `tests/Pest.php`.",
+      "Create `tests/Feature/InvoiceCrudTest.php` with a helper that creates an authenticated user and returns it, so every test starts from `actingAs` rather than the login form.",
+      "CREATE. Post valid data, assert `assertCreated()`, then `assertDatabaseHas` for the row with the correct `user_id`. Both assertions, not just the status.",
+      "VALIDATION. Post an empty payload and assert `assertUnprocessable()` plus `assertJsonValidationErrors` naming every field you expect. Then post a legitimate awkward value (a reference with a slash, an amount of zero if that is allowed) and assert it is accepted with `assertJsonMissingValidationErrors`.",
+      "READ. Create three invoices for your user and two for another, then assert the index returns exactly three. Assert the show endpoint returns the right one and `assertJsonStructure` for the contract, plus `assertJsonMissingPath` for any internal field that must never leak.",
+      "UPDATE. Put new values, assert success, then `assertDatabaseHas` with the new values and `assertDatabaseMissing` with the old reference. Proving the change landed is not the same as proving the response said so.",
+      "DELETE. Assert the response, then `assertSoftDeleted` if the model soft-deletes or `assertDatabaseMissing` if it does not. Add `assertDatabaseCount` so a delete that removes two rows also fails.",
+      "AUTHORIZATION. User B tries to show, update and delete User A's invoice and gets `403` each time, and the row is unchanged afterwards. Then a guest hits the index and gets `401`. Four short tests.",
+      "SIDE EFFECTS. Add `Queue::fake()` to the create test and assert the invoice email job was pushed. Add `Http::fake()` and `Http::preventStrayRequests()` and assert `Http::assertNothingSent()` on the paths that should touch nothing external.",
+      "TIME. Freeze time and assert the due date is exactly what you expect. Then travel past the due date, run your overdue command, and assert the status changed. Add the mirror test that travels only partway and asserts it did not.",
+      "NOW BREAK IT, one change at a time, reverting each before the next. Comment out a validation rule. Delete the `authorize` call. Change `assertDatabaseHas`'s column in the controller so the field is never saved. Remove the model's `$fillable` entry for one field. Make the delete a no-op. Return a leaked internal field from the API Resource. Make the overdue command mark everything overdue regardless of date. Record which test went red for each.",
+      "Write up the seven breaks in a comment block or a short note: the break, the test that caught it, and the failure message. Any break that turned nothing red is a missing test, so write it now.",
     ],
     acceptance: [
-      "The notification bell increments without a page refresh.",
-      "The broadcast payload contains only the fields the UI uses, and you recorded what it contained before you shaped it.",
-      "A second user cannot subscribe to another user's channel, and you demonstrated both the refusal and what happens without it.",
-      "You have five recorded symptoms and five one-line diagnostics for the five ways real time breaks.",
-      "Reloading with the socket disconnected shows the correct count, because the page loads its state over HTTP.",
-      "Reconnecting after missing three notifications produces the correct count, not a stale one.",
-      "The presence list shows other viewers, exposes only a name and an id, and counts one person once across two tabs.",
-      "The editing indicator makes no HTTP request per keystroke, confirmed in the network tab.",
-      "You can state three reasons a whisper must not carry something that needs to be true.",
-      "Every real-time feature is listed with an honest answer about whether a poll would have done.",
+      "Every test uses `actingAs`, and the login flow is tested exactly once, in its own file.",
+      "Every write assertion has two halves: the HTTP status and a database assertion.",
+      "The validation test asserts both that invalid data is rejected and that a legitimate awkward value is accepted.",
+      "Guests get `401` and non-owners get `403`, and the two are asserted separately, never interchangeably.",
+      "The delete test uses `assertSoftDeleted` or `assertDatabaseMissing` correctly for the model, plus a count.",
+      "No test touches a real external service, and `Http::preventStrayRequests()` is on.",
+      "Time-dependent assertions are frozen or travelled, never compared against the live clock.",
+      "All seven deliberate breaks turn at least one test red, and you can name which one for each.",
+      "Deleting any factory row from a test causes a test to fail, proving no row is noise.",
+      "The suite passes with `php artisan test --parallel`, proving the tests are genuinely isolated.",
     ],
     stretch: [
-      "Add a live invoice status that updates for everybody watching, and decide between a domain event and model broadcasting with a written reason.",
-      "Simulate a Reverb restart while three browsers are connected, and observe the reconnect. Note what a thousand simultaneous reconnects would mean.",
-      "Add a Slack notification alongside the broadcast on the same event, so one dispatch reaches a screen, an inbox and a channel.",
+      "Run `php artisan test --coverage` and note the number. Then find one uncovered branch that matters, such as a destructive path or an authorization edge, and cover it. Note that the number barely moved and the suite got meaningfully better.",
+      "Write a unit test for whatever calculates the invoice total, with at least six cases: zero lines, one line, rounding, a discount, tax, and a negative adjustment if you allow one. Time it against the same coverage through HTTP.",
+      "Add one Dusk test for the create-invoice screen if it uses JavaScript to add line items. Time it, and compare against the feature test covering the same endpoint. That ratio is why the pyramid has a narrow top.",
+      "Add `Process::fake()` coverage if InvoiceHub shells out for PDF generation, and assert the command that ran rather than the file that appeared.",
     ],
   },
 };
