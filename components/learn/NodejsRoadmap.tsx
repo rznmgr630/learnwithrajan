@@ -11,6 +11,7 @@ import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import { NODEJS_ROADMAP_WEEKS, NODEJS_TOTAL_DAYS } from "@/lib/nodejs-learning/nodejs-challenge-data";
 import { useNodejsProgress } from "@/hooks/use-nodejs-progress";
 import { NODEJS_PHASE_0_LESSONS } from "@/lib/nodejs-learning/nodejs-phase-0-lessons";
+import { NODEJS_DAY_1_LESSONS } from "@/lib/nodejs-learning/nodejs-day-1-lessons";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 
 const TAG_PILL =
@@ -18,6 +19,7 @@ const TAG_PILL =
 
 const LESSON_DAYS: Record<number, LessonDay> = {
   0: NODEJS_PHASE_0_LESSONS,
+  1: NODEJS_DAY_1_LESSONS,
 };
 
 const LESSON_DAY_NUMBERS = Object.keys(LESSON_DAYS)
