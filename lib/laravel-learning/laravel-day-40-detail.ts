@@ -3,300 +3,341 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_40_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Artisan is Laravel's built-in command-line tool — think of it like a remote control for your application. Every `php artisan` command you've used so far was built-in. Today you build your own.\n\nCustom commands are perfect for:\n• Database seeders and one-off data migrations\n• Scheduled background tasks (sending digest emails, cleaning old records)\n• Dev utilities (generating fake test data, syncing API data)\n• Admin operations you don't want to expose in a UI",
-      np: "Artisan = Laravel को command-line tool। Custom commands build गर्न सिक्ने।",
-      jp: "Artisan は Laravel の CLI ツール。カスタムコマンドの作り方を学びます。",
+      en: "Getting your app to production is the final mile — and often the most confusing part for beginners. There is no single \"right\" way to deploy Laravel; the right choice depends on your budget, team size, and traffic.\n\nAnalogy: it is like choosing how to get across town:\n• <b>Driving yourself</b> — a VPS with Laravel Forge (full control, you manage the car)\n• <b>Taking a taxi</b> — a Platform-as-a-Service (someone else drives, you just say the destination)\n• <b>Teleporting</b> — serverless Vapor on AWS Lambda (instant, no roads, pay per trip)\n\nEach has trade-offs in cost, control, and effort. Today covers the three main paths and the tooling that makes every deploy repeatable and safe.",
+      np: "Laravel deploy गर्ने तीन मुख्य तरिका: VPS + Forge, Docker, र serverless Vapor। CI/CD र env config पनि।",
+      jp: "本番デプロイの3つの主要な方法：Forge（VPS）、Docker、Vapor（サーバーレス）。CI/CDと環境設定も解説。",
     },
     {
-      en: "Today's topics:\n• <b>`make:command` scaffold</b> — generate a command class with one line\n• <b>Command signature</b> — define the name, arguments, options, and flags\n• <b>`handle()` method</b> — where your command logic lives\n• <b>I/O helpers</b> — `info`, `error`, `warn`, `table`, `ask`, `confirm`, `progressBar`\n• <b>Calling commands from code</b> — `Artisan::call()` and `Artisan::queue()`\n• <b>Scheduling</b> — define recurring tasks in PHP instead of raw cron",
-      np: "make:command, signature, handle(), I/O helpers, Artisan::call(), scheduling।",
-      jp: "make:command、シグネチャ、handle()、I/O、Artisan::call()、スケジュールを学びます。",
+      en: "The four pillars of production deployment:\n\n• <b>Environment config</b> — `.env` files, config caching, secrets management\n  ↳ Never commit `.env` to git; cache config on every deploy for speed\n• <b>Docker / Sail</b> — containerising your app for consistent dev-to-prod environments\n  ↳ Sail is for development; write a production Dockerfile for real deploys\n• <b>Laravel Forge</b> — managed server provisioning and deployment for VPS\n  ↳ Click to create a server; Forge installs PHP, Nginx, MySQL, Redis, SSL automatically\n• <b>Laravel Vapor</b> — serverless deployment on AWS Lambda\n  ↳ Zero server management, auto-scaling, pay per request\n• <b>CI/CD with GitHub Actions</b> — automated test + deploy on every push\n  ↳ Tests pass → deploy fires automatically — no manual steps, no forgotten commands",
+      np: "Environment config, Docker/Sail, Forge, Vapor, र GitHub Actions CI/CD — पाँच pillars।",
+      jp: "環境設定・Docker/Sail・Forge・Vapor・GitHub Actions CI/CD — 5つの柱。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Creating your first command",
-        np: "पहिलो command बनाउने",
-        jp: "最初のコマンドを作る",
+        en: "Environment config & production checklist",
+        np: "Environment config र production checklist",
+        jp: "環境設定と本番チェックリスト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Every Artisan command is a PHP class that extends `Command`. Running `php artisan make:command` generates the boilerplate. The `$signature` property defines the command name and its inputs — think of it like a function signature but for the terminal. The `$description` is shown in `php artisan list`.",
-            np: "`Command` extend गर्ने PHP class। `$signature` = command को नाम र inputs।",
-            jp: "`Command` を継承した PHP クラス。`$signature` でコマンド名と入力を定義。",
+            en: "The `.env` file holds secrets that should never be in version control. In production, set values through your server's environment variables or a secrets manager — never by copying `.env` files between servers.\n\nLaravel caches the parsed config to disk for performance — run `php artisan config:cache` after every deploy. This turns hundreds of config file reads into one disk read per request.\n\nKey `.env` values for production:\n• `APP_ENV=production` and `APP_DEBUG=false` — debug mode exposes file paths, credentials, and stack traces to the browser\n• `APP_KEY` — used to encrypt cookies and sessions; if it changes, all sessions are invalidated\n  ↳ Generate once with `php artisan key:generate` and back it up\n• `CACHE_DRIVER=redis`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis` — use Redis for all three in production",
+            np: "`.env` git मा राख्नु हुँदैन। `APP_DEBUG=false` र Redis drivers set गर्नुहोस्।",
+            jp: "`.env` は git に含めない。`APP_DEBUG=false` と Redis ドライバ設定が必須。",
           },
         },
         {
           type: "code",
-          title: { en: "Generate and run a custom command", np: "Custom command बनाउने", jp: "カスタムコマンドを生成する" },
-          code: `# Generate the command class
-php artisan make:command SendWeeklyDigest
+          title: { en: "Production .env values & deploy command sequence", np: "Production .env र deploy commands", jp: "本番 .env とデプロイコマンド" },
+          code: `# .env (production — set these via server panel, not a committed file)
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:YOUR_KEY_HERE
 
-# app/Console/Commands/SendWeeklyDigest.php
-namespace App\\Console\\Commands;
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=my_app
+DB_USERNAME=forge
+DB_PASSWORD=secret
 
-use Illuminate\\Console\\Command;
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
 
-class SendWeeklyDigest extends Command
-{
-    protected $signature = 'emails:digest {--dry-run : Preview without sending}';
-    protected $description = 'Send the weekly digest email to all subscribers';
-
-    public function handle(): int
-    {
-        if ($this->option('dry-run')) {
-            $this->info('DRY RUN — no emails will be sent.');
-        } else {
-            $this->info('Sending digest...');
-            // dispatch(new SendDigestJob());
-        }
-
-        return self::SUCCESS; // returns exit code 0
-    }
-}
-
-# Run it
-php artisan emails:digest
-php artisan emails:digest --dry-run`,
+# ─── Deploy command sequence (run in this order every deploy) ───
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+php artisan queue:restart
+npm run build`,
         },
         {
           type: "paragraph",
           text: {
-            en: "<b>Command naming convention:</b> use `noun:verb` format (e.g. `emails:digest`, `users:cleanup`, `reports:generate`). This groups related commands together in `php artisan list`. The namespace (before the colon) is just a label — it does not map to a PHP namespace.",
-            np: "`noun:verb` format use गर्ने — e.g. `emails:digest`, `users:cleanup`।",
-            jp: "`noun:verb` 形式を使う。コロンの前は PHP 名前空間とは無関係のラベル。",
+            en: "<b>Why the order matters:</b>\n1. Install dependencies first (migration classes need them)\n2. Migrate before caching (new config may reference new DB structure)\n3. Cache everything after migration (stale cache during migration = errors)\n4. Restart queue workers last (they pick up new code after restart)\n\n`php artisan optimize` is a shorthand for config + route + view cache in one command — use it in Laravel 11+.",
+            np: "Deploy order: install → migrate → cache → queue:restart। `php artisan optimize` shorthand।",
+            jp: "デプロイ順序：install→migrate→cache→queue:restart。`php artisan optimize` でまとめて実行可。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Arguments, options & flags",
-        np: "Arguments, options र flags",
-        jp: "引数・オプション・フラグ",
+        en: "Docker & Laravel Sail",
+        np: "Docker र Laravel Sail",
+        jp: "DockerとLaravel Sail",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "The command signature syntax borrows from Unix conventions. Think of it like ordering at a coffee shop:\n• The <b>drink name</b> is an argument (required, positional)\n• <b>Milk type</b> is an option (has a value, starts with `--`)\n• <b>\"To go\"</b> is a flag (boolean — present means true, absent means false)\n\nArguments are required by default. Options and flags are always optional.",
-            np: "Argument = required positional। Option = `--name=value`। Flag = `--force` (boolean)।",
-            jp: "引数は位置指定で必須。オプションは `--name=value`。フラグは `--force` のような真偽値。",
+            en: "Docker packages your app and all its dependencies (PHP, Nginx, MySQL, Redis) into containers — isolated processes that run identically on any machine.\n\nAnalogy: instead of telling a new team member \"install PHP 8.3, enable these extensions, configure Nginx to point to `public/`...\" you say \"run `docker compose up`\" and they have the exact same environment in minutes.\n\n<b>Laravel Sail</b> is Laravel's pre-built Docker development environment. It wraps common commands (`artisan`, `composer`, `npm`, `pest`) so you never need to install PHP or Node locally.",
+            np: "Docker = consistent environment। Sail = Laravel को dev Docker wrapper — PHP locally install गर्नु पर्दैन।",
+            jp: "Docker = 一貫した環境。Sail = Laravel の開発用 Docker ラッパー — PHP をローカルにインストール不要。",
           },
         },
         {
           type: "code",
-          title: { en: "Rich signature with arguments, options & flags", np: "Complex signature", jp: "引数・オプション・フラグのサンプル" },
-          code: `// Signature with argument, options, and a flag
-protected $signature = 'users:export
-    {environment : The environment to export from (e.g. production)}
-    {--format=csv : Output format — csv or json}
-    {--limit=100 : Maximum number of records to export}
-    {--force : Skip the confirmation prompt}';
+          title: { en: "Laravel Sail — setup & daily commands", np: "Sail setup र commands", jp: "Sail セットアップとコマンド" },
+          code: `# Create a new Laravel project with Sail (MySQL + Redis)
+curl -s "https://laravel.build/my-app?with=mysql,redis" | bash
+cd my-app
 
-public function handle(): int
-{
-    $env    = $this->argument('environment');    // e.g. "production"
-    $format = $this->option('format');           // "csv" or "json"
-    $limit  = (int) $this->option('limit');      // 100 by default
-    $force  = $this->option('force');            // true if --force passed
+# Add a shell alias so you type 'sail' instead of './vendor/bin/sail'
+alias sail='./vendor/bin/sail'
 
-    if (!in_array($format, ['csv', 'json'])) {
-        $this->error("Invalid format: {$format}. Use csv or json.");
-        return self::FAILURE;
-    }
+# Start all containers in the background
+sail up -d
 
-    if (!$force && !$this->confirm("Export {$limit} users from {$env}?")) {
-        $this->line('Cancelled.');
-        return self::SUCCESS;
-    }
+# Common Sail commands (these run inside the container)
+sail artisan migrate
+sail artisan tinker
+sail composer require laravel/horizon
+sail npm install
+sail npm run dev
 
-    $this->info("Exporting {$limit} users as {$format}...");
-    return self::SUCCESS;
-}
+# Stop all containers
+sail down
 
-// Optional argument with a default value
-// {environment=production}  ← uses "production" if not provided`,
+# View running containers
+sail ps`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Artisan does NOT validate argument types automatically — everything arrives as a string. Validate inside `handle()` with `if (!in_array(...))` or `if (!is_numeric(...))`. This is intentional — you decide what constitutes a valid value for your specific command.",
-            np: "Artisan ले type validate गर्दैन — handle() भित्र आफैं validate गर्नुपर्छ।",
-            jp: "Artisan は型バリデーションをしない。`handle()` の中で自分でバリデーションする。",
+            en: "<b>Sail is for development only.</b> For production Docker you need:\n• A production `Dockerfile` — no Xdebug, no dev dependencies, optimised PHP-FPM config\n• A production `docker-compose.yml` — with proper volume mounts, restart policies, healthchecks\n• An Nginx or Caddy container as the web server\n\nThe `serversideup/php` Docker Hub image is a popular production-ready base for Laravel. In large deployments, use Kubernetes to orchestrate the containers across multiple servers.",
+            np: "Sail = development मात्र। Production मा production Dockerfile चाहिन्छ।",
+            jp: "Sail は開発専用。本番では本番用 Dockerfile が必要。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Console output — tables, progress bars & prompts",
-        np: "Console output — table, progress bar र prompt",
-        jp: "コンソール出力 — テーブル・プログレスバー・プロンプト",
+        en: "Laravel Forge — VPS deployment made easy",
+        np: "Laravel Forge — VPS deployment",
+        jp: "Laravel Forge — VPS デプロイを簡単に",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Good CLI tools give clear, coloured feedback:\n• `$this->info('...')` — green (success messages)\n• `$this->error('...')` — red (errors)\n• `$this->warn('...')` — yellow (warnings)\n• `$this->line('...')` — plain white (neutral output)\n\nFor structured data use `$this->table()`. For long loops use a progress bar. For interactive scripts use `ask()` and `confirm()`.",
-            np: "info() = green, error() = red, warn() = yellow। Table, progress bar, ask/confirm।",
-            jp: "info() 緑・error() 赤・warn() 黄色。テーブル、プログレスバー、ask/confirm も使える。",
+            en: "<b>Forge</b> is a web UI that provisions and manages Linux servers on any cloud provider — DigitalOcean, AWS, Linode, Hetzner, Vultr.\n\nAnalogy: Forge is the experienced sysadmin you don't have on the team. You click \"create server\" and it:\n• Installs PHP (your chosen version), Nginx, MySQL, Redis\n• Configures Nginx as a reverse proxy pointing to `public/`\n• Sets up Let's Encrypt SSL (auto-renewing)\n• Creates a `forge` deploy user with correct filesystem permissions\n• Configures Supervisor to keep queue workers running\n\nCost: $15/month for unlimited servers — far cheaper than a sysadmin.",
+            np: "Forge = server provision गर्ने web UI। PHP, Nginx, MySQL, Redis, SSL सबै automatically।",
+            jp: "Forge = サーバーを自動構成する Web UI。PHP・Nginx・MySQL・Redis・SSL を自動設定。",
           },
         },
         {
           type: "code",
-          title: { en: "Tables, progress bars & prompts", np: "Table, progress bar, prompt", jp: "テーブル・プログレスバー・プロンプト" },
-          code: `// Table output
-$users = User::select('name', 'email', 'role')->get();
-$this->table(
-    ['Name', 'Email', 'Role'],
-    $users->map(fn($u) => [$u->name, $u->email, $u->role])
-);
+          title: { en: "Forge deploy script & queue worker config", np: "Forge deploy script", jp: "Forge デプロイスクリプト" },
+          code: `# ─── Forge deploy script (runs on every git push) ───
+cd /home/forge/my-app
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize
+php artisan queue:restart
+npm ci
+npm run build
 
-// Progress bar (manual)
-$items = Post::all();
-$bar = $this->output->createProgressBar(count($items));
-$bar->start();
-foreach ($items as $item) {
-    // process $item...
-    $bar->advance();
-}
-$bar->finish();
-$this->newLine(); // move cursor to next line after bar
+# ─── Forge daemon (queue worker — runs 24/7 via Supervisor) ───
+# Command:
+php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+# Processes: 2  (run 2 workers in parallel)
+# Stop waiting seconds: 10
 
-// Progress bar (shorthand — handles start/advance/finish for you)
-$this->withProgressBar($items, function (Post $post) {
-    // process $post...
-});
-
-// Interactive prompts
-$name  = $this->ask('What is the user\\'s name?');
-$email = $this->ask('Email address', 'default@example.com');
-$role  = $this->choice('Select role', ['admin', 'editor', 'viewer'], 'viewer');
-
-if ($this->confirm('Are you sure you want to delete all records?')) {
-    // proceed
-}`,
+# ─── Forge daemon for Laravel Reverb (WebSocket server) ───
+# Command:
+php artisan reverb:start --port=8080
+# Processes: 1`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Use `$this->newLine()` to add blank lines for visual breathing room. Use `$this->newLine(2)` for two blank lines. For very long output, consider piping to `less` (`php artisan cmd | less`) rather than flooding the terminal.",
-            np: "`newLine()` = blank line। Long output लाई `| less` मा pipe गर्न सकिन्छ।",
-            jp: "`newLine()` で空行を挿入。長い出力は `| less` にパイプするのがおすすめ。",
+            en: "Forge <b>Quick Deploy</b> fires the deploy script automatically when you push to the connected branch. Disable it for staging environments where you want manual control.\n\nForge also manages:\n• <b>SSL certificates</b> — Let's Encrypt, auto-renewing every 90 days\n• <b>Scheduled tasks</b> — adds the Laravel cron entry automatically\n• <b>Firewall rules</b> — opens only ports 80, 443, and 22 by default\n• <b>PHP version</b> — upgrade PHP without touching your server manually\n• <b>Server monitoring</b> — CPU, disk, memory alerts",
+            np: "Quick Deploy = push गर्दा automatically deploy। SSL, cron, firewall सबै Forge ले manage।",
+            jp: "Quick Deploy = プッシュで自動デプロイ。SSL・cron・ファイアウォールも Forge が管理。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Calling commands from code & chaining",
-        np: "Code बाट command call गर्ने",
-        jp: "コードからコマンドを呼ぶ",
+        en: "Laravel Vapor — serverless on AWS",
+        np: "Laravel Vapor — serverless deployment",
+        jp: "Laravel Vapor — AWS サーバーレス",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "You can call Artisan commands from controllers, jobs, or other commands. This is useful for:\n• Running a command from a web UI trigger (e.g. an admin \"Run now\" button)\n• Chaining commands in a workflow (clear cache → rebuild index)\n• Testing commands programmatically\n\nUse `Artisan::call()` for synchronous execution, or `Artisan::queue()` to dispatch to the queue.",
-            np: "Artisan::call() = synchronous। Artisan::queue() = queue मा dispatch।",
-            jp: "Artisan::call() で同期実行。Artisan::queue() でキューに投入。",
+            en: "<b>Vapor</b> deploys Laravel to AWS Lambda — a \"serverless\" environment where you don't manage any servers.\n\nAnalogy: instead of owning a restaurant (a server that runs 24/7 with fixed costs), you rent a kitchen by the minute, only when customers arrive. No customers = no cost. 10,000 customers at once = 10,000 kitchens spin up automatically.\n\nLambda runs your PHP code in response to HTTP requests, scales to zero when idle, and scales to thousands of concurrent executions under load — all automatically.",
+            np: "Vapor = AWS Lambda मा Laravel। Server manage गर्नु पर्दैन, traffic अनुसार automatically scale।",
+            jp: "Vapor = AWS Lambda で Laravel を動かす。サーバー管理不要、自動スケーリング。",
           },
         },
         {
           type: "code",
-          title: { en: "Artisan::call(), output capture & chaining", np: "Command call गर्ने", jp: "コマンドを呼び出す" },
-          code: `use Illuminate\\Support\\Facades\\Artisan;
+          title: { en: "vapor.yml config & deploy commands", np: "vapor.yml र deploy", jp: "vapor.yml とデプロイ" },
+          code: `# Install Vapor CLI
+composer global require laravel/vapor-cli
 
-// Call from a controller
-Artisan::call('emails:digest', ['--dry-run' => true]);
+# vapor.yml (in project root)
+id: 12345
+name: my-app
+environments:
+  production:
+    runtime: php-8.3:al2
+    memory: 1024
+    cli-memory: 512
+    timeout: 30
+    build:
+      - npm ci
+      - npm run build
+      - php artisan event:cache
+    deploy:
+      - php artisan migrate --force
+    queues:
+      - default
+      - high
 
-// Capture the command's output
-Artisan::call('reports:generate', ['--format' => 'csv']);
-$output = Artisan::output(); // returns the printed text as a string
+# Deploy to production
+vapor deploy production
 
-// Call from inside another command
-public function handle(): int
-{
-    $this->call('cache:clear');           // runs synchronously, inherits I/O
-    $this->callSilently('config:cache');  // runs silently (no output)
-    return self::SUCCESS;
-}
+# Roll back the last deploy
+vapor rollback production
 
-// Dispatch to the queue (non-blocking)
-Artisan::queue('reports:generate', ['--format' => 'csv'])
-    ->onQueue('reports')
-    ->onConnection('redis');`,
+# Open the Vapor dashboard
+vapor open`,
         },
         {
-          type: "paragraph",
-          text: {
-            en: "<b>Testing commands in Pest:</b> use the `artisan()` helper to make assertions on the command's output, exit code, and interactions.\n\n↳ `$this->artisan('emails:digest')->assertExitCode(0)->expectsOutput('Sending digest...')`\n↳ `$this->artisan('users:export', ['environment' => 'staging'])->expectsQuestion(...)->assertExitCode(0)`\n\nDependencies injected via the service container can be mocked with `$this->mock(MyService::class, ...)` before calling `artisan()`.",
-            np: "Test मा artisan() helper use गर्ने। assertExitCode(0), expectsOutput() use गर्ने।",
-            jp: "テストでは artisan() ヘルパーを使い assertExitCode() や expectsOutput() で検証する。",
+          type: "table",
+          caption: {
+            en: "Forge vs Vapor — when to use each",
+            np: "Forge vs Vapor comparison",
+            jp: "Forge vs Vapor — 使い分け",
           },
+          headers: [
+            { en: "Factor", np: "Factor", jp: "要素" },
+            { en: "Forge (VPS)", np: "Forge (VPS)", jp: "Forge（VPS）" },
+            { en: "Vapor (Serverless)", np: "Vapor (Serverless)", jp: "Vapor（サーバーレス）" },
+          ],
+          rows: [
+            [
+              { en: "Server management", np: "Server management", jp: "サーバー管理" },
+              { en: "You manage (Forge automates it)", np: "Forge ले automate", jp: "Forge が自動化" },
+              { en: "None — AWS manages everything", np: "AWS ले manage", jp: "AWS がすべて管理" },
+            ],
+            [
+              { en: "Scaling", np: "Scaling", jp: "スケーリング" },
+              { en: "Manual — add more servers", np: "Manual scaling", jp: "手動でサーバー追加" },
+              { en: "Automatic — zero to millions", np: "Auto scale", jp: "自動スケーリング" },
+            ],
+            [
+              { en: "Long-running jobs", np: "Long-running jobs", jp: "長時間ジョブ" },
+              { en: "Fine — no time limit", np: "Time limit छैन", jp: "時間制限なし" },
+              { en: "15-minute Lambda limit", np: "15 min limit", jp: "15分制限あり" },
+            ],
+            [
+              { en: "Cost model", np: "Cost model", jp: "コストモデル" },
+              { en: "Fixed per server/month", np: "Fixed monthly", jp: "月額固定" },
+              { en: "Pay per request", np: "Per request pay", jp: "リクエスト課金" },
+            ],
+            [
+              { en: "Best for", np: "Best for", jp: "向いている用途" },
+              { en: "Predictable traffic, full control", np: "Predictable traffic", jp: "トラフィックが予測可能な場合" },
+              { en: "Unpredictable spikes, zero ops", np: "Traffic spikes", jp: "急激なスパイクや運用ゼロ希望" },
+            ],
+          ],
         },
       ],
     },
     {
       title: {
-        en: "Scheduling commands with the console kernel",
-        np: "Commands schedule गर्ने",
-        jp: "コマンドをスケジュールする",
+        en: "CI/CD with GitHub Actions",
+        np: "CI/CD with GitHub Actions",
+        jp: "GitHub Actions で CI/CD",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Instead of setting up a separate cron job for every task, Laravel uses a single cron entry that fires every minute. You define all your recurring tasks in PHP code — Laravel figures out which ones to run right now. Think of it like a weekly planner: you write all your tasks in one place and your assistant ticks off what's due.",
-            np: "एउटा cron entry मात्र। बाँकी schedule PHP code मा define गर्ने।",
-            jp: "cron エントリは 1 つだけ。スケジュールは PHP コードで定義する。",
+            en: "<b>CI/CD</b> automates the \"run tests → deploy\" pipeline.\n\n• <b>CI (Continuous Integration)</b> — run tests on every push to catch bugs before they merge\n• <b>CD (Continuous Deployment)</b> — deploy automatically after tests pass\n\nWithout CI/CD: every deploy is manual (and risky — you might forget to run migrations, cache config, or restart workers). With CI/CD: push to `main` → tests run → deploy fires automatically — a repeatable, auditable process.\n\nGitHub Actions is free for public repos and has 2,000 free minutes/month for private repos.",
+            np: "CI = tests run automatically। CD = tests pass भएपछि auto deploy। GitHub Actions = free।",
+            jp: "CI = 自動テスト、CD = テスト通過後の自動デプロイ。GitHub Actions は無料。",
           },
         },
         {
           type: "code",
-          title: { en: "Server cron entry + routes/console.php schedule", np: "Cron entry र schedule", jp: "cron エントリとスケジュール定義" },
-          code: `# Add ONE cron entry to the server (runs every minute)
-* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1
+          title: { en: ".github/workflows/deploy.yml — test & deploy pipeline", np: "GitHub Actions workflow", jp: "GitHub Actions ワークフロー" },
+          code: `# .github/workflows/deploy.yml
+name: Test & Deploy
 
-# routes/console.php (Laravel 11 style — no Kernel class needed)
-use Illuminate\\Support\\Facades\\Schedule;
+on:
+  push:
+    branches: [main]
 
-// Send weekly digest every Monday at 8:00 AM
-Schedule::command('emails:digest')
-    ->weeklyOn(1, '8:00')
-    ->withoutOverlapping()  // skip if previous run is still going
-    ->runInBackground();    // don't block other scheduled jobs
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testing
+          MYSQL_ROOT_PASSWORD: password
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s
 
-// Clean up expired sessions every day at midnight
-Schedule::command('sessions:cleanup')
-    ->daily()
-    ->at('00:00')
-    ->timezone('Asia/Tokyo');
+    steps:
+      - uses: actions/checkout@v4
 
-// Cache reports every hour
-Schedule::command('reports:cache')
-    ->hourly()
-    ->withoutOverlapping();
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
 
-// Other frequency helpers
-// ->everyFiveMinutes()
-// ->everyThirtyMinutes()
-// ->monthly()
-// ->monthlyOn(15, '09:00')  // 15th of each month at 9am
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
-# Test scheduling locally (runs due tasks and waits)
-php artisan schedule:work`,
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run tests
+        run: php artisan test
+
+  deploy:
+    needs: test          # only runs if 'test' job passes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Forge deploy
+        run: curl -s "\${{ secrets.FORGE_DEPLOY_URL }}"`,
         },
         {
           type: "paragraph",
           text: {
-            en: "`withoutOverlapping()` prevents a second run from starting if the previous one is still running — crucial for slow tasks like report generation. Combine it with `runInBackground()` so slow tasks don't block shorter jobs that are scheduled at the same time.\n\n↳ Without `runInBackground()`, scheduled tasks execute sequentially — if task A takes 5 minutes, task B misses its window\n↳ With `runInBackground()`, both spawn as separate OS processes and run in parallel",
-            np: "withoutOverlapping() = duplicate run रोक्छ। runInBackground() = parallel run।",
-            jp: "withoutOverlapping() で二重実行を防ぎ、runInBackground() で並列実行する。",
+            en: "<b>Setting up the Forge deploy webhook:</b>\n1. In Forge → Sites → Your Site → Deployments → copy the \"Deploy Webhook\" URL\n2. In GitHub → Settings → Secrets → Actions → New secret: `FORGE_DEPLOY_URL`\n3. Paste the webhook URL as the secret value\n\nNow every push to `main` that passes tests triggers an automatic Forge deploy.\n\n<b>For Vapor deployments</b> replace the deploy step with:\n`vapor deploy production` using `VAPOR_API_TOKEN` as a GitHub secret.",
+            np: "Forge webhook URL GitHub secret मा राख्नुहोस्। Push → test → deploy automatically।",
+            jp: "Forge の Webhook URL を GitHub シークレットに登録。プッシュ→テスト→自動デプロイ。",
           },
         },
       ],
@@ -305,62 +346,74 @@ php artisan schedule:work`,
   faq: [
     {
       question: {
-        en: "Where should I register my custom commands in Laravel 11?",
-        np: "Laravel 11 मा custom commands कहाँ register गर्ने?",
-        jp: "Laravel 11 でカスタムコマンドはどこに登録する？",
+        en: "What is the difference between Forge and Envoyer?",
+        np: "Forge र Envoyer मा के फरक छ?",
+        jp: "Forge と Envoyer の違いは？",
       },
       answer: {
-        en: "In Laravel 11, commands in `app/Console/Commands/` are auto-discovered — no registration needed. If you place commands elsewhere, add the directory path via `withConsoleCommands()` in `bootstrap/app.php`:\n\n`->withConsoleCommands(base_path('app/Admin/Commands'))`\n\nThe old `app/Console/Kernel.php` with a `$commands` array was removed in Laravel 11.",
-        np: "`app/Console/Commands/` मा auto-discover हुन्छ। अन्यत्र राखे bootstrap/app.php मा register गर्नुपर्छ।",
-        jp: "`app/Console/Commands/` は自動検出される。別の場所は `bootstrap/app.php` で登録する。",
+        en: "Forge provisions and manages the server — installs PHP, Nginx, MySQL, SSL, manages Supervisor daemons. Envoyer handles zero-downtime deployments — it deploys to a new directory, runs migrations and cache commands, then atomically symlinks the web root to the new release so there is no downtime window.\n\nThey work together: Forge manages the server, Envoyer manages the release process. For most apps, Forge alone is sufficient. Add Envoyer when downtime during the 10-30 second deploy window becomes a real problem.",
+        np: "Forge = server manage। Envoyer = zero-downtime deployment। दुवै सँगै काम गर्छन्।",
+        jp: "Forge はサーバー管理、Envoyer はゼロダウンタイムデプロイ。一緒に使うことも可能。",
       },
     },
     {
       question: {
-        en: "How do I pass an array of values as an option?",
-        np: "Option मा array values कसरी pass गर्ने?",
-        jp: "オプションに配列を渡すには？",
+        en: "Should I use Sail in production?",
+        np: "Sail production मा use गर्नुहुन्छ?",
+        jp: "Sail を本番環境で使うべき？",
       },
       answer: {
-        en: "Define the option as variadic using `*`:\n\n`{--user=* : User IDs to process}`\n\nAccess with `$this->option('user')` — it returns an array. Call it like:\n\n`php artisan users:notify --user=1 --user=2 --user=5`\n\nIf no `--user` is passed, `$this->option('user')` returns an empty array `[]`.",
-        np: "`{--user=*}` syntax use गर्ने। `$this->option('user')` ले array return गर्छ।",
-        jp: "`{--user=*}` で可変引数オプションを定義。`$this->option('user')` が配列を返す。",
+        en: "No. Sail is a development tool. Running Docker in production requires a production-grade Dockerfile (no Xdebug, no dev dependencies, optimised PHP-FPM settings), orchestration (Docker Compose or Kubernetes), healthcheck configuration, and careful resource limits.\n\nUse Sail to eliminate \"works on my machine\" problems between developers — everyone uses the same PHP version, extensions, and database. Then deploy to Forge or Vapor for production.",
+        np: "Sail = development only। Production मा production Dockerfile चाहिन्छ।",
+        jp: "Sail は開発専用。本番環境には本番用 Dockerfile が必要。",
       },
     },
     {
       question: {
-        en: "Can I use Auth inside a console command?",
-        np: "Console command भित्र Auth use गर्न सकिन्छ?",
-        jp: "コンソールコマンドの中で Auth を使える？",
+        en: "How do I handle database migrations in a zero-downtime deploy?",
+        np: "Zero-downtime deploy मा migrations कसरी handle गर्ने?",
+        jp: "ゼロダウンタイムデプロイで DB マイグレーションをどう扱う？",
       },
       answer: {
-        en: "Don't use `Auth::login()` in console commands — the session that login creates only lasts the duration of the HTTP request lifecycle. Instead, pass a user ID as an argument and load the user manually:\n\n`$user = User::findOrFail($this->argument('userId'));`\n\nThen pass `$user` directly to any service that needs it. In tests, use `$this->actingAs($user)` before `artisan()`.",
-        np: "Console मा `Auth::login()` नगर्ने। User ID argument मा pass गरेर manually load गर्ने।",
-        jp: "コンソールで `Auth::login()` は使わない。引数でユーザー ID を受け取り手動で取得する。",
+        en: "Write only backwards-compatible migrations — never drop a column or rename it in the same deploy as the code change. Use the <b>expand/contract pattern</b>:\n\n1. Deploy 1 — add the new column with a default value (old code still works)\n2. Deploy 2 — update the code to write to the new column\n3. Deploy 3 — remove the old column (new code no longer reads it)\n\nThis ensures old code and new code can run simultaneously during the brief overlap window of a zero-downtime deploy.",
+        np: "Expand/contract pattern: add column → update code → remove old column। 3 deploys।",
+        jp: "Expand/contract パターン：列追加→コード更新→旧列削除の3段階デプロイ。",
       },
     },
     {
       question: {
-        en: "Can I run scheduled tasks in parallel?",
-        np: "Scheduled tasks parallel मा run गर्न सकिन्छ?",
-        jp: "スケジュールタスクを並列実行できる？",
+        en: "How do I store secrets in CI/CD?",
+        np: "CI/CD मा secrets कसरी store गर्ने?",
+        jp: "CI/CD でシークレットはどう管理する？",
       },
       answer: {
-        en: "Yes — use `->runInBackground()` on each command. This spawns each task as a separate OS process so they run simultaneously instead of one after another.\n\nWithout `runInBackground()`: tasks run sequentially. A slow task at 2:00 AM delays every other task scheduled for the same minute.\n\nWith `runInBackground()`: each task spawns independently. The scheduler finishes in milliseconds and all tasks run in parallel.",
-        np: "`runInBackground()` use गर्ने। Parallel मा spawn हुन्छ।",
-        jp: "`runInBackground()` で並列実行。付けないと直列で動き、遅いタスクが後続を遅らせる。",
+        en: "Never put real credentials in `.yml` files — they are committed to git and visible to anyone with repo access.\n\n• <b>GitHub Actions</b> — use GitHub Secrets (Settings → Secrets → Actions). Reference as `${{ secrets.MY_SECRET }}`. They are masked in logs automatically.\n• <b>Forge</b> — set environment variables in the Forge server panel (encrypted at rest). They are injected into the PHP process environment on every request.\n• <b>Vapor</b> — set environment variables in the Vapor dashboard (encrypted at rest). Never commit them to `vapor.yml`.",
+        np: "GitHub Secrets, Forge env panel, र Vapor dashboard — yaml file मा secrets राख्नु हुँदैन।",
+        jp: "GitHub Secrets・Forge 環境変数パネル・Vapor ダッシュボードを使う。yml ファイルに書かない。",
       },
     },
     {
       question: {
-        en: "How do I test that a scheduled command fires at the right time?",
-        np: "Scheduled command सही time मा fire हुन्छ भनेर कसरी test गर्ने?",
-        jp: "スケジュールが正しい時刻に実行されるかテストするには？",
+        en: "What is the difference between `config:cache` and `config:clear`?",
+        np: "`config:cache` र `config:clear` मा के फरक?",
+        jp: "`config:cache` と `config:clear` の違いは？",
       },
       answer: {
-        en: "Use Laravel's time-travel helpers to simulate a specific date/time, then inspect the schedule:\n\n`$this->travelTo(Carbon::parse('2025-01-06 08:00')); // a Monday at 8am`\n`$event = collect(app(Schedule::class)->events())->first(fn($e) => str_contains($e->command, 'emails:digest'));`\n`$this->assertTrue($event->isDue(app()));`\n\nAlso useful: `$event->getSummaryForDisplay()` returns the cron expression as a human-readable string.",
-        np: "`travelTo()` + `Schedule::events()` use गरेर test गर्ने।",
-        jp: "`travelTo()` で時刻を固定し `Schedule::events()` でスケジュールを検証する。",
+        en: "`config:cache` compiles all config files into a single cached file (`bootstrap/cache/config.php`) — every request reads one file instead of dozens. Config changes are NOT visible until you re-run `config:cache`.\n\n`config:clear` deletes the cache so Laravel reads fresh config files on every request — useful when debugging a config issue locally, but slower in production.\n\nRule: always run `php artisan optimize` (which includes `config:cache`) after every production deploy. Run `php artisan optimize:clear` when debugging locally.",
+        np: "`config:cache` = speed (cached)। `config:clear` = fresh read (slower)। Deploy पछि cache गर्नुहोस्।",
+        jp: "`config:cache` = 高速（キャッシュ済み）。`config:clear` = 毎回読み直し（デバッグ用）。",
+      },
+    },
+    {
+      question: {
+        en: "How do I roll back a bad deployment?",
+        np: "Bad deployment rollback कसरी गर्ने?",
+        jp: "デプロイ失敗時のロールバック方法は？",
+      },
+      answer: {
+        en: "The method depends on your deployment tool:\n• <b>Forge</b> — push the previous commit to your branch: `git revert HEAD && git push`, or in the Forge UI trigger a deploy of the last known-good commit hash\n• <b>Envoyer</b> — click \"Rollback\" in the UI — it symlinks back to the previous release directory instantly (< 1 second)\n• <b>Vapor</b> — run `vapor rollback production` — it redeploys the previous Lambda version\n\nThe safest practice: run database migrations in a separate step BEFORE deploying code. That way, a code rollback never requires a schema rollback (which is very risky on production data).",
+        np: "Forge = previous commit push। Envoyer = Rollback button। Vapor = `vapor rollback production`।",
+        jp: "Forge = 旧コミットをプッシュ。Envoyer = Rollback ボタン。Vapor = `vapor rollback production`。",
       },
     },
   ],

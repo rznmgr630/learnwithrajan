@@ -3,505 +3,301 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const LARAVEL_DAY_36_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Writing tests sounds like extra work, but it's actually the fastest way to move forward without fear.\n• A good test suite means you can change code confidently — if something breaks, you find out in seconds, not after a user reports a bug\n\n<b>What Laravel gives you</b>\n• <b>Pest</b> — a modern, readable testing framework built on top of PHPUnit\n  ↳ No class boilerplate — just `it('does something', fn() => ...)` functions\n• <b>HTTP helpers</b> — simulate requests like `$this->get('/users')` without a real browser\n• <b>Database helpers</b> — check that data was saved or deleted correctly\n• <b>Fake facades</b> — intercept emails, queued jobs, and events so tests stay fast and isolated",
-      np: "Laravel testing first-class। Pest = PHPUnit माथि functional syntax। HTTP, DB, mail, queue assert।",
-      jp: "Laravel はテストを標準サポート。Pest は PHPUnit 上のクリーンな構文。HTTP・DB・メール・キューのアサーションが簡単。",
+      en: "Artisan is Laravel's built-in command-line tool — think of it like a remote control for your application. Every `php artisan` command you've used so far was built-in. Today you build your own.\n\nCustom commands are perfect for:\n• Database seeders and one-off data migrations\n• Scheduled background tasks (sending digest emails, cleaning old records)\n• Dev utilities (generating fake test data, syncing API data)\n• Admin operations you don't want to expose in a UI",
+      np: "Artisan = Laravel को command-line tool। Custom commands build गर्न सिक्ने।",
+      jp: "Artisan は Laravel の CLI ツール。カスタムコマンドの作り方を学びます。",
+    },
+    {
+      en: "Today's topics:\n• <b>`make:command` scaffold</b> — generate a command class with one line\n• <b>Command signature</b> — define the name, arguments, options, and flags\n• <b>`handle()` method</b> — where your command logic lives\n• <b>I/O helpers</b> — `info`, `error`, `warn`, `table`, `ask`, `confirm`, `progressBar`\n• <b>Calling commands from code</b> — `Artisan::call()` and `Artisan::queue()`\n• <b>Scheduling</b> — define recurring tasks in PHP instead of raw cron",
+      np: "make:command, signature, handle(), I/O helpers, Artisan::call(), scheduling।",
+      jp: "make:command、シグネチャ、handle()、I/O、Artisan::call()、スケジュールを学びます。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Pest setup & syntax",
-        np: "Pest setup र syntax",
-        jp: "Pest のセットアップと構文",
+        en: "Creating your first command",
+        np: "पहिलो command बनाउने",
+        jp: "最初のコマンドを作る",
       },
       blocks: [
         {
-          type: "diagram",
-          id: "laravel-test-pyramid",
-        },
-        {
           type: "paragraph",
           text: {
-            en: "PHPUnit is the traditional PHP testing framework — it works, but every test file requires a class, every method name starts with `test_`, and the assertion syntax can feel clunky.\n\n<b>Pest is the modern alternative</b>\n• It wraps PHPUnit under the hood — every PHPUnit assertion still works, nothing is lost\n• But the outer syntax is much cleaner:\n  ↳ No class required — just call `it()` or `test()` with a closure\n  ↳ `it('can create a post', fn() => ...)` reads like a plain English sentence\n  ↳ The `expect()` API chains naturally: `expect($user)->not->toBeNull()->name->toBe('Alice')`\n• Laravel 11 ships with Pest pre-installed — zero extra setup needed",
-            np: "Pest Laravel 11 मा pre-installed। PHPUnit को wrapper। Class boilerplate छैन।",
-            jp: "Pest は Laravel 11 にプリインストール。PHPUnit のラッパーなのでアサーションはすべて使える。クラス不要で `it()` / `test()` だけ。",
+            en: "Every Artisan command is a PHP class that extends `Command`. Running `php artisan make:command` generates the boilerplate. The `$signature` property defines the command name and its inputs — think of it like a function signature but for the terminal. The `$description` is shown in `php artisan list`.",
+            np: "`Command` extend गर्ने PHP class। `$signature` = command को नाम र inputs।",
+            jp: "`Command` を継承した PHP クラス。`$signature` でコマンド名と入力を定義。",
           },
         },
         {
           type: "code",
-          title: { en: "Install Pest in Laravel 10", np: "Laravel 10 मा install", jp: "Laravel 10 でのインストール" },
-          code: `composer require pestphp/pest --dev --with-all-dependencies
-composer require pestphp/pest-plugin-laravel --dev
+          title: { en: "Generate and run a custom command", np: "Custom command बनाउने", jp: "カスタムコマンドを生成する" },
+          code: `# Generate the command class
+php artisan make:command SendWeeklyDigest
 
-# Initialize Pest (creates Pest.php, updates phpunit.xml)
-php artisan pest:install
+# app/Console/Commands/SendWeeklyDigest.php
+namespace App\\Console\\Commands;
 
-# Generate test files
-php artisan make:test PostTest --pest           # Feature test (in tests/Feature/)
-php artisan make:test PostUnitTest --pest --unit # Unit test (in tests/Unit/)`,
+use Illuminate\\Console\\Command;
+
+class SendWeeklyDigest extends Command
+{
+    protected $signature = 'emails:digest {--dry-run : Preview without sending}';
+    protected $description = 'Send the weekly digest email to all subscribers';
+
+    public function handle(): int
+    {
+        if ($this->option('dry-run')) {
+            $this->info('DRY RUN — no emails will be sent.');
+        } else {
+            $this->info('Sending digest...');
+            // dispatch(new SendDigestJob());
+        }
+
+        return self::SUCCESS; // returns exit code 0
+    }
+}
+
+# Run it
+php artisan emails:digest
+php artisan emails:digest --dry-run`,
         },
         {
-          type: "code",
-          title: { en: "Pest test anatomy", np: "Pest test structure", jp: "Pest テストの構造" },
-          code: `<?php
-// tests/Feature/PostTest.php
-
-use App\\Models\\{Post, User};
-
-// beforeEach runs before every test in this file
-beforeEach(function () {
-    $this->user = User::factory()->create();
-});
-
-// 'it' reads as a sentence: "it can create a post"
-it('can create a post', function () {
-    $response = $this->actingAs($this->user)
-        ->post('/posts', [
-            'title' => 'Hello World',
-            'body'  => 'My first post.',
-        ]);
-
-    $response->assertRedirect('/posts');
-    expect(Post::count())->toBe(1);
-});
-
-// 'test' is an alias
-test('guests cannot create posts', function () {
-    $response = $this->post('/posts', ['title' => 'Hack']);
-    $response->assertRedirect('/login');
-});
-
-// Datasets — run the same test with multiple inputs
-it('validates post title length', function (string $title) {
-    $this->actingAs($this->user)
-         ->post('/posts', ['title' => $title, 'body' => 'x'])
-         ->assertSessionHasErrors('title');
-})->with([
-    'empty string'    => [''],
-    'too long'        => [str_repeat('a', 256)],
-]);`,
-        },
-        {
-          type: "code",
-          title: { en: "Pest expectations cheat-sheet", np: "Expectations", jp: "Expectations チートシート" },
-          code: `// Pest's expect() wraps PHPUnit assertions in a fluent API
-
-expect($value)
-    ->toBe(42)                  // strict equality (===)
-    ->toEqual(['a' => 1])       // loose equality (==)
-    ->toBeNull()                // === null
-    ->not->toBeNull()           // negation
-    ->toBeTrue()                // === true
-    ->toBeFalse()               // === false
-    ->toBeString()
-    ->toBeInt()
-    ->toBeArray()
-    ->toBeInstanceOf(User::class)
-    ->toContain('needle')       // string or array contains
-    ->toHaveCount(3)            // array/collection count
-    ->toHaveKey('id')           // array has key
-    ->toHaveKeys(['id', 'name'])
-    ->toMatchArray(['name' => 'Alice'])  // subset match
-    ->toThrow(\\Exception::class)
-    ->toThrow(\\Exception::class, 'message')
-    ->toBeGreaterThan(0)
-    ->toBeLessThanOrEqual(100);
-
-// Multiple assertions chained
-expect(User::find(1))
-    ->not->toBeNull()
-    ->name->toBe('Alice')
-    ->email->toContain('@');`,
+          type: "paragraph",
+          text: {
+            en: "<b>Command naming convention:</b> use `noun:verb` format (e.g. `emails:digest`, `users:cleanup`, `reports:generate`). This groups related commands together in `php artisan list`. The namespace (before the colon) is just a label — it does not map to a PHP namespace.",
+            np: "`noun:verb` format use गर्ने — e.g. `emails:digest`, `users:cleanup`।",
+            jp: "`noun:verb` 形式を使う。コロンの前は PHP 名前空間とは無関係のラベル。",
+          },
         },
       ],
     },
     {
       title: {
-        en: "HTTP feature tests",
-        np: "HTTP feature test",
-        jp: "HTTP フィーチャーテスト",
+        en: "Arguments, options & flags",
+        np: "Arguments, options र flags",
+        jp: "引数・オプション・フラグ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "A feature test simulates a real HTTP request through your entire application — the route resolves, middleware runs, the controller executes, and the database is hit.\n• You don't need a running server or a browser — Laravel handles the full request/response cycle in memory\n  ↳ `$this->get('/posts')` fires a GET request and returns a response object you can assert against\n  ↳ `$this->actingAs($user)->post('/posts', [...])` simulates a logged-in user submitting a form\n• These tests are the most valuable kind — they test your app the same way a real user would interact with it",
-            np: "Feature test = full stack। Real server चाहिँदैन। Response assert methods।",
-            jp: "フィーチャーテストはルーティングから DB まで全スタックを通す。実サーバーは不要。",
+            en: "The command signature syntax borrows from Unix conventions. Think of it like ordering at a coffee shop:\n• The <b>drink name</b> is an argument (required, positional)\n• <b>Milk type</b> is an option (has a value, starts with `--`)\n• <b>\"To go\"</b> is a flag (boolean — present means true, absent means false)\n\nArguments are required by default. Options and flags are always optional.",
+            np: "Argument = required positional। Option = `--name=value`। Flag = `--force` (boolean)।",
+            jp: "引数は位置指定で必須。オプションは `--name=value`。フラグは `--force` のような真偽値。",
           },
         },
         {
           type: "code",
-          title: { en: "Full HTTP test example with actingAs", np: "HTTP test + actingAs", jp: "actingAs を使った HTTP テスト" },
-          code: `<?php
-// tests/Feature/PostControllerTest.php
+          title: { en: "Rich signature with arguments, options & flags", np: "Complex signature", jp: "引数・オプション・フラグのサンプル" },
+          code: `// Signature with argument, options, and a flag
+protected $signature = 'users:export
+    {environment : The environment to export from (e.g. production)}
+    {--format=csv : Output format — csv or json}
+    {--limit=100 : Maximum number of records to export}
+    {--force : Skip the confirmation prompt}';
 
-use App\\Models\\{Post, User};
-use Illuminate\\Http\\UploadedFile;
-use Illuminate\\Support\\Facades\\Storage;
+public function handle(): int
+{
+    $env    = $this->argument('environment');    // e.g. "production"
+    $format = $this->option('format');           // "csv" or "json"
+    $limit  = (int) $this->option('limit');      // 100 by default
+    $force  = $this->option('force');            // true if --force passed
 
-uses(\\Illuminate\\Foundation\\Testing\\RefreshDatabase::class);
+    if (!in_array($format, ['csv', 'json'])) {
+        $this->error("Invalid format: {$format}. Use csv or json.");
+        return self::FAILURE;
+    }
 
-it('shows a paginated list of posts', function () {
-    Post::factory()->count(20)->create();
+    if (!$force && !$this->confirm("Export {$limit} users from {$env}?")) {
+        $this->line('Cancelled.');
+        return self::SUCCESS;
+    }
 
-    $response = $this->get('/posts');
+    $this->info("Exporting {$limit} users as {$format}...");
+    return self::SUCCESS;
+}
 
-    $response
-        ->assertStatus(200)    // same as assertOk()
-        ->assertSee('Posts')
-        ->assertViewIs('posts.index')
-        ->assertViewHas('posts');
-});
-
-it('authenticated user can create a post', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->post('/posts', [
-        'title' => 'Test Post',
-        'body'  => 'Some body content here.',
-    ]);
-
-    $response->assertRedirect(route('posts.index'));
-    $this->assertDatabaseHas('posts', [
-        'title'   => 'Test Post',
-        'user_id' => $user->id,
-    ]);
-});
-
-it('returns 401 for unauthenticated API request', function () {
-    $this->getJson('/api/posts')->assertUnauthorized(); // 401
-});
-
-it('returns JSON post list from API', function () {
-    $user  = User::factory()->create();
-    $posts = Post::factory()->count(3)->for($user)->create();
-
-    $this->actingAs($user, 'sanctum')
-         ->getJson('/api/posts')
-         ->assertOk()
-         ->assertJsonCount(3, 'data')
-         ->assertJsonStructure([
-             'data' => [['id', 'title', 'body', 'author']],
-             'links',
-             'meta',
-         ]);
-});
-
-it('validates post creation fields', function () {
-    $user = User::factory()->create();
-
-    $this->actingAs($user)
-         ->post('/posts', [])              // empty payload
-         ->assertSessionHasErrors(['title', 'body']);
-});
-
-it('redirects guests to login', function () {
-    $this->get('/dashboard')->assertRedirect('/login');
-});`,
+// Optional argument with a default value
+// {environment=production}  ← uses "production" if not provided`,
         },
         {
-          type: "table",
-          caption: {
-            en: "Common response assertion methods",
-            np: "Response assertions",
-            jp: "主要レスポンスアサーション",
+          type: "paragraph",
+          text: {
+            en: "Artisan does NOT validate argument types automatically — everything arrives as a string. Validate inside `handle()` with `if (!in_array(...))` or `if (!is_numeric(...))`. This is intentional — you decide what constitutes a valid value for your specific command.",
+            np: "Artisan ले type validate गर्दैन — handle() भित्र आफैं validate गर्नुपर्छ।",
+            jp: "Artisan は型バリデーションをしない。`handle()` の中で自分でバリデーションする。",
           },
-          headers: [
-            { en: "Method", np: "Method", jp: "メソッド" },
-            { en: "What it checks", np: "के check गर्छ", jp: "確認内容" },
-          ],
-          rows: [
-            [
-              { en: "`assertStatus(200)`", np: "`assertStatus(200)`", jp: "`assertStatus(200)`" },
-              { en: "HTTP status code", np: "Status code", jp: "HTTP ステータスコード" },
-            ],
-            [
-              { en: "`assertOk()` / `assertNotFound()`", np: "`assertOk()`", jp: "`assertOk()`" },
-              { en: "200 / 404 shorthand", np: "Shorthand", jp: "200 / 404 の省略形" },
-            ],
-            [
-              { en: "`assertJson(['key' => 'val'])`", np: "`assertJson()`", jp: "`assertJson()`" },
-              { en: "JSON contains subset", np: "JSON subset", jp: "JSON のサブセット一致" },
-            ],
-            [
-              { en: "`assertJsonCount(3, 'data')`", np: "`assertJsonCount()`", jp: "`assertJsonCount()`" },
-              { en: "Array length at JSON path", np: "Array length", jp: "JSON パスの配列長" },
-            ],
-            [
-              { en: "`assertSee('text')`", np: "`assertSee()`", jp: "`assertSee()`" },
-              { en: "Text appears in response body", np: "Text present", jp: "レスポンスボディにテキスト存在" },
-            ],
-            [
-              { en: "`assertRedirect('/login')`", np: "`assertRedirect()`", jp: "`assertRedirect()`" },
-              { en: "Location header matches", np: "Redirect", jp: "リダイレクト先の一致" },
-            ],
-            [
-              { en: "`assertSessionHasErrors('field')`", np: "`assertSessionHasErrors()`", jp: "`assertSessionHasErrors()`" },
-              { en: "Validation error in session", np: "Validation error", jp: "セッションにバリデーションエラー" },
-            ],
-            [
-              { en: "`assertUnauthorized()` / `assertForbidden()`", np: "401 / 403", jp: "401 / 403" },
-              { en: "401 / 403 responses", np: "401 / 403", jp: "401 / 403 レスポンス" },
-            ],
-          ],
         },
       ],
     },
     {
       title: {
-        en: "Database testing",
-        np: "Database testing",
-        jp: "データベーステスト",
+        en: "Console output — tables, progress bars & prompts",
+        np: "Console output — table, progress bar र prompt",
+        jp: "コンソール出力 — テーブル・プログレスバー・プロンプト",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Tests that touch the database need a clean slate before each test — otherwise results from one test bleed into the next.\n\n<b>`RefreshDatabase`</b> handles this automatically:\n• Before the first test runs, it migrates the database from scratch\n• Before each subsequent test, it wraps everything in a transaction — then rolls it back after\n  ↳ Every test starts with a completely empty database\n\n<b>Factories</b> are how you create test data without hand-writing SQL `INSERT` statements:\n• `User::factory()->create()` — creates a real database row with realistic fake data\n• `User::factory()->count(10)->create()` — create 10 rows at once\n• `User::factory()->admin()->create()` — use a custom state defined in the factory class",
-            np: "`RefreshDatabase` — clean DB। Factory ले test data बनाउँछ।",
-            jp: "`RefreshDatabase` でテストごとに DB をクリーン。Factory でリアルなテストデータを生成。",
+            en: "Good CLI tools give clear, coloured feedback:\n• `$this->info('...')` — green (success messages)\n• `$this->error('...')` — red (errors)\n• `$this->warn('...')` — yellow (warnings)\n• `$this->line('...')` — plain white (neutral output)\n\nFor structured data use `$this->table()`. For long loops use a progress bar. For interactive scripts use `ask()` and `confirm()`.",
+            np: "info() = green, error() = red, warn() = yellow। Table, progress bar, ask/confirm।",
+            jp: "info() 緑・error() 赤・warn() 黄色。テーブル、プログレスバー、ask/confirm も使える。",
           },
         },
         {
           type: "code",
-          title: { en: "RefreshDatabase + assertDatabaseHas", np: "DB assert", jp: "DB アサーション" },
-          code: `<?php
-// tests/Feature/UserRegistrationTest.php
+          title: { en: "Tables, progress bars & prompts", np: "Table, progress bar, prompt", jp: "テーブル・プログレスバー・プロンプト" },
+          code: `// Table output
+$users = User::select('name', 'email', 'role')->get();
+$this->table(
+    ['Name', 'Email', 'Role'],
+    $users->map(fn($u) => [$u->name, $u->email, $u->role])
+);
 
-use App\\Models\\User;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
+// Progress bar (manual)
+$items = Post::all();
+$bar = $this->output->createProgressBar(count($items));
+$bar->start();
+foreach ($items as $item) {
+    // process $item...
+    $bar->advance();
+}
+$bar->finish();
+$this->newLine(); // move cursor to next line after bar
 
-uses(RefreshDatabase::class);
-
-it('registers a new user', function () {
-    $response = $this->post('/register', [
-        'name'                  => 'Alice',
-        'email'                 => 'alice@example.com',
-        'password'              => 'password',
-        'password_confirmation' => 'password',
-    ]);
-
-    $response->assertRedirect('/dashboard');
-
-    // Assert a row exists with exact column values
-    $this->assertDatabaseHas('users', [
-        'name'  => 'Alice',
-        'email' => 'alice@example.com',
-    ]);
-
-    // Assert user count
-    $this->assertDatabaseCount('users', 1);
+// Progress bar (shorthand — handles start/advance/finish for you)
+$this->withProgressBar($items, function (Post $post) {
+    // process $post...
 });
 
-it('does not store plain-text password', function () {
-    $this->post('/register', [
-        'name'                  => 'Bob',
-        'email'                 => 'bob@example.com',
-        'password'              => 'secret123',
-        'password_confirmation' => 'secret123',
-    ]);
+// Interactive prompts
+$name  = $this->ask('What is the user\\'s name?');
+$email = $this->ask('Email address', 'default@example.com');
+$role  = $this->choice('Select role', ['admin', 'editor', 'viewer'], 'viewer');
 
-    // Row should NOT have this value
-    $this->assertDatabaseMissing('users', [
-        'email'    => 'bob@example.com',
-        'password' => 'secret123',
-    ]);
-});`,
-        },
-        {
-          type: "code",
-          title: { en: "Factories — creating test data", np: "Factory", jp: "Factory でテストデータ生成" },
-          code: `// Basic factory usage
-$user    = User::factory()->create();         // persisted
-$user    = User::factory()->make();           // in memory only
-$users   = User::factory()->count(10)->create();
-
-// States defined in the factory class
-$admin   = User::factory()->admin()->create();
-$unverified = User::factory()->unverified()->create();
-
-// With relationships
-$post = Post::factory()
-    ->for(User::factory()->create())    // belongsTo
-    ->has(Comment::factory()->count(3)) // hasMany
-    ->create();
-
-// Inline attribute override
-$post = Post::factory()->create([
-    'title'     => 'Custom Title',
-    'published' => true,
-]);
-
-// UserFactory example
-// database/factories/UserFactory.php
-public function definition(): array
-{
-    return [
-        'name'              => fake()->name(),
-        'email'             => fake()->unique()->safeEmail(),
-        'password'          => Hash::make('password'),
-        'email_verified_at' => now(),
-    ];
-}
-
-public function admin(): static
-{
-    return $this->state(['role' => 'admin']);
-}
-
-public function unverified(): static
-{
-    return $this->state(['email_verified_at' => null]);
+if ($this->confirm('Are you sure you want to delete all records?')) {
+    // proceed
 }`,
         },
+        {
+          type: "paragraph",
+          text: {
+            en: "Use `$this->newLine()` to add blank lines for visual breathing room. Use `$this->newLine(2)` for two blank lines. For very long output, consider piping to `less` (`php artisan cmd | less`) rather than flooding the terminal.",
+            np: "`newLine()` = blank line। Long output लाई `| less` मा pipe गर्न सकिन्छ।",
+            jp: "`newLine()` で空行を挿入。長い出力は `| less` にパイプするのがおすすめ。",
+          },
+        },
       ],
     },
     {
       title: {
-        en: "Faking external services",
-        np: "External service fake",
-        jp: "外部サービスのフェイク",
+        en: "Calling commands from code & chaining",
+        np: "Code बाट command call गर्ने",
+        jp: "コードからコマンドを呼ぶ",
       },
       blocks: [
         {
           type: "paragraph",
           text: {
-            en: "Testing code that calls external services (email, queues, events) is tricky — you don't want real emails sent or real jobs running during tests.\n\n<b>Laravel's fake facades solve this</b>\n• Call `Mail::fake()`, `Queue::fake()`, or `Event::fake()` at the start of a test\n  ↳ From that point on, nothing is actually sent or dispatched — Laravel just records what would have happened\n• After running the code under test, use assertion methods to verify the right things were triggered:\n  ↳ `Mail::assertSent(WelcomeMail::class)` — was this email triggered?\n  ↳ `Queue::assertPushed(SendWelcomeEmail::class)` — was this job queued?\n  ↳ `Event::assertDispatched(OrderShipped::class)` — was this event fired?\n• Tests stay fast (no network calls) and reliable (no flaky external dependencies)",
-            np: "Fake facade ले real implementation replace। Assert ले check। Real service hit हुँदैन।",
-            jp: "フェイクファサードは実装をスタブに差し替え。実際には何も送らずアサーションのみ。高速・決定的。",
+            en: "You can call Artisan commands from controllers, jobs, or other commands. This is useful for:\n• Running a command from a web UI trigger (e.g. an admin \"Run now\" button)\n• Chaining commands in a workflow (clear cache → rebuild index)\n• Testing commands programmatically\n\nUse `Artisan::call()` for synchronous execution, or `Artisan::queue()` to dispatch to the queue.",
+            np: "Artisan::call() = synchronous। Artisan::queue() = queue मा dispatch।",
+            jp: "Artisan::call() で同期実行。Artisan::queue() でキューに投入。",
           },
         },
         {
           type: "code",
-          title: { en: "Mail::fake() — email assertions", np: "Mail fake", jp: "Mail::fake()" },
-          code: `<?php
-use App\\Mail\\WelcomeMail;
-use Illuminate\\Support\\Facades\\Mail;
+          title: { en: "Artisan::call(), output capture & chaining", np: "Command call गर्ने", jp: "コマンドを呼び出す" },
+          code: `use Illuminate\\Support\\Facades\\Artisan;
 
-it('sends a welcome email after registration', function () {
-    Mail::fake();
+// Call from a controller
+Artisan::call('emails:digest', ['--dry-run' => true]);
 
-    $this->post('/register', [
-        'name'                  => 'Carol',
-        'email'                 => 'carol@example.com',
-        'password'              => 'password',
-        'password_confirmation' => 'password',
-    ]);
+// Capture the command's output
+Artisan::call('reports:generate', ['--format' => 'csv']);
+$output = Artisan::output(); // returns the printed text as a string
 
-    // Assert a specific mailable was sent to an address
-    Mail::assertSent(WelcomeMail::class, function (WelcomeMail $mail) {
-        return $mail->hasTo('carol@example.com');
-    });
+// Call from inside another command
+public function handle(): int
+{
+    $this->call('cache:clear');           // runs synchronously, inherits I/O
+    $this->callSilently('config:cache');  // runs silently (no output)
+    return self::SUCCESS;
+}
 
-    // Assert exactly one email was sent
-    Mail::assertSent(WelcomeMail::class, 1);
-
-    // Assert nothing else was sent
-    Mail::assertNothingQueued();
-});`,
+// Dispatch to the queue (non-blocking)
+Artisan::queue('reports:generate', ['--format' => 'csv'])
+    ->onQueue('reports')
+    ->onConnection('redis');`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "<b>Testing commands in Pest:</b> use the `artisan()` helper to make assertions on the command's output, exit code, and interactions.\n\n↳ `$this->artisan('emails:digest')->assertExitCode(0)->expectsOutput('Sending digest...')`\n↳ `$this->artisan('users:export', ['environment' => 'staging'])->expectsQuestion(...)->assertExitCode(0)`\n\nDependencies injected via the service container can be mocked with `$this->mock(MyService::class, ...)` before calling `artisan()`.",
+            np: "Test मा artisan() helper use गर्ने। assertExitCode(0), expectsOutput() use गर्ने।",
+            jp: "テストでは artisan() ヘルパーを使い assertExitCode() や expectsOutput() で検証する。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Scheduling commands with the console kernel",
+        np: "Commands schedule गर्ने",
+        jp: "コマンドをスケジュールする",
+      },
+      blocks: [
+        {
+          type: "paragraph",
+          text: {
+            en: "Instead of setting up a separate cron job for every task, Laravel uses a single cron entry that fires every minute. You define all your recurring tasks in PHP code — Laravel figures out which ones to run right now. Think of it like a weekly planner: you write all your tasks in one place and your assistant ticks off what's due.",
+            np: "एउटा cron entry मात्र। बाँकी schedule PHP code मा define गर्ने।",
+            jp: "cron エントリは 1 つだけ。スケジュールは PHP コードで定義する。",
+          },
         },
         {
           type: "code",
-          title: { en: "Queue::fake() — job assertions", np: "Queue fake", jp: "Queue::fake()" },
-          code: `<?php
-use App\\Jobs\\SendWelcomeEmail;
-use App\\Jobs\\GenerateThumbnail;
-use Illuminate\\Support\\Facades\\Queue;
+          title: { en: "Server cron entry + routes/console.php schedule", np: "Cron entry र schedule", jp: "cron エントリとスケジュール定義" },
+          code: `# Add ONE cron entry to the server (runs every minute)
+* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1
 
-it('dispatches a welcome email job on registration', function () {
-    Queue::fake();
+# routes/console.php (Laravel 11 style — no Kernel class needed)
+use Illuminate\\Support\\Facades\\Schedule;
 
-    $user = User::factory()->create();
-    $this->actingAs($user)->post('/posts', ['title' => 'Hi', 'body' => 'World']);
+// Send weekly digest every Monday at 8:00 AM
+Schedule::command('emails:digest')
+    ->weeklyOn(1, '8:00')
+    ->withoutOverlapping()  // skip if previous run is still going
+    ->runInBackground();    // don't block other scheduled jobs
 
-    Queue::assertPushed(GenerateThumbnail::class);
+// Clean up expired sessions every day at midnight
+Schedule::command('sessions:cleanup')
+    ->daily()
+    ->at('00:00')
+    ->timezone('Asia/Tokyo');
 
-    Queue::assertPushedOn('emails', SendWelcomeEmail::class);
+// Cache reports every hour
+Schedule::command('reports:cache')
+    ->hourly()
+    ->withoutOverlapping();
 
-    Queue::assertPushed(SendWelcomeEmail::class, function ($job) use ($user) {
-        return $job->user->id === $user->id;
-    });
+// Other frequency helpers
+// ->everyFiveMinutes()
+// ->everyThirtyMinutes()
+// ->monthly()
+// ->monthlyOn(15, '09:00')  // 15th of each month at 9am
 
-    // Opposite — nothing of this type was dispatched
-    Queue::assertNotPushed(SomeOtherJob::class);
-});`,
+# Test scheduling locally (runs due tasks and waits)
+php artisan schedule:work`,
         },
         {
-          type: "code",
-          title: { en: "Event::fake() — event & notification assertions", np: "Event fake", jp: "Event::fake()" },
-          code: `<?php
-use App\\Events\\OrderShipped;
-use App\\Notifications\\OrderShippedNotification;
-use Illuminate\\Support\\Facades\\{Event, Notification};
-
-it('fires OrderShipped event when order is shipped', function () {
-    Event::fake();
-
-    $order = Order::factory()->create();
-    $order->ship();
-
-    Event::assertDispatched(OrderShipped::class, function ($event) use ($order) {
-        return $event->order->id === $order->id;
-    });
-
-    Event::assertDispatchedTimes(OrderShipped::class, 1);
-    Event::assertNotDispatched(SomeOtherEvent::class);
-});
-
-it('notifies user when order ships', function () {
-    Notification::fake();
-
-    $user  = User::factory()->create();
-    $order = Order::factory()->for($user)->create();
-    $order->ship();
-
-    Notification::assertSentTo($user, OrderShippedNotification::class);
-    Notification::assertSentToTimes($user, OrderShippedNotification::class, 1);
-});`,
-        },
-        {
-          type: "code",
-          title: { en: "Storage::fake() + Http::fake() + artisan command tests", np: "Other fakes", jp: "その他のフェイク" },
-          code: `<?php
-use Illuminate\\Http\\UploadedFile;
-use Illuminate\\Support\\Facades\\{Http, Storage};
-
-// Storage::fake — test file uploads without touching disk
-it('stores an uploaded avatar', function () {
-    Storage::fake('avatars');
-
-    $user = User::factory()->create();
-    $file = UploadedFile::fake()->image('avatar.jpg', 200, 200);
-
-    $this->actingAs($user)
-         ->post('/profile/avatar', ['avatar' => $file])
-         ->assertOk();
-
-    Storage::disk('avatars')->assertExists("avatars/{$user->id}.jpg");
-});
-
-// Http::fake — fake outbound HTTP calls
-it('syncs data from external API', function () {
-    Http::fake([
-        'api.example.com/items' => Http::response([
-            ['id' => 1, 'name' => 'Widget'],
-            ['id' => 2, 'name' => 'Gadget'],
-        ], 200),
-        '*' => Http::response([], 500), // catch-all fallback
-    ]);
-
-    $this->artisan('app:sync-items')->assertSuccessful();
-    $this->assertDatabaseCount('items', 2);
-});
-
-// Artisan command tests
-it('runs the weekly report command', function () {
-    $this->artisan('reports:weekly')
-         ->expectsOutput('Report generated.')
-         ->assertExitCode(0);   // or assertSuccessful()
-});`,
+          type: "paragraph",
+          text: {
+            en: "`withoutOverlapping()` prevents a second run from starting if the previous one is still running — crucial for slow tasks like report generation. Combine it with `runInBackground()` so slow tasks don't block shorter jobs that are scheduled at the same time.\n\n↳ Without `runInBackground()`, scheduled tasks execute sequentially — if task A takes 5 minutes, task B misses its window\n↳ With `runInBackground()`, both spawn as separate OS processes and run in parallel",
+            np: "withoutOverlapping() = duplicate run रोक्छ। runInBackground() = parallel run।",
+            jp: "withoutOverlapping() で二重実行を防ぎ、runInBackground() で並列実行する。",
+          },
         },
       ],
     },
@@ -509,86 +305,62 @@ it('runs the weekly report command', function () {
   faq: [
     {
       question: {
-        en: "Should I use Pest or PHPUnit?",
-        np: "Pest वा PHPUnit?",
-        jp: "Pest と PHPUnit どちらを使うべき？",
+        en: "Where should I register my custom commands in Laravel 11?",
+        np: "Laravel 11 मा custom commands कहाँ register गर्ने?",
+        jp: "Laravel 11 でカスタムコマンドはどこに登録する？",
       },
       answer: {
-        en: "<b>Pest</b> is the recommended default for all new Laravel projects — here's why:\n• Less boilerplate: no class, no `setUp()`, no `public function test_...` naming convention\n  ↳ A Pest test is just an `it()` call with a closure — much easier to read and write\n• Better assertions: `expect($value)->toBe(42)` reads more like English than `$this->assertEquals(42, $value)`\n• Extras built in: datasets (`it()->with([...])`), architecture tests (`arch()`), and parallel test execution\n• No feature loss: it compiles to PHPUnit under the hood — every PHPUnit assertion works inside Pest\n\nThe only reason to stick with PHPUnit is if you have an existing test suite you're not ready to migrate yet.",
-        np: "New project मा Pest। PHPUnit wrapper, feature loss छैन। Old project छ भने PHPUnit ठीक।",
-        jp: "新規プロジェクトは Pest が推奨。PHPUnit のラッパーなので機能差なし。既存スイートがある場合は PHPUnit をそのまま使ってよい。",
+        en: "In Laravel 11, commands in `app/Console/Commands/` are auto-discovered — no registration needed. If you place commands elsewhere, add the directory path via `withConsoleCommands()` in `bootstrap/app.php`:\n\n`->withConsoleCommands(base_path('app/Admin/Commands'))`\n\nThe old `app/Console/Kernel.php` with a `$commands` array was removed in Laravel 11.",
+        np: "`app/Console/Commands/` मा auto-discover हुन्छ। अन्यत्र राखे bootstrap/app.php मा register गर्नुपर्छ।",
+        jp: "`app/Console/Commands/` は自動検出される。別の場所は `bootstrap/app.php` で登録する。",
       },
     },
     {
       question: {
-        en: "What does `RefreshDatabase` do to performance?",
-        np: "`RefreshDatabase` performance मा असर?",
-        jp: "`RefreshDatabase` はパフォーマンスにどう影響しますか？",
+        en: "How do I pass an array of values as an option?",
+        np: "Option मा array values कसरी pass गर्ने?",
+        jp: "オプションに配列を渡すには？",
       },
       answer: {
-        en: "`RefreshDatabase` is the most common approach and works like this:\n• <b>First test in the suite</b>: runs all your migrations from scratch against the test database\n• <b>Every subsequent test</b>: wraps the test in a database transaction, then rolls it back after\n  ↳ Each test starts clean without re-running migrations — so it's fast after the first one\n\n<b>Speed tips</b>\n• Use an in-memory SQLite database for tests: set `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` in `phpunit.xml`\n  ↳ SQLite migrations run almost instantly — great for local development\n• For very large migration suites, `LazilyRefreshDatabase` only migrates when a test actually needs the database",
-        np: "First test मा migrate एकपटक, बाकी transaction rollback। SQLite in-memory सबभन्दा fast।",
-        jp: "最初の 1 回だけマイグレーション実行、以降はトランザクションロールバック。SQLite インメモリが最速。",
+        en: "Define the option as variadic using `*`:\n\n`{--user=* : User IDs to process}`\n\nAccess with `$this->option('user')` — it returns an array. Call it like:\n\n`php artisan users:notify --user=1 --user=2 --user=5`\n\nIf no `--user` is passed, `$this->option('user')` returns an empty array `[]`.",
+        np: "`{--user=*}` syntax use गर्ने। `$this->option('user')` ले array return गर्छ।",
+        jp: "`{--user=*}` で可変引数オプションを定義。`$this->option('user')` が配列を返す。",
       },
     },
     {
       question: {
-        en: "How do I test validation errors?",
-        np: "Validation error test कसरी?",
-        jp: "バリデーションエラーをテストする方法は？",
+        en: "Can I use Auth inside a console command?",
+        np: "Console command भित्र Auth use गर्न सकिन्छ?",
+        jp: "コンソールコマンドの中で Auth を使える？",
       },
       answer: {
-        en: "It depends on whether the route returns HTML or JSON:\n\n<b>Web (Blade) routes</b> — validation errors are flashed to the session and the user is redirected back:\n• `->assertSessionHasErrors('title')` — one field failed\n• `->assertSessionHasErrors(['title', 'body'])` — multiple fields failed\n\n<b>API (JSON) routes</b> — Laravel returns a 422 response with an errors object:\n• `->assertUnprocessable()` — confirms a 422 status code\n• `->assertJsonValidationErrors('email')` — confirms the field appears in the errors list\n• `->assertJsonValidationErrors(['email' => 'The email field is required.'])` — checks the exact message",
-        np: "Web: `assertSessionHasErrors()`। API: `assertJsonValidationErrors()`। 422 = `assertUnprocessable()`।",
-        jp: "Web は `assertSessionHasErrors()`、API は `assertJsonValidationErrors()` と `assertUnprocessable()`（422）。",
+        en: "Don't use `Auth::login()` in console commands — the session that login creates only lasts the duration of the HTTP request lifecycle. Instead, pass a user ID as an argument and load the user manually:\n\n`$user = User::findOrFail($this->argument('userId'));`\n\nThen pass `$user` directly to any service that needs it. In tests, use `$this->actingAs($user)` before `artisan()`.",
+        np: "Console मा `Auth::login()` नगर्ने। User ID argument मा pass गरेर manually load गर्ने।",
+        jp: "コンソールで `Auth::login()` は使わない。引数でユーザー ID を受け取り手動で取得する。",
       },
     },
     {
       question: {
-        en: "How do I assert a notification was sent?",
-        np: "Notification send भयो कि भएन assert?",
-        jp: "通知が送信されたことをアサートする方法は？",
+        en: "Can I run scheduled tasks in parallel?",
+        np: "Scheduled tasks parallel मा run गर्न सकिन्छ?",
+        jp: "スケジュールタスクを並列実行できる？",
       },
       answer: {
-        en: "Call `Notification::fake()` at the start of your test — after that, no notifications actually go out.\n\nThen, after running the action that should trigger the notification:\n• `Notification::assertSentTo($user, MyNotification::class)` — was this notification sent to this user?\n• Pass a callback as a third argument to check the notification's data:\n  ↳ `Notification::assertSentTo($user, MyNotification::class, fn($n) => $n->order->id === 5)`\n• `Notification::assertNothingSent()` — confirms nothing was sent at all\n\nThis works regardless of which channel the notification uses — email, Slack, SMS, database — because `Notification::fake()` intercepts all of them.",
-        np: "`Notification::fake()` → assert। `assertSentTo()` user र class दिनु।",
-        jp: "`Notification::fake()` 後に `assertSentTo($user, MyNotification::class)`。チャンネル問わず動作。",
+        en: "Yes — use `->runInBackground()` on each command. This spawns each task as a separate OS process so they run simultaneously instead of one after another.\n\nWithout `runInBackground()`: tasks run sequentially. A slow task at 2:00 AM delays every other task scheduled for the same minute.\n\nWith `runInBackground()`: each task spawns independently. The scheduler finishes in milliseconds and all tasks run in parallel.",
+        np: "`runInBackground()` use गर्ने। Parallel मा spawn हुन्छ।",
+        jp: "`runInBackground()` で並列実行。付けないと直列で動き、遅いタスクが後続を遅らせる。",
       },
     },
     {
       question: {
-        en: "Can I test middleware in isolation?",
-        np: "Middleware isolation मा test?",
-        jp: "ミドルウェアを独立してテストできますか？",
+        en: "How do I test that a scheduled command fires at the right time?",
+        np: "Scheduled command सही time मा fire हुन्छ भनेर कसरी test गर्ने?",
+        jp: "スケジュールが正しい時刻に実行されるかテストするには？",
       },
       answer: {
-        en: "Yes, though the most practical approach is to test middleware <b>indirectly through feature tests</b>:\n• `$this->get('/dashboard')->assertRedirect('/login')` — confirms the auth middleware is working\n  ↳ You don't need to instantiate the middleware class itself — the full stack proves it\n\nFor direct unit testing of a middleware class:\n• Instantiate it, pass a `Request` object and a `$next` closure, and assert the response\n  ↳ Useful when middleware has complex internal logic that's hard to test via HTTP\n\nTo isolate a controller by skipping middleware in a test, call `$this->withoutMiddleware()` at the top — it disables all middleware for that test only.",
-        np: "Feature test मा indirect test सजिलो। Direct unit test को लागि Request र Closure pass।",
-        jp: "HTTPテストで間接的にテストが一般的。直接 `new Middleware()` して Request と Closure を渡す方法もある。",
-      },
-    },
-    {
-      question: {
-        en: "How do I test exception handling?",
-        np: "Exception handling test?",
-        jp: "例外処理をテストする方法は？",
-      },
-      answer: {
-        en: "For <b>HTTP responses</b>, assert the status code — that's usually all you need:\n• `->assertNotFound()` — 404 (e.g. when a model isn't found)\n• `->assertForbidden()` — 403 (e.g. when authorization fails)\n• `->assertStatus(500)` — any specific code\n\nFor <b>non-HTTP code</b> that throws an exception, use Pest's `expect()` wrapper:\n• `expect(fn() => $thing->doSomething())->toThrow(ModelNotFoundException::class)`\n\n<b>Debugging tip</b>: by default, Laravel's exception handler catches exceptions and converts them to HTTP responses (like a 500 page). If you want to see the raw exception instead of a response, call `$this->withoutExceptionHandling()` at the top of your test.",
-        np: "HTTP: status code assert। Raw exception: `toThrow()`। `withoutExceptionHandling()` debug को लागि।",
-        jp: "HTTP は `assertNotFound()` など。例外を直接テストは `toThrow()`。`withoutExceptionHandling()` で生の例外を確認。",
-      },
-    },
-    {
-      question: {
-        en: "How do I test that a queued mailable was queued (not sent immediately)?",
-        np: "Queued mailable test कसरी?",
-        jp: "キューに入れられたメールをテストする方法は？",
-      },
-      answer: {
-        en: "There are two different assertion methods and they check different things:\n\n• `Mail::assertSent()` — checks for mail that was sent <b>immediately</b> (synchronous, no queue)\n• `Mail::assertQueued()` — checks for mail that was <b>pushed onto the queue</b> (the mailable implements `ShouldQueue`)\n\nIf your mailable implements `ShouldQueue` and you use `assertSent()`, the assertion will fail even if the code is working — because the mail was queued, not sent directly.\n\nUse `assertQueued()` for any mailable with `ShouldQueue`. After calling `Mail::fake()`, both kinds are intercepted — no real email goes out either way.",
-        np: "`Mail::assertQueued()` — `assertSent()` होइन। `ShouldQueue` implement भएको mailable को लागि।",
-        jp: "`ShouldQueue` を実装したメールは `assertQueued()` でチェック。`assertSent()` は同期送信のみ。",
+        en: "Use Laravel's time-travel helpers to simulate a specific date/time, then inspect the schedule:\n\n`$this->travelTo(Carbon::parse('2025-01-06 08:00')); // a Monday at 8am`\n`$event = collect(app(Schedule::class)->events())->first(fn($e) => str_contains($e->command, 'emails:digest'));`\n`$this->assertTrue($event->isDue(app()));`\n\nAlso useful: `$event->getSummaryForDisplay()` returns the cron expression as a human-readable string.",
+        np: "`travelTo()` + `Schedule::events()` use गरेर test गर्ने।",
+        jp: "`travelTo()` で時刻を固定し `Schedule::events()` でスケジュールを検証する。",
       },
     },
   ],
