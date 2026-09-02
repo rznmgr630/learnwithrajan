@@ -45,66 +45,71 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "インストール・実行・Node.js プロジェクトの形",
   },
   2: {
+    en: "Modules — ESM vs CommonJS, resolution & package entry points",
+    np: "मोड्युल — ESM बनाम CommonJS, रिजोल्युसन र entry point",
+    jp: "モジュール — ESM と CommonJS・解決・エントリポイント",
+  },
+  3: {
     en: "Global object, CommonJS modules, Path & OS",
     np: "ग्लोबल वस्तु, मोड्युल, Path र OS",
     jp: "グローバル・CommonJS・path・os",
   },
-  3: {
+  4: {
     en: "File system, Events, EventEmitter & HTTP module",
     np: "फाइल प्रणाली, इभेन्ट, EventEmitter र HTTP",
     jp: "fs・イベント・EventEmitter・http",
   },
-  4: {
+  5: {
     en: "npm — package.json, semver, publishing & globals",
     np: "npm — package.json, semver, प्रकाशन र ग्लोबल",
     jp: "npm・package.json・semver・公開・グローバル",
   },
-  5: {
+  6: {
     en: "RESTful APIs with Express — routes, verbs & validation",
     np: "Express सँग REST — रूट, verb र प्रमाणीकरण",
     jp: "Express で REST — ルート・HTTP メソッド・検証",
   },
-  6: {
+  7: {
     en: "Express advanced — middleware, config & app structure",
     np: "Express उन्नत — मिडलवेयर, विन्यास र संरचना",
     jp: "Express 応用 — ミドルウェア・設定・アプリ構成",
   },
-  7: {
+  8: {
     en: "Asynchronous JavaScript — callbacks, promises & async/await",
     np: "असिंक JS — callback, promise र async/await",
     jp: "非同期 JS — コールバック・Promise・async/await",
   },
-  8: {
+  9: {
     en: "MongoDB & Mongoose — connect, schemas, queries & CRUD",
     np: "MongoDB र Mongoose — जडान, schema, प्रश्न र CRUD",
     jp: "MongoDB・Mongoose — 接続・スキーマ・クエリ・CRUD",
   },
-  9: {
+  10: {
     en: "Data validation — schemas, validators & persistence projects",
     np: "डाटा प्रमाणीकरण — schema, validators र persistence",
     jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
   },
-  10: {
+  11: {
     en: "Modelling relationships — refs, embed, population & transactions",
     np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
     jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
   },
-  11: {
+  12: {
     en: "Authentication & authorization — users, JWT & roles",
     np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
     jp: "認証・認可 — ユーザー・JWT・ロール",
   },
-  12: {
+  13: {
     en: "Errors, logging & extracting routes / services",
     np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
     jp: "エラー・ログ・ルートとサービスの分割",
   },
-  13: {
+  14: {
     en: "Unit tests, integration tests & test-driven habits",
     np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
     jp: "単体・結合テストと TDD の習慣",
   },
-  14: {
+  15: {
     en: "Deployment, MongoDB Atlas & what to learn next",
     np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
     jp: "デプロイ・Atlas・次に学ぶこと",
