@@ -3,19 +3,86 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_20_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
-      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
-      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
+      en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
+      np: "Mongo दस्तावेज; Mongoose ले आकार र प्रश्न सजिलो बनाउँछ।",
+      jp: "**MongoDB** はドキュメント指向。**Mongoose** がスキーマとクエリを整える。",
     },
     {
-      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
-      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
-      jp: "**populate** は便利だが **N+1** に注意。",
+      en: "You can install MongoDB using the **official installer** or run it with **Docker** — just make sure your data folder is not inside your git repo. The **`mongosh`** shell lets you connect from your terminal and check what is actually in your database, which is more reliable than only reading your app logs.",
+      np: "स्थापना पछि `mongosh` ले जाँच गर्नुहोस्।",
+      jp: "ローカルは公式インストーラか Docker。**mongosh** で直接確認できると強い。",
     },
   ],
   sections: [
     {
-      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
+      title: { en: "MongoDB basics & local setup", np: "MongoDB र स्थापना", jp: "MongoDB とセットアップ" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "-bt_y4Loofg",
+          title: "MongoDB in 100 Seconds",
+        },
+        {
+          type: "code",
+          title: { en: "mongosh after mongod is running", np: "mongosh", jp: "mongosh で確認" },
+          code: `# Terminal (with mongod listening):
+mongosh
+show dbs
+use rental_db
+db.genres.insertOne({ name: 'Comedy' })
+db.genres.find().pretty()`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "MongoDB lets you embed nested objects inside a document, unlike SQL which splits data across multiple tables. That flexibility is powerful, but you still need to plan your **indexes** and how you will query the data. For now, run **`mongod`** locally. When you are ready to host your database online, use the **MongoDB Atlas** free tier — and always store your connection string in an **environment variable**, never in your code.",
+            np: "लचिलोपनका लागि इन्डेक्स र प्रश्न योजना चाहिन्छ।",
+            jp: "柔軟だからこそインデックス設計が重要。接続 URI は環境変数へ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Connecting, schemas, models & saving",
+        np: "जडान, schema, मोडेल",
+        jp: "接続・スキーマ・モデル・保存",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Connect + define model (sketch)", np: "जडान उदाहरण", jp: "接続の例" },
+          code: `const mongoose = require('mongoose');
+
+mongoose.connect(process.env.MONGODB_URI);
+
+const genreSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+});
+const Genre = mongoose.model('Genre', genreSchema);
+
+// create vs new + save — both valid patterns`,
+        },
+        {
+          type: "diagram",
+          id: "primary-replica",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "In production, MongoDB usually runs as a **replica set** — multiple copies of your database for reliability (shown in the diagram above). **`mongoose.connect(uri)`** opens a connection pool automatically. It is good practice to listen for **`disconnected`** and **`reconnected`** events so you know when the database goes down. **Schemas** describe what fields a document has and what values are valid; **Models** connect a schema to the actual MongoDB collection.",
+            np: "उत्पादनमा प्रायः replica — जडान घटनाहरू सुन्नुहोस्।",
+            jp: "本番はレプリカ構成が一般的。**mongoose.connect** とプールを理解する。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Querying, indexes, pagination & updates",
+        np: "प्रश्न र पृष्ठांकन",
+        jp: "クエリ・インデックス・ページング",
+      },
       blocks: [
         {
           type: "youtube",
@@ -24,94 +91,35 @@ export const NODEJS_DAY_20_DETAIL: RoadmapDayDetail = {
         },
         {
           type: "code",
-          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
-          code: `// Reference another collection by id
-const movieSchema = new mongoose.Schema({
-  title: String,
-  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
-});
-
-// Embed small subdocuments that always ship with the parent
-const orderSchema = new mongoose.Schema({
-  lines: [{ sku: String, qty: Number, price: Number }],
-});`,
+          title: { en: "Filter + page in the database", np: "प्रश्न उदाहरण", jp: "クエリ例" },
+          code: `const movies = await Movie.find({ genreId, price: { $lte: 20 } })
+  .sort({ title: 1 })
+  .skip((page - 1) * pageSize)
+  .limit(pageSize)
+  .select('title price');`,
         },
         {
           type: "diagram",
-          id: "erd-one-many",
+          id: "btree-index",
         },
         {
           type: "paragraph",
           text: {
-            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
-            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
-            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
+            en: "Operators like **`$gt`**, **`$in`**, **`$and`**, and **`$or`** let you filter data inside the database — so only the matching documents come back to your app. This is much faster than loading everything and filtering in JavaScript. Be careful with **regex searches** though — without an index, they scan every document and can slow your app down.",
+            np: "फिल्टर DB भित्र — पूरै लोड गर्नु हुँदैन।",
+            jp: "**演算子**で DB 側にフィルタ。正規表現はインデックスと相談。",
           },
-        },
-      ],
-    },
-    {
-      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
-          code: `async function createMovie(body) {
-  const genre = await Genre.findById(body.genreId);
-  if (!genre) {
-    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
-  }
-  return Movie.create(body);
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
-            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
-            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Transactions & validating ObjectIds",
-        np: "लेनदेन र ObjectId",
-        jp: "トランザクションと ObjectId",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Transactions Explained",
-        },
-        {
-          type: "code",
-          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
-          code: `const session = await mongoose.startSession();
-session.startTransaction();
-try {
-  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
-  await Rental.create([{ customerId, movieId }], { session });
-  await session.commitTransaction();
-} catch (e) {
-  await session.abortTransaction();
-  throw e;
-} finally {
-  session.endSession();
-}`,
         },
         {
           type: "diagram",
-          id: "acid-transaction",
+          id: "cursor-pagination",
         },
         {
           type: "paragraph",
           text: {
-            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
-            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
-            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
+            en: "For **pagination**, `skip` and `limit` are the easiest to start with — but they get slow when users navigate to later pages because MongoDB still has to scan all the skipped documents. **Cursor-based pagination** (sorting by `_id` or a timestamp and passing the last value you saw) is faster and works much better for long lists or feeds.",
+            np: "गहिरो पृष्ठमा कर्सर राम्रो — skip भारी हुन सक्छ।",
+            jp: "**ページング** — 深いページはカーソル方式が安定（図参照）。",
           },
         },
       ],
@@ -120,14 +128,14 @@ try {
   faq: [
     {
       question: {
-        en: "When should I embed instead of reference?",
-        np: "एम्बेड कहिले?",
-        jp: "埋め込みはいつ？",
+        en: "Why prefer atomic updates over read-modify-save?",
+        np: "अणु अद्यावधिक किन?",
+        jp: "原子更新を使う理由？",
       },
       answer: {
-        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
-        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
-        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
+        en: "If two requests both read the same document and then save it, one will overwrite the other's changes. **`findOneAndUpdate`** with operators like **`$inc`** and **`$set`** avoids this by making the change directly in the database in one step — no read-then-write race condition.",
+        np: "दुई लेखकले पढेर बचत गर्दा रेस — अणु अद्यावधिक सुरक्षित।",
+        jp: "読んで書くと競合しやすい。**findOneAndUpdate** と演算子で原子更新。",
       },
     },
   ],

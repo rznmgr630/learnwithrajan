@@ -3,51 +3,40 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_14_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
-      np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
-      jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
+      en: "In Node.js, you share code between files using **modules**. Each file is its own separate space — when you `require` a file, Node runs it once and saves the result. Built-in modules like **path** and **os** help your code work the same way on any computer or operating system.",
+      np: "मोड्युलले कोड साझेदारी गर्छ — require, cache, path, os।",
+      jp: "モジュールでコードを共有。`require` はキャッシュされ、`path` / `os` で環境差を吸収する。",
     },
     {
-      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
-      np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
-      jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
+      en: "**CommonJS** (`require` / `module.exports`) is the original Node.js way of importing code — you'll see it everywhere. **ES modules** (`import` / `export`) are the modern style. Most projects pick one and stick with it, though you may see both during a transition.",
+      np: "CommonJS र ESM — परियोजनामा एकै शैली राख्नुहोस्।",
+      jp: "CommonJS が王道。ESM との混在はプロジェクトのルールに従う。",
     },
   ],
   sections: [
     {
-      title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
+      title: { en: "Introduction & the global object", np: "परिचय र ग्लोबल", jp: "はじめに・グローバル" },
       blocks: [
         {
           type: "youtube",
-          videoId: "jHDhaSSKmB0",
-          title: "npm Crash Course",
+          videoId: "fBNz5xF-Kx4",
+          title: "Node.js Modules Explained",
         },
         {
           type: "code",
-          title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
-          code: `// Run once in an empty folder:
-//   npm init -y
+          title: { en: "Each file is its own scope", np: "फाइल स्कोप", jp: "ファイルは別スコープ" },
+          code: `// In a CommonJS module, top-level \`this\` points at module.exports
+console.log(this === module.exports); // true
 
-{
-  "name": "my-app",
-  "version": "1.0.0",
-  "dependencies": {},
-  "scripts": {
-    "start": "node index.js"
-  }
-}
-
-// Terminal:
-//   npm install lodash
-//   npm install --save-dev eslint
-//   npx eslint --version`,
+const secret = 42; // not global — other files cannot see \`secret\`
+globalThis.demo = 'avoid this in real apps';`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
-            np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
-            jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
+            en: "In a browser, variables at the top of a script can accidentally become global (attached to `window`). Node prevents this — every file is **wrapped in a function**, so a `var x = 1` at the top stays private to that file. If you want other files to use it, export it. Putting things on `globalThis` is almost always a bad idea.",
+            np: "प्रत्येक फाइल आफ्नै स्कोप — ग्लोबलमा थप्नु हुँदैन; निर्यात प्रयोग गर्नुहोस्।",
+            jp: "ファイル単位でスコープが閉じる。グローバル汚染は避け、export を使う。",
           },
         },
         {
@@ -55,129 +44,93 @@ export const NODEJS_DAY_14_DETAIL: RoadmapDayDetail = {
           variant: "bullet",
           items: [
             {
-              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
-              np: "`npm run` ले टोलीको एउटै शब्दकोश।",
-              jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
+              en: "**globalThis** — this is the global object, available in any environment (Node, browser, etc.). Putting your own functions on it means they're visible everywhere in your app, which makes code hard to test and debug. Use it only for polyfills or temporary debugging, not real app logic.",
+              np: "`globalThis` मा व्यापार लजिक नराख्नुहोस् — परीक्षण गाह्रो हुन्छ।",
+              jp: "`globalThis` はテストしにくい。ビジネスロジックは置かない。",
             },
           ],
         },
       ],
     },
     {
-      title: {
-        en: "Installing, using packages & working with Git",
-        np: "स्थापना, प्रयोग र Git",
-        jp: "インストール・利用・Git",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Install production vs dev-only packages", np: "स्थापना उदाहरण", jp: "依存の入れ方" },
-          code: `# App dependency (recorded in "dependencies")
-npm install express
-
-# Tooling only — tests, linters (recorded in "devDependencies")
-npm install --save-dev jest eslint
-
-// In code:
-const express = require('express');`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
-            np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
-            jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
-              np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
-              jp: "**利用** — README と `exports` でエントリを確認。",
-            },
-            {
-              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
-              np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
-              jp: "**間接依存** — 見えないパッケージまでついてくる。",
-            },
-            {
-              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
-              np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
-              jp: "**秘密情報** — package.json に書かない。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
+      title: { en: "Modules — create, load & the wrapper function", np: "मोड्युल सिर्जना र लोड", jp: "モジュールの作成・読み込み・ラッパー" },
       blocks: [
         {
           type: "youtube",
-          videoId: "jHDhaSSKmB0",
-          title: "Semantic Versioning Explained",
+          videoId: "yxJG-edtgPM",
+          title: "CommonJS vs ES Modules in Node.js",
         },
         {
           type: "code",
-          title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
-          code: `npm list --depth=0
-npm view lodash version
-npm install lodash@4.17.21
-npm update lodash
-npm uninstall lodash`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Quick semver cheat sheet — what changes when the left digit bumps",
-            np: "Semver संक्षिप्त तालिका",
-            jp: "セマバ早見",
-          },
-          headers: [
-            { en: "Bump", np: "परिवर्तन", jp: "桁" },
-            { en: "Meaning (typical)", np: "अर्थ", jp: "意味（目安）" },
-            { en: "npm range hint", np: "रेञ्ज", jp: "範囲の例" },
-          ],
-          rows: [
-            [
-              { en: "**PATCH** (third number)", np: "PATCH", jp: "**PATCH**" },
-              { en: "Bug fixes, no API change", np: "बग फिक्स", jp: "バグ修正のみ" },
-              { en: "`~1.2.3` allows patch bumps", np: "`~`", jp: "`~` はパッチまで" },
-            ],
-            [
-              { en: "**MINOR** (middle)", np: "MINOR", jp: "**MINOR**" },
-              { en: "New features, backward compatible", np: "नयाँ, मिल्दो", jp: "後方互換の追加" },
-              { en: "`^1.2.3` allows minor + patch", np: "`^`", jp: "`^` は minor まで" },
-            ],
-            [
-              { en: "**MAJOR** (first)", np: "MAJOR", jp: "**MAJOR**" },
-              { en: "Breaking changes — read changelog", np: "ब्रेकिङ", jp: "**破壊的変更**" },
-              { en: "Pin exact version or migrate code", np: "जाँच गर्नुहोस्", jp: "固定か移行作業" },
-            ],
-          ],
+          title: { en: "Tiny export / import pair", np: "सानो उदाहरण", jp: "小さい例" },
+          code: `// math.js
+module.exports.add = (a, b) => a + b;
+
+// app.js
+const math = require('./math');
+console.log(math.add(2, 3));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
-            np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
-            jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
+            en: "When you call `require('./something')`, Node finds the file, runs it **once**, and saves the result in **`require.cache`**. Every time you `require` that same file again — from anywhere in your project — you get back the exact same object. This means any setup code in that file only runs once, and any changes to `module.exports` will be seen by everyone who imports it.",
+            np: "`require` ले पथ हल गर्छ, एक पटक चलाउँछ, cache मा राख्छ — पछि एउटै exports फर्काउँछ।",
+            jp: "`require` は一度だけ実行し、同じ exports を返す。だから副作用は一回。",
           },
         },
         {
           type: "diagram",
-          id: "queue-backpressure",
+          id: "nodejs-require-resolution",
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Creating a module** — put whatever you want to share on `module.exports`. You can also use the shorthand `exports.foo = …` since `exports` starts as an alias for `module.exports`. Just don't do `exports = {}` — that breaks the connection and nothing gets exported.",
+              np: "`module.exports` प्रयोग गर्नुहोस् — `exports = {}` ले जडान टुट्छ।",
+              jp: "**作成** — `module.exports` に公開したいものを載せる。`exports` の再代入は危険。",
+            },
+            {
+              en: "**Loading** — `require('./file')` looks for a file relative to where you are. `require('lodash')` looks inside the `node_modules` folder, walking up until it finds it. Built-in modules like `fs` are always available just by name — no path needed.",
+              np: "`./` सापेक्षिक; प्याकेज नामले node_modules खोज्छ।",
+              jp: "**読み込み** — `./` は相対、`lodash` のような名前は node_modules を遡る。",
+            },
+            {
+              en: "**Module wrapper** — Node secretly wraps every file in a function before running it. That's how variables like `exports`, `require`, `module`, `__filename`, and `__dirname` become available. So `__dirname` always gives you the folder path of the file you're currently in.",
+              np: "व्रापरले `__dirname` र `__filename` दिन्छ।",
+              jp: "**ラッパー** — `__dirname` / `__filename` はこの仕組みで渡される。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Path & OS modules — portable scripts", np: "Path र OS", jp: "path と os" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Path snippet", np: "path उदाहरण", jp: "path の例" },
+          code: `const path = require('path');
+
+const full = path.join(__dirname, 'config', 'default.json');
+const { name, ext } = path.parse('/var/log/app.log');
+// name === 'app', ext === '.log'`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
-            np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
-            jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
+            en: "Don't build file paths by joining strings like `folder + '/' + file` — that breaks on Windows because it uses `\\` instead of `/`. Use **`path.join`** or **`path.resolve`** and Node handles the slashes for you. **`path.parse`** is handy when you need to pull apart a file path — like grabbing just the filename or extension from an upload.",
+            np: "`path.join` प्रयोग गर्नुहोस् — Windows मा `/` मात्र जोड्नु हुँदैन।",
+            jp: "パスは **`path.join`** / **`resolve`**。文字連結は環境で壊れる。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The **os** module tells you about the machine your code is running on — things like the operating system, number of CPUs, and the home directory. It's useful for logging and diagnostics. Just be careful not to leak sensitive info like file paths into error messages that users might see.",
+            np: "`os` ले प्लेटफर्म र CPU संख्या — लगमा संवेदनशील पथ नदेखाउनुहोस्।",
+            jp: "**os** — プラットフォームや CPU 数。本番では詳細を出しすぎない。",
           },
         },
       ],
@@ -185,11 +138,15 @@ npm uninstall lodash`,
   ],
   faq: [
     {
-      question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
+      question: {
+        en: "Should I use default export or named exports in CommonJS?",
+        np: "CommonJS मा default वा named?",
+        jp: "CommonJS で default と named？",
+      },
       answer: {
-        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
-        np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
-        jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
+        en: "If your file does one thing, just export that one function directly: `module.exports = createServer`. If it does multiple things, export an object: `module.exports = { createUser, listUsers }` — then whoever imports it can do `const { createUser } = require('./users')`. The key is to pick one style and stick to it across a folder so your imports are easy to predict.",
+        np: "एक फङ्क्शन वा अब्जेक्ट निर्यात — टोलीले बुझ्ने शैली राख्नुहोस्।",
+        jp: "単一なら関数をそのまま、複数ならオブジェクトでまとめる。フォルダで統一する。",
       },
     },
   ],

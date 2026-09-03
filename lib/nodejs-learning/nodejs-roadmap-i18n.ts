@@ -102,66 +102,76 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "子プロセス・ワーカー・シェル",
   },
   12: {
+    en: "npm, packages & dependency hygiene",
+    np: "npm, प्याकेज र निर्भरता स्वच्छता",
+    jp: "npm・パッケージ・依存関係の衛生",
+  },
+  13: {
+    en: "Testing — node:test, mocking & the test pyramid",
+    np: "परीक्षण — node:test, mocking र test pyramid",
+    jp: "テスト — node:test・モック・テストピラミッド",
+  },
+  14: {
     en: "Global object, CommonJS modules, Path & OS",
     np: "ग्लोबल वस्तु, मोड्युल, Path र OS",
     jp: "グローバル・CommonJS・path・os",
   },
-  13: {
+  15: {
     en: "File system, Events, EventEmitter & HTTP module",
     np: "फाइल प्रणाली, इभेन्ट, EventEmitter र HTTP",
     jp: "fs・イベント・EventEmitter・http",
   },
-  14: {
+  16: {
     en: "npm — package.json, semver, publishing & globals",
     np: "npm — package.json, semver, प्रकाशन र ग्लोबल",
     jp: "npm・package.json・semver・公開・グローバル",
   },
-  15: {
+  17: {
     en: "RESTful APIs with Express — routes, verbs & validation",
     np: "Express सँग REST — रूट, verb र प्रमाणीकरण",
     jp: "Express で REST — ルート・HTTP メソッド・検証",
   },
-  16: {
+  18: {
     en: "Express advanced — middleware, config & app structure",
     np: "Express उन्नत — मिडलवेयर, विन्यास र संरचना",
     jp: "Express 応用 — ミドルウェア・設定・アプリ構成",
   },
-  17: {
+  19: {
     en: "Asynchronous JavaScript — callbacks, promises & async/await",
     np: "असिंक JS — callback, promise र async/await",
     jp: "非同期 JS — コールバック・Promise・async/await",
   },
-  18: {
+  20: {
     en: "MongoDB & Mongoose — connect, schemas, queries & CRUD",
     np: "MongoDB र Mongoose — जडान, schema, प्रश्न र CRUD",
     jp: "MongoDB・Mongoose — 接続・スキーマ・クエリ・CRUD",
   },
-  19: {
+  21: {
     en: "Data validation — schemas, validators & persistence projects",
     np: "डाटा प्रमाणीकरण — schema, validators र persistence",
     jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
   },
-  20: {
+  22: {
     en: "Modelling relationships — refs, embed, population & transactions",
     np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
     jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
   },
-  21: {
+  23: {
     en: "Authentication & authorization — users, JWT & roles",
     np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
     jp: "認証・認可 — ユーザー・JWT・ロール",
   },
-  22: {
+  24: {
     en: "Errors, logging & extracting routes / services",
     np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
     jp: "エラー・ログ・ルートとサービスの分割",
   },
-  23: {
+  25: {
     en: "Unit tests, integration tests & test-driven habits",
     np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
     jp: "単体・結合テストと TDD の習慣",
   },
-  24: {
+  26: {
     en: "Deployment, MongoDB Atlas & what to learn next",
     np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
     jp: "デプロイ・Atlas・次に学ぶこと",
@@ -172,6 +182,7 @@ const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-w0": { en: "Before you start", np: "सुरु गर्नुअघि", jp: "はじめる前に" },
   "nodejs-w1": { en: "Phase 1 · The runtime", np: "Phase 1 · रनटाइम", jp: "Phase 1 · ランタイム" },
   "nodejs-p2": { en: "Phase 2 · The standard library", np: "Phase 2 · स्टान्डर्ड लाइब्रेरी", jp: "Phase 2 · 標準ライブラリ" },
+  "nodejs-p3": { en: "Phase 3 · Tooling", np: "Phase 3 · उपकरण", jp: "Phase 3 · ツール" },
   "nodejs-w2": { en: "Core modules & npm", np: "कोर मोड्युल र npm", jp: "コアモジュールと npm" },
   "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
   "nodejs-w4": { en: "Async JavaScript & Mongoose CRUD", np: "async JS र Mongoose CRUD", jp: "非同期JSとMongoose CRUD" },

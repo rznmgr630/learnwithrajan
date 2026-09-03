@@ -3,100 +3,115 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_22_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Production APIs will fail — networks time out, disks fill up, and code has bugs. **Structured error handling** means that when something goes wrong, your API sends a clear, predictable response and your logs make it easy to figure out what happened. Good error handling is not about hiding problems — it is about surfacing them in a controlled way.",
-      np: "संरचित त्रुटि — HTTP र लग उही भाषा।",
-      jp: "**構造化エラー**で HTTP とログを揃える。",
+      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
+      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
+      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
     },
     {
-      en: "There are two kinds of errors: **operational errors** (like invalid input or a duplicate email) that you expect and handle, and **programmer errors** (like a null pointer or an unhandled edge case) that are bugs. Users should see friendly messages for the first kind. The second kind should get logged with full details on the server, but users should never see a stack trace.",
-      np: "सञ्चालन त्रुटि बनाम बग — स्ट्याक उत्पादनमा नदेखाउनु।",
-      jp: "**運用エラー**と**バグ**を分ける。本番ではスタックを見せない。",
+      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
+      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
+      jp: "**populate** は便利だが **N+1** に注意。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Promises, Express error middleware & async helpers",
-        np: "प्रतिज्ञा र त्रुटि मिडलवेयर",
-        jp: "Promise とエラーミドルウェア",
-      },
+      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
       blocks: [
         {
           type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Error Handling in Express.js",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
         },
         {
           type: "code",
-          title: { en: "Central Express error handler", np: "केन्द्रीय त्रुटि", jp: "集約エラーハンドラ" },
-          code: `// Register AFTER all routes:
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  console.error(err);
-  const status = err.statusCode ?? 500;
-  res.status(status).json({ message: err.message ?? 'Server error' });
+          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
+          code: `// Reference another collection by id
+const movieSchema = new mongoose.Schema({
+  title: String,
+  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
+});
+
+// Embed small subdocuments that always ship with the parent
+const orderSchema = new mongoose.Schema({
+  lines: [{ sku: String, qty: Number, price: Number }],
 });`,
+        },
+        {
+          type: "diagram",
+          id: "erd-one-many",
         },
         {
           type: "paragraph",
           text: {
-            en: "If a Promise rejects inside a route handler and you do not catch it, the process can crash. Always wrap async route handlers with `try/catch`, or use the **`express-async-errors`** package which patches Express so any uncaught rejection automatically calls `next(err)`. Either way, register a **central error middleware** at the bottom of your app to catch everything and send back a consistent response.",
-            np: "async रूटमा try/catch वा express-async-errors — अन्तमा त्रुटि मिडलवेयर।",
-            jp: "**async** ルートは **`try/catch`** か **`express-async-errors`** で `next(err)` へ。",
+            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
+            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
+            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
           },
         },
+      ],
+    },
+    {
+      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
+      blocks: [
         {
-          type: "diagram",
-          id: "error-classification",
+          type: "code",
+          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
+          code: `async function createMovie(body) {
+  const genre = await Genre.findById(body.genreId);
+  if (!genre) {
+    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
+  }
+  return Movie.create(body);
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
+            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
+            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
+          },
         },
       ],
     },
     {
       title: {
-        en: "Logging, persistence & extracting modules",
-        np: "लग र मोड्युल निकाल्नु",
-        jp: "ログとモジュール分割",
+        en: "Transactions & validating ObjectIds",
+        np: "लेनदेन र ObjectId",
+        jp: "トランザクションと ObjectId",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "fBNz5xF-Kx4",
-          title: "Structured Logging in Node.js",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Transactions Explained",
         },
         {
           type: "code",
-          title: { en: "One JSON line per request (easy to grep)", np: "संरचित लग", jp: "構造化ログ" },
-          code: `const crypto = require('crypto');
-
-function requestLogger(req, res, next) {
-  req.correlationId = crypto.randomUUID();
-  console.log(JSON.stringify({
-    at: new Date().toISOString(),
-    correlationId: req.correlationId,
-    method: req.method,
-    url: req.url,
-  }));
-  next();
+          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
+          code: `const session = await mongoose.startSession();
+session.startTransaction();
+try {
+  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
+  await Rental.create([{ customerId, movieId }], { session });
+  await session.commitTransaction();
+} catch (e) {
+  await session.abortTransaction();
+  throw e;
+} finally {
+  session.endSession();
 }`,
         },
         {
           type: "diagram",
-          id: "log-correlation",
+          id: "acid-transaction",
         },
         {
           type: "paragraph",
           text: {
-            en: "**Structured logs** (one JSON object per line) are much easier to search and filter than plain text. Attach a unique **correlation ID** to each request and include it in every log line, so you can trace exactly what happened across multiple services or log entries. Never log sensitive data like passwords, credit card numbers, or API keys.",
-            np: "कोरिलेसन आईडी — संवेदनशील डाटा लग नगर्नु।",
-            jp: "**相関 ID** でログを繋ぐ。秘密はログに出さない。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "As your app grows, keep each file focused on one thing — routes, database access, logging, config, and validation all in their own folders. Set up **`process.on('uncaughtException')`** and **`process.on('unhandledRejection')`** handlers that log the error before the process exits. Most hosting platforms will automatically restart the process, but you want the error in your logs before that happens.",
-            np: "रूट, DB, लग, विन्यास अलग फाइल — अनह्यान्ड प्रक्रिया ह्यान्डलर।",
-            jp: "**分割**で責務を分離。未処理例外はプロセスハンドラへ。",
+            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
+            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
+            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
           },
         },
       ],
@@ -105,14 +120,14 @@ function requestLogger(req, res, next) {
   faq: [
     {
       question: {
-        en: "What belongs in the global Express error handler?",
-        np: "ग्लोबल त्रुटि ह्यान्डलरमा के?",
-        jp: "グローバルエラーハンドラに何を書く？",
+        en: "When should I embed instead of reference?",
+        np: "एम्बेड कहिले?",
+        jp: "埋め込みはいつ？",
       },
       answer: {
-        en: "For errors you know about (like validation failures or duplicate keys), map them to the right HTTP status code and return a helpful message. For everything else, return a generic 500 and log the full error with the correlation ID on the server. Never send internal error details or stack traces to the client.",
-        np: "ज्ञात त्रुटिलाई कोड — ग्राहकलाई सुरक्षित सन्देश।",
-        jp: "既知エラーはコード付き。未知は 500 とログに詳細。",
+        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
+        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
+        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
       },
     },
   ],
