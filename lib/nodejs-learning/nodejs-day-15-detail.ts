@@ -3,234 +3,153 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
-      np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
-      jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
+      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
+      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
+      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
     },
     {
-      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
-      np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
-      jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
+      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
+      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
+      jp: "**Postman** でローカル API をフロント無しで検証できる。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "The evolution of async patterns",
-        np: "async ढाँचाको विकास",
-        jp: "非同期パターンの進化",
-      },
+      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
       blocks: [
         {
           type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "JavaScript Promises in 10 Minutes",
-        },
-        {
-          type: "diagram",
-          id: "nodejs-async-evolution",
+          videoId: "L72fhGm1tfE",
+          title: "Express JS Crash Course",
         },
         {
           type: "code",
-          title: {
-            en: "Same operation — callback → Promise → async/await",
-            np: "एउटै काम — तीन तरिका",
-            jp: "同じ操作を 3 通りで書く",
+          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
+          code: `const express = require('express');
+const app = express();
+
+app.get('/api/genres', (req, res) => res.json([]));
+app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
+// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
+            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
+            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
           },
-          code: `// ── Callback style ──────────────────────────────────
-function getUserCb(id, cb) {
-  db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-    if (err) return cb(err);
-    cb(null, rows[0]);
-  });
-}
-getUserCb(42, (err, user) => {
-  if (err) console.error(err);
-  else console.log(user);
+        },
+        {
+          type: "diagram",
+          id: "rest-graphql-grpc",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
+            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
+            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "First server, nodemon & environment variables",
+        np: "पहिलो सर्भर, nodemon र env",
+        jp: "最初のサーバ・nodemon・環境変数",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
+          code: `const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
 });
 
-// ── Promise style ─────────────────────────────────────
-function getUserP(id) {
-  return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows[0]);
-    });
-  });
-}
-getUserP(42).then(console.log).catch(console.error);
-
-// ── async/await style ─────────────────────────────────
-async function getUser(id) {
-  const rows = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-  return rows[0];
-}
-try {
-  const user = await getUser(42);
-  console.log(user);
-} catch (err) {
-  console.error(err);
-}`,
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => console.log(\`Listening on \${port}\`));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
-            np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
-            jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
+            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
+            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
+            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
+            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
+            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Sync vs async — why Node feels different",
-        np: "सिंक र असिंक",
-        jp: "同期と非同期の違い",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Blocking vs yielding the thread",
-            np: "ब्लक बनाम असिंक",
-            jp: "ブロックと譲る",
-          },
-          code: `const fs = require('fs');
-
-// BAD in a busy HTTP handler — blocks every waiting request:
-// const data = fs.readFileSync('./big.json', 'utf8');
-
-// GOOD — yields the thread; other requests run while this waits:
-fs.readFile('./big.json', 'utf8', (err, data) => {
-  if (err) throw err;
-  console.log('bytes:', data.length);
-});`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
-            np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
-            jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "node-execution-priority",
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Promise utilities — all, allSettled, race",
-        np: "Promise utilities — all, allSettled, race",
-        jp: "Promise ユーティリティ",
+        en: "Routes, verbs, Postman, validation & CRUD projects",
+        np: "रूट, क्रिया, Postman",
+        jp: "ルート・メソッド・Postman",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "Promise.all, allSettled, race Explained",
+          videoId: "fBNz5xF-Kx4",
+          title: "REST API with Node.js & Express",
         },
         {
           type: "code",
-          title: {
-            en: "Running independent async tasks concurrently",
-            np: "स्वतन्त्र कार्य एकैसाथ",
-            jp: "独立タスクを並行実行",
-          },
-          code: `// Promise.all — fails fast if ANY promise rejects
-const [user, orders] = await Promise.all([
-  fetchUser(userId),
-  fetchOrders(userId),
-]);
-// wall-clock time ≈ max(fetchUser, fetchOrders) — not their sum
+          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
+          code: `app.get('/api/items/:id', (req, res) => {
+  const { id } = req.params;
+  const page = Number(req.query.page ?? 1);
+  res.json({ id, page });
+});
 
-// Promise.allSettled — always waits for all, captures failures too
-const results = await Promise.allSettled([
-  sendEmail(user),
-  sendSMS(user),
-  pushNotify(user),
-]);
-for (const r of results) {
-  if (r.status === 'rejected') console.error('Notification failed', r.reason);
-}
-
-// Promise.race — first settled wins (useful for timeouts)
-const withTimeout = Promise.race([
-  fetchExpensiveData(),
-  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
-]);`,
+app.post('/api/items', (req, res) => {
+  // Needs express.json() above — validate req.body before DB
+  res.status(201).json(req.body);
+});`,
+        },
+        {
+          type: "diagram",
+          id: "request-response",
         },
         {
           type: "paragraph",
           text: {
-            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
-            np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
-            jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
+            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
+            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
+            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
           },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Error handling patterns",
-        np: "त्रुटि व्यवस्थापन ढाँचा",
-        jp: "エラーハンドリングパターン",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Reliable async error handling",
-            np: "विश्वसनीय async त्रुटि",
-            jp: "信頼できる非同期エラー処理",
-          },
-          code: `// ── try/catch in async functions ─────────────────────
-async function createUser(data) {
-  try {
-    const user = await User.create(data);
-    return user;
-  } catch (err) {
-    if (err.code === 11000) throw new Error('Email already in use');
-    throw err; // rethrow — don't swallow unknown errors
-  }
-}
-
-// ── .catch() on promise chains ────────────────────────
-fetchUser(id)
-  .then(user => processUser(user))
-  .catch(err => {
-    logger.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
-
-// ── Global safety net (log, never swallow) ────────────
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
-  // In production: alert on-call, then graceful shutdown
-  process.exit(1);
-});`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
-              np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
-              jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
+              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
+              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
+              jp: "**Postman** — コレクションで再現性を保つ。",
             },
             {
-              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
-              np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
-              jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
+              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
+              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
+              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
             },
             {
-              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
-              np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
-              jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
+              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
+              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
+              jp: "**Genres API** — 成功と 400 を両方テスト。",
             },
           ],
         },
@@ -239,15 +158,11 @@ process.on('unhandledRejection', (reason, promise) => {
   ],
   faq: [
     {
-      question: {
-        en: "Promise.all or sequential await?",
-        np: "Promise.all वा क्रम await?",
-        jp: "all と順番 await？",
-      },
+      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
       answer: {
-        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
-        np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
-        jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
+        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
+        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
+        jp: "HTTP の境界で止める。DB は第二の防壁。",
       },
     },
   ],

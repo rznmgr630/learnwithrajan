@@ -3,311 +3,235 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_17_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Validation** is how you stop bad data from ever reaching your database. Mongoose validators check your data right before it gets saved. Libraries like **Joi** or **Zod** check it even earlier — at the route level — so you can send a clear 400 error back to the client without touching any business logic.",
-      np: "Mongoose — DB write अघि; Joi — route मा। दुवै तह मिलाएर राम्रो।",
-      jp: "Mongoose は DB 書き込み前、Joi はルートレベルで検証。二段で守る。",
+      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
+      np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
+      jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
     },
     {
-      en: "Think of validation as two layers of protection. The **route layer** catches problems in the incoming request and returns friendly error messages. The **schema layer** is your backup — it stops bad data from getting into MongoDB even if something slips past the route check.",
-      np: "रूट — पहिलो रिंग (400); Schema — अन्तिम रिंग (DB protection)।",
-      jp: "**ルート検証**は早期の 400 返却。**スキーマ検証**は DB へのゴミを防ぐ最後の砦。",
+      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
+      np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
+      jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Mongoose schema validators",
-        np: "Mongoose schema validators",
-        jp: "Mongoose スキーマバリデータ",
+        en: "The evolution of async patterns",
+        np: "async ढाँचाको विकास",
+        jp: "非同期パターンの進化",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "Mongoose Crash Course",
+          videoId: "DHvZLI7Db8E",
+          title: "JavaScript Promises in 10 Minutes",
+        },
+        {
+          type: "diagram",
+          id: "nodejs-async-evolution",
         },
         {
           type: "code",
           title: {
-            en: "Schema with built-in and custom validators",
-            np: "बिल्ट-इन र कस्टम validators",
-            jp: "組み込み + カスタムバリデータ",
+            en: "Same operation — callback → Promise → async/await",
+            np: "एउटै काम — तीन तरिका",
+            jp: "同じ操作を 3 通りで書く",
           },
-          code: `const mongoose = require('mongoose');
-
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    minlength: [2, 'Name must be at least 2 characters'],
-    maxlength: [100, 'Name must be at most 100 characters'],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
-    lowercase: true,
-  },
-  role: {
-    type: String,
-    enum: {
-      values: ['user', 'admin', 'moderator'],
-      message: '{VALUE} is not a valid role',
-    },
-    default: 'user',
-  },
-  age: {
-    type: Number,
-    min: [0, 'Age cannot be negative'],
-    max: [150, 'Age seems unrealistic'],
-  },
-  website: {
-    type: String,
-    validate: {
-      validator: (v) => !v || v.startsWith('https://'),
-      message: 'Website must use HTTPS',
-    },
-  },
+          code: `// ── Callback style ──────────────────────────────────
+function getUserCb(id, cb) {
+  db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
+    if (err) return cb(err);
+    cb(null, rows[0]);
+  });
+}
+getUserCb(42, (err, user) => {
+  if (err) console.error(err);
+  else console.log(user);
 });
 
-const User = mongoose.model('User', userSchema);`,
+// ── Promise style ─────────────────────────────────────
+function getUserP(id) {
+  return new Promise((resolve, reject) => {
+    db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows[0]);
+    });
+  });
+}
+getUserP(42).then(console.log).catch(console.error);
+
+// ── async/await style ─────────────────────────────────
+async function getUser(id) {
+  const rows = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  return rows[0];
+}
+try {
+  const user = await getUser(42);
+  console.log(user);
+} catch (err) {
+  console.error(err);
+}`,
         },
         {
-          type: "diagram",
-          id: "nodejs-mongoose-schema",
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Common Mongoose validators",
-            np: "सामान्य validators",
-            jp: "よく使うバリデータ",
+          type: "paragraph",
+          text: {
+            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
+            np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
+            jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
           },
-          headers: [
-            { en: "Validator", np: "Validator", jp: "バリデータ" },
-            { en: "Usage", np: "प्रयोग", jp: "使い方" },
-            { en: "Error message", np: "त्रुटि सन्देश", jp: "エラーメッセージ" },
-          ],
-          rows: [
-            [
-              { en: "`required`", np: "required", jp: "`required`" },
-              { en: "`required: [true, 'msg']`", np: "अनिवार्य", jp: "必須フィールド" },
-              { en: "Path `name` is required", np: "field अनिवार्य", jp: "フィールドが必要" },
-            ],
-            [
-              { en: "`min` / `max`", np: "min/max", jp: "`min` / `max`" },
-              { en: "Numbers and dates", np: "संख्या र मिति", jp: "数値・日付に適用" },
-              { en: "Path `age` (5) is less than minimum", np: "न्यूनतम भन्दा कम", jp: "最小値より小さい" },
-            ],
-            [
-              { en: "`minlength` / `maxlength`", np: "लम्बाइ", jp: "`minlength` / `maxlength`" },
-              { en: "String length bounds", np: "string लम्बाइ", jp: "文字列の長さ" },
-              { en: "Path `name` is shorter than minimum", np: "छोटो", jp: "最小文字数より短い" },
-            ],
-            [
-              { en: "`enum`", np: "enum", jp: "`enum`" },
-              { en: "Allowed string values", np: "अनुमत मानहरू", jp: "許可された値のリスト" },
-              { en: "`xyz` is not a valid role", np: "अमान्य मान", jp: "無効な値" },
-            ],
-            [
-              { en: "`match`", np: "match (regex)", jp: "`match`" },
-              { en: "Regex test on string", np: "regex परीक्षण", jp: "正規表現テスト" },
-              { en: "Invalid email format", np: "अमान्य ढाँचा", jp: "フォーマット不正" },
-            ],
-            [
-              { en: "`validate`", np: "custom", jp: "`validate`" },
-              { en: "Custom `validator(value)` function", np: "कस्टम function", jp: "カスタム関数" },
-              { en: "Website must use HTTPS", np: "HTTPS चाहिन्छ", jp: "カスタムメッセージ" },
-            ],
-          ],
         },
       ],
     },
     {
       title: {
-        en: "Joi validation in Express routes",
-        np: "Express routes मा Joi validation",
-        jp: "Express ルートでの Joi 検証",
+        en: "Sync vs async — why Node feels different",
+        np: "सिंक र असिंक",
+        jp: "同期と非同期の違い",
       },
       blocks: [
         {
-          type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Express Validation with Joi",
-        },
-        {
           type: "code",
           title: {
-            en: "Reusable validation middleware with Joi",
-            np: "Joi validation middleware",
-            jp: "Joi を使った検証ミドルウェア",
+            en: "Blocking vs yielding the thread",
+            np: "ब्लक बनाम असिंक",
+            jp: "ブロックと譲る",
           },
-          code: `const Joi = require('joi');
+          code: `const fs = require('fs');
 
-// Define the schema
-const createUserSchema = Joi.object({
-  name: Joi.string().min(2).max(100).required(),
-  email: Joi.string().email().required(),
-  role: Joi.string().valid('user', 'admin').default('user'),
-  age: Joi.number().integer().min(0).max(150),
-});
+// BAD in a busy HTTP handler — blocks every waiting request:
+// const data = fs.readFileSync('./big.json', 'utf8');
 
-// Reusable middleware factory
-function validate(schema) {
-  return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
-      abortEarly: false,    // collect ALL errors, not just first
-      stripUnknown: true,   // remove fields not in schema
-    });
-    if (error) {
-      return res.status(400).json({
-        status: 400,
-        error: 'Validation failed',
-        details: error.details.map((d) => ({
-          field: d.path.join('.'),
-          message: d.message,
-        })),
-      });
-    }
-    req.body = value; // use the cleaned/coerced value
-    next();
-  };
-}
-
-// Use in routes
-const express = require('express');
-const router = express.Router();
-
-router.post('/users', validate(createUserSchema), async (req, res) => {
-  // req.body is now validated and stripped of unknown fields
-  const user = await User.create(req.body);
-  res.status(201).json(user);
+// GOOD — yields the thread; other requests run while this waits:
+fs.readFile('./big.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log('bytes:', data.length);
 });`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Put your validation middleware between the route and the handler — the handler only runs if the data passes. Set `abortEarly: false` so all errors are collected in one go, meaning the client can see and fix everything at once rather than fixing one error at a time. Set `stripUnknown: true` to automatically drop any extra fields the client sent.",
-            np: "validation middleware route र handler बीच — `abortEarly: false` ले सबै त्रुटि एकैपटक।",
-            jp: "バリデーションはルートとハンドラの間に挟む。`abortEarly: false` で全エラーをまとめて返す。",
+            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
+            np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
+            jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "node-execution-priority",
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Promise utilities — all, allSettled, race",
+        np: "Promise utilities — all, allSettled, race",
+        jp: "Promise ユーティリティ",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "DHvZLI7Db8E",
+          title: "Promise.all, allSettled, race Explained",
+        },
+        {
+          type: "code",
+          title: {
+            en: "Running independent async tasks concurrently",
+            np: "स्वतन्त्र कार्य एकैसाथ",
+            jp: "独立タスクを並行実行",
+          },
+          code: `// Promise.all — fails fast if ANY promise rejects
+const [user, orders] = await Promise.all([
+  fetchUser(userId),
+  fetchOrders(userId),
+]);
+// wall-clock time ≈ max(fetchUser, fetchOrders) — not their sum
+
+// Promise.allSettled — always waits for all, captures failures too
+const results = await Promise.allSettled([
+  sendEmail(user),
+  sendSMS(user),
+  pushNotify(user),
+]);
+for (const r of results) {
+  if (r.status === 'rejected') console.error('Notification failed', r.reason);
+}
+
+// Promise.race — first settled wins (useful for timeouts)
+const withTimeout = Promise.race([
+  fetchExpensiveData(),
+  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+]);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
+            np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
+            jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Sanitization — strip unknown fields",
-        np: "Sanitization — अज्ञात fields हटाउनु",
-        jp: "サニタイズ — 余分なフィールドを除去",
+        en: "Error handling patterns",
+        np: "त्रुटि व्यवस्थापन ढाँचा",
+        jp: "エラーハンドリングパターン",
       },
       blocks: [
         {
           type: "code",
           title: {
-            en: "Strip unknown fields to prevent mass-assignment",
-            np: "mass-assignment रोक्न unknown fields हटाउनु",
-            jp: "マスアサインメント防止のためのフィールド除去",
+            en: "Reliable async error handling",
+            np: "विश्वसनीय async त्रुटि",
+            jp: "信頼できる非同期エラー処理",
           },
-          code: `// Without stripUnknown, a malicious client could send:
-// { name: 'Alice', email: 'a@b.com', role: 'admin', isVerified: true }
-// and pollute your DB with isVerified = true
+          code: `// ── try/catch in async functions ─────────────────────
+async function createUser(data) {
+  try {
+    const user = await User.create(data);
+    return user;
+  } catch (err) {
+    if (err.code === 11000) throw new Error('Email already in use');
+    throw err; // rethrow — don't swallow unknown errors
+  }
+}
 
-const { error, value } = schema.validate(req.body, {
-  stripUnknown: true,
-  // value now only contains fields defined in the Joi schema
-});
+// ── .catch() on promise chains ────────────────────────
+fetchUser(id)
+  .then(user => processUser(user))
+  .catch(err => {
+    logger.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
 
-// With Mongoose you can also enable strict mode (default true):
-// strict: true means fields not in schema are silently dropped on save
-const userSchema = new mongoose.Schema({ name: String }, { strict: true });`,
+// ── Global safety net (log, never swallow) ────────────
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  // In production: alert on-call, then graceful shutdown
+  process.exit(1);
+});`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**Mass-assignment** — if a client sends `{ role: 'admin' }` in the request body and your code does `User.create(req.body)` directly, they can give themselves admin privileges. Always whitelist the fields you accept, or use `stripUnknown` to remove anything you did not define.",
-              np: "mass-assignment — `role: 'admin'` पठाएर privilege escalate गर्न सकिन्छ।",
-              jp: "**マスアサインメント** — 不正なフィールドで権限昇格が起きる。ホワイトリスト化が必要。",
+              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
+              np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
+              jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
             },
             {
-              en: "**Keep your database clean** — extra unknown fields in your documents make future schema changes harder and can break analytics queries that assume a consistent shape.",
-              np: "DB सफा राख्नुहोस् — अज्ञात fields ले schema migration कठिन बन्छ।",
-              jp: "**DB をきれいに保つ** — 未知フィールドはスキーママイグレーションを壊す。",
+              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
+              np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
+              jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
             },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Validation error responses",
-        np: "Validation error responses",
-        jp: "バリデーションエラーレスポンス",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Structured error response format",
-            np: "संरचित त्रुटि response",
-            jp: "構造化エラーレスポンス",
-          },
-          code: `// Consistent error shape — clients can rely on this contract
-{
-  "status": 400,
-  "error": "Validation failed",
-  "details": [
-    { "field": "email",  "message": "\\"email\\" must be a valid email" },
-    { "field": "name",   "message": "\\"name\\" is not allowed to be empty" }
-  ]
-}
-
-// Express error handler for Mongoose ValidationError
-app.use((err, req, res, next) => {
-  if (err.name === 'ValidationError') {
-    const details = Object.entries(err.errors).map(([field, e]) => ({
-      field,
-      message: e.message,
-    }));
-    return res.status(400).json({ status: 400, error: 'Validation failed', details });
-  }
-  if (err.code === 11000) {
-    return res.status(409).json({ status: 409, error: 'Duplicate key', field: Object.keys(err.keyPattern)[0] });
-  }
-  res.status(500).json({ status: 500, error: 'Internal server error' });
-});`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "HTTP status codes for validation scenarios",
-            np: "validation status codes",
-            jp: "検証エラーの HTTP ステータス",
-          },
-          headers: [
-            { en: "Status", np: "Status", jp: "ステータス" },
-            { en: "When to use", np: "कहिले", jp: "使いどき" },
-            { en: "Example", np: "उदाहरण", jp: "例" },
-          ],
-          rows: [
-            [
-              { en: "**400 Bad Request**", np: "400", jp: "**400**" },
-              { en: "Malformed JSON, missing required fields, type mismatch", np: "अमान्य body", jp: "フォーマット不正・必須欠如" },
-              { en: "`name` is required", np: "name अनिवार्य", jp: "name は必須" },
-            ],
-            [
-              { en: "**422 Unprocessable Entity**", np: "422", jp: "**422**" },
-              { en: "Well-formed body but semantically invalid business rule", np: "व्यावसायिक नियम उल्लङ्घन", jp: "形式は正しいが業務ルール違反" },
-              { en: "Start date must be before end date", np: "मिति नियम", jp: "開始日が終了日より後" },
-            ],
-            [
-              { en: "**409 Conflict**", np: "409", jp: "**409**" },
-              { en: "Duplicate unique field (e.g. email already registered)", np: "डुप्लिकेट key", jp: "一意フィールドの重複" },
-              { en: "Email already in use", np: "email पहिल्यै छ", jp: "メールが既に存在" },
-            ],
+            {
+              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
+              np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
+              jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
+            },
           ],
         },
       ],
@@ -316,14 +240,14 @@ app.use((err, req, res, next) => {
   faq: [
     {
       question: {
-        en: "Should I validate in the schema or the route?",
-        np: "schema मा वा route मा validate गर्ने?",
-        jp: "スキーマとルートどちらで検証すべきか？",
+        en: "Promise.all or sequential await?",
+        np: "Promise.all वा क्रम await?",
+        jp: "all と順番 await？",
       },
       answer: {
-        en: "**Both** — they do different things. Route middleware (Joi/Zod) stops bad requests at the door and sends a clear 400 error before any of your logic runs. Mongoose schema validators catch anything that slips through — including bugs in your own code, like a service function that skips the route validation. Using both gives you layered protection.",
-        np: "दुवै — route middleware ले HTTP boundary मा 400 दिन्छ; Mongoose ले DB अघि अन्तिम जाँच।",
-        jp: "**両方**。ルート検証は HTTP 境界で 400 を返す。Mongoose 検証はコードバグへの最後の砦。",
+        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
+        np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
+        jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
       },
     },
   ],

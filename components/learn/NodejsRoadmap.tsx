@@ -19,6 +19,8 @@ import { NODEJS_DAY_5_LESSONS } from "@/lib/nodejs-learning/nodejs-day-5-lessons
 import { NODEJS_DAY_6_LESSONS } from "@/lib/nodejs-learning/nodejs-day-6-lessons";
 import { NODEJS_DAY_7_LESSONS } from "@/lib/nodejs-learning/nodejs-day-7-lessons";
 import { NODEJS_DAY_8_LESSONS } from "@/lib/nodejs-learning/nodejs-day-8-lessons";
+import { NODEJS_DAY_9_LESSONS } from "@/lib/nodejs-learning/nodejs-day-9-lessons";
+import { NODEJS_DAY_10_LESSONS } from "@/lib/nodejs-learning/nodejs-day-10-lessons";
 import { NODEJS_DAY_11_LESSONS } from "@/lib/nodejs-learning/nodejs-day-11-lessons";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 
@@ -35,6 +37,8 @@ const LESSON_DAYS: Record<number, LessonDay> = {
   6: NODEJS_DAY_6_LESSONS,
   7: NODEJS_DAY_7_LESSONS,
   8: NODEJS_DAY_8_LESSONS,
+  9: NODEJS_DAY_9_LESSONS,
+  10: NODEJS_DAY_10_LESSONS,
   11: NODEJS_DAY_11_LESSONS,
 };
 
