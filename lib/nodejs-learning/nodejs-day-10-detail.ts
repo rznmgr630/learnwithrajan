@@ -3,166 +3,273 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_10_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
-      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
-      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
+      en: "The **`fs`** module is how Node reads and writes files. Every operation comes in two versions: a synchronous one that blocks everything while it works, and an async one that lets your server keep handling other requests while it waits. On a server, always use the async version.",
+      np: "`fs` — फाइल प्रणालीको प्रवेशद्वार। सर्भरमा सधैँ async variant प्रयोग गर्नुहोस्।",
+      jp: "**`fs`** はファイルシステムへの入口。サーバでは常に非同期版を使い、イベントループを解放する。",
     },
     {
-      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
-      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
-      jp: "**Postman** でローカル API をフロント無しで検証できる。",
+      en: "**EventEmitter** is Node's built-in way to broadcast events and react to them — like a simple publish/subscribe system. HTTP servers, streams, and timers are all built on top of it. The **`http`** module uses it too, which means you can build a basic server without installing any extra packages.",
+      np: "EventEmitter — Node को प्रकाशन/सदस्यता आधार। http सर्भर यसैमा बनेको छ।",
+      jp: "**EventEmitter** は Node 内蔵の pub/sub 基盤。http モジュールはこれを継承したサーバを提供する。",
     },
   ],
   sections: [
     {
-      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Express JS Crash Course",
-        },
-        {
-          type: "code",
-          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
-          code: `const express = require('express');
-const app = express();
-
-app.get('/api/genres', (req, res) => res.json([]));
-app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
-// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
-            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
-            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "rest-graphql-grpc",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
-            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
-            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
-          },
-        },
-      ],
-    },
-    {
       title: {
-        en: "First server, nodemon & environment variables",
-        np: "पहिलो सर्भर, nodemon र env",
-        jp: "最初のサーバ・nodemon・環境変数",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
-          code: `const express = require('express');
-const app = express();
-
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true });
-});
-
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => console.log(\`Listening on \${port}\`));`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
-            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
-            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
-            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
-            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Routes, verbs, Postman, validation & CRUD projects",
-        np: "रूट, क्रिया, Postman",
-        jp: "ルート・メソッド・Postman",
+        en: "fs — reading and writing files",
+        np: "fs — फाइल पढ्नु र लेख्नु",
+        jp: "fs — ファイルの読み書き",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "fBNz5xF-Kx4",
-          title: "REST API with Node.js & Express",
+          videoId: "Z_p1yFGS0Ak",
+          title: "Node.js fs Module - Reading & Writing Files",
         },
         {
           type: "code",
-          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
-          code: `app.get('/api/items/:id', (req, res) => {
-  const { id } = req.params;
-  const page = Number(req.query.page ?? 1);
-  res.json({ id, page });
+          title: {
+            en: "Three ways to read a file",
+            np: "फाइल पढ्ने तीन तरिका",
+            jp: "ファイルを読む 3 通り",
+          },
+          code: `const fs = require('fs');
+const fsp = require('fs').promises;
+
+// 1. Callback — old-style but universal
+fs.readFile('./config.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(JSON.parse(data));
 });
 
-app.post('/api/items', (req, res) => {
-  // Needs express.json() above — validate req.body before DB
-  res.status(201).json(req.body);
-});`,
-        },
-        {
-          type: "diagram",
-          id: "request-response",
+// 2. async/await with fs.promises (Node 10+)
+async function readConfig() {
+  const raw = await fsp.readFile('./config.json', 'utf8');
+  return JSON.parse(raw);
+}
+
+// 3. Synchronous — ONLY safe at startup, never in request handlers
+const config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
+
+// Writing a file
+await fsp.writeFile('./output.json', JSON.stringify({ ok: true }, null, 2));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
-            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
-            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
+            en: "Reading files synchronously is fine at **startup** — your app hasn't received any traffic yet, so blocking doesn't matter. But inside a **request handler**, always use the async version so other requests don't have to wait for one request's file read to finish.",
+            np: "सुरुवातमा sync ठीक; अनुरोध handler मा async चाहिन्छ ताकि अन्य अनुरोधहरू पर्खनु नपरोस्।",
+            jp: "起動時は同期も可。**リクエスト処理内**では必ず非同期を使い、他のリクエストをブロックしない。",
           },
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
-              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
-              jp: "**Postman** — コレクションで再現性を保つ。",
-            },
-            {
-              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
-              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
-              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
-            },
-            {
-              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
-              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
-              jp: "**Genres API** — 成功と 400 を両方テスト。",
-            },
+          type: "table",
+          caption: {
+            en: "fs.readFile vs fs.promises.readFile vs fs.readFileSync",
+            np: "तीन तरिका तुलना",
+            jp: "3 つの API 比較",
+          },
+          headers: [
+            { en: "Method", np: "विधि", jp: "メソッド" },
+            { en: "Returns", np: "फर्काउँछ", jp: "戻り値" },
+            { en: "When to use", np: "कहिले प्रयोग", jp: "使いどき" },
           ],
+          rows: [
+            [
+              { en: "`fs.readFile(path, cb)`", np: "callback", jp: "`fs.readFile`" },
+              { en: "void — result in callback", np: "callback मा नतिजा", jp: "コールバックで受け取る" },
+              { en: "Legacy code; interop with older Node APIs", np: "पुरानो कोड", jp: "既存コードとの互換" },
+            ],
+            [
+              { en: "`fs.promises.readFile(path)`", np: "Promise", jp: "`fsp.readFile`" },
+              { en: "Promise<Buffer|string>", np: "Promise<Buffer|string>", jp: "Promise<Buffer|string>" },
+              { en: "Modern servers — works with async/await", np: "आधुनिक सर्भर", jp: "現代のサーバコード" },
+            ],
+            [
+              { en: "`fs.readFileSync(path)`", np: "sync", jp: "`readFileSync`" },
+              { en: "Buffer | string (blocks)", np: "Buffer — ब्लक गर्छ", jp: "Buffer（ブロックする）" },
+              { en: "App startup scripts only — not in HTTP handlers", np: "सुरुवात मात्र", jp: "起動スクリプトのみ" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Streams — pipe large data",
+        np: "Streams — ठूलो डाटा पाइप गर्नुहोस्",
+        jp: "ストリーム — 大量データをパイプ",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "EcznOgzOdxI",
+          title: "Node.js Streams Explained",
+        },
+        {
+          type: "code",
+          title: {
+            en: "Stream a file directly to an HTTP response",
+            np: "फाइल HTTP response मा stream गर्नुहोस्",
+            jp: "ファイルを HTTP レスポンスにストリーミング",
+          },
+          code: `const http = require('http');
+const fs = require('fs');
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/download') {
+    res.setHeader('Content-Type', 'text/csv');
+    // Chunk the file to res — never loads all into RAM
+    fs.createReadStream('./big.csv').pipe(res);
+    return;
+  }
+  res.end('ok');
+});
+
+server.listen(3000);`,
+        },
+        {
+          type: "diagram",
+          id: "nodejs-stream-pipe",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you call **`.pipe(destination)`**, Node automatically connects a readable source to a writable destination and handles the flow between them. **Backpressure** is built in — if the destination (like an HTTP response) can't keep up with the incoming data, Node pauses the source automatically so your app doesn't run out of memory trying to buffer everything.",
+            np: "`.pipe()` ले backpressure स्वतः सम्हाल्छ — RAM मा सम्पूर्ण फाइल लोड हुँदैन।",
+            jp: "**`.pipe()`** はバックプレッシャを自動処理。書き込み側が遅くても RAM に全データを溜めない。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "EventEmitter — pub/sub inside Node",
+        np: "EventEmitter — Node भित्र pub/sub",
+        jp: "EventEmitter — Node 内部の pub/sub",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Subclass EventEmitter for a domain object",
+            np: "EventEmitter विस्तार गर्ने उदाहरण",
+            jp: "EventEmitter を継承したドメインオブジェクト",
+          },
+          code: `const EventEmitter = require('events');
+
+class OrderProcessor extends EventEmitter {
+  process(order) {
+    // ... business logic ...
+    this.emit('shipped', { orderId: order.id, trackingCode: 'TRK123' });
+    this.emit('invoice:ready', order);
+  }
+}
+
+const processor = new OrderProcessor();
+
+// Register listeners
+processor.on('shipped', ({ orderId }) => {
+  console.log('Notify warehouse for order', orderId);
+});
+
+// once() fires only on first emission, then removes itself
+processor.once('shipped', () => console.log('First shipment this session'));
+
+processor.process({ id: 'ORD-99' });
+// Output: "Notify warehouse for order ORD-99"
+//         "First shipment this session"`,
+        },
+        {
+          type: "diagram",
+          id: "nodejs-event-emitter",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Every time you call `.emit()`, all listeners registered with **`.on()`** run immediately in the order you added them. Use **`.once()`** when you only need to react to something the first time it happens — it removes itself automatically after that. Use **`.off()`** to manually remove a listener you no longer need, especially in long-running apps where forgotten listeners can slowly leak memory.",
+            np: "`.on()` listener क्रममा synchronous — `.once()` पहिलो पटक मात्र — `.off()` हटाउन।",
+            jp: "**`.on()`** は登録順に同期実行。**`.once()`** は初回のみ。**`.off()`** でリスナーを解除しリーク防止。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "http module — a server from scratch",
+        np: "http module — शुरुदेखि सर्भर बनाउनु",
+        jp: "http モジュール — 素のサーバを作る",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Routing and reading the request body manually",
+            np: "रूटिङ र body पढ्नु",
+            jp: "ルーティングとリクエストボディの読み取り",
+          },
+          code: `const http = require('http');
+
+const server = http.createServer((req, res) => {
+  const { method, url } = req;
+
+  // Simple routing
+  if (method === 'GET' && url === '/ping') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ pong: true }));
+  }
+
+  if (method === 'POST' && url === '/echo') {
+    let body = '';
+    // req is a Readable stream — collect chunks
+    req.on('data', (chunk) => { body += chunk.toString(); });
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(body); // echo back
+    });
+    return;
+  }
+
+  res.writeHead(404);
+  res.end('Not found');
+});
+
+server.listen(3000, () => console.log('http://localhost:3000'));`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "`req` and `res` are both EventEmitters under the hood. The request body comes in as chunks through `'data'` events and finishes with `'end'`. That is why **Express exists** — doing all of this by hand for every route (parsing JSON, matching URLs, handling errors) gets repetitive very quickly. Express is essentially a thin layer that handles all of that for you.",
+            np: "`req` र `res` EventEmitter — Express यहीँ माथि routing र parsing थप्छ।",
+            jp: "`req`/`res` は EventEmitter。Express はこの API にルーティングと JSON 解析を追加したラッパー。",
+          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
+      question: {
+        en: "When should I use streams instead of readFile?",
+        np: "streams कहिले प्रयोग गर्ने?",
+        jp: "ストリームをいつ使うべきか？",
+      },
       answer: {
-        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
-        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
-        jp: "HTTP の境界で止める。DB は第二の防壁。",
+        en: "Use streams when files are **larger than a few MB** or when you are sending a file directly to an HTTP response. `fs.readFile` loads the whole file into memory at once — fine for a small config file, but if 100 users each request a 500 MB file at the same time, your server runs out of RAM fast. Streams avoid this by processing the data one small chunk at a time.",
+        np: "कुछ MB भन्दा ठूला फाइल वा HTTP response मा pipe गर्दा stream — readFile ले सम्पूर्ण RAM मा राख्छ।",
+        jp: "数 MB 以上のファイルや HTTP にパイプする場合はストリーム。readFile は全データを RAM に展開するため大ファイルに危険。",
+      },
+    },
+    {
+      question: {
+        en: "Can I use EventEmitter as a state manager?",
+        np: "EventEmitter state manager बन्न सक्छ?",
+        jp: "EventEmitter をステート管理に使えるか？",
+      },
+      answer: {
+        en: "It works fine for **simple internal events** — like tracking download progress or notifying parts of your app when an order ships. But if you need multiple consumers, event replay, or persistence across restarts, something like **RxJS**, **Redis pub/sub**, or a message broker is a better fit. EventEmitter does not scale well across services or complex listener setups.",
+        np: "साधारण in-process pub/sub मा ठीक — जटिल state का लागि RxJS वा Redis pub/sub।",
+        jp: "シンプルな in-process pub/sub には有効。複雑な状態管理には RxJS や Redis pub/sub の方が拡張しやすい。",
       },
     },
   ],

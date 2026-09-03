@@ -3,116 +3,236 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_15_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
-      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
-      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
+      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
+      np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
+      jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
     },
     {
-      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
-      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
-      jp: "**populate** は便利だが **N+1** に注意。",
+      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
+      np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
+      jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
     },
   ],
   sections: [
     {
-      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
+      title: {
+        en: "The evolution of async patterns",
+        np: "async ढाँचाको विकास",
+        jp: "非同期パターンの進化",
+      },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Crash Course",
-        },
-        {
-          type: "code",
-          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
-          code: `// Reference another collection by id
-const movieSchema = new mongoose.Schema({
-  title: String,
-  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
-});
-
-// Embed small subdocuments that always ship with the parent
-const orderSchema = new mongoose.Schema({
-  lines: [{ sku: String, qty: Number, price: Number }],
-});`,
+          videoId: "DHvZLI7Db8E",
+          title: "JavaScript Promises in 10 Minutes",
         },
         {
           type: "diagram",
-          id: "erd-one-many",
+          id: "nodejs-async-evolution",
         },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
-            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
-            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
-          },
-        },
-      ],
-    },
-    {
-      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
-      blocks: [
         {
           type: "code",
-          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
-          code: `async function createMovie(body) {
-  const genre = await Genre.findById(body.genreId);
-  if (!genre) {
-    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
-  }
-  return Movie.create(body);
+          title: {
+            en: "Same operation — callback → Promise → async/await",
+            np: "एउटै काम — तीन तरिका",
+            jp: "同じ操作を 3 通りで書く",
+          },
+          code: `// ── Callback style ──────────────────────────────────
+function getUserCb(id, cb) {
+  db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
+    if (err) return cb(err);
+    cb(null, rows[0]);
+  });
+}
+getUserCb(42, (err, user) => {
+  if (err) console.error(err);
+  else console.log(user);
+});
+
+// ── Promise style ─────────────────────────────────────
+function getUserP(id) {
+  return new Promise((resolve, reject) => {
+    db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows[0]);
+    });
+  });
+}
+getUserP(42).then(console.log).catch(console.error);
+
+// ── async/await style ─────────────────────────────────
+async function getUser(id) {
+  const rows = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+  return rows[0];
+}
+try {
+  const user = await getUser(42);
+  console.log(user);
+} catch (err) {
+  console.error(err);
 }`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
-            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
-            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
+            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
+            np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
+            jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Transactions & validating ObjectIds",
-        np: "लेनदेन र ObjectId",
-        jp: "トランザクションと ObjectId",
+        en: "Sync vs async — why Node feels different",
+        np: "सिंक र असिंक",
+        jp: "同期と非同期の違い",
       },
       blocks: [
         {
-          type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Transactions Explained",
-        },
-        {
           type: "code",
-          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
-          code: `const session = await mongoose.startSession();
-session.startTransaction();
-try {
-  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
-  await Rental.create([{ customerId, movieId }], { session });
-  await session.commitTransaction();
-} catch (e) {
-  await session.abortTransaction();
-  throw e;
-} finally {
-  session.endSession();
-}`,
-        },
-        {
-          type: "diagram",
-          id: "acid-transaction",
+          title: {
+            en: "Blocking vs yielding the thread",
+            np: "ब्लक बनाम असिंक",
+            jp: "ブロックと譲る",
+          },
+          code: `const fs = require('fs');
+
+// BAD in a busy HTTP handler — blocks every waiting request:
+// const data = fs.readFileSync('./big.json', 'utf8');
+
+// GOOD — yields the thread; other requests run while this waits:
+fs.readFile('./big.json', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log('bytes:', data.length);
+});`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
-            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
-            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
+            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
+            np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
+            jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
           },
+        },
+        {
+          type: "diagram",
+          id: "node-execution-priority",
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Promise utilities — all, allSettled, race",
+        np: "Promise utilities — all, allSettled, race",
+        jp: "Promise ユーティリティ",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "DHvZLI7Db8E",
+          title: "Promise.all, allSettled, race Explained",
+        },
+        {
+          type: "code",
+          title: {
+            en: "Running independent async tasks concurrently",
+            np: "स्वतन्त्र कार्य एकैसाथ",
+            jp: "独立タスクを並行実行",
+          },
+          code: `// Promise.all — fails fast if ANY promise rejects
+const [user, orders] = await Promise.all([
+  fetchUser(userId),
+  fetchOrders(userId),
+]);
+// wall-clock time ≈ max(fetchUser, fetchOrders) — not their sum
+
+// Promise.allSettled — always waits for all, captures failures too
+const results = await Promise.allSettled([
+  sendEmail(user),
+  sendSMS(user),
+  pushNotify(user),
+]);
+for (const r of results) {
+  if (r.status === 'rejected') console.error('Notification failed', r.reason);
+}
+
+// Promise.race — first settled wins (useful for timeouts)
+const withTimeout = Promise.race([
+  fetchExpensiveData(),
+  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+]);`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
+            np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
+            jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Error handling patterns",
+        np: "त्रुटि व्यवस्थापन ढाँचा",
+        jp: "エラーハンドリングパターン",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Reliable async error handling",
+            np: "विश्वसनीय async त्रुटि",
+            jp: "信頼できる非同期エラー処理",
+          },
+          code: `// ── try/catch in async functions ─────────────────────
+async function createUser(data) {
+  try {
+    const user = await User.create(data);
+    return user;
+  } catch (err) {
+    if (err.code === 11000) throw new Error('Email already in use');
+    throw err; // rethrow — don't swallow unknown errors
+  }
+}
+
+// ── .catch() on promise chains ────────────────────────
+fetchUser(id)
+  .then(user => processUser(user))
+  .catch(err => {
+    logger.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+
+// ── Global safety net (log, never swallow) ────────────
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  // In production: alert on-call, then graceful shutdown
+  process.exit(1);
+});`,
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
+              np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
+              jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
+            },
+            {
+              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
+              np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
+              jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
+            },
+            {
+              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
+              np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
+              jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
+            },
+          ],
         },
       ],
     },
@@ -120,14 +240,14 @@ try {
   faq: [
     {
       question: {
-        en: "When should I embed instead of reference?",
-        np: "एम्बेड कहिले?",
-        jp: "埋め込みはいつ？",
+        en: "Promise.all or sequential await?",
+        np: "Promise.all वा क्रम await?",
+        jp: "all と順番 await？",
       },
       answer: {
-        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
-        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
-        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
+        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
+        np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
+        jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
       },
     },
   ],
