@@ -3,230 +3,116 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_19_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Deploying** means running your API on a remote server (usually a Linux container) managed by a cloud platform. The platform handles HTTPS, process restarts, and scaling. Understanding how code goes from your machine to live users — the git push, CI tests, Docker build, and cloud deployment — helps you debug when something goes wrong.",
-      np: "Deploy — अरूको Linux container मा env, HTTPS, managed Mongo सँग।",
-      jp: "**デプロイ**は env・HTTPS・マネージド Mongo を揃えて他人の Linux コンテナで動かすこと。",
+      en: "**Authentication** is about proving who you are — usually with an email and password. **Authorization** is about what you are allowed to do once you are logged in — things like admin-only routes. Node APIs often use **JWTs** (JSON Web Tokens) after login so the server does not need to store session data for every user. The token travels with each request and the server just verifies it.",
+      np: "प्रमाणीकरण पहिचान; प्राधिकरण अनुमति — JWT सामान्य।",
+      jp: "**認証**と**認可**を分ける。JWT はステートレスな証明に便利。",
     },
     {
-      en: "Before you push to deploy, test your app locally with `NODE_ENV=production node index.js`. Cloud platforms will restart a crashed process, but they cannot fix a missing environment variable or a wrong `PORT`. Make sure `npm start` runs cleanly before you ship.",
-      np: "`NODE_ENV=production` स्थानीयमा test गर्नुहोस् — platform PORT ठीक गर्न सक्दैन।",
-      jp: "push 前にローカルで `NODE_ENV=production` でテスト。`PORT` ミスはプラットフォームが直してくれない。",
+      en: "Passwords must never be stored as plain text — always hash them with **`bcrypt`** before saving, and use bcrypt's compare function when logging in. Keep your **`JWT_SECRET`** and database connection string in environment variables only, never in your code or git history.",
+      np: "पासवर्ड ह्यास — गोप्य कुञ्जी env मा मात्र।",
+      jp: "パスワードは平文禁止。**JWT_SECRET** は環境変数のみ。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Preparing for production",
-        np: "उत्पादनको तयारी",
-        jp: "本番環境の準備",
-      },
+      title: { en: "Users, registration & hashing", np: "प्रयोगकर्ता र ह्यासिङ", jp: "ユーザーとハッシュ" },
       blocks: [
         {
           type: "youtube",
-          videoId: "Gjnup-PuquQ",
-          title: "Docker in 100 Seconds",
+          videoId: "7Q17ubqLfaM",
+          title: "Node.js JWT Authentication Tutorial",
         },
         {
           type: "code",
-          title: {
-            en: "Production start script, health check, and graceful shutdown",
-            np: "Production start, health check, graceful shutdown",
-            jp: "本番スクリプト・ヘルスチェック・グレースフルシャットダウン",
+          title: { en: "Hash then store — never plaintext", np: "ह्यास गर्नु", jp: "ハッシュして保存" },
+          code: `const bcrypt = require('bcrypt');
+
+async function registerUser({ email, password }) {
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+  await User.create({ email, password: hash });
+}`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When a user registers, validate their input, check for duplicate emails, hash the password, and save the user. Never send the hash back in the response. When they log in, compare the password they sent against the stored hash using bcrypt's `compare` function. If it matches, issue a **JWT** that includes the user's ID (`sub`) and an expiry time (`exp`). Strip out internal fields like the password hash before sending the user object back.",
+            np: "दर्ता — दोहोरो जाँच, ह्यास, जवाफमा गोप्य नदेखाउनु।",
+            jp: "登録は検証・重複チェック・ハッシュ保存。レスでハッシュを返さない。",
           },
-          code: `// package.json
-{
-  "scripts": {
-    "start": "node index.js",
-    "dev":   "nodemon index.js"
+        },
+      ],
+    },
+    {
+      title: { en: "JWT flow & protecting routes", np: "JWT र सुरक्षित रूट", jp: "JWT とルート保護" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "7Q17ubqLfaM",
+          title: "JWT Authentication in Node.js",
+        },
+        {
+          type: "code",
+          title: { en: "Issue on login, verify in middleware", np: "जारी र जाँच", jp: "発行と検証" },
+          code: `const jwt = require('jsonwebtoken');
+
+function authMiddleware(req, res, next) {
+  const header = req.headers.authorization;
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).send('Missing token');
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).send('Invalid token');
   }
+}`,
+        },
+        {
+          type: "diagram",
+          id: "jwt-flow",
+        },
+        {
+          type: "diagram",
+          id: "status-401-403",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**401** means the request does not have a valid identity — the token is missing, expired, or wrong. **403** means the user is identified but does not have permission for that action. Your auth middleware reads the `Authorization: Bearer ...` header, verifies the token using your secret, then attaches the decoded user to `req.user` and calls `next()`. Centralizing this in one middleware means every protected route is just one line.",
+            np: "401 पहिचान; 403 अनुमति — मिडलवेयरले JWT जाँच।",
+            jp: "**401 vs 403** を図の通り区別。ミドルウェアで検証を一元化。",
+          },
+        },
+      ],
+    },
+    {
+      title: { en: "Roles & authorization middleware", np: "भूमिका र प्राधिकरण", jp: "ロールと認可" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Factory that checks req.user.role", np: "भूमिका जाँच", jp: "ロールチェック" },
+          code: `function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).end();
+    if (!roles.includes(req.user.role)) return res.status(403).end();
+    next();
+  };
 }
 
-// index.js — read PORT from env, never hardcode
-const PORT = process.env.PORT ?? 3000;
-const app = require('./app');
-
-const server = app.listen(PORT, () => {
-  console.log(\`Listening on \${PORT} (NODE_ENV=\${process.env.NODE_ENV})\`);
-});
-
-// Health check route (used by load balancer / Cloud Run)
-app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
-
-// Graceful shutdown — finish in-flight requests before exiting
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received — closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
-    mongoose.connection.close(false, () => process.exit(0));
-  });
-});`,
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Environment variables** — put secrets like `JWT_SECRET`, `MONGODB_URI`, and `PORT` in your platform's dashboard (Heroku Config Vars, Railway Variables, etc.). Locally, use a `.env` file. Never commit that file to git — add it to `.gitignore` from day one.",
-              np: "env vars — dashboard मा राख्नुहोस्। `.env` commit नगर्नुहोस्।",
-              jp: "**環境変数**はホストのダッシュボードへ。`.env` は必ず `.gitignore` に追加。",
-            },
-            {
-              en: "**dotenv** — calling `require('dotenv').config()` at the top of your `index.js` loads your `.env` file in development. In production, the platform injects the variables directly, so you do not need any extra logic. If the `.env` file is absent, `dotenv` does nothing — so it is safe to call it unconditionally.",
-              np: "dotenv — development मा `.env` लोड; production मा platform ले inject गर्छ।",
-              jp: "**dotenv** は開発用。本番はプラットフォームが直接 env を注入。ファイルがなければ何もしない。",
-            },
-            {
-              en: "**Remove debug logs** from production — especially anything that might print a secret or user data. Replace ad-hoc `console.log` calls with a structured logger like **`pino`** that outputs JSON. Cloud platforms can ingest JSON logs directly into their log viewer, making it easy to search and filter.",
-              np: "production मा secrets को `console.log` हटाउनुहोस् — pino जस्ता logger प्रयोग गर्नुहोस्।",
-              jp: "本番では秘密情報の `console.log` を削除。`pino` 等の構造化ロガーを使う。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Deploy pipeline",
-        np: "Deploy pipeline",
-        jp: "デプロイパイプライン",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "Gjnup-PuquQ",
-          title: "GitHub Actions CI/CD for Node.js",
+app.delete('/api/movies/:id', authMiddleware, requireRole('admin'), handler);`,
         },
         {
           type: "diagram",
-          id: "nodejs-deploy-pipeline",
+          id: "rbac-model",
         },
         {
           type: "paragraph",
           text: {
-            en: "A typical deploy pipeline works like this: you **push to git**, which triggers **CI** (like GitHub Actions) to run your tests. If tests pass, CI builds a **Docker image** and pushes it to a registry. The cloud platform then pulls the new image and starts it up — **Cloud Run**, **Railway**, **Fly.io**, and **ECS** all work this way. The platform sends `SIGTERM` to the old container so it can finish in-flight requests before shutting down, then the new container takes over with no downtime.",
-            np: "Git push → CI (npm test) → Docker build → registry → cloud deploy। SIGTERM ले rolling deploy।",
-            jp: "push → CI (テスト) → Docker ビルド → レジストリ → クラウドデプロイ。SIGTERM でローリング更新。",
+            en: "**Role-based access** lets you say which roles can access which routes — `admin` can delete, `viewer` can only read. Writing it as a small middleware factory (`requireRole('admin')`) keeps your route definitions clean and makes it easy to test that denied users get a 403. For logout with JWTs, the simplest approach is having the client delete the token. If you need to revoke tokens before they expire (like after a password change), you will need a server-side token blocklist.",
+            np: "भूमिका मिडलवेयर — JWT लगआउट प्रायः क्लाइन्टले टोकन हटाउँछ।",
+            jp: "**RBAC** をミドルウェア化。JWT のログアウトはクライアント破棄が基本。",
           },
-        },
-        {
-          type: "code",
-          title: {
-            en: "Minimal Dockerfile for a Node.js API",
-            np: "Node.js API को Dockerfile",
-            jp: "Node.js API の最小 Dockerfile",
-          },
-          code: `# Build stage — install all deps to compile TypeScript (if used)
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build   # skip if plain JS
-
-# Production image — only runtime deps
-FROM node:20-alpine AS prod
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev   # no devDependencies in image
-COPY --from=build /app/dist ./dist
-EXPOSE 8080
-CMD ["node", "dist/index.js"]
-
-# Usage:
-# docker build -t my-api:latest .
-# docker run -p 3000:8080 --env-file .env my-api:latest`,
-        },
-      ],
-    },
-    {
-      title: {
-        en: "MongoDB Atlas setup",
-        np: "MongoDB Atlas सेटअप",
-        jp: "MongoDB Atlas の設定",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Atlas connection string shape",
-            np: "Atlas connection string",
-            jp: "Atlas 接続文字列の形式",
-          },
-          code: `# .env (local — gitignored)
-MONGODB_URI=mongodb+srv://USER:PASS@cluster0.xxxxx.mongodb.net/mydb?retryWrites=true&w=majority
-
-# Node code:
-const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => { console.error(err); process.exit(1); });
-
-# Atlas security checklist:
-# 1. Create a DB user with minimum required permissions (readWrite on your DB only)
-# 2. Network Access → add your deployment IP or VPC CIDR (not 0.0.0.0/0 in production)
-# 3. Enable "Require TLS" (default on Atlas — always keep it)
-# 4. Enable Atlas Auditing and Alerts for failed auth attempts`,
-        },
-        {
-          type: "diagram",
-          id: "primary-replica",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**MongoDB Atlas** sets up a replica set automatically — your data is copied to multiple servers so if one goes down, the others keep serving. The **`w=majority`** write concern in your connection string means a write is only confirmed once the majority of replica set members have it, protecting you from data loss if the primary server crashes right after a write.",
-            np: "Atlas — replica set, TLS, backup। `w=majority` ले primary failover मा data loss बाट जोगाउँछ।",
-            jp: "**Atlas** はデフォルトでレプリカセットを構成。`w=majority` でプライマリ障害時のデータ損失を防ぐ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "What to learn next",
-        np: "अर्को के सिक्ने?",
-        jp: "次に学ぶこと",
-      },
-      blocks: [
-        {
-          type: "table",
-          caption: {
-            en: "Paths to deepen your Node.js stack",
-            np: "Node.js stack गहिरो बनाउन",
-            jp: "Node スタックを深める学習パス",
-          },
-          headers: [
-            { en: "Track", np: "track", jp: "トラック" },
-            { en: "Why", np: "किन", jp: "理由" },
-            { en: "Starting point", np: "सुरुवात", jp: "開始点" },
-          ],
-          rows: [
-            [
-              { en: "**TypeScript + Node**", np: "TypeScript", jp: "**TypeScript + Node**" },
-              { en: "Catch type errors at compile time; better IDE support; required at most companies", np: "compile-time error detection", jp: "コンパイル時の型チェックで品質向上" },
-              { en: "`ts-node`, `@types/node`, `tsconfig.json`", np: "ts-node सुरु", jp: "`ts-node` から始める" },
-            ],
-            [
-              { en: "**GraphQL**", np: "GraphQL", jp: "**GraphQL**" },
-              { en: "Clients request exactly what they need — eliminates over/under-fetching REST problems", np: "over/under-fetching रोक्छ", jp: "over/under-fetch を排除" },
-              { en: "Apollo Server or Mercurius (Fastify)", np: "Apollo Server", jp: "Apollo Server" },
-            ],
-            [
-              { en: "**Redis caching**", np: "Redis", jp: "**Redis キャッシュ**" },
-              { en: "Cache expensive DB queries; dramatically cut p99 latency for hot data", np: "DB query cache — latency कम", jp: "DB クエリをキャッシュして p99 を削減" },
-              { en: "`ioredis`, cache-aside pattern", np: "ioredis सुरु", jp: "`ioredis` と cache-aside パターン" },
-            ],
-            [
-              { en: "**BullMQ queues**", np: "BullMQ", jp: "**BullMQ キュー**" },
-              { en: "Offload slow jobs (email, PDF, video encoding) to background workers", np: "slow jobs background मा", jp: "重い処理をバックグラウンドワーカーに委譲" },
-              { en: "BullMQ + Redis, worker process", np: "BullMQ + Redis", jp: "BullMQ + Redis ワーカー" },
-            ],
-            [
-              { en: "**Microservices**", np: "Microservices", jp: "**マイクロサービス**" },
-              { en: "Split monolith into independently deployable services — learn gRPC and message brokers", np: "monolith तोड्नु — gRPC र message broker", jp: "モノリスを分割してgRPCやメッセージブローカーを学ぶ" },
-              { en: "Start with gRPC-node or NATS messaging", np: "gRPC-node", jp: "gRPC-node か NATS" },
-            ],
-          ],
         },
       ],
     },
@@ -234,14 +120,14 @@ mongoose.connect(process.env.MONGODB_URI)
   faq: [
     {
       question: {
-        en: "Why does the platform inject PORT?",
-        np: "Platform PORT किन inject गर्छ?",
-        jp: "なぜプラットフォームは PORT を注入するのか？",
+        en: "Should JWTs live in localStorage?",
+        np: "JWT localStorage मा?",
+        jp: "JWT は localStorage？",
       },
       answer: {
-        en: "Cloud platforms use a **reverse proxy** that routes incoming HTTPS traffic to your process on a dynamically assigned port. If you hardcode port `3000`, the proxy cannot reach your app. Always read the port from `process.env.PORT` — the `?? 3000` fallback means local development still works without setting the variable.",
-        np: "proxy ले PORT assign गर्छ — hardcode गर्दा break हुन्छ। `process.env.PORT ?? 3000` प्रयोग गर्नुहोस्।",
-        jp: "**リバースプロキシ**が PORT を割り当てる。ハードコードすると壊れる。`process.env.PORT ?? 3000` を使う。",
+        en: "Storing JWTs in `localStorage` means any injected script (XSS attack) can steal them. Many teams prefer **httpOnly cookies** instead — JavaScript cannot access them, but you need CSRF protection since cookies are automatically sent with requests. The right choice depends on your frontend and your threat model, so understand the trade-off before deciding.",
+        np: "XSS जोखिम — httpOnly कुकी वा शून्य विश्वास नमूना।",
+        jp: "XSS 対策では **httpOnly** の検討。フロントの脅威モデルを決める。",
       },
     },
   ],

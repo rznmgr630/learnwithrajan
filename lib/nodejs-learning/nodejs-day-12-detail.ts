@@ -3,251 +3,193 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_12_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In Node.js, almost every file, network, or database operation is **asynchronous** — meaning your code doesn't sit and wait. Instead, it schedules work to happen later. Over time, the pattern evolved from **callbacks** to **Promises** to **`async`/`await`**, which lets you write async code that reads like normal top-to-bottom code.",
-      np: "असिंक — callback, Promise, async/await सम्म — थ्रेड खाली राख्छ।",
-      jp: "Node の I/O は**非同期が基本**。callback → Promise → async/await とパターンが進化した。",
+      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
+      np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
+      jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
     },
     {
-      en: "The most important habit with async code is handling errors every single time. Every Promise that can fail needs a **`catch`** or a **`try/catch`** block. If you miss one, Node can crash with an **unhandled rejection** error.",
-      np: "हरेक rejection समात्नुहोस् — unhandled rejection ले crash ल्याउन सक्छ।",
-      jp: "**未処理の reject** はプロセスを落とすことがある。すべての Promise は必ず捕捉する。",
+      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
+      np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
+      jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "The evolution of async patterns",
-        np: "async ढाँचाको विकास",
-        jp: "非同期パターンの進化",
-      },
+      title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
       blocks: [
         {
           type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "JavaScript Promises in 10 Minutes",
-        },
-        {
-          type: "diagram",
-          id: "nodejs-async-evolution",
+          videoId: "jHDhaSSKmB0",
+          title: "npm Crash Course",
         },
         {
           type: "code",
-          title: {
-            en: "Same operation — callback → Promise → async/await",
-            np: "एउटै काम — तीन तरिका",
-            jp: "同じ操作を 3 通りで書く",
-          },
-          code: `// ── Callback style ──────────────────────────────────
-function getUserCb(id, cb) {
-  db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-    if (err) return cb(err);
-    cb(null, rows[0]);
-  });
-}
-getUserCb(42, (err, user) => {
-  if (err) console.error(err);
-  else console.log(user);
-});
+          title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
+          code: `// Run once in an empty folder:
+//   npm init -y
 
-// ── Promise style ─────────────────────────────────────
-function getUserP(id) {
-  return new Promise((resolve, reject) => {
-    db.query('SELECT * FROM users WHERE id = ?', [id], (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows[0]);
-    });
-  });
-}
-getUserP(42).then(console.log).catch(console.error);
-
-// ── async/await style ─────────────────────────────────
-async function getUser(id) {
-  const rows = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-  return rows[0];
-}
-try {
-  const user = await getUser(42);
-  console.log(user);
-} catch (err) {
-  console.error(err);
-}`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "All three patterns do the same thing under the hood — they all use the event loop. **`await`** is just a shortcut for writing `.then()`. The big win with async/await is that your error handling sits right next to the code that caused it, and you read everything top to bottom like normal code.",
-            np: "तीनै style event-loop मा उही छन् — await Promise को syntactic sugar हो।",
-            jp: "3 つのスタイルは同じイベントループスケジューリング。`await` は Promise の糖衣構文。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Sync vs async — why Node feels different",
-        np: "सिंक र असिंक",
-        jp: "同期と非同期の違い",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Blocking vs yielding the thread",
-            np: "ब्लक बनाम असिंक",
-            jp: "ブロックと譲る",
-          },
-          code: `const fs = require('fs');
-
-// BAD in a busy HTTP handler — blocks every waiting request:
-// const data = fs.readFileSync('./big.json', 'utf8');
-
-// GOOD — yields the thread; other requests run while this waits:
-fs.readFile('./big.json', 'utf8', (err, data) => {
-  if (err) throw err;
-  console.log('bytes:', data.length);
-});`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Synchronous** code runs line by line and blocks everything else — fine for a quick script, but terrible in a server where many requests might be waiting. **Asynchronous** APIs return right away and notify you when the work is done. This keeps your server fast, but the code no longer completes in the order you wrote it.",
-            np: "सिंकले लूप रोक्छ; असिंकले पछि बोलाउँछ — क्रम फरक हुन सक्छ।",
-            jp: "**同期**はメインスレッドを占有。**非同期**は完了順がソース順と違う。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "node-execution-priority",
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Promise utilities — all, allSettled, race",
-        np: "Promise utilities — all, allSettled, race",
-        jp: "Promise ユーティリティ",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "DHvZLI7Db8E",
-          title: "Promise.all, allSettled, race Explained",
-        },
-        {
-          type: "code",
-          title: {
-            en: "Running independent async tasks concurrently",
-            np: "स्वतन्त्र कार्य एकैसाथ",
-            jp: "独立タスクを並行実行",
-          },
-          code: `// Promise.all — fails fast if ANY promise rejects
-const [user, orders] = await Promise.all([
-  fetchUser(userId),
-  fetchOrders(userId),
-]);
-// wall-clock time ≈ max(fetchUser, fetchOrders) — not their sum
-
-// Promise.allSettled — always waits for all, captures failures too
-const results = await Promise.allSettled([
-  sendEmail(user),
-  sendSMS(user),
-  pushNotify(user),
-]);
-for (const r of results) {
-  if (r.status === 'rejected') console.error('Notification failed', r.reason);
-}
-
-// Promise.race — first settled wins (useful for timeouts)
-const withTimeout = Promise.race([
-  fetchExpensiveData(),
-  new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
-]);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Use **`Promise.all`** when you're running multiple independent tasks and need all of them to succeed — if any one fails, the whole thing stops. Use **`Promise.allSettled`** when you want to know what happened to every task even if some failed, like sending notifications to multiple channels. Use **`Promise.race`** when you want the result of whichever task finishes first — great for timeouts.",
-            np: "`Promise.all` — सबै चाहिन्छ; `allSettled` — केही fail भए पनि जारी; `race` — timeout का लागि।",
-            jp: "**all** は全成功が必要なとき。**allSettled** は失敗があっても全結果が欲しいとき。**race** はタイムアウト実装に。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Error handling patterns",
-        np: "त्रुटि व्यवस्थापन ढाँचा",
-        jp: "エラーハンドリングパターン",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Reliable async error handling",
-            np: "विश्वसनीय async त्रुटि",
-            jp: "信頼できる非同期エラー処理",
-          },
-          code: `// ── try/catch in async functions ─────────────────────
-async function createUser(data) {
-  try {
-    const user = await User.create(data);
-    return user;
-  } catch (err) {
-    if (err.code === 11000) throw new Error('Email already in use');
-    throw err; // rethrow — don't swallow unknown errors
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {},
+  "scripts": {
+    "start": "node index.js"
   }
 }
 
-// ── .catch() on promise chains ────────────────────────
-fetchUser(id)
-  .then(user => processUser(user))
-  .catch(err => {
-    logger.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
-
-// ── Global safety net (log, never swallow) ────────────
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
-  // In production: alert on-call, then graceful shutdown
-  process.exit(1);
-});`,
+// Terminal:
+//   npm install lodash
+//   npm install --save-dev eslint
+//   npx eslint --version`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
+            np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
+            jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
+          },
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**Forgetting `await`** — if you write `const user = getUser(id)` without `await`, you get a Promise back, not the actual user. So `user.name` will be `undefined`. TypeScript's strict mode will catch this for you.",
-              np: "`await` बिर्सनु — Promise object मिल्छ, नतिजा होइन।",
-              jp: "**`await` を忘れる** — Promise オブジェクトが返る。TypeScript の strict で検出可能。",
-            },
-            {
-              en: "**Don't re-wrap errors** — if you catch an error and throw `new Error(err.message)`, you lose the original stack trace, which makes debugging much harder. Just use `throw err` to pass the error along as-is.",
-              np: "`new Error` मा re-throw — stack trace गुम्छ। `throw err` नै गर्नुहोस्।",
-              jp: "**`new Error` で再スロー** — スタックトレースが消える。`throw err` で元のトレースを保つ。",
-            },
-            {
-              en: "**Don't mix callbacks and Promises** — combining the two styles in the same function leads to tricky bugs where errors get reported twice or not at all. Use `util.promisify` to convert callback-based APIs into Promises so everything stays consistent.",
-              np: "callback र promise मिसाउनु — `util.promisify` प्रयोग गर्नुहोस्।",
-              jp: "**コールバックと Promise を混ぜる** — `util.promisify` で変換してから統一する。",
+              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
+              np: "`npm run` ले टोलीको एउटै शब्दकोश।",
+              jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
             },
           ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Installing, using packages & working with Git",
+        np: "स्थापना, प्रयोग र Git",
+        jp: "インストール・利用・Git",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Install production vs dev-only packages", np: "स्थापना उदाहरण", jp: "依存の入れ方" },
+          code: `# App dependency (recorded in "dependencies")
+npm install express
+
+# Tooling only — tests, linters (recorded in "devDependencies")
+npm install --save-dev jest eslint
+
+// In code:
+const express = require('express');`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
+            np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
+            jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
+          },
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
+              np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
+              jp: "**利用** — README と `exports` でエントリを確認。",
+            },
+            {
+              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
+              np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
+              jp: "**間接依存** — 見えないパッケージまでついてくる。",
+            },
+            {
+              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
+              np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
+              jp: "**秘密情報** — package.json に書かない。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "jHDhaSSKmB0",
+          title: "Semantic Versioning Explained",
+        },
+        {
+          type: "code",
+          title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
+          code: `npm list --depth=0
+npm view lodash version
+npm install lodash@4.17.21
+npm update lodash
+npm uninstall lodash`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Quick semver cheat sheet — what changes when the left digit bumps",
+            np: "Semver संक्षिप्त तालिका",
+            jp: "セマバ早見",
+          },
+          headers: [
+            { en: "Bump", np: "परिवर्तन", jp: "桁" },
+            { en: "Meaning (typical)", np: "अर्थ", jp: "意味（目安）" },
+            { en: "npm range hint", np: "रेञ्ज", jp: "範囲の例" },
+          ],
+          rows: [
+            [
+              { en: "**PATCH** (third number)", np: "PATCH", jp: "**PATCH**" },
+              { en: "Bug fixes, no API change", np: "बग फिक्स", jp: "バグ修正のみ" },
+              { en: "`~1.2.3` allows patch bumps", np: "`~`", jp: "`~` はパッチまで" },
+            ],
+            [
+              { en: "**MINOR** (middle)", np: "MINOR", jp: "**MINOR**" },
+              { en: "New features, backward compatible", np: "नयाँ, मिल्दो", jp: "後方互換の追加" },
+              { en: "`^1.2.3` allows minor + patch", np: "`^`", jp: "`^` は minor まで" },
+            ],
+            [
+              { en: "**MAJOR** (first)", np: "MAJOR", jp: "**MAJOR**" },
+              { en: "Breaking changes — read changelog", np: "ब्रेकिङ", jp: "**破壊的変更**" },
+              { en: "Pin exact version or migrate code", np: "जाँच गर्नुहोस्", jp: "固定か移行作業" },
+            ],
+          ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
+            np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
+            jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "queue-backpressure",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
+            np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
+            jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
+          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "Promise.all or sequential await?",
-        np: "Promise.all वा क्रम await?",
-        jp: "all と順番 await？",
-      },
+      question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
       answer: {
-        en: "Use **`Promise.all`** when your tasks are independent — they run at the same time, so you only wait as long as the slowest one. Use sequential **`await`** when the second step needs the result of the first, or when order matters — like inserting records that reference each other.",
-        np: "स्वतन्त्रमा `all` — परिणाम चाहिएमा क्रम।",
-        jp: "独立なら **`Promise.all`**。前の結果が要るなら順番に **`await`**。",
+        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
+        np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
+        jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
       },
     },
   ],
