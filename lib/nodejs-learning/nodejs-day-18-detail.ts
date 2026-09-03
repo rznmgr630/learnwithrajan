@@ -3,123 +3,148 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_18_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
-      np: "Mongo दस्तावेज; Mongoose ले आकार र प्रश्न सजिलो बनाउँछ।",
-      jp: "**MongoDB** はドキュメント指向。**Mongoose** がスキーマとクエリを整える。",
+      en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",
+      np: "मिडलवेयरले साझा लजिक क्रममा चलाउँछ — परीक्षण योग्य संरचना।",
+      jp: "**ミドルウェア** で共通処理を順に適用。構成でテストしやすくする。",
     },
     {
-      en: "You can install MongoDB using the **official installer** or run it with **Docker** — just make sure your data folder is not inside your git repo. The **`mongosh`** shell lets you connect from your terminal and check what is actually in your database, which is more reliable than only reading your app logs.",
-      np: "स्थापना पछि `mongosh` ले जाँच गर्नुहोस्।",
-      jp: "ローカルは公式インストーラか Docker。**mongosh** で直接確認できると強い。",
+      en: "Using **`node --inspect`** with Chrome DevTools is much more powerful than adding `console.log` everywhere. You can set breakpoints, step through async code, and see the actual call stack when a Promise is waiting — which makes tracking down bugs much faster.",
+      np: "`--inspect` ले async डिबग सजिलो बनाउँछ।",
+      jp: "**`--inspect`** で非同期もブレークポイントを張れる。",
     },
   ],
   sections: [
     {
-      title: { en: "MongoDB basics & local setup", np: "MongoDB र स्थापना", jp: "MongoDB とセットアップ" },
+      title: { en: "Middleware — the heart of Express", np: "मिडलवेयर", jp: "ミドルウェア" },
       blocks: [
         {
           type: "youtube",
-          videoId: "-bt_y4Loofg",
-          title: "MongoDB in 100 Seconds",
+          videoId: "MIr1oxQ3pao",
+          title: "Express Middleware Explained",
         },
         {
           type: "code",
-          title: { en: "mongosh after mongod is running", np: "mongosh", jp: "mongosh で確認" },
-          code: `# Terminal (with mongod listening):
-mongosh
-show dbs
-use rental_db
-db.genres.insertOne({ name: 'Comedy' })
-db.genres.find().pretty()`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "MongoDB lets you embed nested objects inside a document, unlike SQL which splits data across multiple tables. That flexibility is powerful, but you still need to plan your **indexes** and how you will query the data. For now, run **`mongod`** locally. When you are ready to host your database online, use the **MongoDB Atlas** free tier — and always store your connection string in an **environment variable**, never in your code.",
-            np: "लचिलोपनका लागि इन्डेक्स र प्रश्न योजना चाहिन्छ।",
-            jp: "柔軟だからこそインデックス設計が重要。接続 URI は環境変数へ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Connecting, schemas, models & saving",
-        np: "जडान, schema, मोडेल",
-        jp: "接続・スキーマ・モデル・保存",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Connect + define model (sketch)", np: "जडान उदाहरण", jp: "接続の例" },
-          code: `const mongoose = require('mongoose');
+          title: { en: "Three middlewares in order", np: "मिडलवेयर क्रम", jp: "順番に並べる" },
+          code: `const express = require('express');
+const app = express();
 
-mongoose.connect(process.env.MONGODB_URI);
-
-const genreSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
+app.use(express.json());
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
 });
-const Genre = mongoose.model('Genre', genreSchema);
-
-// create vs new + save — both valid patterns`,
-        },
-        {
-          type: "diagram",
-          id: "primary-replica",
+app.get('/api/ping', (req, res) => res.send('pong'));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "In production, MongoDB usually runs as a **replica set** — multiple copies of your database for reliability (shown in the diagram above). **`mongoose.connect(uri)`** opens a connection pool automatically. It is good practice to listen for **`disconnected`** and **`reconnected`** events so you know when the database goes down. **Schemas** describe what fields a document has and what values are valid; **Models** connect a schema to the actual MongoDB collection.",
-            np: "उत्पादनमा प्रायः replica — जडान घटनाहरू सुन्नुहोस्।",
-            jp: "本番はレプリカ構成が一般的。**mongoose.connect** とプールを理解する。",
+            en: "Every middleware function gets three arguments: **`req`**, **`res`**, and **`next`**. Call **`next()`** when you are done and want the next middleware to run. Call **`next(err)`** if something goes wrong — Express will skip to your error handler. Once you call `res.send()` or `res.json()`, the chain stops and no more middleware runs.",
+            np: "`next()` अगाडि, `next(err)` त्रुटि ह्यान्डलर, प्रतिक्रिया पठाएपछि रोकिन्छ।",
+            jp: "**ミドルウェア** — `next()` で次へ、`next(err)` でエラーへ。送信後はチェーン停止。",
           },
+        },
+        {
+          type: "diagram",
+          id: "nodejs-express-middleware-chain",
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Built-ins** — `express.json()` parses JSON request bodies, `express.urlencoded` handles HTML form data, and `express.static` serves files from a folder. Mount static files before your route middleware so simple file requests do not go through your auth checks.",
+              np: "`express.json` अघि रूट — बडी पहिले पार्स।",
+              jp: "**組み込み** — JSON・フォーム・静的ファイル。順序が重要。",
+            },
+            {
+              en: "**Third-party** — `cors` controls which origins can call your API, `helmet` sets secure HTTP headers, and `morgan` logs every request. Add only what you actually need, and put security middleware near the top so it runs before anything else.",
+              np: "cors, helmet — सुरक्षा अगाडि।",
+              jp: "**サードパーティ** — cors / helmet は早めに。",
+            },
+          ],
         },
       ],
     },
     {
       title: {
-        en: "Querying, indexes, pagination & updates",
-        np: "प्रश्न र पृष्ठांकन",
-        jp: "クエリ・インデックス・ページング",
+        en: "Environments, configuration & debugging",
+        np: "वातावरण, विन्यास र डिबग",
+        jp: "環境・設定・デバッグ",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Crash Course",
+          videoId: "L72fhGm1tfE",
+          title: "Debugging Node.js with Chrome DevTools",
         },
         {
           type: "code",
-          title: { en: "Filter + page in the database", np: "प्रश्न उदाहरण", jp: "クエリ例" },
-          code: `const movies = await Movie.find({ genreId, price: { $lte: 20 } })
-  .sort({ title: 1 })
-  .skip((page - 1) * pageSize)
-  .limit(pageSize)
-  .select('title price');`,
-        },
-        {
-          type: "diagram",
-          id: "btree-index",
+          title: { en: "NODE_ENV + inspect flag", np: "NODE_ENV र inspect", jp: "環境と inspect" },
+          code: `# Terminal (development):
+NODE_ENV=development node --inspect server.js
+# Then open chrome://inspect → inspect your process
+
+console.log(process.env.NODE_ENV);
+console.log(process.env.PORT ?? 3000);`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Operators like **`$gt`**, **`$in`**, **`$and`**, and **`$or`** let you filter data inside the database — so only the matching documents come back to your app. This is much faster than loading everything and filtering in JavaScript. Be careful with **regex searches** though — without an index, they scan every document and can slow your app down.",
-            np: "फिल्टर DB भित्र — पूरै लोड गर्नु हुँदैन।",
-            jp: "**演算子**で DB 側にフィルタ。正規表現はインデックスと相談。",
+            en: "**`NODE_ENV`** is a widely used convention. Setting it to `production` tells libraries to enable optimizations and hide detailed error messages from users. Setting it to `test` lets you point to a test database or use mocks. Read all your environment variables in one place — a `config.js` file or a validated schema — so a missing or misspelled variable fails at startup rather than crashing mid-request.",
+            np: "`NODE_ENV` र एक पटक विन्यास जाँच।",
+            jp: "**NODE_ENV** — 起動時に設定を一箇所で検証。",
+          },
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Debugging** — start your server with `node --inspect server.js`, go to `chrome://inspect` in Chrome, and attach to your process. You can set breakpoints and inspect `req` and `res` objects directly. Pair this with structured (JSON) logs instead of scattered `console.log` strings — they are much easier to search and filter.",
+              np: "`--inspect` र संरचित लग।",
+              jp: "**デバッグ** — `--inspect` と構造化ログ。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Templating, database hooks & folder structure",
+        np: "टेम्प्लेट, डाटाबेस र फोल्डर",
+        jp: "テンプレート・DB・フォルダ構成",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Suggested folder layout", np: "फोल्डर संरचना", jp: "フォルダ例" },
+          code: `/*
+  src/
+    index.js       ← creates app, listens
+    routes/
+    models/
+    middleware/
+    startup/db.js  ← mongoose.connect isolated here
+*/`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Template engines** like Pug, EJS, or Handlebars let Express render HTML on the server — useful if your app serves web pages, not just a JSON API. Many modern apps skip templates entirely and serve a separate frontend. For database connections, keep **`mongoose.connect`** and your models in their own file (like `startup/db.js`) so tests can easily swap in a different database URI.",
+            np: "SSR को लागि टेम्प्लेट; DB जडान अलग फाइलमा।",
+            jp: "SSR が要るときテンプレート。DB 接続は別モジュールへ。",
           },
         },
         {
           type: "diagram",
-          id: "cursor-pagination",
+          id: "cache-aside-pattern",
         },
         {
           type: "paragraph",
           text: {
-            en: "For **pagination**, `skip` and `limit` are the easiest to start with — but they get slow when users navigate to later pages because MongoDB still has to scan all the skipped documents. **Cursor-based pagination** (sorting by `_id` or a timestamp and passing the last value you saw) is faster and works much better for long lists or feeds.",
-            np: "गहिरो पृष्ठमा कर्सर राम्रो — skip भारी हुन सक्छ।",
-            jp: "**ページング** — 深いページはカーソル方式が安定（図参照）。",
+            en: "The cache-aside pattern is about databases, but the same principle applies to how you structure your app: **each module should do one thing**. Routes handle incoming requests, services contain your business logic, and data access files talk to the database. When you refactor your folder structure, the API should behave exactly the same — verify that with your existing tests or Postman.",
+            np: "पुनर्संरचना — व्यवहार उही, फाइल मात्र बाँड्नुहोस्।",
+            jp: "**リファクタ** — 挙動は変えずフォルダだけ分ける。Postman で確認。",
           },
         },
       ],
@@ -127,15 +152,11 @@ const Genre = mongoose.model('Genre', genreSchema);
   ],
   faq: [
     {
-      question: {
-        en: "Why prefer atomic updates over read-modify-save?",
-        np: "अणु अद्यावधिक किन?",
-        jp: "原子更新を使う理由？",
-      },
+      question: { en: "Why does middleware order matter?", np: "मिडलवेयर क्रम किन?", jp: "ミドルウェアの順番は？" },
       answer: {
-        en: "If two requests both read the same document and then save it, one will overwrite the other's changes. **`findOneAndUpdate`** with operators like **`$inc`** and **`$set`** avoids this by making the change directly in the database in one step — no read-then-write race condition.",
-        np: "दुई लेखकले पढेर बचत गर्दा रेस — अणु अद्यावधिक सुरक्षित।",
-        jp: "読んで書くと競合しやすい。**findOneAndUpdate** と演算子で原子更新。",
+        en: "Express runs middleware in the order you register it. Body parsers need to come before any handler that reads `req.body`. Auth middleware must come before the routes it is protecting. Error handlers (the ones with four arguments) must be registered last — after all your routes — so that `next(err)` has somewhere to land.",
+        np: "पार्सर अघि, प्रमाणीकरण रूट अघि, त्रुटि अन्तिम।",
+        jp: "パーサ → 認証 → ルート → エラーの順。",
       },
     },
   ],

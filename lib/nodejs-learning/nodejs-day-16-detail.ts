@@ -3,96 +3,51 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_16_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",
-      np: "मिडलवेयरले साझा लजिक क्रममा चलाउँछ — परीक्षण योग्य संरचना।",
-      jp: "**ミドルウェア** で共通処理を順に適用。構成でテストしやすくする。",
+      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
+      np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
+      jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
     },
     {
-      en: "Using **`node --inspect`** with Chrome DevTools is much more powerful than adding `console.log` everywhere. You can set breakpoints, step through async code, and see the actual call stack when a Promise is waiting — which makes tracking down bugs much faster.",
-      np: "`--inspect` ले async डिबग सजिलो बनाउँछ।",
-      jp: "**`--inspect`** で非同期もブレークポイントを張れる。",
+      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
+      np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
+      jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
     },
   ],
   sections: [
     {
-      title: { en: "Middleware — the heart of Express", np: "मिडलवेयर", jp: "ミドルウェア" },
+      title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
       blocks: [
         {
           type: "youtube",
-          videoId: "MIr1oxQ3pao",
-          title: "Express Middleware Explained",
+          videoId: "jHDhaSSKmB0",
+          title: "npm Crash Course",
         },
         {
           type: "code",
-          title: { en: "Three middlewares in order", np: "मिडलवेयर क्रम", jp: "順番に並べる" },
-          code: `const express = require('express');
-const app = express();
+          title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
+          code: `// Run once in an empty folder:
+//   npm init -y
 
-app.use(express.json());
-app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
-});
-app.get('/api/ping', (req, res) => res.send('pong'));`,
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {},
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+
+// Terminal:
+//   npm install lodash
+//   npm install --save-dev eslint
+//   npx eslint --version`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Every middleware function gets three arguments: **`req`**, **`res`**, and **`next`**. Call **`next()`** when you are done and want the next middleware to run. Call **`next(err)`** if something goes wrong — Express will skip to your error handler. Once you call `res.send()` or `res.json()`, the chain stops and no more middleware runs.",
-            np: "`next()` अगाडि, `next(err)` त्रुटि ह्यान्डलर, प्रतिक्रिया पठाएपछि रोकिन्छ।",
-            jp: "**ミドルウェア** — `next()` で次へ、`next(err)` でエラーへ。送信後はチェーン停止。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "nodejs-express-middleware-chain",
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Built-ins** — `express.json()` parses JSON request bodies, `express.urlencoded` handles HTML form data, and `express.static` serves files from a folder. Mount static files before your route middleware so simple file requests do not go through your auth checks.",
-              np: "`express.json` अघि रूट — बडी पहिले पार्स।",
-              jp: "**組み込み** — JSON・フォーム・静的ファイル。順序が重要。",
-            },
-            {
-              en: "**Third-party** — `cors` controls which origins can call your API, `helmet` sets secure HTTP headers, and `morgan` logs every request. Add only what you actually need, and put security middleware near the top so it runs before anything else.",
-              np: "cors, helmet — सुरक्षा अगाडि।",
-              jp: "**サードパーティ** — cors / helmet は早めに。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Environments, configuration & debugging",
-        np: "वातावरण, विन्यास र डिबग",
-        jp: "環境・設定・デバッグ",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Debugging Node.js with Chrome DevTools",
-        },
-        {
-          type: "code",
-          title: { en: "NODE_ENV + inspect flag", np: "NODE_ENV र inspect", jp: "環境と inspect" },
-          code: `# Terminal (development):
-NODE_ENV=development node --inspect server.js
-# Then open chrome://inspect → inspect your process
-
-console.log(process.env.NODE_ENV);
-console.log(process.env.PORT ?? 3000);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**`NODE_ENV`** is a widely used convention. Setting it to `production` tells libraries to enable optimizations and hide detailed error messages from users. Setting it to `test` lets you point to a test database or use mocks. Read all your environment variables in one place — a `config.js` file or a validated schema — so a missing or misspelled variable fails at startup rather than crashing mid-request.",
-            np: "`NODE_ENV` र एक पटक विन्यास जाँच।",
-            jp: "**NODE_ENV** — 起動時に設定を一箇所で検証。",
+            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
+            np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
+            jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
           },
         },
         {
@@ -100,9 +55,9 @@ console.log(process.env.PORT ?? 3000);`,
           variant: "bullet",
           items: [
             {
-              en: "**Debugging** — start your server with `node --inspect server.js`, go to `chrome://inspect` in Chrome, and attach to your process. You can set breakpoints and inspect `req` and `res` objects directly. Pair this with structured (JSON) logs instead of scattered `console.log` strings — they are much easier to search and filter.",
-              np: "`--inspect` र संरचित लग।",
-              jp: "**デバッグ** — `--inspect` と構造化ログ。",
+              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
+              np: "`npm run` ले टोलीको एउटै शब्दकोश।",
+              jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
             },
           ],
         },
@@ -110,41 +65,119 @@ console.log(process.env.PORT ?? 3000);`,
     },
     {
       title: {
-        en: "Templating, database hooks & folder structure",
-        np: "टेम्प्लेट, डाटाबेस र फोल्डर",
-        jp: "テンプレート・DB・フォルダ構成",
+        en: "Installing, using packages & working with Git",
+        np: "स्थापना, प्रयोग र Git",
+        jp: "インストール・利用・Git",
       },
       blocks: [
         {
           type: "code",
-          title: { en: "Suggested folder layout", np: "फोल्डर संरचना", jp: "フォルダ例" },
-          code: `/*
-  src/
-    index.js       ← creates app, listens
-    routes/
-    models/
-    middleware/
-    startup/db.js  ← mongoose.connect isolated here
-*/`,
+          title: { en: "Install production vs dev-only packages", np: "स्थापना उदाहरण", jp: "依存の入れ方" },
+          code: `# App dependency (recorded in "dependencies")
+npm install express
+
+# Tooling only — tests, linters (recorded in "devDependencies")
+npm install --save-dev jest eslint
+
+// In code:
+const express = require('express');`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**Template engines** like Pug, EJS, or Handlebars let Express render HTML on the server — useful if your app serves web pages, not just a JSON API. Many modern apps skip templates entirely and serve a separate frontend. For database connections, keep **`mongoose.connect`** and your models in their own file (like `startup/db.js`) so tests can easily swap in a different database URI.",
-            np: "SSR को लागि टेम्प्लेट; DB जडान अलग फाइलमा।",
-            jp: "SSR が要るときテンプレート。DB 接続は別モジュールへ。",
+            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
+            np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
+            jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
+          },
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
+              np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
+              jp: "**利用** — README と `exports` でエントリを確認。",
+            },
+            {
+              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
+              np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
+              jp: "**間接依存** — 見えないパッケージまでついてくる。",
+            },
+            {
+              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
+              np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
+              jp: "**秘密情報** — package.json に書かない。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "jHDhaSSKmB0",
+          title: "Semantic Versioning Explained",
+        },
+        {
+          type: "code",
+          title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
+          code: `npm list --depth=0
+npm view lodash version
+npm install lodash@4.17.21
+npm update lodash
+npm uninstall lodash`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Quick semver cheat sheet — what changes when the left digit bumps",
+            np: "Semver संक्षिप्त तालिका",
+            jp: "セマバ早見",
+          },
+          headers: [
+            { en: "Bump", np: "परिवर्तन", jp: "桁" },
+            { en: "Meaning (typical)", np: "अर्थ", jp: "意味（目安）" },
+            { en: "npm range hint", np: "रेञ्ज", jp: "範囲の例" },
+          ],
+          rows: [
+            [
+              { en: "**PATCH** (third number)", np: "PATCH", jp: "**PATCH**" },
+              { en: "Bug fixes, no API change", np: "बग फिक्स", jp: "バグ修正のみ" },
+              { en: "`~1.2.3` allows patch bumps", np: "`~`", jp: "`~` はパッチまで" },
+            ],
+            [
+              { en: "**MINOR** (middle)", np: "MINOR", jp: "**MINOR**" },
+              { en: "New features, backward compatible", np: "नयाँ, मिल्दो", jp: "後方互換の追加" },
+              { en: "`^1.2.3` allows minor + patch", np: "`^`", jp: "`^` は minor まで" },
+            ],
+            [
+              { en: "**MAJOR** (first)", np: "MAJOR", jp: "**MAJOR**" },
+              { en: "Breaking changes — read changelog", np: "ब्रेकिङ", jp: "**破壊的変更**" },
+              { en: "Pin exact version or migrate code", np: "जाँच गर्नुहोस्", jp: "固定か移行作業" },
+            ],
+          ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
+            np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
+            jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
           },
         },
         {
           type: "diagram",
-          id: "cache-aside-pattern",
+          id: "queue-backpressure",
         },
         {
           type: "paragraph",
           text: {
-            en: "The cache-aside pattern is about databases, but the same principle applies to how you structure your app: **each module should do one thing**. Routes handle incoming requests, services contain your business logic, and data access files talk to the database. When you refactor your folder structure, the API should behave exactly the same — verify that with your existing tests or Postman.",
-            np: "पुनर्संरचना — व्यवहार उही, फाइल मात्र बाँड्नुहोस्।",
-            jp: "**リファクタ** — 挙動は変えずフォルダだけ分ける。Postman で確認。",
+            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
+            np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
+            jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
           },
         },
       ],
@@ -152,11 +185,11 @@ console.log(process.env.PORT ?? 3000);`,
   ],
   faq: [
     {
-      question: { en: "Why does middleware order matter?", np: "मिडलवेयर क्रम किन?", jp: "ミドルウェアの順番は？" },
+      question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
       answer: {
-        en: "Express runs middleware in the order you register it. Body parsers need to come before any handler that reads `req.body`. Auth middleware must come before the routes it is protecting. Error handlers (the ones with four arguments) must be registered last — after all your routes — so that `next(err)` has somewhere to land.",
-        np: "पार्सर अघि, प्रमाणीकरण रूट अघि, त्रुटि अन्तिम।",
-        jp: "パーサ → 認証 → ルート → エラーの順。",
+        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
+        np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
+        jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
       },
     },
   ],

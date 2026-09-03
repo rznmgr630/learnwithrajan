@@ -22,6 +22,8 @@ import { NODEJS_DAY_8_LESSONS } from "@/lib/nodejs-learning/nodejs-day-8-lessons
 import { NODEJS_DAY_9_LESSONS } from "@/lib/nodejs-learning/nodejs-day-9-lessons";
 import { NODEJS_DAY_10_LESSONS } from "@/lib/nodejs-learning/nodejs-day-10-lessons";
 import { NODEJS_DAY_11_LESSONS } from "@/lib/nodejs-learning/nodejs-day-11-lessons";
+import { NODEJS_DAY_12_LESSONS } from "@/lib/nodejs-learning/nodejs-day-12-lessons";
+import { NODEJS_DAY_13_LESSONS } from "@/lib/nodejs-learning/nodejs-day-13-lessons";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 
 const TAG_PILL =
@@ -40,6 +42,8 @@ const LESSON_DAYS: Record<number, LessonDay> = {
   9: NODEJS_DAY_9_LESSONS,
   10: NODEJS_DAY_10_LESSONS,
   11: NODEJS_DAY_11_LESSONS,
+  12: NODEJS_DAY_12_LESSONS,
+  13: NODEJS_DAY_13_LESSONS,
 };
 
 const LESSON_DAY_NUMBERS = Object.keys(LESSON_DAYS)
