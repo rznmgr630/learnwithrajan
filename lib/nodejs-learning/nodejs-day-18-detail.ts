@@ -3,96 +3,133 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_18_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",
-      np: "मिडलवेयरले साझा लजिक क्रममा चलाउँछ — परीक्षण योग्य संरचना।",
-      jp: "**ミドルウェア** で共通処理を順に適用。構成でテストしやすくする。",
+      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
+      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
+      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
     },
     {
-      en: "Using **`node --inspect`** with Chrome DevTools is much more powerful than adding `console.log` everywhere. You can set breakpoints, step through async code, and see the actual call stack when a Promise is waiting — which makes tracking down bugs much faster.",
-      np: "`--inspect` ले async डिबग सजिलो बनाउँछ।",
-      jp: "**`--inspect`** で非同期もブレークポイントを張れる。",
+      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
+      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
+      jp: "**Postman** でローカル API をフロント無しで検証できる。",
     },
   ],
   sections: [
     {
-      title: { en: "Middleware — the heart of Express", np: "मिडलवेयर", jp: "ミドルウェア" },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "MIr1oxQ3pao",
-          title: "Express Middleware Explained",
-        },
-        {
-          type: "code",
-          title: { en: "Three middlewares in order", np: "मिडलवेयर क्रम", jp: "順番に並べる" },
-          code: `const express = require('express');
-const app = express();
-
-app.use(express.json());
-app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
-});
-app.get('/api/ping', (req, res) => res.send('pong'));`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Every middleware function gets three arguments: **`req`**, **`res`**, and **`next`**. Call **`next()`** when you are done and want the next middleware to run. Call **`next(err)`** if something goes wrong — Express will skip to your error handler. Once you call `res.send()` or `res.json()`, the chain stops and no more middleware runs.",
-            np: "`next()` अगाडि, `next(err)` त्रुटि ह्यान्डलर, प्रतिक्रिया पठाएपछि रोकिन्छ।",
-            jp: "**ミドルウェア** — `next()` で次へ、`next(err)` でエラーへ。送信後はチェーン停止。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "nodejs-express-middleware-chain",
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Built-ins** — `express.json()` parses JSON request bodies, `express.urlencoded` handles HTML form data, and `express.static` serves files from a folder. Mount static files before your route middleware so simple file requests do not go through your auth checks.",
-              np: "`express.json` अघि रूट — बडी पहिले पार्स।",
-              jp: "**組み込み** — JSON・フォーム・静的ファイル。順序が重要。",
-            },
-            {
-              en: "**Third-party** — `cors` controls which origins can call your API, `helmet` sets secure HTTP headers, and `morgan` logs every request. Add only what you actually need, and put security middleware near the top so it runs before anything else.",
-              np: "cors, helmet — सुरक्षा अगाडि।",
-              jp: "**サードパーティ** — cors / helmet は早めに。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Environments, configuration & debugging",
-        np: "वातावरण, विन्यास र डिबग",
-        jp: "環境・設定・デバッグ",
-      },
+      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
       blocks: [
         {
           type: "youtube",
           videoId: "L72fhGm1tfE",
-          title: "Debugging Node.js with Chrome DevTools",
+          title: "Express JS Crash Course",
         },
         {
           type: "code",
-          title: { en: "NODE_ENV + inspect flag", np: "NODE_ENV र inspect", jp: "環境と inspect" },
-          code: `# Terminal (development):
-NODE_ENV=development node --inspect server.js
-# Then open chrome://inspect → inspect your process
+          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
+          code: `const express = require('express');
+const app = express();
 
-console.log(process.env.NODE_ENV);
-console.log(process.env.PORT ?? 3000);`,
+app.get('/api/genres', (req, res) => res.json([]));
+app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
+// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**`NODE_ENV`** is a widely used convention. Setting it to `production` tells libraries to enable optimizations and hide detailed error messages from users. Setting it to `test` lets you point to a test database or use mocks. Read all your environment variables in one place — a `config.js` file or a validated schema — so a missing or misspelled variable fails at startup rather than crashing mid-request.",
-            np: "`NODE_ENV` र एक पटक विन्यास जाँच।",
-            jp: "**NODE_ENV** — 起動時に設定を一箇所で検証。",
+            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
+            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
+            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "rest-graphql-grpc",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
+            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
+            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "First server, nodemon & environment variables",
+        np: "पहिलो सर्भर, nodemon र env",
+        jp: "最初のサーバ・nodemon・環境変数",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
+          code: `const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => console.log(\`Listening on \${port}\`));`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
+            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
+            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
+            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
+            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
+          },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Routes, verbs, Postman, validation & CRUD projects",
+        np: "रूट, क्रिया, Postman",
+        jp: "ルート・メソッド・Postman",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "fBNz5xF-Kx4",
+          title: "REST API with Node.js & Express",
+        },
+        {
+          type: "code",
+          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
+          code: `app.get('/api/items/:id', (req, res) => {
+  const { id } = req.params;
+  const page = Number(req.query.page ?? 1);
+  res.json({ id, page });
+});
+
+app.post('/api/items', (req, res) => {
+  // Needs express.json() above — validate req.body before DB
+  res.status(201).json(req.body);
+});`,
+        },
+        {
+          type: "diagram",
+          id: "request-response",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
+            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
+            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
           },
         },
         {
@@ -100,63 +137,32 @@ console.log(process.env.PORT ?? 3000);`,
           variant: "bullet",
           items: [
             {
-              en: "**Debugging** — start your server with `node --inspect server.js`, go to `chrome://inspect` in Chrome, and attach to your process. You can set breakpoints and inspect `req` and `res` objects directly. Pair this with structured (JSON) logs instead of scattered `console.log` strings — they are much easier to search and filter.",
-              np: "`--inspect` र संरचित लग।",
-              jp: "**デバッグ** — `--inspect` と構造化ログ。",
+              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
+              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
+              jp: "**Postman** — コレクションで再現性を保つ。",
+            },
+            {
+              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
+              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
+              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
+            },
+            {
+              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
+              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
+              jp: "**Genres API** — 成功と 400 を両方テスト。",
             },
           ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Templating, database hooks & folder structure",
-        np: "टेम्प्लेट, डाटाबेस र फोल्डर",
-        jp: "テンプレート・DB・フォルダ構成",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Suggested folder layout", np: "फोल्डर संरचना", jp: "フォルダ例" },
-          code: `/*
-  src/
-    index.js       ← creates app, listens
-    routes/
-    models/
-    middleware/
-    startup/db.js  ← mongoose.connect isolated here
-*/`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Template engines** like Pug, EJS, or Handlebars let Express render HTML on the server — useful if your app serves web pages, not just a JSON API. Many modern apps skip templates entirely and serve a separate frontend. For database connections, keep **`mongoose.connect`** and your models in their own file (like `startup/db.js`) so tests can easily swap in a different database URI.",
-            np: "SSR को लागि टेम्प्लेट; DB जडान अलग फाइलमा।",
-            jp: "SSR が要るときテンプレート。DB 接続は別モジュールへ。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "cache-aside-pattern",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The cache-aside pattern is about databases, but the same principle applies to how you structure your app: **each module should do one thing**. Routes handle incoming requests, services contain your business logic, and data access files talk to the database. When you refactor your folder structure, the API should behave exactly the same — verify that with your existing tests or Postman.",
-            np: "पुनर्संरचना — व्यवहार उही, फाइल मात्र बाँड्नुहोस्।",
-            jp: "**リファクタ** — 挙動は変えずフォルダだけ分ける。Postman で確認。",
-          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Why does middleware order matter?", np: "मिडलवेयर क्रम किन?", jp: "ミドルウェアの順番は？" },
+      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
       answer: {
-        en: "Express runs middleware in the order you register it. Body parsers need to come before any handler that reads `req.body`. Auth middleware must come before the routes it is protecting. Error handlers (the ones with four arguments) must be registered last — after all your routes — so that `next(err)` has somewhere to land.",
-        np: "पार्सर अघि, प्रमाणीकरण रूट अघि, त्रुटि अन्तिम।",
-        jp: "パーサ → 認証 → ルート → エラーの順。",
+        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
+        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
+        jp: "HTTP の境界で止める。DB は第二の防壁。",
       },
     },
   ],
