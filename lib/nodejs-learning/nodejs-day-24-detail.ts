@@ -3,115 +3,123 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_24_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Authentication** is about proving who you are — usually with an email and password. **Authorization** is about what you are allowed to do once you are logged in — things like admin-only routes. Node APIs often use **JWTs** (JSON Web Tokens) after login so the server does not need to store session data for every user. The token travels with each request and the server just verifies it.",
-      np: "प्रमाणीकरण पहिचान; प्राधिकरण अनुमति — JWT सामान्य।",
-      jp: "**認証**と**認可**を分ける。JWT はステートレスな証明に便利。",
+      en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
+      np: "Mongo दस्तावेज; Mongoose ले आकार र प्रश्न सजिलो बनाउँछ।",
+      jp: "**MongoDB** はドキュメント指向。**Mongoose** がスキーマとクエリを整える。",
     },
     {
-      en: "Passwords must never be stored as plain text — always hash them with **`bcrypt`** before saving, and use bcrypt's compare function when logging in. Keep your **`JWT_SECRET`** and database connection string in environment variables only, never in your code or git history.",
-      np: "पासवर्ड ह्यास — गोप्य कुञ्जी env मा मात्र।",
-      jp: "パスワードは平文禁止。**JWT_SECRET** は環境変数のみ。",
+      en: "You can install MongoDB using the **official installer** or run it with **Docker** — just make sure your data folder is not inside your git repo. The **`mongosh`** shell lets you connect from your terminal and check what is actually in your database, which is more reliable than only reading your app logs.",
+      np: "स्थापना पछि `mongosh` ले जाँच गर्नुहोस्।",
+      jp: "ローカルは公式インストーラか Docker。**mongosh** で直接確認できると強い。",
     },
   ],
   sections: [
     {
-      title: { en: "Users, registration & hashing", np: "प्रयोगकर्ता र ह्यासिङ", jp: "ユーザーとハッシュ" },
+      title: { en: "MongoDB basics & local setup", np: "MongoDB र स्थापना", jp: "MongoDB とセットアップ" },
       blocks: [
         {
           type: "youtube",
-          videoId: "7Q17ubqLfaM",
-          title: "Node.js JWT Authentication Tutorial",
+          videoId: "-bt_y4Loofg",
+          title: "MongoDB in 100 Seconds",
         },
         {
           type: "code",
-          title: { en: "Hash then store — never plaintext", np: "ह्यास गर्नु", jp: "ハッシュして保存" },
-          code: `const bcrypt = require('bcrypt');
-
-async function registerUser({ email, password }) {
-  const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(password, salt);
-  await User.create({ email, password: hash });
-}`,
+          title: { en: "mongosh after mongod is running", np: "mongosh", jp: "mongosh で確認" },
+          code: `# Terminal (with mongod listening):
+mongosh
+show dbs
+use rental_db
+db.genres.insertOne({ name: 'Comedy' })
+db.genres.find().pretty()`,
         },
         {
           type: "paragraph",
           text: {
-            en: "When a user registers, validate their input, check for duplicate emails, hash the password, and save the user. Never send the hash back in the response. When they log in, compare the password they sent against the stored hash using bcrypt's `compare` function. If it matches, issue a **JWT** that includes the user's ID (`sub`) and an expiry time (`exp`). Strip out internal fields like the password hash before sending the user object back.",
-            np: "दर्ता — दोहोरो जाँच, ह्यास, जवाफमा गोप्य नदेखाउनु।",
-            jp: "登録は検証・重複チェック・ハッシュ保存。レスでハッシュを返さない。",
+            en: "MongoDB lets you embed nested objects inside a document, unlike SQL which splits data across multiple tables. That flexibility is powerful, but you still need to plan your **indexes** and how you will query the data. For now, run **`mongod`** locally. When you are ready to host your database online, use the **MongoDB Atlas** free tier — and always store your connection string in an **environment variable**, never in your code.",
+            np: "लचिलोपनका लागि इन्डेक्स र प्रश्न योजना चाहिन्छ।",
+            jp: "柔軟だからこそインデックス設計が重要。接続 URI は環境変数へ。",
           },
         },
       ],
     },
     {
-      title: { en: "JWT flow & protecting routes", np: "JWT र सुरक्षित रूट", jp: "JWT とルート保護" },
+      title: {
+        en: "Connecting, schemas, models & saving",
+        np: "जडान, schema, मोडेल",
+        jp: "接続・スキーマ・モデル・保存",
+      },
       blocks: [
         {
-          type: "youtube",
-          videoId: "7Q17ubqLfaM",
-          title: "JWT Authentication in Node.js",
-        },
-        {
           type: "code",
-          title: { en: "Issue on login, verify in middleware", np: "जारी र जाँच", jp: "発行と検証" },
-          code: `const jwt = require('jsonwebtoken');
+          title: { en: "Connect + define model (sketch)", np: "जडान उदाहरण", jp: "接続の例" },
+          code: `const mongoose = require('mongoose');
 
-function authMiddleware(req, res, next) {
-  const header = req.headers.authorization;
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return res.status(401).send('Missing token');
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).send('Invalid token');
-  }
-}`,
+mongoose.connect(process.env.MONGODB_URI);
+
+const genreSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+});
+const Genre = mongoose.model('Genre', genreSchema);
+
+// create vs new + save — both valid patterns`,
         },
         {
           type: "diagram",
-          id: "jwt-flow",
-        },
-        {
-          type: "diagram",
-          id: "status-401-403",
+          id: "primary-replica",
         },
         {
           type: "paragraph",
           text: {
-            en: "**401** means the request does not have a valid identity — the token is missing, expired, or wrong. **403** means the user is identified but does not have permission for that action. Your auth middleware reads the `Authorization: Bearer ...` header, verifies the token using your secret, then attaches the decoded user to `req.user` and calls `next()`. Centralizing this in one middleware means every protected route is just one line.",
-            np: "401 पहिचान; 403 अनुमति — मिडलवेयरले JWT जाँच।",
-            jp: "**401 vs 403** を図の通り区別。ミドルウェアで検証を一元化。",
+            en: "In production, MongoDB usually runs as a **replica set** — multiple copies of your database for reliability (shown in the diagram above). **`mongoose.connect(uri)`** opens a connection pool automatically. It is good practice to listen for **`disconnected`** and **`reconnected`** events so you know when the database goes down. **Schemas** describe what fields a document has and what values are valid; **Models** connect a schema to the actual MongoDB collection.",
+            np: "उत्पादनमा प्रायः replica — जडान घटनाहरू सुन्नुहोस्।",
+            jp: "本番はレプリカ構成が一般的。**mongoose.connect** とプールを理解する。",
           },
         },
       ],
     },
     {
-      title: { en: "Roles & authorization middleware", np: "भूमिका र प्राधिकरण", jp: "ロールと認可" },
+      title: {
+        en: "Querying, indexes, pagination & updates",
+        np: "प्रश्न र पृष्ठांकन",
+        jp: "クエリ・インデックス・ページング",
+      },
       blocks: [
         {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
+        },
+        {
           type: "code",
-          title: { en: "Factory that checks req.user.role", np: "भूमिका जाँच", jp: "ロールチェック" },
-          code: `function requireRole(...roles) {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).end();
-    if (!roles.includes(req.user.role)) return res.status(403).end();
-    next();
-  };
-}
-
-app.delete('/api/movies/:id', authMiddleware, requireRole('admin'), handler);`,
+          title: { en: "Filter + page in the database", np: "प्रश्न उदाहरण", jp: "クエリ例" },
+          code: `const movies = await Movie.find({ genreId, price: { $lte: 20 } })
+  .sort({ title: 1 })
+  .skip((page - 1) * pageSize)
+  .limit(pageSize)
+  .select('title price');`,
         },
         {
           type: "diagram",
-          id: "rbac-model",
+          id: "btree-index",
         },
         {
           type: "paragraph",
           text: {
-            en: "**Role-based access** lets you say which roles can access which routes — `admin` can delete, `viewer` can only read. Writing it as a small middleware factory (`requireRole('admin')`) keeps your route definitions clean and makes it easy to test that denied users get a 403. For logout with JWTs, the simplest approach is having the client delete the token. If you need to revoke tokens before they expire (like after a password change), you will need a server-side token blocklist.",
-            np: "भूमिका मिडलवेयर — JWT लगआउट प्रायः क्लाइन्टले टोकन हटाउँछ।",
-            jp: "**RBAC** をミドルウェア化。JWT のログアウトはクライアント破棄が基本。",
+            en: "Operators like **`$gt`**, **`$in`**, **`$and`**, and **`$or`** let you filter data inside the database — so only the matching documents come back to your app. This is much faster than loading everything and filtering in JavaScript. Be careful with **regex searches** though — without an index, they scan every document and can slow your app down.",
+            np: "फिल्टर DB भित्र — पूरै लोड गर्नु हुँदैन।",
+            jp: "**演算子**で DB 側にフィルタ。正規表現はインデックスと相談。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "cursor-pagination",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "For **pagination**, `skip` and `limit` are the easiest to start with — but they get slow when users navigate to later pages because MongoDB still has to scan all the skipped documents. **Cursor-based pagination** (sorting by `_id` or a timestamp and passing the last value you saw) is faster and works much better for long lists or feeds.",
+            np: "गहिरो पृष्ठमा कर्सर राम्रो — skip भारी हुन सक्छ।",
+            jp: "**ページング** — 深いページはカーソル方式が安定（図参照）。",
           },
         },
       ],
@@ -120,14 +128,14 @@ app.delete('/api/movies/:id', authMiddleware, requireRole('admin'), handler);`,
   faq: [
     {
       question: {
-        en: "Should JWTs live in localStorage?",
-        np: "JWT localStorage मा?",
-        jp: "JWT は localStorage？",
+        en: "Why prefer atomic updates over read-modify-save?",
+        np: "अणु अद्यावधिक किन?",
+        jp: "原子更新を使う理由？",
       },
       answer: {
-        en: "Storing JWTs in `localStorage` means any injected script (XSS attack) can steal them. Many teams prefer **httpOnly cookies** instead — JavaScript cannot access them, but you need CSRF protection since cookies are automatically sent with requests. The right choice depends on your frontend and your threat model, so understand the trade-off before deciding.",
-        np: "XSS जोखिम — httpOnly कुकी वा शून्य विश्वास नमूना।",
-        jp: "XSS 対策では **httpOnly** の検討。フロントの脅威モデルを決める。",
+        en: "If two requests both read the same document and then save it, one will overwrite the other's changes. **`findOneAndUpdate`** with operators like **`$inc`** and **`$set`** avoids this by making the change directly in the database in one step — no read-then-write race condition.",
+        np: "दुई लेखकले पढेर बचत गर्दा रेस — अणु अद्यावधिक सुरक्षित।",
+        jp: "読んで書くと競合しやすい。**findOneAndUpdate** と演算子で原子更新。",
       },
     },
   ],

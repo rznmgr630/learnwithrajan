@@ -3,133 +3,40 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_18_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
-      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
-      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
+      en: "In Node.js, you share code between files using **modules**. Each file is its own separate space — when you `require` a file, Node runs it once and saves the result. Built-in modules like **path** and **os** help your code work the same way on any computer or operating system.",
+      np: "मोड्युलले कोड साझेदारी गर्छ — require, cache, path, os।",
+      jp: "モジュールでコードを共有。`require` はキャッシュされ、`path` / `os` で環境差を吸収する。",
     },
     {
-      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
-      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
-      jp: "**Postman** でローカル API をフロント無しで検証できる。",
+      en: "**CommonJS** (`require` / `module.exports`) is the original Node.js way of importing code — you'll see it everywhere. **ES modules** (`import` / `export`) are the modern style. Most projects pick one and stick with it, though you may see both during a transition.",
+      np: "CommonJS र ESM — परियोजनामा एकै शैली राख्नुहोस्।",
+      jp: "CommonJS が王道。ESM との混在はプロジェクトのルールに従う。",
     },
   ],
   sections: [
     {
-      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Express JS Crash Course",
-        },
-        {
-          type: "code",
-          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
-          code: `const express = require('express');
-const app = express();
-
-app.get('/api/genres', (req, res) => res.json([]));
-app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
-// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
-            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
-            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "rest-graphql-grpc",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
-            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
-            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "First server, nodemon & environment variables",
-        np: "पहिलो सर्भर, nodemon र env",
-        jp: "最初のサーバ・nodemon・環境変数",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
-          code: `const express = require('express');
-const app = express();
-
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true });
-});
-
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => console.log(\`Listening on \${port}\`));`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
-            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
-            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
-            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
-            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Routes, verbs, Postman, validation & CRUD projects",
-        np: "रूट, क्रिया, Postman",
-        jp: "ルート・メソッド・Postman",
-      },
+      title: { en: "Introduction & the global object", np: "परिचय र ग्लोबल", jp: "はじめに・グローバル" },
       blocks: [
         {
           type: "youtube",
           videoId: "fBNz5xF-Kx4",
-          title: "REST API with Node.js & Express",
+          title: "Node.js Modules Explained",
         },
         {
           type: "code",
-          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
-          code: `app.get('/api/items/:id', (req, res) => {
-  const { id } = req.params;
-  const page = Number(req.query.page ?? 1);
-  res.json({ id, page });
-});
+          title: { en: "Each file is its own scope", np: "फाइल स्कोप", jp: "ファイルは別スコープ" },
+          code: `// In a CommonJS module, top-level \`this\` points at module.exports
+console.log(this === module.exports); // true
 
-app.post('/api/items', (req, res) => {
-  // Needs express.json() above — validate req.body before DB
-  res.status(201).json(req.body);
-});`,
-        },
-        {
-          type: "diagram",
-          id: "request-response",
+const secret = 42; // not global — other files cannot see \`secret\`
+globalThis.demo = 'avoid this in real apps';`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
-            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
-            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
+            en: "In a browser, variables at the top of a script can accidentally become global (attached to `window`). Node prevents this — every file is **wrapped in a function**, so a `var x = 1` at the top stays private to that file. If you want other files to use it, export it. Putting things on `globalThis` is almost always a bad idea.",
+            np: "प्रत्येक फाइल आफ्नै स्कोप — ग्लोबलमा थप्नु हुँदैन; निर्यात प्रयोग गर्नुहोस्।",
+            jp: "ファイル単位でスコープが閉じる。グローバル汚染は避け、export を使う。",
           },
         },
         {
@@ -137,32 +44,109 @@ app.post('/api/items', (req, res) => {
           variant: "bullet",
           items: [
             {
-              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
-              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
-              jp: "**Postman** — コレクションで再現性を保つ。",
-            },
-            {
-              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
-              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
-              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
-            },
-            {
-              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
-              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
-              jp: "**Genres API** — 成功と 400 を両方テスト。",
+              en: "**globalThis** — this is the global object, available in any environment (Node, browser, etc.). Putting your own functions on it means they're visible everywhere in your app, which makes code hard to test and debug. Use it only for polyfills or temporary debugging, not real app logic.",
+              np: "`globalThis` मा व्यापार लजिक नराख्नुहोस् — परीक्षण गाह्रो हुन्छ।",
+              jp: "`globalThis` はテストしにくい。ビジネスロジックは置かない。",
             },
           ],
+        },
+      ],
+    },
+    {
+      title: { en: "Modules — create, load & the wrapper function", np: "मोड्युल सिर्जना र लोड", jp: "モジュールの作成・読み込み・ラッパー" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "yxJG-edtgPM",
+          title: "CommonJS vs ES Modules in Node.js",
+        },
+        {
+          type: "code",
+          title: { en: "Tiny export / import pair", np: "सानो उदाहरण", jp: "小さい例" },
+          code: `// math.js
+module.exports.add = (a, b) => a + b;
+
+// app.js
+const math = require('./math');
+console.log(math.add(2, 3));`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "When you call `require('./something')`, Node finds the file, runs it **once**, and saves the result in **`require.cache`**. Every time you `require` that same file again — from anywhere in your project — you get back the exact same object. This means any setup code in that file only runs once, and any changes to `module.exports` will be seen by everyone who imports it.",
+            np: "`require` ले पथ हल गर्छ, एक पटक चलाउँछ, cache मा राख्छ — पछि एउटै exports फर्काउँछ।",
+            jp: "`require` は一度だけ実行し、同じ exports を返す。だから副作用は一回。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "nodejs-require-resolution",
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Creating a module** — put whatever you want to share on `module.exports`. You can also use the shorthand `exports.foo = …` since `exports` starts as an alias for `module.exports`. Just don't do `exports = {}` — that breaks the connection and nothing gets exported.",
+              np: "`module.exports` प्रयोग गर्नुहोस् — `exports = {}` ले जडान टुट्छ।",
+              jp: "**作成** — `module.exports` に公開したいものを載せる。`exports` の再代入は危険。",
+            },
+            {
+              en: "**Loading** — `require('./file')` looks for a file relative to where you are. `require('lodash')` looks inside the `node_modules` folder, walking up until it finds it. Built-in modules like `fs` are always available just by name — no path needed.",
+              np: "`./` सापेक्षिक; प्याकेज नामले node_modules खोज्छ।",
+              jp: "**読み込み** — `./` は相対、`lodash` のような名前は node_modules を遡る。",
+            },
+            {
+              en: "**Module wrapper** — Node secretly wraps every file in a function before running it. That's how variables like `exports`, `require`, `module`, `__filename`, and `__dirname` become available. So `__dirname` always gives you the folder path of the file you're currently in.",
+              np: "व्रापरले `__dirname` र `__filename` दिन्छ।",
+              jp: "**ラッパー** — `__dirname` / `__filename` はこの仕組みで渡される。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Path & OS modules — portable scripts", np: "Path र OS", jp: "path と os" },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Path snippet", np: "path उदाहरण", jp: "path の例" },
+          code: `const path = require('path');
+
+const full = path.join(__dirname, 'config', 'default.json');
+const { name, ext } = path.parse('/var/log/app.log');
+// name === 'app', ext === '.log'`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Don't build file paths by joining strings like `folder + '/' + file` — that breaks on Windows because it uses `\\` instead of `/`. Use **`path.join`** or **`path.resolve`** and Node handles the slashes for you. **`path.parse`** is handy when you need to pull apart a file path — like grabbing just the filename or extension from an upload.",
+            np: "`path.join` प्रयोग गर्नुहोस् — Windows मा `/` मात्र जोड्नु हुँदैन।",
+            jp: "パスは **`path.join`** / **`resolve`**。文字連結は環境で壊れる。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The **os** module tells you about the machine your code is running on — things like the operating system, number of CPUs, and the home directory. It's useful for logging and diagnostics. Just be careful not to leak sensitive info like file paths into error messages that users might see.",
+            np: "`os` ले प्लेटफर्म र CPU संख्या — लगमा संवेदनशील पथ नदेखाउनुहोस्।",
+            jp: "**os** — プラットフォームや CPU 数。本番では詳細を出しすぎない。",
+          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
+      question: {
+        en: "Should I use default export or named exports in CommonJS?",
+        np: "CommonJS मा default वा named?",
+        jp: "CommonJS で default と named？",
+      },
       answer: {
-        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
-        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
-        jp: "HTTP の境界で止める。DB は第二の防壁。",
+        en: "If your file does one thing, just export that one function directly: `module.exports = createServer`. If it does multiple things, export an object: `module.exports = { createUser, listUsers }` — then whoever imports it can do `const { createUser } = require('./users')`. The key is to pick one style and stick to it across a folder so your imports are easy to predict.",
+        np: "एक फङ्क्शन वा अब्जेक्ट निर्यात — टोलीले बुझ्ने शैली राख्नुहोस्।",
+        jp: "単一なら関数をそのまま、複数ならオブジェクトでまとめる。フォルダで統一する。",
       },
     },
   ],
