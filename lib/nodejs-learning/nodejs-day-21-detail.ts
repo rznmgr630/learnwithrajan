@@ -3,133 +3,51 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_21_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
-      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
-      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
+      en: "**npm** is how you install and manage packages in a Node project. Your **`package.json`** is the list of what your project needs and which version ranges are acceptable. The **lockfile** records the exact versions that were actually installed, so every developer and CI machine gets the same result.",
+      np: "npm — package.json र lockfile ले एउटै रूख दोहोर्याउँछ।",
+      jp: "**npm** と **package.json**・ロックファイルで依存を再現可能にする。",
     },
     {
-      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
-      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
-      jp: "**Postman** でローカル API をフロント無しで検証できる。",
+      en: "**Semver** (semantic versioning) is a numbering system that tells you how much risk a version bump carries. A patch update is usually safe, a minor update adds features without breaking anything, and a major update may break your code. Use **`npm audit`** to check if any installed packages have known security issues.",
+      np: "semver ले अपग्रेड जोखिम देखाउँछ — `npm audit` सँग मिलाउनुहोस्।",
+      jp: "**semver** で更新のリスクを読む。**npm audit** で脆弱性も確認。",
     },
   ],
   sections: [
     {
-      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
+      title: { en: "Introduction & package.json — project manifest", np: "परिचय र package.json", jp: "はじめにと package.json" },
       blocks: [
         {
           type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Express JS Crash Course",
+          videoId: "jHDhaSSKmB0",
+          title: "npm Crash Course",
         },
         {
           type: "code",
-          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
-          code: `const express = require('express');
-const app = express();
+          title: { en: "Manifest + everyday commands", np: "package.json र आदेश", jp: "マニフェストとコマンド" },
+          code: `// Run once in an empty folder:
+//   npm init -y
 
-app.get('/api/genres', (req, res) => res.json([]));
-app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
-// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {},
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+
+// Terminal:
+//   npm install lodash
+//   npm install --save-dev eslint
+//   npx eslint --version`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
-            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
-            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
-          },
-        },
-        {
-          type: "diagram",
-          id: "rest-graphql-grpc",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
-            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
-            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "First server, nodemon & environment variables",
-        np: "पहिलो सर्भर, nodemon र env",
-        jp: "最初のサーバ・nodemon・環境変数",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
-          code: `const express = require('express');
-const app = express();
-
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true });
-});
-
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => console.log(\`Listening on \${port}\`));`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
-            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
-            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
-            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
-            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Routes, verbs, Postman, validation & CRUD projects",
-        np: "रूट, क्रिया, Postman",
-        jp: "ルート・メソッド・Postman",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "fBNz5xF-Kx4",
-          title: "REST API with Node.js & Express",
-        },
-        {
-          type: "code",
-          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
-          code: `app.get('/api/items/:id', (req, res) => {
-  const { id } = req.params;
-  const page = Number(req.query.page ?? 1);
-  res.json({ id, page });
-});
-
-app.post('/api/items', (req, res) => {
-  // Needs express.json() above — validate req.body before DB
-  res.status(201).json(req.body);
-});`,
-        },
-        {
-          type: "diagram",
-          id: "request-response",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
-            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
-            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
+            en: "Running **`npm install lodash`** downloads the package into `node_modules/` and records it in both `package.json` and `package-lock.json`. **`npx`** lets you run a package's command without installing it globally — useful for one-off tools like `npx create-next-app`. Always commit your **`package-lock.json`** so everyone on your team installs the exact same version tree.",
+            np: "`npm install` र lock commit गर्नुहोस्; `npx` ले अस्थायी CLI चलाउँछ।",
+            jp: "`npm install` で依存を記録。**package-lock.json** はコミット。**npx** は一回だけの CLI に便利。",
           },
         },
         {
@@ -137,32 +55,141 @@ app.post('/api/items', (req, res) => {
           variant: "bullet",
           items: [
             {
-              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
-              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
-              jp: "**Postman** — コレクションで再現性を保つ。",
-            },
-            {
-              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
-              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
-              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
-            },
-            {
-              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
-              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
-              jp: "**Genres API** — 成功と 400 を両方テスト。",
+              en: "**Scripts** — add a `start` entry that runs your app (like `node index.js`) so `npm start` works from any machine. Put your lint, test, and build commands here too so your CI and your teammates all use the same commands without needing to remember extra flags.",
+              np: "`npm run` ले टोलीको एउटै शब्दकोश।",
+              jp: "**scripts** — `npm start` / `npm test` でコマンドを共有。",
             },
           ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Installing, using packages & working with Git",
+        np: "स्थापना, प्रयोग र Git",
+        jp: "インストール・利用・Git",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: { en: "Install production vs dev-only packages", np: "स्थापना उदाहरण", jp: "依存の入れ方" },
+          code: `# App dependency (recorded in "dependencies")
+npm install express
+
+# Tooling only — tests, linters (recorded in "devDependencies")
+npm install --save-dev jest eslint
+
+// In code:
+const express = require('express');`,
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Adding `--save-dev` (or `-D`) puts a package under **`devDependencies`** — tools like ESLint and Jest that are only needed during development. When deploying, you can skip them with `npm install --omit=dev` to keep your production image smaller. Never commit `node_modules/` to git — it is massive and anyone can regenerate it from the lockfile.",
+            np: "devDependencies उत्पादनमा छोड्न सकिन्छ; `node_modules` commit नगर्नु।",
+            jp: "**devDependencies** は本番ビルドで省略可能。**node_modules** はコミットしない。",
+          },
+        },
+        {
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Using a package** — just `require('name')` or `import` it. For modern packages, check the `exports` field on the npm page — some packages expose specific subpaths like `pkg/utils` rather than exposing everything from the top level.",
+              np: "`require` वा `import` — प्याकेजको `exports` हेर्नुहोस्।",
+              jp: "**利用** — README と `exports` でエントリを確認。",
+            },
+            {
+              en: "**Transitive dependencies** — when you install something like `express`, it pulls in dozens of other packages behind the scenes. This is why `npm audit` and lockfiles matter — a security issue might be in a package you have never heard of, buried three levels deep.",
+              np: "अप्रत्यक्ष निर्भरता — `npm audit`।",
+              jp: "**間接依存** — 見えないパッケージまでついてくる。",
+            },
+            {
+              en: "**Secrets** — never put API keys or passwords in `package.json` or in a `.env` file that gets committed to git. Use environment variables and your hosting platform's secret manager instead.",
+              np: "गोप्य कुञ्जी commit नगर्नुहोस्।",
+              jp: "**秘密情報** — package.json に書かない。",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: { en: "Semantic versioning & day-to-day npm commands", np: "Semver र आदेश", jp: "セマバとコマンド" },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "jHDhaSSKmB0",
+          title: "Semantic Versioning Explained",
+        },
+        {
+          type: "code",
+          title: { en: "Inspect versions before you bump", np: "संस्करण हेर्नु", jp: "バージョンを調べる" },
+          code: `npm list --depth=0
+npm view lodash version
+npm install lodash@4.17.21
+npm update lodash
+npm uninstall lodash`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Quick semver cheat sheet — what changes when the left digit bumps",
+            np: "Semver संक्षिप्त तालिका",
+            jp: "セマバ早見",
+          },
+          headers: [
+            { en: "Bump", np: "परिवर्तन", jp: "桁" },
+            { en: "Meaning (typical)", np: "अर्थ", jp: "意味（目安）" },
+            { en: "npm range hint", np: "रेञ्ज", jp: "範囲の例" },
+          ],
+          rows: [
+            [
+              { en: "**PATCH** (third number)", np: "PATCH", jp: "**PATCH**" },
+              { en: "Bug fixes, no API change", np: "बग फिक्स", jp: "バグ修正のみ" },
+              { en: "`~1.2.3` allows patch bumps", np: "`~`", jp: "`~` はパッチまで" },
+            ],
+            [
+              { en: "**MINOR** (middle)", np: "MINOR", jp: "**MINOR**" },
+              { en: "New features, backward compatible", np: "नयाँ, मिल्दो", jp: "後方互換の追加" },
+              { en: "`^1.2.3` allows minor + patch", np: "`^`", jp: "`^` は minor まで" },
+            ],
+            [
+              { en: "**MAJOR** (first)", np: "MAJOR", jp: "**MAJOR**" },
+              { en: "Breaking changes — read changelog", np: "ब्रेकिङ", jp: "**破壊的変更**" },
+              { en: "Pin exact version or migrate code", np: "जाँच गर्नुहोस्", jp: "固定か移行作業" },
+            ],
+          ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**`npm list`** shows everything installed in your project. Adding `--depth=0` limits the output to only your direct dependencies. **`npm view lodash version`** checks the latest version in the registry without downloading anything. Use **`@1.2.3`** to pin an exact version, **`npm update`** to bump within the ranges in your `package.json`, and **`npm uninstall`** to cleanly remove a package and its entry.",
+            np: "`npm list`, `npm view`, `@संस्करण`, `npm update`।",
+            jp: "**一覧** — `npm list`。**確認** — `npm view`。**特定版** — `@x.y.z`。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "queue-backpressure",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "Use **`npm ci`** instead of `npm install` in your CI pipeline. It does a clean install directly from the lockfile, ignores `package.json` ranges, and fails if the lockfile is out of date — so every build is predictable and matches exactly what you tested locally.",
+            np: "CI मा `npm ci` — lock बाट सफा स्थापना।",
+            jp: "CI では **`npm ci`** でロックファイルどおりに再現する。",
+          },
         },
       ],
     },
   ],
   faq: [
     {
-      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
+      question: { en: "Why commit package-lock.json?", np: "package-lock किन commit?", jp: "lock をコミットする理由？" },
       answer: {
-        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
-        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
-        jp: "HTTP の境界で止める。DB は第二の防壁。",
+        en: "Without the lockfile, two developers running `npm install` at different times might get slightly different versions of indirect dependencies, which can cause bugs that only happen on one machine. The lockfile records the exact version of every package in the tree so everyone gets the same result.",
+        np: "यसले रूख फिक्स गर्छ — देव र CI मिल्छ।",
+        jp: "同じ ranges でも間接依存の解決がズレるのを防ぐ。",
       },
     },
   ],
