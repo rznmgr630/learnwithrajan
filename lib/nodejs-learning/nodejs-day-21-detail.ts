@@ -3,139 +3,166 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_21_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
-      np: "Mongo दस्तावेज; Mongoose ले आकार र प्रश्न सजिलो बनाउँछ।",
-      jp: "**MongoDB** はドキュメント指向。**Mongoose** がスキーマとクエリを整える。",
+      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
+      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
+      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
     },
     {
-      en: "You can install MongoDB using the **official installer** or run it with **Docker** — just make sure your data folder is not inside your git repo. The **`mongosh`** shell lets you connect from your terminal and check what is actually in your database, which is more reliable than only reading your app logs.",
-      np: "स्थापना पछि `mongosh` ले जाँच गर्नुहोस्।",
-      jp: "ローカルは公式インストーラか Docker。**mongosh** で直接確認できると強い。",
+      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
+      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
+      jp: "**Postman** でローカル API をフロント無しで検証できる。",
     },
   ],
   sections: [
     {
-      title: { en: "MongoDB basics & local setup", np: "MongoDB र स्थापना", jp: "MongoDB とセットアップ" },
+      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
       blocks: [
         {
           type: "youtube",
-          videoId: "-bt_y4Loofg",
-          title: "MongoDB in 100 Seconds",
+          videoId: "L72fhGm1tfE",
+          title: "Express JS Crash Course",
         },
         {
           type: "code",
-          title: { en: "mongosh after mongod is running", np: "mongosh", jp: "mongosh で確認" },
-          code: `# Terminal (with mongod listening):
-mongosh
-show dbs
-use rental_db
-db.genres.insertOne({ name: 'Comedy' })
-db.genres.find().pretty()`,
+          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
+          code: `const express = require('express');
+const app = express();
+
+app.get('/api/genres', (req, res) => res.json([]));
+app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
+// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
         },
         {
           type: "paragraph",
           text: {
-            en: "MongoDB lets you embed nested objects inside a document, unlike SQL which splits data across multiple tables. That flexibility is powerful, but you still need to plan your **indexes** and how you will query the data. For now, run **`mongod`** locally. When you are ready to host your database online, use the **MongoDB Atlas** free tier — and always store your connection string in an **environment variable**, never in your code.",
-            np: "लचिलोपनका लागि इन्डेक्स र प्रश्न योजना चाहिन्छ।",
-            jp: "柔軟だからこそインデックス設計が重要。接続 URI は環境変数へ。",
+            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
+            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
+            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
+          },
+        },
+        {
+          type: "diagram",
+          id: "rest-graphql-grpc",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
+            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
+            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Connecting, schemas, models & saving",
-        np: "जडान, schema, मोडेल",
-        jp: "接続・スキーマ・モデル・保存",
+        en: "First server, nodemon & environment variables",
+        np: "पहिलो सर्भर, nodemon र env",
+        jp: "最初のサーバ・nodemon・環境変数",
       },
       blocks: [
         {
           type: "code",
-          title: { en: "Connect + define model (sketch)", np: "जडान उदाहरण", jp: "接続の例" },
-          code: `const mongoose = require('mongoose');
+          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
+          code: `const express = require('express');
+const app = express();
 
-mongoose.connect(process.env.MONGODB_URI);
+app.use(express.json());
 
-const genreSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
+app.get('/health', (req, res) => {
+  res.json({ ok: true });
 });
-const Genre = mongoose.model('Genre', genreSchema);
 
-// create vs new + save — both valid patterns`,
-        },
-        {
-          type: "diagram",
-          id: "primary-replica",
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => console.log(\`Listening on \${port}\`));`,
         },
         {
           type: "paragraph",
           text: {
-            en: "In production, MongoDB usually runs as a **replica set** — multiple copies of your database for reliability (shown in the diagram above). **`mongoose.connect(uri)`** opens a connection pool automatically. It is good practice to listen for **`disconnected`** and **`reconnected`** events so you know when the database goes down. **Schemas** describe what fields a document has and what values are valid; **Models** connect a schema to the actual MongoDB collection.",
-            np: "उत्पादनमा प्रायः replica — जडान घटनाहरू सुन्नुहोस्।",
-            jp: "本番はレプリカ構成が一般的。**mongoose.connect** とプールを理解する。",
+            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
+            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
+            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
+          },
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
+            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
+            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Querying, indexes, pagination & updates",
-        np: "प्रश्न र पृष्ठांकन",
-        jp: "クエリ・インデックス・ページング",
+        en: "Routes, verbs, Postman, validation & CRUD projects",
+        np: "रूट, क्रिया, Postman",
+        jp: "ルート・メソッド・Postman",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Crash Course",
+          videoId: "fBNz5xF-Kx4",
+          title: "REST API with Node.js & Express",
         },
         {
           type: "code",
-          title: { en: "Filter + page in the database", np: "प्रश्न उदाहरण", jp: "クエリ例" },
-          code: `const movies = await Movie.find({ genreId, price: { $lte: 20 } })
-  .sort({ title: 1 })
-  .skip((page - 1) * pageSize)
-  .limit(pageSize)
-  .select('title price');`,
+          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
+          code: `app.get('/api/items/:id', (req, res) => {
+  const { id } = req.params;
+  const page = Number(req.query.page ?? 1);
+  res.json({ id, page });
+});
+
+app.post('/api/items', (req, res) => {
+  // Needs express.json() above — validate req.body before DB
+  res.status(201).json(req.body);
+});`,
         },
         {
           type: "diagram",
-          id: "btree-index",
+          id: "request-response",
         },
         {
           type: "paragraph",
           text: {
-            en: "Operators like **`$gt`**, **`$in`**, **`$and`**, and **`$or`** let you filter data inside the database — so only the matching documents come back to your app. This is much faster than loading everything and filtering in JavaScript. Be careful with **regex searches** though — without an index, they scan every document and can slow your app down.",
-            np: "फिल्टर DB भित्र — पूरै लोड गर्नु हुँदैन।",
-            jp: "**演算子**で DB 側にフィルタ。正規表現はインデックスと相談。",
+            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
+            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
+            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
           },
         },
         {
-          type: "diagram",
-          id: "cursor-pagination",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "For **pagination**, `skip` and `limit` are the easiest to start with — but they get slow when users navigate to later pages because MongoDB still has to scan all the skipped documents. **Cursor-based pagination** (sorting by `_id` or a timestamp and passing the last value you saw) is faster and works much better for long lists or feeds.",
-            np: "गहिरो पृष्ठमा कर्सर राम्रो — skip भारी हुन सक्छ।",
-            jp: "**ページング** — 深いページはカーソル方式が安定（図参照）。",
-          },
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
+              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
+              jp: "**Postman** — コレクションで再現性を保つ。",
+            },
+            {
+              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
+              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
+              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
+            },
+            {
+              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
+              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
+              jp: "**Genres API** — 成功と 400 を両方テスト。",
+            },
+          ],
         },
       ],
     },
   ],
   faq: [
     {
-      question: {
-        en: "Why prefer atomic updates over read-modify-save?",
-        np: "अणु अद्यावधिक किन?",
-        jp: "原子更新を使う理由？",
-      },
+      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
       answer: {
-        en: "If two requests both read the same document and then save it, one will overwrite the other's changes. **`findOneAndUpdate`** with operators like **`$inc`** and **`$set`** avoids this by making the change directly in the database in one step — no read-then-write race condition.",
-        np: "दुई लेखकले पढेर बचत गर्दा रेस — अणु अद्यावधिक सुरक्षित।",
-        jp: "読んで書くと競合しやすい。**findOneAndUpdate** と演算子で原子更新。",
+        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
+        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
+        jp: "HTTP の境界で止める。DB は第二の防壁。",
       },
     },
   ],

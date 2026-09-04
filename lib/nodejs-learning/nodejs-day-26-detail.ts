@@ -3,278 +3,115 @@ import type { RoadmapDayDetail } from "@/lib/challenge-data";
 export const NODEJS_DAY_26_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "Testing is how you catch bugs before users do — and how you change code without worrying you broke something. **Unit tests** are fast because they mock all the external stuff (database, network) and test one function at a time. **Integration tests** run your actual Express app against a real test database to check that everything works together.",
-      np: "Unit test — I/O mock, milliseconds; Integration test — वास्तविक DB, wiring परीक्षण।",
-      jp: "**単体テスト**は I/O をモックして高速に。**結合テスト**は実際の DB でワイヤリングを確認。",
+      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
+      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
+      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
     },
     {
-      en: "**Test-driven development (TDD)** means writing your test before writing the code — you describe what the function should do, watch the test fail, then write just enough code to make it pass. Even if you do not follow strict TDD, writing tests alongside your code (not weeks later when you have forgotten the edge cases) produces much better coverage.",
-      np: "TDD — पहिले fail गर्ने test, अनि minimum code। कोडसँगै लेख्नु राम्रो।",
-      jp: "**TDD** は失敗するテストから始める。コードと並行してテストを書くと品質が保たれる。",
+      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
+      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
+      jp: "**populate** は便利だが **N+1** に注意。",
     },
   ],
   sections: [
     {
-      title: {
-        en: "Jest basics — describe, it, expect",
-        np: "Jest — describe, it, expect",
-        jp: "Jest の基本",
-      },
+      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
       blocks: [
         {
           type: "youtube",
-          videoId: "7r4xVDI2vho",
-          title: "Jest Crash Course",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
         },
         {
           type: "code",
-          title: {
-            en: "Unit test for a pure function",
-            np: "pure function को unit test",
-            jp: "純粋関数の単体テスト",
-          },
-          code: `// math.js
-function calculateLateFee(days, dailyRate) {
-  if (days < 0) throw new Error('days cannot be negative');
-  return days * dailyRate;
-}
-module.exports = { calculateLateFee };
+          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
+          code: `// Reference another collection by id
+const movieSchema = new mongoose.Schema({
+  title: String,
+  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
+});
 
-// math.test.js
-const { calculateLateFee } = require('./math');
-
-describe('calculateLateFee', () => {
-  it('returns 0 for 0 days', () => {
-    expect(calculateLateFee(0, 1.5)).toBe(0);
-  });
-
-  it('multiplies days by daily rate', () => {
-    expect(calculateLateFee(3, 2.5)).toBe(7.5);
-  });
-
-  it('throws for negative days', () => {
-    expect(() => calculateLateFee(-1, 2)).toThrow('days cannot be negative');
-  });
-
-  it('handles fractional rates', () => {
-    expect(calculateLateFee(7, 1.99)).toBeCloseTo(13.93);
-  });
+// Embed small subdocuments that always ship with the parent
+const orderSchema = new mongoose.Schema({
+  lines: [{ sku: String, qty: Number, price: Number }],
 });`,
         },
         {
           type: "diagram",
-          id: "nodejs-jest-unit-flow",
+          id: "erd-one-many",
         },
         {
           type: "paragraph",
           text: {
-            en: "The **test pyramid** says: lots of fast unit tests at the bottom, some integration tests in the middle, and a few end-to-end tests at the top. This keeps your test suite fast while still covering important paths. Run **`jest --watch`** while developing so tests re-run automatically every time you save. Add `\"test\": \"jest\"` and `\"test:coverage\": \"jest --coverage\"` to your `package.json` scripts.",
-            np: "pyramid — धेरै unit, कम integration, थोरै e2e। `jest --watch` development मा।",
-            jp: "**テストピラミッド** — 下段を厚く。`jest --watch` で開発中に即時フィードバック。",
+            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
+            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
+            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
           },
         },
       ],
     },
     {
-      title: {
-        en: "Mocking modules and functions",
-        np: "Modules र functions mock गर्नु",
-        jp: "モジュールと関数のモック",
-      },
+      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
       blocks: [
         {
           type: "code",
-          title: {
-            en: "Mock a DB module to test service logic in isolation",
-            np: "DB module mock गरेर service test",
-            jp: "DB モジュールをモックしてサービスを単体テスト",
-          },
-          code: `// userService.js
-const db = require('./db');
-
-async function createUser(data) {
-  const existing = await db.findByEmail(data.email);
-  if (existing) throw new Error('Email in use');
-  return db.insertUser(data);
-}
-module.exports = { createUser };
-
-// userService.test.js
-jest.mock('./db'); // auto-mock — all exports become jest.fn()
-const db = require('./db');
-const { createUser } = require('./userService');
-
-describe('createUser', () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it('throws when email already exists', async () => {
-    db.findByEmail.mockResolvedValue({ id: 1, email: 'a@b.com' });
-    await expect(createUser({ email: 'a@b.com' })).rejects.toThrow('Email in use');
-  });
-
-  it('inserts and returns user when email is free', async () => {
-    db.findByEmail.mockResolvedValue(null);
-    db.insertUser.mockResolvedValue({ id: 2, email: 'new@b.com' });
-
-    const result = await createUser({ email: 'new@b.com', name: 'Alice' });
-    expect(db.insertUser).toHaveBeenCalledWith({ email: 'new@b.com', name: 'Alice' });
-    expect(result.id).toBe(2);
-  });
-});`,
+          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
+          code: `async function createMovie(body) {
+  const genre = await Genre.findById(body.genreId);
+  if (!genre) {
+    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
+  }
+  return Movie.create(body);
+}`,
         },
         {
           type: "paragraph",
           text: {
-            en: "**Mocking** lets you test one piece of code without needing a real database or network connection — tests run fast and give the same result every time. But over-mocking can hide real bugs: if you always mock `.save()` to succeed, you will never catch a Mongoose validation schema that rejects a field your code depends on. Save real database calls for integration tests, where checking that everything works together is the whole point.",
-            np: "mock ले isolation — तर Mongoose mock गर्दा schema bug छुटन सक्छ। integration test मा real DB।",
-            jp: "モックは高速・確定的。しかし Mongoose をモックしすぎるとスキーマバグを見落とす。結合テストでは実 DB を使う。",
+            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
+            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
+            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Integration tests with supertest",
-        np: "supertest सँग integration tests",
-        jp: "supertest を使った結合テスト",
+        en: "Transactions & validating ObjectIds",
+        np: "लेनदेन र ObjectId",
+        jp: "トランザクションと ObjectId",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "FKnzS_icp20",
-          title: "Supertest Integration Testing in Node.js",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Transactions Explained",
         },
         {
           type: "code",
-          title: {
-            en: "Testing an Express route end-to-end",
-            np: "Express route end-to-end test",
-            jp: "Express ルートの結合テスト",
-          },
-          code: `const request = require('supertest');
-const mongoose = require('mongoose');
-const app = require('../app'); // export app without .listen()
-
-beforeAll(async () => {
-  await mongoose.connect('mongodb://localhost:27017/myapp_test');
-});
-
-afterAll(async () => {
-  await mongoose.connection.db.dropDatabase();
-  await mongoose.connection.close();
-});
-
-beforeEach(async () => {
-  await mongoose.connection.db.dropDatabase(); // clean slate per test
-});
-
-describe('POST /api/users', () => {
-  it('creates a user and returns 201', async () => {
-    const res = await request(app)
-      .post('/api/users')
-      .send({ name: 'Alice', email: 'alice@example.com' })
-      .expect(201);
-
-    expect(res.body.email).toBe('alice@example.com');
-    expect(res.body._id).toBeDefined();
-  });
-
-  it('returns 400 for missing email', async () => {
-    const res = await request(app)
-      .post('/api/users')
-      .send({ name: 'Bob' })
-      .expect(400);
-
-    expect(res.body.error).toBe('Validation failed');
-  });
-
-  it('returns 409 for duplicate email', async () => {
-    await request(app).post('/api/users').send({ name: 'Alice', email: 'a@b.com' });
-    const res = await request(app)
-      .post('/api/users')
-      .send({ name: 'Alice2', email: 'a@b.com' })
-      .expect(409);
-    expect(res.body.error).toMatch(/duplicate/i);
-  });
-});`,
+          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
+          code: `const session = await mongoose.startSession();
+session.startTransaction();
+try {
+  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
+  await Rental.create([{ customerId, movieId }], { session });
+  await session.commitTransaction();
+} catch (e) {
+  await session.abortTransaction();
+  throw e;
+} finally {
+  session.endSession();
+}`,
+        },
+        {
+          type: "diagram",
+          id: "acid-transaction",
         },
         {
           type: "paragraph",
           text: {
-            en: "**`supertest`** sends real HTTP requests to your Express app without needing to actually start a server on a port — this makes tests fast and easy to run anywhere. Always use a separate test database (like `myapp_test`) that you can freely wipe. Drop the database in `afterAll` so each test run starts clean, and set up any required data in `beforeEach` so tests do not depend on each other.",
-            np: "supertest — port bind नगरी real HTTP। test DB अलग URI — production मा कहिल्यै होइन।",
-            jp: "**supertest** はポートなしで実 HTTP を発火。**テスト用 DB** を別 URI に。本番データは絶対に使わない。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Coverage and what it actually measures",
-        np: "Coverage — के मापन गर्छ?",
-        jp: "カバレッジが実際に測るもの",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: {
-            en: "Reading jest --coverage output",
-            np: "coverage output पढ्नु",
-            jp: "jest --coverage の出力を読む",
-          },
-          code: `# Run: npx jest --coverage
-
-# Output table:
-# File          | % Stmts | % Branch | % Funcs | % Lines
-# userService.js|    91.3 |     75.0 |   100.0 |    91.3
-
-# 75% Branch means 1 of 4 if/else branches was never executed.
-# Find it: jest --coverage --verbose --collectCoverageFrom='src/**/*.js'
-
-# CI badge target: 80% minimum on all four columns.
-# But 80% can still miss critical paths — cover your auth and billing logic first.`,
-        },
-        {
-          type: "table",
-          caption: {
-            en: "Coverage types — what they count and what they miss",
-            np: "coverage प्रकार",
-            jp: "カバレッジの種類",
-          },
-          headers: [
-            { en: "Coverage type", np: "प्रकार", jp: "種類" },
-            { en: "What it counts", np: "के गन्छ", jp: "カウント対象" },
-            { en: "Blind spot", np: "अन्धा ठाउँ", jp: "見落とし" },
-          ],
-          rows: [
-            [
-              { en: "**Statement**", np: "Statement", jp: "**ステートメント**" },
-              { en: "Every executable statement reached", np: "हरेक statement", jp: "実行された文" },
-              { en: "Does not check boolean branches", np: "branch जाँच गर्दैन", jp: "分岐を区別しない" },
-            ],
-            [
-              { en: "**Branch**", np: "Branch", jp: "**ブランチ**" },
-              { en: "Both sides of if/else, ternary, &&, ||", np: "if/else दुवै side", jp: "if/else 両側・三項演算子" },
-              { en: "Misses logic errors inside a taken branch", np: "branch भित्रको logic", jp: "分岐内のロジックは見ない" },
-            ],
-            [
-              { en: "**Function**", np: "Function", jp: "**関数**" },
-              { en: "Every function called at least once", np: "हरेक function एकपटक", jp: "各関数が最低1回呼ばれた" },
-              { en: "Misses edge-case inputs inside the function", np: "edge case input", jp: "関数内のエッジケース" },
-            ],
-            [
-              { en: "**Line**", np: "Line", jp: "**行**" },
-              { en: "Every source line executed", np: "हरेक line", jp: "各行が実行された" },
-              { en: "Multi-statement lines mislead the metric", np: "एक line मा धेरै statement", jp: "複文行でメトリクスが歪む" },
-            ],
-          ],
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**80% test coverage is a reasonable minimum**, not a goal to celebrate hitting. 100% coverage does not mean your code is correct — a test that touches every line but makes no real assertions is useless. Spend your testing effort on the things that matter most: auth flows, pricing logic, and error handling. If a test only exists to bump a number, delete it.",
-            np: "80% coverage न्यूनतम — 100% भएर पनि logic error हुन सक्छ। auth र pricing मा ध्यान दिनुहोस्।",
-            jp: "**80% はフロア**。100% でもロジックエラーを見逃す。認証・課金・エラーパスに意味のあるテストを集中。",
+            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
+            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
+            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
           },
         },
       ],
@@ -283,26 +120,14 @@ describe('POST /api/users', () => {
   faq: [
     {
       question: {
-        en: "What is the difference between unit and integration tests?",
-        np: "Unit र integration test मा फरक के?",
-        jp: "単体テストと結合テストの違いは？",
+        en: "When should I embed instead of reference?",
+        np: "एम्बेड कहिले?",
+        jp: "埋め込みはいつ？",
       },
       answer: {
-        en: "**Unit tests** test one function in isolation by replacing external dependencies (database, network) with mocks. They run in milliseconds and are great for testing logic. **Integration tests** connect real components — actual database, actual Express routes, actual middleware — and check that everything works together. They are slower but catch bugs that unit tests cannot, like a misconfigured route or a missing database index.",
-        np: "Unit — mock सँग isolated, fast; Integration — real DB, real Express, slow तर wiring bugs देखाउँछ।",
-        jp: "**単体**はモックで隔離して高速。**結合**は実コンポーネントを繋いで遅いがワイヤリングバグを発見。",
-      },
-    },
-    {
-      question: {
-        en: "Should I write tests before or after the code?",
-        np: "test पहिले वा code पछि लेख्ने?",
-        jp: "テストはコードの前か後か？",
-      },
-      answer: {
-        en: "**Writing tests first (TDD)** makes you think about how a function should behave before you write it, which often leads to better-designed interfaces — especially for business logic with clear rules. **Testing after** is fine when you are exploring or prototyping. Either way, the rule is: never mark a PR ready without tests. Untested code in production is a liability.",
-        np: "TDD ले interface पहिले सोच्न बाध्य गर्छ — business logic मा राम्रो। PR ready गर्न अघि test लेख्नुहोस्।",
-        jp: "**TDD** はインターフェースを先に考えさせる。探索的開発にはテスト後が現実的。PR 前には必ずテストを書く。",
+        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
+        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
+        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
       },
     },
   ],
