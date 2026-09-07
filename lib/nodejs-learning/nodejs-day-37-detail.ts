@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_40_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_37_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "**Authentication** is about proving who you are — usually with an email and password. **Authorization** is about what you are allowed to do once you are logged in — things like admin-only routes. Node APIs often use **JWTs** (JSON Web Tokens) after login so the server does not need to store session data for every user. The token travels with each request and the server just verifies it.",

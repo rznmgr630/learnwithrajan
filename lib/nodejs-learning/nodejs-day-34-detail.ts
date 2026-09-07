@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_37_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_34_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "**MongoDB** saves data as flexible **documents** (similar to JSON) grouped in **collections** — unlike SQL tables, there is no rigid column structure. **Mongoose** sits on top of MongoDB and gives your Node app **schemas**, **validation**, and a clean API for querying data.",
