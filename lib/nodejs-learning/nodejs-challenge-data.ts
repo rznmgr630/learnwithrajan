@@ -1,6 +1,5 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { NODEJS_DAY_19_DETAIL } from "@/lib/nodejs-learning/nodejs-day-19-detail";
 import { NODEJS_DAY_20_DETAIL } from "@/lib/nodejs-learning/nodejs-day-20-detail";
 import { NODEJS_DAY_21_DETAIL } from "@/lib/nodejs-learning/nodejs-day-21-detail";
 import { NODEJS_DAY_22_DETAIL } from "@/lib/nodejs-learning/nodejs-day-22-detail";
@@ -13,14 +12,14 @@ import { NODEJS_DAY_28_DETAIL } from "@/lib/nodejs-learning/nodejs-day-28-detail
 import { NODEJS_DAY_29_DETAIL } from "@/lib/nodejs-learning/nodejs-day-29-detail";
 import { NODEJS_DAY_30_DETAIL } from "@/lib/nodejs-learning/nodejs-day-30-detail";
 import { NODEJS_DAY_31_DETAIL } from "@/lib/nodejs-learning/nodejs-day-31-detail";
+import { NODEJS_DAY_32_DETAIL } from "@/lib/nodejs-learning/nodejs-day-32-detail";
 import { nodejsDayTitle, nodejsTags, nodejsWeekTitle } from "@/lib/nodejs-learning/nodejs-roadmap-i18n";
 
 export const NODEJS_CURRENT_DAY = 1;
 
-export const NODEJS_TOTAL_DAYS = 31;
+export const NODEJS_TOTAL_DAYS = 32;
 
 const NODEJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  19: NODEJS_DAY_19_DETAIL,
   20: NODEJS_DAY_20_DETAIL,
   21: NODEJS_DAY_21_DETAIL,
   22: NODEJS_DAY_22_DETAIL,
@@ -33,6 +32,7 @@ const NODEJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   29: NODEJS_DAY_29_DETAIL,
   30: NODEJS_DAY_30_DETAIL,
   31: NODEJS_DAY_31_DETAIL,
+  32: NODEJS_DAY_32_DETAIL,
 };
 
 const DOT: Record<string, string> = {
@@ -104,6 +104,7 @@ export const NODEJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       nodejsDayRow(16, ["validation", "fastify"]),
       nodejsDayRow(17, ["database", "sql"]),
       nodejsDayRow(18, ["auth", "jwt"]),
+      nodejsDayRow(19, ["auth", "errors"]),
     ],
   },
   {
@@ -111,16 +112,16 @@ export const NODEJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: nodejsWeekTitle("nodejs-w2"),
     dotClass: DOT["nodejs-w2"],
     days: [
-      nodejsDayRow(19, ["modules", "core"]),
-      nodejsDayRow(20, ["core", "http"]),
-      nodejsDayRow(21, ["npm", "semver"]),
+      nodejsDayRow(20, ["modules", "core"]),
+      nodejsDayRow(21, ["core", "http"]),
+      nodejsDayRow(22, ["npm", "semver"]),
     ],
   },
-  { id: "nodejs-w3", title: nodejsWeekTitle("nodejs-w3"), dotClass: DOT["nodejs-w3"], days: [nodejsDayRow(22, ["express", "http"]), nodejsDayRow(23, ["express", "validation"])] },
-  { id: "nodejs-w4", title: nodejsWeekTitle("nodejs-w4"), dotClass: DOT["nodejs-w4"], days: [nodejsDayRow(24, ["async", "mongo"]), nodejsDayRow(25, ["mongo", "mongoose"])] },
-  { id: "nodejs-w5", title: nodejsWeekTitle("nodejs-w5"), dotClass: DOT["nodejs-w5"], days: [nodejsDayRow(26, ["mongoose", "validation"]), nodejsDayRow(27, ["relations", "mongo"])] },
-  { id: "nodejs-w6", title: nodejsWeekTitle("nodejs-w6"), dotClass: DOT["nodejs-w6"], days: [nodejsDayRow(28, ["auth", "jwt"]), nodejsDayRow(29, ["errors", "testing"])] },
-  { id: "nodejs-w7", title: nodejsWeekTitle("nodejs-w7"), dotClass: DOT["nodejs-w7"], days: [nodejsDayRow(30, ["testing", "integration"]), nodejsDayRow(31, ["deploy", "atlas"])] },
+  { id: "nodejs-w3", title: nodejsWeekTitle("nodejs-w3"), dotClass: DOT["nodejs-w3"], days: [nodejsDayRow(23, ["express", "http"]), nodejsDayRow(24, ["express", "validation"])] },
+  { id: "nodejs-w4", title: nodejsWeekTitle("nodejs-w4"), dotClass: DOT["nodejs-w4"], days: [nodejsDayRow(25, ["async", "mongo"]), nodejsDayRow(26, ["mongo", "mongoose"])] },
+  { id: "nodejs-w5", title: nodejsWeekTitle("nodejs-w5"), dotClass: DOT["nodejs-w5"], days: [nodejsDayRow(27, ["mongoose", "validation"]), nodejsDayRow(28, ["relations", "mongo"])] },
+  { id: "nodejs-w6", title: nodejsWeekTitle("nodejs-w6"), dotClass: DOT["nodejs-w6"], days: [nodejsDayRow(29, ["auth", "jwt"]), nodejsDayRow(30, ["errors", "testing"])] },
+  { id: "nodejs-w7", title: nodejsWeekTitle("nodejs-w7"), dotClass: DOT["nodejs-w7"], days: [nodejsDayRow(31, ["testing", "integration"]), nodejsDayRow(32, ["deploy", "atlas"])] },
 ];
 
 export function getAllNodejsRoadmapDays(): RoadmapDay[] {
