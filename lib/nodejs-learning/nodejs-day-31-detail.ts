@@ -1,156 +1,313 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_31_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_35_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
-      np: "Express ले HTTP र रूट सजिलो बनाउँछ — मिडलवेयर चेन।",
-      jp: "Express は **`http` の上にルーティングとミドルウェア** を載せる薄いフレームワーク。",
+      en: "**Validation** is how you stop bad data from ever reaching your database. Mongoose validators check your data right before it gets saved. Libraries like **Joi** or **Zod** check it even earlier — at the route level — so you can send a clear 400 error back to the client without touching any business logic.",
+      np: "Mongoose — DB write अघि; Joi — route मा। दुवै तह मिलाएर राम्रो।",
+      jp: "Mongoose は DB 書き込み前、Joi はルートレベルで検証。二段で守る。",
     },
     {
-      en: "Use **Postman** (or a similar tool) to test your API while you build it. You can save and replay requests — GET, POST, PUT, DELETE — against your local server without needing a frontend at all.",
-      np: "Postman ले अनुरोध दोहोर्याउन मिल्छ — फ्रन्ट बिना परीक्षण।",
-      jp: "**Postman** でローカル API をフロント無しで検証できる。",
+      en: "Think of validation as two layers of protection. The **route layer** catches problems in the incoming request and returns friendly error messages. The **schema layer** is your backup — it stops bad data from getting into MongoDB even if something slips past the route check.",
+      np: "रूट — पहिलो रिंग (400); Schema — अन्तिम रिंग (DB protection)।",
+      jp: "**ルート検証**は早期の 400 返却。**スキーマ検証**は DB へのゴミを防ぐ最後の砦。",
     },
   ],
   sections: [
     {
-      title: { en: "RESTful services & introducing Express", np: "REST र Express", jp: "REST と Express" },
+      title: {
+        en: "Mongoose schema validators",
+        np: "Mongoose schema validators",
+        jp: "Mongoose スキーマバリデータ",
+      },
+      blocks: [
+        {
+          type: "youtube",
+          videoId: "-56x56UppqQ",
+          title: "Mongoose Crash Course",
+        },
+        {
+          type: "code",
+          title: {
+            en: "Schema with built-in and custom validators",
+            np: "बिल्ट-इन र कस्टम validators",
+            jp: "組み込み + カスタムバリデータ",
+          },
+          code: `const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    minlength: [2, 'Name must be at least 2 characters'],
+    maxlength: [100, 'Name must be at most 100 characters'],
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
+    lowercase: true,
+  },
+  role: {
+    type: String,
+    enum: {
+      values: ['user', 'admin', 'moderator'],
+      message: '{VALUE} is not a valid role',
+    },
+    default: 'user',
+  },
+  age: {
+    type: Number,
+    min: [0, 'Age cannot be negative'],
+    max: [150, 'Age seems unrealistic'],
+  },
+  website: {
+    type: String,
+    validate: {
+      validator: (v) => !v || v.startsWith('https://'),
+      message: 'Website must use HTTPS',
+    },
+  },
+});
+
+const User = mongoose.model('User', userSchema);`,
+        },
+        {
+          type: "diagram",
+          id: "nodejs-mongoose-schema",
+        },
+        {
+          type: "table",
+          caption: {
+            en: "Common Mongoose validators",
+            np: "सामान्य validators",
+            jp: "よく使うバリデータ",
+          },
+          headers: [
+            { en: "Validator", np: "Validator", jp: "バリデータ" },
+            { en: "Usage", np: "प्रयोग", jp: "使い方" },
+            { en: "Error message", np: "त्रुटि सन्देश", jp: "エラーメッセージ" },
+          ],
+          rows: [
+            [
+              { en: "`required`", np: "required", jp: "`required`" },
+              { en: "`required: [true, 'msg']`", np: "अनिवार्य", jp: "必須フィールド" },
+              { en: "Path `name` is required", np: "field अनिवार्य", jp: "フィールドが必要" },
+            ],
+            [
+              { en: "`min` / `max`", np: "min/max", jp: "`min` / `max`" },
+              { en: "Numbers and dates", np: "संख्या र मिति", jp: "数値・日付に適用" },
+              { en: "Path `age` (5) is less than minimum", np: "न्यूनतम भन्दा कम", jp: "最小値より小さい" },
+            ],
+            [
+              { en: "`minlength` / `maxlength`", np: "लम्बाइ", jp: "`minlength` / `maxlength`" },
+              { en: "String length bounds", np: "string लम्बाइ", jp: "文字列の長さ" },
+              { en: "Path `name` is shorter than minimum", np: "छोटो", jp: "最小文字数より短い" },
+            ],
+            [
+              { en: "`enum`", np: "enum", jp: "`enum`" },
+              { en: "Allowed string values", np: "अनुमत मानहरू", jp: "許可された値のリスト" },
+              { en: "`xyz` is not a valid role", np: "अमान्य मान", jp: "無効な値" },
+            ],
+            [
+              { en: "`match`", np: "match (regex)", jp: "`match`" },
+              { en: "Regex test on string", np: "regex परीक्षण", jp: "正規表現テスト" },
+              { en: "Invalid email format", np: "अमान्य ढाँचा", jp: "フォーマット不正" },
+            ],
+            [
+              { en: "`validate`", np: "custom", jp: "`validate`" },
+              { en: "Custom `validator(value)` function", np: "कस्टम function", jp: "カスタム関数" },
+              { en: "Website must use HTTPS", np: "HTTPS चाहिन्छ", jp: "カスタムメッセージ" },
+            ],
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Joi validation in Express routes",
+        np: "Express routes मा Joi validation",
+        jp: "Express ルートでの Joi 検証",
+      },
       blocks: [
         {
           type: "youtube",
           videoId: "L72fhGm1tfE",
-          title: "Express JS Crash Course",
+          title: "Express Validation with Joi",
         },
         {
           type: "code",
-          title: { en: "REST-shaped routes on one app", np: "REST रूट", jp: "REST 風ルート" },
-          code: `const express = require('express');
-const app = express();
-
-app.get('/api/genres', (req, res) => res.json([]));
-app.post('/api/genres', (req, res) => res.status(201).json({ id: 'new' }));
-// PUT/PATCH/DELETE on /api/genres/:id — choose verbs + status codes deliberately.`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**REST** is a set of conventions, not a strict standard. You name your URLs after the things in your app (`/api/genres`, `/api/movies`) and use HTTP methods to say what you want to do — **GET** to read, **POST** to create, **PUT/PATCH** to update, **DELETE** to remove. Return clear status codes (`200`, `201`, `400`, `404`) so anyone reading your logs or using your API knows exactly what happened.",
-            np: "संसाधन URL र HTTP verb — स्थिति कोड स्पष्ट राख्नुहोस्।",
-            jp: "**REST** — リソースとメソッドとステータスコードを揃えるスタイル。",
+          title: {
+            en: "Reusable validation middleware with Joi",
+            np: "Joi validation middleware",
+            jp: "Joi を使った検証ミドルウェア",
           },
-        },
-        {
-          type: "diagram",
-          id: "rest-graphql-grpc",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "The diagram shows different API styles — for this course, we focus on REST: separate endpoints, JSON bodies, and GET requests that browsers can cache. **`const app = express()`** creates your app, and **`app.listen(port)`** starts it. Everything you add between those two lines is your middleware and routes.",
-            np: "यहाँ REST धेरै एन्डपोइन्ट र JSON — `express()` र `listen`।",
-            jp: "このコースでは REST 列が中心。`express()` と `listen` でサーバが待つ。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "First server, nodemon & environment variables",
-        np: "पहिलो सर्भर, nodemon र env",
-        jp: "最初のサーバ・nodemon・環境変数",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Tiny Express server", np: "सानो सर्भर", jp: "小さなサーバ" },
-          code: `const express = require('express');
-const app = express();
+          code: `const Joi = require('joi');
 
-app.use(express.json());
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true });
+// Define the schema
+const createUserSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  email: Joi.string().email().required(),
+  role: Joi.string().valid('user', 'admin').default('user'),
+  age: Joi.number().integer().min(0).max(150),
 });
 
-const port = process.env.PORT ?? 3000;
-app.listen(port, () => console.log(\`Listening on \${port}\`));`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "Start with something simple — `app.get('/', (req, res) => res.send('ok'))` just to confirm everything is wired up. Add **`express.json()`** before any route that reads a request body, otherwise `req.body` will be undefined. Use **nodemon** while developing so your server restarts automatically on file changes — but use a proper process manager like systemd or Docker in production.",
-            np: "विकासमा nodemon; उत्पादनमा प्रक्रिया प्रबन्धक।",
-            jp: "開発は **nodemon**。本番はプロセスマネージャと別。**JSON は `express.json()` の後**。",
-          },
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Environment variables** are the right place to store secrets and config like port numbers. Cloud platforms inject `PORT` automatically, and locally you can use **`dotenv`** to load a `.env` file. Just make sure that file is in your `.gitignore` — never commit real secrets to version control.",
-            np: "`process.env` र `.env` — गोप्य Git मा नहाल्नु।",
-            jp: "**環境変数** — `dotenv` はローカル用。本番はプラットフォームの注入。",
-          },
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Routes, verbs, Postman, validation & CRUD projects",
-        np: "रूट, क्रिया, Postman",
-        jp: "ルート・メソッド・Postman",
-      },
-      blocks: [
-        {
-          type: "youtube",
-          videoId: "fBNz5xF-Kx4",
-          title: "REST API with Node.js & Express",
-        },
-        {
-          type: "code",
-          title: { en: "params, query, body", np: "params, query, body", jp: "params・query・body" },
-          code: `app.get('/api/items/:id', (req, res) => {
-  const { id } = req.params;
-  const page = Number(req.query.page ?? 1);
-  res.json({ id, page });
-});
+// Reusable middleware factory
+function validate(schema) {
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req.body, {
+      abortEarly: false,    // collect ALL errors, not just first
+      stripUnknown: true,   // remove fields not in schema
+    });
+    if (error) {
+      return res.status(400).json({
+        status: 400,
+        error: 'Validation failed',
+        details: error.details.map((d) => ({
+          field: d.path.join('.'),
+          message: d.message,
+        })),
+      });
+    }
+    req.body = value; // use the cleaned/coerced value
+    next();
+  };
+}
 
-app.post('/api/items', (req, res) => {
-  // Needs express.json() above — validate req.body before DB
-  res.status(201).json(req.body);
+// Use in routes
+const express = require('express');
+const router = express.Router();
+
+router.post('/users', validate(createUserSchema), async (req, res) => {
+  // req.body is now validated and stripped of unknown fields
+  const user = await User.create(req.body);
+  res.status(201).json(user);
 });`,
         },
         {
-          type: "diagram",
-          id: "request-response",
-        },
-        {
           type: "paragraph",
           text: {
-            en: "Parts of the URL like `/api/items/:id` show up in **`req.params`**. Query strings like `?page=2` show up in **`req.query`** — but everything there is a string, so convert types before using them. POST body data comes from **`req.body`** and needs `express.json()` to work. Always validate the body with a schema library like **Joi** or **Zod** before passing anything to your database.",
-            np: "`params`, `query`, `body` — डेटाबेस अघि प्रमाणीकरण।",
-            jp: "**ルート** — `params` / `query` / `body`。DB の前に検証。",
+            en: "Put your validation middleware between the route and the handler — the handler only runs if the data passes. Set `abortEarly: false` so all errors are collected in one go, meaning the client can see and fix everything at once rather than fixing one error at a time. Set `stripUnknown: true` to automatically drop any extra fields the client sent.",
+            np: "validation middleware route र handler बीच — `abortEarly: false` ले सबै त्रुटि एकैपटक।",
+            jp: "バリデーションはルートとハンドラの間に挟む。`abortEarly: false` で全エラーをまとめて返す。",
           },
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Sanitization — strip unknown fields",
+        np: "Sanitization — अज्ञात fields हटाउनु",
+        jp: "サニタイズ — 余分なフィールドを除去",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Strip unknown fields to prevent mass-assignment",
+            np: "mass-assignment रोक्न unknown fields हटाउनु",
+            jp: "マスアサインメント防止のためのフィールド除去",
+          },
+          code: `// Without stripUnknown, a malicious client could send:
+// { name: 'Alice', email: 'a@b.com', role: 'admin', isVerified: true }
+// and pollute your DB with isVerified = true
+
+const { error, value } = schema.validate(req.body, {
+  stripUnknown: true,
+  // value now only contains fields defined in the Joi schema
+});
+
+// With Mongoose you can also enable strict mode (default true):
+// strict: true means fields not in schema are silently dropped on save
+const userSchema = new mongoose.Schema({ name: String }, { strict: true });`,
         },
         {
           type: "list",
           variant: "bullet",
           items: [
             {
-              en: "**Postman** — organize your requests in a collection so teammates can reuse them. Always set `Content-Type: application/json` on requests with a body, and save example responses so others know what to expect.",
-              np: "Postman संग्रह र हेडर उही राख्नुहोस्।",
-              jp: "**Postman** — コレクションで再現性を保つ。",
+              en: "**Mass-assignment** — if a client sends `{ role: 'admin' }` in the request body and your code does `User.create(req.body)` directly, they can give themselves admin privileges. Always whitelist the fields you accept, or use `stripUnknown` to remove anything you did not define.",
+              np: "mass-assignment — `role: 'admin'` पठाएर privilege escalate गर्न सकिन्छ।",
+              jp: "**マスアサインメント** — 不正なフィールドで権限昇格が起きる。ホワイトリスト化が必要。",
             },
             {
-              en: "**PUT vs PATCH** — PUT typically replaces the whole resource with what you send. PATCH updates only the fields you include. Pick one approach and stick to it across your API so it stays consistent.",
-              np: "PUT/PATCH सम्झौता टोलीले लेख्नुहोस्।",
-              jp: "**PUT/PATCH** — チームで意味を決めドキュメント化。",
+              en: "**Keep your database clean** — extra unknown fields in your documents make future schema changes harder and can break analytics queries that assume a consistent shape.",
+              np: "DB सफा राख्नुहोस् — अज्ञात fields ले schema migration कठिन बन्छ।",
+              jp: "**DB をきれいに保つ** — 未知フィールドはスキーママイグレーションを壊す。",
             },
-            {
-              en: "**Genres API project** — use plural route names, share your validation logic across routes, and write tests for both the happy path and the cases where validation should fail.",
-              np: "Genres परियोजना — खुसी र त्रुटि दुवै परीक्षण।",
-              jp: "**Genres API** — 成功と 400 を両方テスト。",
-            },
+          ],
+        },
+      ],
+    },
+    {
+      title: {
+        en: "Validation error responses",
+        np: "Validation error responses",
+        jp: "バリデーションエラーレスポンス",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Structured error response format",
+            np: "संरचित त्रुटि response",
+            jp: "構造化エラーレスポンス",
+          },
+          code: `// Consistent error shape — clients can rely on this contract
+{
+  "status": 400,
+  "error": "Validation failed",
+  "details": [
+    { "field": "email",  "message": "\\"email\\" must be a valid email" },
+    { "field": "name",   "message": "\\"name\\" is not allowed to be empty" }
+  ]
+}
+
+// Express error handler for Mongoose ValidationError
+app.use((err, req, res, next) => {
+  if (err.name === 'ValidationError') {
+    const details = Object.entries(err.errors).map(([field, e]) => ({
+      field,
+      message: e.message,
+    }));
+    return res.status(400).json({ status: 400, error: 'Validation failed', details });
+  }
+  if (err.code === 11000) {
+    return res.status(409).json({ status: 409, error: 'Duplicate key', field: Object.keys(err.keyPattern)[0] });
+  }
+  res.status(500).json({ status: 500, error: 'Internal server error' });
+});`,
+        },
+        {
+          type: "table",
+          caption: {
+            en: "HTTP status codes for validation scenarios",
+            np: "validation status codes",
+            jp: "検証エラーの HTTP ステータス",
+          },
+          headers: [
+            { en: "Status", np: "Status", jp: "ステータス" },
+            { en: "When to use", np: "कहिले", jp: "使いどき" },
+            { en: "Example", np: "उदाहरण", jp: "例" },
+          ],
+          rows: [
+            [
+              { en: "**400 Bad Request**", np: "400", jp: "**400**" },
+              { en: "Malformed JSON, missing required fields, type mismatch", np: "अमान्य body", jp: "フォーマット不正・必須欠如" },
+              { en: "`name` is required", np: "name अनिवार्य", jp: "name は必須" },
+            ],
+            [
+              { en: "**422 Unprocessable Entity**", np: "422", jp: "**422**" },
+              { en: "Well-formed body but semantically invalid business rule", np: "व्यावसायिक नियम उल्लङ्घन", jp: "形式は正しいが業務ルール違反" },
+              { en: "Start date must be before end date", np: "मिति नियम", jp: "開始日が終了日より後" },
+            ],
+            [
+              { en: "**409 Conflict**", np: "409", jp: "**409**" },
+              { en: "Duplicate unique field (e.g. email already registered)", np: "डुप्लिकेट key", jp: "一意フィールドの重複" },
+              { en: "Email already in use", np: "email पहिल्यै छ", jp: "メールが既に存在" },
+            ],
           ],
         },
       ],
@@ -158,11 +315,15 @@ app.post('/api/items', (req, res) => {
   ],
   faq: [
     {
-      question: { en: "Where should validation live?", np: "प्रमाणीकरण कहाँ?", jp: "検証はどこで？" },
+      question: {
+        en: "Should I validate in the schema or the route?",
+        np: "schema मा वा route मा validate गर्ने?",
+        jp: "スキーマとルートどちらで検証すべきか？",
+      },
       answer: {
-        en: "Validation should happen as close to the incoming request as possible — in middleware or at the top of your controller — so bad data never reaches your database. Mongoose validations are a useful backup, but they should not be your only line of defense.",
-        np: "HTTP नजिक पहिलो रेखा — DB अघि रोक्नुहोस्।",
-        jp: "HTTP の境界で止める。DB は第二の防壁。",
+        en: "**Both** — they do different things. Route middleware (Joi/Zod) stops bad requests at the door and sends a clear 400 error before any of your logic runs. Mongoose schema validators catch anything that slips through — including bugs in your own code, like a service function that skips the route validation. Using both gives you layered protection.",
+        np: "दुवै — route middleware ले HTTP boundary मा 400 दिन्छ; Mongoose ले DB अघि अन्तिम जाँच।",
+        jp: "**両方**。ルート検証は HTTP 境界で 400 を返す。Mongoose 検証はコードバグへの最後の砦。",
       },
     },
   ],
