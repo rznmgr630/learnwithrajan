@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const NODEJS_DAY_2_LESSONS: LessonDay = {
   day: 2,
   title: "Modules — ESM vs CommonJS",
-  totalMinutes: 88,
+  totalMinutes: 99,
   difficulty: "Beginner",
   lessons: [
     {
@@ -438,6 +438,401 @@ console.log("after");
           correctIndex: 1,
           explanation:
             "`require` hands back an ordinary object, so a wrong key is just `undefined` and blows up later. ESM checks the export names up front, so the file refuses to start.",
+        },
+      ],
+    },
+    {
+      id: "caching-and-the-wrapper",
+      title: "What happens when you load a module — caching and the wrapper",
+      durationMinutes: 11,
+      explanation:
+        "Both systems have a property that explains a surprising amount of Node behaviour: <b>a module runs once</b>.\n\n---\n\n## Module caching\n\n<b>Module caching</b> (Node runs a module's body the first time it is loaded and returns the same result for every later load).\n\nVerified, requiring the same file twice:\n\n```text\n  [counter.cjs body ran]        ← printed ONCE\nsame object: true\n```\n\n> So the second `require` never executes the file. Which means <b>every module is a singleton</b>, and that is the sentence to remember, because it explains behaviour you will otherwise find mysterious.\n\n---\n\n## The consequence, measured\n\nA module holding a `count`, bumped twice through one handle and once through the other:\n\n```text\na.get(): 3   b.get(): 3\n```\n\n> One counter, not two. Any state at module scope is <b>shared by everything that imports it</b>, across your whole application.\n>\n> That is useful on purpose: a connection pool, a logger, a config object. And it is the reason a `new Pool()` at module scope is a problem rather than a style choice, because importing that file anywhere runs it.\n\n---\n\n## `require.cache`\n\n<b>`require.cache`</b> (the object holding every loaded CommonJS module, keyed by resolved absolute path).\n\nVerified:\n\n```text\nin cache: true\ndelete require.cache[key]\n  [counter.cjs body ran]        ← ran AGAIN\nsame object: false   c.get(): 0\n```\n\n> Deleting an entry makes the next `require` re-run the file and produce a fresh object. It is how old hot-reloaders worked, and it is a bad idea in application code: everything that already imported the module keeps the <b>old</b> object, so you end up with two versions of the same thing.\n\n---\n\n## The module wrapper\n\n<b>Module wrapper</b> (the function Node wraps every CommonJS file in before running it).\n\nVerified with `require(\"node:module\").wrap`:\n\n```javascript\n(function (exports, require, module, __filename, __dirname) { const x = 1;\n});\n```\n\n> That is the whole answer to \"where do `require` and `__dirname` come from\". They are not globals, they are <b>parameters</b>. Which is also why a top-level `var` cannot leak: your file is a function body.\n>\n> And it explains one oddity: at the top of a CommonJS file `this === module.exports`, verified `true`. In ESM top-level `this` is `undefined`.\n\n---\n\n## ESM caches too, slightly differently\n\nVerified:\n\n```text\nrequire / module / exports / __dirname   all undefined\nsame namespace object: true\nObject.isSealed(ns): true\nns.bump = 1  →  TypeError\n```\n\n> Same once-only execution, and the namespace object is <b>sealed</b>, so you cannot reassign an export. ESM has no `require.cache` to delete, and adding a query string does force a re-run:\n\n```text\nimport(\"./counter.mjs?v=2\")\n  [counter.mjs body ran]   same as before: false\n```\n\n> Which leaks: the old copy stays loaded forever, so this is a debugging trick, not a reload mechanism.\n\n---\n\n## And one line about globals\n\n> Because each file is a scope, the only way to make something truly global is `globalThis`. Do not: it is invisible in every import list, so nothing tells a reader where the value came from. Export it.",
+      diagram: `A module runs ONCE
+
+    verified, requiring the same file twice:
+
+      [counter.cjs body ran]     ← printed ONCE
+      same object: true
+
+    → the second require never executes the file
+
+    ⚠⚠ SO EVERY MODULE IS A SINGLETON.
+
+      that is the sentence to remember. it
+      explains behaviour you will otherwise find
+      mysterious.
+
+
+The consequence. Measured.
+
+    a module holding a count, bumped twice through
+    one handle and once through the other:
+
+      a.get(): 3     b.get(): 3
+
+    ONE counter, not two.
+
+    → any state at module scope is SHARED BY
+      EVERYTHING THAT IMPORTS IT, across your
+      whole application
+
+    ✓ useful on purpose:
+        a connection pool
+        a logger
+        a config object
+
+    ⚠ and the reason new Pool() at module scope is
+      a PROBLEM rather than a style choice:
+
+      importing that file ANYWHERE runs it.
+
+
+require.cache
+
+    the object holding every loaded CommonJS
+    module, keyed by RESOLVED ABSOLUTE PATH.
+
+    verified:
+
+      in cache: true
+      delete require.cache[key]
+        [counter.cjs body ran]   ← ran AGAIN
+      same object: false   c.get(): 0
+
+    ⚠ how old hot-reloaders worked, and a bad idea
+      in application code:
+
+      everything that ALREADY imported the module
+      keeps the OLD object.
+
+      → two versions of the same thing
+
+
+⚠⚠ The module wrapper
+
+    verified with require("node:module").wrap:
+
+      (function (exports, require, module,
+                 __filename, __dirname) {
+        const x = 1;
+      });
+
+    that is the whole answer to "where do require
+    and __dirname come from".
+
+      THEY ARE NOT GLOBALS. THEY ARE PARAMETERS.
+
+    → which is also why a top-level var cannot
+      leak: your file is a FUNCTION BODY
+
+    and it explains one oddity:
+
+      CommonJS top level   this === module.exports
+                           (verified true)
+      ESM top level        this === undefined
+
+
+ESM caches too, slightly differently
+
+    verified:
+
+      require / module / exports / __dirname
+        all undefined
+      same namespace object: true
+      Object.isSealed(ns): true
+      ns.bump = 1  →  TypeError
+
+    same once-only execution, and the namespace is
+    SEALED, so you cannot reassign an export.
+
+    no require.cache to delete. a query string
+    does force a re-run:
+
+      import("./counter.mjs?v=2")
+        [counter.mjs body ran]
+        same as before: false
+
+    ⚠ which LEAKS: the old copy stays loaded
+      forever.
+
+      → a debugging trick, not a reload mechanism
+
+
+One line about globals
+
+    each file is a scope, so the only way to make
+    something truly global is globalThis.
+
+    ⚠ don't. it is invisible in every import list,
+      so nothing tells a reader where the value
+      came from.
+
+      export it.`,
+      codeExample: {
+        title: "Proving a module is a singleton",
+        code: `// ── counter.cjs ─────────────────────────────────────────────
+console.log("  [counter.cjs body ran]");
+let count = 0;
+module.exports = { bump: () => ++count, get: () => count };
+
+
+// ── main.cjs ────────────────────────────────────────────────
+console.log("this === module.exports:", this === module.exports);
+console.log("wrapper params:",
+  typeof exports, typeof require, typeof module,
+  typeof __filename, typeof __dirname);
+
+const a = require("./counter.cjs");
+const b = require("./counter.cjs");
+console.log("same object:", a === b);
+
+a.bump(); a.bump(); b.bump();
+console.log("a.get():", a.get(), "b.get():", b.get());
+
+// VERIFIED output:
+//   this === module.exports: true
+//   wrapper params: object function object string string
+//   --- requiring counter twice ---
+//     [counter.cjs body ran]        ← ONCE, for two requires
+//   same object: true
+//   a.get(): 3 b.get(): 3           ← ONE counter
+//
+// Three bumps split across two handles, and both report 3.
+// There is one module, so there is one \`count\`.
+
+
+// ── ⚠⚠ Why that matters more than it looks ──────────────────
+// This is the whole reason module-scope state is a design
+// decision rather than a detail.
+//
+// ✓ Deliberate, and correct:
+//   // logger.js
+//   import pino from "pino";
+//   export const logger = pino({ level: process.env.LOG_LEVEL });
+//   // Every file that imports this gets the SAME logger, which
+//   // is what you want: one configuration, one output stream.
+//
+// ✗ Accidental, and a problem:
+//   // db.js
+//   import { Pool } from "pg";
+//   export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+//   // ⚠ The pool is created when the file is first imported,
+//   // by anything, for any reason. So importing db.js in a
+//   // unit test opens real connections, and a missing env var
+//   // fails at import time rather than at a startup check.
+//
+// The fix is not to avoid module state, it is to export a
+// FACTORY and call it once where you control the timing:
+//   export function createPool(url) { return new Pool({ connectionString: url }); }
+
+
+// ── require.cache, and why not to touch it ──────────────────
+const key = require.resolve("./counter.cjs");
+console.log("in cache:", key in require.cache);
+
+delete require.cache[key];
+const c = require("./counter.cjs");
+console.log("after delete, same object:", a === c, "| c.get():", c.get());
+
+// VERIFIED:
+//   in cache: true
+//     [counter.cjs body ran]        ← re-executed
+//   after delete, same object: false | c.get(): 0
+//
+// Note the key: require.resolve gives the RESOLVED ABSOLUTE
+// PATH, which is what the cache is keyed on. Not the string
+// you typed.
+//
+// ⚠ And note what did NOT happen: \`a\` still points at the old
+// object with count 3. So a "hot reload" done this way leaves
+// every existing importer holding the previous version, and
+// you now have two modules that both think they are the only
+// one. Use \`node --watch\` instead, which restarts the process.
+
+
+// ── The wrapper, shown directly ─────────────────────────────
+// $ node -e "console.log(require('node:module').wrap('const x = 1;'))"
+//
+//   (function (exports, require, module, __filename, __dirname) { const x = 1;
+//   });
+//
+// VERIFIED. Every CommonJS file you have ever written was run
+// as that function body.
+//
+// Which answers three questions at once:
+//   - where require and __dirname come from   → parameters
+//   - why a top-level var does not leak       → function scope
+//   - why \`this\` is module.exports            → it is the call's
+//                                               \`this\`
+//
+// ⚠ In ESM none of the five exist:
+//   typeof require    → undefined
+//   typeof module     → undefined
+//   typeof exports    → undefined
+//   typeof __dirname  → undefined
+//   this              → undefined
+//
+// There is no wrapper because ESM modules are not functions.
+// That is why the previous lesson's import.meta.dirname exists:
+// the information had to come back some other way.
+
+
+// ── ESM caching, verified ───────────────────────────────────
+// counter.mjs
+//   console.log("  [counter.mjs body ran]");
+//   let count = 0;
+//   export const bump = () => ++count;
+//   export const get = () => count;
+
+const a2 = await import("./counter.mjs");
+const b2 = await import("./counter.mjs");
+console.log("same namespace object:", a2 === b2);
+a2.bump(); a2.bump(); b2.bump();
+console.log("a.get():", a2.get(), "b.get():", b2.get());
+console.log("sealed:", Object.isSealed(a2));
+try { a2.bump = 1; } catch (e) { console.log("assignment threw:", e.constructor.name); }
+
+// VERIFIED:
+//     [counter.mjs body ran]        ← once
+//   same namespace object: true
+//   a.get(): 3 b.get(): 3
+//   sealed: true
+//   assignment threw: TypeError
+//
+// Same singleton behaviour. Two differences worth knowing.
+//
+// The namespace object is SEALED, so you cannot add to it or
+// reassign an export from outside. In CommonJS \`a.bump = 1\`
+// would just work and quietly change the module for everyone.
+//
+// And ESM has no cache you can delete. The only way to force a
+// re-run is a different specifier:
+const c2 = await import("./counter.mjs?v=2");
+console.log("same as before:", c2 === a2, "| count:", c2.get());
+//   [counter.mjs body ran]
+//   same as before: false | count: 0        ← VERIFIED
+//
+// ⚠ But the first copy is still loaded. Every unique query
+// string is a permanent new entry in the module registry, so
+// doing this in a loop is a leak. It is fine for poking at
+// something in a REPL and wrong as a reload strategy.
+
+
+// ── ⚠ And globalThis, briefly ───────────────────────────────
+// ✗ globalThis.currentUser = user;
+//   Works from anywhere, and that is the problem: no import
+//   names it, so a reader has no way to find where it was set
+//   or who else writes to it. It also survives between tests
+//   in the same process, which produces failures that depend
+//   on test order.
+//
+// ✓ export it, or pass it. If something genuinely needs to
+//   cross the whole application, that is what the singleton
+//   behaviour above is for: put it in a module and import it.`,
+      },
+      keyTakeaways: [
+        "A module's body runs once. Verified: two `require` calls printed the file's log line once and returned the same object.",
+        "So every module is a singleton, which is the sentence that explains a lot of otherwise mysterious Node behaviour.",
+        "Verified: three bumps split across two handles both reported 3, because there is one module and one variable.",
+        "Module-scope state is therefore shared by everything that imports it, across the whole application.",
+        "That is useful on purpose for a logger, a pool or a config object, and it is a design decision rather than a detail.",
+        "It is also why `new Pool()` at module scope runs when anything imports the file, so a unit test opens real connections.",
+        "The fix is to export a factory and call it once where you control the timing.",
+        "`require.cache` is keyed on the resolved absolute path, which `require.resolve` gives you.",
+        "Verified: deleting a cache entry re-runs the file and returns a fresh object with reset state.",
+        "But existing importers keep the old object, so cache deletion leaves two live versions of one module. Use `node --watch` instead.",
+        "Verified with `module.wrap`: every CommonJS file runs as `(function (exports, require, module, __filename, __dirname) { ... })`.",
+        "So `require` and `__dirname` are parameters, not globals, which is also why a top-level `var` cannot leak.",
+        "Verified: at CommonJS top level `this === module.exports` is true, and in ESM top-level `this` is `undefined`.",
+        "ESM caches the same way: verified one execution and the same namespace object for two dynamic imports.",
+        "Verified: the ESM namespace object is sealed, so assigning to an export throws a `TypeError`.",
+        "ESM has no deletable cache. A query string forces a re-run, verified, but the old copy stays loaded forever, so it leaks.",
+        "`globalThis` is the only true global, and it is invisible in every import list, so export things instead.",
+      ],
+      commonMistakes: [
+        "Expecting a module's setup code to run per import, when it runs once for the whole process.",
+        "Putting mutable state at module scope by accident, then being surprised that two importers share it.",
+        "Constructing a database pool or a client at module scope, so importing the file for any reason connects.",
+        "Deleting `require.cache` entries to reload code, which leaves earlier importers holding the previous version.",
+        "Assuming `require.cache` is keyed on the string you typed rather than the resolved absolute path.",
+        "Thinking `require`, `module` and `__dirname` are globals, when they are wrapper parameters that do not exist in ESM.",
+        "Expecting top-level `this` to behave the same in both systems. It is `module.exports` in CommonJS and `undefined` in ESM.",
+        "Assigning to a property of an imported ESM namespace, which throws because the object is sealed.",
+        "Using `import(\"./x.js?v=\" + Date.now())` as a reload mechanism, which permanently accumulates module copies.",
+        "Reaching for `globalThis` to share a value, which hides its origin and leaks state between tests in one process.",
+      ],
+      quiz: [
+        {
+          question: "You `require` the same file twice. How many times does its body run?",
+          options: [
+            "Twice",
+            "Once. Verified: the file's log line printed once and both calls returned the same object.",
+            "Once per exported function",
+            "It depends on the file type",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Which means every module is a singleton, and any state at module scope is shared by everything that imports it.",
+        },
+        {
+          question: "A module holds `let count = 0`. Two files import it and bump it three times between them. What does each see?",
+          options: [
+            "Each sees its own count",
+            "Both see 3, because there is one module and therefore one variable",
+            "Both see 0",
+            "It throws",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified. It is why a logger or a pool at module scope works, and why an accidental `new Pool()` there runs on any import.",
+        },
+        {
+          question: "What does `require(\"node:module\").wrap(\"const x = 1;\")` reveal?",
+          options: [
+            "Nothing useful",
+            "That every CommonJS file runs as `(function (exports, require, module, __filename, __dirname) { ... })`, so those five are parameters rather than globals",
+            "That modules are compiled to bytecode",
+            "The module's dependencies",
+          ],
+          correctIndex: 1,
+          explanation:
+            "It also explains why a top-level `var` cannot leak and why `this` is `module.exports` at the top of a CommonJS file.",
+        },
+        {
+          question: "Why is deleting a `require.cache` entry a bad way to reload code?",
+          options: [
+            "It is too slow",
+            "Everything that already imported the module keeps the old object, so you end up with two live versions of one module",
+            "It throws an error",
+            "It does not work at all",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified that the file re-runs and returns a fresh object, but the earlier handle still held the previous one. Use `node --watch`.",
+        },
+        {
+          question: "What happens if you assign to a property of an imported ESM namespace object?",
+          options: [
+            "It works and changes the module for everyone",
+            "It throws a `TypeError`, because the namespace object is sealed",
+            "It is silently ignored",
+            "It creates a local copy",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified, along with `Object.isSealed` returning true. In CommonJS the same assignment would just work.",
+        },
+        {
+          question: "How do you force an ES module to re-run, and why is it not a reload mechanism?",
+          options: [
+            "Delete it from `require.cache`",
+            "Import it with a different query string, which does re-run it, but the old copy stays loaded forever so repeated use leaks",
+            "Call a reset function",
+            "You cannot",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified: `./counter.mjs?v=2` re-ran the body and returned a different namespace. Fine in a REPL, wrong in a program.",
         },
       ],
     },
@@ -1517,6 +1912,42 @@ export function formatOrder(order) {
       explanation:
         "ESM is the language standard, works in browsers, supports top-level `await`, and catches import typos before your code runs. Reach for `.cjs` only where a tool insists on it.",
     },
+    {
+      question: "You `require` the same file twice. How many times does its body run?",
+      options: [
+        "Twice",
+        "Once, and both calls return the same object, so every module is a singleton",
+        "Once per export",
+        "It depends on the extension",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Verified: the file's log line printed once for two requires. Any state at module scope is shared by everything that imports it.",
+    },
+    {
+      question: "Where do `require`, `module` and `__dirname` come from in CommonJS?",
+      options: [
+        "They are globals",
+        "They are parameters of the wrapper function Node runs every file inside, which is also why a top-level `var` cannot leak",
+        "The `node:module` package",
+        "V8 provides them",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Verified with `module.wrap`: `(function (exports, require, module, __filename, __dirname) { ... })`. None of the five exist in ESM.",
+    },
+    {
+      question: "What happens if you assign to a property of an imported ESM namespace object?",
+      options: [
+        "It changes the module for everyone",
+        "It throws a `TypeError`, because the namespace object is sealed",
+        "It is silently ignored",
+        "It creates a local copy",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Verified. In CommonJS the same assignment would just work, which is one of the few places ESM is stricter at runtime.",
+    }
   ],
   project: {
     name: "node-modules-practice",
