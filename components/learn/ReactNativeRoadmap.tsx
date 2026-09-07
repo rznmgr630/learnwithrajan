@@ -126,26 +126,6 @@ export function ReactNativeRoadmap() {
         })}
       </ul>
 
-      <div className="mt-14 flex flex-col items-center gap-4" id="react-native-roadmap-bottom">
-        <button
-          type="button"
-          className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] text-[var(--muted)] shadow-inner transition hover:border-[var(--accent)] hover:text-[var(--text)]"
-          aria-label="Scroll to description"
-          onClick={() => document.getElementById("react-native-roadmap-blurb")?.scrollIntoView({ behavior: "smooth" })}
-        >
-          <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path
-              fillRule="evenodd"
-              d="M10 3a.75.75 0 0 1 .75.75v10.19l2.22-2.22a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.22 2.22V3.75A.75.75 0 0 1 10 3Z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-        <p id="react-native-roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-[var(--muted)]">
-          {t("reactNativeRoadmap.bottomBlurb")}
-        </p>
-      </div>
-
       <DayDetailPanel
         key={detailDay === null ? "closed" : `rn-day-${detailDay}`}
         dayNumber={detailDay}

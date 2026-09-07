@@ -343,12 +343,6 @@ export function JapaneseRoadmap() {
         </div>
       </div>
 
-      <div className="mt-14 flex flex-col items-center gap-4" id="jp-roadmap-bottom">
-        <p id="jp-roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-[var(--muted)]">
-          {t("jpRoadmap.bottomBlurb")}
-        </p>
-      </div>
-
       <JapaneseDayDetailPanel
         key={detailDay === null ? "closed" : `jp-day-${detailDay}`}
         dayNumber={detailDay}

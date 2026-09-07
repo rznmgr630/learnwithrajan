@@ -203,11 +203,6 @@ export const UI_STRINGS = {
     np: "% पूरा",
     jp: "% 完了",
   },
-  "reactNativeRoadmap.bottomBlurb": {
-    en: "Tick a day after running the commands or emulator steps yourself and answering the FAQ from memory—not from copy-paste alone.",
-    np: "आफैले सिम/फोन चलाइ र FAQ सम्झिएपछि टिक गर्नुहोस्।",
-    jp: "シミュレータや実機で手を動かし、FAQ を見ずに答えられるようになってからチェックするのがおすすめです。",
-  },
   "reactNativeDetail.selfCheckHint": {
     en: "Collapsed by default — section titles mirror the Udemy-style syllabus slice you opened (Days 1–20). Prefer official Expo, React Navigation, and store docs when APIs drift.",
     np: "दिन (१–२०) अनुसार शीर्षक — API यात्राका लागि आधिकारिक डक हेर्नुहोस्।",
@@ -293,11 +288,6 @@ export const UI_STRINGS = {
     np: "% पूरा",
     jp: "% 完了",
   },
-  "reactRoadmap.bottomBlurb": {
-    en: "Tick Day 1 when you have run a dev server, edited JSX, and answered the self-check without peeking first.",
-    np: "dev server चलाउनुभयो, JSX सम्पादन गर्नुभयो, र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
-    jp: "開発サーバを動かし、JSX を編集し、セルフチェックに取り組めたら 1 日目にチェック。",
-  },
   "jsRoadmap.title": {
     en: "JavaScript · Fundamentals to Senior",
     np: "JavaScript · आधारदेखि सिनियरसम्म",
@@ -322,11 +312,6 @@ export const UI_STRINGS = {
     en: "% complete",
     np: "% पूरा",
     jp: "% 完了",
-  },
-  "jsRoadmap.bottomBlurb": {
-    en: "Tick Day 1 when you have traced the type coercion examples yourself and answered the self-check without peeking first.",
-    np: "type coercion का उदाहरण आफैं ट्रेस गर्नुभयो र आत्मजाँच हेरुअघि जवाफ दिनुभयो भने दिन १ टिक गर्नुहोस्।",
-    jp: "型変換の例を自分でたどり、セルフチェックに取り組めたら1日目にチェック。",
   },
   "laravelRoadmap.title": {
     en: "Laravel 13 · novice to ninja",
@@ -353,11 +338,6 @@ export const UI_STRINGS = {
     np: "% पूरा",
     jp: "% 完了",
   },
-  "laravelRoadmap.bottomBlurb": {
-    en: "Tick a day when you have written the code yourself, passed the quiz from memory, and built that day's slice of the project.",
-    np: "आफैले कोड लेख्नुभयो, क्विज स्मरणबाट पास गर्नुभयो र त्यो दिनको प्रोजेक्ट बनाउनुभयो भने दिन टिक गर्नुहोस्।",
-    jp: "自分でコードを書き、クイズを見ずに答え、その日の課題を作れたら、その日にチェック。",
-  },
   "nodejsRoadmap.title": {
     en: "Node.js 24 · runtime to production",
     np: "Node.js 24 · रनटाइमदेखि उत्पादनसम्म",
@@ -382,11 +362,6 @@ export const UI_STRINGS = {
     en: "% complete",
     np: "% पूरा",
     jp: "% 完了",
-  },
-  "nodejsRoadmap.bottomBlurb": {
-    en: "Tick a day after you have exercised that slice (commands, API calls, or tests) without relying on copy-paste alone.",
-    np: "आफैले आदेश वा API परीक्षण गर्नुभयो भने टिक गर्नुहोस्।",
-    jp: "コマンドやAPI・テストを手で試したらチェック。コピペだけに頼らない。",
   },
   "reactDetail.selfCheckHint": {
     en: "All collapsed by default — click a question to reveal its answer; click again to hide it. You can keep several open at once. Prompts match the day you opened (Days 1–8 each have different topics).",
@@ -427,11 +402,6 @@ export const UI_STRINGS = {
     en: "% complete",
     np: "% पूरा",
     jp: "% 完了",
-  },
-  "nextjsRoadmap.bottomBlurb": {
-    en: "Cross-check uncertain behavior with nextjs.org/docs—defaults for caching and async request APIs change between minors; treat this roadmap as a map, not a substitute for the release notes.",
-    np: "निश्चित नभए nextjs.org/docs हेर्नुहोस् — cache र async API नियम रिलिज अनुसार बदलिन सक्छ।",
-    jp: "挙動が不安なときは nextjs.org/docs を正とし、キャッシュや非同期 API はマイナーごとに変わり得ます。",
   },
   "nextjsDetail.selfCheckHint": {
     en: "Collapsed by default — answers align with the day you opened (Days 1–10). Prefer the official Next.js docs for exact API signatures.",
@@ -898,11 +868,6 @@ export const UI_STRINGS = {
     np: "% पूरा",
     jp: "% 完了",
   },
-  "backendRoadmap.bottomBlurb": {
-    en: "Here's your full 30-day advanced backend engineering roadmap — fully interactive. Tick days as you finish them; progress syncs in this browser. Tweak the default seed via CURRENT_DAY in lib/challenge-data.ts. Click a day card (not the checkbox) to read the detail panel.",
-    np: "यहाँ तपाईंको पूरा ३०-दिने उन्नत ब्याकएन्ड इन्जिनियरिङ रोडम्याप छ — पूर्ण इन्टरएक्टिभ। दिन सकिएजस्तै टिक लगाउनुहोस्; प्रगति यस ब्राउजरमा बचत हुन्छ। पूर्वनिर्धारित सिड समायोजन गर्न lib/challenge-data.ts मा CURRENT_DAY बदल्नुहोस्। विवरण प्यानल पढ्न दिन कार्ड क्लिक गर्नुहोस् (चेकबक्स होइन)।",
-    jp: "30日分の発展向けバックエンド工学ロードマップです（インタラクティブ）。終わった日にチェックを入れると進捗がこのブラウザに保存されます。既定のシードは lib/challenge-data.ts の CURRENT_DAY で調整できます。詳細パネルはチェックボックスではなく日カードをクリックしてください。",
-  },
   "backendRoadmap.doneSlash": {
     en: "done",
     np: "पूरा",
@@ -927,11 +892,6 @@ export const UI_STRINGS = {
     en: "% complete",
     np: "% पूरा",
     jp: "% 完了",
-  },
-  "gitRoadmap.bottomBlurb": {
-    en: "Seven focused days: days 1–2 cover the three-state model and reading history; days 3–7 add branching, remotes, rebase vs merge, stash/reset safety, `git worktree` for parallel checkouts, and team PR flow. Tick days as you finish; progress saves in this browser. Open a day card for localized notes, commands, tables, and SVG diagrams. Below the Advanced week you will find a visual cheatsheet with before/after pictures for common commands (e.g. `git init` adding `.git`). Adjust the seeded progress via GIT_CURRENT_DAY in lib/git-learning/git-challenge-data.ts.",
-    np: "सात केन्द्रित दिन: १–२ मा तीन अवस्था र इतिहास; ३–७ मा ब्रान्च, रिमोट, rebase/merge, stash/reset, `git worktree`, र PR। उन्नत हप्ता मुनि दृश्य चिटशीट छ — सामान्य आदेशका अघि/पछि चित्र (जस्तै `git init` ले `.git` थप्छ)।",
-    jp: "7日構成: 1〜2日目は3状態と履歴、3〜7日目はブランチ・リモート・rebase/merge・stash/reset・`git worktree`・PR運用。応用週の下に、よく使うコマンドの「前→後」イラスト付きビジュアルチートシートがあります（例: `git init` で `.git` ができる）。シードは lib/git-learning/git-challenge-data.ts の GIT_CURRENT_DAY で変更できます。",
   },
   "jpRoadmap.title": {
     en: "Japanese · JLPT N5 in 30 days",
@@ -1017,11 +977,6 @@ export const UI_STRINGS = {
     en: "Open full mock exam",
     np: "पूर्ण मॉक परीक्षा खोल्नुहोस्",
     jp: "総合模試を開く",
-  },
-  "jpRoadmap.bottomBlurb": {
-    en: 'Tick days as you finish them — progress stays in this browser. Each lesson mirrors "みんなの日本語" chapter order with conversation, particle drills, grammar tables, kanji cards, MCQs, and listening tasks (pair with your textbook audio). After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam (same submit-to-score flow). Coming later: JLPT N4 track using the same layout.',
-    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक पाठले मिन्नाको अध्याय क्रम अनुसार संवाद, जुड्ने शब्द अभ्यास, व्याकरण तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ (पाठ्यपुस्तक अडियोसँग जोड्नुहोस्)। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट प्रयोग गर्नुहोस्; अन्त्यमा पूर्ण मॉक खोल्नुहोस् (उही पेश-स्कोर प्रवाह)। आउँदै: उही लेआउटमा JLPT N4 ट्र्याक।",
-    jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各レッスンは『みんなの日本語』の順に沿って会話・助詞ドリル・文法表・漢字・MCQ・聴解タスクを含みます（教科書の音声とセットで）。各週末は JLPT 形式のウィークリーテスト、最後は総合模試（同じ提出→採点の流れ）。今後同じレイアウトで N4 トラックも予定です。",
   },
   "weeklyPanel.tagWeekly": {
     en: " · Weekly unit test",
@@ -1523,11 +1478,6 @@ export const UI_STRINGS = {
     np: "पूर्ण मॉक परीक्षा खोल्नुहोस्",
     jp: "総合模試を開く",
   },
-  "jpN4Roadmap.bottomBlurb": {
-    en: "Tick days as you finish them — progress stays in this browser. Each lesson mirrors Minna no Nihongo II chapter order with conversation, verb drills, grammar tables, kanji cards, MCQs, and listening tasks (pair with your textbook audio). After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam. Passive, causative, and causative-passive verb forms are the heart of N4 — keep a dedicated conjugation table open while studying.",
-    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक पाठले मिन्ना II को अध्याय क्रम अनुसार संवाद, क्रिया अभ्यास, व्याकरण तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट; अन्त्यमा पूर्ण मॉक। Passive, causative र causative-passive N4 को मुटु हुन् — अध्ययन गर्दा क्रिया संयोग तालिका खुला राख्नुहोस्।",
-    jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各レッスンはみんなの日本語IIの順に沿って会話・動詞ドリル・文法表・漢字カード・MCQ・聴解タスクを含みます（教科書CDとセットで）。各週末はJLPT形式のウィークリーテスト、最後は総合模試。受け身・使役・使役受け身はN4の核心なので、学習中は動詞活用表を常に開いておきましょう。",
-  },
   "hub.devops.title": {
     en: "DevOps in 13 weeks",
     np: "१३ हप्तामा DevOps",
@@ -1557,11 +1507,6 @@ export const UI_STRINGS = {
     en: "% complete",
     np: "% पूरा",
     jp: "% 完了",
-  },
-  "devopsRoadmap.bottomBlurb": {
-    en: "Tick days as you finish them — progress is saved in this browser. Each week introduces one major DevOps tool from first principles: start with why it exists, understand how it works, then practice with hands-on exercises and self-check questions.",
-    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमा सुरक्षित हुन्छ। प्रत्येक हप्तामा एउटा प्रमुख DevOps उपकरण वा अवधारणा पहिलो सिद्धान्तबाट परिचय हुन्छ।",
-    jp: "終わった日にチェックすると進捗がブラウザに保存されます。毎週ひとつの主要 DevOps ツールを「なぜ・何を・どうやって」から学びます。",
   },
   "devopsDetail.selfCheckHint": {
     en: "Tap a question to reveal the answer.",
@@ -1677,11 +1622,6 @@ export const UI_STRINGS = {
     en: "Open full mock exam",
     np: "पूर्ण मॉक परीक्षा खोल्नुहोस्",
     jp: "総合模試を開く",
-  },
-  "jpN3Roadmap.bottomBlurb": {
-    en: "Tick days as you finish them — progress stays in this browser. Each topic covers an N3 grammar pattern with conversation, grammar bullets, usage tables, kanji cards, MCQs, and listening tasks. After each week, use the weekly JLPT-style unit test; at the end of the course, open the full mock exam. Keigo (honorific and humble forms), cause-effect expressions (おかげで/せいで/によって), and complex conditionals are the heart of N3 — keep a dedicated grammar reference open while studying.",
-    np: "दिनहरू सकिएजस्तै टिक लगाउनुहोस् — प्रगति यस ब्राउजरमै रहन्छ। प्रत्येक विषयले N3 व्याकरण ढाँचासहित संवाद, व्याकरण बुलेट, प्रयोग तालिका, कांजी कार्ड, बहुविकल्प र सुन्ने कार्य समेट्छ। प्रत्येक हप्तापछि JLPT-शैलीको साप्ताहिक टेस्ट; अन्त्यमा पूर्ण मॉक। केइगो, कारण-प्रभाव अभिव्यक्ति र जटिल सर्त N3 को मुटु हुन्।",
-    jp: "終わった日にチェックを入れると進捗がこのブラウザに保存されます。各トピックはN3文法パターンを中心に会話・文法ポイント・使い分け表・漢字カード・MCQ・聴解タスクを含みます。各週末はJLPT形式のウィークリーテスト、最後は総合模試。敬語（尊敬語・謙譲語）、因果表現（おかげで・せいで・によって）、複雑な条件形はN3の核心なので、学習中は文法参考書を常に開いておきましょう。",
   },
 } as const satisfies Record<string, Record<Locale, string>>;
 

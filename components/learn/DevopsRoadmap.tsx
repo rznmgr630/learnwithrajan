@@ -170,12 +170,6 @@ export function DevopsRoadmap() {
         })}
       </div>
 
-      <div className="mt-14 flex flex-col items-center gap-4">
-        <p className="max-w-2xl text-center text-sm leading-relaxed text-[var(--muted)]">
-          {t("devopsRoadmap.bottomBlurb")}
-        </p>
-      </div>
-
       <DayDetailPanel
         key={detailDay === null ? "closed" : `devops-day-${detailDay}`}
         dayNumber={detailDay}
