@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_43_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_40_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "**Deploying** means running your API on a remote server (usually a Linux container) managed by a cloud platform. The platform handles HTTPS, process restarts, and scaling. Understanding how code goes from your machine to live users — the git push, CI tests, Docker build, and cloud deployment — helps you debug when something goes wrong.",

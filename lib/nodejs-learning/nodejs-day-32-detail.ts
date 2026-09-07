@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_35_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_32_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",

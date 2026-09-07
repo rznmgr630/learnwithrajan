@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_34_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_31_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "**Express** is a lightweight framework built on top of Node's built-in `http` module. It handles the repetitive parts — matching URLs to functions, running shared logic in order, and parsing JSON — so you can focus on writing your app's actual logic.",
