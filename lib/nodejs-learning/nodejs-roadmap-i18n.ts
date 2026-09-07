@@ -27,24 +27,17 @@ const NODEJS_TAG: Record<string, LocalizedString> = {
   realtime: { en: "real time", np: "रियल टाइम", jp: "リアルタイム" },
   performance: { en: "performance", np: "प्रदर्शन", jp: "パフォーマンス" },
   docker: { en: "Docker", np: "Docker", jp: "Docker" },
-  semver: { en: "semver", np: "semver", jp: "セマバ" },
-  express: { en: "Express", np: "Express", jp: "Express" },
   http: { en: "HTTP API", np: "HTTP API", jp: "HTTP API" },
   async: { en: "async JS", np: "async JS", jp: "非同期JS" },
-  mongo: { en: "MongoDB", np: "MongoDB", jp: "MongoDB" },
-  mongoose: { en: "Mongoose", np: "Mongoose", jp: "Mongoose" },
   validation: { en: "validation", np: "प्रमाणीकरण", jp: "バリデーション" },
-  relations: { en: "relations", np: "सम्बन्ध", jp: "リレーション" },
   auth: { en: "auth", np: "प्रमाणीकरण", jp: "認証" },
   jwt: { en: "JWT", np: "JWT", jp: "JWT" },
   errors: { en: "errors", np: "त्रुटि", jp: "エラー" },
   testing: { en: "testing", np: "परीक्षण", jp: "テスト" },
-  integration: { en: "integration tests", np: "इन्टिग्रेशन", jp: "結合テスト" },
   deploy: { en: "deploy", np: "डिप्लोइ", jp: "デプロイ" },
   ci: { en: "CI/CD", np: "CI/CD", jp: "CI/CD" },
   architecture: { en: "architecture", np: "आर्किटेक्चर", jp: "アーキテクチャ" },
   upgrade: { en: "upgrades", np: "अपग्रेड", jp: "アップグレード" },
-  atlas: { en: "Atlas / hosting", np: "Atlas / होस्टिङ", jp: "Atlas・ホスティング" },
 };
 
 export function nodejsTags(slugs: [string, string]): RoadmapTag[] {
@@ -198,36 +191,6 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
   28: { en: "Deployment & CI/CD — pipelines, zero downtime & migrations", np: "Deployment & CI/CD — pipelines, zero downtime & migrations", jp: "Deployment & CI/CD — pipelines, zero downtime & migrations" },
   29: { en: "Architecture — layers, boundaries & testable business logic", np: "Architecture — layers, boundaries & testable business logic", jp: "Architecture — layers, boundaries & testable business logic" },
   30: { en: "Node upgrades — Temporal, deprecations & pinning your version", np: "Node upgrades — Temporal, deprecations & pinning your version", jp: "Node upgrades — Temporal, deprecations & pinning your version" },
-  31: {
-    en: "Data validation — schemas, validators & persistence projects",
-    np: "डाटा प्रमाणीकरण — schema, validators र persistence",
-    jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
-  },
-  32: {
-    en: "Modelling relationships — refs, embed, population & transactions",
-    np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
-    jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
-  },
-  33: {
-    en: "Authentication & authorization — users, JWT & roles",
-    np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
-    jp: "認証・認可 — ユーザー・JWT・ロール",
-  },
-  34: {
-    en: "Errors, logging & extracting routes / services",
-    np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
-    jp: "エラー・ログ・ルートとサービスの分割",
-  },
-  35: {
-    en: "Unit tests, integration tests & test-driven habits",
-    np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
-    jp: "単体・結合テストと TDD の習慣",
-  },
-  36: {
-    en: "Deployment, MongoDB Atlas & what to learn next",
-    np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
-    jp: "デプロイ・Atlas・次に学ぶこと",
-  },
 };
 
 const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
@@ -238,9 +201,6 @@ const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-p4": { en: "Phase 4 · Building an API", np: "Phase 4 · API निर्माण", jp: "Phase 4 · API の構築" },
   "nodejs-p5": { en: "Phase 5 · Production concerns", np: "Phase 5 · उत्पादन सरोकार", jp: "Phase 5 · 本番運用の関心事" },
   "nodejs-p6": { en: "Phase 6 · Performance and deployment", np: "Phase 6 · प्रदर्शन र डिप्लोइ", jp: "Phase 6 · パフォーマンスとデプロイ" },
-  "nodejs-w5": { en: "Validation & relationships", np: "प्रमाणीकरण र सम्बन्ध", jp: "検証とリレーション" },
-  "nodejs-w6": { en: "Authentication & error handling", np: "प्रमाणीकरण र त्रुटि प्रबन्ध", jp: "認証とエラー処理" },
-  "nodejs-w7": { en: "Ship to production", np: "उत्पादनमा पठाउनु", jp: "本番リリース" },
 };
 
 export function nodejsDayTitle(day: number): LocalizedString {
