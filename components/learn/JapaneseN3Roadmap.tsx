@@ -329,12 +329,6 @@ export function JapaneseN3Roadmap() {
         </div>
       </div>
 
-      <div className="mt-14 flex flex-col items-center gap-4" id="jp-n3-roadmap-bottom">
-        <p id="jp-n3-roadmap-blurb" className="max-w-2xl text-center text-sm leading-relaxed text-[var(--muted)]">
-          {t("jpN3Roadmap.bottomBlurb")}
-        </p>
-      </div>
-
       <JapaneseN3DayDetailPanel
         key={detailDay === null ? "closed" : `jn3-day-${detailDay}`}
         dayNumber={detailDay}
