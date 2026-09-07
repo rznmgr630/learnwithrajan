@@ -199,51 +199,31 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
   29: { en: "Architecture — layers, boundaries & testable business logic", np: "Architecture — layers, boundaries & testable business logic", jp: "Architecture — layers, boundaries & testable business logic" },
   30: { en: "Node upgrades — Temporal, deprecations & pinning your version", np: "Node upgrades — Temporal, deprecations & pinning your version", jp: "Node upgrades — Temporal, deprecations & pinning your version" },
   31: {
-    en: "RESTful APIs with Express — routes, verbs & validation",
-    np: "Express सँग REST — रूट, verb र प्रमाणीकरण",
-    jp: "Express で REST — ルート・HTTP メソッド・検証",
-  },
-  32: {
-    en: "Express advanced — middleware, config & app structure",
-    np: "Express उन्नत — मिडलवेयर, विन्यास र संरचना",
-    jp: "Express 応用 — ミドルウェア・設定・アプリ構成",
-  },
-  33: {
-    en: "Asynchronous JavaScript — callbacks, promises & async/await",
-    np: "असिंक JS — callback, promise र async/await",
-    jp: "非同期 JS — コールバック・Promise・async/await",
-  },
-  34: {
-    en: "MongoDB & Mongoose — connect, schemas, queries & CRUD",
-    np: "MongoDB र Mongoose — जडान, schema, प्रश्न र CRUD",
-    jp: "MongoDB・Mongoose — 接続・スキーマ・クエリ・CRUD",
-  },
-  35: {
     en: "Data validation — schemas, validators & persistence projects",
     np: "डाटा प्रमाणीकरण — schema, validators र persistence",
     jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
   },
-  36: {
+  32: {
     en: "Modelling relationships — refs, embed, population & transactions",
     np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
     jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
   },
-  37: {
+  33: {
     en: "Authentication & authorization — users, JWT & roles",
     np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
     jp: "認証・認可 — ユーザー・JWT・ロール",
   },
-  38: {
+  34: {
     en: "Errors, logging & extracting routes / services",
     np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
     jp: "エラー・ログ・ルートとサービスの分割",
   },
-  39: {
+  35: {
     en: "Unit tests, integration tests & test-driven habits",
     np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
     jp: "単体・結合テストと TDD の習慣",
   },
-  40: {
+  36: {
     en: "Deployment, MongoDB Atlas & what to learn next",
     np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
     jp: "デプロイ・Atlas・次に学ぶこと",
@@ -258,8 +238,6 @@ const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-p4": { en: "Phase 4 · Building an API", np: "Phase 4 · API निर्माण", jp: "Phase 4 · API の構築" },
   "nodejs-p5": { en: "Phase 5 · Production concerns", np: "Phase 5 · उत्पादन सरोकार", jp: "Phase 5 · 本番運用の関心事" },
   "nodejs-p6": { en: "Phase 6 · Performance and deployment", np: "Phase 6 · प्रदर्शन र डिप्लोइ", jp: "Phase 6 · パフォーマンスとデプロイ" },
-  "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
-  "nodejs-w4": { en: "Async JavaScript & Mongoose CRUD", np: "async JS र Mongoose CRUD", jp: "非同期JSとMongoose CRUD" },
   "nodejs-w5": { en: "Validation & relationships", np: "प्रमाणीकरण र सम्बन्ध", jp: "検証とリレーション" },
   "nodejs-w6": { en: "Authentication & error handling", np: "प्रमाणीकरण र त्रुटि प्रबन्ध", jp: "認証とエラー処理" },
   "nodejs-w7": { en: "Ship to production", np: "उत्पादनमा पठाउनु", jp: "本番リリース" },
