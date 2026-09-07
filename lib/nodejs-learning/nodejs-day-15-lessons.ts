@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const NODEJS_DAY_15_LESSONS: LessonDay = {
   day: 15,
   title: "Picking a framework and Fastify basics",
-  totalMinutes: 104,
+  totalMinutes: 116,
   difficulty: "Intermediate",
   lessons: [
     {
@@ -212,6 +212,425 @@ await app.listen({ port: 3000 });
           correctIndex: 1,
           explanation:
             "Fastify sits on `node:http`. Day 10 is what lets you debug the seam between them.",
+        },
+      ],
+    },
+    {
+      id: "reading-express",
+      title: "Reading an Express codebase",
+      durationMinutes: 12,
+      explanation:
+        "This track builds on Fastify, and the previous lesson said knowing Express is not optional. You will open an existing service and need to read it. This lesson is that, and nothing more: <b>the parts of Express that behave differently from what you are about to learn</b>.\n\nEverything below is verified on Express 5.2.1.\n\n---\n\n## Middleware\n\n<b>Middleware</b> (a function that runs in order on the way to a route handler).\n\n```javascript\napp.use((req, res, next) => {\n  next();\n});\n```\n\n> The difference from Fastify's hooks is that a hook is attached to a <b>named lifecycle stage</b>, while middleware is a flat list in registration order. So in Fastify you ask \"which stage does this belong to\", and in Express you ask \"is this line above or below that line\". Registration order <b>is</b> the design.\n\n---\n\n## Which is why ordering bugs are the classic ones\n\nVerified, a route registered <b>before</b> `express.json()`:\n\n```text\nGET /no-parser   →  {\"body\":\"undefined\"}\n```\n\n> `req.body` is `undefined`, not `{}`, and nothing warns you. Fastify parses the body based on the content type with no line to forget, which is why this bug does not exist there.\n\nAnd two routes on the same path:\n\n```text\nGET /first   →  {\"which\":\"first\"}\n```\n\n> First registration wins, silently. Fastify refuses to start with `FST_ERR_DUPLICATED_ROUTE`.\n\n---\n\n## The error handler, and the one thing to remember\n\n<b>Error-handling middleware</b> (middleware that takes four arguments).\n\n> Express decides what a function <b>is</b> by counting its parameters. Four means error handler. Three means ordinary middleware. That is the whole mechanism, and it is why this is the most confusing part of Express for anyone arriving from elsewhere.\n\nVerified, with only a three-argument function registered after the route:\n\n```text\nGET /boom  →  500  <!DOCTYPE html><html>...<title>Error</title>\n```\n\n> The thrown error <b>skipped it entirely</b> and hit Express's built-in handler, which returns an HTML page. Add a fourth parameter to the same function and it catches the error. Nothing about the code changed except its arity.\n\n---\n\n## `next(err)` jumps the queue\n\nVerified:\n\n```text\nnext(new Error(\"passed along\"))\n→ 400 {\"msg\":\"passed along\",\"skipped\":[]}\n```\n\n> `skipped` is empty, so the ordinary middleware between the route and the error handler never ran. `next()` continues the chain and `next(err)` abandons it.\n\n---\n\n## Two things that are the same everywhere\n\nVerified: `req.query.page` for `?page=2` is the <b>string</b> `\"2\"`. Day 19's coercion applies identically.\n\nAnd verified: calling `res.json()` twice throws `ERR_HTTP_HEADERS_SENT` while the client keeps the first response. That is Node's `http` module underneath, so Day 10's rule holds in every framework.\n\n---\n\n## The mapping, so you can read either\n\n```text\nexpress()                 →  Fastify()\napp.use(mw)               →  addHook, or a plugin\napp.get(path, handler)    →  app.get(path, handler)\nreq.params / query / body →  request.params / query / body\nres.json(x)               →  return x\nres.status(201).json(x)   →  reply.code(201); return x\n(err, req, res, next)     →  setErrorHandler\nexpress.json()            →  built in\nexpress.Router()          →  a plugin\n```\n\n> The row worth pausing on is `res.json(x)` against `return x`. In Express, sending is a <b>side effect</b> you perform, so forgetting it hangs the request. In Fastify the return value <b>is</b> the response, so forgetting is a syntax-level mistake instead of a runtime hang.",
+      diagram: `Why this lesson exists
+
+    this track builds on Fastify. the previous
+    lesson said knowing Express is NOT OPTIONAL.
+
+    you will open an existing service and need to
+    read it.
+
+    → so: only the parts of Express that BEHAVE
+      DIFFERENTLY from what you are about to
+      learn.
+
+    all verified on Express 5.2.1.
+
+
+Middleware vs hooks
+
+    app.use((req, res, next) => { next(); });
+
+    a HOOK is attached to a NAMED LIFECYCLE STAGE.
+    MIDDLEWARE is a FLAT LIST in registration
+    order.
+
+    Fastify   "which stage does this belong to?"
+    Express   "is this line above or below that
+               line?"
+
+    → REGISTRATION ORDER *IS* THE DESIGN
+
+
+⚠⚠ Which is why ordering bugs are the classic ones
+
+    verified, a route registered BEFORE
+    express.json():
+
+      GET /no-parser → {"body":"undefined"}
+
+    req.body is UNDEFINED, not {}. nothing warns
+    you.
+
+    → Fastify parses on content type, with no line
+      to forget, so the bug does not exist there
+
+    verified, two routes on the same path:
+
+      GET /first → {"which":"first"}
+
+    FIRST REGISTRATION WINS, SILENTLY.
+
+    → Fastify refuses to start:
+      FST_ERR_DUPLICATED_ROUTE
+
+
+⚠⚠ The error handler: ARITY DECIDES IDENTITY
+
+    Express decides what a function IS by COUNTING
+    ITS PARAMETERS.
+
+      4 params  →  error handler
+      3 params  →  ordinary middleware
+
+    that is the whole mechanism.
+
+    verified, only a 3-arg function after the
+    route:
+
+      GET /boom → 500
+        <!DOCTYPE html> ... <title>Error</title>
+
+    the thrown error SKIPPED IT ENTIRELY and hit
+    Express's built-in handler, which returns HTML.
+
+    → add a fourth parameter to the SAME function
+      and it catches the error.
+
+      nothing changed except its ARITY.
+
+
+next(err) jumps the queue
+
+    verified:
+
+      next(new Error("passed along"))
+      → 400 {"msg":"passed along","skipped":[]}
+
+    skipped is EMPTY, so the ordinary middleware
+    between route and error handler NEVER RAN.
+
+      next()     continues the chain
+      next(err)  abandons it
+
+
+Two things that are the same everywhere
+
+    verified: req.query.page for ?page=2 is the
+    STRING "2". Day 19's coercion applies
+    identically.
+
+    verified: res.json() twice throws
+    ERR_HTTP_HEADERS_SENT, client keeps the first
+    response.
+
+    → that is Node's http module underneath, so
+      Day 10's rule holds in every framework
+
+
+The mapping, so you can read either
+
+  express()               →  Fastify()
+  app.use(mw)             →  addHook, or a plugin
+  app.get(p, h)           →  app.get(p, h)
+  req.params/query/body   →  request.params/...
+  res.json(x)             →  return x
+  res.status(201).json(x) →  reply.code(201);
+                             return x
+  (err, req, res, next)   →  setErrorHandler
+  express.json()          →  built in
+  express.Router()        →  a plugin
+
+⚠ the row worth pausing on:
+
+    res.json(x)   vs   return x
+
+    Express: sending is a SIDE EFFECT you perform,
+      so forgetting it HANGS the request.
+
+    Fastify: the return value IS the response, so
+      forgetting is a syntax-level mistake instead
+      of a runtime hang.`,
+      codeExample: {
+        title: "The Express behaviours you need to recognise",
+        code: `// ── ⚠⚠ Ordering: the body parser must come first ────────────
+import express from "express";
+const app = express();
+
+app.get("/no-parser", (req, res) =>
+  res.json({ body: req.body === undefined ? "undefined" : typeof req.body }));
+
+app.use(express.json());          // ← registered AFTER that route
+
+app.post("/body", (req, res) => res.json({ got: req.body }));
+
+// VERIFIED on Express 5.2.1:
+//   GET  /no-parser  200  {"body":"undefined"}
+//   POST /body       200  {"got":{"a":1}}
+//
+// Same file, same app. The only difference is which side of
+// app.use(express.json()) the route was registered on.
+//
+// ⚠ And note it is \`undefined\`, not \`{}\`. So the failure is
+// not "empty body", it is \`Cannot read properties of
+// undefined (reading 'email')\` from somewhere three functions
+// deep, which is a much worse error to debug.
+//
+// This is the single most common Express bug, and it exists
+// because ordering is the design rather than a detail.
+
+
+// ── ⚠ Duplicate routes are silent ───────────────────────────
+app.get("/first", (req, res) => res.json({ which: "first" }));
+app.get("/first", (req, res) => res.json({ which: "second" }));
+
+// VERIFIED:  GET /first → {"which":"first"}
+//
+// First registration wins and the second is dead code. No
+// warning at startup, no warning at request time.
+//
+// So in a large Express codebase, a route defined in two
+// routers is a real possibility and the loser is invisible.
+// Fastify refuses to boot:
+//   FST_ERR_DUPLICATED_ROUTE: Method 'GET' already declared
+//                             for route '/first'
+
+
+// ── ⚠⚠ Arity decides what a function IS ─────────────────────
+// This is the part that catches everyone.
+//
+// $ node -e "console.log(((req,res,next)=>{}).length)"      → 3
+// $ node -e "console.log(((err,req,res,next)=>{}).length)"  → 4
+//
+// Express reads \`.length\` to classify the function. Four
+// parameters means error handler; three means ordinary
+// middleware. There is no registration API that says which
+// one you meant.
+
+// ✗ The version that does NOT work:
+const a = express();
+a.get("/boom", () => { throw new Error("kaboom"); });
+a.use((req, res, next) => {                  // ⚠ THREE args
+  res.status(500).json({ caught: "by 3-arg" });
+});
+//
+// VERIFIED:
+//   GET /boom → 500
+//   <!DOCTYPE html><html lang="en"><head>...<title>Error</title>
+//
+// The error skipped that middleware completely and landed in
+// Express's built-in handler, which returns an HTML page and
+// prints the stack to stderr. Your JSON API just answered a
+// request with HTML.
+
+// ✓ The version that works, identical except for one word:
+const b = express();
+b.get("/boom", () => { throw new Error("kaboom"); });
+b.use((err, req, res, next) => {             // ✓ FOUR args
+  res.status(500).json({ handled: err.message });
+});
+// VERIFIED:  GET /boom → 500 {"handled":"kaboom","args":4}
+//
+// ⚠ Two consequences when reading real code.
+//
+// A lint rule that removes the "unused" \`next\` parameter
+// silently converts your error handler into ordinary
+// middleware, and every error starts returning HTML.
+//
+// And \`(...args) => {}\` has a \`.length\` of 0, verified, so a
+// rest-parameter middleware can never be an error handler.
+// The error skipped straight past mine to the real four-arg
+// one.
+
+
+// ── next() versus next(err) ─────────────────────────────────
+const c = express();
+const seen = [];
+
+c.get("/x", (req, res, next) => { next(new Error("passed along")); });
+c.use((req, res, next) => { seen.push("normal-mw-ran"); next(); });
+c.use((err, req, res, next) => res.status(400).json({ msg: err.message, skipped: seen }));
+
+// VERIFIED:
+//   GET /x → 400 {"msg":"passed along","skipped":[]}
+//
+// \`skipped\` is empty, which is the proof: the ordinary
+// middleware sitting between the route and the error handler
+// never ran at all.
+//
+//   next()      → continue to the next ordinary middleware
+//   next(err)   → skip all of them, go to the first four-arg one
+//   neither     → ⚠ the request hangs forever
+//
+// That last row has no equivalent in Fastify, where an async
+// handler that returns has answered by definition.
+
+
+// ── ✓ Express 5 fixed the async case ────────────────────────
+app.get("/throws", async () => { throw new Error("async boom"); });
+// VERIFIED on 5.2.1:  500 {"handled":"async boom","args":4}
+//
+// On Express 4 that same handler left the request hanging
+// until it timed out, which is why every Express 4 codebase
+// has a wrapper like:
+//
+//   const asyncHandler = (fn) => (req, res, next) =>
+//     Promise.resolve(fn(req, res, next)).catch(next);
+//
+// ⚠ If you see that helper, you are reading Express 4 code,
+// and that tells you something about the age of everything
+// around it.
+
+
+// ── Two rules that are framework-independent ────────────────
+// 1. Query values are strings. VERIFIED:
+app.get("/query", (req, res) =>
+  res.json({ page: req.query.page, type: typeof req.query.page }));
+//   GET /query?page=2 → {"page":"2","type":"string"}
+//
+//   So \`req.query.page > 10\` compares strings, and
+//   \`?page=abc\` gives you NaN downstream. Day 19's coercion
+//   and bounds apply exactly the same here:
+//     const Query = z.object({ page: z.coerce.number().int().min(1).max(1000) });
+
+// 2. You can only answer once. VERIFIED:
+app.get("/twice", (req, res) => {
+  res.json({ first: true });
+  try { res.json({ second: true }); }
+  catch (e) { console.log("threw:", e.code); }   // ERR_HTTP_HEADERS_SENT
+});
+//   Client receives: 200 {"first":true}
+//
+// This is Node's \`http\` module, not Express, so Day 10's rule
+// holds everywhere: the classic version is an early return
+// you forgot, then a second send at the bottom of the handler.
+
+
+// ── Reading the structure ───────────────────────────────────
+// A typical Express app, and what each part maps to:
+//
+//   const app = express();                    → Fastify()
+//   app.use(helmet());                        → @fastify/helmet
+//   app.use(cors());                          → @fastify/cors
+//   app.use(express.json());                  → built in
+//   app.use(morgan("combined"));              → Fastify's logger
+//   app.use("/api/users", usersRouter);       → a plugin with a prefix
+//   app.use(notFoundHandler);                 → setNotFoundHandler
+//   app.use(errorHandler);                    → setErrorHandler
+//
+// Read that block top to bottom and you know the request's
+// path through the application, which is genuinely Express's
+// best quality: the whole pipeline is one visible list.
+//
+// ⚠ What it does not give you is a boundary. Every \`app.use\`
+// is global unless it is mounted on a path, so a middleware
+// added for one feature runs for every request. Day 15's
+// plugin encapsulation is the thing Express does not have,
+// and Day 29's module boundaries are why that matters.`,
+      },
+      keyTakeaways: [
+        "This lesson is only the parts of Express that behave differently from Fastify, because you will read existing Express services.",
+        "A Fastify hook attaches to a named lifecycle stage, while Express middleware is a flat list in registration order, so order is the design.",
+        "Verified on Express 5.2.1: a route registered before `express.json()` gets `req.body === undefined`, not `{}`, with no warning.",
+        "That produces \"cannot read properties of undefined\" three functions away, which is why it is Express's most common bug.",
+        "Verified: two routes on one path silently use the first registration, while Fastify refuses to boot with `FST_ERR_DUPLICATED_ROUTE`.",
+        "Express classifies a function by counting parameters: four means error handler, three means ordinary middleware.",
+        "Verified: with only a three-argument function after the route, a thrown error skipped it and Express returned its built-in HTML error page.",
+        "Adding a fourth parameter to the same function makes it catch the error, so a lint rule removing an unused `next` breaks error handling.",
+        "Verified: `(...args) => {}` has a `.length` of 0, so a rest-parameter middleware can never be an error handler.",
+        "Verified: `next(err)` skipped every ordinary middleware between the route and the handler, proven by an empty log array.",
+        "Calling neither `next()` nor a send method hangs the request, which has no Fastify equivalent because a returned value is the response.",
+        "Express 5 forwards async handler errors; the `asyncHandler` wrapper is a sign you are reading Express 4 code.",
+        "Verified: `req.query.page` is the string `\"2\"`, so Day 19's coercion applies identically.",
+        "Verified: a second `res.json()` throws `ERR_HTTP_HEADERS_SENT` and the client keeps the first response, because that is Node's `http` module.",
+        "Reading the `app.use` block top to bottom gives you the whole request pipeline, which is Express's best quality.",
+        "What Express lacks is a boundary: every `app.use` is global unless mounted on a path, which is what Fastify's plugin encapsulation provides.",
+      ],
+      commonMistakes: [
+        "Registering a route above `express.json()` and getting `req.body === undefined` with no warning.",
+        "Assuming a missing body parser gives `{}`, when it gives `undefined` and fails deeper in the call stack.",
+        "Defining the same route in two routers, where the first registration silently wins.",
+        "Writing an error handler with three parameters, so errors bypass it and return Express's HTML page.",
+        "Letting a linter remove the unused `next` parameter from an error handler, which reclassifies it as ordinary middleware.",
+        "Using `(...args)` for middleware, which has an arity of 0 and can never be an error handler.",
+        "Expecting ordinary middleware to run after `next(err)`, when it is skipped entirely.",
+        "Forgetting to call `next()` or send a response, which hangs the request rather than erroring.",
+        "Adding an `asyncHandler` wrapper on Express 5, where async errors are already forwarded.",
+        "Comparing `req.query.page` numerically without coercion, since it is always a string.",
+        "Sending twice after a missed early return, which throws `ERR_HTTP_HEADERS_SENT`.",
+        "Treating `app.use(mw)` as scoped to a feature, when it is global unless mounted on a path.",
+      ],
+      quiz: [
+        {
+          question: "A route is registered above `app.use(express.json())`. What is `req.body`?",
+          options: [
+            "An empty object",
+            "`undefined`, verified, with no warning, so the failure appears deeper as \"cannot read properties of undefined\"",
+            "The raw string",
+            "It throws",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Ordering is the design in Express. Fastify parses on content type, so there is no line to forget.",
+        },
+        {
+          question: "How does Express decide whether a function is an error handler?",
+          options: [
+            "By where you register it",
+            "By counting its parameters: four means error handler, three means ordinary middleware",
+            "By a registration option",
+            "By whether it throws",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified: a three-argument function after the route was skipped entirely and Express returned its built-in HTML error page.",
+        },
+        {
+          question: "Why is a linter that removes an unused `next` parameter dangerous in Express?",
+          options: [
+            "It breaks types",
+            "It changes the function's arity from four to three, silently converting your error handler into ordinary middleware",
+            "It removes the stack trace",
+            "It is not dangerous",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Nothing about the body changes. Verified that `(...args)` has an arity of 0 and is treated the same way.",
+        },
+        {
+          question: "What did `next(err)` do to the ordinary middleware registered after the route?",
+          options: [
+            "Ran it first",
+            "Skipped it entirely, proven by the log array coming back empty",
+            "Ran it after the error handler",
+            "Threw",
+          ],
+          correctIndex: 1,
+          explanation:
+            "`next()` continues the chain, `next(err)` abandons it, and calling neither hangs the request.",
+        },
+        {
+          question: "You see an `asyncHandler` wrapper in an Express codebase. What does it tell you?",
+          options: [
+            "It is required",
+            "You are likely reading Express 4 code, since Express 5 forwards async handler errors on its own",
+            "The author preferred promises",
+            "It is a performance optimisation",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Verified on 5.2.1: an async handler that throws returns 500 through the four-argument handler with no wrapper.",
+        },
+        {
+          question: "What does Express lack that Fastify's plugins provide?",
+          options: [
+            "Routing",
+            "A boundary: every `app.use` is global unless mounted on a path, so feature middleware runs for every request",
+            "Body parsing",
+            "Error handling",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Express's strength is that the whole pipeline is one readable list. Its weakness is that the list has no scope.",
         },
       ],
     },
@@ -2502,6 +2921,30 @@ test("POST /api/users never returns passwordHash", async (t) => {
       explanation:
         "Every verified fact in today's lesson came from `inject()`. It is also why the `app.js` / `server.js` split is worth doing.",
     },
+    {
+      question: "A route is registered above `app.use(express.json())`. What is `req.body`?",
+      options: [
+        "An empty object",
+        "`undefined`, verified on Express 5.2.1, so the failure surfaces deeper as \"cannot read properties of undefined\"",
+        "The raw string",
+        "It throws",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Ordering is the design in Express. Fastify parses on content type, so there is no line to forget.",
+    },
+    {
+      question: "How does Express decide whether a function is an error handler?",
+      options: [
+        "By where you register it",
+        "By counting its parameters: four means error handler, three means ordinary middleware",
+        "By a registration option",
+        "By whether it throws",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Verified: a three-argument function after the route was skipped and Express returned its built-in HTML error page.",
+    }
   ],
   project: {
     name: "day-15",

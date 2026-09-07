@@ -1,118 +1,232 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_36_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_40_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
-      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
-      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
+      en: "**Deploying** means running your API on a remote server (usually a Linux container) managed by a cloud platform. The platform handles HTTPS, process restarts, and scaling. Understanding how code goes from your machine to live users — the git push, CI tests, Docker build, and cloud deployment — helps you debug when something goes wrong.",
+      np: "Deploy — अरूको Linux container मा env, HTTPS, managed Mongo सँग।",
+      jp: "**デプロイ**は env・HTTPS・マネージド Mongo を揃えて他人の Linux コンテナで動かすこと。",
     },
     {
-      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
-      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
-      jp: "**populate** は便利だが **N+1** に注意。",
+      en: "Before you push to deploy, test your app locally with `NODE_ENV=production node index.js`. Cloud platforms will restart a crashed process, but they cannot fix a missing environment variable or a wrong `PORT`. Make sure `npm start` runs cleanly before you ship.",
+      np: "`NODE_ENV=production` स्थानीयमा test गर्नुहोस् — platform PORT ठीक गर्न सक्दैन।",
+      jp: "push 前にローカルで `NODE_ENV=production` でテスト。`PORT` ミスはプラットフォームが直してくれない。",
     },
   ],
   sections: [
     {
-      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
+      title: {
+        en: "Preparing for production",
+        np: "उत्पादनको तयारी",
+        jp: "本番環境の準備",
+      },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Crash Course",
+          videoId: "Gjnup-PuquQ",
+          title: "Docker in 100 Seconds",
         },
         {
           type: "code",
-          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
-          code: `// Reference another collection by id
-const movieSchema = new mongoose.Schema({
-  title: String,
-  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
+          title: {
+            en: "Production start script, health check, and graceful shutdown",
+            np: "Production start, health check, graceful shutdown",
+            jp: "本番スクリプト・ヘルスチェック・グレースフルシャットダウン",
+          },
+          code: `// package.json
+{
+  "scripts": {
+    "start": "node index.js",
+    "dev":   "nodemon index.js"
+  }
+}
+
+// index.js — read PORT from env, never hardcode
+const PORT = process.env.PORT ?? 3000;
+const app = require('./app');
+
+const server = app.listen(PORT, () => {
+  console.log(\`Listening on \${PORT} (NODE_ENV=\${process.env.NODE_ENV})\`);
 });
 
-// Embed small subdocuments that always ship with the parent
-const orderSchema = new mongoose.Schema({
-  lines: [{ sku: String, qty: Number, price: Number }],
+// Health check route (used by load balancer / Cloud Run)
+app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+
+// Graceful shutdown — finish in-flight requests before exiting
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received — closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    mongoose.connection.close(false, () => process.exit(0));
+  });
 });`,
         },
         {
-          type: "diagram",
-          id: "erd-one-many",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
-            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
-            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
-          },
+          type: "list",
+          variant: "bullet",
+          items: [
+            {
+              en: "**Environment variables** — put secrets like `JWT_SECRET`, `MONGODB_URI`, and `PORT` in your platform's dashboard (Heroku Config Vars, Railway Variables, etc.). Locally, use a `.env` file. Never commit that file to git — add it to `.gitignore` from day one.",
+              np: "env vars — dashboard मा राख्नुहोस्। `.env` commit नगर्नुहोस्।",
+              jp: "**環境変数**はホストのダッシュボードへ。`.env` は必ず `.gitignore` に追加。",
+            },
+            {
+              en: "**dotenv** — calling `require('dotenv').config()` at the top of your `index.js` loads your `.env` file in development. In production, the platform injects the variables directly, so you do not need any extra logic. If the `.env` file is absent, `dotenv` does nothing — so it is safe to call it unconditionally.",
+              np: "dotenv — development मा `.env` लोड; production मा platform ले inject गर्छ।",
+              jp: "**dotenv** は開発用。本番はプラットフォームが直接 env を注入。ファイルがなければ何もしない。",
+            },
+            {
+              en: "**Remove debug logs** from production — especially anything that might print a secret or user data. Replace ad-hoc `console.log` calls with a structured logger like **`pino`** that outputs JSON. Cloud platforms can ingest JSON logs directly into their log viewer, making it easy to search and filter.",
+              np: "production मा secrets को `console.log` हटाउनुहोस् — pino जस्ता logger प्रयोग गर्नुहोस्।",
+              jp: "本番では秘密情報の `console.log` を削除。`pino` 等の構造化ロガーを使う。",
+            },
+          ],
         },
       ],
     },
     {
-      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
+      title: {
+        en: "Deploy pipeline",
+        np: "Deploy pipeline",
+        jp: "デプロイパイプライン",
+      },
       blocks: [
         {
-          type: "code",
-          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
-          code: `async function createMovie(body) {
-  const genre = await Genre.findById(body.genreId);
-  if (!genre) {
-    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
-  }
-  return Movie.create(body);
-}`,
+          type: "youtube",
+          videoId: "Gjnup-PuquQ",
+          title: "GitHub Actions CI/CD for Node.js",
+        },
+        {
+          type: "diagram",
+          id: "nodejs-deploy-pipeline",
         },
         {
           type: "paragraph",
           text: {
-            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
-            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
-            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
+            en: "A typical deploy pipeline works like this: you **push to git**, which triggers **CI** (like GitHub Actions) to run your tests. If tests pass, CI builds a **Docker image** and pushes it to a registry. The cloud platform then pulls the new image and starts it up — **Cloud Run**, **Railway**, **Fly.io**, and **ECS** all work this way. The platform sends `SIGTERM` to the old container so it can finish in-flight requests before shutting down, then the new container takes over with no downtime.",
+            np: "Git push → CI (npm test) → Docker build → registry → cloud deploy। SIGTERM ले rolling deploy।",
+            jp: "push → CI (テスト) → Docker ビルド → レジストリ → クラウドデプロイ。SIGTERM でローリング更新。",
+          },
+        },
+        {
+          type: "code",
+          title: {
+            en: "Minimal Dockerfile for a Node.js API",
+            np: "Node.js API को Dockerfile",
+            jp: "Node.js API の最小 Dockerfile",
+          },
+          code: `# Build stage — install all deps to compile TypeScript (if used)
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build   # skip if plain JS
+
+# Production image — only runtime deps
+FROM node:20-alpine AS prod
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev   # no devDependencies in image
+COPY --from=build /app/dist ./dist
+EXPOSE 8080
+CMD ["node", "dist/index.js"]
+
+# Usage:
+# docker build -t my-api:latest .
+# docker run -p 3000:8080 --env-file .env my-api:latest`,
+        },
+      ],
+    },
+    {
+      title: {
+        en: "MongoDB Atlas setup",
+        np: "MongoDB Atlas सेटअप",
+        jp: "MongoDB Atlas の設定",
+      },
+      blocks: [
+        {
+          type: "code",
+          title: {
+            en: "Atlas connection string shape",
+            np: "Atlas connection string",
+            jp: "Atlas 接続文字列の形式",
+          },
+          code: `# .env (local — gitignored)
+MONGODB_URI=mongodb+srv://USER:PASS@cluster0.xxxxx.mongodb.net/mydb?retryWrites=true&w=majority
+
+# Node code:
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => { console.error(err); process.exit(1); });
+
+# Atlas security checklist:
+# 1. Create a DB user with minimum required permissions (readWrite on your DB only)
+# 2. Network Access → add your deployment IP or VPC CIDR (not 0.0.0.0/0 in production)
+# 3. Enable "Require TLS" (default on Atlas — always keep it)
+# 4. Enable Atlas Auditing and Alerts for failed auth attempts`,
+        },
+        {
+          type: "diagram",
+          id: "primary-replica",
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**MongoDB Atlas** sets up a replica set automatically — your data is copied to multiple servers so if one goes down, the others keep serving. The **`w=majority`** write concern in your connection string means a write is only confirmed once the majority of replica set members have it, protecting you from data loss if the primary server crashes right after a write.",
+            np: "Atlas — replica set, TLS, backup। `w=majority` ले primary failover मा data loss बाट जोगाउँछ।",
+            jp: "**Atlas** はデフォルトでレプリカセットを構成。`w=majority` でプライマリ障害時のデータ損失を防ぐ。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Transactions & validating ObjectIds",
-        np: "लेनदेन र ObjectId",
-        jp: "トランザクションと ObjectId",
+        en: "What to learn next",
+        np: "अर्को के सिक्ने?",
+        jp: "次に学ぶこと",
       },
       blocks: [
         {
-          type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "MongoDB Transactions Explained",
-        },
-        {
-          type: "code",
-          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
-          code: `const session = await mongoose.startSession();
-session.startTransaction();
-try {
-  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
-  await Rental.create([{ customerId, movieId }], { session });
-  await session.commitTransaction();
-} catch (e) {
-  await session.abortTransaction();
-  throw e;
-} finally {
-  session.endSession();
-}`,
-        },
-        {
-          type: "diagram",
-          id: "acid-transaction",
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
-            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
-            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
+          type: "table",
+          caption: {
+            en: "Paths to deepen your Node.js stack",
+            np: "Node.js stack गहिरो बनाउन",
+            jp: "Node スタックを深める学習パス",
           },
+          headers: [
+            { en: "Track", np: "track", jp: "トラック" },
+            { en: "Why", np: "किन", jp: "理由" },
+            { en: "Starting point", np: "सुरुवात", jp: "開始点" },
+          ],
+          rows: [
+            [
+              { en: "**TypeScript + Node**", np: "TypeScript", jp: "**TypeScript + Node**" },
+              { en: "Catch type errors at compile time; better IDE support; required at most companies", np: "compile-time error detection", jp: "コンパイル時の型チェックで品質向上" },
+              { en: "`ts-node`, `@types/node`, `tsconfig.json`", np: "ts-node सुरु", jp: "`ts-node` から始める" },
+            ],
+            [
+              { en: "**GraphQL**", np: "GraphQL", jp: "**GraphQL**" },
+              { en: "Clients request exactly what they need — eliminates over/under-fetching REST problems", np: "over/under-fetching रोक्छ", jp: "over/under-fetch を排除" },
+              { en: "Apollo Server or Mercurius (Fastify)", np: "Apollo Server", jp: "Apollo Server" },
+            ],
+            [
+              { en: "**Redis caching**", np: "Redis", jp: "**Redis キャッシュ**" },
+              { en: "Cache expensive DB queries; dramatically cut p99 latency for hot data", np: "DB query cache — latency कम", jp: "DB クエリをキャッシュして p99 を削減" },
+              { en: "`ioredis`, cache-aside pattern", np: "ioredis सुरु", jp: "`ioredis` と cache-aside パターン" },
+            ],
+            [
+              { en: "**BullMQ queues**", np: "BullMQ", jp: "**BullMQ キュー**" },
+              { en: "Offload slow jobs (email, PDF, video encoding) to background workers", np: "slow jobs background मा", jp: "重い処理をバックグラウンドワーカーに委譲" },
+              { en: "BullMQ + Redis, worker process", np: "BullMQ + Redis", jp: "BullMQ + Redis ワーカー" },
+            ],
+            [
+              { en: "**Microservices**", np: "Microservices", jp: "**マイクロサービス**" },
+              { en: "Split monolith into independently deployable services — learn gRPC and message brokers", np: "monolith तोड्नु — gRPC र message broker", jp: "モノリスを分割してgRPCやメッセージブローカーを学ぶ" },
+              { en: "Start with gRPC-node or NATS messaging", np: "gRPC-node", jp: "gRPC-node か NATS" },
+            ],
+          ],
         },
       ],
     },
@@ -120,14 +234,14 @@ try {
   faq: [
     {
       question: {
-        en: "When should I embed instead of reference?",
-        np: "एम्बेड कहिले?",
-        jp: "埋め込みはいつ？",
+        en: "Why does the platform inject PORT?",
+        np: "Platform PORT किन inject गर्छ?",
+        jp: "なぜプラットフォームは PORT を注入するのか？",
       },
       answer: {
-        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
-        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
-        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
+        en: "Cloud platforms use a **reverse proxy** that routes incoming HTTPS traffic to your process on a dynamically assigned port. If you hardcode port `3000`, the proxy cannot reach your app. Always read the port from `process.env.PORT` — the `?? 3000` fallback means local development still works without setting the variable.",
+        np: "proxy ले PORT assign गर्छ — hardcode गर्दा break हुन्छ। `process.env.PORT ?? 3000` प्रयोग गर्नुहोस्।",
+        jp: "**リバースプロキシ**が PORT を割り当てる。ハードコードすると壊れる。`process.env.PORT ?? 3000` を使う。",
       },
     },
   ],

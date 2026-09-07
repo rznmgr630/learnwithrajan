@@ -1,150 +1,117 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_32_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_36_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Middleware** is how you share logic across all your routes without duplicating it. Things like parsing request bodies, checking auth, and logging happen once in the middleware chain before your route handler ever runs. Good folder structure keeps all of that logic easy to find and test as your app grows.",
-      np: "मिडलवेयरले साझा लजिक क्रममा चलाउँछ — परीक्षण योग्य संरचना।",
-      jp: "**ミドルウェア** で共通処理を順に適用。構成でテストしやすくする。",
+      en: "In a real app, data is connected — customers rent movies, orders have line items, posts have comments. In MongoDB you choose whether to **embed** that related data inside the document or **reference** it with an ID that points to another collection. Picking the wrong approach leads to bloated documents, slow queries, or data that gets out of sync.",
+      np: "एम्बेड वा सन्दर्भ — प्रश्न ढाँचा अनुसार छान्नुहोस्।",
+      jp: "**埋め込みと参照**をクエリと整合性で選ぶ。",
     },
     {
-      en: "Using **`node --inspect`** with Chrome DevTools is much more powerful than adding `console.log` everywhere. You can set breakpoints, step through async code, and see the actual call stack when a Promise is waiting — which makes tracking down bugs much faster.",
-      np: "`--inspect` ले async डिबग सजिलो बनाउँछ।",
-      jp: "**`--inspect`** で非同期もブレークポイントを張れる。",
+      en: "**`populate`** in Mongoose works like a SQL join — it runs a second query to fetch the related documents. This is convenient, but be careful: if you call `populate` on a list of 50 items, that is 50 extra database queries. This is called the **N+1 problem** and it can quietly make your endpoints much slower.",
+      np: "`populate` मन पराउँछ तर N+1 खर्चिलो हुन सक्छ।",
+      jp: "**populate** は便利だが **N+1** に注意。",
     },
   ],
   sections: [
     {
-      title: { en: "Middleware — the heart of Express", np: "मिडलवेयर", jp: "ミドルウェア" },
+      title: { en: "Modelling relationships — embed vs reference", np: "एम्बेड र सन्दर्भ", jp: "関連のモデル化" },
       blocks: [
         {
           type: "youtube",
-          videoId: "MIr1oxQ3pao",
-          title: "Express Middleware Explained",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Crash Course",
         },
         {
           type: "code",
-          title: { en: "Three middlewares in order", np: "मिडलवेयर क्रम", jp: "順番に並べる" },
-          code: `const express = require('express');
-const app = express();
-
-app.use(express.json());
-app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
+          title: { en: "Embed vs ObjectId reference (sketch)", np: "एम्बेड वा ref", jp: "埋め込みと参照" },
+          code: `// Reference another collection by id
+const movieSchema = new mongoose.Schema({
+  title: String,
+  genreId: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre', required: true },
 });
-app.get('/api/ping', (req, res) => res.send('pong'));`,
+
+// Embed small subdocuments that always ship with the parent
+const orderSchema = new mongoose.Schema({
+  lines: [{ sku: String, qty: Number, price: Number }],
+});`,
+        },
+        {
+          type: "diagram",
+          id: "erd-one-many",
         },
         {
           type: "paragraph",
           text: {
-            en: "Every middleware function gets three arguments: **`req`**, **`res`**, and **`next`**. Call **`next()`** when you are done and want the next middleware to run. Call **`next(err)`** if something goes wrong — Express will skip to your error handler. Once you call `res.send()` or `res.json()`, the chain stops and no more middleware runs.",
-            np: "`next()` अगाडि, `next(err)` त्रुटि ह्यान्डलर, प्रतिक्रिया पठाएपछि रोकिन्छ।",
-            jp: "**ミドルウェア** — `next()` で次へ、`next(err)` でエラーへ。送信後はチェーン停止。",
+            en: "**Embed** data when it always belongs to one parent and you always need it at the same time — like comments inside a blog post. **Reference** data (using an ID) when the related document is large, shared across multiple parents, or changes independently. Arrays of embedded objects are great for ordered items like order line items — each one gets its own `_id` so you can update them individually.",
+            np: "सँगै जीवनचक्र भए embed; स्वतन्त्र भए ref।",
+            jp: "**埋め込み**は常に一緒に読む子。**参照**は独立したライフサイクル向け。",
           },
         },
+      ],
+    },
+    {
+      title: { en: "Movies & Rentals projects", np: "Movies र Rentals", jp: "Movies / Rentals プロジェクト" },
+      blocks: [
         {
-          type: "diagram",
-          id: "nodejs-express-middleware-chain",
+          type: "code",
+          title: { en: "Validate foreign keys before save", np: "जाँच गर्नु", jp: "保存前に関連検証" },
+          code: `async function createMovie(body) {
+  const genre = await Genre.findById(body.genreId);
+  if (!genre) {
+    throw Object.assign(new Error('Unknown genre'), { statusCode: 400 });
+  }
+  return Movie.create(body);
+}`,
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Built-ins** — `express.json()` parses JSON request bodies, `express.urlencoded` handles HTML form data, and `express.static` serves files from a folder. Mount static files before your route middleware so simple file requests do not go through your auth checks.",
-              np: "`express.json` अघि रूट — बडी पहिले पार्स।",
-              jp: "**組み込み** — JSON・フォーム・静的ファイル。順序が重要。",
-            },
-            {
-              en: "**Third-party** — `cors` controls which origins can call your API, `helmet` sets secure HTTP headers, and `morgan` logs every request. Add only what you actually need, and put security middleware near the top so it runs before anything else.",
-              np: "cors, helmet — सुरक्षा अगाडि।",
-              jp: "**サードパーティ** — cors / helmet は早めに。",
-            },
-          ],
+          type: "paragraph",
+          text: {
+            en: "Movies belong to genres — store a `genreId` reference and always check that the genre actually exists before saving a movie. Rentals connect customers and movies — think about inventory carefully. If you decrement stock and record the rental in two separate steps without a transaction, a crash between those steps can leave your data inconsistent and show users inventory that is not really there.",
+            np: "अस्तित्व जाँच र इन्भेन्टरी — दुवै मिलाउनुहोस्।",
+            jp: "**Movies** はジャンル参照の整合。**Rentals** は在庫と整合。",
+          },
         },
       ],
     },
     {
       title: {
-        en: "Environments, configuration & debugging",
-        np: "वातावरण, विन्यास र डिबग",
-        jp: "環境・設定・デバッグ",
+        en: "Transactions & validating ObjectIds",
+        np: "लेनदेन र ObjectId",
+        jp: "トランザクションと ObjectId",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Debugging Node.js with Chrome DevTools",
+          videoId: "-56x56UppqQ",
+          title: "MongoDB Transactions Explained",
         },
         {
           type: "code",
-          title: { en: "NODE_ENV + inspect flag", np: "NODE_ENV र inspect", jp: "環境と inspect" },
-          code: `# Terminal (development):
-NODE_ENV=development node --inspect server.js
-# Then open chrome://inspect → inspect your process
-
-console.log(process.env.NODE_ENV);
-console.log(process.env.PORT ?? 3000);`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**`NODE_ENV`** is a widely used convention. Setting it to `production` tells libraries to enable optimizations and hide detailed error messages from users. Setting it to `test` lets you point to a test database or use mocks. Read all your environment variables in one place — a `config.js` file or a validated schema — so a missing or misspelled variable fails at startup rather than crashing mid-request.",
-            np: "`NODE_ENV` र एक पटक विन्यास जाँच।",
-            jp: "**NODE_ENV** — 起動時に設定を一箇所で検証。",
-          },
-        },
-        {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Debugging** — start your server with `node --inspect server.js`, go to `chrome://inspect` in Chrome, and attach to your process. You can set breakpoints and inspect `req` and `res` objects directly. Pair this with structured (JSON) logs instead of scattered `console.log` strings — they are much easier to search and filter.",
-              np: "`--inspect` र संरचित लग।",
-              jp: "**デバッグ** — `--inspect` と構造化ログ。",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: {
-        en: "Templating, database hooks & folder structure",
-        np: "टेम्प्लेट, डाटाबेस र फोल्डर",
-        jp: "テンプレート・DB・フォルダ構成",
-      },
-      blocks: [
-        {
-          type: "code",
-          title: { en: "Suggested folder layout", np: "फोल्डर संरचना", jp: "フォルダ例" },
-          code: `/*
-  src/
-    index.js       ← creates app, listens
-    routes/
-    models/
-    middleware/
-    startup/db.js  ← mongoose.connect isolated here
-*/`,
-        },
-        {
-          type: "paragraph",
-          text: {
-            en: "**Template engines** like Pug, EJS, or Handlebars let Express render HTML on the server — useful if your app serves web pages, not just a JSON API. Many modern apps skip templates entirely and serve a separate frontend. For database connections, keep **`mongoose.connect`** and your models in their own file (like `startup/db.js`) so tests can easily swap in a different database URI.",
-            np: "SSR को लागि टेम्प्लेट; DB जडान अलग फाइलमा।",
-            jp: "SSR が要るときテンプレート。DB 接続は別モジュールへ。",
-          },
+          title: { en: "Multi-document transaction (pattern)", np: "लेनदेन उदाहरण", jp: "トランザクションの型" },
+          code: `const session = await mongoose.startSession();
+session.startTransaction();
+try {
+  await Movie.updateOne({ _id }, { $inc: { numberInStock: -1 } }).session(session);
+  await Rental.create([{ customerId, movieId }], { session });
+  await session.commitTransaction();
+} catch (e) {
+  await session.abortTransaction();
+  throw e;
+} finally {
+  session.endSession();
+}`,
         },
         {
           type: "diagram",
-          id: "cache-aside-pattern",
+          id: "acid-transaction",
         },
         {
           type: "paragraph",
           text: {
-            en: "The cache-aside pattern is about databases, but the same principle applies to how you structure your app: **each module should do one thing**. Routes handle incoming requests, services contain your business logic, and data access files talk to the database. When you refactor your folder structure, the API should behave exactly the same — verify that with your existing tests or Postman.",
-            np: "पुनर्संरचना — व्यवहार उही, फाइल मात्र बाँड्नुहोस्।",
-            jp: "**リファクタ** — 挙動は変えずフォルダだけ分ける。Postman で確認。",
+            en: "**Transactions** let you update multiple documents at once, where either all changes succeed or none do — essential when inventory or money is involved. **`mongoose.Types.ObjectId.isValid`** only checks whether the string has the right format (24 hex characters) — it does not check if a document with that ID actually exists. Always do a `findById` or `exists` query when you need to be sure.",
+            np: "`isValid` मात्र पर्याप्त छैन — अस्तित्व जाँच गर्नुहोस्।",
+            jp: "**トランザクション**で複数コレクションを一体に。**ObjectId** は形式と存在を別検証。",
           },
         },
       ],
@@ -152,11 +119,15 @@ console.log(process.env.PORT ?? 3000);`,
   ],
   faq: [
     {
-      question: { en: "Why does middleware order matter?", np: "मिडलवेयर क्रम किन?", jp: "ミドルウェアの順番は？" },
+      question: {
+        en: "When should I embed instead of reference?",
+        np: "एम्बेड कहिले?",
+        jp: "埋め込みはいつ？",
+      },
       answer: {
-        en: "Express runs middleware in the order you register it. Body parsers need to come before any handler that reads `req.body`. Auth middleware must come before the routes it is protecting. Error handlers (the ones with four arguments) must be registered last — after all your routes — so that `next(err)` has somewhere to land.",
-        np: "पार्सर अघि, प्रमाणीकरण रूट अघि, त्रुटि अन्तिम।",
-        jp: "パーサ → 認証 → ルート → エラーの順。",
+        en: "Embed when the data is small, always read alongside the parent, and updated at the same time as the parent. Reference when documents are large, when the same data is used by multiple parents, or when each document changes on its own schedule. A good rule of thumb: if the embedded data would get out of sync or grow unbounded, reference instead.",
+        np: "सानो र सँगै भए embed; ठूलो वा स्वतन्त्र भए ref।",
+        jp: "常に一緒・小さければ埋め込み。大きい・共有・独立なら参照。",
       },
     },
   ],

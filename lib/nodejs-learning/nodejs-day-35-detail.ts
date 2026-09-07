@@ -1,314 +1,281 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_35_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_39_DETAIL: RoadmapDayDetail = {
   overview: [
     {
-      en: "**Validation** is how you stop bad data from ever reaching your database. Mongoose validators check your data right before it gets saved. Libraries like **Joi** or **Zod** check it even earlier — at the route level — so you can send a clear 400 error back to the client without touching any business logic.",
-      np: "Mongoose — DB write अघि; Joi — route मा। दुवै तह मिलाएर राम्रो।",
-      jp: "Mongoose は DB 書き込み前、Joi はルートレベルで検証。二段で守る。",
+      en: "Testing is how you catch bugs before users do — and how you change code without worrying you broke something. **Unit tests** are fast because they mock all the external stuff (database, network) and test one function at a time. **Integration tests** run your actual Express app against a real test database to check that everything works together.",
+      np: "Unit test — I/O mock, milliseconds; Integration test — वास्तविक DB, wiring परीक्षण।",
+      jp: "**単体テスト**は I/O をモックして高速に。**結合テスト**は実際の DB でワイヤリングを確認。",
     },
     {
-      en: "Think of validation as two layers of protection. The **route layer** catches problems in the incoming request and returns friendly error messages. The **schema layer** is your backup — it stops bad data from getting into MongoDB even if something slips past the route check.",
-      np: "रूट — पहिलो रिंग (400); Schema — अन्तिम रिंग (DB protection)।",
-      jp: "**ルート検証**は早期の 400 返却。**スキーマ検証**は DB へのゴミを防ぐ最後の砦。",
+      en: "**Test-driven development (TDD)** means writing your test before writing the code — you describe what the function should do, watch the test fail, then write just enough code to make it pass. Even if you do not follow strict TDD, writing tests alongside your code (not weeks later when you have forgotten the edge cases) produces much better coverage.",
+      np: "TDD — पहिले fail गर्ने test, अनि minimum code। कोडसँगै लेख्नु राम्रो।",
+      jp: "**TDD** は失敗するテストから始める。コードと並行してテストを書くと品質が保たれる。",
     },
   ],
   sections: [
     {
       title: {
-        en: "Mongoose schema validators",
-        np: "Mongoose schema validators",
-        jp: "Mongoose スキーマバリデータ",
+        en: "Jest basics — describe, it, expect",
+        np: "Jest — describe, it, expect",
+        jp: "Jest の基本",
       },
       blocks: [
         {
           type: "youtube",
-          videoId: "-56x56UppqQ",
-          title: "Mongoose Crash Course",
+          videoId: "7r4xVDI2vho",
+          title: "Jest Crash Course",
         },
         {
           type: "code",
           title: {
-            en: "Schema with built-in and custom validators",
-            np: "बिल्ट-इन र कस्टम validators",
-            jp: "組み込み + カスタムバリデータ",
+            en: "Unit test for a pure function",
+            np: "pure function को unit test",
+            jp: "純粋関数の単体テスト",
           },
-          code: `const mongoose = require('mongoose');
+          code: `// math.js
+function calculateLateFee(days, dailyRate) {
+  if (days < 0) throw new Error('days cannot be negative');
+  return days * dailyRate;
+}
+module.exports = { calculateLateFee };
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Name is required'],
-    minlength: [2, 'Name must be at least 2 characters'],
-    maxlength: [100, 'Name must be at most 100 characters'],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
-    lowercase: true,
-  },
-  role: {
-    type: String,
-    enum: {
-      values: ['user', 'admin', 'moderator'],
-      message: '{VALUE} is not a valid role',
-    },
-    default: 'user',
-  },
-  age: {
-    type: Number,
-    min: [0, 'Age cannot be negative'],
-    max: [150, 'Age seems unrealistic'],
-  },
-  website: {
-    type: String,
-    validate: {
-      validator: (v) => !v || v.startsWith('https://'),
-      message: 'Website must use HTTPS',
-    },
-  },
-});
+// math.test.js
+const { calculateLateFee } = require('./math');
 
-const User = mongoose.model('User', userSchema);`,
+describe('calculateLateFee', () => {
+  it('returns 0 for 0 days', () => {
+    expect(calculateLateFee(0, 1.5)).toBe(0);
+  });
+
+  it('multiplies days by daily rate', () => {
+    expect(calculateLateFee(3, 2.5)).toBe(7.5);
+  });
+
+  it('throws for negative days', () => {
+    expect(() => calculateLateFee(-1, 2)).toThrow('days cannot be negative');
+  });
+
+  it('handles fractional rates', () => {
+    expect(calculateLateFee(7, 1.99)).toBeCloseTo(13.93);
+  });
+});`,
         },
         {
           type: "diagram",
-          id: "nodejs-mongoose-schema",
+          id: "nodejs-jest-unit-flow",
         },
         {
-          type: "table",
-          caption: {
-            en: "Common Mongoose validators",
-            np: "सामान्य validators",
-            jp: "よく使うバリデータ",
+          type: "paragraph",
+          text: {
+            en: "The **test pyramid** says: lots of fast unit tests at the bottom, some integration tests in the middle, and a few end-to-end tests at the top. This keeps your test suite fast while still covering important paths. Run **`jest --watch`** while developing so tests re-run automatically every time you save. Add `\"test\": \"jest\"` and `\"test:coverage\": \"jest --coverage\"` to your `package.json` scripts.",
+            np: "pyramid — धेरै unit, कम integration, थोरै e2e। `jest --watch` development मा।",
+            jp: "**テストピラミッド** — 下段を厚く。`jest --watch` で開発中に即時フィードバック。",
           },
-          headers: [
-            { en: "Validator", np: "Validator", jp: "バリデータ" },
-            { en: "Usage", np: "प्रयोग", jp: "使い方" },
-            { en: "Error message", np: "त्रुटि सन्देश", jp: "エラーメッセージ" },
-          ],
-          rows: [
-            [
-              { en: "`required`", np: "required", jp: "`required`" },
-              { en: "`required: [true, 'msg']`", np: "अनिवार्य", jp: "必須フィールド" },
-              { en: "Path `name` is required", np: "field अनिवार्य", jp: "フィールドが必要" },
-            ],
-            [
-              { en: "`min` / `max`", np: "min/max", jp: "`min` / `max`" },
-              { en: "Numbers and dates", np: "संख्या र मिति", jp: "数値・日付に適用" },
-              { en: "Path `age` (5) is less than minimum", np: "न्यूनतम भन्दा कम", jp: "最小値より小さい" },
-            ],
-            [
-              { en: "`minlength` / `maxlength`", np: "लम्बाइ", jp: "`minlength` / `maxlength`" },
-              { en: "String length bounds", np: "string लम्बाइ", jp: "文字列の長さ" },
-              { en: "Path `name` is shorter than minimum", np: "छोटो", jp: "最小文字数より短い" },
-            ],
-            [
-              { en: "`enum`", np: "enum", jp: "`enum`" },
-              { en: "Allowed string values", np: "अनुमत मानहरू", jp: "許可された値のリスト" },
-              { en: "`xyz` is not a valid role", np: "अमान्य मान", jp: "無効な値" },
-            ],
-            [
-              { en: "`match`", np: "match (regex)", jp: "`match`" },
-              { en: "Regex test on string", np: "regex परीक्षण", jp: "正規表現テスト" },
-              { en: "Invalid email format", np: "अमान्य ढाँचा", jp: "フォーマット不正" },
-            ],
-            [
-              { en: "`validate`", np: "custom", jp: "`validate`" },
-              { en: "Custom `validator(value)` function", np: "कस्टम function", jp: "カスタム関数" },
-              { en: "Website must use HTTPS", np: "HTTPS चाहिन्छ", jp: "カスタムメッセージ" },
-            ],
-          ],
         },
       ],
     },
     {
       title: {
-        en: "Joi validation in Express routes",
-        np: "Express routes मा Joi validation",
-        jp: "Express ルートでの Joi 検証",
+        en: "Mocking modules and functions",
+        np: "Modules र functions mock गर्नु",
+        jp: "モジュールと関数のモック",
       },
       blocks: [
         {
-          type: "youtube",
-          videoId: "L72fhGm1tfE",
-          title: "Express Validation with Joi",
-        },
-        {
           type: "code",
           title: {
-            en: "Reusable validation middleware with Joi",
-            np: "Joi validation middleware",
-            jp: "Joi を使った検証ミドルウェア",
+            en: "Mock a DB module to test service logic in isolation",
+            np: "DB module mock गरेर service test",
+            jp: "DB モジュールをモックしてサービスを単体テスト",
           },
-          code: `const Joi = require('joi');
+          code: `// userService.js
+const db = require('./db');
 
-// Define the schema
-const createUserSchema = Joi.object({
-  name: Joi.string().min(2).max(100).required(),
-  email: Joi.string().email().required(),
-  role: Joi.string().valid('user', 'admin').default('user'),
-  age: Joi.number().integer().min(0).max(150),
-});
-
-// Reusable middleware factory
-function validate(schema) {
-  return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
-      abortEarly: false,    // collect ALL errors, not just first
-      stripUnknown: true,   // remove fields not in schema
-    });
-    if (error) {
-      return res.status(400).json({
-        status: 400,
-        error: 'Validation failed',
-        details: error.details.map((d) => ({
-          field: d.path.join('.'),
-          message: d.message,
-        })),
-      });
-    }
-    req.body = value; // use the cleaned/coerced value
-    next();
-  };
+async function createUser(data) {
+  const existing = await db.findByEmail(data.email);
+  if (existing) throw new Error('Email in use');
+  return db.insertUser(data);
 }
+module.exports = { createUser };
 
-// Use in routes
-const express = require('express');
-const router = express.Router();
+// userService.test.js
+jest.mock('./db'); // auto-mock — all exports become jest.fn()
+const db = require('./db');
+const { createUser } = require('./userService');
 
-router.post('/users', validate(createUserSchema), async (req, res) => {
-  // req.body is now validated and stripped of unknown fields
-  const user = await User.create(req.body);
-  res.status(201).json(user);
+describe('createUser', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('throws when email already exists', async () => {
+    db.findByEmail.mockResolvedValue({ id: 1, email: 'a@b.com' });
+    await expect(createUser({ email: 'a@b.com' })).rejects.toThrow('Email in use');
+  });
+
+  it('inserts and returns user when email is free', async () => {
+    db.findByEmail.mockResolvedValue(null);
+    db.insertUser.mockResolvedValue({ id: 2, email: 'new@b.com' });
+
+    const result = await createUser({ email: 'new@b.com', name: 'Alice' });
+    expect(db.insertUser).toHaveBeenCalledWith({ email: 'new@b.com', name: 'Alice' });
+    expect(result.id).toBe(2);
+  });
 });`,
         },
         {
           type: "paragraph",
           text: {
-            en: "Put your validation middleware between the route and the handler — the handler only runs if the data passes. Set `abortEarly: false` so all errors are collected in one go, meaning the client can see and fix everything at once rather than fixing one error at a time. Set `stripUnknown: true` to automatically drop any extra fields the client sent.",
-            np: "validation middleware route र handler बीच — `abortEarly: false` ले सबै त्रुटि एकैपटक।",
-            jp: "バリデーションはルートとハンドラの間に挟む。`abortEarly: false` で全エラーをまとめて返す。",
+            en: "**Mocking** lets you test one piece of code without needing a real database or network connection — tests run fast and give the same result every time. But over-mocking can hide real bugs: if you always mock `.save()` to succeed, you will never catch a Mongoose validation schema that rejects a field your code depends on. Save real database calls for integration tests, where checking that everything works together is the whole point.",
+            np: "mock ले isolation — तर Mongoose mock गर्दा schema bug छुटन सक्छ। integration test मा real DB।",
+            jp: "モックは高速・確定的。しかし Mongoose をモックしすぎるとスキーマバグを見落とす。結合テストでは実 DB を使う。",
           },
         },
       ],
     },
     {
       title: {
-        en: "Sanitization — strip unknown fields",
-        np: "Sanitization — अज्ञात fields हटाउनु",
-        jp: "サニタイズ — 余分なフィールドを除去",
+        en: "Integration tests with supertest",
+        np: "supertest सँग integration tests",
+        jp: "supertest を使った結合テスト",
       },
       blocks: [
         {
+          type: "youtube",
+          videoId: "FKnzS_icp20",
+          title: "Supertest Integration Testing in Node.js",
+        },
+        {
           type: "code",
           title: {
-            en: "Strip unknown fields to prevent mass-assignment",
-            np: "mass-assignment रोक्न unknown fields हटाउनु",
-            jp: "マスアサインメント防止のためのフィールド除去",
+            en: "Testing an Express route end-to-end",
+            np: "Express route end-to-end test",
+            jp: "Express ルートの結合テスト",
           },
-          code: `// Without stripUnknown, a malicious client could send:
-// { name: 'Alice', email: 'a@b.com', role: 'admin', isVerified: true }
-// and pollute your DB with isVerified = true
+          code: `const request = require('supertest');
+const mongoose = require('mongoose');
+const app = require('../app'); // export app without .listen()
 
-const { error, value } = schema.validate(req.body, {
-  stripUnknown: true,
-  // value now only contains fields defined in the Joi schema
+beforeAll(async () => {
+  await mongoose.connect('mongodb://localhost:27017/myapp_test');
 });
 
-// With Mongoose you can also enable strict mode (default true):
-// strict: true means fields not in schema are silently dropped on save
-const userSchema = new mongoose.Schema({ name: String }, { strict: true });`,
+afterAll(async () => {
+  await mongoose.connection.db.dropDatabase();
+  await mongoose.connection.close();
+});
+
+beforeEach(async () => {
+  await mongoose.connection.db.dropDatabase(); // clean slate per test
+});
+
+describe('POST /api/users', () => {
+  it('creates a user and returns 201', async () => {
+    const res = await request(app)
+      .post('/api/users')
+      .send({ name: 'Alice', email: 'alice@example.com' })
+      .expect(201);
+
+    expect(res.body.email).toBe('alice@example.com');
+    expect(res.body._id).toBeDefined();
+  });
+
+  it('returns 400 for missing email', async () => {
+    const res = await request(app)
+      .post('/api/users')
+      .send({ name: 'Bob' })
+      .expect(400);
+
+    expect(res.body.error).toBe('Validation failed');
+  });
+
+  it('returns 409 for duplicate email', async () => {
+    await request(app).post('/api/users').send({ name: 'Alice', email: 'a@b.com' });
+    const res = await request(app)
+      .post('/api/users')
+      .send({ name: 'Alice2', email: 'a@b.com' })
+      .expect(409);
+    expect(res.body.error).toMatch(/duplicate/i);
+  });
+});`,
         },
         {
-          type: "list",
-          variant: "bullet",
-          items: [
-            {
-              en: "**Mass-assignment** — if a client sends `{ role: 'admin' }` in the request body and your code does `User.create(req.body)` directly, they can give themselves admin privileges. Always whitelist the fields you accept, or use `stripUnknown` to remove anything you did not define.",
-              np: "mass-assignment — `role: 'admin'` पठाएर privilege escalate गर्न सकिन्छ।",
-              jp: "**マスアサインメント** — 不正なフィールドで権限昇格が起きる。ホワイトリスト化が必要。",
-            },
-            {
-              en: "**Keep your database clean** — extra unknown fields in your documents make future schema changes harder and can break analytics queries that assume a consistent shape.",
-              np: "DB सफा राख्नुहोस् — अज्ञात fields ले schema migration कठिन बन्छ।",
-              jp: "**DB をきれいに保つ** — 未知フィールドはスキーママイグレーションを壊す。",
-            },
-          ],
+          type: "paragraph",
+          text: {
+            en: "**`supertest`** sends real HTTP requests to your Express app without needing to actually start a server on a port — this makes tests fast and easy to run anywhere. Always use a separate test database (like `myapp_test`) that you can freely wipe. Drop the database in `afterAll` so each test run starts clean, and set up any required data in `beforeEach` so tests do not depend on each other.",
+            np: "supertest — port bind नगरी real HTTP। test DB अलग URI — production मा कहिल्यै होइन।",
+            jp: "**supertest** はポートなしで実 HTTP を発火。**テスト用 DB** を別 URI に。本番データは絶対に使わない。",
+          },
         },
       ],
     },
     {
       title: {
-        en: "Validation error responses",
-        np: "Validation error responses",
-        jp: "バリデーションエラーレスポンス",
+        en: "Coverage and what it actually measures",
+        np: "Coverage — के मापन गर्छ?",
+        jp: "カバレッジが実際に測るもの",
       },
       blocks: [
         {
           type: "code",
           title: {
-            en: "Structured error response format",
-            np: "संरचित त्रुटि response",
-            jp: "構造化エラーレスポンス",
+            en: "Reading jest --coverage output",
+            np: "coverage output पढ्नु",
+            jp: "jest --coverage の出力を読む",
           },
-          code: `// Consistent error shape — clients can rely on this contract
-{
-  "status": 400,
-  "error": "Validation failed",
-  "details": [
-    { "field": "email",  "message": "\\"email\\" must be a valid email" },
-    { "field": "name",   "message": "\\"name\\" is not allowed to be empty" }
-  ]
-}
+          code: `# Run: npx jest --coverage
 
-// Express error handler for Mongoose ValidationError
-app.use((err, req, res, next) => {
-  if (err.name === 'ValidationError') {
-    const details = Object.entries(err.errors).map(([field, e]) => ({
-      field,
-      message: e.message,
-    }));
-    return res.status(400).json({ status: 400, error: 'Validation failed', details });
-  }
-  if (err.code === 11000) {
-    return res.status(409).json({ status: 409, error: 'Duplicate key', field: Object.keys(err.keyPattern)[0] });
-  }
-  res.status(500).json({ status: 500, error: 'Internal server error' });
-});`,
+# Output table:
+# File          | % Stmts | % Branch | % Funcs | % Lines
+# userService.js|    91.3 |     75.0 |   100.0 |    91.3
+
+# 75% Branch means 1 of 4 if/else branches was never executed.
+# Find it: jest --coverage --verbose --collectCoverageFrom='src/**/*.js'
+
+# CI badge target: 80% minimum on all four columns.
+# But 80% can still miss critical paths — cover your auth and billing logic first.`,
         },
         {
           type: "table",
           caption: {
-            en: "HTTP status codes for validation scenarios",
-            np: "validation status codes",
-            jp: "検証エラーの HTTP ステータス",
+            en: "Coverage types — what they count and what they miss",
+            np: "coverage प्रकार",
+            jp: "カバレッジの種類",
           },
           headers: [
-            { en: "Status", np: "Status", jp: "ステータス" },
-            { en: "When to use", np: "कहिले", jp: "使いどき" },
-            { en: "Example", np: "उदाहरण", jp: "例" },
+            { en: "Coverage type", np: "प्रकार", jp: "種類" },
+            { en: "What it counts", np: "के गन्छ", jp: "カウント対象" },
+            { en: "Blind spot", np: "अन्धा ठाउँ", jp: "見落とし" },
           ],
           rows: [
             [
-              { en: "**400 Bad Request**", np: "400", jp: "**400**" },
-              { en: "Malformed JSON, missing required fields, type mismatch", np: "अमान्य body", jp: "フォーマット不正・必須欠如" },
-              { en: "`name` is required", np: "name अनिवार्य", jp: "name は必須" },
+              { en: "**Statement**", np: "Statement", jp: "**ステートメント**" },
+              { en: "Every executable statement reached", np: "हरेक statement", jp: "実行された文" },
+              { en: "Does not check boolean branches", np: "branch जाँच गर्दैन", jp: "分岐を区別しない" },
             ],
             [
-              { en: "**422 Unprocessable Entity**", np: "422", jp: "**422**" },
-              { en: "Well-formed body but semantically invalid business rule", np: "व्यावसायिक नियम उल्लङ्घन", jp: "形式は正しいが業務ルール違反" },
-              { en: "Start date must be before end date", np: "मिति नियम", jp: "開始日が終了日より後" },
+              { en: "**Branch**", np: "Branch", jp: "**ブランチ**" },
+              { en: "Both sides of if/else, ternary, &&, ||", np: "if/else दुवै side", jp: "if/else 両側・三項演算子" },
+              { en: "Misses logic errors inside a taken branch", np: "branch भित्रको logic", jp: "分岐内のロジックは見ない" },
             ],
             [
-              { en: "**409 Conflict**", np: "409", jp: "**409**" },
-              { en: "Duplicate unique field (e.g. email already registered)", np: "डुप्लिकेट key", jp: "一意フィールドの重複" },
-              { en: "Email already in use", np: "email पहिल्यै छ", jp: "メールが既に存在" },
+              { en: "**Function**", np: "Function", jp: "**関数**" },
+              { en: "Every function called at least once", np: "हरेक function एकपटक", jp: "各関数が最低1回呼ばれた" },
+              { en: "Misses edge-case inputs inside the function", np: "edge case input", jp: "関数内のエッジケース" },
+            ],
+            [
+              { en: "**Line**", np: "Line", jp: "**行**" },
+              { en: "Every source line executed", np: "हरेक line", jp: "各行が実行された" },
+              { en: "Multi-statement lines mislead the metric", np: "एक line मा धेरै statement", jp: "複文行でメトリクスが歪む" },
             ],
           ],
+        },
+        {
+          type: "paragraph",
+          text: {
+            en: "**80% test coverage is a reasonable minimum**, not a goal to celebrate hitting. 100% coverage does not mean your code is correct — a test that touches every line but makes no real assertions is useless. Spend your testing effort on the things that matter most: auth flows, pricing logic, and error handling. If a test only exists to bump a number, delete it.",
+            np: "80% coverage न्यूनतम — 100% भएर पनि logic error हुन सक्छ। auth र pricing मा ध्यान दिनुहोस्।",
+            jp: "**80% はフロア**。100% でもロジックエラーを見逃す。認証・課金・エラーパスに意味のあるテストを集中。",
+          },
         },
       ],
     },
@@ -316,14 +283,26 @@ app.use((err, req, res, next) => {
   faq: [
     {
       question: {
-        en: "Should I validate in the schema or the route?",
-        np: "schema मा वा route मा validate गर्ने?",
-        jp: "スキーマとルートどちらで検証すべきか？",
+        en: "What is the difference between unit and integration tests?",
+        np: "Unit र integration test मा फरक के?",
+        jp: "単体テストと結合テストの違いは？",
       },
       answer: {
-        en: "**Both** — they do different things. Route middleware (Joi/Zod) stops bad requests at the door and sends a clear 400 error before any of your logic runs. Mongoose schema validators catch anything that slips through — including bugs in your own code, like a service function that skips the route validation. Using both gives you layered protection.",
-        np: "दुवै — route middleware ले HTTP boundary मा 400 दिन्छ; Mongoose ले DB अघि अन्तिम जाँच।",
-        jp: "**両方**。ルート検証は HTTP 境界で 400 を返す。Mongoose 検証はコードバグへの最後の砦。",
+        en: "**Unit tests** test one function in isolation by replacing external dependencies (database, network) with mocks. They run in milliseconds and are great for testing logic. **Integration tests** connect real components — actual database, actual Express routes, actual middleware — and check that everything works together. They are slower but catch bugs that unit tests cannot, like a misconfigured route or a missing database index.",
+        np: "Unit — mock सँग isolated, fast; Integration — real DB, real Express, slow तर wiring bugs देखाउँछ।",
+        jp: "**単体**はモックで隔離して高速。**結合**は実コンポーネントを繋いで遅いがワイヤリングバグを発見。",
+      },
+    },
+    {
+      question: {
+        en: "Should I write tests before or after the code?",
+        np: "test पहिले वा code पछि लेख्ने?",
+        jp: "テストはコードの前か後か？",
+      },
+      answer: {
+        en: "**Writing tests first (TDD)** makes you think about how a function should behave before you write it, which often leads to better-designed interfaces — especially for business logic with clear rules. **Testing after** is fine when you are exploring or prototyping. Either way, the rule is: never mark a PR ready without tests. Untested code in production is a liability.",
+        np: "TDD ले interface पहिले सोच्न बाध्य गर्छ — business logic मा राम्रो। PR ready गर्न अघि test लेख्नुहोस्।",
+        jp: "**TDD** はインターフェースを先に考えさせる。探索的開発にはテスト後が現実的。PR 前には必ずテストを書く。",
       },
     },
   ],
