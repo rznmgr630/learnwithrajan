@@ -19,6 +19,8 @@ const NODEJS_TAG: Record<string, LocalizedString> = {
   fastify: { en: "Fastify", np: "Fastify", jp: "Fastify" },
   database: { en: "databases", np: "डाटाबेस", jp: "データベース" },
   sql: { en: "SQL", np: "SQL", jp: "SQL" },
+  config: { en: "configuration", np: "विन्यास", jp: "設定" },
+  observability: { en: "observability", np: "अवलोकनीयता", jp: "オブザーバビリティ" },
   semver: { en: "semver", np: "semver", jp: "セマバ" },
   express: { en: "Express", np: "Express", jp: "Express" },
   http: { en: "HTTP API", np: "HTTP API", jp: "HTTP API" },
@@ -145,66 +147,76 @@ const NODEJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "認可と API セキュリティ — RBAC・IDOR・インジェクション・上限",
   },
   20: {
+    en: "Configuration & environment — env files, validation & flags",
+    np: "विन्यास र वातावरण — env फाइल, प्रमाणीकरण र flag",
+    jp: "設定と環境 — env ファイル・検証・フィーチャーフラグ",
+  },
+  21: {
+    en: "Logging & observability — Pino, traces, metrics & health",
+    np: "लगिङ र अवलोकनीयता — Pino, trace, metric र health",
+    jp: "ログとオブザーバビリティ — Pino・トレース・メトリクス・ヘルス",
+  },
+  22: {
     en: "Global object, CommonJS modules, Path & OS",
     np: "ग्लोबल वस्तु, मोड्युल, Path र OS",
     jp: "グローバル・CommonJS・path・os",
   },
-  21: {
+  23: {
     en: "File system, Events, EventEmitter & HTTP module",
     np: "फाइल प्रणाली, इभेन्ट, EventEmitter र HTTP",
     jp: "fs・イベント・EventEmitter・http",
   },
-  22: {
+  24: {
     en: "npm — package.json, semver, publishing & globals",
     np: "npm — package.json, semver, प्रकाशन र ग्लोबल",
     jp: "npm・package.json・semver・公開・グローバル",
   },
-  23: {
+  25: {
     en: "RESTful APIs with Express — routes, verbs & validation",
     np: "Express सँग REST — रूट, verb र प्रमाणीकरण",
     jp: "Express で REST — ルート・HTTP メソッド・検証",
   },
-  24: {
+  26: {
     en: "Express advanced — middleware, config & app structure",
     np: "Express उन्नत — मिडलवेयर, विन्यास र संरचना",
     jp: "Express 応用 — ミドルウェア・設定・アプリ構成",
   },
-  25: {
+  27: {
     en: "Asynchronous JavaScript — callbacks, promises & async/await",
     np: "असिंक JS — callback, promise र async/await",
     jp: "非同期 JS — コールバック・Promise・async/await",
   },
-  26: {
+  28: {
     en: "MongoDB & Mongoose — connect, schemas, queries & CRUD",
     np: "MongoDB र Mongoose — जडान, schema, प्रश्न र CRUD",
     jp: "MongoDB・Mongoose — 接続・スキーマ・クエリ・CRUD",
   },
-  27: {
+  29: {
     en: "Data validation — schemas, validators & persistence projects",
     np: "डाटा प्रमाणीकरण — schema, validators र persistence",
     jp: "データ検証 — スキーマ・バリデータ・永続化プロジェクト",
   },
-  28: {
+  30: {
     en: "Modelling relationships — refs, embed, population & transactions",
     np: "सम्बन्ध मोडेलिङ — ref, embed, population र लेनदेन",
     jp: "関連モデリング — 参照・埋め込み・populate・トランザクション",
   },
-  29: {
+  31: {
     en: "Authentication & authorization — users, JWT & roles",
     np: "प्रमाणीकरण र अधिकार — प्रयोगकर्ता, JWT र भूमिका",
     jp: "認証・認可 — ユーザー・JWT・ロール",
   },
-  30: {
+  32: {
     en: "Errors, logging & extracting routes / services",
     np: "त्रुटि, लगिङ र रूट/सेवा अलग गर्नु",
     jp: "エラー・ログ・ルートとサービスの分割",
   },
-  31: {
+  33: {
     en: "Unit tests, integration tests & test-driven habits",
     np: "युनिट, इन्टिग्रेशन परीक्षण र TDD",
     jp: "単体・結合テストと TDD の習慣",
   },
-  32: {
+  34: {
     en: "Deployment, MongoDB Atlas & what to learn next",
     np: "डिप्लोइ, Atlas र अगाडि के सिक्ने",
     jp: "デプロイ・Atlas・次に学ぶこと",
@@ -217,6 +229,7 @@ const NODEJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nodejs-p2": { en: "Phase 2 · The standard library", np: "Phase 2 · स्टान्डर्ड लाइब्रेरी", jp: "Phase 2 · 標準ライブラリ" },
   "nodejs-p3": { en: "Phase 3 · Tooling", np: "Phase 3 · उपकरण", jp: "Phase 3 · ツール" },
   "nodejs-p4": { en: "Phase 4 · Building an API", np: "Phase 4 · API निर्माण", jp: "Phase 4 · API の構築" },
+  "nodejs-p5": { en: "Phase 5 · Production concerns", np: "Phase 5 · उत्पादन सरोकार", jp: "Phase 5 · 本番運用の関心事" },
   "nodejs-w2": { en: "Core modules & npm", np: "कोर मोड्युल र npm", jp: "コアモジュールと npm" },
   "nodejs-w3": { en: "Express REST & advanced topics", np: "Express REST र उन्नत विषय", jp: "Express REST と応用トピック" },
   "nodejs-w4": { en: "Async JavaScript & Mongoose CRUD", np: "async JS र Mongoose CRUD", jp: "非同期JSとMongoose CRUD" },
