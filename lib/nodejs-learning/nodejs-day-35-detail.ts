@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_39_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_35_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "Testing is how you catch bugs before users do — and how you change code without worrying you broke something. **Unit tests** are fast because they mock all the external stuff (database, network) and test one function at a time. **Integration tests** run your actual Express app against a real test database to check that everything works together.",

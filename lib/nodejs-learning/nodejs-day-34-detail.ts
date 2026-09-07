@@ -1,6 +1,6 @@
 import type { RoadmapDayDetail } from "@/lib/challenge-data";
 
-export const NODEJS_DAY_38_DETAIL: RoadmapDayDetail = {
+export const NODEJS_DAY_34_DETAIL: RoadmapDayDetail = {
   overview: [
     {
       en: "Production APIs will fail — networks time out, disks fill up, and code has bugs. **Structured error handling** means that when something goes wrong, your API sends a clear, predictable response and your logs make it easy to figure out what happened. Good error handling is not about hiding problems — it is about surfacing them in a controlled way.",
