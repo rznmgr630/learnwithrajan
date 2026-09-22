@@ -41,6 +41,7 @@ function parseInlineHtml(input: string): Segment[] {
   const tags = [
     { open: "<b>", close: "</b>", kind: "bold" as const },
     { open: "<i>", close: "</i>", kind: "italic" as const },
+    { open: "<code>", close: "</code>", kind: "code" as const },
   ];
 
   const out: Segment[] = [];
@@ -59,7 +60,12 @@ function parseInlineHtml(input: string): Segment[] {
     const close = input.indexOf(found.tag.close, contentStart);
     if (close === -1) { out.push({ kind: "text", value: input.slice(found.at) }); break; }
 
-    out.push({ kind: found.tag.kind, children: parseInlineFormatting(input.slice(contentStart, close)) });
+    const content = input.slice(contentStart, close);
+    if (found.tag.kind === "code") {
+      out.push({ kind: "code", value: content.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&") });
+    } else {
+      out.push({ kind: found.tag.kind, children: parseInlineFormatting(content) });
+    }
     i = close + found.tag.close.length;
   }
   return mergeTextRuns(out);
@@ -140,6 +146,18 @@ type RichTextProps = {
   className?: string;
 };
 
+function decodeCodeEntities(value: string): string {
+  return value.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
+}
+
+function CodeBlock({ code }: { code: string }) {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
+      <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{code}</pre>
+    </div>
+  );
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -191,6 +209,8 @@ const headingClass: Record<number, string> = {
  */
 export function RichParagraph({ text, className }: RichTextProps) {
   if (!text.includes("\n")) {
+    const standaloneCode = text.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
+    if (standaloneCode) return <CodeBlock code={decodeCodeEntities(standaloneCode[1])} />;
     return <span className={className}>{renderInlineLine(text)}</span>;
   }
   const lines = text.split("\n");
@@ -198,6 +218,12 @@ export function RichParagraph({ text, className }: RichTextProps) {
 
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
+
+    const standaloneCode = line.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
+    if (standaloneCode) {
+      nodes.push(<CodeBlock key={j} code={decodeCodeEntities(standaloneCode[1])} />);
+      continue;
+    }
 
     if (line.trimStart().startsWith("```")) {
       const body: string[] = [];
