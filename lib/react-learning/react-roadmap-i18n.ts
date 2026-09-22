@@ -496,7 +496,10 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 15) {
     return { en: "Client-Side Routing", np: "Client-Side Routing", jp: "クライアントサイドルーティング" };
   }
-  if (day >= 16) return REACT_DAY_TITLE[day - 14] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 16) {
+    return { en: "Data Fetching with TanStack Query", np: "TanStack Query सँग Data Fetching", jp: "TanStack Query によるデータフェッチ" };
+  }
+  if (day >= 17) return REACT_DAY_TITLE[day - 15] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
