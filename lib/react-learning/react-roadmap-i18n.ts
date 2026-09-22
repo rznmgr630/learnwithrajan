@@ -408,7 +408,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "イベント・イベントハンドラー・ユーザー操作",
     };
   }
-  if (day >= 4) return REACT_DAY_TITLE[day - 2] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 4) {
+    return {
+      en: "State and re-rendering",
+      np: "State र re-rendering",
+      jp: "State と再レンダリング",
+    };
+  }
+  if (day >= 5) return REACT_DAY_TITLE[day - 3] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
