@@ -401,7 +401,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "Props・データフロー・再利用可能なコンポーネント",
     };
   }
-  if (day >= 3) return REACT_DAY_TITLE[day - 1] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 3) {
+    return {
+      en: "Events, event handlers, and user interaction",
+      np: "Events, event handlers र user interaction",
+      jp: "イベント・イベントハンドラー・ユーザー操作",
+    };
+  }
+  if (day >= 4) return REACT_DAY_TITLE[day - 2] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
