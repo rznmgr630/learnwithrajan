@@ -502,7 +502,10 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 17) {
     return { en: "Client State Management", np: "Client State Management", jp: "クライアント状態管理" };
   }
-  if (day >= 18) return REACT_DAY_TITLE[day - 16] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 18) {
+    return { en: "Advanced Forms and Validation", np: "Advanced Forms र Validation", jp: "高度なフォームとバリデーション" };
+  }
+  if (day >= 19) return REACT_DAY_TITLE[day - 17] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
