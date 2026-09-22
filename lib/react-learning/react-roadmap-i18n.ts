@@ -429,7 +429,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "Props・コンポーネント通信・composition",
     };
   }
-  if (day >= 7) return REACT_DAY_TITLE[day - 5] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 7) {
+    return {
+      en: "Conditional rendering, lists, and UI states",
+      np: "Conditional rendering, lists र UI states",
+      jp: "条件付きレンダリング・リスト・UI 状態",
+    };
+  }
+  if (day >= 8) return REACT_DAY_TITLE[day - 6] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
