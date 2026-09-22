@@ -443,7 +443,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "useReducer と状態マシン",
     };
   }
-  if (day >= 9) return REACT_DAY_TITLE[day - 7] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 9) {
+    return {
+      en: "Context and shared state",
+      np: "Context र shared state",
+      jp: "Context と共有状態",
+    };
+  }
+  if (day >= 10) return REACT_DAY_TITLE[day - 8] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
