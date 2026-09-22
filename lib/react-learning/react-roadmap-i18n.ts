@@ -499,7 +499,10 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 16) {
     return { en: "Data Fetching with TanStack Query", np: "TanStack Query सँग Data Fetching", jp: "TanStack Query によるデータフェッチ" };
   }
-  if (day >= 17) return REACT_DAY_TITLE[day - 15] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 17) {
+    return { en: "Client State Management", np: "Client State Management", jp: "クライアント状態管理" };
+  }
+  if (day >= 18) return REACT_DAY_TITLE[day - 16] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
