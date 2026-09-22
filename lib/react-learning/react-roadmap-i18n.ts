@@ -383,7 +383,11 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
   "react-w0": { en: "PHASE 0 — PREREQUISITES", np: "चरण ० — पूर्वआवश्यकता", jp: "フェーズ 0 — 前提知識" },
   "react-w1": { en: "PHASE 1 — REACT FUNDAMENTALS", np: "आधार", jp: "基礎" },
   "react-w2": { en: "PHASE 2 — HOOKS, STATE, AND COMPONENT PATTERNS", np: "चरण २ — Hooks, State र Component Patterns", jp: "フェーズ 2 — Hooks・State・コンポーネントパターン" },
-  "react-w3": { en: "Forms & API", np: "Forms र API", jp: "フォームとAPI" },
+  "react-w3": {
+    en: "PHASE 3 — TYPESCRIPT, TOOLING, AND TESTING",
+    np: "चरण ३ — TypeScript, Tooling र Testing",
+    jp: "フェーズ 3 — TypeScript・Tooling・Testing",
+  },
   "react-w4": { en: "Advanced hooks", np: "Advanced hooks", jp: "高度なフック" },
   "react-w5": { en: "Advanced patterns", np: "Advanced patterns", jp: "高度なパターン" },
   "react-w6": { en: "TypeScript, testing & debugging", np: "TypeScript, testing र debugging", jp: "TypeScript・テスト・デバッグ" },
@@ -464,7 +468,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "Custom Hooks と composition patterns",
     };
   }
-  if (day >= 12) return REACT_DAY_TITLE[day - 10] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 12) {
+    return {
+      en: "React Router and Client-Side Routing",
+      np: "React Router र Client-Side Routing",
+      jp: "React Router とクライアントサイドルーティング",
+    };
+  }
+  if (day >= 13) return REACT_DAY_TITLE[day - 11] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 

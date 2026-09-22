@@ -30,7 +30,7 @@ import { reactDayTitle, reactTags, reactWeekTitle } from "@/lib/react-learning/r
 
 export const REACT_CURRENT_DAY = 1;
 
-export const REACT_TOTAL_DAYS = 37;
+export const REACT_TOTAL_DAYS = 38;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   2: REACT_DAY_2_DETAIL,
@@ -62,7 +62,7 @@ const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
 };
 
 function reactDayRow(sourceDay: number, tagSlugs: [string, string]): RoadmapDay {
-  const day = sourceDay >= 2 ? sourceDay + 10 : sourceDay;
+  const day = sourceDay >= 2 ? sourceDay + 11 : sourceDay;
   return {
     day,
     title: reactDayTitle(day),
@@ -109,11 +109,6 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactLessonDayRow(9, ["context", "state"]),
       reactLessonDayRow(10, ["forms", "state"]),
       reactLessonDayRow(11, ["hooks", "patterns"]),
-      reactDayRow(2, ["tooling", "structure"]),
-      reactDayRow(3, ["components", "lists"]),
-      reactDayRow(4, ["props", "state"]),
-      reactDayRow(5, ["styling", "css"]),
-      reactDayRow(6, ["hooks", "immutability"]),
     ],
   },
   {
@@ -121,6 +116,12 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
     days: [
+      reactLessonDayRow(12, ["routing", "navigation"]),
+      reactDayRow(2, ["tooling", "structure"]),
+      reactDayRow(3, ["components", "lists"]),
+      reactDayRow(4, ["props", "state"]),
+      reactDayRow(5, ["styling", "css"]),
+      reactDayRow(6, ["hooks", "immutability"]),
       reactDayRow(7, ["forms", "validation"]),
       reactDayRow(8, ["effects", "api"]),
     ],
