@@ -415,7 +415,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "State と再レンダリング",
     };
   }
-  if (day >= 5) return REACT_DAY_TITLE[day - 3] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 5) {
+    return {
+      en: "Forms, controlled inputs, and form state",
+      np: "Forms, controlled inputs र form state",
+      jp: "フォーム・制御された入力・フォーム状態",
+    };
+  }
+  if (day >= 6) return REACT_DAY_TITLE[day - 4] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
