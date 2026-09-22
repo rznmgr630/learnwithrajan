@@ -237,8 +237,13 @@ export function reactTags(slugs: [string, string]): RoadmapTag[] {
 }
 
 const REACT_DAY_TITLE: Record<number, LocalizedString> = {
+  0: {
+    en: "Phase 0 — Before You Start",
+    np: "चरण ० — सुरु गर्नु अघि",
+    jp: "フェーズ 0 — 始める前に",
+  },
   1: {
-    en: "Prerequisites & Hello React",
+    en: "Day 1 — React, JSX, TypeScript, and Components",
     np: "पूर्वआवश्यकता र Hello React",
     jp: "前提知識と Hello React",
   },
@@ -375,7 +380,8 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
 };
 
 const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
-  "react-w1": { en: "Foundation", np: "आधार", jp: "基礎" },
+  "react-w0": { en: "PHASE 0 — PREREQUISITES", np: "चरण ० — पूर्वआवश्यकता", jp: "フェーズ 0 — 前提知識" },
+  "react-w1": { en: "PHASE 1 — REACT FUNDAMENTALS", np: "आधार", jp: "基礎" },
   "react-w2": { en: "Core mechanics", np: "Core mechanics", jp: "コアの仕組み" },
   "react-w3": { en: "Forms & API", np: "Forms र API", jp: "フォームとAPI" },
   "react-w4": { en: "Advanced hooks", np: "Advanced hooks", jp: "高度なフック" },
