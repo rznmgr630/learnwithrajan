@@ -394,6 +394,14 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function reactDayTitle(day: number): LocalizedString {
+  if (day === 2) {
+    return {
+      en: "Props, data flow, and reusable components",
+      np: "Props, data flow र reusable components",
+      jp: "Props・データフロー・再利用可能なコンポーネント",
+    };
+  }
+  if (day >= 3) return REACT_DAY_TITLE[day - 1] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
