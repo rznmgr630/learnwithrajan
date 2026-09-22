@@ -457,7 +457,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "フォームと React Actions",
     };
   }
-  if (day >= 11) return REACT_DAY_TITLE[day - 9] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 11) {
+    return {
+      en: "Custom Hooks and composition patterns",
+      np: "Custom Hooks र composition patterns",
+      jp: "Custom Hooks と composition patterns",
+    };
+  }
+  if (day >= 12) return REACT_DAY_TITLE[day - 10] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
