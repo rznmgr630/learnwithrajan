@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_14_LESSONS: LessonDay = {
   day: 14,
   title: "React Performance and Optimization",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
   {
@@ -228,6 +228,41 @@ export const REACT_DAY_14_LESSONS: LessonDay = {
         ],
         correctIndex: 1,
         explanation: "A React render optimization does not remove server/network latency."
+      }
+    ]
+  },
+  {
+    id: "day6",
+    title: "CSS Organization and Styling Performance",
+    durationMinutes: 12,
+    explanation: "Styling belongs in a performance conversation when it affects layout, paint, or how easily a team can change a UI. Keep component styles close to the component, use a consistent naming strategy, and avoid deeply coupled global rules.\n\nFor animation, prefer `transform` and `opacity` when possible because they usually avoid expensive layout work. Use browser DevTools to check whether a visual change triggers layout or paint before optimizing it.",
+    diagram: "Interaction\n   │\n   ├── transform / opacity → usually composited\n   └── width / top / left  → may trigger layout and paint\n\nMeasure in browser DevTools before changing CSS.",
+    codeExample: {
+      title: "Prefer transform for a moving element",
+      code: ".card {\n  transition: transform 160ms ease, opacity 160ms ease;\n}\n\n.card:hover {\n  transform: translateY(-4px);\n}\n\n/* Avoid repeatedly animating top or left when transform works. */"
+    },
+    keyTakeaways: [
+      "Keep styles organized by component or feature.",
+      "Prefer transform and opacity for simple motion when appropriate.",
+      "Measure layout and paint cost before optimizing CSS."
+    ],
+    commonMistakes: [
+      "Using global selectors that unexpectedly affect unrelated components.",
+      "Animating layout properties without checking the rendering cost.",
+      "Treating every slow interaction as a React rendering problem."
+    ],
+    quiz: [
+      {
+        question: "Which properties are commonly a good choice for simple animation?",
+        options: ["transform and opacity", "top and left only", "font-family and title", "route and query"],
+        correctIndex: 0,
+        explanation: "Transform and opacity often avoid layout work for simple visual motion."
+      },
+      {
+        question: "What should you do before optimizing a CSS animation?",
+        options: ["Measure it in DevTools", "Rewrite every component", "Add memo everywhere", "Remove all styles"],
+        correctIndex: 0,
+        explanation: "Profiling identifies whether layout or paint is actually the problem."
       }
     ]
   }

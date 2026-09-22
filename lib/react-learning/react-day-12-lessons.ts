@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_12_LESSONS: LessonDay = {
   day: 12,
   title: "React Router and Client-Side Routing",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
   {
@@ -228,6 +228,41 @@ export const REACT_DAY_12_LESSONS: LessonDay = {
         ],
         correctIndex: 2,
         explanation: "Good routing includes predictable URLs and intentional loading/error/not-found experiences."
+      }
+    ]
+  },
+  {
+    id: "day6",
+    title: "Project Structure, Modules, and DevTools",
+    durationMinutes: 12,
+    explanation: "Routing is easier to maintain when related pages, layouts, hooks, and route configuration have a predictable home. Start with a simple structure, then group code by feature as the application grows.\n\nUse named exports for utilities and hooks, and keep route layouts close to the screens they serve. React DevTools helps inspect the component tree, props, state, and rendering behavior while you build.",
+    diagram: "src/\n├── features/\n│   ├── projects/\n│   │   ├── pages/\n│   │   └── routes.tsx\n│   └── settings/\n├── components/\n└── app/\n    └── router.tsx",
+    codeExample: {
+      title: "Feature-based route organization",
+      code: "// features/projects/routes.tsx\nexport const projectRoutes = [\n  { index: true, element: <ProjectsPage /> },\n  { path: \":projectId\", element: <ProjectPage /> },\n];\n\n// app/router.tsx\n<Route path=\"projects\" element={<ProjectsLayout />}>\n  {projectRoutes.map((route) => <Route key={route.path ?? \"index\"} {...route} />)}\n</Route>"
+    },
+    keyTakeaways: [
+      "Keep related route code close together.",
+      "Use named exports for shared hooks and utilities.",
+      "Use React DevTools to inspect state and rendering behavior."
+    ],
+    commonMistakes: [
+      "Putting every route and page in one large file.",
+      "Using unclear relative imports that become fragile as files move.",
+      "Debugging a rendering issue without first inspecting props and state."
+    ],
+    quiz: [
+      {
+        question: "What is a useful reason to group files by feature?",
+        options: ["It keeps related code together", "It removes all imports", "It replaces routing", "It makes CSS unnecessary"],
+        correctIndex: 0,
+        explanation: "Feature folders make it easier to find and change code that belongs to one product area."
+      },
+      {
+        question: "Which tool helps inspect a React component's props and state?",
+        options: ["React DevTools", "Git", "npm", "CSS"],
+        correctIndex: 0,
+        explanation: "React DevTools exposes the component tree and current component data."
       }
     ]
   }
