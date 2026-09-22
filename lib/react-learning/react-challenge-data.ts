@@ -1,6 +1,5 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { REACT_DAY_1_DETAIL } from "@/lib/react-learning/react-day-1-detail";
 import { REACT_DAY_2_DETAIL } from "@/lib/react-learning/react-day-2-detail";
 import { REACT_DAY_3_DETAIL } from "@/lib/react-learning/react-day-3-detail";
 import { REACT_DAY_4_DETAIL } from "@/lib/react-learning/react-day-4-detail";
@@ -34,7 +33,6 @@ export const REACT_CURRENT_DAY = 1;
 export const REACT_TOTAL_DAYS = 27;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  1: REACT_DAY_1_DETAIL,
   2: REACT_DAY_2_DETAIL,
   3: REACT_DAY_3_DETAIL,
   4: REACT_DAY_4_DETAIL,
@@ -73,6 +71,12 @@ function reactDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
 }
 
 export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
+  {
+    id: "react-w0",
+    title: reactWeekTitle("react-w0"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#94a3b8)]",
+    days: [reactDayRow(0, ["basics", "tooling"])],
+  },
   {
     id: "react-w1",
     title: reactWeekTitle("react-w1"),

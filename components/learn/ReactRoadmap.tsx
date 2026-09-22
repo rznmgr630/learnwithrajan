@@ -6,16 +6,56 @@ import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
+import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
+import type { LessonDay } from "@/lib/learn/lesson-types";
+import { REACT_DAY_1_LESSONS } from "@/lib/react-learning/react-day-1-detail";
+import { REACT_PHASE_0_LESSONS } from "@/lib/react-learning/react-phase-0";
 import { REACT_ROADMAP_WEEKS, REACT_TOTAL_DAYS } from "@/lib/react-learning/react-challenge-data";
 import { useReactProgress } from "@/hooks/use-react-progress";
 
 const TAG_PILL =
   "rounded-full border border-[var(--border)]/60 bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--faint)]";
 
+const REACT_LESSON_DAYS: Record<number, LessonDay> = {
+  0: REACT_PHASE_0_LESSONS,
+  1: REACT_DAY_1_LESSONS,
+};
+
+const REACT_LESSON_DAY_NUMBERS = Object.keys(REACT_LESSON_DAYS)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+const REACT_DAY_TITLES = new Map(
+  REACT_ROADMAP_WEEKS.flatMap((week) => week.days.map((d) => [d.day, d.title] as const)),
+);
+
 export function ReactRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useReactProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
+  const [lessonDay, setLessonDay] = useState<number | null>(null);
+
+  const lessonNeighbours = useMemo(() => {
+    if (lessonDay === null) return { previous: null, next: null };
+
+    const toTarget = (n: number | undefined): LessonNavTarget | null => {
+      if (n === undefined) return null;
+      const title = REACT_DAY_TITLES.get(n);
+
+      return {
+        day: n,
+        title: title ? stripRichMarkers(pickLocalized(title, locale)) : "",
+      };
+    };
+
+    const i = REACT_LESSON_DAY_NUMBERS.indexOf(lessonDay);
+
+    return {
+      previous: toTarget(REACT_LESSON_DAY_NUMBERS[i - 1]),
+      next: toTarget(REACT_LESSON_DAY_NUMBERS[i + 1]),
+    };
+  }, [lessonDay, locale]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / REACT_TOTAL_DAYS) * 100))}%`,
@@ -121,7 +161,7 @@ export function ReactRoadmap() {
                         type="button"
                         aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                         className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                        onClick={() => setDetailDay(d.day)}
+                        onClick={() => (REACT_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
                       >
                         <span
                           className={[
@@ -159,6 +199,19 @@ export function ReactRoadmap() {
           </div>
         ))}
       </div>
+
+      {lessonDay !== null && (
+        <LessonDayDetail
+          key={`react-lesson-day-${lessonDay}`}
+          open
+          onClose={() => setLessonDay(null)}
+          day={REACT_LESSON_DAYS[lessonDay]}
+          previousDay={lessonNeighbours.previous}
+          nextDay={lessonNeighbours.next}
+          onNavigateDay={setLessonDay}
+          track="react"
+        />
+      )}
 
       <DayDetailPanel
         key={detailDay === null ? "closed" : `react-day-${detailDay}`}
