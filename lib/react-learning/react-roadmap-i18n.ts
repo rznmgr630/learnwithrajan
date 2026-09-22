@@ -243,7 +243,7 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "フェーズ 0 — 始める前に",
   },
   1: {
-    en: "Day 1 — React, JSX, TypeScript, and Components",
+    en: "React, JSX, TypeScript, and Components",
     np: "पूर्वआवश्यकता र Hello React",
     jp: "前提知識と Hello React",
   },
@@ -382,7 +382,7 @@ const REACT_DAY_TITLE: Record<number, LocalizedString> = {
 const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
   "react-w0": { en: "PHASE 0 — PREREQUISITES", np: "चरण ० — पूर्वआवश्यकता", jp: "フェーズ 0 — 前提知識" },
   "react-w1": { en: "PHASE 1 — REACT FUNDAMENTALS", np: "आधार", jp: "基礎" },
-  "react-w2": { en: "Core mechanics", np: "Core mechanics", jp: "コアの仕組み" },
+  "react-w2": { en: "PHASE 2 — HOOKS, STATE, AND COMPONENT PATTERNS", np: "चरण २ — Hooks, State र Component Patterns", jp: "フェーズ 2 — Hooks・State・コンポーネントパターン" },
   "react-w3": { en: "Forms & API", np: "Forms र API", jp: "フォームとAPI" },
   "react-w4": { en: "Advanced hooks", np: "Advanced hooks", jp: "高度なフック" },
   "react-w5": { en: "Advanced patterns", np: "Advanced patterns", jp: "高度なパターン" },
@@ -422,7 +422,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "フォーム・制御された入力・フォーム状態",
     };
   }
-  if (day >= 6) return REACT_DAY_TITLE[day - 4] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 6) {
+    return {
+      en: "Props, component communication, and composition",
+      np: "Props, component communication र composition",
+      jp: "Props・コンポーネント通信・composition",
+    };
+  }
+  if (day >= 7) return REACT_DAY_TITLE[day - 5] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
