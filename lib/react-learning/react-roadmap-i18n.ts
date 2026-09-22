@@ -436,7 +436,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "条件付きレンダリング・リスト・UI 状態",
     };
   }
-  if (day >= 8) return REACT_DAY_TITLE[day - 6] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 8) {
+    return {
+      en: "useReducer and state machines",
+      np: "useReducer र state machines",
+      jp: "useReducer と状態マシン",
+    };
+  }
+  if (day >= 9) return REACT_DAY_TITLE[day - 7] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
