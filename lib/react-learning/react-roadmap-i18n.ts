@@ -475,7 +475,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "React Router とクライアントサイドルーティング",
     };
   }
-  if (day >= 13) return REACT_DAY_TITLE[day - 11] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 13) {
+    return {
+      en: "Data Fetching and Server State",
+      np: "Data Fetching र Server State",
+      jp: "データフェッチとサーバー状態",
+    };
+  }
+  if (day >= 14) return REACT_DAY_TITLE[day - 12] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
