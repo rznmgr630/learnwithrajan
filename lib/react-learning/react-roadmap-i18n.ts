@@ -450,7 +450,14 @@ export function reactDayTitle(day: number): LocalizedString {
       jp: "Context と共有状態",
     };
   }
-  if (day >= 10) return REACT_DAY_TITLE[day - 8] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 10) {
+    return {
+      en: "Forms and React Actions",
+      np: "Forms र React Actions",
+      jp: "フォームと React Actions",
+    };
+  }
+  if (day >= 11) return REACT_DAY_TITLE[day - 9] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
