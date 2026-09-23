@@ -524,7 +524,10 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 23) {
     return { en: "Testing React Applications", np: "React Applications परीक्षण", jp: "React アプリケーションのテスト" };
   }
-  if (day >= 24) return REACT_DAY_TITLE[day - 18] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 24) {
+    return { en: "TypeScript for React", np: "React का लागि TypeScript", jp: "React のための TypeScript" };
+  }
+  if (day >= 25) return REACT_DAY_TITLE[day - 18] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
