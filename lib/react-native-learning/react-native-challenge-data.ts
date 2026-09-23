@@ -1,6 +1,5 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { REACT_NATIVE_DAY_0_DETAIL } from "@/lib/react-native-learning/react-native-day-0-detail";
 import { REACT_NATIVE_DAY_1_DETAIL } from "@/lib/react-native-learning/react-native-day-1-detail";
 import { REACT_NATIVE_DAY_2_DETAIL } from "@/lib/react-native-learning/react-native-day-2-detail";
 import { REACT_NATIVE_DAY_3_DETAIL } from "@/lib/react-native-learning/react-native-day-3-detail";
@@ -32,7 +31,6 @@ export const REACT_NATIVE_CURRENT_DAY = 1;
 export const REACT_NATIVE_TOTAL_DAYS = 20;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  0: REACT_NATIVE_DAY_0_DETAIL,
   1: REACT_NATIVE_DAY_1_DETAIL,
   2: REACT_NATIVE_DAY_2_DETAIL,
   3: REACT_NATIVE_DAY_3_DETAIL,

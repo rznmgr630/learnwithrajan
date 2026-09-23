@@ -6,6 +6,9 @@ import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
+import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import type { LessonDay } from "@/lib/learn/lesson-types";
+import { REACT_NATIVE_PHASE_0_LESSONS } from "@/lib/react-native-learning/react-native-phase-0-lessons";
 import {
   getAllReactNativeRoadmapDays,
   REACT_NATIVE_TOTAL_DAYS,
@@ -20,10 +23,15 @@ const dayGridClass =
     ? "grid grid-cols-1 gap-4 sm:mx-auto sm:max-w-xl md:grid-cols-2"
     : "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4";
 
+const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
+  0: REACT_NATIVE_PHASE_0_LESSONS,
+};
+
 export function ReactNativeRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useReactNativeProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
+  const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / REACT_NATIVE_TOTAL_DAYS) * 100))}%`,
@@ -108,7 +116,7 @@ export function ReactNativeRoadmap() {
                 type="button"
                 aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                 className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                onClick={() => setDetailDay(d.day)}
+                onClick={() => (REACT_NATIVE_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
               >
                 <span className="text-sm font-semibold leading-snug text-[var(--text)]">
                   <RichText text={pickLocalized(d.title, locale)} />
@@ -125,6 +133,16 @@ export function ReactNativeRoadmap() {
           );
         })}
       </ul>
+
+      {lessonDay !== null && (
+        <LessonDayDetail
+          key={`react-native-lesson-day-${lessonDay}`}
+          open
+          onClose={() => setLessonDay(null)}
+          day={REACT_NATIVE_LESSON_DAYS[lessonDay]}
+          track="react-native"
+        />
+      )}
 
       <DayDetailPanel
         key={detailDay === null ? "closed" : `rn-day-${detailDay}`}
