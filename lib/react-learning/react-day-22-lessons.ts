@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_22_LESSONS: LessonDay = {
   day: 22,
   title: "React Performance and Optimization",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
     {
@@ -164,6 +164,17 @@ Unexpected movement → CLS`,
           explanation: "INP measures interaction responsiveness.",
         },
       ],
+    },
+    {
+      id: "day6",
+      title: "Scheduling, Strict Mode, and Concurrent Rendering",
+      durationMinutes: 12,
+      explanation: "Fiber lets React pause lower-priority render work so urgent interactions stay responsive. Strict Mode intentionally repeats development checks to reveal impure rendering and missing effect cleanup. Concurrent rendering is interruptible preparation work, not parallel JavaScript.",
+      diagram: "Urgent input → higher priority\nBackground render → can pause and resume",
+      codeExample: { title: "Non-urgent update", code: "startTransition(() => setFilteredItems(nextItems));" },
+      keyTakeaways: ["Render work can be interrupted before commit.", "Strict Mode exposes unsafe effects in development."],
+      commonMistakes: ["Treating Strict Mode warnings as production bugs.", "Putting side effects in render."],
+      quiz: [{ question: "Why can React interrupt a transition?", options: ["It is lower priority", "It removes state", "It disables DOM", "It uses CSS"], correctIndex: 0, explanation: "Transitions mark work as non-urgent." }],
     },
   ],
   finalQuiz: [

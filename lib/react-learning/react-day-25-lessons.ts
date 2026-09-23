@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_25_LESSONS: LessonDay = {
   day: 25,
   title: "React Architecture and Production Patterns",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
     {
@@ -181,6 +181,17 @@ export { useProjects } from "./hooks/useProjects";
           explanation: "Maintainability is about reducing the cost and risk of future changes.",
         },
       ],
+    },
+    {
+      id: "day6",
+      title: "Reusable Component Patterns",
+      durationMinutes: 12,
+      explanation: "Reusable component APIs need clear ownership. Providers group shared state behind a focused hook, slots let callers supply structured JSX, and polymorphic components can preserve a shared design while rendering an appropriate semantic element. HOCs remain useful when wrapping an unchangeable component, but hooks are usually simpler for new code.",
+      diagram: "Provider → focused hook → feature\nComponent → named slots → caller content",
+      codeExample: { title: "Named slot API", code: "<Card header={<Title />} footer={<Actions />}>Content</Card>" },
+      keyTakeaways: ["Prefer focused providers over one global context.", "Slots support flexible composition."],
+      commonMistakes: ["Using HOCs where a hook is simpler.", "Putting feature logic in shared primitives."],
+      quiz: [{ question: "When are slots useful?", options: ["When callers need structured JSX", "To fetch data", "To create reducers", "To replace semantics"], correctIndex: 0, explanation: "Slots let a component accept flexible structured content." }],
     },
   ],
   finalQuiz: [

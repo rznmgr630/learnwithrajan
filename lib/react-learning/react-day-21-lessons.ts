@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_21_LESSONS: LessonDay = {
   day: 21,
   title: "Suspense, Error Boundaries, and Resilient UI",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
     {
@@ -240,6 +240,17 @@ function Widget({ state }: { state: State }) {
           explanation: "Loading, success, and empty are all legitimate non-error states.",
         },
       ],
+    },
+    {
+      id: "day6",
+      title: "Portals and Retry Strategy",
+      durationMinutes: 12,
+      explanation: "Portals render UI such as dialogs and tooltips outside a parent DOM container while keeping the same React context and event behavior. Retry only transient failures, using backoff so a struggling service is not flooded with repeated requests.",
+      diagram: "React tree → Portal → document.body\n\nTransient error → wait → retry → recover or show action",
+      codeExample: { title: "Portal for a dialog", code: "createPortal(<Dialog />, document.body);" },
+      keyTakeaways: ["Portals escape DOM clipping without leaving the React tree.", "Retry transient failures with backoff."],
+      commonMistakes: ["Retrying invalid requests forever.", "Rendering dialogs inside clipped containers."],
+      quiz: [{ question: "What does a portal change?", options: ["DOM placement", "React context", "Route URL", "Server data"], correctIndex: 0, explanation: "A portal changes where DOM is rendered while preserving React relationships." }],
     },
   ],
   finalQuiz: [
