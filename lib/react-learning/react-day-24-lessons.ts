@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_24_LESSONS: LessonDay = {
   day: 24,
   title: "TypeScript for React",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
     {
@@ -186,6 +186,17 @@ bypasses checking`,
           explanation: "unknown prevents arbitrary operations until the value is narrowed.",
         },
       ],
+    },
+    {
+      id: "day6",
+      title: "Refs and Accessible Component APIs",
+      durationMinutes: 12,
+      explanation: "Refs support DOM focus and imperative integrations without triggering renders. `useId` creates stable IDs for labels and descriptions across server and client rendering. Use `forwardRef` only when a reusable component must expose a controlled DOM reference.",
+      diagram: "Parent ref → reusable input → DOM node\nuseId → label htmlFor + input id",
+      codeExample: { title: "Typed input ref", code: "const inputRef = useRef<HTMLInputElement | null>(null);\nconst id = useId();" },
+      keyTakeaways: ["Refs do not trigger renders.", "useId supports accessible relationships."],
+      commonMistakes: ["Using useId for list keys.", "Using refs instead of normal props and state."],
+      quiz: [{ question: "What is useId useful for?", options: ["Accessible label IDs", "List keys", "API caching", "Routes"], correctIndex: 0, explanation: "It creates stable IDs for accessible DOM relationships." }],
     },
   ],
   finalQuiz: [
