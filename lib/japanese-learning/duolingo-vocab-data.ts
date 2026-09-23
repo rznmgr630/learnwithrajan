@@ -24,6 +24,7 @@ export type DuolingoNote = {
   title: string;
   japanese?: string;
   note: string;
+  examples?: DuolingoExample[];
 };
 
 export const DUOLINGO_DAYS: DuolingoDay[] = [
@@ -3918,94 +3919,113 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     title: "Counting People: Seven",
     japanese: "しちにん / ななにん",
     note: "しちにん (shichi-nin) or ななにん (nana-nin) = seven people; しちじ (shichi-ji) = seven o'clock; しちがつ (shichi-gatsu) = July (seventh month).",
+    examples: [{ ja: "ここにしちにんいます。", en: "There are seven people here.", np: "यहाँ सात जना मानिस छन्।" }],
   },
   {
     title: "Unlucky Number Four",
     japanese: "四（し）",
     note: "In Japan, the number 'four' (shi) is considered unlucky due to its similarity to the word for 'death'. This results in the omission of 'four' in hospital rooms, floor numbers, and product packaging.",
+    examples: [{ ja: "このびょういんに四号室はありません。", en: "This hospital has no room number four.", np: "यस अस्पतालमा नम्बर चारको कोठा छैन।" }],
   },
   {
     title: "Formal Thanks After a Meal",
     japanese: "ごちそうさまでした",
     note: "A more formal and polite way to say ごちそうさま (gochisōsama) is ごちそうさまでした (gochisōsama deshita), used to show greater respect, particularly when dining with guests or in formal settings.",
+    examples: [{ ja: "ごちそうさまでした。おいしかったです。", en: "Thank you for the meal. It was delicious.", np: "खानाको लागि धन्यवाद। मिठो थियो।" }],
   },
   {
     title: "Gratitude Before a Meal",
     japanese: "いただきます",
     note: "いただきます (itadakimasu) expresses gratitude before a meal, acknowledging the food and those who contributed to it. It reflects Japanese values of humility.",
+    examples: [{ ja: "いただきます。", en: "Thank you for the meal. (Said before eating.)", np: "खानाको लागि धन्यवाद। (खानुअघि भनिन्छ।)" }],
   },
   {
     title: "The Tea Ceremony",
     japanese: "茶道（さどう）",
     note: "The tea ceremony known as Sadō is a traditional ritual where green tea is ceremoniously prepared and enjoyed in a serene tatami-floored tearoom. It highlights the host's hospitality and emphasises mindfulness.",
+    examples: [{ ja: "茶道でお茶を飲みます。", en: "I drink tea at a tea ceremony.", np: "म चिया समारोहमा चिया पिउँछु।" }],
   },
   {
     title: "Asking for an Order",
     japanese: "ごちゅうもんは",
     note: "ごちゅうもんは (go-chūmon wa) is a shortened form of a longer question that literally translates to 'What is your order?'. ちゅうもん (chūmon) means 'order', and ご (go) is an honorific prefix.",
+    examples: [{ ja: "ごちゅうもんは？", en: "What is your order?", np: "तपाईंको अर्डर के हो?" }],
   },
   {
     title: "The Beckoning Cat",
     japanese: "まねきねこ",
     note: "Maneki-neko (まねきねこ), the 'beckoning cat', is a popular Japanese figurine believed to bring good luck and fortune. With one paw raised, it invites prosperity and is commonly seen in shops.",
+    examples: [{ ja: "店にまねきねこがあります。", en: "There is a beckoning cat in the shop.", np: "पसलमा मानेकि-नेको छ।" }],
   },
   {
     title: "Counting with Nine",
     japanese: "くじ / くがつ / きゅうさい",
     note: "くじ (kuji): nine o'clock; くがつ (ku-gatsu): September (ninth month); きゅうさい (kyū-sai): nine years old; きゅうにん (kyūnin): nine people; きゅうかい (kyūkai): ninth floor.",
+    examples: [{ ja: "くじに会いましょう。", en: "Let's meet at nine o'clock.", np: "नौ बजे भेटौँ।" }],
   },
   {
     title: "Counting with Ten",
     japanese: "じゅうじ / じゅうがつ / じゅっさい",
     note: "じゅうじ (jū-ji): ten o'clock; じゅうがつ (jū-gatsu): October (tenth month); じゅっさい (jussai): ten years old; じゅうにん (jū-nin): ten people; じゅっかい (jukkai): tenth floor.",
+    examples: [{ ja: "じゅうじに来てください。", en: "Please come at ten o'clock.", np: "कृपया दस बजे आउनुहोस्।" }],
   },
   {
     title: "Counting with Eleven",
     japanese: "じゅういちじ / じゅういちがつ / じゅういっさい",
     note: "じゅういちじ (jū-ichi-ji): eleven o'clock; じゅういちがつ (jū-ichi-gatsu): November; じゅういっさい (jū-issai): eleven years old; じゅういちにん (jū-ichi-nin): eleven people; じゅういっかい (jū-ikkai): eleventh floor.",
+    examples: [{ ja: "じゅういちじに出かけます。", en: "I go out at eleven o'clock.", np: "म एघार बजे बाहिर जान्छु।" }],
   },
   {
     title: "Counting with Twelve",
     japanese: "じゅうにじ / じゅうにがつ / じゅうにさい",
     note: "じゅうにじ (jū-ni-ji): twelve o'clock; じゅうにがつ (jū-ni-gatsu): December (twelfth month); じゅうにさい (jū-ni-sai): twelve years old; じゅうににん (jū-ni-nin): twelve people; じゅうにかい (jū-ni-kai): twelfth floor.",
+    examples: [{ ja: "じゅうにじに昼ごはんを食べます。", en: "I eat lunch at twelve o'clock.", np: "म बाह्र बजे दिउँसोको खाना खान्छु।" }],
   },
   {
     title: "Hundreds Pronunciation Changes",
     japanese: "さんびゃく / ろっぴゃく / はっぴゃく",
     note: "When counting by hundreds, the pronunciation of ひゃく (hyaku) changes with certain numbers — さんびゃく (san-byaku): three hundred; ろっぴゃく (roppyaku): six hundred; はっぴゃく (happyaku): eight hundred.",
+    examples: [{ ja: "これはさんびゃくえんです。", en: "This is 300 yen.", np: "यो तीन सय येन हो।" }],
   },
   {
     title: "Japanese Parties",
     japanese: "のみかい / ぼうねんかい / かんげいかい",
     note: "In Japan, several types of parties are celebrated: のみかい (nomikai) for drinking with coworkers and friends, ぼうねんかい (bōnenkai) as a year-end celebration, and かんげいかい (kangeikai) to welcome new company members.",
+    examples: [{ ja: "会社でぼうねんかいがあります。", en: "There is a year-end party at the company.", np: "कम्पनीमा वर्ष-अन्तको पार्टी छ।" }],
   },
   {
     title: "Making a Choice",
     japanese: "〜にします",
     note: "〜にします expresses a decision or choice, such as when ordering at a restaurant, shopping, or making plans.",
+    examples: [{ ja: "ビールにします。", en: "I'll have beer.", np: "म बियर लिन्छु।" }],
   },
   {
     title: "Japanese Restaurant Customs",
     japanese: "おしぼり",
     note: "Many Japanese restaurants display realistic food replicas at the entrance so customers can see dishes before ordering. Restaurants often provide a wet towel called おしぼり (oshibori), set menus are common, and tipping is not practiced.",
+    examples: [{ ja: "レストランでおしぼりをもらいました。", en: "I received a wet towel at the restaurant.", np: "मैले रेस्टुरेन्टमा भिजेको तौलिया पाएँ।" }],
   },
   {
     title: "Making a Suggestion",
     japanese: "どうですか",
     note: "どうですか can mean 'How about?' when making a suggestion.",
+    examples: [{ ja: "日曜日はどうですか。", en: "How about Sunday?", np: "आइतबार कस्तो हुन्छ?" }],
   },
   {
     title: "Indirect Japanese Communication",
     note: "Japanese communication can be indirect or vague, and listeners are expected to understand the meaning from context. This is especially common in business and formal situations, where harmony and respect are valued over direct confrontation.",
+    examples: [{ ja: "今日はちょっと……", en: "Today is a little difficult…", np: "आज अलिकति गाह्रो छ…" }],
   },
   {
     title: "Softening a Refusal: またこんど",
     japanese: "またこんど",
     note: "またこんど is a polite way to decline an invitation without making a firm commitment.",
+    examples: [{ ja: "またこんどにしましょう。", en: "Let's do it another time.", np: "अर्को पटक गरौँ।" }],
   },
   {
     title: "Softening a Refusal: ちょっと",
     japanese: "ちょっと",
     note: "ちょっと can soften a refusal, allowing someone to say 'no' politely without sounding too direct.",
+    examples: [{ ja: "今日はちょっとむずかしいです。", en: "Today is a little difficult.", np: "आज अलिकति गाह्रो छ।" }],
   },
 ];
