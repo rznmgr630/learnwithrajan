@@ -93,6 +93,7 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
 function LessonAccordionItem({
   lesson,
   index,
+  dayNumber,
   locale,
   expanded,
   onToggle,
@@ -100,6 +101,7 @@ function LessonAccordionItem({
 }: {
   lesson: Lesson;
   index: number;
+  dayNumber: number;
   locale: "en" | "np" | "jp";
   expanded: boolean;
   onToggle: () => void;
@@ -174,10 +176,14 @@ function LessonAccordionItem({
 
           <div className="mt-4">
             {tab === "explanation" ? (
-              <RichParagraph
-                text={pickLocalized(lesson.explanation, locale)}
-                className="text-sm leading-relaxed text-[var(--text)]"
-              />
+              dayNumber >= 5 ? (
+                <LessonExplanation lesson={lesson} locale={locale} />
+              ) : (
+                <RichParagraph
+                  text={pickLocalized(lesson.explanation, locale)}
+                  className="text-sm leading-relaxed text-[var(--text)]"
+                />
+              )
             ) : null}
 
             {tab === "diagram" ? (
@@ -232,6 +238,38 @@ function LessonAccordionItem({
           ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function LessonExplanation({ lesson, locale }: { lesson: Lesson; locale: "en" | "np" | "jp" }) {
+  const explanation = pickLocalized(lesson.explanation, locale);
+  const paragraphs = explanation.split(/\n\s*\n/).filter(Boolean);
+  const what = paragraphs[0] ?? explanation;
+  const why = paragraphs[1] ?? "This helps you make a clear decision about when to use the idea instead of adding complexity by habit.";
+  const how = paragraphs.slice(2).join("\n\n") || "Use the steps and the example below, then change one value and observe what happens.";
+
+  const sections = [
+    ["What it is", what],
+    ["Why it matters", why],
+    ["How it works", how],
+  ] as const;
+
+  return (
+    <div className="space-y-5 text-sm leading-relaxed text-[var(--text)]">
+      {sections.map(([heading, text]) => (
+        <section key={heading}>
+          <h4 className="mb-1 font-semibold text-[var(--text)]">{heading}</h4>
+          <RichParagraph text={text} className="text-sm leading-relaxed text-[var(--text)]" />
+        </section>
+      ))}
+      <section>
+        <h4 className="mb-1 font-semibold text-[var(--text)]">Example</h4>
+        <p className="mb-2 text-[var(--muted)]">{pickLocalized(lesson.codeExample.title, locale)}</p>
+        <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
+          <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{lesson.codeExample.code}</pre>
+        </div>
+      </section>
     </div>
   );
 }
@@ -309,6 +347,7 @@ export function LessonDayDetail({
               key={lesson.id}
               lesson={lesson}
               index={i}
+              dayNumber={day.day}
               locale={locale}
               expanded={expandedLesson === i}
               onToggle={() => setExpandedLesson((prev) => (prev === i ? null : i))}
