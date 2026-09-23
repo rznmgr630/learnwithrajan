@@ -10,8 +10,8 @@ import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { REACT_NATIVE_PHASE_0_LESSONS } from "@/lib/react-native-learning/react-native-phase-0-lessons";
 import {
-  getAllReactNativeRoadmapDays,
   REACT_NATIVE_TOTAL_DAYS,
+  REACT_NATIVE_ROADMAP_WEEKS,
 } from "@/lib/react-native-learning/react-native-challenge-data";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 
@@ -37,8 +37,6 @@ export function ReactNativeRoadmap() {
     () => `${Math.min(100, Math.round((completedCount / REACT_NATIVE_TOTAL_DAYS) * 100))}%`,
     [completedCount],
   );
-
-  const allDays = useMemo(() => getAllReactNativeRoadmapDays(), []);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">
@@ -75,8 +73,19 @@ export function ReactNativeRoadmap() {
         </p>
       </div>
 
-      <ul className={`mt-8 ${dayGridClass}`} id="react-native-roadmap-days" aria-label={t("reactNativeRoadmap.daysListAria")}>
-        {allDays.map((d) => {
+      <div className="mt-8 flex flex-col gap-10" id="react-native-roadmap-days" aria-label={t("reactNativeRoadmap.daysListAria")}>
+        {REACT_NATIVE_ROADMAP_WEEKS.map((week) => (
+          <section key={week.id}>
+            <div className="mb-4 flex items-center gap-3">
+              <span className={`h-2 w-2 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
+                {pickLocalized(week.title, locale)}
+              </h2>
+              <div className="flex-1 border-t border-[var(--border)]" />
+              <span className="text-[10px] tabular-nums text-[var(--faint)]">{week.days.length}</span>
+            </div>
+            <ul className={dayGridClass}>
+              {week.days.map((d) => {
           const checked = isDone(d.day);
           return (
             <li
@@ -131,8 +140,11 @@ export function ReactNativeRoadmap() {
               </button>
             </li>
           );
-        })}
-      </ul>
+              })}
+            </ul>
+          </section>
+        ))}
+      </div>
 
       {lessonDay !== null && (
         <LessonDayDetail
