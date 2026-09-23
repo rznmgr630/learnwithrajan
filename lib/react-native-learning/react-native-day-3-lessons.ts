@@ -1,0 +1,3 @@
+import { foundationLesson } from "@/lib/react-native-learning/react-native-lesson-helpers";
+
+export const REACT_NATIVE_DAY_3_LESSONS = foundationLesson(3, "Core components and layout", "View, Text, Image, ScrollView, and Pressable", "<b>Core components are the primitives of React Native UI.</b> <code>View</code> is a layout container, <code>Text</code> renders text, <code>Image</code> displays images, <code>ScrollView</code> handles bounded scrolling, and <code>Pressable</code> handles touch interaction.\n\nThese are not HTML elements. Use ScrollView for reasonably bounded content. Large lists need virtualization-oriented list components, which come later.");
