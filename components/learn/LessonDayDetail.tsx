@@ -93,7 +93,6 @@ const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
 function LessonAccordionItem({
   lesson,
   index,
-  dayNumber,
   locale,
   expanded,
   onToggle,
@@ -101,7 +100,6 @@ function LessonAccordionItem({
 }: {
   lesson: Lesson;
   index: number;
-  dayNumber: number;
   locale: "en" | "np" | "jp";
   expanded: boolean;
   onToggle: () => void;
@@ -175,16 +173,7 @@ function LessonAccordionItem({
           </div>
 
           <div className="mt-4">
-            {tab === "explanation" ? (
-              dayNumber >= 5 ? (
-                <LessonExplanation lesson={lesson} locale={locale} />
-              ) : (
-                <RichParagraph
-                  text={pickLocalized(lesson.explanation, locale)}
-                  className="text-sm leading-relaxed text-[var(--text)]"
-                />
-              )
-            ) : null}
+            {tab === "explanation" ? <LessonExplanation lesson={lesson} locale={locale} /> : null}
 
             {tab === "diagram" ? (
               <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
@@ -347,7 +336,6 @@ export function LessonDayDetail({
               key={lesson.id}
               lesson={lesson}
               index={i}
-              dayNumber={day.day}
               locale={locale}
               expanded={expandedLesson === i}
               onToggle={() => setExpandedLesson((prev) => (prev === i ? null : i))}
