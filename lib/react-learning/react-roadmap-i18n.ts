@@ -515,7 +515,10 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 20) {
     return { en: "Choosing a React Framework", np: "React Framework छनोट", jp: "React フレームワークの選択" };
   }
-  if (day >= 21) return REACT_DAY_TITLE[day - 18] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 21) {
+    return { en: "Suspense, Error Boundaries, and Resilient UI", np: "Suspense, Error Boundaries र Resilient UI", jp: "Suspense・Error Boundary・堅牢な UI" };
+  }
+  if (day >= 22) return REACT_DAY_TITLE[day - 18] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
