@@ -815,6 +815,48 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         examples: [{ ja: "すきでした。", en: "I liked it.", np: "मलाई मन पर्थ्यो।" }],
         note: "でした is the polite past form used with nouns and な-adjectives.",
       },
+      {
+        word: "りんごのはなはいつさきますか。",
+        romaji: "ringo no hana wa itsu sakimasu ka",
+        meaning_en: "When do apple flowers bloom?",
+        meaning_np: "स्याउका फूलहरू कहिले फुल्छन्?",
+        examples: [{ ja: "りんごのはなはいつさきますか。", en: "When do apple flowers bloom?", np: "स्याउका फूलहरू कहिले फुल्छन्?" }],
+      },
+      {
+        word: "ほっかいどうのはるはどうですか。",
+        romaji: "hokkaidō no haru wa dō desu ka",
+        meaning_en: "How is spring in Hokkaido?",
+        meaning_np: "होक्काइडोमा वसन्त कस्तो हुन्छ?",
+        examples: [{ ja: "ほっかいどうのはるはどうですか。", en: "How is spring in Hokkaido?", np: "होक्काइडोमा वसन्त कस्तो हुन्छ?" }],
+      },
+      {
+        word: "にちようびはどうですか。",
+        romaji: "nichiyōbi wa dō desu ka",
+        meaning_en: "How about Sunday?",
+        meaning_np: "आइतबार कस्तो हुन्छ?",
+        examples: [{ ja: "にちようびはどうですか。", en: "How about Sunday?", np: "आइतबार कस्तो हुन्छ?" }],
+      },
+      {
+        word: "あした、ともだちにあいます。",
+        romaji: "ashita, tomodachi ni aimasu",
+        meaning_en: "I'll meet my friend tomorrow.",
+        meaning_np: "म भोलि साथीलाई भेट्छु।",
+        examples: [{ ja: "あした、ともだちにあいます。", en: "I'll meet my friend tomorrow.", np: "म भोलि साथीलाई भेट्छु।" }],
+      },
+      {
+        word: "またこんど",
+        romaji: "mata kondo",
+        meaning_en: "Next time / another time",
+        meaning_np: "अर्को पटक",
+        examples: [{ ja: "またこんど会いましょう。", en: "Let's meet another time.", np: "अर्को पटक भेटौँ।" }],
+      },
+      {
+        word: "ちょっと",
+        romaji: "chotto",
+        meaning_en: "A little / just a moment",
+        meaning_np: "अलिकति",
+        examples: [{ ja: "ちょっとむずかしいです。", en: "It is a little difficult.", np: "यो अलिकति गाह्रो छ।" }],
+      },
     ],
   },
   {
@@ -3465,6 +3507,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "क्लब",
         examples: [{ ja: "サークルに入りました。", en: "I joined a club.", np: "मैले क्लब जोइन गरें।" }],
       },
+      {
+        word: "ともだちといっしょにべんきょうします。",
+        romaji: "tomodachi to issho ni benkyō shimasu",
+        meaning_en: "I will study together with my friends.",
+        meaning_np: "म साथीहरूसँग सँगै पढ्छु।",
+        examples: [{ ja: "ともだちといっしょにべんきょうします。", en: "I will study together with my friends.", np: "म साथीहरूसँग सँगै पढ्छु।" }],
+      },
     ],
   },
   {
@@ -3820,5 +3869,24 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     title: "Japanese Restaurant Customs",
     japanese: "おしぼり",
     note: "Many Japanese restaurants display realistic food replicas at the entrance so customers can see dishes before ordering. Restaurants often provide a wet towel called おしぼり (oshibori), set menus are common, and tipping is not practiced.",
+  },
+  {
+    title: "Making a Suggestion",
+    japanese: "どうですか",
+    note: "どうですか can mean 'How about?' when making a suggestion.",
+  },
+  {
+    title: "Indirect Japanese Communication",
+    note: "Japanese communication can be indirect or vague, and listeners are expected to understand the meaning from context. This is especially common in business and formal situations, where harmony and respect are valued over direct confrontation.",
+  },
+  {
+    title: "Softening a Refusal: またこんど",
+    japanese: "またこんど",
+    note: "またこんど is a polite way to decline an invitation without making a firm commitment.",
+  },
+  {
+    title: "Softening a Refusal: ちょっと",
+    japanese: "ちょっと",
+    note: "ちょっと can soften a refusal, allowing someone to say 'no' politely without sounding too direct.",
   },
 ];
