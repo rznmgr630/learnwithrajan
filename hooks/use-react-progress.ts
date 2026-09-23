@@ -6,7 +6,7 @@ import { REACT_TOTAL_DAYS, seedReactCompletedDayNumbers } from "@/lib/react-lear
 const STORAGE_KEY = "learnwithrajan.react.completed";
 const LOCAL_EVENT = "learnwithrajan.react.changed";
 const DAY_SHIFT_VERSION_KEY = "learnwithrajan.react.day-shift-version";
-const DAY_SHIFT_VERSION = "21";
+const DAY_SHIFT_VERSION = "22";
 
 function serialize(done: Set<number>): string {
   return JSON.stringify([...done].sort((a, b) => a - b));
@@ -70,7 +70,8 @@ function getClientSnapshot(): string {
     }));
   }
 
-  if (savedVersion !== DAY_SHIFT_VERSION) shifted = new Set([...shifted].map((day) => (day >= 26 ? day + 1 : day)));
+  if (savedVersion !== "21") shifted = new Set([...shifted].map((day) => (day >= 26 ? day + 1 : day)));
+  if (savedVersion !== DAY_SHIFT_VERSION) shifted = new Set([...shifted].map((day) => (day >= 27 ? day + 1 : day)));
 
   if (savedVersion !== DAY_SHIFT_VERSION) {
     window.localStorage.setItem(STORAGE_KEY, serialize(shifted));
