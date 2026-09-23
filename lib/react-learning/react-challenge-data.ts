@@ -30,7 +30,7 @@ import { reactDayTitle, reactTags, reactWeekTitle } from "@/lib/react-learning/r
 
 export const REACT_CURRENT_DAY = 1;
 
-export const REACT_TOTAL_DAYS = 43;
+export const REACT_TOTAL_DAYS = 36;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   2: REACT_DAY_2_DETAIL,
@@ -156,9 +156,6 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactLessonDayRow(28, ["styling", "css"]),
       reactLessonDayRow(29, ["architecture", "patterns"]),
       reactLessonDayRow(30, ["projects", "portfolio"]),
-      reactDayRow(15, ["typescript", "types"]),
-      reactDayRow(16, ["testing", "quality"]),
-      reactDayRow(17, ["debugging", "devtools"]),
     ],
   },
   {
@@ -166,37 +163,12 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w7"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_40%,#818cf8)]",
     days: [
-      reactDayRow(18, ["routing", "navigation"]),
-      reactDayRow(19, ["zustand", "query"]),
-    ],
-  },
-  {
-    id: "react-w8",
-    title: reactWeekTitle("react-w8"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_36%,#f87171)]",
-    days: [
-      reactDayRow(20, ["auth", "routing"]),
-      reactDayRow(21, ["query", "mutations"]),
-      reactDayRow(22, ["animation", "framer"]),
-    ],
-  },
-  {
-    id: "react-w9",
-    title: reactWeekTitle("react-w9"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_32%,#4ade80)]",
-    days: [
-      reactDayRow(23, ["a11y", "aria"]),
-      reactDayRow(24, ["build", "performance"]),
-    ],
-  },
-  {
-    id: "react-w10",
-    title: reactWeekTitle("react-w10"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_28%,#facc15)]",
-    days: [
-      reactDayRow(25, ["projects", "portfolio"]),
-      reactDayRow(26, ["interview", "career"]),
-      reactDayRow(27, ["architecture", "patterns"]),
+      reactLessonDayRow(31, ["auth", "routing"]),
+      reactLessonDayRow(32, ["animation", "framer"]),
+      reactLessonDayRow(33, ["build", "performance"]),
+      reactLessonDayRow(34, ["projects", "portfolio"]),
+      reactLessonDayRow(35, ["interview", "career"]),
+      reactLessonDayRow(36, ["architecture", "patterns"]),
     ],
   },
 ];
