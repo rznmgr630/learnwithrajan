@@ -7,6 +7,11 @@ export const UI_STRINGS = {
     np: "सिकाइ केन्द्र",
     jp: "学習ハブ",
   },
+  "nav.library": {
+    en: "Library",
+    np: "पुस्तकालय",
+    jp: "ライブラリ",
+  },
   "nav.language": {
     en: "Language",
     np: "भाषा",
@@ -46,6 +51,56 @@ export const UI_STRINGS = {
     en: "Choose Programming or Language, then open a track — each day has notes and a self-check. More topics appear as they go live.",
     np: "प्रोग्रामिङ वा भाषा छान्नुहोस्, ट्र्याक खोल्नुहोस् — हरेक दिन नोट र आत्मजाँच। नयाँ विषयहरू थपिँदै जाँदा यहाँ थप देखिनेछ।",
     jp: "プログラミングか言語を選びトラックを開きます。各日に解説とセルフチェックがあります。新しいトピックは順次追加します。",
+  },
+  "library.title": {
+    en: "Library",
+    np: "पुस्तकालय",
+    jp: "ライブラリ",
+  },
+  "library.eyebrow": {
+    en: "Your reading room",
+    np: "तपाईंको पढ्ने कोठा",
+    jp: "あなたの読書室",
+  },
+  "library.subtitle": {
+    en: "Read saved books and learning material in one place.",
+    np: "सुरक्षित पुस्तक र सिकाइ सामग्री एउटै ठाउँमा पढ्नुहोस्।",
+    jp: "保存した本と学習資料を一か所で読めます。",
+  },
+  "library.finance": {
+    en: "Finance",
+    np: "वित्त",
+    jp: "金融",
+  },
+  "library.savedBooks": {
+    en: "1 saved book",
+    np: "१ सुरक्षित पुस्तक",
+    jp: "保存した本 1冊",
+  },
+  "library.collection": {
+    en: "Collection",
+    np: "संग्रह",
+    jp: "コレクション",
+  },
+  "library.continueReading": {
+    en: "Continue reading",
+    np: "पढ्न जारी राख्नुहोस्",
+    jp: "続きを読む",
+  },
+  "library.financeBook.title": {
+    en: "Rich Dad Poor Dad",
+    np: "Rich Dad Poor Dad",
+    jp: "Rich Dad Poor Dad",
+  },
+  "library.financeBook.subtitle": {
+    en: "Read in the built-in book reader.",
+    np: "बिल्ट-इन बुक रिडरमा पढ्नुहोस्।",
+    jp: "内蔵ブックリーダーで読めます。",
+  },
+  "library.financeBook.cta": {
+    en: "Open book →",
+    np: "पुस्तक खोल्नुहोस् →",
+    jp: "本を開く →",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",

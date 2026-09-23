@@ -50,3 +50,42 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+.book-loader {
+  position: relative;
+  width: 64px;
+  height: 48px;
+  perspective: 180px;
+}
+
+.book-loader__cover,
+.book-loader__page {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 32px;
+  width: 27px;
+  border-radius: 2px 5px 5px 2px;
+  transform-origin: left center;
+}
+
+.book-loader__cover {
+  background: var(--accent);
+  box-shadow: -3px 0 0 color-mix(in oklab, var(--accent) 55%, #000);
+}
+
+.book-loader__page {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  animation: book-page-turn 1.5s ease-in-out infinite;
+}
+
+.book-loader__page--one { animation-delay: 0s; }
+.book-loader__page--two { animation-delay: 0.2s; }
+.book-loader__page--three { animation-delay: 0.4s; }
+
+@keyframes book-page-turn {
+  0%, 20% { transform: rotateY(0deg); }
+  65%, 85% { transform: rotateY(-165deg); }
+  100% { transform: rotateY(0deg); }
+}
