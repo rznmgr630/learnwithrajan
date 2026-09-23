@@ -97,6 +97,7 @@ function LessonAccordionItem({
   expanded,
   onToggle,
   quizIdPrefix,
+  preserveExplanation,
 }: {
   lesson: Lesson;
   index: number;
@@ -104,6 +105,7 @@ function LessonAccordionItem({
   expanded: boolean;
   onToggle: () => void;
   quizIdPrefix: string;
+  preserveExplanation: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("explanation");
   const { getResult } = useJsLessonQuizProgress();
@@ -173,7 +175,9 @@ function LessonAccordionItem({
           </div>
 
           <div className="mt-4">
-            {tab === "explanation" ? <LessonExplanation lesson={lesson} locale={locale} /> : null}
+            {tab === "explanation" ? (
+              <LessonExplanation lesson={lesson} locale={locale} preserveExplanation={preserveExplanation} />
+            ) : null}
 
             {tab === "diagram" ? (
               <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
@@ -231,18 +235,29 @@ function LessonAccordionItem({
   );
 }
 
-function LessonExplanation({ lesson, locale }: { lesson: Lesson; locale: "en" | "np" | "jp" }) {
+function LessonExplanation({
+  lesson,
+  locale,
+  preserveExplanation,
+}: {
+  lesson: Lesson;
+  locale: "en" | "np" | "jp";
+  preserveExplanation: boolean;
+}) {
   const explanation = pickLocalized(lesson.explanation, locale);
+  if (preserveExplanation) {
+    return <RichParagraph text={explanation} className="text-sm leading-relaxed text-[var(--text)]" />;
+  }
   const paragraphs = explanation.split(/\n\s*\n/).filter(Boolean);
-  const what = paragraphs[0] ?? explanation;
-  const why = paragraphs[1] ?? "This helps you make a clear decision about when to use the idea instead of adding complexity by habit.";
-  const how = paragraphs.slice(2).join("\n\n") || "Use the steps and the example below, then change one value and observe what happens.";
+  const what = paragraphs[0] ?? "";
+  const why = paragraphs[1] ?? "";
+  const how = paragraphs.slice(2).join("\n\n");
 
   const sections = [
     ["What it is", what],
     ["Why it matters", why],
     ["How it works", how],
-  ] as const;
+  ].filter((section) => section[1].trim().length > 0);
 
   return (
     <div className="space-y-5 text-sm leading-relaxed text-[var(--text)]">
@@ -340,6 +355,7 @@ export function LessonDayDetail({
               expanded={expandedLesson === i}
               onToggle={() => setExpandedLesson((prev) => (prev === i ? null : i))}
               quizIdPrefix={quizIdPrefix}
+              preserveExplanation={track === "react-native"}
             />
           ))}
 
