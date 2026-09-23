@@ -1,0 +1,3 @@
+import { foundationLesson } from "@/lib/react-native-learning/react-native-lesson-helpers";
+
+export const REACT_NATIVE_DAY_2_LESSONS = foundationLesson(2, "React Native internals: from state update to native UI", "The full path from state update to pixels", "A React Native state update travels through several layers before pixels change: <code>JS state change → React reconciler → Shadow Tree → Fabric renderer → host components → native view mutation → pixels</code>.\n\nThe React reconciler determines what changed. Fabric coordinates rendering changes, and native host components apply them on iOS or Android. This mental model explains why JavaScript work, React rendering, and native UI are related but not identical.");
