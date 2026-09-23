@@ -11,6 +11,15 @@ const BookReader = dynamic(
   },
 );
 
+interface LibraryBookReaderProps {
+  title: string;
+  pdfUrl: string;
+}
+
+export function LibraryBookReader({ title, pdfUrl }: LibraryBookReaderProps) {
+  return <BookReader title={title} pdfUrl={pdfUrl} />;
+}
+
 export function FinanceBookReader() {
-  return <BookReader title="Rich Dad Poor Dad" pdfUrl="/api/library/finance-book" />;
+  return <LibraryBookReader title="Rich Dad Poor Dad" pdfUrl="/api/library/finance-book" />;
 }

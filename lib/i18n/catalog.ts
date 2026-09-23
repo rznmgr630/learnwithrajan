@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "1 saved book",
-    np: "१ सुरक्षित पुस्तक",
-    jp: "保存した本 1冊",
+    en: "2 saved books",
+    np: "२ सुरक्षित पुस्तक",
+    jp: "保存した本 2冊",
   },
   "library.collection": {
     en: "Collection",
@@ -101,6 +101,21 @@ export const UI_STRINGS = {
     en: "Open book →",
     np: "पुस्तक खोल्नुहोस् →",
     jp: "本を開く →",
+  },
+  "library.personalDevelopment": {
+    en: "Personal Development",
+    np: "व्यक्तिगत विकास",
+    jp: "自己啓発",
+  },
+  "library.subconsciousMind.title": {
+    en: "The Power of Your Subconscious Mind",
+    np: "The Power of Your Subconscious Mind",
+    jp: "The Power of Your Subconscious Mind",
+  },
+  "library.subconsciousMind.subtitle": {
+    en: "Build confidence and reshape the beliefs that guide your life.",
+    np: "आत्मविश्वास बढाउनुहोस् र जीवनलाई मार्गदर्शन गर्ने विश्वासहरू बदल्नुहोस्।",
+    jp: "自信を育て、人生を導く信念を見直します。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",

@@ -54,6 +54,30 @@ export function LibraryShelf() {
           </Link>
         </div>
       </section>
+
+      <section className="mt-12" aria-labelledby="personal-development-heading">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-rose-500">{t("library.collection")}</p>
+            <h2 id="personal-development-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.personalDevelopment")}</h2>
+          </div>
+          <span className="hidden text-sm text-[var(--faint)] sm:block">02</span>
+        </div>
+        <div className="mt-5">
+          <Link href="/library/personal-development/power-of-your-subconscious-mind" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-rose-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,#ef4444_10%,var(--elevated))] p-8 sm:min-h-full">
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,#ef4444_20%,transparent))]" />
+              <Image src="/images/library/power-of-your-subconscious-mind.png" alt="The Power of Your Subconscious Mind cover" width={627} height={1000} className="relative mx-auto h-60 w-auto rounded-md object-cover shadow-[12px_12px_0_color-mix(in_oklab,#ef4444_22%,transparent)] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-rose-500"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />{t("library.personalDevelopment")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-rose-500">{t("library.subconsciousMind.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.subconsciousMind.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
