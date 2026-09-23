@@ -532,7 +532,8 @@ export function reactDayTitle(day: number): LocalizedString {
   }
   if (day === 26) return { en: "Browser Performance and React Rendering", np: "Browser Performance र React Rendering", jp: "ブラウザ性能と React レンダリング" };
   if (day === 27) return { en: "Debugging, Error Handling, and React DevTools", np: "Debugging, Error Handling र React DevTools", jp: "デバッグ・エラー処理・React DevTools" };
-  if (day >= 28) return REACT_DAY_TITLE[day - 20] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 28) return { en: "Styling, Design Systems, and Responsive React UI", np: "Styling, Design Systems र Responsive React UI", jp: "スタイリング・デザインシステム・レスポンシブ React UI" };
+  if (day >= 29) return REACT_DAY_TITLE[day - 21] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
