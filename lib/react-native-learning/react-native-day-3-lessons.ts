@@ -14,7 +14,54 @@ export const REACT_NATIVE_DAY_3_LESSONS = normalizePastedLessonDay({
 
 Unlike the web, these are not HTML elements. They are React Native components backed by the native rendering system.
 
-Use ScrollView for content that is reasonably bounded. Very large lists should use virtualization-oriented list components, which the syllabus covers later.`,
+Use ScrollView for content that is reasonably bounded. Very large lists should use virtualization-oriented list components, which the syllabus covers later.
+
+---
+
+### Component props reference
+
+The lists below cover the component-specific props exposed by the current React Native reference. These components also accept shared View, accessibility, layout, style, responder, identification, and testing props where their type inherits them.
+
+<b>View props</b>
+
+• Layout and content: \`children\`, \`style\`, \`onLayout\`, \`pointerEvents\`, \`hitSlop\`, \`nativeID\`, \`id\`, \`testID\`
+• Accessibility: \`accessible\`, \`accessibilityActions\`, \`accessibilityElementsHidden\`, \`accessibilityHint\`, \`accessibilityIgnoresInvertColors\`, \`accessibilityLabel\`, \`accessibilityLanguage\`, \`accessibilityLiveRegion\`, \`accessibilityRole\`, \`accessibilityState\`, \`accessibilityValue\`, \`accessibilityViewIsModal\`, \`accessibilityCollection\`, \`accessibilityCollectionItem\`, \`accessibilityLabelledBy\`, \`accessibilityShowsLargeContentViewer\`, \`accessibilityLargeContentTitle\`, \`importantForAccessibility\`, \`role\`, and ARIA props
+• Responder events: \`onAccessibilityAction\`, \`onAccessibilityEscape\`, \`onAccessibilityTap\`, \`onMagicTap\`, \`onMoveShouldSetResponder\`, \`onMoveShouldSetResponderCapture\`, \`onResponderGrant\`, \`onResponderMove\`, \`onResponderReject\`, \`onResponderRelease\`, \`onResponderStart\`, \`onResponderEnd\`, \`onResponderTerminate\`, \`onResponderTerminationRequest\`, \`onStartShouldSetResponder\`, \`onStartShouldSetResponderCapture\`, \`onTouchCancel\`, \`onTouchEnd\`, \`onTouchEndCapture\`, \`onTouchMove\`, \`onTouchStart\`
+• Platform and rendering: \`collapsable\`, \`collapsableChildren\`, \`experimental_accessibilityOrder\`, \`focusable\`, \`tabIndex\`, \`needsOffscreenAlphaCompositing\`, \`renderToHardwareTextureAndroid\`, \`shouldRasterizeIOS\`
+
+<b>Text props</b>
+
+• Content and appearance: \`children\`, \`style\`, \`allowFontScaling\`, \`adjustsFontSizeToFit\`, \`maxFontSizeMultiplier\`, \`minimumFontScale\`, \`numberOfLines\`, \`ellipsizeMode\`, \`selectable\`, \`selectionColor\`
+• Text behavior: \`onTextLayout\`, \`dataDetectorType\`, \`android_hyphenationFrequency\`, \`textBreakStrategy\`, \`lineBreakStrategyIOS\`, \`dynamicTypeRamp\`, \`suppressHighlighting\`
+• Interaction: \`disabled\`, \`onPress\`, \`onPressIn\`, \`onPressOut\`, \`onLongPress\`, \`pressRetentionOffset\`
+• Also accepts relevant accessibility, responder, layout, \`nativeID\`, \`id\`, \`testID\`, \`role\`, and \`ref\` props
+
+<b>Image props</b>
+
+• Source and sizing: \`source\`, \`src\`, \`srcSet\`, \`width\`, \`height\`, \`style\`, \`resizeMode\`, \`resizeMethod\`, \`resizeMultiplier\`
+• Loading: \`defaultSource\`, \`loadingIndicatorSource\`, \`progressiveRenderingEnabled\`, \`fadeDuration\`, \`blurRadius\`
+• Events: \`onLoadStart\`, \`onLoad\`, \`onLoadEnd\`, \`onError\`, \`onProgress\`, \`onPartialLoad\`, \`onLayout\`
+• Network and platform: \`crossOrigin\`, \`referrerPolicy\`, \`capInsets\`, \`tintColor\`
+• Accessibility and identity: \`accessible\`, \`accessibilityLabel\`, \`alt\`, \`testID\`, \`ref\`, plus inherited View props
+
+<b>ScrollView props</b>
+
+• Content: \`children\`, \`contentContainerStyle\`, \`horizontal\`, \`style\`, \`StickyHeaderComponent\`, \`stickyHeaderIndices\`, \`invertStickyHeaders\`, \`stickyHeaderHiddenOnScroll\`
+• Scrolling: \`scrollEnabled\`, \`pagingEnabled\`, \`decelerationRate\`, \`disableIntervalMomentum\`, \`disableScrollViewPanResponder\`, \`directionalLockEnabled\`, \`nestedScrollEnabled\`, \`canCancelContentTouches\`, \`pinchGestureEnabled\`
+• Position and snapping: \`contentOffset\`, \`snapToAlignment\`, \`snapToEnd\`, \`snapToInterval\`, \`snapToOffsets\`, \`maintainVisibleContentPosition\`
+• Indicators: \`showsHorizontalScrollIndicator\`, \`showsVerticalScrollIndicator\`, \`indicatorStyle\`, \`persistentScrollbar\`, \`scrollIndicatorInsets\`, \`fadingEdgeLength\`
+• Insets and keyboard: \`contentInset\`, \`contentInsetAdjustmentBehavior\`, \`automaticallyAdjustContentInsets\`, \`automaticallyAdjustKeyboardInsets\`, \`automaticallyAdjustsScrollIndicatorInsets\`, \`keyboardDismissMode\`, \`keyboardShouldPersistTaps\`
+• Events: \`onContentSizeChange\`, \`onScroll\`, \`onScrollBeginDrag\`, \`onScrollEndDrag\`, \`onMomentumScrollBegin\`, \`onMomentumScrollEnd\`, \`onScrollToTop\`, \`scrollEventThrottle\`, \`scrollPerfTag\`
+• Refresh, zoom, and platform: \`refreshControl\`, \`bounces\`, \`alwaysBounceHorizontal\`, \`alwaysBounceVertical\`, \`bouncesZoom\`, \`centerContent\`, \`maximumZoomScale\`, \`minimumZoomScale\`, \`zoomScale\`, \`endFillColor\`, \`overScrollMode\`, \`removeClippedSubviews\`
+• Also inherits View props
+
+<b>Pressable props</b>
+
+• Core: \`children\`, \`disabled\`, \`style\`, \`onPress\`, \`onPressIn\`, \`onPressOut\`, \`onLongPress\`
+• Press area and timing: \`hitSlop\`, \`pressRetentionOffset\`, \`delayLongPress\`, \`unstable_pressDelay\`
+• Platform interaction: \`android_disableSound\`, \`android_ripple\`, \`onHoverIn\`, \`onHoverOut\`
+• Testing: \`testOnly_pressed\`, \`testID\`
+• Also accepts View accessibility, focus, responder, layout, identity, and style props.`,
       diagram: `<pre>Screen
 ├─ View
 │  ├─ Image
