@@ -157,7 +157,14 @@ const RN_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function reactNativeDayTitle(day: number): LocalizedString {
-  return RN_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 0) return { en: "Phase 0 — Before You Start", np: "Phase 0 — सुरु गर्नुअघि", jp: "Phase 0 — はじめる前に" };
+  const foundationTitles: Record<number, LocalizedString> = {
+    1: { en: "React Native setup, runtime & New Architecture", np: "RN setup र runtime", jp: "RN セットアップとランタイム" },
+    2: { en: "React Native internals: state update to native UI", np: "RN internals", jp: "RN 内部: state から UI" },
+    3: { en: "Core components and layout", np: "कोर कम्पोनेन्ट र layout", jp: "コアコンポーネントとレイアウト" },
+  };
+  if (foundationTitles[day]) return foundationTitles[day];
+  return RN_DAY_TITLE[day - 3] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {

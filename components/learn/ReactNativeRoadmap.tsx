@@ -9,6 +9,9 @@ import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { REACT_NATIVE_PHASE_0_LESSONS } from "@/lib/react-native-learning/react-native-phase-0-lessons";
+import { REACT_NATIVE_DAY_1_LESSONS } from "@/lib/react-native-learning/react-native-day-1-lessons";
+import { REACT_NATIVE_DAY_2_LESSONS } from "@/lib/react-native-learning/react-native-day-2-lessons";
+import { REACT_NATIVE_DAY_3_LESSONS } from "@/lib/react-native-learning/react-native-day-3-lessons";
 import {
   REACT_NATIVE_TOTAL_DAYS,
   REACT_NATIVE_ROADMAP_WEEKS,
@@ -25,6 +28,9 @@ const dayGridClass =
 
 const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
   0: REACT_NATIVE_PHASE_0_LESSONS,
+  1: REACT_NATIVE_DAY_1_LESSONS,
+  2: REACT_NATIVE_DAY_2_LESSONS,
+  3: REACT_NATIVE_DAY_3_LESSONS,
 };
 
 export function ReactNativeRoadmap() {
