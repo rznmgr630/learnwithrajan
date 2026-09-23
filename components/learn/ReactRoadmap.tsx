@@ -34,6 +34,7 @@ import { REACT_DAY_22_LESSONS } from "@/lib/react-learning/react-day-22-lessons"
 import { REACT_DAY_23_LESSONS } from "@/lib/react-learning/react-day-23-lessons";
 import { REACT_DAY_24_LESSONS } from "@/lib/react-learning/react-day-24-lessons";
 import { REACT_DAY_25_LESSONS } from "@/lib/react-learning/react-day-25-lessons";
+import { REACT_DAY_26_LESSONS } from "@/lib/react-learning/react-day-26-lessons";
 import { REACT_PHASE_0_LESSONS } from "@/lib/react-learning/react-phase-0";
 import { REACT_ROADMAP_WEEKS, REACT_TOTAL_DAYS } from "@/lib/react-learning/react-challenge-data";
 import { useReactProgress } from "@/hooks/use-react-progress";
@@ -68,6 +69,7 @@ const REACT_LESSON_DAYS: Record<number, LessonDay> = {
   23: REACT_DAY_23_LESSONS,
   24: REACT_DAY_24_LESSONS,
   25: REACT_DAY_25_LESSONS,
+  26: REACT_DAY_26_LESSONS,
 };
 
 const REACT_LESSON_DAY_NUMBERS = Object.keys(REACT_LESSON_DAYS)

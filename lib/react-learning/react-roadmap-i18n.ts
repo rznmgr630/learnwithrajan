@@ -398,7 +398,7 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
     np: "चरण ५ — Next.js र Modern React",
     jp: "フェーズ 5 — Next.js とモダン React",
   },
-  "react-w6": { en: "TypeScript, testing & debugging", np: "TypeScript, testing र debugging", jp: "TypeScript・テスト・デバッグ" },
+  "react-w6": { en: "PHASE 6 — PRODUCTION REACT", np: "चरण ६ — Production React", jp: "フェーズ 6 — プロダクション React" },
   "react-w7": { en: "Routing & state", np: "Routing र state", jp: "ルーティングと状態管理" },
   "react-w8": { en: "Production patterns", np: "Production patterns", jp: "本番パターン" },
   "react-w9": { en: "Production readiness", np: "Production readiness", jp: "本番対応" },
@@ -530,7 +530,8 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 25) {
     return { en: "React Architecture and Production Patterns", np: "React Architecture र Production Patterns", jp: "React アーキテクチャとプロダクションパターン" };
   }
-  if (day >= 26) return REACT_DAY_TITLE[day - 18] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 26) return { en: "Browser Performance and React Rendering", np: "Browser Performance र React Rendering", jp: "ブラウザ性能と React レンダリング" };
+  if (day >= 27) return REACT_DAY_TITLE[day - 19] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
