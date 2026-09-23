@@ -1,5 +1,6 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
+import { REACT_NATIVE_DAY_0_DETAIL } from "@/lib/react-native-learning/react-native-day-0-detail";
 import { REACT_NATIVE_DAY_1_DETAIL } from "@/lib/react-native-learning/react-native-day-1-detail";
 import { REACT_NATIVE_DAY_2_DETAIL } from "@/lib/react-native-learning/react-native-day-2-detail";
 import { REACT_NATIVE_DAY_3_DETAIL } from "@/lib/react-native-learning/react-native-day-3-detail";
@@ -31,6 +32,7 @@ export const REACT_NATIVE_CURRENT_DAY = 1;
 export const REACT_NATIVE_TOTAL_DAYS = 20;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
+  0: REACT_NATIVE_DAY_0_DETAIL,
   1: REACT_NATIVE_DAY_1_DETAIL,
   2: REACT_NATIVE_DAY_2_DETAIL,
   3: REACT_NATIVE_DAY_3_DETAIL,
@@ -76,6 +78,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
+  {
+    id: "rn-w0",
+    title: { en: "Phase 0 · Preparation", np: "Phase 0 · तयारी", jp: "Phase 0 · 準備" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#94a3b8)]",
+    days: [reactNativeDayRow(0, ["prerequisites", "toolchain"])],
+  },
   {
     id: "rn-w1",
     title: reactNativeWeekTitle("rn-w1"),

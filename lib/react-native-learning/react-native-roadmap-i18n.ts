@@ -2,6 +2,7 @@ import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapTag } from "@/lib/challenge-data";
 
 const RN_TAG: Record<string, LocalizedString> = {
+  prerequisites: { en: "prerequisites", np: "पूर्वआवश्यकता", jp: "前提知識" },
   expo: { en: "Expo", np: "Expo", jp: "Expo" },
   fundamentals: { en: "fundamentals", np: "आधार", jp: "基礎" },
   metro: { en: "Metro", np: "Metro", jp: "Metro" },
@@ -35,6 +36,11 @@ export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
 }
 
 const RN_DAY_TITLE: Record<number, LocalizedString> = {
+  0: {
+    en: "Phase 0 — Before You Start",
+    np: "Phase 0 — सुरु गर्नुअघि",
+    jp: "Phase 0 — はじめる前に",
+  },
   1: {
     en: "Course intro — how to use this track, prerequisites & learning paths",
     np: "परिचय, शर्त र बाटो।",
