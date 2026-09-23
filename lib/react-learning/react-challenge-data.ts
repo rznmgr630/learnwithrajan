@@ -62,7 +62,7 @@ const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
 };
 
 function reactDayRow(sourceDay: number, tagSlugs: [string, string]): RoadmapDay {
-  const day = sourceDay >= 15 ? sourceDay + 17 : sourceDay >= 9 ? sourceDay + 23 : sourceDay + 18;
+  const day = sourceDay;
   return {
     day,
     title: reactDayTitle(day),
@@ -108,7 +108,6 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactLessonDayRow(8, ["hooks", "state"]),
       reactLessonDayRow(9, ["context", "state"]),
       reactLessonDayRow(10, ["forms", "state"]),
-      reactLessonDayRow(11, ["hooks", "patterns"]),
     ],
   },
   {
@@ -116,6 +115,7 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
     days: [
+      reactLessonDayRow(11, ["hooks", "patterns"]),
       reactLessonDayRow(12, ["routing", "navigation"]),
       reactLessonDayRow(13, ["api", "state"]),
       reactLessonDayRow(14, ["performance", "optimization"]),
@@ -131,6 +131,7 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactLessonDayRow(17, ["state", "patterns"]),
       reactLessonDayRow(18, ["forms", "validation"]),
       reactLessonDayRow(19, ["a11y", "basics"]),
+      reactLessonDayRow(20, ["typescript", "tooling"]),
     ],
   },
   {
@@ -138,7 +139,6 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactWeekTitle("react-w5"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#f472b6)]",
     days: [
-      reactLessonDayRow(20, ["typescript", "tooling"]),
       reactLessonDayRow(21, ["suspense", "error"]),
       reactLessonDayRow(22, ["performance", "optimization"]),
       reactLessonDayRow(23, ["testing", "quality"]),
