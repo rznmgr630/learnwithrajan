@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 23;
+export const REACT_NATIVE_TOTAL_DAYS = 26;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 3 ? day - 3 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 6 ? day - 6 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 3, tagSlugs);
+  return reactNativeDayRow(day + 6, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -94,9 +94,9 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactNativeDayRow(1, ["fundamentals", "expo"]),
       reactNativeDayRow(2, ["fundamentals", "native"]),
       reactNativeDayRow(3, ["core-ui", "jsx"]),
-      existingReactNativeDayRow(1, ["fundamentals", "expo"]),
-      existingReactNativeDayRow(2, ["expo", "metro"]),
-      existingReactNativeDayRow(3, ["metro", "toolchain"]),
+      reactNativeDayRow(4, ["styling", "core-ui"]),
+      reactNativeDayRow(5, ["navigation", "screens"]),
+      reactNativeDayRow(6, ["lists", "performance"]),
     ],
   },
   {
@@ -104,8 +104,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w2"),
     dotClass: DOT["rn-w2"],
     days: [
-      existingReactNativeDayRow(4, ["toolchain", "platform"]),
-      existingReactNativeDayRow(5, ["toolchain", "jsx"]),
+      existingReactNativeDayRow(1, ["fundamentals", "expo"]),
+      existingReactNativeDayRow(2, ["expo", "metro"]),
     ],
   },
   {
@@ -113,8 +113,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w3"),
     dotClass: DOT["rn-w3"],
     days: [
-      existingReactNativeDayRow(6, ["core-ui", "jsx"]),
-      existingReactNativeDayRow(7, ["core-ui", "platform"]),
+      existingReactNativeDayRow(3, ["metro", "toolchain"]),
+      existingReactNativeDayRow(4, ["toolchain", "platform"]),
     ],
   },
   {
@@ -122,8 +122,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w4"),
     dotClass: DOT["rn-w4"],
     days: [
-      existingReactNativeDayRow(8, ["flexbox", "styling"]),
-      existingReactNativeDayRow(9, ["screens", "styling"]),
+      existingReactNativeDayRow(5, ["toolchain", "jsx"]),
+      existingReactNativeDayRow(6, ["core-ui", "jsx"]),
     ],
   },
   {
@@ -131,8 +131,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w5"),
     dotClass: DOT["rn-w5"],
     days: [
-      existingReactNativeDayRow(10, ["styling", "lists"]),
-      existingReactNativeDayRow(11, ["lists", "performance"]),
+      existingReactNativeDayRow(7, ["core-ui", "platform"]),
+      existingReactNativeDayRow(8, ["flexbox", "styling"]),
     ],
   },
   {
@@ -140,8 +140,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w6"),
     dotClass: DOT["rn-w6"],
     days: [
-      existingReactNativeDayRow(12, ["inputs", "forms"]),
-      existingReactNativeDayRow(13, ["forms", "inputs"]),
+      existingReactNativeDayRow(9, ["screens", "styling"]),
+      existingReactNativeDayRow(10, ["styling", "lists"]),
     ],
   },
   {
@@ -149,8 +149,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w7"),
     dotClass: DOT["rn-w7"],
     days: [
-      existingReactNativeDayRow(14, ["navigation", "toolchain"]),
-      existingReactNativeDayRow(15, ["native", "shipping"]),
+      existingReactNativeDayRow(11, ["lists", "performance"]),
+      existingReactNativeDayRow(12, ["inputs", "forms"]),
     ],
   },
   {
@@ -158,8 +158,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w8"),
     dotClass: DOT["rn-w8"],
     days: [
-      existingReactNativeDayRow(16, ["permissions", "native"]),
-      existingReactNativeDayRow(17, ["navigation", "hooks"]),
+      existingReactNativeDayRow(13, ["forms", "inputs"]),
+      existingReactNativeDayRow(14, ["navigation", "toolchain"]),
     ],
   },
   {
@@ -167,8 +167,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w9"),
     dotClass: DOT["rn-w9"],
     days: [
-      existingReactNativeDayRow(18, ["networking", "caching"]),
-      existingReactNativeDayRow(19, ["auth", "caching"]),
+      existingReactNativeDayRow(15, ["native", "shipping"]),
+      existingReactNativeDayRow(16, ["permissions", "native"]),
     ],
   },
   {
@@ -176,6 +176,9 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: reactNativeWeekTitle("rn-w10"),
     dotClass: DOT["rn-w10"],
     days: [
+      existingReactNativeDayRow(17, ["navigation", "hooks"]),
+      existingReactNativeDayRow(18, ["networking", "caching"]),
+      existingReactNativeDayRow(19, ["auth", "caching"]),
       existingReactNativeDayRow(20, ["notifications", "shipping"]),
     ],
   },

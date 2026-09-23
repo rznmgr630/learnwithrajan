@@ -163,8 +163,11 @@ export function reactNativeDayTitle(day: number): LocalizedString {
     2: { en: "React Native internals: state update to native UI", np: "RN internals", jp: "RN 内部: state から UI" },
     3: { en: "Core components and layout", np: "कोर कम्पोनेन्ट र layout", jp: "コアコンポーネントとレイアウト" },
   };
+  foundationTitles[4] = { en: "Styling", np: "Styling", jp: "スタイリング" };
+  foundationTitles[5] = { en: "Navigation", np: "Navigation", jp: "ナビゲーション" };
+  foundationTitles[6] = { en: "Lists and performance basics", np: "Lists र performance", jp: "リストとパフォーマンス基礎" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 3] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 6] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
