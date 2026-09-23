@@ -158,6 +158,20 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
+function tableCells(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function isTableDivider(line: string): boolean {
+  const cells = tableCells(line);
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -218,6 +232,44 @@ export function RichParagraph({ text, className }: RichTextProps) {
 
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
+
+    if (line.trim().startsWith("|") && j + 1 < lines.length && isTableDivider(lines[j + 1])) {
+      const headers = tableCells(line);
+      const rows: string[][] = [];
+      j += 2;
+      while (j < lines.length && lines[j].trim().startsWith("|")) {
+        rows.push(tableCells(lines[j]));
+        j++;
+      }
+      j--;
+      nodes.push(
+        <div key={`table-${j}`} className="my-3 overflow-x-auto rounded-xl border border-[var(--border)]">
+          <table className="w-full min-w-md border-collapse text-left text-sm">
+            <thead className="bg-[var(--elevated)]">
+              <tr>
+                {headers.map((header, index) => (
+                  <th key={index} scope="col" className="border-b border-[var(--border)] px-4 py-2.5 font-semibold text-[var(--text)]">
+                    {renderInlineLine(header)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex} className="bg-[var(--surface)] align-top">
+                  {headers.map((_, cellIndex) => (
+                    <td key={cellIndex} className="px-4 py-2.5 text-[var(--muted)]">
+                      {renderInlineLine(row[cellIndex] ?? "")}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      continue;
+    }
 
     const standaloneCode = line.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
     if (standaloneCode) {
