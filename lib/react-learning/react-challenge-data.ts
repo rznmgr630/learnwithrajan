@@ -30,7 +30,7 @@ import { reactDayTitle, reactTags, reactWeekTitle } from "@/lib/react-learning/r
 
 export const REACT_CURRENT_DAY = 1;
 
-export const REACT_TOTAL_DAYS = 43;
+export const REACT_TOTAL_DAYS = 44;
 
 const REACT_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   2: REACT_DAY_2_DETAIL,
@@ -145,6 +145,7 @@ export const REACT_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactLessonDayRow(22, ["performance", "optimization"]),
       reactLessonDayRow(23, ["testing", "quality"]),
       reactLessonDayRow(24, ["typescript", "types"]),
+      reactLessonDayRow(25, ["architecture", "patterns"]),
       reactDayRow(11, ["patterns", "hooks"]),
       reactDayRow(12, ["patterns", "components"]),
       reactDayRow(13, ["internals", "performance"]),
