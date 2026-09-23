@@ -22,8 +22,8 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   // ── Lesson 2 — これ/それ/あれ, things, prices ──────────────────────────────
   // Directions (compass + vertical)  |  Things & value adjectives
   2: [
-    "上", "下", "左", "右", "前", "後", "北", "南", "東", "西",  // directions
-    "本", "百", "千", "万", "大", "小", "高", "安", "長", "白",  // things / adjectives
+    "上", "下", "左", "右", "後", "北", "南", "東", "西",  // directions
+    "本", "百", "千", "大", "小", "高", "長", "白",  // things / adjectives
   ],
 
   // ── Lesson 3 — ここ/そこ/あそこ, places, floors ────────────────────────────
@@ -47,9 +47,10 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop
+  // Transport: station, car, electric (電車), shop  |  Front, price, large number
   5: [
     "駅", "車", "電", "店",  // station / car / electric (train) / shop
+    "前", "安", "万",        // front / cheap / ten thousand
   ],
 
   // ── Lesson 6 — transitive verbs, food, weekday context ────────────────────
