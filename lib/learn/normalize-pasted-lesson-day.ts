@@ -23,6 +23,26 @@ type RawDay = Omit<LessonDay, "title" | "difficulty" | "lessons" | "finalQuiz" |
 
 const local = (en: string): LocalizedString => ({ en, np: en, jp: en });
 
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&#x20;", " ")
+    .replaceAll("&amp;", "&");
+}
+
+function unwrapPreformatted(value: string): string {
+  return decodeHtmlEntities(value)
+    .replace(/^<pre(?:\s[^>]*)?>\s*/i, "")
+    .replace(/^<code(?:\s[^>]*)?>\s*/i, "")
+    .replace(/\s*<\/pre>\s*$/i, "")
+    .replace(/\s*<\/code>\s*$/i, "")
+    .replace(/\[(https?:\/\/[^\]]+)\]\(\1\)/g, "$1")
+    .trim();
+}
+
 export function normalizePastedLessonDay(raw: RawDay): LessonDay {
   return {
     ...raw,
@@ -32,9 +52,10 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
       ...lesson,
       title: local(lesson.title),
       explanation: local(lesson.explanation),
+      diagram: unwrapPreformatted(lesson.diagram),
       codeExample: typeof lesson.codeExample === "string"
-        ? { title: local("Code example"), code: lesson.codeExample }
-        : { title: local(lesson.codeExample.title), code: lesson.codeExample.code },
+        ? { title: local("Code example"), code: unwrapPreformatted(lesson.codeExample) }
+        : { title: local(lesson.codeExample.title), code: unwrapPreformatted(lesson.codeExample.code) },
       keyTakeaways: lesson.keyTakeaways.map(local),
       commonMistakes: lesson.commonMistakes.map(local),
       quiz: lesson.quiz.map((item) => ({ question: local(item.question), options: (item.options ?? [item.answer ?? ""]).map(local), correctIndex: item.correctIndex ?? 0, explanation: local(item.explanation ?? item.answer ?? "") })),
