@@ -18,12 +18,29 @@ const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
       romaji: w.romaji,
       reading: w.reading,
       note: w.note as string,
+      examples: w.examples,
     })),
 );
 
 function exampleMeaning(en: string, np: string, locale: Locale): string {
   if (locale === "np" && np) return np;
   return en;
+}
+
+function NoteExamples({ examples }: { examples?: { ja: string; en: string; np: string }[] }) {
+  if (!examples?.length) return null;
+
+  return (
+    <div className="mt-3 space-y-2 border-l-2 border-[color-mix(in_oklab,var(--accent)_30%,var(--border))] pl-3">
+      {examples.map((example, index) => (
+        <div key={index} className="text-xs">
+          <p className="text-sm text-[var(--text)]">{example.ja}</p>
+          <p className="mt-0.5 text-[var(--muted)]">EN: {example.en}</p>
+          <p className="mt-0.5 text-[var(--faint)]">NP: {example.np}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function DuolingoPage() {
@@ -213,6 +230,7 @@ export function DuolingoPage() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
+                  <NoteExamples examples={n.examples} />
                 </div>
               ))}
             </div>
@@ -233,6 +251,7 @@ export function DuolingoPage() {
                     )}
                   </div>
                   <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
+                  <NoteExamples examples={n.examples} />
                 </div>
               ))}
             </div>
