@@ -6,7 +6,7 @@ import { REACT_TOTAL_DAYS, seedReactCompletedDayNumbers } from "@/lib/react-lear
 const STORAGE_KEY = "learnwithrajan.react.completed";
 const LOCAL_EVENT = "learnwithrajan.react.changed";
 const DAY_SHIFT_VERSION_KEY = "learnwithrajan.react.day-shift-version";
-const DAY_SHIFT_VERSION = "27";
+const DAY_SHIFT_VERSION = "28";
 
 function serialize(done: Set<number>): string {
   return JSON.stringify([...done].sort((a, b) => a - b));
@@ -83,10 +83,17 @@ function getClientSnapshot(): string {
     }));
   }
 
-  if (savedVersion !== DAY_SHIFT_VERSION) {
+  if (savedVersion !== "27") {
     shifted = new Set([...shifted].flatMap((day) => {
       const replacements: Record<number, number> = { 32: 24, 33: 25, 34: 22, 35: 21 };
       return [replacements[day] ?? (day >= 36 ? day - 4 : day)];
+    }));
+  }
+
+  if (savedVersion !== DAY_SHIFT_VERSION) {
+    shifted = new Set([...shifted].flatMap((day) => {
+      const replacements: Record<number, number> = { 32: 24, 33: 23, 34: 27, 35: 15, 36: 16, 37: 31, 38: 16, 39: 32, 40: 19, 41: 33, 42: 34, 43: 35, 44: 36 };
+      return [replacements[day] ?? day];
     }));
   }
 

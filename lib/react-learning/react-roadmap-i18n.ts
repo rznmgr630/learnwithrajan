@@ -399,7 +399,7 @@ const REACT_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "フェーズ 5 — Next.js とモダン React",
   },
   "react-w6": { en: "PHASE 6 — PRODUCTION REACT", np: "चरण ६ — Production React", jp: "フェーズ 6 — プロダクション React" },
-  "react-w7": { en: "Routing & state", np: "Routing र state", jp: "ルーティングと状態管理" },
+  "react-w7": { en: "PHASE 7 — ADVANCED PRODUCTION AND CAREER SKILLS", np: "चरण ७ — Advanced Production र Career Skills", jp: "フェーズ 7 — 高度なプロダクションとキャリアスキル" },
   "react-w8": { en: "Production patterns", np: "Production patterns", jp: "本番パターン" },
   "react-w9": { en: "Production readiness", np: "Production readiness", jp: "本番対応" },
   "react-w10": { en: "Capstone", np: "Capstone", jp: "キャップストーン" },
@@ -535,7 +535,13 @@ export function reactDayTitle(day: number): LocalizedString {
   if (day === 28) return { en: "Styling, Design Systems, and Responsive React UI", np: "Styling, Design Systems र Responsive React UI", jp: "スタイリング・デザインシステム・レスポンシブ React UI" };
   if (day === 29) return { en: "Large-Scale React Architecture", np: "Large-Scale React Architecture", jp: "大規模 React アーキテクチャ" };
   if (day === 30) return { en: "Production Readiness and React Mastery", np: "Production Readiness र React Mastery", jp: "プロダクション準備と React 熟達" };
-  if (day >= 31) return REACT_DAY_TITLE[day - 17] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  if (day === 31) return { en: "Authentication and Protected Applications", np: "Authentication र Protected Applications", jp: "認証と保護されたアプリケーション" };
+  if (day === 32) return { en: "Animations and Motion", np: "Animations र Motion", jp: "アニメーションとモーション" };
+  if (day === 33) return { en: "Build, Deployment, and Environment Configuration", np: "Build, Deployment र Environment Configuration", jp: "ビルド・デプロイ・環境設定" };
+  if (day === 34) return { en: "Production Project Planning", np: "Production Project Planning", jp: "プロダクションプロジェクト計画" };
+  if (day === 35) return { en: "React Interview Preparation", np: "React Interview Preparation", jp: "React 面接対策" };
+  if (day === 36) return { en: "Storybook and Team-Scale Workflow", np: "Storybook र Team-Scale Workflow", jp: "Storybook とチーム規模のワークフロー" };
+  if (day >= 37) return REACT_DAY_TITLE[day - 17] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
   return REACT_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
