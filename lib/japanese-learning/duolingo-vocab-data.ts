@@ -232,6 +232,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         examples: [{ ja: "ふとんでねます。", en: "I sleep on a futon.", np: "म फुटोनमा सुत्छु।" }],
         note: "A futon includes a mattress called しきぶとん (shikibuton) and a duvet called かけぶとん (kakebuton). It is placed on tatami mats and stored away during the day.",
       },
+      {
+        word: "だんぼう",
+        romaji: "danbō",
+        meaning_en: "Heater / heating",
+        meaning_np: "हिटर / ताप्ने उपकरण",
+        examples: [{ ja: "だんぼうをつけます。", en: "I turn on the heater.", np: "म हिटर बाल्छु।" }],
+      },
     ],
   },
   {
@@ -1318,6 +1325,34 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         examples: [{ ja: "今日、サッカーのしあいがあります。", en: "There is a soccer match today.", np: "आज फुटबल प्रतियोगिता छ।" }],
       },
       {
+        word: "しゅみははいくです。",
+        romaji: "shumi wa haiku desu",
+        meaning_en: "My hobby is haiku.",
+        meaning_np: "मेरो रुचि हाइकु हो।",
+        examples: [{ ja: "しゅみははいくです。", en: "My hobby is haiku.", np: "मेरो रुचि हाइकु हो।" }],
+      },
+      {
+        word: "スノボ",
+        romaji: "sunobo",
+        meaning_en: "Snowboarding",
+        meaning_np: "स्नोबोर्डिङ",
+        examples: [{ ja: "スノボをします。", en: "I go snowboarding.", np: "म स्नोबोर्डिङ गर्छु।" }],
+      },
+      {
+        word: "スケート",
+        romaji: "sukēto",
+        meaning_en: "Skating",
+        meaning_np: "स्केटिङ",
+        examples: [{ ja: "スケートをします。", en: "I go skating.", np: "म स्केटिङ गर्छु।" }],
+      },
+      {
+        word: "どくしょ",
+        romaji: "dokusho",
+        meaning_en: "Reading books",
+        meaning_np: "पुस्तक पढाइ",
+        examples: [{ ja: "しゅみはどくしょです。", en: "My hobby is reading books.", np: "मेरो रुचि पुस्तक पढाइ हो।" }],
+      },
+      {
         word: "マラソン",
         romaji: "marason",
         meaning_en: "Marathon",
@@ -1556,6 +1591,34 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Fruit smoothie",
         meaning_np: "फलफूलको स्मूदी",
         examples: [{ ja: "くだもののスムージーをください。", en: "A fruit smoothie, please.", np: "एउटा फलफूलको स्मूदी दिनुहोस्।" }],
+      },
+      {
+        word: "なべ",
+        romaji: "nabe",
+        meaning_en: "Hot pot",
+        meaning_np: "हट पोट",
+        examples: [{ ja: "なべを食べます。", en: "I eat hot pot.", np: "म हट पोट खान्छु।" }],
+      },
+      {
+        word: "さつまいも",
+        romaji: "satsumaimo",
+        meaning_en: "Sweet potato",
+        meaning_np: "सखरखण्ड",
+        examples: [{ ja: "さつまいもを食べます。", en: "I eat sweet potato.", np: "म सखरखण्ड खान्छु।" }],
+      },
+      {
+        word: "ビールにします。",
+        romaji: "bīru ni shimasu",
+        meaning_en: "I'll have beer.",
+        meaning_np: "म बियर लिन्छु।",
+        examples: [{ ja: "ビールにします。", en: "I'll have beer.", np: "म बियर लिन्छु।" }],
+      },
+      {
+        word: "すいか",
+        romaji: "suika",
+        meaning_en: "Watermelon",
+        meaning_np: "तरबूजा",
+        examples: [{ ja: "すいかを食べます。", en: "I eat watermelon.", np: "म तरबूजा खान्छु।" }],
       },
       {
         word: "とうにゅう",
@@ -1939,6 +2002,24 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         examples: [{ ja: "おいしかったです。", en: "It was delicious.", np: "यो मिठो थियो।" }],
         note: "Adding です after an adjective ending in かった makes the past-tense sentence polite.",
       },
+      {
+        word: "夜",
+        romaji: "yoru",
+        reading: "よる",
+        meaning_en: "Night",
+        meaning_np: "रात",
+        examples: [{ ja: "夜にねます。", en: "I sleep at night.", np: "म राति सुत्छु।" }],
+      },
+      {
+        word: "〜がいいです",
+        romaji: "~ ga ii desu",
+        meaning_en: "Prefer / would like",
+        meaning_np: "रुचाउनु / चाहनु",
+        examples: [
+          { ja: "どこがいいですか。", en: "Where would you prefer?", np: "तपाईं कहाँ रुचाउनुहुन्छ?" },
+          { ja: "レストランがいいです。", en: "I prefer the restaurant.", np: "मलाई रेस्टुरेन्ट मन पर्छ।" },
+        ],
+      },
     ],
   },
   {
@@ -2246,6 +2327,13 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_np: "हावा मिठाई",
         examples: [{ ja: "わたあめを食べます。", en: "I eat cotton candy.", np: "म हावा मिठाई खान्छु।" }],
       },
+      {
+        word: "ぶんか",
+        romaji: "bunka",
+        meaning_en: "Culture",
+        meaning_np: "संस्कृति",
+        examples: [{ ja: "日本のぶんかが好きです。", en: "I like Japanese culture.", np: "मलाई जापानी संस्कृति मन पर्छ।" }],
+      },
     ],
   },
   {
@@ -2478,6 +2566,14 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Four",
         meaning_np: "चार",
         examples: [{ ja: "四時に来てください。", en: "Please come at four o'clock.", np: "कृपया चार बजे आउनुहोस्।" }],
+      },
+      {
+        word: "木曜日",
+        romaji: "mokuyōbi",
+        reading: "もくようび",
+        meaning_en: "Thursday",
+        meaning_np: "बिहीबार",
+        examples: [{ ja: "木曜日に会いましょう。", en: "Let's meet on Thursday.", np: "बिहीबार भेटौँ।" }],
       },
       {
         word: "ここのつ（九つ）",
@@ -3709,5 +3805,20 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     title: "Hundreds Pronunciation Changes",
     japanese: "さんびゃく / ろっぴゃく / はっぴゃく",
     note: "When counting by hundreds, the pronunciation of ひゃく (hyaku) changes with certain numbers — さんびゃく (san-byaku): three hundred; ろっぴゃく (roppyaku): six hundred; はっぴゃく (happyaku): eight hundred.",
+  },
+  {
+    title: "Japanese Parties",
+    japanese: "のみかい / ぼうねんかい / かんげいかい",
+    note: "In Japan, several types of parties are celebrated: のみかい (nomikai) for drinking with coworkers and friends, ぼうねんかい (bōnenkai) as a year-end celebration, and かんげいかい (kangeikai) to welcome new company members.",
+  },
+  {
+    title: "Making a Choice",
+    japanese: "〜にします",
+    note: "〜にします expresses a decision or choice, such as when ordering at a restaurant, shopping, or making plans.",
+  },
+  {
+    title: "Japanese Restaurant Customs",
+    japanese: "おしぼり",
+    note: "Many Japanese restaurants display realistic food replicas at the entrance so customers can see dishes before ordering. Restaurants often provide a wet towel called おしぼり (oshibori), set menus are common, and tipping is not practiced.",
   },
 ];
