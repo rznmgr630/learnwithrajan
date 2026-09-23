@@ -3,7 +3,7 @@ import type { LessonDay } from "@/lib/learn/lesson-types";
 export const REACT_DAY_17_LESSONS: LessonDay = {
   day: 17,
   title: "Client State Management",
-  totalMinutes: 60,
+  totalMinutes: 72,
   difficulty: "Beginner",
   lessons: [
     {
@@ -228,6 +228,41 @@ export const REACT_DAY_17_LESSONS: LessonDay = {
           ],
           correctIndex: 0,
           explanation: "URL state is durable and shareable."
+        }
+      ]
+    },
+    {
+      id: "day6",
+      title: "Combining useReducer and Context",
+      durationMinutes: 12,
+      explanation: "For a focused shared domain, combine useReducer with Context: the reducer owns the allowed state transitions, while Context makes state and dispatch available without prop drilling. Keep the provider small and split it when unrelated, frequently changing values would cause broad re-renders.",
+      diagram: "Provider\n├── useReducer → state, dispatch\n└── Context value → consumers\n\nConsumer → dispatch(action) → reducer → next state",
+      codeExample: {
+        title: "Reducer-backed context",
+        code: "const PostsContext = createContext(null);\n\nfunction PostsProvider({ children }) {\n  const [state, dispatch] = useReducer(postsReducer, initialState);\n  const value = useMemo(() => ({ state, dispatch }), [state]);\n\n  return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>;\n}"
+      },
+      keyTakeaways: [
+        "Reducers make shared state transitions explicit.",
+        "Context removes prop drilling for a focused shared domain.",
+        "Split contexts when update frequency differs."
+      ],
+      commonMistakes: [
+        "Putting unrelated application state into one provider.",
+        "Performing side effects inside a reducer.",
+        "Creating a new provider value unnecessarily."
+      ],
+      quiz: [
+        {
+          question: "What does a reducer-backed context provide?",
+          options: ["Shared state and dispatch", "Automatic API caching", "Route matching", "CSS compilation"],
+          correctIndex: 0,
+          explanation: "The provider shares the reducer state and its dispatch function."
+        },
+        {
+          question: "Why might you split contexts?",
+          options: ["To limit unnecessary consumer re-renders", "To avoid components", "To remove state", "To replace tests"],
+          correctIndex: 0,
+          explanation: "Separate contexts can isolate updates to the consumers that need them."
         }
       ]
     }
