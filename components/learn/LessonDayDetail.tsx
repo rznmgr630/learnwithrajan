@@ -397,6 +397,12 @@ export function LessonDayDetail({
 
           {day.project ? <LessonProjectCard project={day.project} /> : null}
 
+          {day.footer ? (
+            <div className="rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_28%,transparent)] p-5">
+              <RichParagraph text={pickLocalized(day.footer, locale)} />
+            </div>
+          ) : null}
+
           {onNavigateDay ? (
             <LessonNav
               previous={previousDay}

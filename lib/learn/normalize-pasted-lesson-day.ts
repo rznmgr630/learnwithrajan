@@ -13,12 +13,13 @@ type RawLesson = {
   commonMistakes: string[];
   quiz: RawQuiz[];
 };
-type RawDay = Omit<LessonDay, "title" | "overview" | "difficulty" | "lessons" | "finalQuiz" | "project"> & {
+type RawDay = Omit<LessonDay, "title" | "overview" | "difficulty" | "lessons" | "finalQuiz" | "footer" | "project"> & {
   title: string;
   overview?: string;
   difficulty: string;
   lessons: RawLesson[];
   finalQuiz: RawQuiz[];
+  footer?: string;
   project?: { name: string; goal: string; brief: string; steps: string[]; acceptance: string[]; stretch?: string[]; footer?: string };
 };
 
@@ -112,6 +113,28 @@ function formatCodeLikeExamples(value: string): string {
   return output.join("\n\n").replace(/__FENCED_BLOCK_(\d+)__/g, (_, index) => fencedBlocks[Number(index)]);
 }
 
+function localizeQuiz(item: RawQuiz) {
+  const options = item.options ?? [item.answer ?? ""];
+  const correctIndex = item.correctIndex ?? Math.max(0, options.indexOf(item.answer ?? ""));
+  return {
+    question: local(item.question),
+    options: options.map(local),
+    correctIndex,
+    explanation: local(item.explanation ?? item.answer ?? ""),
+  };
+}
+
+function localizeFinalQuiz(item: RawQuiz, index: number) {
+  const localized = localizeQuiz(item);
+  if (localized.options.length < 2) return localized;
+  const positions = [2, 0, 3, 1, 1, 3, 0, 2, 3, 1];
+  const targetIndex = positions[index % positions.length] % localized.options.length;
+  const options = [...localized.options];
+  const [correct] = options.splice(localized.correctIndex, 1);
+  options.splice(targetIndex, 0, correct);
+  return { ...localized, options, correctIndex: targetIndex };
+}
+
 export function normalizePastedLessonDay(raw: RawDay): LessonDay {
   const formatExamples = raw.day >= 2 && raw.day <= 6 ? formatCodeLikeExamples : (value: string) => value;
   return {
@@ -119,6 +142,7 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
     title: local(raw.title),
     overview: raw.overview ? local(raw.overview) : undefined,
     difficulty: local(raw.difficulty),
+    footer: raw.footer ? local(formatExamples(raw.footer)) : undefined,
     lessons: raw.lessons.map((lesson) => ({
       ...lesson,
       title: local(lesson.title),
@@ -133,9 +157,9 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
           },
       keyTakeaways: lesson.keyTakeaways.map((item) => local(formatExamples(item))),
       commonMistakes: lesson.commonMistakes.map((item) => local(formatExamples(item))),
-      quiz: lesson.quiz.map((item) => ({ question: local(item.question), options: (item.options ?? [item.answer ?? ""]).map(local), correctIndex: item.correctIndex ?? 0, explanation: local(item.explanation ?? item.answer ?? "") })),
+      quiz: lesson.quiz.map(localizeQuiz),
     })),
-    finalQuiz: raw.finalQuiz.map((item) => ({ question: local(item.question), options: (item.options ?? [item.answer ?? ""]).map(local), correctIndex: item.correctIndex ?? 0, explanation: local(item.explanation ?? item.answer ?? "") })),
+    finalQuiz: raw.finalQuiz.map(localizeFinalQuiz),
     project: raw.project && {
       name: local(raw.project.name), goal: local(raw.project.goal), brief: local(formatExamples(raw.project.brief)),
       steps: raw.project.steps.map((item) => local(formatExamples(item))), acceptance: raw.project.acceptance.map(local), stretch: raw.project.stretch?.map((item) => local(formatExamples(item))),

@@ -1,5 +1,6 @@
 import type { LessonDay, LessonQuizQuestion } from "@/lib/learn/lesson-types";
 import type { LocalizedString } from "@/lib/i18n/types";
+import type { ReactNativeFinalQuizQuestion } from "@/lib/react-native-learning/react-native-final-quizzes";
 
 const local = (en: string): LocalizedString => ({ en, np: en, jp: en });
 
@@ -14,7 +15,7 @@ function firstCodeBlock(markdown: string): string {
   return markdown.match(/```(?:tsx|ts|text|css)?\n([\s\S]*?)```/)?.[1].trim() ?? "Review the explanation and build the example yourself.";
 }
 
-export function markdownLessonDay(day: number, title: string, markdown: string): LessonDay {
+export function markdownLessonDay(day: number, title: string, markdown: string, finalQuiz?: ReactNativeFinalQuizQuestion[]): LessonDay {
   const lessonSource = markdown.split("## Final project")[0];
   const matches = [...lessonSource.matchAll(/### \d+\.\s+([^\n]+)\n([\s\S]*?)(?=\n---\n\n### \d+\.|$)/g)];
   const lessons = matches.map((match, index) => {
@@ -42,7 +43,12 @@ export function markdownLessonDay(day: number, title: string, markdown: string):
     totalMinutes: 60,
     difficulty: local("Intermediate"),
     lessons,
-    finalQuiz: lessons.map((lesson) => reviewQuestion(typeof lesson.title === "string" ? lesson.title : lesson.title.en)),
+    finalQuiz: finalQuiz?.map((item) => ({
+      question: local(item.question),
+      options: item.options.map(local),
+      correctIndex: item.correctIndex,
+      explanation: local(item.explanation),
+    })) ?? lessons.map((lesson) => reviewQuestion(typeof lesson.title === "string" ? lesson.title : lesson.title.en)),
     project: {
       name: local("Responsive profile screen"),
       goal: local("Build a responsive profile screen using the Day 3 components and layout APIs."),

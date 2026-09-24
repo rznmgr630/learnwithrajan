@@ -1,4 +1,5 @@
 import { markdownLessonDay } from "@/lib/learn/markdown-lesson-day";
+import { REACT_NATIVE_DAY_3_FINAL_QUIZ } from "@/lib/react-native-learning/react-native-final-quizzes";
 
 const DAY_3_CONTENT = [
   "## Day 3 — Core Components & Layout",
@@ -666,4 +667,5 @@ export const REACT_NATIVE_DAY_3_LESSONS = markdownLessonDay(
   3,
   "Core Components & Layout",
   DAY_3_CONTENT,
+  REACT_NATIVE_DAY_3_FINAL_QUIZ,
 );

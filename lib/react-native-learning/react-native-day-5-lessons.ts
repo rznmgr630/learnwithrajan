@@ -1,4 +1,5 @@
 import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-day";
+import { REACT_NATIVE_DAY_5_FINAL_QUIZ } from "@/lib/react-native-learning/react-native-final-quizzes";
 
 export const REACT_NATIVE_DAY_5_LESSONS = normalizePastedLessonDay({
   "day": 5,
@@ -256,44 +257,7 @@ export const REACT_NATIVE_DAY_5_LESSONS = normalizePastedLessonDay({
       ]
     }
   ],
-  "finalQuiz": [
-    {
-      "question": "What routing model does Expo Router use?",
-      "options": [
-        "A. File-based routing",
-        "B. Database-based routing"
-      ],
-      "correctIndex": 0,
-      "explanation": "Answer: A"
-    },
-    {
-      "question": "What library is underneath Expo Router?",
-      "options": [
-        "A. React Navigation",
-        "B. Express"
-      ],
-      "correctIndex": 0,
-      "explanation": "Answer: A"
-    },
-    {
-      "question": "Which navigator models hierarchical screen history?",
-      "options": [
-        "A. Stack",
-        "B. Tab"
-      ],
-      "correctIndex": 0,
-      "explanation": "Answer: A"
-    },
-    {
-      "question": "What should be validated when restoring persisted navigation state?",
-      "options": [
-        "A. The stored state is still valid for the current app",
-        "B. Only the screen color"
-      ],
-      "correctIndex": 0,
-      "explanation": "Answer: A"
-    }
-  ],
+  "finalQuiz": REACT_NATIVE_DAY_5_FINAL_QUIZ,
   "project": {
     "name": "Deep-Linkable Tab Application",
     "goal": "Now let's put everything together.",

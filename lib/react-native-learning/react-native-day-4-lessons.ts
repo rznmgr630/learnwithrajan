@@ -1,4 +1,5 @@
 import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-day";
+import { REACT_NATIVE_DAY_4_FINAL_QUIZ } from "@/lib/react-native-learning/react-native-final-quizzes";
 
 export const REACT_NATIVE_DAY_4_LESSONS = normalizePastedLessonDay({
   "day": 4,
@@ -274,7 +275,7 @@ export const REACT_NATIVE_DAY_4_LESSONS = normalizePastedLessonDay({
       ]
     }
   ],
-  "finalQuiz": [],
+  "finalQuiz": REACT_NATIVE_DAY_4_FINAL_QUIZ,
   "project": {
     "name": "Build a Persistent Theme Toggle",
     "goal": "You've now covered all eight styling concepts.\n\nBefore moving to Day 5, try this challenge:",

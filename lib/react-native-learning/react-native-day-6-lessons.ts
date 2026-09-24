@@ -1,4 +1,5 @@
 import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-day";
+import { REACT_NATIVE_DAY_6_FINAL_QUIZ } from "@/lib/react-native-learning/react-native-final-quizzes";
 
 export const REACT_NATIVE_DAY_6_LESSONS = normalizePastedLessonDay({
   "day": 6,
@@ -232,7 +233,7 @@ export const REACT_NATIVE_DAY_6_LESSONS = normalizePastedLessonDay({
       "quiz": []
     }
   ],
-  "finalQuiz": [],
+  "finalQuiz": REACT_NATIVE_DAY_6_FINAL_QUIZ,
   "project": {
     "name": "Render 5,000 items",
     "goal": "Now it's time to test what you've learned.",
