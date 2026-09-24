@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 26;
+export const REACT_NATIVE_TOTAL_DAYS = 27;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 6 ? day - 6 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 7 ? day - 7 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 6, tagSlugs);
+  return reactNativeDayRow(day + 7, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -98,6 +98,12 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactNativeDayRow(5, ["navigation", "screens"]),
       reactNativeDayRow(6, ["lists", "performance"]),
     ],
+  },
+  {
+    id: "rn-phase2",
+    title: { en: "PHASE 2 · MOBILE PLATFORM (Days 7–14)", np: "PHASE 2 · MOBILE PLATFORM (दिन ७–१४)", jp: "PHASE 2 · MOBILE PLATFORM (7〜14日目)" },
+    dotClass: DOT["rn-w2"],
+    days: [reactNativeDayRow(7, ["gestures", "animation"])],
   },
   {
     id: "rn-w2",
