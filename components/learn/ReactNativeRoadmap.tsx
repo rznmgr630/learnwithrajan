@@ -48,6 +48,8 @@ import { REACT_NATIVE_DAY_36_LESSONS } from "@/lib/react-native-learning/react-n
 import { REACT_NATIVE_DAY_37_LESSONS } from "@/lib/react-native-learning/react-native-day-37-lessons";
 import { REACT_NATIVE_DAY_38_LESSONS } from "@/lib/react-native-learning/react-native-day-38-lessons";
 import { REACT_NATIVE_DAY_39_LESSONS } from "@/lib/react-native-learning/react-native-day-39-lessons";
+import { REACT_NATIVE_DAY_40_LESSONS } from "@/lib/react-native-learning/react-native-day-40-lessons";
+import { REACT_NATIVE_DAY_41_LESSONS } from "@/lib/react-native-learning/react-native-day-41-lessons";
 import {
   REACT_NATIVE_TOTAL_DAYS,
   REACT_NATIVE_ROADMAP_WEEKS,
@@ -100,6 +102,8 @@ const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
   37: REACT_NATIVE_DAY_37_LESSONS,
   38: REACT_NATIVE_DAY_38_LESSONS,
   39: REACT_NATIVE_DAY_39_LESSONS,
+  40: REACT_NATIVE_DAY_40_LESSONS,
+  41: REACT_NATIVE_DAY_41_LESSONS,
 };
 
 export function ReactNativeRoadmap() {
