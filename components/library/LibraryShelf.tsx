@@ -2,10 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRef } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function LibraryShelf() {
   const { t } = useLocale();
+  const financeCarouselRef = useRef<HTMLDivElement>(null);
+
+  function scrollFinance(direction: "left" | "right") {
+    financeCarouselRef.current?.scrollBy({
+      left: direction === "left" ? -financeCarouselRef.current.clientWidth : financeCarouselRef.current.clientWidth,
+      behavior: "smooth",
+    });
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
@@ -37,10 +46,17 @@ export function LibraryShelf() {
             <p className="text-sm font-medium text-[var(--accent)]">{t("library.collection")}</p>
             <h2 id="finance-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.finance")}</h2>
           </div>
-          <span className="hidden text-sm text-[var(--faint)] sm:block">01</span>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => scrollFinance("left")} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]" aria-label="Previous finance book">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" onClick={() => scrollFinance("right")} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]" aria-label="Next finance book">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
         </div>
-        <div className="mt-5">
-          <Link href="/library/finance/finance-book" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+        <div ref={financeCarouselRef} className="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Link href="/library/finance/finance-book" className="group grid min-w-full snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,var(--accent)_12%,var(--elevated))] p-8 sm:min-h-full">
               <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,var(--accent)_20%,transparent))]" />
               <Image src="/images/library/rich-dad-poor-dad.jpg" alt="Rich Dad Poor Dad cover" width={623} height={900} className="relative mx-auto h-60 w-auto rounded-md object-cover shadow-[12px_12px_0_color-mix(in_oklab,var(--accent)_22%,transparent)] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
@@ -49,6 +65,38 @@ export function LibraryShelf() {
               <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.financeBook.title")}</h3>
               <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.financeBook.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+          <Link href="/library/finance/the-psychology-of-money" className="group grid min-w-full snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#ddd8cd] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#fff6_0,transparent_42%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between bg-[#f4f0e8] p-5 text-[#242424] shadow-[12px_12px_0_#9a928555] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#857c6e]">Morgan Housel</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">The<br />Psychology<br />of Money</h3>
+                <span className="h-1 w-12 bg-[#caa552]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.psychologyOfMoney.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.psychologyOfMoney.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+          <Link href="/library/finance/the-richest-man-in-babylon" className="group grid min-w-full snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#5e4030] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#d7a94d66_0,transparent_48%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between border border-[#dbb457] bg-[#211a19] p-5 text-[#f4d783] shadow-[12px_12px_0_#17111080] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em]">George S. Clason</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">The Richest<br />Man in<br />Babylon</h3>
+                <span className="h-1 w-12 bg-[#d7a94d]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.richestMan.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.richestMan.subtitle")}</p>
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
