@@ -197,8 +197,9 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[18] = { en: "TypeScript in React Native", np: "TypeScript in React Native", jp: "React NativeのTypeScript" };
   foundationTitles[19] = { en: "Server State in Depth", np: "Server State in Depth", jp: "サーバー状態の詳細" };
   foundationTitles[20] = { en: "Offline-first and Sync", np: "Offline-first and Sync", jp: "オフライン優先と同期" };
+  foundationTitles[21] = { en: "Authentication Architecture", np: "Authentication Architecture", jp: "認証アーキテクチャ" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 20] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 21] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
