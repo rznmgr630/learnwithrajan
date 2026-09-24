@@ -43,6 +43,14 @@ const RN_TAG: Record<string, LocalizedString> = {
   "server-state": { en: "server state", np: "server state", jp: "サーバー状態" },
   offline: { en: "offline-first", np: "offline-first", jp: "オフライン優先" },
   sync: { en: "sync", np: "sync", jp: "同期" },
+  "native-modules": { en: "native modules", np: "native modules", jp: "ネイティブモジュール" },
+  "turbo-modules": { en: "TurboModules", np: "TurboModules", jp: "TurboModules" },
+  fabric: { en: "Fabric", np: "Fabric", jp: "Fabric" },
+  ios: { en: "iOS", np: "iOS", jp: "iOS" },
+  android: { en: "Android", np: "Android", jp: "Android" },
+  build: { en: "build", np: "build", jp: "ビルド" },
+  configuration: { en: "configuration", np: "configuration", jp: "設定" },
+  publishing: { en: "publishing", np: "publishing", jp: "公開" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -198,8 +206,15 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[19] = { en: "Server State in Depth", np: "Server State in Depth", jp: "サーバー状態の詳細" };
   foundationTitles[20] = { en: "Offline-first and Sync", np: "Offline-first and Sync", jp: "オフライン優先と同期" };
   foundationTitles[21] = { en: "Authentication Architecture", np: "Authentication Architecture", jp: "認証アーキテクチャ" };
+  foundationTitles[22] = { en: "Bridging to Native Code", np: "Bridging to Native Code", jp: "ネイティブコードとの連携" };
+  foundationTitles[23] = { en: "Fabric Native Components", np: "Fabric Native Components", jp: "Fabricネイティブコンポーネント" };
+  foundationTitles[24] = { en: "iOS Fundamentals for React Native Developers", np: "iOS Fundamentals for React Native Developers", jp: "React Native開発者のためのiOS基礎" };
+  foundationTitles[25] = { en: "Android Fundamentals for React Native Developers", np: "Android Fundamentals for React Native Developers", jp: "React Native開発者のためのAndroid基礎" };
+  foundationTitles[26] = { en: "Native Build Configuration", np: "Native Build Configuration", jp: "ネイティブビルド設定" };
+  foundationTitles[27] = { en: "Platform Differences in Practice", np: "Platform Differences in Practice", jp: "プラットフォーム差異の実践" };
+  foundationTitles[28] = { en: "Authoring and Publishing a Native Module", np: "Authoring and Publishing a Native Module", jp: "ネイティブモジュールの作成と公開" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 21] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 28] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {

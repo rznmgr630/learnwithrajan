@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 41;
+export const REACT_NATIVE_TOTAL_DAYS = 48;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 21 ? day - 21 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 28 ? day - 28 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 21, tagSlugs);
+  return reactNativeDayRow(day + 28, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -126,6 +126,20 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactNativeDayRow(19, ["server-state", "caching"]),
       reactNativeDayRow(20, ["offline", "sync"]),
       reactNativeDayRow(21, ["auth", "security"]),
+    ],
+  },
+  {
+    id: "rn-phase4",
+    title: { en: "PHASE 4 · NATIVE ENGINEERING (Days 22–28)", np: "PHASE 4 · NATIVE ENGINEERING (दिन २२–२८)", jp: "PHASE 4 · NATIVE ENGINEERING (22〜28日目)" },
+    dotClass: DOT["rn-w4"],
+    days: [
+      reactNativeDayRow(22, ["native-modules", "turbo-modules"]),
+      reactNativeDayRow(23, ["fabric", "native"]),
+      reactNativeDayRow(24, ["ios", "native"]),
+      reactNativeDayRow(25, ["android", "native"]),
+      reactNativeDayRow(26, ["build", "configuration"]),
+      reactNativeDayRow(27, ["platform", "permissions"]),
+      reactNativeDayRow(28, ["native-modules", "publishing"]),
     ],
   },
   {
