@@ -201,13 +201,6 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
         )}
       </div>
 
-      {!failed && pageCount && (
-        <nav className="mt-5 flex items-center justify-between" aria-label="Book pages">
-          <button type="button" onClick={() => setPageNumber((page) => Math.max(1, page - 1))} disabled={pageNumber === 1} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
-          <button type="button" onClick={() => setPageNumber((page) => Math.min(pageCount, page + 1))} disabled={pageNumber === pageCount} className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] disabled:cursor-not-allowed disabled:opacity-40">Next</button>
-        </nav>
-      )}
-
       {selectedWord && (
         <aside style={meaningPosition} className="fixed z-40 w-72 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl" aria-live="polite">
           <div className="flex items-start justify-between gap-3">
