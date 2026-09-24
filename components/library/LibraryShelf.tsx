@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function LibraryShelf() {
@@ -10,7 +10,16 @@ export function LibraryShelf() {
   const financeCarouselRef = useRef<HTMLDivElement>(null);
   const financeTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const [financePage, setFinancePage] = useState(0);
+  const [pinnedBook, setPinnedBook] = useState<string>();
   const financeBookCount = 7;
+
+  useEffect(() => {
+    setPinnedBook(window.localStorage.getItem("library:pinned-book") ?? undefined);
+  }, []);
+
+  function getBookOrder(pdfUrl: string) {
+    return pinnedBook === pdfUrl ? -1 : 0;
+  }
 
   function getFinanceSlideWidth() {
     const carousel = financeCarouselRef.current;
@@ -103,7 +112,7 @@ export function LibraryShelf() {
           </div>
         </div>
         <div ref={financeCarouselRef} onScroll={updateFinancePage} onTouchStart={handleFinanceTouchStart} onTouchEnd={handleFinanceTouchEnd} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2">
-          <Link href="/library/finance/finance-book" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/finance-book" style={{ order: getBookOrder("/api/library/finance-book") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,var(--accent)_12%,var(--elevated))] p-8 sm:min-h-full">
               <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,var(--accent)_20%,transparent))]" />
               <Image src="/images/library/rich-dad-poor-dad.jpg" alt="Rich Dad Poor Dad cover" width={623} height={900} className="relative mx-auto h-60 w-auto rounded-md object-cover shadow-[12px_12px_0_color-mix(in_oklab,var(--accent)_22%,transparent)] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]" />
@@ -115,7 +124,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/the-psychology-of-money" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/the-psychology-of-money" style={{ order: getBookOrder("/api/library/psychology-of-money") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#ddd8cd] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#fff6_0,transparent_42%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between bg-[#f4f0e8] p-5 text-[#242424] shadow-[12px_12px_0_#9a928555] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
@@ -131,7 +140,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/the-richest-man-in-babylon" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/the-richest-man-in-babylon" style={{ order: getBookOrder("/api/library/richest-man-in-babylon") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#5e4030] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#d7a94d66_0,transparent_48%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between border border-[#dbb457] bg-[#211a19] p-5 text-[#f4d783] shadow-[12px_12px_0_#17111080] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]">
@@ -147,7 +156,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/the-simple-path-to-wealth" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/the-simple-path-to-wealth" style={{ order: getBookOrder("/api/library/the-simple-path-to-wealth") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#d8e6dc] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#ffffff99_0,transparent_48%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between bg-[#f8f5e9] p-5 text-[#194c3e] shadow-[12px_12px_0_#4b7d6a55] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
@@ -163,7 +172,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/the-millionaire-next-door" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/the-millionaire-next-door" style={{ order: getBookOrder("/api/library/the-millionaire-next-door") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#e4e5e8] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffffcc_0,transparent_46%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between bg-[#274c75] p-5 text-white shadow-[12px_12px_0_#18314f66] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]">
@@ -179,7 +188,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/i-will-teach-you-to-be-rich" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/i-will-teach-you-to-be-rich" style={{ order: getBookOrder("/api/library/i-will-teach-you-to-be-rich") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#ecd8d4] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#ffffffbb_0,transparent_48%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between bg-[#d83a30] p-5 text-white shadow-[12px_12px_0_#9c211d55] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
@@ -195,7 +204,7 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
-          <Link href="/library/finance/your-money-or-your-life" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+          <Link href="/library/finance/your-money-or-your-life" style={{ order: getBookOrder("/api/library/your-money-or-your-life") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#e0e8f1] p-8 sm:min-h-full">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffffcc_0,transparent_48%)]" />
               <div className="relative flex h-60 w-40 flex-col justify-between bg-[#24486d] p-5 text-white shadow-[12px_12px_0_#16324e66] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]">
