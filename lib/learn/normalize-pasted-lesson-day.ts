@@ -19,7 +19,7 @@ type RawDay = Omit<LessonDay, "title" | "overview" | "difficulty" | "lessons" | 
   difficulty: string;
   lessons: RawLesson[];
   finalQuiz: RawQuiz[];
-  project?: { name: string; goal: string; brief: string; steps: string[]; acceptance: string[]; stretch?: string[] };
+  project?: { name: string; goal: string; brief: string; steps: string[]; acceptance: string[]; stretch?: string[]; footer?: string };
 };
 
 const local = (en: string): LocalizedString => ({ en, np: en, jp: en });
@@ -70,6 +70,7 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
     project: raw.project && {
       name: local(raw.project.name), goal: local(raw.project.goal), brief: local(raw.project.brief),
       steps: raw.project.steps.map(local), acceptance: raw.project.acceptance.map(local), stretch: raw.project.stretch?.map(local),
+      footer: raw.project.footer ? local(raw.project.footer) : undefined,
     },
   };
 }

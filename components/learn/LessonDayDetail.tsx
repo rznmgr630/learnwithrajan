@@ -112,6 +112,14 @@ function LessonAccordionItem({
   const quizId = `${quizIdPrefix}.${lesson.id}`;
   const quizDone = getResult(quizId);
   const itemRef = useRef<HTMLDivElement>(null);
+  const availableTabs = TABS.filter(({ id }) => {
+    if (id === "diagram") return lesson.diagram.trim().length > 0;
+    if (id === "code") return lesson.codeExample.code.trim().length > 0 || Boolean(lesson.codeExample.details);
+    if (id === "takeaways") return lesson.keyTakeaways.length > 0;
+    if (id === "mistakes") return lesson.commonMistakes.length > 0;
+    if (id === "quiz") return lesson.quiz.length > 0;
+    return true;
+  });
 
   /** Collapsing the lesson above shifts this one, so bring it back to the top. */
   function handleToggle() {
@@ -151,7 +159,7 @@ function LessonAccordionItem({
       {expanded ? (
         <div className="border-t border-[var(--border)] p-5">
           <div className="flex gap-5 overflow-x-auto border-b border-[var(--border)]">
-            {TABS.map((tb) => {
+            {availableTabs.map((tb) => {
               const active = tab === tb.id;
               return (
                 <button
