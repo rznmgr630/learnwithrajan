@@ -175,17 +175,18 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
           <span className="h-5 w-px bg-[var(--border)]" aria-hidden="true" />
           <h1 className="text-xl font-semibold tracking-tight text-[var(--text)] sm:text-2xl">{title}</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom out" title="Zoom out">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6" /></svg>
-          </button>
-          <button type="button" onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.1).toFixed(1))))} disabled={zoom === 1.5} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom in" title="Zoom in">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6M11 8v6" /></svg>
-          </button>
-          <button type="button" onClick={toggleFullscreen} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)]" aria-label={isFullscreen ? "Exit full screen" : "Full screen"} title={isFullscreen ? "Exit full screen" : "Full screen"}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" /></svg>
-          </button>
-        </div>
+      </div>
+
+      <div className="absolute right-4 top-5 z-10 flex flex-col gap-2 sm:right-6">
+        <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom out" title="Zoom out">
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6" /></svg>
+        </button>
+        <button type="button" onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.1).toFixed(1))))} disabled={zoom === 1.5} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom in" title="Zoom in">
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6M11 8v6" /></svg>
+        </button>
+        <button type="button" onClick={toggleFullscreen} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)]" aria-label={isFullscreen ? "Exit full screen" : "Full screen"} title={isFullscreen ? "Exit full screen" : "Full screen"}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" /></svg>
+        </button>
       </div>
 
       <div ref={viewportRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className={`mt-5 flex min-h-0 flex-1 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--elevated)] p-3 shadow-sm sm:p-6 ${zoom > 1 ? "items-start justify-start" : "items-center justify-center"}`}>
