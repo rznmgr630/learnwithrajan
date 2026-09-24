@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "5 saved books",
-    np: "५ सुरक्षित पुस्तक",
-    jp: "保存した本 5冊",
+    en: "6 saved books",
+    np: "६ सुरक्षित पुस्तक",
+    jp: "保存した本 6冊",
   },
   "library.collection": {
     en: "Collection",
@@ -131,6 +131,16 @@ export const UI_STRINGS = {
     en: "A clear guide to financial independence and a rich, free life.",
     np: "आर्थिक स्वतन्त्रता र स्वतन्त्र जीवनका लागि स्पष्ट मार्गदर्शन।",
     jp: "経済的自立と自由な人生のための明快なガイド。",
+  },
+  "library.millionaireNextDoor.title": {
+    en: "The Millionaire Next Door",
+    np: "The Millionaire Next Door",
+    jp: "The Millionaire Next Door",
+  },
+  "library.millionaireNextDoor.subtitle": {
+    en: "The surprising habits of everyday people who build real wealth.",
+    np: "साँचो सम्पत्ति बनाउने साधारण मानिसहरूका आश्चर्यजनक बानीहरू।",
+    jp: "本当の富を築く普通の人々の意外な習慣。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
