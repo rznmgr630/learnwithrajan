@@ -41,6 +41,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
   const [meaningError, setMeaningError] = useState<string>();
   const [meaningPosition, setMeaningPosition] = useState({ left: 16, top: 16 });
   const readerRef = useRef<HTMLElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const secondPage = pageNumber < (pageCount ?? 0) ? pageNumber + 1 : undefined;
   const renderedPageHeight = Math.round(pageHeight * zoom);
 
@@ -133,6 +134,29 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
     setSelectedWord(word);
   }
 
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = touchStartRef.current;
+    const touch = event.changedTouches[0];
+    touchStartRef.current = undefined;
+
+    if (!start || !touch || !pageCount) {
+      return;
+    }
+
+    const horizontalDistance = touch.clientX - start.x;
+    const verticalDistance = touch.clientY - start.y;
+    if (Math.abs(horizontalDistance) < 72 || Math.abs(horizontalDistance) <= Math.abs(verticalDistance)) {
+      return;
+    }
+
+    setPageNumber((page) => horizontalDistance < 0 ? Math.min(pageCount, page + 1) : Math.max(1, page - 1));
+  }
+
   return (
     <main ref={readerRef} className="fixed inset-0 z-30 flex min-h-0 flex-col overflow-hidden bg-[var(--background)] px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -153,7 +177,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
         </div>
       </div>
 
-      <div className={`mt-5 flex min-h-0 flex-1 justify-center overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--elevated)] p-3 shadow-sm sm:p-6 ${zoom > 1 ? "items-start" : "items-center"}`}>
+      <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className={`mt-5 flex min-h-0 flex-1 justify-center overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--elevated)] p-3 shadow-sm sm:p-6 ${zoom > 1 ? "items-start" : "items-center"}`}>
         {failed ? (
           <div className="grid min-h-80 place-items-center text-center text-sm text-[var(--muted)]">
             <p>Unable to load this book. Check that the Drive file is still shared for anyone with the link.</p>
