@@ -2,18 +2,41 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function LibraryShelf() {
   const { t } = useLocale();
   const financeCarouselRef = useRef<HTMLDivElement>(null);
+  const [financePage, setFinancePage] = useState(0);
+  const financeBookCount = 3;
+
+  function getFinanceSlideWidth() {
+    const carousel = financeCarouselRef.current;
+    const firstSlide = carousel?.children[0] as HTMLElement | undefined;
+    const secondSlide = carousel?.children[1] as HTMLElement | undefined;
+
+    return secondSlide && firstSlide ? secondSlide.offsetLeft - firstSlide.offsetLeft : carousel?.clientWidth ?? 0;
+  }
 
   function scrollFinance(direction: "left" | "right") {
-    financeCarouselRef.current?.scrollBy({
-      left: direction === "left" ? -financeCarouselRef.current.clientWidth : financeCarouselRef.current.clientWidth,
+    const nextPage = Math.max(0, Math.min(financeBookCount - 1, financePage + (direction === "left" ? -1 : 1)));
+    const carousel = financeCarouselRef.current;
+    carousel?.scrollTo({
+      left: nextPage * getFinanceSlideWidth(),
       behavior: "smooth",
     });
+    setFinancePage(nextPage);
+  }
+
+  function updateFinancePage() {
+    const carousel = financeCarouselRef.current;
+    const slideWidth = getFinanceSlideWidth();
+    if (!carousel || !slideWidth) {
+      return;
+    }
+
+    setFinancePage(Math.max(0, Math.min(financeBookCount - 1, Math.round(carousel.scrollLeft / slideWidth))));
   }
 
   return (
@@ -47,15 +70,15 @@ export function LibraryShelf() {
             <h2 id="finance-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.finance")}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => scrollFinance("left")} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]" aria-label="Previous finance book">
+            <button type="button" onClick={() => scrollFinance("left")} disabled={financePage === 0} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Previous finance book">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </button>
-            <button type="button" onClick={() => scrollFinance("right")} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]" aria-label="Next finance book">
+            <button type="button" onClick={() => scrollFinance("right")} disabled={financePage === financeBookCount - 1} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Next finance book">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
             </button>
           </div>
         </div>
-        <div ref={financeCarouselRef} className="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={financeCarouselRef} onScroll={updateFinancePage} className="mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link href="/library/finance/finance-book" className="group grid min-w-full snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,var(--accent)_12%,var(--elevated))] p-8 sm:min-h-full">
               <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,var(--accent)_20%,transparent))]" />
