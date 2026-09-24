@@ -41,6 +41,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
   const [meaningError, setMeaningError] = useState<string>();
   const [meaningPosition, setMeaningPosition] = useState({ left: 16, top: 16 });
   const readerRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const secondPage = pageNumber < (pageCount ?? 0) ? pageNumber + 1 : undefined;
   const renderedPageHeight = Math.round(pageHeight * zoom);
@@ -56,6 +57,15 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
   useEffect(() => {
     window.localStorage.setItem(pageStorageKey, String(pageNumber));
   }, [pageNumber, pageStorageKey]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    viewport.scrollLeft = 0;
+  }, [pageNumber, zoom]);
 
   useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(document.fullscreenElement === readerRef.current);
@@ -160,9 +170,10 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
   return (
     <main ref={readerRef} className="fixed inset-0 z-30 flex min-h-0 flex-col overflow-hidden bg-[var(--background)] px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-3">
           <Link href="/library" className="text-sm font-medium text-[var(--accent)] transition hover:brightness-110">← Library</Link>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text)]">{title}</h1>
+          <span className="h-5 w-px bg-[var(--border)]" aria-hidden="true" />
+          <h1 className="text-xl font-semibold tracking-tight text-[var(--text)] sm:text-2xl">{title}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom out" title="Zoom out">
@@ -177,7 +188,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
         </div>
       </div>
 
-      <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className={`mt-5 flex min-h-0 flex-1 justify-center overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--elevated)] p-3 shadow-sm sm:p-6 ${zoom > 1 ? "items-start" : "items-center"}`}>
+      <div ref={viewportRef} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className={`mt-5 flex min-h-0 flex-1 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--elevated)] p-3 shadow-sm sm:p-6 ${zoom > 1 ? "items-start justify-start" : "items-center justify-center"}`}>
         {failed ? (
           <div className="grid min-h-80 place-items-center text-center text-sm text-[var(--muted)]">
             <p>Unable to load this book. Check that the Drive file is still shared for anyone with the link.</p>
@@ -191,9 +202,9 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
               setPageNumber((page) => Math.min(page, numPages));
             }}
             onLoadError={() => setFailed(true)}
-            className="flex justify-center"
+            className={`flex shrink-0 ${zoom > 1 ? "justify-start" : "justify-center"}`}
           >
-            <div onMouseUp={showSelectedWordMeaning} className="flex max-h-full items-center justify-center gap-px bg-[color-mix(in_oklab,var(--border)_75%,transparent)] shadow-xl">
+            <div onMouseUp={showSelectedWordMeaning} className={`flex w-max max-w-none items-start gap-px bg-[color-mix(in_oklab,var(--border)_75%,transparent)] shadow-xl ${zoom > 1 ? "justify-start" : "justify-center"}`}>
               <Page pageNumber={pageNumber} height={renderedPageHeight} renderTextLayer renderAnnotationLayer={false} />
               {secondPage && <Page pageNumber={secondPage} height={renderedPageHeight} renderTextLayer renderAnnotationLayer={false} className="hidden xl:block" />}
             </div>
