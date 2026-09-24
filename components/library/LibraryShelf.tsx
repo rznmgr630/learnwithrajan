@@ -8,6 +8,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 export function LibraryShelf() {
   const { t } = useLocale();
   const financeCarouselRef = useRef<HTMLDivElement>(null);
+  const financeTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const [financePage, setFinancePage] = useState(0);
   const financeBookCount = 7;
 
@@ -37,6 +38,29 @@ export function LibraryShelf() {
     }
 
     setFinancePage(Math.max(0, Math.min(financeBookCount - 1, Math.round(carousel.scrollLeft / slideWidth))));
+  }
+
+  function handleFinanceTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    financeTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleFinanceTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = financeTouchStartRef.current;
+    const touch = event.changedTouches[0];
+    financeTouchStartRef.current = undefined;
+
+    if (!start || !touch) {
+      return;
+    }
+
+    const horizontalDistance = touch.clientX - start.x;
+    const verticalDistance = touch.clientY - start.y;
+    if (Math.abs(horizontalDistance) < 56 || Math.abs(horizontalDistance) <= Math.abs(verticalDistance)) {
+      return;
+    }
+
+    scrollFinance(horizontalDistance < 0 ? "right" : "left");
   }
 
   return (
@@ -78,7 +102,7 @@ export function LibraryShelf() {
             </button>
           </div>
         </div>
-        <div ref={financeCarouselRef} onScroll={updateFinancePage} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2">
+        <div ref={financeCarouselRef} onScroll={updateFinancePage} onTouchStart={handleFinanceTouchStart} onTouchEnd={handleFinanceTouchEnd} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2">
           <Link href="/library/finance/finance-book" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,var(--accent)_12%,var(--elevated))] p-8 sm:min-h-full">
               <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,var(--accent)_20%,transparent))]" />
