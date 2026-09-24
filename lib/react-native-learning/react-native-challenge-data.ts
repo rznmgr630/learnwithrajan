@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 55;
+export const REACT_NATIVE_TOTAL_DAYS = 57;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 35 ? day - 35 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 37 ? day - 37 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 35, tagSlugs);
+  return reactNativeDayRow(day + 37, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -154,6 +154,15 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactNativeDayRow(33, ["observability", "quality"]),
       reactNativeDayRow(34, ["security", "native"]),
       reactNativeDayRow(35, ["auth", "supply-chain"]),
+    ],
+  },
+  {
+    id: "rn-phase6",
+    title: { en: "PHASE 6 · PRODUCTION (Days 36–40)", np: "PHASE 6 · PRODUCTION (दिन ३६–४०)", jp: "PHASE 6 · PRODUCTION (36〜40日目)" },
+    dotClass: DOT["rn-w6"],
+    days: [
+      reactNativeDayRow(36, ["ci-cd", "eas"]),
+      reactNativeDayRow(37, ["ota", "versioning"]),
     ],
   },
   {
