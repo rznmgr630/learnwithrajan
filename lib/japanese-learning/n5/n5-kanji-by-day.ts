@@ -42,14 +42,15 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
     "読", "書",              // literacy
     "見", "聞",              // senses
     "飲",                    // drink
-    "来", "行", "出", "入",  // movement
+    "来", "行", "入",         // movement
     "今",                    // time — now
   ],
 
   // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop  |  Front, price, large number
+  // Transport: station, car, electric (電車), shop  |  Movement, time, price, large number
   5: [
     "駅", "車", "電", "店",  // station / car / electric (train) / shop
+    "出", "外", "夜",        // exit / outside / night (今夜)
     "前", "安", "万",        // front / cheap / ten thousand
   ],
 
