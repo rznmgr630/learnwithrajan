@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 57;
+export const REACT_NATIVE_TOTAL_DAYS = 59;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 37 ? day - 37 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 39 ? day - 39 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 37, tagSlugs);
+  return reactNativeDayRow(day + 39, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -163,6 +163,8 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [
       reactNativeDayRow(36, ["ci-cd", "eas"]),
       reactNativeDayRow(37, ["ota", "versioning"]),
+      reactNativeDayRow(38, ["app-store", "submission"]),
+      reactNativeDayRow(39, ["play-store", "submission"]),
     ],
   },
   {
