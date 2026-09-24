@@ -23,7 +23,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   // Directions (compass + vertical)  |  Things & value adjectives
   2: [
     "上", "下", "左", "右", "後", "南", "東", "西",          // directions
-    "本", "百", "千", "大", "小", "高", "長", "白",  // things / adjectives
+    "本", "百", "千", "小", "高", "長", "白",       // things / adjectives
   ],
 
   // ── Lesson 3 — ここ/そこ/あそこ, places, floors ────────────────────────────
@@ -47,11 +47,11 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop  |  Movement, direction, time, price, large number
+  // Transport: station, car, electric (電車), shop  |  Movement, direction, time, home, price, large number
   5: [
     "駅", "車", "電", "店",  // station / car / electric (train) / shop
     "出", "外", "夜",        // exit / outside / night (今夜)
-    "先", "北",              // last month / north
+    "先", "北", "大", "家",  // last month / north / landlord
     "前", "安", "万",        // front / cheap / ten thousand
   ],
 
@@ -97,7 +97,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
     "天", "気", "雨",  // weather / sky
     "犬",              // dog (animal)
     "田",              // rice field / land
-    "自", "家", "族",  // family — self, house, clan (自分 家族)
+    "自", "族",          // family — self, house, clan (自分 家族)
   ],
 
   // ── Lesson 11 — counters & time ───────────────────────────────────────────
