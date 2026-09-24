@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "6 saved books",
-    np: "६ सुरक्षित पुस्तक",
-    jp: "保存した本 6冊",
+    en: "7 saved books",
+    np: "७ सुरक्षित पुस्तक",
+    jp: "保存した本 7冊",
   },
   "library.collection": {
     en: "Collection",
@@ -141,6 +141,16 @@ export const UI_STRINGS = {
     en: "The surprising habits of everyday people who build real wealth.",
     np: "साँचो सम्पत्ति बनाउने साधारण मानिसहरूका आश्चर्यजनक बानीहरू।",
     jp: "本当の富を築く普通の人々の意外な習慣。",
+  },
+  "library.iWillTeachYou.title": {
+    en: "I Will Teach You to Be Rich",
+    np: "I Will Teach You to Be Rich",
+    jp: "I Will Teach You to Be Rich",
+  },
+  "library.iWillTeachYou.subtitle": {
+    en: "A practical, no-guilt approach to managing money and investing.",
+    np: "पैसा व्यवस्थापन र लगानीका लागि व्यावहारिक, अपराधबोधरहित दृष्टिकोण।",
+    jp: "お金の管理と投資のための実践的で罪悪感のないアプローチ。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
