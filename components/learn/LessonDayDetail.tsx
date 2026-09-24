@@ -376,7 +376,10 @@ export function LessonDayDetail({
               expanded={expandedLesson === i}
               onToggle={() => setExpandedLesson((prev) => (prev === i ? null : i))}
               quizIdPrefix={quizIdPrefix}
-              preserveExplanation={track === "react-native" || (track === "js" && day.day === 1)}
+              preserveExplanation={
+                track === "react-native" ||
+                (track === "js" && (day.day === 1 || (day.day === 5 && i === 2)))
+              }
             />
           ))}
 
