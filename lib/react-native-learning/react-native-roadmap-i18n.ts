@@ -28,6 +28,13 @@ const RN_TAG: Record<string, LocalizedString> = {
   hooks: { en: "hooks", np: "हुक", jp: "フック" },
   gestures: { en: "gestures", np: "gestures", jp: "ジェスチャー" },
   animation: { en: "animation", np: "animation", jp: "アニメーション" },
+  device: { en: "device APIs", np: "device APIs", jp: "デバイスAPI" },
+  lifecycle: { en: "lifecycle", np: "lifecycle", jp: "ライフサイクル" },
+  storage: { en: "storage", np: "storage", jp: "ストレージ" },
+  media: { en: "media", np: "media", jp: "メディア" },
+  files: { en: "files", np: "files", jp: "ファイル" },
+  webview: { en: "WebView", np: "WebView", jp: "WebView" },
+  security: { en: "security", np: "security", jp: "セキュリティ" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -169,8 +176,15 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[5] = { en: "Navigation", np: "Navigation", jp: "ナビゲーション" };
   foundationTitles[6] = { en: "Lists and performance basics", np: "Lists र performance", jp: "リストとパフォーマンス基礎" };
   foundationTitles[7] = { en: "Gestures and Animation", np: "Gestures and Animation", jp: "ジェスチャーとアニメーション" };
+  foundationTitles[8] = { en: "Device APIs and Permissions", np: "Device APIs and Permissions", jp: "デバイスAPIと権限" };
+  foundationTitles[9] = { en: "App Lifecycle", np: "App Lifecycle", jp: "アプリのライフサイクル" };
+  foundationTitles[10] = { en: "Storage", np: "Storage", jp: "ストレージ" };
+  foundationTitles[11] = { en: "Networking and Data Fetching", np: "Networking and Data Fetching", jp: "ネットワークとデータ取得" };
+  foundationTitles[12] = { en: "Push Notifications and Background Work", np: "Push Notifications and Background Work", jp: "プッシュ通知とバックグラウンド処理" };
+  foundationTitles[13] = { en: "Media and Files", np: "Media and Files", jp: "メディアとファイル" };
+  foundationTitles[14] = { en: "WebView and Web/Native Boundaries", np: "WebView and Web/Native Boundaries", jp: "WebViewとWeb・ネイティブ境界" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 7] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 14] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
