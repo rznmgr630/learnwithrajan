@@ -43,17 +43,18 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href="/"
-          className="font-semibold tracking-tight text-[var(--text)] transition hover:text-[var(--accent)]"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--elevated)] text-xs font-bold tracking-tight text-[var(--text)] transition hover:text-[var(--accent)] sm:block sm:h-auto sm:w-auto sm:bg-transparent sm:text-base sm:font-semibold"
         >
-          {t("site.title")}
+          <span className="sm:hidden">LR</span>
+          <span className="hidden whitespace-nowrap sm:inline">{t("site.title")}</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          <nav className="flex items-center gap-1 text-sm">
+          <nav className="flex items-center gap-0 text-sm sm:gap-1">
             {links.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-lg px-3 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+                className="whitespace-nowrap rounded-lg px-2 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3"
               >
                 {t(item.key)}
               </Link>
