@@ -204,6 +204,10 @@ export function ReactNativeRoadmap() {
                         </div>
                       </button>
                     </div>
+
+                    <span className="pointer-events-none absolute bottom-2 right-3 select-none font-mono text-7xl font-black leading-none text-[var(--text)]/[0.04]" aria-hidden>
+                      {String(d.day).padStart(2, "0")}
+                    </span>
                   </li>
                 );
               })}
