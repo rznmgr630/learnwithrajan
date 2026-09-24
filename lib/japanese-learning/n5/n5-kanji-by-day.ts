@@ -16,13 +16,13 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   // Numbers 1–10  |  People / roles / question word
   1: [
     "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",  // numbers 1–10
-    "私", "先", "生", "学", "人", "名", "会", "社", "員", "何",  // people / jobs / question
+    "私", "生", "学", "人", "名", "会", "社", "員", "何",        // people / jobs / question
   ],
 
   // ── Lesson 2 — これ/それ/あれ, things, prices ──────────────────────────────
   // Directions (compass + vertical)  |  Things & value adjectives
   2: [
-    "上", "下", "左", "右", "後", "北", "南", "東", "西",  // directions
+    "上", "下", "左", "右", "後", "南", "東", "西",          // directions
     "本", "百", "千", "大", "小", "高", "長", "白",  // things / adjectives
   ],
 
@@ -47,10 +47,11 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop  |  Movement, time, price, large number
+  // Transport: station, car, electric (電車), shop  |  Movement, direction, time, price, large number
   5: [
     "駅", "車", "電", "店",  // station / car / electric (train) / shop
     "出", "外", "夜",        // exit / outside / night (今夜)
+    "先", "北",              // last month / north
     "前", "安", "万",        // front / cheap / ten thousand
   ],
 
