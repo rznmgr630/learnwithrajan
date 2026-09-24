@@ -39,8 +39,8 @@ export function SiteHeader() {
   const { t } = useLocale();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_88%,transparent)] backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-20 w-full min-w-0 overflow-x-clip border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_88%,transparent)] backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           href="/"
           className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--elevated)] text-xs font-bold tracking-tight text-[var(--text)] transition hover:text-[var(--accent)] sm:block sm:h-auto sm:w-auto sm:bg-transparent sm:text-base sm:font-semibold"
@@ -48,13 +48,13 @@ export function SiteHeader() {
           <span className="sm:hidden">LR</span>
           <span className="hidden whitespace-nowrap sm:inline">{t("site.title")}</span>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <nav className="flex items-center gap-0 text-sm sm:gap-1">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+          <nav className="flex min-w-0 items-center gap-0 text-sm sm:gap-1">
             {links.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="whitespace-nowrap rounded-lg px-2 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3"
+                className={`${item.href === "/library" ? "hidden min-[360px]:inline-flex" : "inline-flex"} whitespace-nowrap rounded-lg px-1.5 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3`}
               >
                 {t(item.key)}
               </Link>
