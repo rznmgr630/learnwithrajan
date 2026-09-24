@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "7 saved books",
-    np: "७ सुरक्षित पुस्तक",
-    jp: "保存した本 7冊",
+    en: "8 saved books",
+    np: "८ सुरक्षित पुस्तक",
+    jp: "保存した本 8冊",
   },
   "library.collection": {
     en: "Collection",
@@ -151,6 +151,16 @@ export const UI_STRINGS = {
     en: "A practical, no-guilt approach to managing money and investing.",
     np: "पैसा व्यवस्थापन र लगानीका लागि व्यावहारिक, अपराधबोधरहित दृष्टिकोण।",
     jp: "お金の管理と投資のための実践的で罪悪感のないアプローチ。",
+  },
+  "library.yourMoneyYourLife.title": {
+    en: "Your Money or Your Life",
+    np: "Your Money or Your Life",
+    jp: "Your Money or Your Life",
+  },
+  "library.yourMoneyYourLife.subtitle": {
+    en: "Transform your relationship with money and live more deliberately.",
+    np: "पैसासँगको सम्बन्ध बदल्नुहोस् र अझ उद्देश्यपूर्ण जीवन जिउनुहोस्।",
+    jp: "お金との関係を見直し、より意図的に生きるための一冊。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
