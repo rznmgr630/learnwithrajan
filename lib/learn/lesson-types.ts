@@ -29,6 +29,7 @@ export interface LessonDay {
   difficulty: LocalizedString;
   lessons: Lesson[];
   finalQuiz: LessonQuizQuestion[];
+  footer?: LocalizedString;
   /** Optional build slice shown at the bottom, after the final quiz. */
   project?: LessonProject;
 }
