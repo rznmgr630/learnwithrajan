@@ -27,7 +27,7 @@ function List({
       >
         {items.map((line, i) => (
           <li key={i} className="pl-1">
-            <RichText text={pickLocalized(line, locale)} />
+            <RichParagraph text={pickLocalized(line, locale)} />
           </li>
         ))}
       </Tag>

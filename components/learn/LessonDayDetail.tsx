@@ -186,13 +186,20 @@ function LessonAccordionItem({
             ) : null}
 
             {tab === "code" ? (
-              <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950">
-                <div className="border-b border-neutral-700 px-3 py-1.5 text-[11px] font-medium text-zinc-400">
-                  <RichText text={pickLocalized(lesson.codeExample.title, locale)} />
-                </div>
-                <pre className="p-3 font-mono text-[11px] leading-relaxed text-zinc-100">
-                  {lesson.codeExample.code}
-                </pre>
+              <div className="space-y-4">
+                {lesson.codeExample.code ? (
+                  <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950">
+                    <div className="border-b border-neutral-700 px-3 py-1.5 text-[11px] font-medium text-zinc-400">
+                      <RichText text={pickLocalized(lesson.codeExample.title, locale)} />
+                    </div>
+                    <pre className="p-3 font-mono text-[11px] leading-relaxed text-zinc-100">
+                      {lesson.codeExample.code}
+                    </pre>
+                  </div>
+                ) : null}
+                {lesson.codeExample.details ? (
+                  <RichParagraph text={pickLocalized(lesson.codeExample.details, locale)} />
+                ) : null}
               </div>
             ) : null}
 
@@ -200,7 +207,7 @@ function LessonAccordionItem({
               <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-[var(--text)] marker:text-[var(--accent)]">
                 {lesson.keyTakeaways.map((item, i) => (
                   <li key={i}>
-                    <RichText text={pickLocalized(item, locale)} />
+                    <RichParagraph text={pickLocalized(item, locale)} />
                   </li>
                 ))}
               </ul>
@@ -214,7 +221,7 @@ function LessonAccordionItem({
                     className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm leading-relaxed text-[var(--text)]"
                   >
                     <span className="mt-0.5 shrink-0 text-amber-400">⚠</span>
-                    <RichText text={pickLocalized(item, locale)} />
+                    <RichParagraph text={pickLocalized(item, locale)} />
                   </li>
                 ))}
               </ul>
@@ -346,6 +353,12 @@ export function LessonDayDetail({
         </div>
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-y-contain p-5">
+          {day.overview ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--elevated)]/30 p-4">
+              <RichParagraph text={pickLocalized(day.overview, locale)} />
+            </div>
+          ) : null}
+
           {day.lessons.map((lesson, i) => (
             <LessonAccordionItem
               key={lesson.id}
@@ -359,18 +372,20 @@ export function LessonDayDetail({
             />
           ))}
 
-          <div className="mt-2 shrink-0 rounded-2xl border border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_6%,var(--elevated))] p-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[var(--text)]">🏁 Final Quiz</h3>
-              <span className="text-xs font-medium text-[var(--muted)]">
-                {day.finalQuiz.length} Questions
-                {finalResult ? ` · Completed ${finalResult.score}/${finalResult.total}` : ""}
-              </span>
+          {day.finalQuiz.length ? (
+            <div className="mt-2 shrink-0 rounded-2xl border border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_6%,var(--elevated))] p-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--text)]">🏁 Final Quiz</h3>
+                <span className="text-xs font-medium text-[var(--muted)]">
+                  {day.finalQuiz.length} Questions
+                  {finalResult ? ` · Completed ${finalResult.score}/${finalResult.total}` : ""}
+                </span>
+              </div>
+              <div className="mt-4">
+                <LessonQuiz quizId={`${quizIdPrefix}.final`} questions={day.finalQuiz} locale={locale} />
+              </div>
             </div>
-            <div className="mt-4">
-              <LessonQuiz quizId={`${quizIdPrefix}.final`} questions={day.finalQuiz} locale={locale} />
-            </div>
-          </div>
+          ) : null}
 
           {day.project ? <LessonProjectCard project={day.project} /> : null}
 
