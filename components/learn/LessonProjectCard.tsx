@@ -16,6 +16,7 @@ function List({
   ordered?: boolean;
   locale: ReturnType<typeof useLocale>["locale"];
 }) {
+  if (!items.length) return null;
   const Tag = ordered ? "ol" : "ul";
   return (
     <div className="mt-4">
@@ -63,6 +64,11 @@ export function LessonProjectCard({ project }: { project: LessonProject }) {
       <List label={t("lessonProject.acceptance")} items={project.acceptance} locale={locale} />
       {project.stretch?.length ? (
         <List label={t("lessonProject.stretch")} items={project.stretch} locale={locale} />
+      ) : null}
+      {project.footer ? (
+        <div className="mt-4 text-sm leading-relaxed text-[var(--muted)]">
+          <RichParagraph text={pickLocalized(project.footer, locale)} />
+        </div>
       ) : null}
     </div>
   );

@@ -45,4 +45,5 @@ export interface LessonProject {
   /** Checks that tell you the slice is finished. */
   acceptance: LocalizedString[];
   stretch?: LocalizedString[];
+  footer?: LocalizedString;
 }
