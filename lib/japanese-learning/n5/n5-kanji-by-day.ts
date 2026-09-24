@@ -16,7 +16,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   // Numbers 1–10  |  People / roles / question word
   1: [
     "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",  // numbers 1–10
-    "私", "生", "学", "人", "名", "会", "社", "員", "何",        // people / jobs / question
+    "私", "生", "人", "名", "会", "社", "員", "何",              // people / jobs / question
   ],
 
   // ── Lesson 2 — これ/それ/あれ, things, prices ──────────────────────────────
@@ -29,7 +29,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   // ── Lesson 3 — ここ/そこ/あそこ, places, floors ────────────────────────────
   // Rooms / buildings  |  Position (inside/middle)  |  Communication  |  Country / food
   3: [
-    "室", "堂", "場", "校",  // rooms / buildings (教室 食堂 売り場 学校)
+    "室", "堂", "場",        // rooms / buildings (教室 食堂 売り場 学校)
     "中",                    // inside / middle (floor context)
     "話",                    // speak / telephone (電話)
     "国",                    // country (お国)
@@ -47,11 +47,12 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop  |  Movement, direction, time, home, price, large number
+  // Transport: station, car, electric (電車), shop  |  Movement, direction, school, time, home, price, large number
   5: [
     "駅", "車", "電", "店",  // station / car / electric (train) / shop
     "出", "外", "夜",        // exit / outside / night (今夜)
     "先", "北", "大", "家",  // last month / north / landlord
+    "学", "校",              // school
     "前", "安", "万",        // front / cheap / ten thousand
   ],
 
