@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 34;
+export const REACT_NATIVE_TOTAL_DAYS = 36;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 14 ? day - 14 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 16 ? day - 16 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 14, tagSlugs);
+  return reactNativeDayRow(day + 16, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -112,6 +112,15 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       reactNativeDayRow(12, ["notifications", "platform"]),
       reactNativeDayRow(13, ["media", "files"]),
       reactNativeDayRow(14, ["webview", "security"]),
+    ],
+  },
+  {
+    id: "rn-phase3",
+    title: { en: "PHASE 3 · APPLICATION ARCHITECTURE (Days 15–21)", np: "PHASE 3 · APPLICATION ARCHITECTURE (दिन १५–२१)", jp: "PHASE 3 · APPLICATION ARCHITECTURE (15〜21日目)" },
+    dotClass: DOT["rn-w3"],
+    days: [
+      reactNativeDayRow(15, ["state", "architecture"]),
+      reactNativeDayRow(16, ["forms", "validation"]),
     ],
   },
   {
