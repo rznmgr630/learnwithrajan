@@ -13,7 +13,7 @@ export interface Lesson {
   durationMinutes: number;
   explanation: LocalizedString;
   diagram: string;
-  codeExample: { title: LocalizedString; code: string };
+  codeExample: { title: LocalizedString; code: string; details?: LocalizedString };
   keyTakeaways: LocalizedString[];
   commonMistakes: LocalizedString[];
   quiz: LessonQuizQuestion[];
@@ -24,6 +24,7 @@ export interface Lesson {
 export interface LessonDay {
   day: number;
   title: LocalizedString;
+  overview?: LocalizedString;
   totalMinutes: number;
   difficulty: LocalizedString;
   lessons: Lesson[];

@@ -8,13 +8,14 @@ type RawLesson = {
   durationMinutes: number;
   explanation: string;
   diagram: string;
-  codeExample: string | { title: string; code: string };
+  codeExample: string | { title: string; code: string; details?: string };
   keyTakeaways: string[];
   commonMistakes: string[];
   quiz: RawQuiz[];
 };
-type RawDay = Omit<LessonDay, "title" | "difficulty" | "lessons" | "finalQuiz" | "project"> & {
+type RawDay = Omit<LessonDay, "title" | "overview" | "difficulty" | "lessons" | "finalQuiz" | "project"> & {
   title: string;
+  overview?: string;
   difficulty: string;
   lessons: RawLesson[];
   finalQuiz: RawQuiz[];
@@ -47,6 +48,7 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
   return {
     ...raw,
     title: local(raw.title),
+    overview: raw.overview ? local(raw.overview) : undefined,
     difficulty: local(raw.difficulty),
     lessons: raw.lessons.map((lesson) => ({
       ...lesson,
@@ -55,7 +57,11 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
       diagram: unwrapPreformatted(lesson.diagram),
       codeExample: typeof lesson.codeExample === "string"
         ? { title: local("Code example"), code: unwrapPreformatted(lesson.codeExample) }
-        : { title: local(lesson.codeExample.title), code: unwrapPreformatted(lesson.codeExample.code) },
+        : {
+            title: local(lesson.codeExample.title),
+            code: unwrapPreformatted(lesson.codeExample.code),
+            details: lesson.codeExample.details ? local(lesson.codeExample.details) : undefined,
+          },
       keyTakeaways: lesson.keyTakeaways.map(local),
       commonMistakes: lesson.commonMistakes.map(local),
       quiz: lesson.quiz.map((item) => ({ question: local(item.question), options: (item.options ?? [item.answer ?? ""]).map(local), correctIndex: item.correctIndex ?? 0, explanation: local(item.explanation ?? item.answer ?? "") })),
