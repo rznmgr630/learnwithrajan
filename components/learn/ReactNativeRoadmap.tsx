@@ -37,12 +37,9 @@ import {
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 
 const TAG_PILL =
-  "rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_85%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]";
+  "rounded-full border border-[var(--border)]/60 bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--faint)]";
 
-const dayGridClass =
-  REACT_NATIVE_TOTAL_DAYS <= 2
-    ? "grid grid-cols-1 gap-4 sm:mx-auto sm:max-w-xl md:grid-cols-2"
-    : "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4";
+const dayGridClass = "grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3";
 
 const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
   0: REACT_NATIVE_PHASE_0_LESSONS,
@@ -128,60 +125,87 @@ export function ReactNativeRoadmap() {
             </div>
             <ul className={dayGridClass}>
               {week.days.map((d) => {
-          const checked = isDone(d.day);
-          return (
-            <li
-              key={d.day}
-              className="flex flex-col rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-4 transition hover:border-[var(--accent)]"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-medium text-[var(--muted)]">
-                  {t("jpRoadmap.dayPrefix")} {d.day}
-                </span>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={checked}
-                  onClick={() => toggleDay(d.day)}
-                  className={[
-                    "grid h-5 w-5 shrink-0 place-items-center rounded border transition",
-                    checked
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                      : "border-[var(--border)] bg-[var(--elevated)] hover:border-[var(--accent)]",
-                  ].join(" ")}
-                >
-                  {checked ? (
-                    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
-                      <path
-                        d="M2.5 6L5 8.5L9.5 3.5"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ) : null}
-                </button>
-              </div>
-              <button
-                type="button"
-                aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
-                className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                onClick={() => (REACT_NATIVE_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
-              >
-                <span className="text-sm font-semibold leading-snug text-[var(--text)]">
-                  <RichText text={pickLocalized(d.title, locale)} />
-                </span>
-                <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
-                  {d.tags.map((tag) => (
-                    <span key={`${d.day}-${tag.slug}`} className={TAG_PILL}>
-                      <RichText text={pickLocalized(tag.label, locale)} />
-                    </span>
-                  ))}
-                </div>
-              </button>
-            </li>
-          );
+                const checked = isDone(d.day);
+                return (
+                  <li
+                    key={d.day}
+                    className={[
+                      "group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-200",
+                      checked
+                        ? "border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_6%,var(--elevated))]"
+                        : "border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] hover:-translate-y-0.5 hover:border-[var(--accent)]/50 hover:shadow-xl hover:shadow-black/10",
+                    ].join(" ")}
+                  >
+                    {checked && (
+                      <div className="h-[2px] bg-gradient-to-r from-[var(--accent)] via-[var(--accent)]/50 to-transparent" />
+                    )}
+
+                    <div className="flex flex-1 flex-col p-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={[
+                            "inline-flex items-center rounded-md px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums",
+                            checked
+                              ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+                              : "border border-[var(--border)] bg-[var(--elevated)] text-[var(--faint)]",
+                          ].join(" ")}
+                        >
+                          {String(d.day).padStart(2, "0")}
+                        </span>
+
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={checked}
+                          onClick={(e) => { e.stopPropagation(); toggleDay(d.day); }}
+                          className={[
+                            "grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-all duration-150",
+                            checked
+                              ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                              : "border-[var(--border)] bg-transparent hover:border-[var(--accent)]/60",
+                          ].join(" ")}
+                        >
+                          {checked && (
+                            <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+                              <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
+                        className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                        onClick={() => (REACT_NATIVE_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
+                      >
+                        <span
+                          className={[
+                            "text-sm font-semibold leading-snug transition-colors duration-150",
+                            checked ? "text-[var(--muted)]" : "text-[var(--text)] group-hover:text-[var(--accent)]",
+                          ].join(" ")}
+                        >
+                          <RichText text={pickLocalized(d.title, locale)} />
+                        </span>
+
+                        <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
+                          {d.tags.map((tag) => (
+                            <span key={`${d.day}-${tag.slug}`} className={TAG_PILL}>
+                              <RichText text={pickLocalized(tag.label, locale)} />
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="mt-3 flex items-center gap-1 text-[11px] font-medium text-[var(--accent)] opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                          <span>View lesson</span>
+                          <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+                            <path d="M4.5 3L8.5 6L4.5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </button>
+                    </div>
+                  </li>
+                );
               })}
             </ul>
           </section>
