@@ -38,6 +38,9 @@ const RN_TAG: Record<string, LocalizedString> = {
   state: { en: "state", np: "state", jp: "状態管理" },
   architecture: { en: "architecture", np: "architecture", jp: "アーキテクチャ" },
   validation: { en: "validation", np: "validation", jp: "バリデーション" },
+  react: { en: "modern React", np: "modern React", jp: "モダンReact" },
+  typescript: { en: "TypeScript", np: "TypeScript", jp: "TypeScript" },
+  "server-state": { en: "server state", np: "server state", jp: "サーバー状態" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -188,8 +191,11 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[14] = { en: "WebView and Web/Native Boundaries", np: "WebView and Web/Native Boundaries", jp: "WebViewとWeb・ネイティブ境界" };
   foundationTitles[15] = { en: "State Management", np: "State Management", jp: "状態管理" };
   foundationTitles[16] = { en: "Forms", np: "Forms", jp: "フォーム" };
+  foundationTitles[17] = { en: "Modern React in React Native", np: "Modern React in React Native", jp: "React NativeのモダンReact" };
+  foundationTitles[18] = { en: "TypeScript in React Native", np: "TypeScript in React Native", jp: "React NativeのTypeScript" };
+  foundationTitles[19] = { en: "Server State in Depth", np: "Server State in Depth", jp: "サーバー状態の詳細" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 16] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 19] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
