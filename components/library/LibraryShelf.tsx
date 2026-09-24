@@ -70,10 +70,10 @@ export function LibraryShelf() {
             <h2 id="finance-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.finance")}</h2>
           </div>
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <button type="button" onClick={() => scrollFinance("left")} disabled={financePage === 0} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Previous finance book">
+            <button type="button" onClick={() => scrollFinance("left")} disabled={financePage === 0} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Previous finance book">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </button>
-            <button type="button" onClick={() => scrollFinance("right")} disabled={financePage === financeBookCount - 1} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Next finance book">
+            <button type="button" onClick={() => scrollFinance("right")} disabled={financePage === financeBookCount - 1} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Next finance book">
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
             </button>
           </div>

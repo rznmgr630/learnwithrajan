@@ -169,7 +169,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
 
   return (
     <main ref={readerRef} className="fixed inset-0 z-30 flex min-h-0 flex-col overflow-hidden bg-[var(--background)] px-4 py-5 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className={`flex flex-wrap items-center justify-between gap-4 ${isFullscreen ? "hidden" : ""}`}>
         <div className="flex items-center gap-3">
           <Link href="/library" className="text-sm font-medium text-[var(--accent)] transition hover:brightness-110">← Library</Link>
           <span className="h-5 w-px bg-[var(--border)]" aria-hidden="true" />
