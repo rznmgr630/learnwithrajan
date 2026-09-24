@@ -17,6 +17,11 @@ export function LibraryShelf() {
     setPinnedBook(window.localStorage.getItem("library:pinned-book") ?? undefined);
   }, []);
 
+  useEffect(() => {
+    financeCarouselRef.current?.scrollTo({ left: 0 });
+    setFinancePage(0);
+  }, [pinnedBook]);
+
   function getBookOrder(pdfUrl: string) {
     return pinnedBook === pdfUrl ? -1 : 0;
   }
@@ -26,7 +31,7 @@ export function LibraryShelf() {
     const firstSlide = carousel?.children[0] as HTMLElement | undefined;
     const secondSlide = carousel?.children[1] as HTMLElement | undefined;
 
-    return secondSlide && firstSlide ? secondSlide.offsetLeft - firstSlide.offsetLeft : carousel?.clientWidth ?? 0;
+    return secondSlide && firstSlide ? Math.abs(secondSlide.offsetLeft - firstSlide.offsetLeft) : carousel?.clientWidth ?? 0;
   }
 
   function scrollFinance(direction: "left" | "right") {
