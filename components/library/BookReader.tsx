@@ -165,14 +165,14 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--text)]">{title}</h1>
         </div>
         <div className="flex items-center gap-3">
-          {pageCount && <p className="text-sm text-[var(--muted)]">Page {pageNumber} of {pageCount}</p>}
-          <div className="flex items-center overflow-hidden rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--text)]">
-            <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="px-3 py-2 transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Decrease text size">A−</button>
-            <span className="border-x border-[var(--border)] px-3 py-2 text-[var(--muted)]">{Math.round(zoom * 100)}%</span>
-            <button type="button" onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.1).toFixed(1))))} disabled={zoom === 1.5} className="px-3 py-2 transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Increase text size">A+</button>
-          </div>
-          <button type="button" onClick={toggleFullscreen} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--elevated)]">
-            {isFullscreen ? "Exit full screen" : "Full screen"}
+          <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom out" title="Zoom out">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6" /></svg>
+          </button>
+          <button type="button" onClick={() => setZoom((value) => Math.min(1.5, Number((value + 0.1).toFixed(1))))} disabled={zoom === 1.5} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom in" title="Zoom in">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6M11 8v6" /></svg>
+          </button>
+          <button type="button" onClick={toggleFullscreen} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--text)] transition hover:bg-[var(--elevated)]" aria-label={isFullscreen ? "Exit full screen" : "Full screen"} title={isFullscreen ? "Exit full screen" : "Full screen"}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" /></svg>
           </button>
         </div>
       </div>
@@ -200,6 +200,8 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
           </Document>
         )}
       </div>
+
+      {pageCount && <p className="mt-2 text-center text-xs text-[var(--faint)]">Page {pageNumber} of {pageCount}</p>}
 
       {selectedWord && (
         <aside style={meaningPosition} className="fixed z-40 w-72 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-2xl" aria-live="polite">
