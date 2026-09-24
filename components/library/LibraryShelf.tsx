@@ -9,7 +9,7 @@ export function LibraryShelf() {
   const { t } = useLocale();
   const financeCarouselRef = useRef<HTMLDivElement>(null);
   const [financePage, setFinancePage] = useState(0);
-  const financeBookCount = 3;
+  const financeBookCount = 4;
 
   function getFinanceSlideWidth() {
     const carousel = financeCarouselRef.current;
@@ -120,6 +120,22 @@ export function LibraryShelf() {
               <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.richestMan.title")}</h3>
               <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.richestMan.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+          <Link href="/library/finance/the-simple-path-to-wealth" className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#d8e6dc] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#ffffff99_0,transparent_48%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between bg-[#f8f5e9] p-5 text-[#194c3e] shadow-[12px_12px_0_#4b7d6a55] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#4b7d6a]">J. L. Collins</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">The Simple<br />Path to<br />Wealth</h3>
+                <span className="h-1 w-12 bg-[#d5a547]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.simplePath.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.simplePath.subtitle")}</p>
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
