@@ -201,7 +201,11 @@ function renderSegment(part: Segment, key: number) {
 }
 
 export function RichText({ text, className }: RichTextProps) {
-  const parts = parseInlineFormatting(text);
+  const standaloneHeading = text.trim().match(/^#{1,6}\s+(.+)$/);
+  const parts = parseInlineFormatting(standaloneHeading?.[1] ?? text);
+  if (standaloneHeading) {
+    return <strong className={`${boldClass} ${className ?? ""}`}>{parts.map((part, i) => renderSegment(part, i))}</strong>;
+  }
   return <span className={className}>{parts.map((part, i) => renderSegment(part, i))}</span>;
 }
 
@@ -214,6 +218,9 @@ const headingClass: Record<number, string> = {
   1: "mt-4 text-base font-bold text-[var(--text)]",
   2: "mt-4 text-[15px] font-bold text-[var(--text)]",
   3: "mt-3 text-sm font-semibold text-[var(--text)]",
+  4: "mt-3 text-sm font-semibold text-[var(--text)]",
+  5: "mt-2 text-sm font-medium text-[var(--text)]",
+  6: "mt-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]",
 };
 
 /**
@@ -225,6 +232,14 @@ export function RichParagraph({ text, className }: RichTextProps) {
   if (!text.includes("\n")) {
     const standaloneCode = text.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
     if (standaloneCode) return <CodeBlock code={decodeCodeEntities(standaloneCode[1])} />;
+    const standaloneHeading = text.trim().match(/^(#{1,6})\s+(.+)$/);
+    if (standaloneHeading) {
+      return (
+        <p className={headingClass[standaloneHeading[1].length]}>
+          {renderInlineLine(standaloneHeading[2])}
+        </p>
+      );
+    }
     return <span className={className}>{renderInlineLine(text)}</span>;
   }
   const lines = text.split("\n");
@@ -297,7 +312,7 @@ export function RichParagraph({ text, className }: RichTextProps) {
       continue;
     }
 
-    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    const headingMatch = line.trimStart().match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
       nodes.push(
         <p key={j} className={headingClass[headingMatch[1].length]}>
