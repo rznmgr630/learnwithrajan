@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "4 saved books",
-    np: "४ सुरक्षित पुस्तक",
-    jp: "保存した本 4冊",
+    en: "5 saved books",
+    np: "५ सुरक्षित पुस्तक",
+    jp: "保存した本 5冊",
   },
   "library.collection": {
     en: "Collection",
@@ -121,6 +121,16 @@ export const UI_STRINGS = {
     en: "Ancient parables for building wealth and financial wisdom.",
     np: "सम्पत्ति र आर्थिक बुद्धिमत्ता निर्माणका लागि प्राचीन कथाहरू।",
     jp: "富と金融の知恵を育てるための古代の寓話。",
+  },
+  "library.simplePath.title": {
+    en: "The Simple Path to Wealth",
+    np: "The Simple Path to Wealth",
+    jp: "The Simple Path to Wealth",
+  },
+  "library.simplePath.subtitle": {
+    en: "A clear guide to financial independence and a rich, free life.",
+    np: "आर्थिक स्वतन्त्रता र स्वतन्त्र जीवनका लागि स्पष्ट मार्गदर्शन।",
+    jp: "経済的自立と自由な人生のための明快なガイド。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
