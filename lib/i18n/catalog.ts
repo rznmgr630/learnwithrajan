@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "2 saved books",
-    np: "२ सुरक्षित पुस्तक",
-    jp: "保存した本 2冊",
+    en: "4 saved books",
+    np: "४ सुरक्षित पुस्तक",
+    jp: "保存した本 4冊",
   },
   "library.collection": {
     en: "Collection",
@@ -101,6 +101,26 @@ export const UI_STRINGS = {
     en: "Open book →",
     np: "पुस्तक खोल्नुहोस् →",
     jp: "本を開く →",
+  },
+  "library.psychologyOfMoney.title": {
+    en: "The Psychology of Money",
+    np: "The Psychology of Money",
+    jp: "The Psychology of Money",
+  },
+  "library.psychologyOfMoney.subtitle": {
+    en: "Timeless lessons on wealth, greed, and happiness.",
+    np: "धन, लोभ र खुसीका समयहीन पाठहरू।",
+    jp: "富、欲望、幸福についての時代を超えた教訓。",
+  },
+  "library.richestMan.title": {
+    en: "The Richest Man in Babylon",
+    np: "The Richest Man in Babylon",
+    jp: "The Richest Man in Babylon",
+  },
+  "library.richestMan.subtitle": {
+    en: "Ancient parables for building wealth and financial wisdom.",
+    np: "सम्पत्ति र आर्थिक बुद्धिमत्ता निर्माणका लागि प्राचीन कथाहरू।",
+    jp: "富と金融の知恵を育てるための古代の寓話。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
