@@ -36,13 +36,14 @@ function splitSections(content: string): PastedSection[] {
 }
 
 function namedParts(content: string): PastedParts {
-  const matches = [...content.matchAll(/^#{3,6}\s+(Explanation|Visual Diagram|Code Example|Key Takeaways|Common Mistakes|Mini Quiz)\s*$/gim)];
+  const matches = [...content.matchAll(/^#{2,6}\s+(Explanation|Visual Diagram|Code Example|Key Takeaways?|Common Mistakes|Mini Quiz)\s*$/gim)];
   const parts: PastedParts = { intro: content.slice(0, matches[0]?.index ?? content.length).trim() };
 
   matches.forEach((match, index) => {
     const start = (match.index ?? 0) + match[0].length;
     const end = index + 1 < matches.length ? (matches[index + 1].index ?? content.length) : content.length;
-    parts[match[1].toLowerCase()] = content.slice(start, end).trim();
+    const name = match[1].toLowerCase() === "key takeaway" ? "key takeaways" : match[1].toLowerCase();
+    parts[name] = content.slice(start, end).trim();
   });
 
   return parts;
