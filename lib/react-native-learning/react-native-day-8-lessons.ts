@@ -4,7 +4,7 @@ export const REACT_NATIVE_DAY_8_LESSONS = normalizePastedLessonDay({
   "day": 8,
   "title": "Device APIs and Permissions",
   "overview": "Today we're moving from the UI into something that makes React Native apps feel like **real mobile apps**.\n\nYour app can show buttons, lists, animations, and screens—but eventually you'll want it to interact with the device itself.\n\nFor example:\n\n- Open the camera\n- Pick a photo\n- Read the user's location\n- Detect device movement\n- Access contacts\n- Trigger haptic feedback (a small vibration or physical response)\n\nThat's where **device APIs** (features provided by the phone's operating system) come in.\n\nBut there's an important rule:\n\n> Your app doesn't automatically get access to everything on the device.\n\nThe user has to grant **permission** (authorization that allows your app to use a protected device feature).\n\nSo today we'll learn both sides:\n\n```\nDevice API\n    +\nPermission\n    ↓\nUseful mobile feature\n```\n\nWe'll also spend a lot of time on what happens when the user says:\n\n> **No.**\n\nBecause a good mobile app should work well even when a permission is denied.\n\n---",
-  "totalMinutes": 45,
+  "totalMinutes": 53,
   "difficulty": "Beginner",
   "lessons": [
     {
@@ -140,6 +140,41 @@ export const REACT_NATIVE_DAY_8_LESSONS = normalizePastedLessonDay({
           "explanation": "**Answer:** C"
         }
       ]
+    },
+    {
+      "id": "rn8-6",
+      "title": "Continuous Location Tracking and Cleanup",
+      "durationMinutes": 8,
+      "explanation": "A one-time location request answers: `Where is the device now?` Continuous tracking answers: `How does the device position change over time?`\n\nWith `expo-location`, `watchPositionAsync` registers a native location subscription. The callback receives updates until you remove that subscription.\n\n```text\nScreen mounts\n     ↓\nPermission granted\n     ↓\nStart location subscription\n     ↓\nReceive coordinate updates\n     ↓\nScreen unmounts\n     ↓\nRemove subscription\n```\n\nAlways remove the watcher in the `useEffect` cleanup function. Otherwise the GPS can continue consuming battery and callbacks can keep running after the screen is gone.\n\nChoose `accuracy`, `timeInterval`, and `distanceInterval` based on the feature. Turn-by-turn navigation needs different accuracy and update frequency than a nearby-store screen. More frequent, higher-accuracy updates normally consume more battery.\n\nIf continuous tracking must continue while the app is backgrounded, foreground permission is not enough. Background location needs separate platform configuration, permission, user explanation, and store-policy justification.",
+      "diagram": "Mount → Request permission → Subscribe → Receive updates\n                                      │\nUnmount → Cleanup → Remove subscription",
+      "codeExample": {
+        "title": "Subscribe to location updates and clean up",
+        "code": "import { useEffect } from \"react\";\nimport * as Location from \"expo-location\";\n\nuseEffect(() => {\n  let subscription: Location.LocationSubscription | undefined;\n\n  async function startTracking() {\n    const permission = await Location.requestForegroundPermissionsAsync();\n    if (!permission.granted) return;\n\n    subscription = await Location.watchPositionAsync(\n      {\n        accuracy: Location.Accuracy.Balanced,\n        distanceInterval: 10,\n      },\n      (position) => {\n        console.log(position.coords);\n      },\n    );\n  }\n\n  void startTracking();\n\n  return () => {\n    subscription?.remove();\n  };\n}, []);"
+      },
+      "keyTakeaways": [
+        "Continuous location uses a subscription rather than a one-time request.",
+        "Remove the subscription when the screen unmounts.",
+        "Accuracy and update frequency directly affect battery usage.",
+        "Background tracking requires additional permission and platform configuration."
+      ],
+      "commonMistakes": [
+        "Starting multiple watchers without removing the previous subscription.",
+        "Using the highest accuracy and fastest interval without a product reason.",
+        "Assuming foreground location permission allows background tracking."
+      ],
+      "quiz": [
+        {
+          "question": "What should happen when a screen using `watchPositionAsync` unmounts?",
+          "options": [
+            "A. Start another watcher",
+            "B. Remove the location subscription",
+            "C. Request camera permission",
+            "D. Clear AsyncStorage"
+          ],
+          "correctIndex": 1,
+          "explanation": "Removing the subscription stops updates and prevents unnecessary battery use."
+        }
+      ]
     }
   ],
   "finalQuiz": [
@@ -243,15 +278,15 @@ export const REACT_NATIVE_DAY_8_LESSONS = normalizePastedLessonDay({
       "explanation": "**Answer:** A"
     },
     {
-      "question": "What should your app do after camera permission is denied?",
+      "question": "What must happen to a continuous location subscription when its screen unmounts?",
       "options": [
-        "A. Crash",
-        "B. Keep asking every second",
-        "C. Explain the situation and provide an appropriate next step",
-        "D. Delete the camera feature permanently"
+        "A. It should be removed during cleanup",
+        "B. It should start a second subscription",
+        "C. It should be stored in JSON",
+        "D. It should request camera permission"
       ],
-      "correctIndex": 2,
-      "explanation": "**Answer:** C"
+      "correctIndex": 0,
+      "explanation": "**Answer:** A"
     }
   ],
   "project": {
@@ -263,4 +298,3 @@ export const REACT_NATIVE_DAY_8_LESSONS = normalizePastedLessonDay({
     "footer": "# 🧠 Day 8 Mental Model\n\nHere's the most important diagram from today's lesson:\n\n```\n                   User\n                    │\n                    ▼\n             Taps \"Scan\"\n                    │\n                    ▼\n            Check permission\n                    │\n         ┌──────────┴──────────┐\n         │                     │\n     Granted                Not granted\n         │                     │\n         ▼                     ▼\n   Open camera          Request permission\n                               │\n                      ┌────────┴────────┐\n                      │                 │\n                   Granted            Denied\n                      │                 │\n                      ▼                 ▼\n                 Open camera      Explain state\n                                        │\n                               ┌────────┴────────┐\n                               │                 │\n                           Try Again          Settings\n```\n\nAnd the bigger architecture looks like:\n\n```\nYour React Native App\n       │\n       ▼\n  Expo Module\n       │\n       ▼\niOS / Android API\n       │\n       ▼\nPermission System\n       │\n       ▼\nUser Decision\n       │\n  ┌────┴────┐\n  ▼         ▼\nAllow      Deny\n  │         │\n  ▼         ▼\nFeature    Fallback UI\nworks      / retry / settings\n```\n\n---\n\n# 🎯 What You Should Understand After Day 8\n\nBy the end of this lesson, you should be comfortable explaining this:\n\n> **\"How does a React Native app access the camera?\"**\n\nYou should be able to say:\n\n```\nMy React Native code\n      ↓\nexpo-camera\n      ↓\nNative camera APIs\n      ↓\nOperating system permission\n      ↓\nUser grants access\n      ↓\nCamera feature becomes available\n```\n\nAnd you should understand that the flow isn't:\n\n```\nInstall package\n    ↓\nCamera automatically works\n```\n\nIt's:\n\n```\nInstall API\n    ↓\nBuild the feature\n    ↓\nAsk for permission at the right moment\n    ↓\nCheck the result\n    ↓\nHandle granted\n    ↓\nHandle denied\n    ↓\nHandle retry/settings when necessary\n```\n\nThe biggest lesson from Day 8 is:"
   }
 });
-
