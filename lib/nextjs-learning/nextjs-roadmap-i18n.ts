@@ -75,14 +75,14 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Server/Client Components とデータ取得",
   },
   7: {
-    en: "Database integration with Prisma — models, migrations & CRUD",
-    np: "Prisma सहित डेटाबेस — models, migrations र CRUD",
-    jp: "Prisma でデータベース連携 — モデル・マイグレーション・CRUD",
+    en: "Data fetching, caching, revalidation & server-side patterns",
+    np: "Data fetching, caching र revalidation",
+    jp: "データ取得・キャッシュ・再検証",
   },
   8: {
-    en: "Uploading files with Cloudinary",
-    np: "Cloudinary सहित फाइल अपलोड",
-    jp: "Cloudinary を使ったファイルアップロード",
+    en: "Forms, Server Actions & mutations",
+    np: "Forms, Server Actions र mutations",
+    jp: "フォーム・Server Actions・ミューテーション",
   },
   9: {
     en: "Authentication with NextAuth — Google, credentials & session protection",
@@ -127,9 +127,9 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
   },
   "nextjs-existing-course": {
-    en: "EXISTING NEXT.JS COURSE (Days 11–17)",
-    np: "पहिलेको NEXT.JS कोर्स (दिन ११–१७)",
-    jp: "既存のNEXT.JSコース（11〜17日目）",
+    en: "EXISTING NEXT.JS COURSE (Days 11–19)",
+    np: "पहिलेको NEXT.JS कोर्स (दिन ११–१९)",
+    jp: "既存のNEXT.JSコース（11〜19日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
@@ -164,7 +164,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function nextjsDayTitle(day: number): LocalizedString {
-  return NEXTJS_EXISTING_COURSE_DAY_TITLE[day] ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 2] ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function nextjsWeekTitle(weekId: string): LocalizedString {
