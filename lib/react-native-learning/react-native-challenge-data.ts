@@ -1,57 +1,13 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
-import { REACT_NATIVE_DAY_1_DETAIL } from "@/lib/react-native-learning/react-native-day-1-detail";
-import { REACT_NATIVE_DAY_2_DETAIL } from "@/lib/react-native-learning/react-native-day-2-detail";
-import { REACT_NATIVE_DAY_3_DETAIL } from "@/lib/react-native-learning/react-native-day-3-detail";
-import { REACT_NATIVE_DAY_4_DETAIL } from "@/lib/react-native-learning/react-native-day-4-detail";
-import { REACT_NATIVE_DAY_5_DETAIL } from "@/lib/react-native-learning/react-native-day-5-detail";
-import { REACT_NATIVE_DAY_6_DETAIL } from "@/lib/react-native-learning/react-native-day-6-detail";
-import { REACT_NATIVE_DAY_7_DETAIL } from "@/lib/react-native-learning/react-native-day-7-detail";
-import { REACT_NATIVE_DAY_8_DETAIL } from "@/lib/react-native-learning/react-native-day-8-detail";
-import { REACT_NATIVE_DAY_9_DETAIL } from "@/lib/react-native-learning/react-native-day-9-detail";
-import { REACT_NATIVE_DAY_10_DETAIL } from "@/lib/react-native-learning/react-native-day-10-detail";
-import { REACT_NATIVE_DAY_11_DETAIL } from "@/lib/react-native-learning/react-native-day-11-detail";
-import { REACT_NATIVE_DAY_12_DETAIL } from "@/lib/react-native-learning/react-native-day-12-detail";
-import { REACT_NATIVE_DAY_13_DETAIL } from "@/lib/react-native-learning/react-native-day-13-detail";
-import { REACT_NATIVE_DAY_14_DETAIL } from "@/lib/react-native-learning/react-native-day-14-detail";
-import { REACT_NATIVE_DAY_15_DETAIL } from "@/lib/react-native-learning/react-native-day-15-detail";
-import { REACT_NATIVE_DAY_16_DETAIL } from "@/lib/react-native-learning/react-native-day-16-detail";
-import { REACT_NATIVE_DAY_17_DETAIL } from "@/lib/react-native-learning/react-native-day-17-detail";
-import { REACT_NATIVE_DAY_18_DETAIL } from "@/lib/react-native-learning/react-native-day-18-detail";
-import { REACT_NATIVE_DAY_19_DETAIL } from "@/lib/react-native-learning/react-native-day-19-detail";
-import { REACT_NATIVE_DAY_20_DETAIL } from "@/lib/react-native-learning/react-native-day-20-detail";
 import {
   reactNativeDayTitle,
   reactNativeTags,
-  reactNativeWeekTitle,
 } from "@/lib/react-native-learning/react-native-roadmap-i18n";
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 67;
-
-const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
-  1: REACT_NATIVE_DAY_1_DETAIL,
-  2: REACT_NATIVE_DAY_2_DETAIL,
-  3: REACT_NATIVE_DAY_3_DETAIL,
-  4: REACT_NATIVE_DAY_4_DETAIL,
-  5: REACT_NATIVE_DAY_5_DETAIL,
-  6: REACT_NATIVE_DAY_6_DETAIL,
-  7: REACT_NATIVE_DAY_7_DETAIL,
-  8: REACT_NATIVE_DAY_8_DETAIL,
-  9: REACT_NATIVE_DAY_9_DETAIL,
-  10: REACT_NATIVE_DAY_10_DETAIL,
-  11: REACT_NATIVE_DAY_11_DETAIL,
-  12: REACT_NATIVE_DAY_12_DETAIL,
-  13: REACT_NATIVE_DAY_13_DETAIL,
-  14: REACT_NATIVE_DAY_14_DETAIL,
-  15: REACT_NATIVE_DAY_15_DETAIL,
-  16: REACT_NATIVE_DAY_16_DETAIL,
-  17: REACT_NATIVE_DAY_17_DETAIL,
-  18: REACT_NATIVE_DAY_18_DETAIL,
-  19: REACT_NATIVE_DAY_19_DETAIL,
-  20: REACT_NATIVE_DAY_20_DETAIL,
-};
+export const REACT_NATIVE_TOTAL_DAYS = 49;
 
 const DOT: Record<string, string> = {
   "rn-w1": "bg-sky-500",
@@ -71,12 +27,7 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 49 ? day - 47 : day],
   };
-}
-
-function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 47, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -201,80 +152,6 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
         ...reactNativeDayRow(49, ["universal-web", "architecture"]),
         label: { en: "Elective D", np: "Elective D", jp: "選択科目 D" },
       },
-    ],
-  },
-  {
-    id: "rn-w3",
-    title: reactNativeWeekTitle("rn-w3"),
-    dotClass: DOT["rn-w3"],
-    days: [
-      existingReactNativeDayRow(3, ["metro", "toolchain"]),
-      existingReactNativeDayRow(4, ["toolchain", "platform"]),
-    ],
-  },
-  {
-    id: "rn-w4",
-    title: reactNativeWeekTitle("rn-w4"),
-    dotClass: DOT["rn-w4"],
-    days: [
-      existingReactNativeDayRow(5, ["toolchain", "jsx"]),
-      existingReactNativeDayRow(6, ["core-ui", "jsx"]),
-    ],
-  },
-  {
-    id: "rn-w5",
-    title: reactNativeWeekTitle("rn-w5"),
-    dotClass: DOT["rn-w5"],
-    days: [
-      existingReactNativeDayRow(7, ["core-ui", "platform"]),
-      existingReactNativeDayRow(8, ["flexbox", "styling"]),
-    ],
-  },
-  {
-    id: "rn-w6",
-    title: reactNativeWeekTitle("rn-w6"),
-    dotClass: DOT["rn-w6"],
-    days: [
-      existingReactNativeDayRow(9, ["screens", "styling"]),
-      existingReactNativeDayRow(10, ["styling", "lists"]),
-    ],
-  },
-  {
-    id: "rn-w7",
-    title: reactNativeWeekTitle("rn-w7"),
-    dotClass: DOT["rn-w7"],
-    days: [
-      existingReactNativeDayRow(11, ["lists", "performance"]),
-      existingReactNativeDayRow(12, ["inputs", "forms"]),
-    ],
-  },
-  {
-    id: "rn-w8",
-    title: reactNativeWeekTitle("rn-w8"),
-    dotClass: DOT["rn-w8"],
-    days: [
-      existingReactNativeDayRow(13, ["forms", "inputs"]),
-      existingReactNativeDayRow(14, ["navigation", "toolchain"]),
-    ],
-  },
-  {
-    id: "rn-w9",
-    title: reactNativeWeekTitle("rn-w9"),
-    dotClass: DOT["rn-w9"],
-    days: [
-      existingReactNativeDayRow(15, ["native", "shipping"]),
-      existingReactNativeDayRow(16, ["permissions", "native"]),
-    ],
-  },
-  {
-    id: "rn-w10",
-    title: reactNativeWeekTitle("rn-w10"),
-    dotClass: DOT["rn-w10"],
-    days: [
-      existingReactNativeDayRow(17, ["navigation", "hooks"]),
-      existingReactNativeDayRow(18, ["networking", "caching"]),
-      existingReactNativeDayRow(19, ["auth", "caching"]),
-      existingReactNativeDayRow(20, ["notifications", "shipping"]),
     ],
   },
 ];
