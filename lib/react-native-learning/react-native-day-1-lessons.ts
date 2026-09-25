@@ -3,7 +3,7 @@ import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-da
 export const REACT_NATIVE_DAY_1_LESSONS = normalizePastedLessonDay({
   day: 1,
   title: "React Native setup, the mobile runtime, and the New Architecture",
-  totalMinutes: 45,
+  totalMinutes: 51,
   difficulty: "Beginner",
   lessons: [
     {
@@ -295,6 +295,102 @@ npx expo run:android`,
           ],
           correctIndex: 0,
           explanation: "EAS Build creates installable iOS and Android application builds.",
+        },
+      ],
+    },
+    {
+      id: "using-the-track",
+      title: "How to use this track and organize the source code",
+      durationMinutes: 6,
+      explanation: `Treat each day as a practical lesson rather than reading material to finish quickly.
+
+### How to use the track
+
+• Skim the lesson headings first so you understand the goal.
+• Type the examples instead of blindly pasting them. Metro errors and JSX mistakes are part of learning.
+• Mark a day complete only after the application works and you can explain the main ideas without reading.
+• Follow the phases in order when possible. If you jump ahead for a project, return to the skipped foundations.
+
+### Keep dependency versions aligned
+
+If you follow a tutorial or existing project, check its React Native, Expo, SDK, and navigation-library versions. APIs and setup steps can differ between releases.
+
+When an import or native package fails:
+
+\`\`\`text
+Check the package documentation
+        ↓
+Check Expo / React Native compatibility
+        ↓
+Install the compatible version
+        ↓
+Rebuild when native code changed
+\`\`\`
+
+Do not copy an old package version into a modern project without checking compatibility.
+
+### Organize the project by responsibility
+
+A simple starting structure is:
+
+\`\`\`text
+app/ or screens/    → route targets
+components/         → reusable UI
+hooks/              → reusable stateful logic
+services/           → API and external integrations
+navigation/         → navigation configuration when used
+\`\`\`
+
+The exact folder names can change. The important rule is to keep route screens, reusable UI, domain logic, and external integrations from becoming one mixed folder.`,
+      diagram: `Learn the goal
+      ↓
+Type and run the example
+      ↓
+Fix errors
+      ↓
+Explain the result
+      ↓
+Mark the day complete`,
+      codeExample: {
+        title: "A clear starter structure",
+        code: `app/
+components/
+hooks/
+services/
+navigation/`,
+      },
+      keyTakeaways: [
+        "Complete a lesson by running and explaining it, not only by reading it.",
+        "Check package compatibility before copying versions from another project.",
+        "Separate route screens, reusable UI, hooks, and external services.",
+      ],
+      commonMistakes: [
+        "Copying tutorial dependencies without checking their React Native or Expo compatibility.",
+        "Marking a lesson complete before running the example.",
+        "Putting screens, reusable components, API calls, and navigation into one folder.",
+      ],
+      quiz: [
+        {
+          question: "When should you mark a lesson complete?",
+          options: [
+            "After reading the title",
+            "After the example works and you can explain the main ideas",
+            "After copying the code",
+            "Before resolving build errors",
+          ],
+          correctIndex: 1,
+          explanation: "Running the example and explaining it confirms that the lesson was understood.",
+        },
+        {
+          question: "What should you check before copying a package version from a tutorial?",
+          options: [
+            "Only the package name",
+            "The tutorial author's editor theme",
+            "Compatibility with your React Native and Expo versions",
+            "The number of files in the project",
+          ],
+          correctIndex: 2,
+          explanation: "Package and native SDK compatibility can change across React Native and Expo releases.",
         },
       ],
     },

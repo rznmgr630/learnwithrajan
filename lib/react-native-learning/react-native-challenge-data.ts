@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 69;
+export const REACT_NATIVE_TOTAL_DAYS = 67;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 49 ? day - 49 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 49 ? day - 47 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 49, tagSlugs);
+  return reactNativeDayRow(day + 47, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -201,15 +201,6 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
         ...reactNativeDayRow(49, ["universal-web", "architecture"]),
         label: { en: "Elective D", np: "Elective D", jp: "選択科目 D" },
       },
-    ],
-  },
-  {
-    id: "rn-w2",
-    title: reactNativeWeekTitle("rn-w2"),
-    dotClass: DOT["rn-w2"],
-    days: [
-      existingReactNativeDayRow(1, ["fundamentals", "expo"]),
-      existingReactNativeDayRow(2, ["expo", "metro"]),
     ],
   },
   {
