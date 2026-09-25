@@ -67,6 +67,8 @@ const RN_TAG: Record<string, LocalizedString> = {
   submission: { en: "submission", np: "submission", jp: "ストア申請" },
   release: { en: "release", np: "release", jp: "リリース" },
   skia: { en: "Skia", np: "Skia", jp: "Skia" },
+  monorepo: { en: "monorepo", np: "monorepo", jp: "モノレポ" },
+  "code-sharing": { en: "code sharing", np: "code sharing", jp: "コード共有" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -242,8 +244,10 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[39] = { en: "Play Store Submission", np: "Play Store Submission", jp: "Play Store申請" };
   foundationTitles[40] = { en: "Release Management", np: "Release Management", jp: "リリース管理" };
   foundationTitles[41] = { en: "Advanced Animation and Custom Rendering", np: "Advanced Animation and Custom Rendering", jp: "高度なアニメーションとカスタム描画" };
+  foundationTitles[42] = { en: "Monorepos and Code Sharing", np: "Monorepos and Code Sharing", jp: "モノレポとコード共有" };
+  foundationTitles[43] = { en: "Architecture at Scale", np: "Architecture at Scale", jp: "大規模アーキテクチャ" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 41] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 43] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
