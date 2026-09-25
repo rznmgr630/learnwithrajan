@@ -3,7 +3,7 @@ import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-da
 export const REACT_NATIVE_DAY_1_LESSONS = normalizePastedLessonDay({
   day: 1,
   title: "React Native setup, the mobile runtime, and the New Architecture",
-  totalMinutes: 51,
+  totalMinutes: 57,
   difficulty: "Beginner",
   lessons: [
     {
@@ -395,6 +395,85 @@ navigation/`,
       ],
     },
     {
+      id: "fast-refresh-device-connection",
+      title: "Fast Refresh and device connection troubleshooting",
+      durationMinutes: 6,
+      explanation: `### Fast Refresh
+
+<b>Fast Refresh</b> updates the running application when you save a JavaScript or TypeScript file. It often preserves local component state, but state can reset when an export, hook order, or component signature changes.
+
+Use a full reload when the application and source code appear out of sync. Rebuild the native application when you add or change native dependencies.
+
+\`\`\`text
+JavaScript or style change
+        ↓
+Fast Refresh
+
+Application state looks stale
+        ↓
+Full reload
+
+Native dependency changed
+        ↓
+Rebuild the development app
+\`\`\`
+
+### Connecting a physical device
+
+The device and development computer must be able to reach Metro. Start with the same local network. If LAN discovery is blocked by a firewall, VPN, or isolated Wi-Fi, use an Expo tunnel.
+
+For a wired Android device, USB debugging must be enabled and the computer's RSA prompt accepted. If the device cannot reach Metro on port 8081, Android Debug Bridge can reverse the port:
+
+\`\`\`bash
+adb devices
+adb reverse tcp:8081 tcp:8081
+\`\`\`
+
+Troubleshoot the connection in this order:
+
+\`\`\`text
+Is Metro running?
+        ↓
+Can the device reach the computer?
+        ↓
+Is a firewall or VPN blocking the connection?
+        ↓
+Try tunnel mode or adb reverse
+        ↓
+Reload, then rebuild only if native code changed
+\`\`\``,
+      diagram: "Source change → Fast Refresh → Running app\n\nNative change → Rebuild → Running app",
+      codeExample: {
+        title: "Reconnect an Android device to Metro",
+        code: `adb devices
+adb reverse tcp:8081 tcp:8081
+npx expo start`,
+      },
+      keyTakeaways: [
+        "Fast Refresh is for JavaScript, TypeScript, and styling changes.",
+        "A native dependency change requires rebuilding the development application.",
+        "LAN, tunnel mode, and adb reverse are different ways for a device to reach Metro.",
+      ],
+      commonMistakes: [
+        "Expecting Fast Refresh to install a new native dependency.",
+        "Debugging application code before checking whether the device can reach Metro.",
+        "Leaving a VPN or firewall unexamined when LAN discovery fails.",
+      ],
+      quiz: [
+        {
+          question: "When is Fast Refresh insufficient?",
+          options: [
+            "After changing text",
+            "After changing a color",
+            "After adding a native dependency",
+            "After editing a TypeScript type",
+          ],
+          correctIndex: 2,
+          explanation: "Native dependency changes require the native development application to be rebuilt.",
+        },
+      ],
+    },
+    {
       id: "first-project-device",
       title: "Create the project and run it on a device",
       durationMinutes: 8,
@@ -579,15 +658,15 @@ const styles = StyleSheet.create({
       explanation: "A development build is your own native application configured for development and debugging.",
     },
     {
-      question: "Which EAS service creates application builds?",
+      question: "When should you rebuild instead of relying on Fast Refresh?",
       options: [
-        "EAS Build",
-        "EAS Submit",
-        "EAS Update",
-        "EAS Router",
+        "After changing a Text label",
+        "After adding or changing a native dependency",
+        "After changing a margin",
+        "After editing a TypeScript interface",
       ],
-      correctIndex: 0,
-      explanation: "EAS Build creates installable iOS and Android builds.",
+      correctIndex: 1,
+      explanation: "Fast Refresh cannot install native code into an existing development application.",
     },
   ],
   project: {
