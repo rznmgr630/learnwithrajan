@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 67;
+export const REACT_NATIVE_TOTAL_DAYS = 69;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 47 ? day - 47 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 49 ? day - 49 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 47, tagSlugs);
+  return reactNativeDayRow(day + 49, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -192,6 +192,14 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
       {
         ...reactNativeDayRow(47, ["skia", "custom-rendering"]),
         label: { en: "Elective B", np: "Elective B", jp: "選択科目 B" },
+      },
+      {
+        ...reactNativeDayRow(48, ["beyond-phones", "platform"]),
+        label: { en: "Elective C", np: "Elective C", jp: "選択科目 C" },
+      },
+      {
+        ...reactNativeDayRow(49, ["universal-web", "architecture"]),
+        label: { en: "Elective D", np: "Elective D", jp: "選択科目 D" },
       },
     ],
   },

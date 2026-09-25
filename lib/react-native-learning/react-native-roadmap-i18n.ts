@@ -74,6 +74,8 @@ const RN_TAG: Record<string, LocalizedString> = {
   upgrades: { en: "upgrades", np: "upgrades", jp: "アップグレード" },
   "expo-router": { en: "Expo Router", np: "Expo Router", jp: "Expo Router" },
   "custom-rendering": { en: "custom rendering", np: "custom rendering", jp: "カスタム描画" },
+  "beyond-phones": { en: "beyond phones", np: "beyond phones", jp: "スマートフォン以外" },
+  "universal-web": { en: "universal web", np: "universal web", jp: "ユニバーサルWeb" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -255,8 +257,10 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[45] = { en: "The 2026 State of the React Native Ecosystem", np: "The 2026 State of the React Native Ecosystem", jp: "2026年のReact Nativeエコシステム" };
   foundationTitles[46] = { en: "Expo Router Deep Dive", np: "Expo Router Deep Dive", jp: "Expo Router 詳細" };
   foundationTitles[47] = { en: "Advanced Skia and Custom Rendering", np: "Advanced Skia and Custom Rendering", jp: "高度なSkiaとカスタム描画" };
+  foundationTitles[48] = { en: "Beyond Phones", np: "Beyond Phones", jp: "スマートフォンを超えて" };
+  foundationTitles[49] = { en: "React Native Web and Universal Apps", np: "React Native Web and Universal Apps", jp: "React Native Webとユニバーサルアプリ" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 47] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 49] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
