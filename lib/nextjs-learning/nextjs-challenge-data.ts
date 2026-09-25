@@ -1,5 +1,6 @@
 import type { LocalizedString } from "@/lib/i18n/types";
 import type { RoadmapDay, RoadmapDayDetail, RoadmapWeek } from "@/lib/challenge-data";
+import { NEXTJS_DAY_0_DETAIL } from "@/lib/nextjs-learning/nextjs-day-0-detail";
 import { NEXTJS_DAY_1_DETAIL } from "@/lib/nextjs-learning/nextjs-day-1-detail";
 import { NEXTJS_DAY_2_DETAIL } from "@/lib/nextjs-learning/nextjs-day-2-detail";
 import { NEXTJS_DAY_3_DETAIL } from "@/lib/nextjs-learning/nextjs-day-3-detail";
@@ -18,6 +19,7 @@ export const NEXTJS_CURRENT_DAY = 1;
 export const NEXTJS_TOTAL_DAYS = 11;
 
 const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
+  0: NEXTJS_DAY_0_DETAIL,
   1: NEXTJS_DAY_1_DETAIL,
   2: NEXTJS_DAY_2_DETAIL,
   3: NEXTJS_DAY_3_DETAIL,
@@ -41,6 +43,12 @@ function nextjsDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
 }
 
 export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
+  {
+    id: "nextjs-phase-0",
+    title: nextjsWeekTitle("nextjs-phase-0"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#94a3b8)]",
+    days: [nextjsDayRow(0, ["prerequisites", "web-fundamentals"])],
+  },
   {
     id: "nextjs-foundations",
     title: nextjsWeekTitle("nextjs-foundations"),
