@@ -4,7 +4,7 @@ export const REACT_NATIVE_DAY_30_LESSONS = normalizePastedLessonDay({
   "day": 30,
   "title": "Debugging and DevTools",
   "overview": "**Goal:** By the end of this day, you should be able to debug a React Native application using React Native DevTools, Metro, Hermes, Xcode, and `adb logcat`, and diagnose a crash without adding `console.log()` everywhere.",
-  "totalMinutes": 60,
+  "totalMinutes": 65,
   "difficulty": "Intermediate",
   "lessons": [
     {
@@ -286,6 +286,41 @@ export const REACT_NATIVE_DAY_30_LESSONS = normalizePastedLessonDay({
       "keyTakeaways": [],
       "commonMistakes": [],
       "quiz": []
+    },
+    {
+      "id": "rn30-21",
+      "title": "Path Aliases and Auto-Import Troubleshooting",
+      "durationMinutes": 5,
+      "explanation": "An editor can suggest an import that TypeScript understands while Metro cannot resolve it. That happens when the editor, TypeScript, Babel, and Metro do not share the same alias configuration.\n\n```text\nEditor auto-import\n       ↓\nTypeScript resolver\n       ↓\nMetro resolver\n       ↓\nRunning application\n```\n\nIf any layer disagrees, an import such as `@/components/Button` may look valid in the editor but fail at runtime. Configure aliases through the project approach supported by your Expo or React Native version, then keep `tsconfig.json` and the runtime resolver aligned.\n\nAfter changing alias configuration, restart both the TypeScript server and Metro with a cleared cache. Also check whether an auto-import selected a private file, the wrong package, or a default export when the module provides a named export.\n\nBarrel files can make imports shorter, but large barrels can introduce circular dependencies. Prefer explicit feature entry points over exporting every file from one global index.",
+      "diagram": "Editor → TypeScript → Metro → Device\n           same import path",
+      "codeExample": {
+        "title": "TypeScript alias and matching import",
+        "code": "// tsconfig.json\n{\n  \"compilerOptions\": {\n    \"baseUrl\": \".\",\n    \"paths\": {\n      \"@/*\": [\"./*\"]\n    }\n  }\n}\n\n// Use the configured public path\nimport { Button } from \"@/components/Button\";\n\n// Restart Metro after resolver changes\nnpx expo start --clear"
+      },
+      "keyTakeaways": [
+        "TypeScript and Metro must agree on how an alias resolves.",
+        "Auto-import suggestions can select the wrong module or export style.",
+        "Restart the TypeScript server and Metro after resolver changes.",
+        "Avoid barrel files that create hidden circular dependencies."
+      ],
+      "commonMistakes": [
+        "Configuring an alias only in TypeScript and assuming Metro automatically understands it.",
+        "Accepting an auto-import without checking the source module.",
+        "Adding every project file to a single barrel export."
+      ],
+      "quiz": [
+        {
+          "question": "Why can an aliased import pass TypeScript but fail in the running app?",
+          "options": [
+            "A. TypeScript and Metro may use different resolver configuration",
+            "B. Aliases disable React",
+            "C. Metro cannot load components",
+            "D. Auto-imports only work on iOS"
+          ],
+          "correctIndex": 0,
+          "explanation": "The compile-time and runtime resolvers must map the alias to the same file."
+        }
+      ]
     }
   ],
   "finalQuiz": [
@@ -389,15 +424,15 @@ export const REACT_NATIVE_DAY_30_LESSONS = normalizePastedLessonDay({
       "explanation": "**Answer:** A"
     },
     {
-      "question": "What is symbolication?",
+      "question": "Why can a path alias work in TypeScript but fail in Metro?",
       "options": [
-        "A. Converting native crash addresses into readable function and source information",
-        "B. Compressing images",
-        "C. Creating an AAB",
-        "D. Refreshing a token"
+        "A. Their resolver configurations may not map the alias to the same file",
+        "B. Metro does not support TypeScript",
+        "C. Aliases only work in production",
+        "D. React components cannot be imported"
       ],
       "correctIndex": 0,
-      "explanation": "**Answer:** A"
+      "explanation": "**Answer:** A — the editor, TypeScript, and Metro must agree on alias resolution."
     }
   ],
   "project": {
@@ -413,4 +448,3 @@ export const REACT_NATIVE_DAY_30_LESSONS = normalizePastedLessonDay({
     ]
   }
 });
-
