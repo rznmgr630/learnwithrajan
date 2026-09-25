@@ -69,6 +69,9 @@ const RN_TAG: Record<string, LocalizedString> = {
   skia: { en: "Skia", np: "Skia", jp: "Skia" },
   monorepo: { en: "monorepo", np: "monorepo", jp: "モノレポ" },
   "code-sharing": { en: "code sharing", np: "code sharing", jp: "コード共有" },
+  capstone: { en: "capstone", np: "capstone", jp: "総合プロジェクト" },
+  ecosystem: { en: "ecosystem", np: "ecosystem", jp: "エコシステム" },
+  upgrades: { en: "upgrades", np: "upgrades", jp: "アップグレード" },
 };
 
 export function reactNativeTags(slugs: [string, string]): RoadmapTag[] {
@@ -246,8 +249,10 @@ export function reactNativeDayTitle(day: number): LocalizedString {
   foundationTitles[41] = { en: "Advanced Animation and Custom Rendering", np: "Advanced Animation and Custom Rendering", jp: "高度なアニメーションとカスタム描画" };
   foundationTitles[42] = { en: "Monorepos and Code Sharing", np: "Monorepos and Code Sharing", jp: "モノレポとコード共有" };
   foundationTitles[43] = { en: "Architecture at Scale", np: "Architecture at Scale", jp: "大規模アーキテクチャ" };
+  foundationTitles[44] = { en: "Extending Your Capstone with a Real Native Feature", np: "Extending Your Capstone with a Real Native Feature", jp: "実際のネイティブ機能で総合プロジェクトを拡張" };
+  foundationTitles[45] = { en: "The 2026 State of the React Native Ecosystem", np: "The 2026 State of the React Native Ecosystem", jp: "2026年のReact Nativeエコシステム" };
   if (foundationTitles[day]) return foundationTitles[day];
-  return RN_DAY_TITLE[day - 43] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return RN_DAY_TITLE[day - 45] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function reactNativeWeekTitle(weekId: string): LocalizedString {
