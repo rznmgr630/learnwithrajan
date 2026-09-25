@@ -19,6 +19,8 @@ import { NEXTJS_DAY_5_LESSONS } from "@/lib/nextjs-learning/nextjs-day-5-lessons
 import { NEXTJS_DAY_6_LESSONS } from "@/lib/nextjs-learning/nextjs-day-6-lessons";
 import { NEXTJS_DAY_7_LESSONS } from "@/lib/nextjs-learning/nextjs-day-7-lessons";
 import { NEXTJS_DAY_8_LESSONS } from "@/lib/nextjs-learning/nextjs-day-8-lessons";
+import { NEXTJS_DAY_9_LESSONS } from "@/lib/nextjs-learning/nextjs-day-9-lessons";
+import { NEXTJS_DAY_10_LESSONS } from "@/lib/nextjs-learning/nextjs-day-10-lessons";
 import { useNextjsProgress } from "@/hooks/use-nextjs-progress";
 
 const TAG_PILL =
@@ -34,6 +36,8 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   6: NEXTJS_DAY_6_LESSONS,
   7: NEXTJS_DAY_7_LESSONS,
   8: NEXTJS_DAY_8_LESSONS,
+  9: NEXTJS_DAY_9_LESSONS,
+  10: NEXTJS_DAY_10_LESSONS,
 };
 
 export function NextjsRoadmap() {

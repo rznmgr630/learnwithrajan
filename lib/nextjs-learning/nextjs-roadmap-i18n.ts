@@ -90,9 +90,9 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "NextAuth 認証 — Google・認証情報・セッション保護",
   },
   10: {
-    en: "Sending emails, image/font optimizations, SEO & lazy loading",
-    np: "इमेल, image/font अनुकूलन, SEO र lazy loading",
-    jp: "メール送信・画像/フォント最適化・SEO・遅延読み込み",
+    en: "Route Handlers, REST APIs, HTTP & backend integration",
+    np: "Route Handlers, REST APIs र backend integration",
+    jp: "Route Handlers・REST API・バックエンド連携",
   },
   11: {
     en: "Deployment to Vercel — production prep, CI & troubleshooting",
@@ -164,7 +164,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function nextjsDayTitle(day: number): LocalizedString {
-  return NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 2] ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return (day >= 11 ? NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 4] : undefined) ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function nextjsWeekTitle(weekId: string): LocalizedString {
