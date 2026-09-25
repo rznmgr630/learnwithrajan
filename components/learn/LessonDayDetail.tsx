@@ -117,7 +117,7 @@ function LessonAccordionItem({
     if (id === "code") return lesson.codeExample.code.trim().length > 0 || Boolean(lesson.codeExample.details);
     if (id === "takeaways") return lesson.keyTakeaways.length > 0;
     if (id === "mistakes") return lesson.commonMistakes.length > 0;
-    if (id === "quiz") return lesson.quiz.length > 0;
+    if (id === "quiz") return lesson.quiz.length > 0 || Boolean(lesson.rawMiniQuiz);
     return true;
   });
 
@@ -235,7 +235,11 @@ function LessonAccordionItem({
               </ul>
             ) : null}
 
-            {tab === "quiz" ? <LessonQuiz quizId={quizId} questions={lesson.quiz} locale={locale} /> : null}
+            {tab === "quiz" ? (
+              lesson.quiz.length > 0 ? <LessonQuiz quizId={quizId} questions={lesson.quiz} locale={locale} /> : (
+                <RichParagraph text={pickLocalized(lesson.rawMiniQuiz!, locale)} />
+              )
+            ) : null}
           </div>
 
           {lesson.youtubeIds?.length ? (
