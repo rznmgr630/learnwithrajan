@@ -136,7 +136,7 @@ function localizeFinalQuiz(item: RawQuiz, index: number) {
 }
 
 export function normalizePastedLessonDay(raw: RawDay): LessonDay {
-  const formatExamples = raw.day >= 2 && raw.day <= 45 ? formatCodeLikeExamples : (value: string) => value;
+  const formatExamples = raw.day >= 2 && raw.day <= 47 ? formatCodeLikeExamples : (value: string) => value;
   return {
     ...raw,
     title: local(raw.title),

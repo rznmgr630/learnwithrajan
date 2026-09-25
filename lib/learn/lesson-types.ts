@@ -23,6 +23,7 @@ export interface Lesson {
 
 export interface LessonDay {
   day: number;
+  label?: LocalizedString;
   title: LocalizedString;
   overview?: LocalizedString;
   totalMinutes: number;

@@ -340,7 +340,7 @@ export function LessonDayDetail({
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
             <h2 className="text-lg font-semibold leading-snug text-[var(--text)]">
-              📚 Day {day.day} — <RichText text={pickLocalized(day.title, locale)} />
+              📚 {day.label ? <RichText text={pickLocalized(day.label, locale)} /> : <>Day {day.day}</>} — <RichText text={pickLocalized(day.title, locale)} />
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
               <span>⏱ {day.totalMinutes} min</span>
