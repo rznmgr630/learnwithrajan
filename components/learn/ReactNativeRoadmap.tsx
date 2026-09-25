@@ -54,6 +54,8 @@ import { REACT_NATIVE_DAY_42_LESSONS } from "@/lib/react-native-learning/react-n
 import { REACT_NATIVE_DAY_43_LESSONS } from "@/lib/react-native-learning/react-native-day-43-lessons";
 import { REACT_NATIVE_DAY_44_LESSONS } from "@/lib/react-native-learning/react-native-day-44-lessons";
 import { REACT_NATIVE_DAY_45_LESSONS } from "@/lib/react-native-learning/react-native-day-45-lessons";
+import { REACT_NATIVE_ELECTIVE_A_LESSONS } from "@/lib/react-native-learning/react-native-elective-a-lessons";
+import { REACT_NATIVE_ELECTIVE_B_LESSONS } from "@/lib/react-native-learning/react-native-elective-b-lessons";
 import {
   REACT_NATIVE_TOTAL_DAYS,
   REACT_NATIVE_ROADMAP_WEEKS,
@@ -112,6 +114,8 @@ const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
   43: REACT_NATIVE_DAY_43_LESSONS,
   44: REACT_NATIVE_DAY_44_LESSONS,
   45: REACT_NATIVE_DAY_45_LESSONS,
+  46: REACT_NATIVE_ELECTIVE_A_LESSONS,
+  47: REACT_NATIVE_ELECTIVE_B_LESSONS,
 };
 
 export function ReactNativeRoadmap() {
@@ -174,6 +178,8 @@ export function ReactNativeRoadmap() {
             <ul className={dayGridClass}>
               {week.days.map((d) => {
                 const checked = isDone(d.day);
+                const cardLabel = d.label ? pickLocalized(d.label, locale) : String(d.day).padStart(2, "0");
+                const watermark = d.label ? cardLabel.slice(-1) : cardLabel;
                 return (
                   <li
                     key={d.day}
@@ -198,7 +204,7 @@ export function ReactNativeRoadmap() {
                               : "border border-[var(--border)] bg-[var(--elevated)] text-[var(--faint)]",
                           ].join(" ")}
                         >
-                          {String(d.day).padStart(2, "0")}
+                          {cardLabel}
                         </span>
 
                         <button
@@ -223,7 +229,7 @@ export function ReactNativeRoadmap() {
 
                       <button
                         type="button"
-                        aria-label={`Open details for day ${d.day}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
+                        aria-label={`Open details for ${cardLabel}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                         className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                         onClick={() => (REACT_NATIVE_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
                       >
@@ -254,7 +260,7 @@ export function ReactNativeRoadmap() {
                     </div>
 
                     <span className="pointer-events-none absolute bottom-2 right-3 select-none font-mono text-7xl font-black leading-none text-[var(--text)]/[0.04]" aria-hidden>
-                      {String(d.day).padStart(2, "0")}
+                      {watermark}
                     </span>
                   </li>
                 );

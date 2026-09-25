@@ -271,6 +271,7 @@ export interface RoadmapDayDetail {
 
 export interface RoadmapDay {
   day: number;
+  label?: LocalizedString;
   title: LocalizedString;
   tags: RoadmapTag[];
   /** Optional; if omitted, the UI uses a short generic template. */
