@@ -5,7 +5,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
-import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { REACT_NATIVE_PHASE_0_LESSONS } from "@/lib/react-native-learning/react-native-phase-0-lessons";
@@ -125,7 +124,6 @@ const REACT_NATIVE_LESSON_DAYS: Record<number, LessonDay> = {
 export function ReactNativeRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useReactNativeProgress();
-  const [detailDay, setDetailDay] = useState<number | null>(null);
   const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   const barWidth = useMemo(
@@ -235,7 +233,7 @@ export function ReactNativeRoadmap() {
                         type="button"
                         aria-label={`Open details for ${cardLabel}: ${stripRichMarkers(pickLocalized(d.title, locale))}`}
                         className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-                        onClick={() => (REACT_NATIVE_LESSON_DAYS[d.day] ? setLessonDay(d.day) : setDetailDay(d.day))}
+                        onClick={() => setLessonDay(d.day)}
                       >
                         <span
                           className={[
@@ -283,16 +281,6 @@ export function ReactNativeRoadmap() {
           track="react-native"
         />
       )}
-
-      <DayDetailPanel
-        key={detailDay === null ? "closed" : `rn-day-${detailDay}`}
-        dayNumber={detailDay}
-        onClose={() => setDetailDay(null)}
-        isDone={isDone}
-        onToggleDone={(day) => toggleDay(day)}
-        onNavigateDay={setDetailDay}
-        track="react-native"
-      />
     </div>
   );
 }
