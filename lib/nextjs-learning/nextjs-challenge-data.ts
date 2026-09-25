@@ -50,50 +50,34 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [nextjsDayRow(0, ["prerequisites", "web-fundamentals"])],
   },
   {
-    id: "nextjs-foundations",
-    title: nextjsWeekTitle("nextjs-foundations"),
+    id: "nextjs-phase-1",
+    title: nextjsWeekTitle("nextjs-phase-1"),
     dotClass: "bg-[var(--accent)]",
     days: [
       nextjsDayRow(1, ["intro", "setup"]),
-      nextjsDayRow(2, ["server-components", "rendering"]),
-    ],
-  },
-  {
-    id: "nextjs-ui-routing",
-    title: nextjsWeekTitle("nextjs-ui-routing"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_72%,#60a5fa)]",
-    days: [
+      nextjsDayRow(2, ["routing", "layouts"]),
       nextjsDayRow(3, ["styling", "tailwind"]),
       nextjsDayRow(4, ["routing", "layouts"]),
-      nextjsDayRow(5, ["navigation", "error-handling"]),
+      nextjsDayRow(5, ["layouts", "error-handling"]),
     ],
   },
   {
-    id: "nextjs-apis-data",
-    title: nextjsWeekTitle("nextjs-apis-data"),
+    id: "nextjs-phase-2",
+    title: nextjsWeekTitle("nextjs-phase-2"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
     days: [
-      nextjsDayRow(6, ["api-routes", "zod"]),
+      nextjsDayRow(6, ["server-components", "rendering"]),
       nextjsDayRow(7, ["prisma", "database"]),
-    ],
-  },
-  {
-    id: "nextjs-features",
-    title: nextjsWeekTitle("nextjs-features"),
-    dotClass: "bg-[color-mix(in_oklab,var(--accent)_58%,#fb923c)]",
-    days: [
       nextjsDayRow(8, ["upload", "cloudinary"]),
       nextjsDayRow(9, ["auth", "next-auth"]),
+      nextjsDayRow(10, ["email", "optimization"]),
     ],
   },
   {
     id: "nextjs-ship",
     title: nextjsWeekTitle("nextjs-ship"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
-    days: [
-      nextjsDayRow(10, ["email", "optimization"]),
-      nextjsDayRow(11, ["deployment", "vercel"]),
-    ],
+    days: [nextjsDayRow(11, ["deployment", "vercel"])],
   },
 ];
 

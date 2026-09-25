@@ -65,14 +65,14 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "ルーティング詳解 — 動的・キャッチオール・クエリ・レイアウト",
   },
   5: {
-    en: "Navigation, loading UI, Not Found & error boundaries",
-    np: "Navigation, loading UI, Not Found र error boundaries",
-    jp: "ナビゲーション・ローディング・Not Found・エラー境界",
+    en: "Layouts, templates, loading & error UI",
+    np: "Layouts, templates, loading र error UI",
+    jp: "レイアウト・テンプレート・ローディング・エラーUI",
   },
   6: {
-    en: "Building REST APIs with Route Handlers & Zod validation",
-    np: "Route Handlers र Zod सहित REST API निर्माण",
-    jp: "Route Handler と Zod で REST API を構築する",
+    en: "Server Components, Client Components & data fetching",
+    np: "Server/Client Components र data fetching",
+    jp: "Server/Client Components とデータ取得",
   },
   7: {
     en: "Database integration with Prisma — models, migrations & CRUD",
@@ -102,6 +102,16 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
 };
 
 const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
+  "nextjs-phase-1": {
+    en: "PHASE 1 · NEXT.JS FOUNDATIONS (Days 1–5)",
+    np: "PHASE 1 · NEXT.JS आधार (दिन १–५)",
+    jp: "PHASE 1 · NEXT.JS 基礎（1〜5日目）",
+  },
+  "nextjs-phase-2": {
+    en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–10)",
+    np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–१०)",
+    jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
+  },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
     np: "Phase 0 · तयारी",
