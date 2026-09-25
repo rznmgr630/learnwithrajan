@@ -28,7 +28,7 @@ import {
 
 export const REACT_NATIVE_CURRENT_DAY = 1;
 
-export const REACT_NATIVE_TOTAL_DAYS = 61;
+export const REACT_NATIVE_TOTAL_DAYS = 63;
 
 const REACT_NATIVE_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   1: REACT_NATIVE_DAY_1_DETAIL,
@@ -71,12 +71,12 @@ function reactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay 
     day,
     title: reactNativeDayTitle(day),
     tags: reactNativeTags(tagSlugs),
-    detail: REACT_NATIVE_DAY_DETAILS[day > 41 ? day - 41 : day],
+    detail: REACT_NATIVE_DAY_DETAILS[day > 43 ? day - 43 : day],
   };
 }
 
 function existingReactNativeDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
-  return reactNativeDayRow(day + 41, tagSlugs);
+  return reactNativeDayRow(day + 43, tagSlugs);
 }
 
 export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
@@ -172,7 +172,11 @@ export const REACT_NATIVE_ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "rn-phase7",
     title: { en: "PHASE 7 · ADVANCED ARCHITECTURE (Days 41–45)", np: "PHASE 7 · ADVANCED ARCHITECTURE (दिन ४१–४५)", jp: "PHASE 7 · ADVANCED ARCHITECTURE (41〜45日目)" },
     dotClass: DOT["rn-w7"],
-    days: [reactNativeDayRow(41, ["animation", "skia"])],
+    days: [
+      reactNativeDayRow(41, ["animation", "skia"]),
+      reactNativeDayRow(42, ["monorepo", "code-sharing"]),
+      reactNativeDayRow(43, ["architecture", "testing"]),
+    ],
   },
   {
     id: "rn-w2",
