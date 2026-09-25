@@ -17,6 +17,8 @@ export interface Lesson {
   keyTakeaways: LocalizedString[];
   commonMistakes: LocalizedString[];
   quiz: LessonQuizQuestion[];
+  /** Open-ended questions from imported lessons, shown without invented answers. */
+  rawMiniQuiz?: LocalizedString;
   /** YouTube ids shown under the tabs, for lessons with companion videos. */
   youtubeIds?: string[];
 }

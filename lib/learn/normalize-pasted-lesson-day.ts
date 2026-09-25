@@ -12,6 +12,7 @@ type RawLesson = {
   keyTakeaways: string[];
   commonMistakes: string[];
   quiz: RawQuiz[];
+  rawMiniQuiz?: string;
 };
 type RawDay = Omit<LessonDay, "title" | "overview" | "difficulty" | "lessons" | "finalQuiz" | "footer" | "project"> & {
   title: string;
@@ -158,6 +159,7 @@ export function normalizePastedLessonDay(raw: RawDay): LessonDay {
       keyTakeaways: lesson.keyTakeaways.map((item) => local(formatExamples(item))),
       commonMistakes: lesson.commonMistakes.map((item) => local(formatExamples(item))),
       quiz: lesson.quiz.map(localizeQuiz),
+      rawMiniQuiz: lesson.rawMiniQuiz ? local(formatExamples(lesson.rawMiniQuiz)) : undefined,
     })),
     finalQuiz: raw.finalQuiz.map(localizeFinalQuiz),
     project: raw.project && {

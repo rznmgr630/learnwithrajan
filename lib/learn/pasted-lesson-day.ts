@@ -1,6 +1,7 @@
 import { normalizePastedLessonDay } from "@/lib/learn/normalize-pasted-lesson-day";
 
 type PastedSection = { title: string; explanation: string };
+type PastedParts = Record<string, string>;
 
 const DETAIL_HEADINGS = new Set([
   "explanation",
@@ -34,6 +35,36 @@ function splitSections(content: string): PastedSection[] {
   }).filter((section) => section.explanation.length > 0);
 }
 
+function namedParts(content: string): PastedParts {
+  const matches = [...content.matchAll(/^#{3,6}\s+(Explanation|Visual Diagram|Code Example|Key Takeaways|Common Mistakes|Mini Quiz)\s*$/gim)];
+  const parts: PastedParts = { intro: content.slice(0, matches[0]?.index ?? content.length).trim() };
+
+  matches.forEach((match, index) => {
+    const start = (match.index ?? 0) + match[0].length;
+    const end = index + 1 < matches.length ? (matches[index + 1].index ?? content.length) : content.length;
+    parts[match[1].toLowerCase()] = content.slice(start, end).trim();
+  });
+
+  return parts;
+}
+
+function fencedCode(value: string): { code: string; details?: string } {
+  const block = value.match(/```[^\n]*\n([\s\S]*?)```/);
+  if (!block) return { code: "", details: value || undefined };
+
+  const details = `${value.slice(0, block.index).trim()}\n\n${value.slice((block.index ?? 0) + block[0].length).trim()}`.trim();
+  return { code: block[1].trim(), details: details || undefined };
+}
+
+function contentItems(value: string): string[] {
+  if (!value) return [];
+  const bulletItems = value
+    .split("\n")
+    .filter((line) => /^\s*[-*•]\s+/.test(line))
+    .map((line) => line.replace(/^\s*[-*•]\s+/, "").trim());
+  return bulletItems.length ? bulletItems : [value];
+}
+
 export function pastedLessonDay(day: number, title: string, content: string) {
   const sections = splitSections(content);
 
@@ -42,17 +73,22 @@ export function pastedLessonDay(day: number, title: string, content: string) {
     title,
     totalMinutes: Math.max(60, sections.length * 8),
     difficulty: "Beginner to Advanced",
-    lessons: sections.map((section, index) => ({
-      id: `nextjs-day-${day}-section-${index + 1}`,
-      title: section.title,
-      durationMinutes: 8,
-      explanation: section.explanation,
-      diagram: "",
-      codeExample: { title: "Code example", code: "" },
-      keyTakeaways: [],
-      commonMistakes: [],
-      quiz: [],
-    })),
+    lessons: sections.map((section, index) => {
+      const parts = namedParts(section.explanation);
+      const codeExample = fencedCode(parts["code example"] ?? "");
+      return {
+        id: `nextjs-day-${day}-section-${index + 1}`,
+        title: section.title,
+        durationMinutes: 8,
+        explanation: [parts.intro, parts.explanation].filter(Boolean).join("\n\n"),
+        diagram: fencedCode(parts["visual diagram"] ?? "").code,
+        codeExample: { title: "Code example", ...codeExample },
+        keyTakeaways: contentItems(parts["key takeaways"] ?? ""),
+        commonMistakes: contentItems(parts["common mistakes"] ?? ""),
+        quiz: [],
+        rawMiniQuiz: parts["mini quiz"],
+      };
+    }),
     finalQuiz: [],
   });
 }
