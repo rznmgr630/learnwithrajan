@@ -50,19 +50,19 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Next.js とは・セットアップ・最初のアプリ",
   },
   2: {
-    en: "Server & Client Components, data fetching & rendering strategies",
-    np: "Server/Client कम्पोनेन्ट, डेटा फेच र रेन्डरिङ",
-    jp: "Server/Client コンポーネント・データ取得・レンダリング戦略",
+    en: "App Router fundamentals",
+    np: "App Router आधार",
+    jp: "App Router 基礎",
   },
   3: {
-    en: "Styling — Global CSS, CSS Modules, Tailwind & DaisyUI",
-    np: "Styling — Global CSS, CSS Modules, Tailwind र DaisyUI",
-    jp: "スタイル — Global CSS・CSS Modules・Tailwind・DaisyUI",
+    en: "Navigation & linking",
+    np: "Navigation र linking",
+    jp: "ナビゲーションとリンク",
   },
   4: {
-    en: "Routing deep dive — dynamic, catch-all, query params & layouts",
-    np: "Routing — dynamic, catch-all, query params र layouts",
-    jp: "ルーティング詳解 — 動的・キャッチオール・クエリ・レイアウト",
+    en: "Dynamic routes, route parameters & navigation patterns",
+    np: "Dynamic routes, route parameters र navigation",
+    jp: "動的ルート・ルートパラメータ・ナビゲーション",
   },
   5: {
     en: "Layouts, templates, loading & error UI",
@@ -101,6 +101,20 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   },
 };
 
+const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
+  7: { en: "What is Next.js, setup & your first app", np: "Next.js के हो, सेटअप र पहिलो एप", jp: "Next.js とは・セットアップ・最初のアプリ" },
+  8: { en: "Server & Client Components, data fetching & rendering strategies", np: "Server/Client कम्पोनेन्ट, डेटा फेच र रेन्डरिङ", jp: "Server/Client コンポーネント・データ取得・レンダリング戦略" },
+  9: { en: "Styling — Global CSS, CSS Modules, Tailwind & DaisyUI", np: "Styling — Global CSS, CSS Modules, Tailwind र DaisyUI", jp: "スタイル — Global CSS・CSS Modules・Tailwind・DaisyUI" },
+  10: { en: "Routing deep dive — dynamic, catch-all, query params & layouts", np: "Routing — dynamic, catch-all, query params र layouts", jp: "ルーティング詳解 — 動的・キャッチオール・クエリ・レイアウト" },
+  11: { en: "Navigation, loading UI, Not Found & error boundaries", np: "Navigation, loading UI, Not Found र error boundaries", jp: "ナビゲーション・ローディング・Not Found・エラー境界" },
+  12: { en: "Building REST APIs with Route Handlers & Zod validation", np: "Route Handlers र Zod सहित REST API निर्माण", jp: "Route Handler と Zod で REST API を構築する" },
+  13: { en: "Database integration with Prisma — models, migrations & CRUD", np: "Prisma सहित डेटाबेस — models, migrations र CRUD", jp: "Prisma でデータベース連携 —モデル・マイグレーション・CRUD" },
+  14: { en: "Uploading files with Cloudinary", np: "Cloudinary सहित फाइल अपलोड", jp: "Cloudinary を使ったファイルアップロード" },
+  15: { en: "Authentication with NextAuth — Google, credentials & session protection", np: "NextAuth — Google, credentials र session सुरक्षा", jp: "NextAuth 認証 — Google・認証情報・セッション保護" },
+  16: { en: "Sending emails, image/font optimizations, SEO & lazy loading", np: "इमेल, image/font अनुकूलन, SEO र lazy loading", jp: "メール送信・画像/フォント最適化・SEO・遅延読み込み" },
+  17: { en: "Deployment to Vercel — production prep, CI & troubleshooting", np: "Vercel मा Deployment — production, CI र troubleshooting", jp: "Vercel へのデプロイ — 本番準備・CI・トラブルシューティング" },
+};
+
 const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
   "nextjs-phase-1": {
     en: "PHASE 1 · NEXT.JS FOUNDATIONS (Days 1–5)",
@@ -111,6 +125,11 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–10)",
     np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–१०)",
     jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
+  },
+  "nextjs-existing-course": {
+    en: "EXISTING NEXT.JS COURSE (Days 11–17)",
+    np: "पहिलेको NEXT.JS कोर्स (दिन ११–१७)",
+    jp: "既存のNEXT.JSコース（11〜17日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
@@ -145,7 +164,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function nextjsDayTitle(day: number): LocalizedString {
-  return NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return NEXTJS_EXISTING_COURSE_DAY_TITLE[day] ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function nextjsWeekTitle(weekId: string): LocalizedString {

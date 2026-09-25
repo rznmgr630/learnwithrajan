@@ -16,21 +16,21 @@ import { nextjsDayTitle, nextjsTags, nextjsWeekTitle } from "@/lib/nextjs-learni
 
 export const NEXTJS_CURRENT_DAY = 1;
 
-export const NEXTJS_TOTAL_DAYS = 11;
+export const NEXTJS_TOTAL_DAYS = 17;
 
 const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   0: NEXTJS_DAY_0_DETAIL,
-  1: NEXTJS_DAY_1_DETAIL,
-  2: NEXTJS_DAY_2_DETAIL,
-  3: NEXTJS_DAY_3_DETAIL,
-  4: NEXTJS_DAY_4_DETAIL,
-  5: NEXTJS_DAY_5_DETAIL,
-  6: NEXTJS_DAY_6_DETAIL,
-  7: NEXTJS_DAY_7_DETAIL,
-  8: NEXTJS_DAY_8_DETAIL,
-  9: NEXTJS_DAY_9_DETAIL,
-  10: NEXTJS_DAY_10_DETAIL,
-  11: NEXTJS_DAY_11_DETAIL,
+  7: NEXTJS_DAY_1_DETAIL,
+  8: NEXTJS_DAY_2_DETAIL,
+  9: NEXTJS_DAY_3_DETAIL,
+  10: NEXTJS_DAY_4_DETAIL,
+  11: NEXTJS_DAY_5_DETAIL,
+  12: NEXTJS_DAY_6_DETAIL,
+  13: NEXTJS_DAY_7_DETAIL,
+  14: NEXTJS_DAY_8_DETAIL,
+  15: NEXTJS_DAY_9_DETAIL,
+  16: NEXTJS_DAY_10_DETAIL,
+  17: NEXTJS_DAY_11_DETAIL,
 };
 
 function nextjsDayRow(day: number, tagSlugs: [string, string]): RoadmapDay {
@@ -67,17 +67,25 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
     days: [
       nextjsDayRow(6, ["server-components", "rendering"]),
-      nextjsDayRow(7, ["prisma", "database"]),
-      nextjsDayRow(8, ["upload", "cloudinary"]),
-      nextjsDayRow(9, ["auth", "next-auth"]),
-      nextjsDayRow(10, ["email", "optimization"]),
+      nextjsDayRow(7, ["intro", "setup"]),
+      nextjsDayRow(8, ["server-components", "rendering"]),
+      nextjsDayRow(9, ["styling", "tailwind"]),
+      nextjsDayRow(10, ["routing", "layouts"]),
     ],
   },
   {
-    id: "nextjs-ship",
-    title: nextjsWeekTitle("nextjs-ship"),
+    id: "nextjs-existing-course",
+    title: nextjsWeekTitle("nextjs-existing-course"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
-    days: [nextjsDayRow(11, ["deployment", "vercel"])],
+    days: [
+      nextjsDayRow(11, ["navigation", "error-handling"]),
+      nextjsDayRow(12, ["api-routes", "zod"]),
+      nextjsDayRow(13, ["prisma", "database"]),
+      nextjsDayRow(14, ["upload", "cloudinary"]),
+      nextjsDayRow(15, ["auth", "next-auth"]),
+      nextjsDayRow(16, ["email", "optimization"]),
+      nextjsDayRow(17, ["deployment", "vercel"]),
+    ],
   },
 ];
 
