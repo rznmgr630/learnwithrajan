@@ -4,7 +4,7 @@ export const REACT_NATIVE_DAY_19_LESSONS = normalizePastedLessonDay({
   "day": 19,
   "title": "Server State in Depth",
   "overview": "📖 **5 lessons**\n\nDay 15 introduced the difference between:\n\n```\nClient state\nServer state\n```\n\nToday we're going deeper into server state.\n\nWe'll use **TanStack Query** as the main example.\n\nThe big idea is:\n\n> Server data is not just data you fetch once.\n\nIt has a lifecycle:\n\n```\nFetch\n↓\nCache\n↓\nBecome stale\n↓\nRefetch\n↓\nMutate\n↓\nInvalidate\n↓\nRefetch again\n```\n\nMobile applications make this especially important because the network can disappear at any time.",
-  "totalMinutes": 60,
+  "totalMinutes": 68,
   "difficulty": "Intermediate",
   "lessons": [
     {
@@ -156,6 +156,41 @@ export const REACT_NATIVE_DAY_19_LESSONS = normalizePastedLessonDay({
           "explanation": "**Answer:** A"
         }
       ]
+    },
+    {
+      "id": "rn19-6",
+      "title": "Stale-While-Revalidate on Mobile",
+      "durationMinutes": 8,
+      "explanation": "Stale-while-revalidate shows the most recent cached data immediately, then requests fresh data in the background. The user gets a fast screen without pretending that cached data is permanently correct.\n\n```text\nOpen screen\n    ↓\nRead cached data\n    ↓\nShow it immediately as possibly stale\n    ↓\nFetch fresh data in background\n    ↓\nSuccess? ── yes ──→ Replace UI and cache\n    │\n    no\n    ↓\nKeep cached UI and show a non-destructive error\n```\n\nThis is especially useful on mobile because the app may reopen on a slow or unavailable network. The cache provides continuity while revalidation restores server truth.\n\nWith TanStack Query, cached data, `staleTime`, refetch policies, and persisted query storage can provide this behavior. With a custom cache, store both the payload and metadata such as `savedAt` or a version.\n\nDo not confuse stale with invalid. Stale means the data may need refreshing. Invalid means the data cannot safely be used. Sensitive or irreversible decisions may require a successful server check instead of showing old data.",
+      "diagram": "Cache → Immediate UI → Background request → Fresh UI + updated cache",
+      "codeExample": {
+        "title": "Show cached data, then revalidate",
+        "code": "async function loadProducts() {\n  const cached = await readProductCache();\n  if (cached) setProducts(cached.data);\n\n  try {\n    const fresh = await fetchProducts();\n    setProducts(fresh);\n    await writeProductCache({\n      data: fresh,\n      savedAt: Date.now(),\n    });\n  } catch (error) {\n    if (!cached) throw error;\n    setRefreshError(\"Showing saved data. Pull to retry.\");\n  }\n}"
+      },
+      "keyTakeaways": [
+        "Cached data can make a mobile screen useful before the network responds.",
+        "Revalidation fetches server truth after cached data is shown.",
+        "A failed refresh should not erase valid cached data.",
+        "Cache metadata helps determine whether old data is safe to display."
+      ],
+      "commonMistakes": [
+        "Showing cached data without indicating that a refresh failed.",
+        "Replacing useful cached data with an empty state when revalidation fails.",
+        "Using stale data for actions that require current server confirmation."
+      ],
+      "quiz": [
+        {
+          "question": "What does stale-while-revalidate do?",
+          "options": [
+            "A. Deletes cached data before every request",
+            "B. Shows cached data immediately and refreshes it in the background",
+            "C. Prevents all network requests",
+            "D. Retries every mutation forever"
+          ],
+          "correctIndex": 1,
+          "explanation": "It combines immediate cached UI with a background request for fresh server data."
+        }
+      ]
     }
   ],
   "finalQuiz": [
@@ -259,15 +294,15 @@ export const REACT_NATIVE_DAY_19_LESSONS = normalizePastedLessonDay({
       "explanation": "**Answer:** A"
     },
     {
-      "question": "Why should mutation retries use an idempotency key?",
+      "question": "What is the stale-while-revalidate flow?",
       "options": [
-        "A. To prevent duplicate server effects",
-        "B. To improve styling",
-        "C. To create route types",
-        "D. To preserve component identity"
+        "A. Show cached data first, then refresh it from the server",
+        "B. Delete the cache before rendering",
+        "C. Disable the network after the first request",
+        "D. Store every response forever"
       ],
       "correctIndex": 0,
-      "explanation": "**Answer:** A"
+      "explanation": "**Answer:** A — cached data provides immediate UI while background revalidation restores server truth."
     }
   ],
   "footer": "# 🧠 Days 17–19 — The Big Picture\n\nThese three days are connected.\n\nYou are not learning three unrelated topics.\n\nYou're building one architecture.\n\n```\n                        React Native App\n                               │\n         ┌─────────────────────┼─────────────────────┐\n         │                     │                     │\n         ▼                     ▼                     ▼\n       React               TypeScript           Server State\n         │                     │                     │\n         │                     │                     │\n  ┌──────┼──────┐       ┌──────┼──────┐       ┌──────┼──────┐\n  │      │      │       │      │      │       │      │      │\n  ▼      ▼      ▼       ▼      ▼      ▼       ▼      ▼      ▼\nEffects State Suspense Routes Native Config  Cache  Query Mutation\n  │                                      │       │      │\n  ▼                                      ▼       ▼      ▼\nuseEffectEvent                       Safe APIs  Fresh   Optimistic\n                                               Data      UI\n```\n\nThe mental model you should leave with is:\n\n### React handles the UI and rendering model.\n\n```\nComponents\nState\nEffects\nTransitions\nSuspense\n```\n\n### TypeScript protects important boundaries.\n\n```\nRoutes\nProps\nAPI models\nNative modules\nConfiguration\n```\n\n### TanStack Query handles server state.\n\n```\nCaching\nFetching\nRefetching\nInvalidation\nPagination\nMutations\nOptimistic updates\n```\n\n### Your server must still be the source of truth.\n\nOptimistic UI is only a temporary prediction.\n\n```\nClient prediction\n      ↓\nServer confirmation\n      ↓\nFinal truth\n```\n\nAnd on mobile, you must always remember:\n\n```\nNetwork can disappear.\nRequests can fail.\nApps can be backgrounded.\nResponses can arrive late.\nRequests can be retried.\n```\n\nThat's why the architecture you're building now is much more than simply:\n\n```\nfetch()\n```",
@@ -291,4 +326,3 @@ export const REACT_NATIVE_DAY_19_LESSONS = normalizePastedLessonDay({
     ]
   }
 });
-
