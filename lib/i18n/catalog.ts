@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "15 saved books",
-    np: "१५ सुरक्षित पुस्तक",
-    jp: "保存した本 15冊",
+    en: "16 saved books",
+    np: "१६ सुरक्षित पुस्तक",
+    jp: "保存した本 16冊",
   },
   "library.collection": {
     en: "Collection",
@@ -239,6 +239,8 @@ export const UI_STRINGS = {
   },
   "library.howToWinFriends.title": { en: "How to Win Friends and Influence People", np: "How to Win Friends and Influence People", jp: "How to Win Friends and Influence People" },
   "library.howToWinFriends.subtitle": { en: "Practical principles for building stronger relationships and communication.", np: "बलियो सम्बन्ध र संवाद निर्माणका व्यावहारिक सिद्धान्तहरू।", jp: "より良い人間関係とコミュニケーションを築く実践的な原則。" },
+  "library.mindset.title": { en: "Mindset: The New Psychology of Success", np: "Mindset: The New Psychology of Success", jp: "Mindset: The New Psychology of Success" },
+  "library.mindset.subtitle": { en: "Discover how a growth mindset can change learning, work, and achievement.", np: "विकास मानसिकताले सिकाइ, काम र उपलब्धि कसरी बदल्छ भन्ने जान्नुहोस्।", jp: "成長マインドセットが学び、仕事、達成をどう変えるかを学びます。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
