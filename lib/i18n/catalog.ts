@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "14 saved books",
-    np: "१४ सुरक्षित पुस्तक",
-    jp: "保存した本 14冊",
+    en: "15 saved books",
+    np: "१५ सुरक्षित पुस्तक",
+    jp: "保存した本 15冊",
   },
   "library.collection": {
     en: "Collection",
@@ -237,6 +237,8 @@ export const UI_STRINGS = {
     np: "जीवन र काममा अझ प्रभावकारी बन्ने व्यावहारिक रूपरेखा।",
     jp: "人生と仕事でより効果的になるための実践的な枠組み。",
   },
+  "library.howToWinFriends.title": { en: "How to Win Friends and Influence People", np: "How to Win Friends and Influence People", jp: "How to Win Friends and Influence People" },
+  "library.howToWinFriends.subtitle": { en: "Practical principles for building stronger relationships and communication.", np: "बलियो सम्बन्ध र संवाद निर्माणका व्यावहारिक सिद्धान्तहरू।", jp: "より良い人間関係とコミュニケーションを築く実践的な原則。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
