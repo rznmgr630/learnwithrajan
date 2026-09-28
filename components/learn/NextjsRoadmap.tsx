@@ -26,6 +26,7 @@ import { NEXTJS_DAY_11_LESSONS } from "@/lib/nextjs-learning/nextjs-day-11-lesso
 import { NEXTJS_DAY_12_LESSONS } from "@/lib/nextjs-learning/nextjs-day-12-lessons";
 import { NEXTJS_DAY_13_LESSONS } from "@/lib/nextjs-learning/nextjs-day-13-lessons";
 import { NEXTJS_DAY_14_LESSONS } from "@/lib/nextjs-learning/nextjs-day-14-lessons";
+import { NEXTJS_DAY_15_LESSONS } from "@/lib/nextjs-learning/nextjs-day-15-lessons";
 import { NEXTJS_DAY_22_LESSONS } from "@/lib/nextjs-learning/nextjs-day-22-lessons";
 import { NEXTJS_DAY_23_LESSONS } from "@/lib/nextjs-learning/nextjs-day-23-lessons";
 import { NEXTJS_DAY_24_LESSONS } from "@/lib/nextjs-learning/nextjs-day-24-lessons";
@@ -51,6 +52,7 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   12: NEXTJS_DAY_12_LESSONS,
   13: NEXTJS_DAY_13_LESSONS,
   14: NEXTJS_DAY_14_LESSONS,
+  15: NEXTJS_DAY_15_LESSONS,
   23: { ...NEXTJS_DAY_22_LESSONS, day: 23 },
   24: { ...NEXTJS_DAY_23_LESSONS, day: 24 },
   25: { ...NEXTJS_DAY_24_LESSONS, day: 25 },
