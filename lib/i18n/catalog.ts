@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "13 saved books",
-    np: "१३ सुरक्षित पुस्तक",
-    jp: "保存した本 13冊",
+    en: "14 saved books",
+    np: "१४ सुरक्षित पुस्तक",
+    jp: "保存した本 14冊",
   },
   "library.collection": {
     en: "Collection",
@@ -226,6 +226,16 @@ export const UI_STRINGS = {
     en: "Small changes that create remarkable results through better habits.",
     np: "राम्रो बानीमार्फत उल्लेखनीय परिणाम सिर्जना गर्ने साना परिवर्तनहरू।",
     jp: "より良い習慣で大きな成果を生む小さな変化。",
+  },
+  "library.sevenHabits.title": {
+    en: "The 7 Habits of Highly Effective People",
+    np: "The 7 Habits of Highly Effective People",
+    jp: "The 7 Habits of Highly Effective People",
+  },
+  "library.sevenHabits.subtitle": {
+    en: "A practical framework for becoming more effective in life and work.",
+    np: "जीवन र काममा अझ प्रभावकारी बन्ने व्यावहारिक रूपरेखा।",
+    jp: "人生と仕事でより効果的になるための実践的な枠組み。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
