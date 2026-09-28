@@ -97,6 +97,7 @@ export function SiteHeader() {
         </Link>
         <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <nav className="flex min-w-0 items-center gap-0 text-sm sm:gap-1">
+            <Link href="/focus" className="inline-flex whitespace-nowrap rounded-lg px-1.5 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3">Focus</Link>
             {links.map((item) => (
               <Link
                 key={item.href}
