@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "20 saved books",
-    np: "२० सुरक्षित पुस्तक",
-    jp: "保存した本 20冊",
+    en: "21 saved books",
+    np: "२१ सुरक्षित पुस्तक",
+    jp: "保存した本 21冊",
   },
   "library.collection": {
     en: "Collection",
@@ -250,6 +250,8 @@ export const UI_STRINGS = {
   "library.jungleBook.subtitle": { en: "Mowgli's classic adventure through the wild Indian jungle.", np: "जंगली भारतीय जंगलमा मोग्लीको क्लासिक साहसिक यात्रा।", jp: "野生のインドのジャングルを巡るモーグリの古典的な冒険。" },
   "library.animalFarm.title": { en: "Animal Farm", np: "Animal Farm", jp: "Animal Farm" },
   "library.animalFarm.subtitle": { en: "George Orwell's timeless political fable about power and equality.", np: "शक्ति र समानताबारे जर्ज अर्वेलको समयहीन राजनीतिक कथा।", jp: "権力と平等を描くジョージ・オーウェルの不朽の政治寓話。" },
+  "library.wizardOfOz.title": { en: "The Wizard of Oz", np: "The Wizard of Oz", jp: "The Wizard of Oz" },
+  "library.wizardOfOz.subtitle": { en: "Dorothy's magical journey through the Land of Oz.", np: "ओजको भूमिमा डोरोथीको जादुई यात्रा।", jp: "オズの国を巡るドロシーの魔法の旅。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
