@@ -1,5 +1,479 @@
-import { pastedLessonDay } from "@/lib/learn/pasted-lesson-day";
+import type { LessonDay } from "@/lib/learn/lesson-types";
 
-const PASTED_CONTENT = "# Day 9 — Authentication, Authorization, Cookies & Protected Routes\n\nDay 8 taught you how users can **change data**.\n\nNow we need to answer a much more important question:\n\n> **Who is the user, and what is that user allowed to do?**\n\nThis day builds the foundation for authentication in a real Next.js application.\n\n---\n\n# 1. Authentication vs Authorization\n\n### Explanation\n\nThese two terms are often confused, but they solve different problems.\n\n### Authentication\n\n**Authentication** means:\n\n> \"Who are you?\"\n\nExamples:\n\n```text\nLogin with email/password\nLogin with Google\nLogin with GitHub\nSession cookie\nJWT\nOAuth\n```\n\nAfter authentication, the application knows:\n\n```text\nUser ID: 123\nEmail: user@example.com\n```\n\n---\n\n### Authorization\n\n**Authorization** means:\n\n> \"What are you allowed to do?\"\n\nFor example:\n\n```text\nUser A\n→ can view their profile\n\nAdmin\n→ can view all users\n\nEditor\n→ can edit articles\n\nViewer\n→ can only read articles\n```\n\nSo:\n\n```text\nAuthentication\n      ↓\nWho are you?\n      ↓\nAuthorization\n      ↓\nWhat can you do?\n```\n\n---\n\n### Visual Diagram\n\n```text\n                 User\n                  │\n                  ▼\n           Authentication\n                  │\n             \"Who are you?\"\n                  │\n                  ▼\n             User Identity\n                  │\n                  ▼\n            Authorization\n                  │\n          \"What can you do?\"\n                  │\n        ┌─────────┼─────────┐\n        ▼         ▼         ▼\n      Read      Write     Delete\n```\n\n---\n\n### Code Example\n\nImagine the server identifies the user:\n\n```ts\nconst user = {\n  id: 123,\n  role: \"editor\",\n};\n```\n\nAuthentication tells us:\n\n```text\nUser = 123\n```\n\nAuthorization asks:\n\n```ts\nif (user.role !== \"editor\") {\n  throw new Error(\"Forbidden\");\n}\n```\n\nThe first answers **identity**.\n\nThe second checks **permission**.\n\n---\n\n### Key Takeaways\n\nRemember this permanently:\n\n```text\nAuthentication = Who are you?\n\nAuthorization = What are you allowed to do?\n```\n\nAuthentication happens before meaningful authorization decisions can usually be made, because the application needs to know who is requesting the action.\n\n---\n\n### Common Mistakes\n\n#### Mistake 1 — Thinking login means authorization\n\nA logged-in user isn't automatically allowed to perform every operation.\n\n```text\nLogged in\n    ≠\nAdministrator\n```\n\n#### Mistake 2 — Checking authorization only in the UI\n\nHiding:\n\n```text\nDelete User\n```\n\nfrom the UI is not security.\n\nThe server must still verify permission.\n\n---\n\n### Mini Quiz\n\n1. What does authentication answer?\n2. What does authorization answer?\n3. Does being logged in automatically make someone an admin?\n4. Where should important authorization checks happen?\n\n---\n\n# 2. Understanding the Authentication Request Flow\n\n### Explanation\n\nLet's understand what actually happens when a user logs in.\n\nSuppose the user enters:\n\n```text\nEmail:\nrajan@example.com\n\nPassword:\n********\n```\n\nThe browser sends the credentials to the server.\n\n```text\nBrowser\n   │\n   │ POST /login\n   │ email + password\n   ▼\nServer\n   │\n   ├── validate input\n   ├── find user\n   ├── verify password\n   └── create session\n          │\n          ▼\n       Cookie\n          │\n          ▼\n      Browser stores it\n```\n\nOn later requests:\n\n```text\nBrowser\n   │\n   │ Cookie\n   ▼\nNext.js Server\n   │\n   ▼\nIdentify user\n   │\n   ▼\nAuthorize request\n```\n\n---\n\n### Visual Diagram\n\n```text\nFIRST REQUEST\n\nBrowser\n   │\n   │ email + password\n   ▼\n┌──────────────┐\n│ Login Server │\n└──────┬───────┘\n       │\n       ▼\nVerify credentials\n       │\n       ▼\nCreate session\n       │\n       ▼\nSet-Cookie\n       │\n       ▼\nBrowser\n\n\nLATER REQUESTS\n\nBrowser\n   │\n   │ Cookie\n   ▼\nNext.js\n   │\n   ▼\nRead session\n   │\n   ▼\nIdentify user\n```\n\n---\n\n### Code Example\n\nA simplified login action might look like:\n\n```tsx\n\"use server\";\n\nimport { cookies } from \"next/headers\";\n\nexport async function login(formData: FormData) {\n  const email = formData.get(\"email\");\n  const password = formData.get(\"password\");\n\n  if (\n    typeof email !== \"string\" ||\n    typeof password !== \"string\"\n  ) {\n    throw new Error(\"Invalid credentials\");\n  }\n\n  const user = await verifyCredentials(\n    email,\n    password\n  );\n\n  if (!user) {\n    throw new Error(\"Invalid email or password\");\n  }\n\n  const cookieStore = await cookies();\n\n  cookieStore.set(\"session\", user.sessionToken, {\n    httpOnly: true,\n    secure: true,\n    sameSite: \"lax\",\n    path: \"/\",\n  });\n}\n```\n\nThis is a simplified educational example.\n\nIn a production application, you would normally use a properly designed authentication system/library rather than implementing password/session security from scratch.\n\n---\n\n### Key Takeaways\n\nThe important flow is:\n\n```text\nCredentials\n    ↓\nVerify\n    ↓\nCreate session\n    ↓\nStore session identifier\n    ↓\nBrowser sends it on future requests\n    ↓\nServer identifies user\n```\n\n---\n\n### Common Mistakes\n\nNever store a user's plain password in a cookie.\n\nDon't do:\n\n```text\nCookie:\nemail=...\npassword=...\n```\n\nAuthentication systems should use secure session mechanisms.\n\n---\n\n### Mini Quiz\n\n1. What happens after successful login?\n2. Why does the browser need something representing the session?\n3. What does the server do with the session on future requests?\n\n---\n\n# 3. Cookies in Next.js\n\n### Explanation\n\nA **cookie** is a small piece of data associated with a website that the browser can send back with future requests.\n\nCookies are commonly used for:\n\n```text\nSession identifiers\nAuthentication\nPreferences\nSecurity-related state\n```\n\nFor authentication, a cookie might contain:\n\n```text\nsession=abc123\n```\n\nThe server can use that session identifier to determine who the user is.\n\n---\n\n### Visual Diagram\n\n```text\nServer\n   │\n   │ Set-Cookie\n   ▼\nBrowser\n   │\n   │ stores cookie\n   │\n   │ future request\n   ▼\nServer\n   │\n   │ Cookie: session=abc123\n   ▼\nSession lookup\n```\n\n---\n\n### Code Example\n\nReading cookies on the server:\n\n```tsx\nimport { cookies } from \"next/headers\";\n\nexport default async function ProfilePage() {\n  const cookieStore = await cookies();\n\n  const session = cookieStore.get(\"session\");\n\n  if (!session) {\n    return <p>Not authenticated</p>;\n  }\n\n  return <p>Authenticated</p>;\n}\n```\n\nSetting a cookie can be done from an appropriate server-side context such as a Server Action or Route Handler.\n\n```tsx\n\"use server\";\n\nimport { cookies } from \"next/headers\";\n\nexport async function createSession() {\n  const cookieStore = await cookies();\n\n  cookieStore.set(\"session\", \"abc123\", {\n    httpOnly: true,\n    secure: true,\n    sameSite: \"lax\",\n    path: \"/\",\n  });\n}\n```\n\n---\n\n### Important Cookie Options\n\n#### `httpOnly`\n\n```text\nhttpOnly: true\n```\n\nPrevents normal browser JavaScript from reading the cookie.\n\nThis is particularly useful for session cookies.\n\n---\n\n#### `secure`\n\n```text\nsecure: true\n```\n\nTells the browser to send the cookie only over HTTPS.\n\nDuring local development, configuration may need to account for your development environment.\n\n---\n\n#### `sameSite`\n\nControls when the browser sends the cookie in cross-site situations.\n\nCommon values include:\n\n```text\nstrict\nlax\nnone\n```\n\nYou should understand this concept because it is closely related to CSRF and cross-site request behavior.\n\n---\n\n#### `path`\n\n```text\npath: \"/\"\n```\n\nmeans the cookie applies across the site.\n\n---\n\n### Key Takeaways\n\nA secure session cookie commonly has properties such as:\n\n```text\nhttpOnly\nsecure\nsameSite\npath\n```\n\nDon't memorize the options without understanding why they exist.\n\n---\n\n### Common Mistakes\n\n#### Mistake 1\n\nStoring sensitive information directly in a normal client-readable cookie.\n\n#### Mistake 2\n\nThinking `httpOnly` means the server automatically authenticates the user.\n\nIt only changes browser access to the cookie.\n\nYour application still needs to validate the session.\n\n---\n\n### Mini Quiz\n\n1. What does `httpOnly` do?\n2. What does `secure` do?\n3. Why are cookies commonly used for sessions?\n4. Does having a cookie automatically mean the session is valid?\n\n---\n\n# 4. Sessions and Session Validation\n\n### Explanation\n\nA cookie and a session are not necessarily the same thing.\n\nA useful mental model is:\n\n```text\nCookie\n→ identifier carried by the browser\n\nSession\n→ server-side representation of authenticated state\n```\n\nFor example:\n\n```text\nCookie:\nsession_id=abc123\n```\n\nServer-side:\n\n```text\nabc123\n   ↓\nUser ID: 123\nRole: editor\nExpires: tomorrow\n```\n\n---\n\n### Visual Diagram\n\n```text\nBrowser\n┌────────────────────┐\n│ session_id=abc123  │\n└─────────┬──────────┘\n          │\n          ▼\n       Server\n          │\n          ▼\n┌────────────────────┐\n│ Session Store      │\n│                    │\n│ abc123             │\n│ userId = 123       │\n│ role = editor      │\n└────────────────────┘\n```\n\nThe session store could be implemented using:\n\n```text\nDatabase\nRedis\nAnother session storage system\n```\n\ndepending on the architecture.\n\n---\n\n### Code Example\n\nCreate a reusable server-side function:\n\n```tsx\nimport { cookies } from \"next/headers\";\n\nexport async function getCurrentUser() {\n  const cookieStore = await cookies();\n\n  const session = cookieStore.get(\"session\");\n\n  if (!session) {\n    return null;\n  }\n\n  return getUserFromSession(session.value);\n}\n```\n\nThen:\n\n```tsx\nexport default async function ProfilePage() {\n  const user = await getCurrentUser();\n\n  if (!user) {\n    return <p>Please log in.</p>;\n  }\n\n  return (\n    <main>\n      <h1>Welcome, {user.name}</h1>\n    </main>\n  );\n}\n```\n\nThis is much cleaner than duplicating cookie/session logic across every page.\n\n---\n\n### Key Takeaways\n\nCreate a central authentication abstraction such as:\n\n```text\ngetCurrentUser()\ngetSession()\nrequireUser()\nrequireRole()\n```\n\nrather than repeating authentication logic everywhere.\n\n---\n\n### Common Mistakes\n\nDon't do this in every page:\n\n```text\nread cookie\ndecode cookie\nfind user\ncheck expiration\ncheck permissions\n...\n```\n\nThat creates duplicated and inconsistent security logic.\n\n---\n\n### Mini Quiz\n\n1. What is the difference between a cookie and a session?\n2. Why create a reusable `getCurrentUser()` function?\n3. Where could session information be stored?\n\n---\n\n# 5. Protecting Server Components and Pages\n\n### Explanation\n\nNow we can combine everything.\n\nSuppose:\n\n```text\n/dashboard\n```\n\nshould only be accessible to authenticated users.\n\nThe page can check the current user.\n\n```tsx\nimport { redirect } from \"next/navigation\";\n\nexport default async function DashboardPage() {\n  const user = await getCurrentUser();\n\n  if (!user) {\n    redirect(\"/login\");\n  }\n\n  return (\n    <main>\n      <h1>Dashboard</h1>\n      <p>Welcome, {user.name}</p>\n    </main>\n  );\n}\n```\n\nThe important security principle is:\n\n> **The server must enforce access.**\n\n---\n\n### Visual Diagram\n\n```text\nRequest /dashboard\n        │\n        ▼\nGet current session\n        │\n   ┌────┴────┐\n   │         │\nUser        No User\n │             │\n ▼             ▼\nDashboard    redirect\n```\n\n---\n\n### Key Takeaways\n\nProtected pages should verify authentication before exposing protected information.\n\n---\n\n### Common Mistakes\n\nDon't rely only on:\n\n```tsx\n\"use client\";\n\nif (!user) {\n  router.push(\"/login\");\n}\n```\n\nfor security.\n\nClient-side redirects improve UX.\n\nThey are not a substitute for server-side authorization.\n\n---\n\n### Mini Quiz\n\n1. Why should protected data be checked on the server?\n2. Is a client-side redirect enough for security?\n3. What should happen when an unauthenticated user accesses `/dashboard`?\n\n---\n\n# 6. Authorization and Role-Based Access\n\n### Explanation\n\nNow suppose your application has:\n\n```text\nUser\nEditor\nAdmin\n```\n\nAuthentication tells you:\n\n```text\nuser.id = 123\n```\n\nAuthorization determines:\n\n```text\nuser.role = \"admin\"\n```\n\nand whether that role can perform an operation.\n\n---\n\n### Visual Diagram\n\n```text\nAuthenticated User\n        │\n        ▼\n      Role\n        │\n ┌──────┼────────┐\n ▼      ▼        ▼\nUser   Editor   Admin\n │       │        │\nRead    Read     Read\n        Write    Write\n                 Delete\n```\n\n---\n\n### Code Example\n\nCreate a server-side authorization helper:\n\n```tsx\nexport async function requireAdmin() {\n  const user = await getCurrentUser();\n\n  if (!user) {\n    redirect(\"/login\");\n  }\n\n  if (user.role !== \"admin\") {\n    redirect(\"/forbidden\");\n  }\n\n  return user;\n}\n```\n\nThen:\n\n```tsx\nexport default async function AdminPage() {\n  await requireAdmin();\n\n  return (\n    <main>\n      <h1>Admin Dashboard</h1>\n    </main>\n  );\n}\n```\n\n---\n\n### Key Takeaways\n\nA good authorization architecture makes permission checks explicit:\n\n```text\nrequireUser()\nrequireAdmin()\nrequireEditor()\ncanEditProject()\ncanDeleteUser()\n```\n\nThe exact abstraction depends on your application.\n\n---\n\n### Common Mistakes\n\nDon't assume:\n\n```text\nURL contains /admin\n```\n\nmeans the user is an admin.\n\nThe server must verify the user's actual permissions.\n\n---\n\n### Mini Quiz\n\n1. What is role-based authorization?\n2. Why shouldn't permissions be determined from the URL?\n3. Where should an admin check happen?\n\n---\n\n# 7. Middleware / Proxy vs Server-Side Authorization\n\n### Explanation\n\nThere is an important distinction between **routing-level checks** and **actual authorization**.\n\nA routing interception layer can be useful for things such as:\n\n```text\nredirect unauthenticated users\nrewrite requests\nperform lightweight request checks\n```\n\nBut it should not become your only authorization layer.\n\nThink:\n\n```text\nRequest-level protection\n        +\nServer-side authorization\n        +\nDatabase/resource authorization\n```\n\nFor current Next.js versions, the routing interception convention is moving toward `proxy.ts`, so you should learn the current convention rather than relying on older tutorials that exclusively teach `middleware.ts`.\n\n---\n\n### Visual Diagram\n\n```text\nRequest\n   │\n   ▼\nProxy / routing layer\n   │\n   ▼\nPage / Server Action\n   │\n   ▼\nAuthorization\n   │\n   ▼\nDatabase/resource\n```\n\n---\n\n### Key Takeaways\n\nUse request-level routing logic for request handling.\n\nUse server-side authorization to actually enforce permissions.\n\n---\n\n### Common Mistakes\n\nDon't think:\n\n```text\nProxy checked user\n        ↓\nEverything is secure\n```\n\nYour Server Actions and data access paths must still protect themselves.\n\n---\n\n### Mini Quiz\n\n1. What is the purpose of a routing interception layer?\n2. Should it replace authorization checks?\n3. Why should Server Actions still verify permissions?\n\n---\n\n# Day 9 Project — Protected Admin Dashboard\n\nBuild:\n\n```text\n/login\n/dashboard\n/admin\n/profile\n/forbidden\n```\n\n### Requirements\n\nImplement:\n\n```text\nAuthentication\n      ↓\nSession cookie\n      ↓\ngetCurrentUser()\n      ↓\nProtected dashboard\n      ↓\nRole-based authorization\n```\n\nUsers:\n\n```text\nRajan → admin\nAlex  → editor\nSam   → user\n```\n\nRules:\n\n```text\nuser\n→ profile\n\neditor\n→ profile + dashboard\n\nadmin\n→ profile + dashboard + admin\n```\n\nThe project should include:\n\n* login form\n* session creation\n* secure cookie configuration\n* current-user helper\n* protected pages\n* role checks\n* logout\n* forbidden page\n* server-side authorization\n\n---";
+export const NEXTJS_DAY_9_LESSONS: LessonDay = {
+  day: 9,
+  title: "Rendering Strategies",
+  totalMinutes: 76,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "rendering-strategies-overview",
+      title: "Build-time and request-time rendering",
+      durationMinutes: 15,
+      explanation: `
+Rendering is the process of producing the HTML and UI that the user receives for a route. In Next.js, you can decide when that work should happen. The two useful ideas to start with are **build-time rendering** and **request-time rendering**.
 
-export const NEXTJS_DAY_9_LESSONS = pastedLessonDay(9, "Day 9", PASTED_CONTENT);
+Build-time rendering means the application can prepare a route before a user requests it. This is useful when the output can be known ahead of time or does not need to be calculated for every request. Because the work can happen before the request, the resulting page can often be served very quickly.
+
+Request-time rendering means the route is rendered when a request arrives. This is useful when the response depends on information that is only available at request time, such as request-specific data, cookies, authentication state, or other dynamic information.
+
+### Static rendering
+
+A statically rendered route can be generated ahead of time and reused for multiple requests. Static rendering is especially useful for content such as documentation pages, marketing pages, public product information, and other content that does not need a unique result for every request.
+
+### Dynamic rendering
+
+Dynamic rendering happens when the result needs to be produced at request time. The important idea is not simply "dynamic means slower." Instead, dynamic rendering gives the application access to request-time information when the route needs it.
+
+A route can therefore be thought of as either using information that is stable enough to prepare ahead of time or information that requires request-time work.
+      `,
+      diagram: `
+Request
+  |
+  v
++-----------------------+
+| Does output depend on |
+| request-time data?    |
++-----------+-----------+
+            |
+       +----+----+
+       |         |
+      No        Yes
+       |         |
+       v         v
+ Build-time   Request-time
+ rendering    rendering
+       |         |
+       v         v
+Prepared      Rendered when
+ahead         request arrives
+      `,
+      codeExample: {
+        title: "A mostly static page vs request-specific page",
+        code: `// Mostly static content
+// app/about/page.tsx
+
+export default function AboutPage() {
+  return (
+    <main>
+      <h1>About our company</h1>
+      <p>This information is shared with every visitor.</p>
+    </main>
+  );
+}
+
+// Request-specific content
+// app/account/page.tsx
+
+import { cookies } from "next/headers";
+
+export default async function AccountPage() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
+
+  return (
+    <main>
+      <h1>Account</h1>
+      <p>Session: {session?.value ?? "Not signed in"}</p>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Build-time rendering prepares output before a request needs it.",
+        "Request-time rendering produces output when a request arrives.",
+        "Static rendering is useful when many users can receive the same result.",
+        "Dynamic rendering is useful when the response depends on request-time information.",
+      ],
+      commonMistakes: [
+        "Thinking every Next.js page must be rendered at request time.",
+        "Assuming dynamic rendering is automatically a performance failure.",
+        "Choosing a rendering strategy without considering where the required data comes from.",
+      ],
+      quiz: [
+        {
+          question: "What is the main difference between build-time and request-time rendering?",
+          options: [
+            "Build-time rendering only works with TypeScript.",
+            "Build-time rendering prepares output ahead of requests, while request-time rendering happens when a request arrives.",
+            "Request-time rendering only works in development.",
+            "There is no difference.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "The important difference is when the rendering work happens.",
+        },
+        {
+          question: "Which type of page is a natural candidate for static rendering?",
+          options: [
+            "A public documentation page shared by everyone",
+            "A page showing each user's private account",
+            "A page whose HTML depends on the current request cookie",
+            "A page that must read request-specific headers",
+          ],
+          correctIndex: 0,
+          explanation:
+            "Public documentation can often be prepared ahead of time because the same content can be reused.",
+        },
+      ],
+    },
+
+    {
+      id: "static-dynamic-rendering",
+      title: "Static rendering, dynamic rendering, and revalidation",
+      durationMinutes: 16,
+      explanation: `
+Static and dynamic rendering are not the only useful choices. A common real-world requirement is: "The data does not need to change for every request, but it should eventually become fresh." This is where **revalidation** becomes important.
+
+Revalidation means allowing previously generated data or output to be refreshed after some period or after an explicit invalidation. Instead of forcing a page to be fully dynamic for every visitor, you can often reuse existing output and refresh it when necessary.
+
+### Revalidation
+
+Imagine a product catalog that changes several times per hour. Rendering it from scratch for every request may be unnecessary. A revalidation strategy can allow the application to reuse generated data for a period and then refresh it.
+
+Time-based revalidation is useful when a known freshness window is acceptable. On-demand revalidation is useful when the application knows that a mutation has changed specific data and wants to invalidate the relevant cached information.
+
+### Choosing the strategy
+
+A useful decision process is:
+
+1. Can the result be prepared before users request it?
+2. If yes, can the result remain unchanged for an acceptable period?
+3. If it becomes stale, can it be revalidated?
+4. Does the result depend on request-specific information?
+5. Does the user need the newest data on every request?
+
+The answer to these questions should determine the strategy rather than choosing "static" or "dynamic" by habit.
+      `,
+      diagram: `
+                    Rendering decision
+                           |
+             +-------------+-------------+
+             |                           |
+       Same output okay?          Request-specific?
+             |                           |
+            Yes                         Yes
+             |                           |
+      +------+-------+              Dynamic
+      |              |
+ Always reusable   Changes over time
+      |              |
+    Static       Revalidate
+                    |
+          +---------+---------+
+          |                   |
+       Time-based         On-demand
+       freshness          invalidation
+      `,
+      codeExample: {
+        title: "Time-based and on-demand revalidation",
+        code: `// Time-based revalidation
+// The fetched data can be reused for 60 seconds.
+
+const response = await fetch("https://api.example.com/products", {
+  next: {
+    revalidate: 60,
+  },
+});
+
+const products = await response.json();
+
+// On-demand invalidation can be used after a mutation.
+// Example:
+//
+// revalidatePath("/products");
+// revalidateTag("products");`,
+      },
+      keyTakeaways: [
+        "Revalidation lets reusable data become fresh again without making every request fully dynamic.",
+        "Time-based revalidation is useful when a known freshness window is acceptable.",
+        "On-demand revalidation is useful when the application knows when data changed.",
+        "Rendering strategy should be chosen from the application's freshness and request requirements.",
+      ],
+      commonMistakes: [
+        "Treating revalidation as the same thing as client-side polling.",
+        "Using a very short revalidation interval when the data does not need to be that fresh.",
+        "Forgetting that invalidating cached data and rendering a page are related but separate concerns.",
+      ],
+      quiz: [
+        {
+          question: "Why would a product catalog use revalidation?",
+          options: [
+            "To make every visitor execute the same JavaScript.",
+            "To reuse generated data while still allowing it to become fresh.",
+            "To disable caching completely.",
+            "To replace the database.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Revalidation provides a middle ground between permanently reusable output and rendering everything from scratch.",
+        },
+      ],
+    },
+
+    {
+      id: "streaming-and-request-time",
+      title: "Request-time rendering and streaming",
+      durationMinutes: 15,
+      explanation: `
+A request-time page does not necessarily have to wait for every piece of work before sending anything to the browser. **Streaming** changes how the result is delivered.
+
+Without streaming, a slow operation can delay the first useful HTML if the whole page has to wait before the response can be sent. With streaming, the application can send the parts that are ready while slower parts continue rendering.
+
+This is particularly useful for dashboards and pages containing multiple independent sections. For example, a dashboard may have a navigation shell, user information, sales metrics, and a large analytics report. The shell may be ready immediately while the analytics report takes longer.
+
+### Streaming
+
+Streaming sends a response progressively rather than treating the entire page as one indivisible result.
+
+### Request-time rendering + streaming
+
+These concepts solve different problems. Request-time rendering answers **when rendering happens**. Streaming answers **how the result can be delivered progressively**.
+
+A route can therefore use request-time rendering and still stream portions of the UI as they become ready.
+      `,
+      diagram: `
+Browser
+  ^
+  |  HTML chunk 1: shell
+  |  HTML chunk 2: navigation
+  |  HTML chunk 3: fast data
+  |  HTML chunk 4: slow analytics
+  |
+Next.js
+  |
+  +--> fast work --------> ready
+  |
+  +--> slow work --------> ready later
+      `,
+      codeExample: {
+        title: "Streaming a slow section with Suspense",
+        code: `import { Suspense } from "react";
+import AnalyticsPanel from "./AnalyticsPanel";
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Analytics</h1>
+
+      <section>
+        <p>The dashboard shell can render immediately.</p>
+      </section>
+
+      <Suspense fallback={<p>Loading analytics...</p>}>
+        <AnalyticsPanel />
+      </Suspense>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Request-time rendering determines when rendering occurs.",
+        "Streaming determines how progressively rendered UI can reach the browser.",
+        "A slow section does not always need to block the entire page.",
+        "Suspense boundaries provide natural boundaries for streaming UI.",
+      ],
+      commonMistakes: [
+        "Treating streaming as a replacement for choosing the correct rendering strategy.",
+        "Putting the Suspense boundary too high and making a large part of the page wait.",
+        "Assuming streaming automatically makes the slow operation itself faster.",
+      ],
+      quiz: [
+        {
+          question: "What problem does streaming primarily address?",
+          options: [
+            "It makes databases faster.",
+            "It allows parts of the UI to be delivered as they become ready.",
+            "It converts Server Components into Client Components.",
+            "It replaces Suspense.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Streaming improves how progressively available UI is delivered; it does not magically speed up the underlying operation.",
+        },
+      ],
+    },
+
+    {
+      id: "partial-rendering",
+      title: "Partial rendering and practical rendering decisions",
+      durationMinutes: 14,
+      explanation: `
+Modern applications are rarely made from one single rendering strategy. Different parts of a page can have different data requirements.
+
+This leads to the idea of **partial rendering**: keeping stable or fast parts of the UI available while dynamic or slower parts are handled separately. In the App Router, layouts, nested routes, Server Components, Suspense boundaries, and data-fetching boundaries all help you structure the page this way.
+
+For example, a dashboard layout may be stable while the main report changes frequently. A navigation area may be immediately available while one analytics card waits for a slow database query.
+
+### Think in boundaries
+
+Instead of asking "Is this entire page static or dynamic?", ask:
+
+- Which data is stable?
+- Which data changes frequently?
+- Which data is request-specific?
+- Which part can be streamed?
+- Which part can be cached or revalidated?
+
+This produces a more useful architecture because rendering decisions are made around actual application boundaries.
+
+### A practical decision
+
+A good default is to keep content as reusable as its requirements allow, make only request-dependent work dynamic, and introduce revalidation or streaming where they solve a real freshness or latency problem.
+      `,
+      diagram: `
+Dashboard
+├── Header
+│   └── Stable UI
+├── Account summary
+│   └── Request-specific data
+├── Sales cards
+│   └── Revalidated data
+└── Analytics report
+    └── Slow data + Suspense
+        └── Stream when ready
+      `,
+      codeExample: {
+        title: "Combining multiple rendering boundaries",
+        code: `import { Suspense } from "react";
+import AccountSummary from "./AccountSummary";
+import SalesCards from "./SalesCards";
+import AnalyticsReport from "./AnalyticsReport";
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Dashboard</h1>
+
+      <AccountSummary />
+
+      <Suspense fallback={<p>Loading sales...</p>}>
+        <SalesCards />
+      </Suspense>
+
+      <Suspense fallback={<p>Loading analytics...</p>}>
+        <AnalyticsReport />
+      </Suspense>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "A page can contain multiple rendering and data-fetching boundaries.",
+        "Partial rendering is about structuring a page so independent work does not unnecessarily block other UI.",
+        "Layouts, Server Components, Suspense, caching, and revalidation can work together.",
+        "Choose boundaries around actual data and interaction requirements.",
+      ],
+      commonMistakes: [
+        "Making an entire dashboard dynamic because one small section needs request-specific data.",
+        "Adding Suspense boundaries everywhere without a meaningful loading boundary.",
+        "Optimizing rendering strategy before understanding the application's actual data dependencies.",
+      ],
+      quiz: [
+        {
+          question: "What is a useful way to approach partial rendering?",
+          options: [
+            "Make every component a Client Component.",
+            "Separate independent UI and data requirements into appropriate boundaries.",
+            "Disable all caching.",
+            "Render every component at build time.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Partial rendering works best when the application is divided according to actual data, interaction, and loading requirements.",
+        },
+      ],
+    },
+  ],
+
+  finalQuiz: [
+    {
+      question: "What does build-time rendering mean?",
+      options: [
+        "Rendering only after a browser event.",
+        "Preparing output before users request the route.",
+        "Rendering only on the client.",
+        "Rendering only after a database mutation.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Build-time rendering prepares reusable output ahead of incoming requests.",
+    },
+    {
+      question: "When is request-time rendering useful?",
+      options: [
+        "When every user must receive exactly the same prebuilt HTML.",
+        "When the response depends on information available at request time.",
+        "Only when using static assets.",
+        "Only during local development.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Request-time rendering is useful when the result depends on request-specific or otherwise dynamic information.",
+    },
+    {
+      question: "What is the purpose of revalidation?",
+      options: [
+        "To permanently disable caching.",
+        "To refresh reusable data or output when it becomes stale.",
+        "To convert a Server Component into a Client Component.",
+        "To replace Suspense.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Revalidation allows previously reusable data or output to become fresh again.",
+    },
+    {
+      question: "What does streaming primarily improve?",
+      options: [
+        "How progressively available UI is delivered.",
+        "Database query execution speed.",
+        "TypeScript compilation.",
+        "CSS parsing.",
+      ],
+      correctIndex: 0,
+      explanation:
+        "Streaming lets ready portions of the UI reach the browser while slower work continues.",
+    },
+    {
+      question: "Why are rendering boundaries useful?",
+      options: [
+        "They force the entire application to use one rendering strategy.",
+        "They let different parts of the UI have different data and loading requirements.",
+        "They remove the need for data fetching.",
+        "They make all routes static.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Boundaries allow independent parts of an application to be handled according to their actual requirements.",
+    },
+  ],
+
+  project: {
+    name: "Rendering strategy lab",
+    goal: "Build a small Next.js content dashboard that demonstrates static, dynamic, revalidated, and streamed sections.",
+    brief:
+      "Create a dashboard with a mostly stable page shell, a request-specific account section, a revalidated product or sales section, and a slow analytics section rendered behind Suspense.",
+    steps: [
+      "Create the dashboard route and shared page structure.",
+      "Add a mostly static information section that can be reused.",
+      "Add a request-specific account section using request-time information.",
+      "Add a data section with a revalidation strategy.",
+      "Create a deliberately slow analytics component.",
+      "Wrap the slow analytics component in Suspense with a useful loading fallback.",
+      "Compare the behavior of the sections and document why each rendering strategy was selected.",
+    ],
+    acceptance: [
+      "The dashboard contains at least one mostly reusable section.",
+      "At least one section demonstrates request-time information.",
+      "At least one data source uses revalidation.",
+      "The slow analytics section has its own Suspense boundary.",
+      "The project explains why each section uses its chosen strategy.",
+    ],
+    stretch: [
+      "Add a second slow section and stream both sections independently.",
+      "Add an on-demand revalidation path after updating product data.",
+      "Measure the perceived loading sequence and explain which boundary controls each part.",
+    ],
+  },
+};
