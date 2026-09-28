@@ -313,6 +313,22 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
+          <Link href="/library/personal-development/atomic-habits" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-amber-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#eee7d4] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#ffffffcc_0,transparent_48%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between bg-[#f5f2e8] p-5 text-[#252525] shadow-[12px_12px_0_#b79a5555] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8e7440]">James Clear</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">Atomic<br />Habits</h3>
+                <span className="h-1 w-12 bg-[#d2ae4c]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-amber-600"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{t("library.personalDevelopment")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-amber-600">{t("library.atomicHabits.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.atomicHabits.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
         </div>
       </section>
     </main>
