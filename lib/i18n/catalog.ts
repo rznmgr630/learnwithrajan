@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "9 saved books",
-    np: "९ सुरक्षित पुस्तक",
-    jp: "保存した本 9冊",
+    en: "10 saved books",
+    np: "१० सुरक्षित पुस्तक",
+    jp: "保存した本 10冊",
   },
   "library.collection": {
     en: "Collection",
@@ -171,6 +171,16 @@ export const UI_STRINGS = {
     en: "Timeless principles for thoughtful, long-term investing.",
     np: "विचारशील, दीर्घकालीन लगानीका लागि समयहीन सिद्धान्तहरू।",
     jp: "思慮深い長期投資のための時代を超えた原則。",
+  },
+  "library.randomWalk.title": {
+    en: "A Random Walk Down Wall Street",
+    np: "A Random Walk Down Wall Street",
+    jp: "A Random Walk Down Wall Street",
+  },
+  "library.randomWalk.subtitle": {
+    en: "A classic guide to investing, markets, and building a portfolio.",
+    np: "लगानी, बजार र पोर्टफोलियो निर्माणका लागि क्लासिक मार्गदर्शक।",
+    jp: "投資、市場、ポートフォリオ構築のための古典的ガイド。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
