@@ -68,7 +68,7 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   22: NEXTJS_DAY_22_LESSONS,
   23: NEXTJS_DAY_23_LESSONS,
   24: NEXTJS_DAY_24_LESSONS,
-  26: { ...NEXTJS_DAY_25_LESSONS, day: 26 },
+  25: NEXTJS_DAY_25_LESSONS,
 };
 
 export function NextjsRoadmap() {

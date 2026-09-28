@@ -149,8 +149,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   22: { en: "Authorization", np: "अनुमति", jp: "認可" },
   23: { en: "Middleware / Proxy and Request Control", np: "मिडलवेयर / प्रोक्सी र अनुरोध नियन्त्रण", jp: "ミドルウェア / プロキシとリクエスト制御" },
   24: { en: "Next.js Security", np: "Next.js सुरक्षा", jp: "Next.js セキュリティ" },
-  25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
-  26: { en: "Production security architecture build", np: "प्रोडक्सन सुरक्षा architecture build", jp: "本番セキュリティアーキテクチャ構築" },
+  25: { en: "Production Security Architecture", np: "प्रोडक्सन सुरक्षा आर्किटेक्चर", jp: "本番セキュリティアーキテクチャ" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
