@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "10 saved books",
-    np: "१० सुरक्षित पुस्तक",
-    jp: "保存した本 10冊",
+    en: "11 saved books",
+    np: "११ सुरक्षित पुस्तक",
+    jp: "保存した本 11冊",
   },
   "library.collection": {
     en: "Collection",
@@ -181,6 +181,16 @@ export const UI_STRINGS = {
     en: "A classic guide to investing, markets, and building a portfolio.",
     np: "लगानी, बजार र पोर्टफोलियो निर्माणका लागि क्लासिक मार्गदर्शक।",
     jp: "投資、市場、ポートフォリオ構築のための古典的ガイド。",
+  },
+  "library.totalMoneyMakeover.title": {
+    en: "The Total Money Makeover",
+    np: "The Total Money Makeover",
+    jp: "The Total Money Makeover",
+  },
+  "library.totalMoneyMakeover.subtitle": {
+    en: "A proven plan for getting out of debt and taking control of money.",
+    np: "ऋणबाट बाहिर निस्कन र पैसामाथि नियन्त्रण लिन प्रमाणित योजना।",
+    jp: "借金から抜け出し、お金を管理するための実証済みプラン。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
