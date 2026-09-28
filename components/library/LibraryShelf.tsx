@@ -284,7 +284,7 @@ export function LibraryShelf() {
           </div>
           <span className="hidden text-sm text-[var(--faint)] sm:block">02</span>
         </div>
-        <div className="mt-5">
+        <div className="mt-5 space-y-4">
           <Link href="/library/personal-development/power-of-your-subconscious-mind" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-rose-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
             <div className="relative min-h-72 overflow-hidden bg-[color-mix(in_oklab,#ef4444_10%,var(--elevated))] p-8 sm:min-h-full">
               <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(135deg,transparent_40%,color-mix(in_oklab,#ef4444_20%,transparent))]" />
@@ -295,6 +295,22 @@ export function LibraryShelf() {
               <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-rose-500">{t("library.subconsciousMind.title")}</h3>
               <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.subconsciousMind.subtitle")}</p>
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+          <Link href="/library/personal-development/eat-that-frog" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-emerald-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#dcefd1] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#ffffffbb_0,transparent_48%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between bg-[#5f9d39] p-5 text-[#fff8cf] shadow-[12px_12px_0_#3d702666] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e8f7ad]">Brian Tracy</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">Eat<br />That<br />Frog!</h3>
+                <span className="h-1 w-12 bg-[#f6cf46]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{t("library.personalDevelopment")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-emerald-600">{t("library.eatThatFrog.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.eatThatFrog.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
         </div>
