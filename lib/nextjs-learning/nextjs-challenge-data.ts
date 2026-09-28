@@ -64,7 +64,6 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       nextjsDayRow(8, ["server-components", "client-components"]),
       nextjsDayRow(9, ["rendering-strategies", "caching"]),
       nextjsDayRow(10, ["suspense-streaming", "rendering-strategies"]),
-      nextjsDayRow(11, ["api-routes", "zod"]),
     ],
   },
   {
@@ -72,7 +71,7 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: nextjsWeekTitle("nextjs-phase-3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
-      nextjsDayRow(12, ["intro", "setup"]), nextjsDayRow(13, ["server-components", "rendering"]),
+      nextjsDayRow(11, ["data-fetching", "server-components"]), nextjsDayRow(12, ["intro", "setup"]), nextjsDayRow(13, ["server-components", "rendering"]),
       nextjsDayRow(14, ["styling", "tailwind"]), nextjsDayRow(15, ["routing", "layouts"]),
       nextjsDayRow(16, ["navigation", "error-handling"]), nextjsDayRow(17, ["api-routes", "zod"]),
     ],

@@ -102,9 +102,9 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Suspense とストリーミング",
   },
   11: {
-    en: "Route Handlers, REST APIs, HTTP & backend integration",
-    np: "Route Handlers, REST APIs र backend integration",
-    jp: "Route Handlers・REST API・バックエンド連携",
+    en: "Fetching Data",
+    np: "डेटा फेचिङ",
+    jp: "データ取得",
   },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
@@ -133,14 +133,14 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 1 · NEXT.JS 基礎（1〜5日目）",
   },
   "nextjs-phase-2": {
-    en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–11)",
-    np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–११)",
-    jp: "PHASE 2 · レンダリングとReact Server Components（6〜11日目）",
+    en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–10)",
+    np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–१०)",
+    jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
   },
   "nextjs-phase-3": {
-    en: "PHASE 3 · APPLICATION UI & ROUTING (Days 12–17)",
-    np: "PHASE 3 · APPLICATION UI र ROUTING (दिन १२–१७)",
-    jp: "PHASE 3 · アプリケーションUIとルーティング（12〜17日目）",
+    en: "PHASE 3 · DATA FETCHING (Days 11–15)",
+    np: "PHASE 3 · डेटा फेचिङ (दिन ११–१५)",
+    jp: "PHASE 3 · データ取得（11〜15日目）",
   },
   "nextjs-phase-4": {
     en: "PHASE 4 · DATA, FEATURES & AUTH (Days 18–21)",
