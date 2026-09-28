@@ -146,6 +146,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   19: { en: "Route Handlers", np: "रुट ह्यान्डलरहरू", jp: "ルートハンドラー" },
   20: { en: "Building Production-Style APIs", np: "प्रोडक्सन-स्तरका APIs निर्माण", jp: "本番向けAPIの構築" },
   21: { en: "Authentication", np: "प्रमाणीकरण", jp: "認証" },
+  22: { en: "Authorization", np: "अनुमति", jp: "認可" },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
