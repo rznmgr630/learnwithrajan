@@ -60,10 +60,11 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#34d399)]",
     days: [
       nextjsDayRow(6, ["server-components", "rendering"]),
-      nextjsDayRow(7, ["data-fetching", "caching"]),
-      nextjsDayRow(8, ["forms", "server-actions"]),
-      nextjsDayRow(9, ["auth", "next-auth"]),
-      nextjsDayRow(10, ["api-routes", "zod"]),
+      nextjsDayRow(7, ["rendering", "caching"]),
+      nextjsDayRow(8, ["data-fetching", "caching"]),
+      nextjsDayRow(9, ["forms", "server-actions"]),
+      nextjsDayRow(10, ["auth", "next-auth"]),
+      nextjsDayRow(11, ["api-routes", "zod"]),
     ],
   },
   {
@@ -71,26 +72,26 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: nextjsWeekTitle("nextjs-phase-3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
-      nextjsDayRow(11, ["intro", "setup"]), nextjsDayRow(12, ["server-components", "rendering"]),
-      nextjsDayRow(13, ["styling", "tailwind"]), nextjsDayRow(14, ["routing", "layouts"]),
-      nextjsDayRow(15, ["navigation", "error-handling"]), nextjsDayRow(16, ["api-routes", "zod"]),
+      nextjsDayRow(12, ["intro", "setup"]), nextjsDayRow(13, ["server-components", "rendering"]),
+      nextjsDayRow(14, ["styling", "tailwind"]), nextjsDayRow(15, ["routing", "layouts"]),
+      nextjsDayRow(16, ["navigation", "error-handling"]), nextjsDayRow(17, ["api-routes", "zod"]),
     ],
   },
   {
     id: "nextjs-phase-4", title: nextjsWeekTitle("nextjs-phase-4"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
-      nextjsDayRow(17, ["prisma", "database"]), nextjsDayRow(18, ["upload", "cloudinary"]),
-      nextjsDayRow(19, ["auth", "next-auth"]), nextjsDayRow(20, ["email", "optimization"]),
+      nextjsDayRow(18, ["prisma", "database"]), nextjsDayRow(19, ["upload", "cloudinary"]),
+      nextjsDayRow(20, ["auth", "next-auth"]), nextjsDayRow(21, ["email", "optimization"]),
     ],
   },
   {
     id: "nextjs-phase-5", title: nextjsWeekTitle("nextjs-phase-5"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#f59e0b)]",
     days: [
-      nextjsDayRow(21, ["deployment", "vercel"]), nextjsDayRow(22, ["browser-security", "security"]),
-      nextjsDayRow(23, ["server-security", "security"]), nextjsDayRow(24, ["auth", "security"]),
-      nextjsDayRow(25, ["security", "production"]),
+      nextjsDayRow(22, ["deployment", "vercel"]), nextjsDayRow(23, ["browser-security", "security"]),
+      nextjsDayRow(24, ["server-security", "security"]), nextjsDayRow(25, ["auth", "security"]),
+      nextjsDayRow(26, ["security", "production"]),
     ],
   },
 ];

@@ -18,6 +18,7 @@ import { NEXTJS_DAY_4_LESSONS } from "@/lib/nextjs-learning/nextjs-day-4-lessons
 import { NEXTJS_DAY_5_LESSONS } from "@/lib/nextjs-learning/nextjs-day-5-lessons";
 import { NEXTJS_DAY_6_LESSONS } from "@/lib/nextjs-learning/nextjs-day-6-lessons";
 import { NEXTJS_DAY_7_LESSONS } from "@/lib/nextjs-learning/nextjs-day-7-lessons";
+import { NEXTJS_DAY_7_RENDERING_LESSONS } from "@/lib/nextjs-learning/nextjs-day-7-rendering-lessons";
 import { NEXTJS_DAY_8_LESSONS } from "@/lib/nextjs-learning/nextjs-day-8-lessons";
 import { NEXTJS_DAY_9_LESSONS } from "@/lib/nextjs-learning/nextjs-day-9-lessons";
 import { NEXTJS_DAY_10_LESSONS } from "@/lib/nextjs-learning/nextjs-day-10-lessons";
@@ -38,14 +39,15 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   4: NEXTJS_DAY_4_LESSONS,
   5: NEXTJS_DAY_5_LESSONS,
   6: NEXTJS_DAY_6_LESSONS,
-  7: NEXTJS_DAY_7_LESSONS,
-  8: NEXTJS_DAY_8_LESSONS,
-  9: NEXTJS_DAY_9_LESSONS,
-  10: NEXTJS_DAY_10_LESSONS,
-  22: NEXTJS_DAY_22_LESSONS,
-  23: NEXTJS_DAY_23_LESSONS,
-  24: NEXTJS_DAY_24_LESSONS,
-  25: NEXTJS_DAY_25_LESSONS,
+  7: NEXTJS_DAY_7_RENDERING_LESSONS,
+  8: { ...NEXTJS_DAY_7_LESSONS, day: 8 },
+  9: { ...NEXTJS_DAY_8_LESSONS, day: 9 },
+  10: { ...NEXTJS_DAY_9_LESSONS, day: 10 },
+  11: { ...NEXTJS_DAY_10_LESSONS, day: 11 },
+  23: { ...NEXTJS_DAY_22_LESSONS, day: 23 },
+  24: { ...NEXTJS_DAY_23_LESSONS, day: 24 },
+  25: { ...NEXTJS_DAY_24_LESSONS, day: 25 },
+  26: { ...NEXTJS_DAY_25_LESSONS, day: 26 },
 };
 
 export function NextjsRoadmap() {

@@ -79,34 +79,34 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Server/Client Components とデータ取得",
   },
   7: {
+    en: "Rendering strategies — static, dynamic, streaming & revalidation",
+    np: "Rendering strategies — static, dynamic, streaming र revalidation",
+    jp: "レンダリング戦略 — 静的・動的・ストリーミング・再検証",
+  },
+  8: {
     en: "Data fetching, caching, revalidation & server-side patterns",
     np: "Data fetching, caching र revalidation",
     jp: "データ取得・キャッシュ・再検証",
   },
-  8: {
+  9: {
     en: "Forms, Server Actions & mutations",
     np: "Forms, Server Actions र mutations",
     jp: "フォーム・Server Actions・ミューテーション",
   },
-  9: {
+  10: {
     en: "Authentication with NextAuth — Google, credentials & session protection",
     np: "NextAuth — Google, credentials र session सुरक्षा",
     jp: "NextAuth 認証 — Google・認証情報・セッション保護",
   },
-  10: {
+  11: {
     en: "Route Handlers, REST APIs, HTTP & backend integration",
     np: "Route Handlers, REST APIs र backend integration",
     jp: "Route Handlers・REST API・バックエンド連携",
   },
-  11: {
-    en: "Deployment to Vercel — production prep, CI & troubleshooting",
-    np: "Vercel मा Deployment — production, CI र troubleshooting",
-    jp: "Vercel へのデプロイ — 本番準備・CI・トラブルシューティング",
-  },
-  22: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
-  23: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
-  24: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
-  25: { en: "Production security architecture build", np: "प्रोडक्सन सुरक्षा architecture build", jp: "本番セキュリティアーキテクチャ構築" },
+  23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
+  24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
+  25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
+  26: { en: "Production security architecture build", np: "प्रोडक्सन सुरक्षा architecture build", jp: "本番セキュリティアーキテクチャ構築" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -130,24 +130,24 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 1 · NEXT.JS 基礎（1〜5日目）",
   },
   "nextjs-phase-2": {
-    en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–10)",
-    np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–१०)",
-    jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
+    en: "PHASE 2 · RENDERING & REACT SERVER COMPONENTS (Days 6–11)",
+    np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–११)",
+    jp: "PHASE 2 · レンダリングとReact Server Components（6〜11日目）",
   },
   "nextjs-phase-3": {
-    en: "PHASE 3 · APPLICATION UI & ROUTING (Days 11–16)",
-    np: "PHASE 3 · APPLICATION UI र ROUTING (दिन ११–१६)",
-    jp: "PHASE 3 · アプリケーションUIとルーティング（11〜16日目）",
+    en: "PHASE 3 · APPLICATION UI & ROUTING (Days 12–17)",
+    np: "PHASE 3 · APPLICATION UI र ROUTING (दिन १२–१७)",
+    jp: "PHASE 3 · アプリケーションUIとルーティング（12〜17日目）",
   },
   "nextjs-phase-4": {
-    en: "PHASE 4 · DATA, FEATURES & AUTH (Days 17–20)",
-    np: "PHASE 4 · DATA, FEATURES र AUTH (दिन १७–२०)",
-    jp: "PHASE 4 · データ・機能・認証（17〜20日目）",
+    en: "PHASE 4 · DATA, FEATURES & AUTH (Days 18–21)",
+    np: "PHASE 4 · DATA, FEATURES र AUTH (दिन १८–२१)",
+    jp: "PHASE 4 · データ・機能・認証（18〜21日目）",
   },
   "nextjs-phase-5": {
-    en: "PHASE 5 · PRODUCTION & SECURITY (Days 21–25)",
-    np: "PHASE 5 · PRODUCTION र SECURITY (दिन २१–२५)",
-    jp: "PHASE 5 · 本番運用とセキュリティ（21〜25日目）",
+    en: "PHASE 5 · PRODUCTION & SECURITY (Days 22–26)",
+    np: "PHASE 5 · PRODUCTION र SECURITY (दिन २२–२६)",
+    jp: "PHASE 5 · 本番運用とセキュリティ（22〜26日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
@@ -182,7 +182,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function nextjsDayTitle(day: number): LocalizedString {
-  return (day >= 11 ? NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 4] : undefined) ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return (day >= 12 ? NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 5] : undefined) ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function nextjsWeekTitle(weekId: string): LocalizedString {
