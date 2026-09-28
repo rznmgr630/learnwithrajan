@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -84,6 +85,7 @@ function SettingsMenu() {
 
 export function SiteHeader() {
   const { t } = useLocale();
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-20 w-full min-w-0 overflow-x-clip border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_88%,transparent)] backdrop-blur-md">
@@ -97,16 +99,20 @@ export function SiteHeader() {
         </Link>
         <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <nav className="flex min-w-0 items-center gap-0 text-sm sm:gap-1">
-            <Link href="/focus" className="inline-flex whitespace-nowrap rounded-lg px-1.5 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3">Focus</Link>
-            {links.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${item.href === "/library" ? "hidden min-[360px]:inline-flex" : "inline-flex"} whitespace-nowrap rounded-lg px-1.5 py-2 text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)] sm:px-3`}
-              >
-                {t(item.key)}
-              </Link>
-            ))}
+            <Link href="/focus" aria-current={pathname === "/focus" ? "page" : undefined} className={`inline-flex whitespace-nowrap rounded-lg px-1.5 py-2 transition sm:px-3 ${pathname === "/focus" ? "bg-[var(--elevated)] font-medium text-[var(--text)]" : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"}`}>Focus</Link>
+            {links.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`${item.href === "/library" ? "hidden min-[360px]:inline-flex" : "inline-flex"} whitespace-nowrap rounded-lg px-1.5 py-2 transition sm:px-3 ${isActive ? "bg-[var(--elevated)] font-medium text-[var(--text)]" : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"}`}
+                >
+                  {t(item.key)}
+                </Link>
+              );
+            })}
           </nav>
           <SettingsMenu />
         </div>
