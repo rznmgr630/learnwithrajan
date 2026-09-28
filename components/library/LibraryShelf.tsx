@@ -11,7 +11,7 @@ export function LibraryShelf() {
   const financeTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const [financePage, setFinancePage] = useState(0);
   const [pinnedBook, setPinnedBook] = useState<string>();
-  const financeBookCount = 9;
+  const financeBookCount = 10;
 
   useEffect(() => {
     setPinnedBook(window.localStorage.getItem("library:pinned-book") ?? undefined);
@@ -254,6 +254,22 @@ export function LibraryShelf() {
               <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.randomWalk.title")}</h3>
               <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.randomWalk.subtitle")}</p>
+              <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
+            </div>
+          </Link>
+          <Link href="/library/finance/the-total-money-makeover" style={{ order: getBookOrder("/api/library/the-total-money-makeover") }} className="group grid w-full shrink-0 snap-start overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#dce6ee] p-8 sm:min-h-full">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#ffffffbb_0,transparent_48%)]" />
+              <div className="relative flex h-60 w-40 flex-col justify-between bg-[#164e86] p-5 text-white shadow-[12px_12px_0_#0e315466] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9dcf8]">Dave Ramsey</p>
+                <h3 className="font-serif text-3xl leading-[0.95]">The Total<br />Money<br />Makeover</h3>
+                <span className="h-1 w-12 bg-[#f6bf3f]" />
+              </div>
+            </div>
+            <div className="flex flex-col p-7 sm:p-9">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--accent)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />{t("library.finance")}</div>
+              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("library.totalMoneyMakeover.title")}</h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.totalMoneyMakeover.subtitle")}</p>
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-fg)] transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
