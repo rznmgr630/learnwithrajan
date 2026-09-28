@@ -145,6 +145,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   18: { en: "Optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
   19: { en: "Route Handlers", np: "रुट ह्यान्डलरहरू", jp: "ルートハンドラー" },
   20: { en: "Building Production-Style APIs", np: "प्रोडक्सन-स्तरका APIs निर्माण", jp: "本番向けAPIの構築" },
+  21: { en: "Authentication", np: "प्रमाणीकरण", jp: "認証" },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
@@ -187,9 +188,9 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 4 · ミューテーションとフルスタックNext.js（16〜20日目）",
   },
   "nextjs-phase-5": {
-    en: "PHASE 5 · PRODUCTION & SECURITY (Days 22–26)",
-    np: "PHASE 5 · PRODUCTION र SECURITY (दिन २२–२६)",
-    jp: "PHASE 5 · 本番運用とセキュリティ（22〜26日目）",
+    en: "PHASE 5 · AUTHENTICATION AND SECURITY (Days 21–25)",
+    np: "PHASE 5 · प्रमाणीकरण र सुरक्षा (दिन २१–२५)",
+    jp: "PHASE 5 · 認証とセキュリティ（21〜25日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
