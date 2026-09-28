@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "8 saved books",
-    np: "८ सुरक्षित पुस्तक",
-    jp: "保存した本 8冊",
+    en: "9 saved books",
+    np: "९ सुरक्षित पुस्तक",
+    jp: "保存した本 9冊",
   },
   "library.collection": {
     en: "Collection",
@@ -161,6 +161,16 @@ export const UI_STRINGS = {
     en: "Transform your relationship with money and live more deliberately.",
     np: "पैसासँगको सम्बन्ध बदल्नुहोस् र अझ उद्देश्यपूर्ण जीवन जिउनुहोस्।",
     jp: "お金との関係を見直し、より意図的に生きるための一冊。",
+  },
+  "library.intelligentInvestor.title": {
+    en: "The Intelligent Investor",
+    np: "The Intelligent Investor",
+    jp: "The Intelligent Investor",
+  },
+  "library.intelligentInvestor.subtitle": {
+    en: "Timeless principles for thoughtful, long-term investing.",
+    np: "विचारशील, दीर्घकालीन लगानीका लागि समयहीन सिद्धान्तहरू।",
+    jp: "思慮深い長期投資のための時代を超えた原則。",
   },
   "library.personalDevelopment": {
     en: "Personal Development",
