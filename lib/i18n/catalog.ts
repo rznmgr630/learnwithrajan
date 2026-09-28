@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "18 saved books",
-    np: "१८ सुरक्षित पुस्तक",
-    jp: "保存した本 18冊",
+    en: "19 saved books",
+    np: "१९ सुरक्षित पुस्तक",
+    jp: "保存した本 19冊",
   },
   "library.collection": {
     en: "Collection",
@@ -246,6 +246,8 @@ export const UI_STRINGS = {
   "library.mountainIsYou.subtitle": { en: "A guide to overcoming self-sabotage and becoming who you want to be.", np: "आत्म-विनाशबाट बाहिर निस्केर आफू बन्न चाहेको व्यक्ति बन्ने मार्गदर्शन।", jp: "自己破壊を乗り越え、なりたい自分になるためのガイド。" },
   "library.peterPan.title": { en: "Peter Pan and Wendy", np: "Peter Pan and Wendy", jp: "Peter Pan and Wendy" },
   "library.peterPan.subtitle": { en: "The classic adventure of Peter Pan, Wendy, and Neverland.", np: "पीटर प्यान, वेन्डी र नेभरल्याण्डको क्लासिक साहसिक कथा।", jp: "ピーター・パン、ウェンディ、ネバーランドの古典的な冒険物語。" },
+  "library.jungleBook.title": { en: "The Jungle Book", np: "The Jungle Book", jp: "The Jungle Book" },
+  "library.jungleBook.subtitle": { en: "Mowgli's classic adventure through the wild Indian jungle.", np: "जंगली भारतीय जंगलमा मोग्लीको क्लासिक साहसिक यात्रा।", jp: "野生のインドのジャングルを巡るモーグリの古典的な冒険。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
