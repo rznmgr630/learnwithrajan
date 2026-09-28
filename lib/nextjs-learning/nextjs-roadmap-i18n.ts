@@ -45,6 +45,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   forms: { en: "forms", np: "फारमहरू", jp: "フォーム" },
   "optimistic-ui": { en: "optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
   "route-handlers": { en: "Route Handlers", np: "रुट ह्यान्डलरहरू", jp: "ルートハンドラー" },
+  "production-apis": { en: "production APIs", np: "प्रोडक्सन APIs", jp: "本番API" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -143,6 +144,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   17: { en: "Forms", np: "फारमहरू", jp: "フォーム" },
   18: { en: "Optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
   19: { en: "Route Handlers", np: "रुट ह्यान्डलरहरू", jp: "ルートハンドラー" },
+  20: { en: "Building Production-Style APIs", np: "प्रोडक्सन-स्तरका APIs निर्माण", jp: "本番向けAPIの構築" },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
