@@ -71,8 +71,8 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     title: nextjsWeekTitle("nextjs-phase-3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
-      nextjsDayRow(11, ["data-fetching", "server-components"]), nextjsDayRow(12, ["caching", "revalidation"]), nextjsDayRow(13, ["data-fetching", "server-components"]),
-      nextjsDayRow(14, ["database", "data-fetching"]), nextjsDayRow(15, ["database", "production"]),
+      nextjsDayRow(11, ["data-fetching", "server-components"]), nextjsDayRow(12, ["caching", "revalidation"]), nextjsDayRow(13, ["data-patterns", "loading-ui"]),
+      nextjsDayRow(14, ["database", "orm"]), nextjsDayRow(15, ["production-data", "database"]),
     ],
   },
   {
