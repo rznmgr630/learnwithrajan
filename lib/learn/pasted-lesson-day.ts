@@ -14,7 +14,7 @@ const DETAIL_HEADINGS = new Set([
 ]);
 
 function isLessonHeading(heading: string, level: number): boolean {
-  const normalized = heading.trim().toLowerCase();
+  const normalized = heading.trim().toLowerCase().replace(/^\d+\\?\.\s+/, "");
   if (DETAIL_HEADINGS.has(normalized) || /^mistake\s+\d+/.test(normalized)) return false;
   if (/^day\s+\d+\b/.test(normalized)) return false;
 
@@ -22,28 +22,30 @@ function isLessonHeading(heading: string, level: number): boolean {
 }
 
 function splitSections(content: string): PastedSection[] {
-  const matches = [...content.matchAll(/^(#{1,4})\s+(.+)$/gm)];
-  if (!matches.length) return [{ title: "Lesson", explanation: content.trim() }];
+  const normalizedContent = content.replace(/^\s+(?=#{1,6}\s)/gm, "");
+  const matches = [...normalizedContent.matchAll(/^(#{1,4})\s+(.+)$/gm)];
+  if (!matches.length) return [{ title: "Lesson", explanation: normalizedContent.trim() }];
 
   const lessonMatches = matches.filter((match) => isLessonHeading(match[2], match[1].length));
   if (!lessonMatches.length) return [{ title: "Lesson", explanation: content.trim() }];
 
   return lessonMatches.map((match, index) => {
     const start = (match.index ?? 0) + match[0].length;
-    const end = index + 1 < lessonMatches.length ? (lessonMatches[index + 1].index ?? content.length) : content.length;
-    return { title: match[2].trim(), explanation: content.slice(start, end).trim() };
+    const end = index + 1 < lessonMatches.length ? (lessonMatches[index + 1].index ?? normalizedContent.length) : normalizedContent.length;
+    return { title: match[2].trim(), explanation: normalizedContent.slice(start, end).trim() };
   }).filter((section) => section.explanation.length > 0);
 }
 
 function namedParts(content: string): PastedParts {
-  const matches = [...content.matchAll(/^#{2,6}\s+(Explanation|Visual Diagram|Code Example|Key Takeaways?|Common Mistakes|Mini Quiz)\s*$/gim)];
-  const parts: PastedParts = { intro: content.slice(0, matches[0]?.index ?? content.length).trim() };
+  const normalizedContent = content.replace(/^\s+(?=#{1,6}\s)/gm, "");
+  const matches = [...normalizedContent.matchAll(/^#{2,6}\s+(?:\d+\\?\.\s+)?(Explanation|Visual Diagram|Code Example|Key Takeaways?|Common Mistakes|Mini Quiz)\s*$/gim)];
+  const parts: PastedParts = { intro: normalizedContent.slice(0, matches[0]?.index ?? normalizedContent.length).trim() };
 
   matches.forEach((match, index) => {
     const start = (match.index ?? 0) + match[0].length;
-    const end = index + 1 < matches.length ? (matches[index + 1].index ?? content.length) : content.length;
+    const end = index + 1 < matches.length ? (matches[index + 1].index ?? normalizedContent.length) : normalizedContent.length;
     const name = match[1].toLowerCase() === "key takeaway" ? "key takeaways" : match[1].toLowerCase();
-    parts[name] = content.slice(start, end).trim();
+    parts[name] = normalizedContent.slice(start, end).trim();
   });
 
   return parts;
