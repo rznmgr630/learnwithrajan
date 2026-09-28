@@ -16,7 +16,7 @@ import { nextjsDayTitle, nextjsTags, nextjsWeekTitle } from "@/lib/nextjs-learni
 
 export const NEXTJS_CURRENT_DAY = 1;
 
-export const NEXTJS_TOTAL_DAYS = 21;
+export const NEXTJS_TOTAL_DAYS = 25;
 
 const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   0: NEXTJS_DAY_0_DETAIL,
@@ -67,16 +67,30 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     ],
   },
   {
-    id: "nextjs-existing-course",
-    title: nextjsWeekTitle("nextjs-existing-course"),
+    id: "nextjs-phase-3",
+    title: nextjsWeekTitle("nextjs-phase-3"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
       nextjsDayRow(11, ["intro", "setup"]), nextjsDayRow(12, ["server-components", "rendering"]),
       nextjsDayRow(13, ["styling", "tailwind"]), nextjsDayRow(14, ["routing", "layouts"]),
       nextjsDayRow(15, ["navigation", "error-handling"]), nextjsDayRow(16, ["api-routes", "zod"]),
+    ],
+  },
+  {
+    id: "nextjs-phase-4", title: nextjsWeekTitle("nextjs-phase-4"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
+    days: [
       nextjsDayRow(17, ["prisma", "database"]), nextjsDayRow(18, ["upload", "cloudinary"]),
       nextjsDayRow(19, ["auth", "next-auth"]), nextjsDayRow(20, ["email", "optimization"]),
-      nextjsDayRow(21, ["deployment", "vercel"]),
+    ],
+  },
+  {
+    id: "nextjs-phase-5", title: nextjsWeekTitle("nextjs-phase-5"),
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#f59e0b)]",
+    days: [
+      nextjsDayRow(21, ["deployment", "vercel"]), nextjsDayRow(22, ["browser-security", "security"]),
+      nextjsDayRow(23, ["server-security", "security"]), nextjsDayRow(24, ["auth", "security"]),
+      nextjsDayRow(25, ["security", "production"]),
     ],
   },
 ];
