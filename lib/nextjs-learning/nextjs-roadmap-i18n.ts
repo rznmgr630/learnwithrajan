@@ -148,7 +148,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   21: { en: "Authentication", np: "प्रमाणीकरण", jp: "認証" },
   22: { en: "Authorization", np: "अनुमति", jp: "認可" },
   23: { en: "Middleware / Proxy and Request Control", np: "मिडलवेयर / प्रोक्सी र अनुरोध नियन्त्रण", jp: "ミドルウェア / プロキシとリクエスト制御" },
-  24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
+  24: { en: "Next.js Security", np: "Next.js सुरक्षा", jp: "Next.js セキュリティ" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
   26: { en: "Production security architecture build", np: "प्रोडक्सन सुरक्षा architecture build", jp: "本番セキュリティアーキテクチャ構築" },
 };
