@@ -29,6 +29,10 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   seo: { en: "SEO", np: "SEO", jp: "SEO" },
   deployment: { en: "deployment", np: "डिप्लोयमेन्ट", jp: "デプロイ" },
   vercel: { en: "Vercel", np: "Vercel", jp: "Vercel" },
+  security: { en: "security", np: "सुरक्षा", jp: "セキュリティ" },
+  "browser-security": { en: "browser security", np: "ब्राउजर सुरक्षा", jp: "ブラウザセキュリティ" },
+  "server-security": { en: "server security", np: "सर्भर सुरक्षा", jp: "サーバーセキュリティ" },
+  production: { en: "production", np: "प्रोडक्सन", jp: "本番" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -99,6 +103,10 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     np: "Vercel मा Deployment — production, CI र troubleshooting",
     jp: "Vercel へのデプロイ — 本番準備・CI・トラブルシューティング",
   },
+  22: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
+  23: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
+  24: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
+  25: { en: "Production security architecture build", np: "प्रोडक्सन सुरक्षा architecture build", jp: "本番セキュリティアーキテクチャ構築" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -126,10 +134,20 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     np: "PHASE 2 · रेंडरिङ र React Server Components (दिन ६–१०)",
     jp: "PHASE 2 · レンダリングとReact Server Components（6〜10日目）",
   },
-  "nextjs-existing-course": {
-    en: "EXISTING NEXT.JS COURSE (Days 11–19)",
-    np: "पहिलेको NEXT.JS कोर्स (दिन ११–१९)",
-    jp: "既存のNEXT.JSコース（11〜19日目）",
+  "nextjs-phase-3": {
+    en: "PHASE 3 · APPLICATION UI & ROUTING (Days 11–16)",
+    np: "PHASE 3 · APPLICATION UI र ROUTING (दिन ११–१६)",
+    jp: "PHASE 3 · アプリケーションUIとルーティング（11〜16日目）",
+  },
+  "nextjs-phase-4": {
+    en: "PHASE 4 · DATA, FEATURES & AUTH (Days 17–20)",
+    np: "PHASE 4 · DATA, FEATURES र AUTH (दिन १७–२०)",
+    jp: "PHASE 4 · データ・機能・認証（17〜20日目）",
+  },
+  "nextjs-phase-5": {
+    en: "PHASE 5 · PRODUCTION & SECURITY (Days 21–25)",
+    np: "PHASE 5 · PRODUCTION र SECURITY (दिन २१–२५)",
+    jp: "PHASE 5 · 本番運用とセキュリティ（21〜25日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
