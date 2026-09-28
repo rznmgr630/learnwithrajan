@@ -98,6 +98,7 @@ function LessonAccordionItem({
   onToggle,
   quizIdPrefix,
   preserveExplanation,
+  showExampleInExplanation,
 }: {
   lesson: Lesson;
   index: number;
@@ -106,6 +107,7 @@ function LessonAccordionItem({
   onToggle: () => void;
   quizIdPrefix: string;
   preserveExplanation: boolean;
+  showExampleInExplanation: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("explanation");
   const { getResult } = useJsLessonQuizProgress();
@@ -184,7 +186,12 @@ function LessonAccordionItem({
 
           <div className="mt-4">
             {tab === "explanation" ? (
-              <LessonExplanation lesson={lesson} locale={locale} preserveExplanation={preserveExplanation} />
+              <LessonExplanation
+                lesson={lesson}
+                locale={locale}
+                preserveExplanation={preserveExplanation}
+                showExampleInExplanation={showExampleInExplanation}
+              />
             ) : null}
 
             {tab === "diagram" ? (
@@ -258,14 +265,20 @@ function LessonExplanation({
   lesson,
   locale,
   preserveExplanation,
+  showExampleInExplanation,
 }: {
   lesson: Lesson;
   locale: "en" | "np" | "jp";
   preserveExplanation: boolean;
+  showExampleInExplanation: boolean;
 }) {
   const explanation = pickLocalized(lesson.explanation, locale);
   if (preserveExplanation) {
-    return <RichParagraph text={explanation} className="text-sm leading-relaxed text-[var(--text)]" />;
+    const code = lesson.codeExample.code.trim();
+    const example = showExampleInExplanation && code
+      ? `\n\n### Code Example: ${pickLocalized(lesson.codeExample.title, locale)}\n\n\`\`\`tsx\n${code}\n\`\`\``
+      : "";
+    return <RichParagraph text={`${explanation}${example}`} className="text-sm leading-relaxed text-[var(--text)]" />;
   }
   const paragraphs = explanation.split(/\n\s*\n/).filter(Boolean);
   const what = paragraphs[0] ?? "";
@@ -385,6 +398,7 @@ export function LessonDayDetail({
                 track === "nextjs" ||
                 track === "js"
               }
+              showExampleInExplanation={track === "nextjs" && day.day >= 6 && day.day <= 15}
             />
           ))}
 
