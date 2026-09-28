@@ -12,6 +12,8 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "server-components": { en: "Server Components", np: "सर्भर कम्पोनेन्ट", jp: "サーバーコンポーネント" },
   "client-components": { en: "Client Components", np: "क्लाइन्ट कम्पोनेन्ट", jp: "クライアントコンポーネント" },
   "data-fetching": { en: "data fetching", np: "डेटा फेच", jp: "データ取得" },
+  "data-patterns": { en: "data patterns", np: "डेटा ढाँचाहरू", jp: "データパターン" },
+  "loading-ui": { en: "loading UI", np: "लोडिङ UI", jp: "ローディングUI" },
   caching: { en: "caching", np: "क्यासिङ", jp: "キャッシュ" },
   revalidation: { en: "revalidation", np: "पुनः प्रमाणीकरण", jp: "再検証" },
   styling: { en: "styling", np: "शैली", jp: "スタイル" },
@@ -24,6 +26,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   zod: { en: "Zod", np: "Zod", jp: "Zod" },
   prisma: { en: "Prisma", np: "Prisma", jp: "Prisma" },
   database: { en: "database", np: "डेटाबेस", jp: "データベース" },
+  orm: { en: "ORM", np: "ORM", jp: "ORM" },
   upload: { en: "file upload", np: "फाइल अपलोड", jp: "ファイルアップロード" },
   cloudinary: { en: "Cloudinary", np: "Cloudinary", jp: "Cloudinary" },
   auth: { en: "authentication", np: "प्रमाणीकरण", jp: "認証" },
@@ -37,6 +40,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "browser-security": { en: "browser security", np: "ब्राउजर सुरक्षा", jp: "ブラウザセキュリティ" },
   "server-security": { en: "server security", np: "सर्भर सुरक्षा", jp: "サーバーセキュリティ" },
   production: { en: "production", np: "प्रोडक्सन", jp: "本番" },
+  "production-data": { en: "production data", np: "प्रोडक्सन डेटा", jp: "本番データ" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -53,9 +57,9 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "Phase 0 — はじめる前に",
   },
   1: {
-    en: "What is Next.js, setup & your first app",
-    np: "Next.js के हो, सेटअप र पहिलो एप",
-    jp: "Next.js とは・セットアップ・最初のアプリ",
+    en: "What Next.js Actually Is",
+    np: "Next.js वास्तवमा के हो",
+    jp: "Next.js とは何か",
   },
   2: {
     en: "App Router fundamentals",
@@ -206,7 +210,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
 };
 
 export function nextjsDayTitle(day: number): LocalizedString {
-  return (day >= 12 ? NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 5] : undefined) ?? NEXTJS_DAY_TITLE[day] ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
+  return NEXTJS_DAY_TITLE[day] ?? (day >= 12 ? NEXTJS_EXISTING_COURSE_DAY_TITLE[day - 5] : undefined) ?? { en: `Day ${day}`, np: `दिन ${day}`, jp: `Day ${day}` };
 }
 
 export function nextjsWeekTitle(weekId: string): LocalizedString {
