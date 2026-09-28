@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "11 saved books",
-    np: "११ सुरक्षित पुस्तक",
-    jp: "保存した本 11冊",
+    en: "12 saved books",
+    np: "१२ सुरक्षित पुस्तक",
+    jp: "保存した本 12冊",
   },
   "library.collection": {
     en: "Collection",
@@ -206,6 +206,16 @@ export const UI_STRINGS = {
     en: "Build confidence and reshape the beliefs that guide your life.",
     np: "आत्मविश्वास बढाउनुहोस् र जीवनलाई मार्गदर्शन गर्ने विश्वासहरू बदल्नुहोस्।",
     jp: "自信を育て、人生を導く信念を見直します。",
+  },
+  "library.eatThatFrog.title": {
+    en: "Eat That Frog!",
+    np: "Eat That Frog!",
+    jp: "Eat That Frog!",
+  },
+  "library.eatThatFrog.subtitle": {
+    en: "Practical methods for stopping procrastination and getting more done.",
+    np: "ढिलाइ रोक्न र धेरै काम गर्नका व्यावहारिक तरिकाहरू।",
+    jp: "先延ばしをやめて、より多くを達成するための実践的方法。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
