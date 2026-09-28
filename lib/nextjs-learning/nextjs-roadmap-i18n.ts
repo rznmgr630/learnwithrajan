@@ -41,6 +41,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "server-security": { en: "server security", np: "सर्भर सुरक्षा", jp: "サーバーセキュリティ" },
   production: { en: "production", np: "प्रोडक्सन", jp: "本番" },
   "production-data": { en: "production data", np: "प्रोडक्सन डेटा", jp: "本番データ" },
+  "server-actions": { en: "Server Actions", np: "सर्भर कार्यहरू", jp: "サーバーアクション" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -131,6 +132,11 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     np: "प्रोडक्सन डेटा तह",
     jp: "本番データレイヤー",
   },
+  16: {
+    en: "Server Actions",
+    np: "सर्भर कार्यहरू",
+    jp: "サーバーアクション",
+  },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },
@@ -168,9 +174,9 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 3 · データ取得（11〜15日目）",
   },
   "nextjs-phase-4": {
-    en: "PHASE 4 · DATA, FEATURES & AUTH (Days 18–21)",
-    np: "PHASE 4 · DATA, FEATURES र AUTH (दिन १८–२१)",
-    jp: "PHASE 4 · データ・機能・認証（18〜21日目）",
+    en: "PHASE 4 · MUTATIONS AND FULL-STACK NEXT.JS (Days 16–20)",
+    np: "PHASE 4 · परिवर्तन र Full-Stack Next.js (दिन १६–२०)",
+    jp: "PHASE 4 · ミューテーションとフルスタックNext.js（16〜20日目）",
   },
   "nextjs-phase-5": {
     en: "PHASE 5 · PRODUCTION & SECURITY (Days 22–26)",
