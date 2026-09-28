@@ -1,5 +1,557 @@
-import { pastedLessonDay } from "@/lib/learn/pasted-lesson-day";
+import type { LessonDay } from "@/lib/learn/lesson-types";
 
-const PASTED_CONTENT = "# Day 10 — Route Handlers, REST APIs, HTTP & Backend Integration\n\nDay 9 focused on **who can access your application**.\n\nDay 10 focuses on:\n\n> **How Next.js exposes and consumes HTTP APIs.**\n\nThis is especially important if you're coming from Laravel/Node.js because you'll start connecting your frontend architecture with backend/API architecture.\n\n---\n\n# 1. What Is a Route Handler?\n\n### Explanation\n\nA **Route Handler** allows you to create an HTTP endpoint inside the App Router.\n\nFor example:\n\n```text\napp/\n└── api/\n    └── users/\n        └── route.ts\n```\n\ncan represent:\n\n```text\n/api/users\n```\n\nYou can handle HTTP methods such as:\n\n```text\nGET\nPOST\nPUT\nPATCH\nDELETE\n```\n\ndepending on what your route implements.\n\n---\n\n### Visual Diagram\n\n```text\nBrowser / API Client\n        │\n        │ GET /api/users\n        ▼\napp/api/users/route.ts\n        │\n        ├── authentication\n        ├── validation\n        ├── business logic\n        └── database/API\n        │\n        ▼\n      Response\n```\n\n---\n\n### Code Example\n\n```tsx\n// app/api/users/route.ts\n\nimport { NextResponse } from \"next/server\";\n\nexport async function GET() {\n  const users = [\n    { id: 1, name: \"Rajan\" },\n    { id: 2, name: \"Alex\" },\n  ];\n\n  return NextResponse.json(users);\n}\n```\n\nNow:\n\n```text\nGET /api/users\n```\n\nreturns JSON.\n\n---\n\n### Key Takeaways\n\nA Route Handler is an HTTP endpoint.\n\nIt is different from:\n\n```text\npage.tsx\n```\n\nA page renders UI.\n\nA Route Handler returns an HTTP response.\n\n---\n\n### Common Mistakes\n\nDon't confuse:\n\n```text\npage.tsx\n```\n\nwith:\n\n```text\nroute.ts\n```\n\nThink:\n\n```text\npage.tsx\n→ UI\n\nroute.ts\n→ HTTP endpoint\n```\n\n---\n\n### Mini Quiz\n\n1. What does a Route Handler represent?\n2. Which file defines a Route Handler?\n3. What's the difference between `page.tsx` and `route.ts`?\n\n---\n\n# 2. HTTP Methods in Route Handlers\n\n### Explanation\n\nHTTP methods communicate the intention of a request.\n\n```text\nGET\n→ retrieve\n\nPOST\n→ create\n\nPUT\n→ replace\n\nPATCH\n→ partially update\n\nDELETE\n→ remove\n```\n\nFor example:\n\n```text\nGET /api/users\nPOST /api/users\nGET /api/users/123\nPATCH /api/users/123\nDELETE /api/users/123\n```\n\n---\n\n### Visual Diagram\n\n```text\n             /api/users\n                  │\n       ┌──────────┼───────────┐\n       │          │           │\n      GET        POST       DELETE\n       │          │           │\n     Read       Create      Remove\n```\n\n---\n\n### Code Example\n\n```tsx\nimport { NextResponse } from \"next/server\";\n\nexport async function GET() {\n  return NextResponse.json({\n    message: \"Get users\",\n  });\n}\n\nexport async function POST(request: Request) {\n  const body = await request.json();\n\n  return NextResponse.json(\n    {\n      message: \"User created\",\n      data: body,\n    },\n    { status: 201 }\n  );\n}\n```\n\n---\n\n### Key Takeaways\n\nLearn the HTTP semantics rather than treating every request as:\n\n```text\nPOST\n```\n\nGood API design communicates intent through the HTTP method.\n\n---\n\n### Common Mistakes\n\nUsing:\n\n```text\nPOST /api/users/delete/123\n```\n\nisn't necessarily impossible, but if you're designing a conventional REST API, understand the more standard model:\n\n```text\nDELETE /api/users/123\n```\n\n---\n\n### Mini Quiz\n\n1. Which method retrieves data?\n2. Which method commonly creates a resource?\n3. What's the conceptual difference between PUT and PATCH?\n\n---\n\n# 3. Reading Request Data\n\n### Explanation\n\nA Route Handler receives a `Request`.\n\nYou can read:\n\n```text\nBody\nHeaders\nURL\nQuery parameters\nCookies\n```\n\n---\n\n### Code Example — JSON Body\n\n```tsx\nexport async function POST(request: Request) {\n  const body = await request.json();\n\n  const { name, email } = body;\n\n  return Response.json({\n    name,\n    email,\n  });\n}\n```\n\nRequest:\n\n```json\n{\n  \"name\": \"Rajan\",\n  \"email\": \"rajan@example.com\"\n}\n```\n\n---\n\n### Query Parameters\n\nRequest:\n\n```text\n/api/users?role=admin\n```\n\nYou can read them from the URL:\n\n```tsx\nexport async function GET(request: Request) {\n  const url = new URL(request.url);\n\n  const role = url.searchParams.get(\"role\");\n\n  return Response.json({\n    role,\n  });\n}\n```\n\n---\n\n### Visual Diagram\n\n```text\nGET /api/users?role=admin\n             │\n             └── query parameter\n                    │\n                    ▼\n               URLSearchParams\n```\n\n---\n\n### Key Takeaways\n\nKnow where different types of data live:\n\n```text\nPath\n/api/users/123\n\nQuery\n/api/users?role=admin\n\nHeaders\nAuthorization: ...\n\nBody\n{\n  \"name\": \"Rajan\"\n}\n\nCookies\nsession=...\n```\n\n---\n\n### Mini Quiz\n\nFor:\n\n```text\nPATCH /api/users/123?notify=true\n```\n\nidentify:\n\n1. HTTP method\n2. Path parameter\n3. Query parameter\n\n---\n\n# 4. Returning HTTP Responses and Status Codes\n\n### Explanation\n\nAn API response isn't just JSON.\n\nIt contains:\n\n```text\nStatus\nHeaders\nBody\n```\n\nCommon status codes:\n\n```text\n200 OK\n201 Created\n204 No Content\n\n400 Bad Request\n401 Unauthorized\n403 Forbidden\n404 Not Found\n409 Conflict\n422 Unprocessable Content\n\n500 Internal Server Error\n```\n\n---\n\n### Visual Diagram\n\n```text\n                 HTTP Response\n                     │\n          ┌──────────┼──────────┐\n          ▼          ▼          ▼\n        Status     Headers     Body\n         201        JSON       {...}\n```\n\n---\n\n### Code Example\n\n```tsx\nexport async function POST() {\n  const user = {\n    id: 123,\n    name: \"Rajan\",\n  };\n\n  return Response.json(\n    user,\n    {\n      status: 201,\n    }\n  );\n}\n```\n\nFor a missing resource:\n\n```tsx\nreturn Response.json(\n  {\n    error: \"User not found\",\n  },\n  {\n    status: 404,\n  }\n);\n```\n\n---\n\n### Key Takeaways\n\nDon't always return:\n\n```text\n200\n```\n\nHTTP status codes communicate what happened.\n\n---\n\n### Common Mistakes\n\nThis:\n\n```text\n200\n{\n  \"error\": \"User not found\"\n}\n```\n\ncan make API clients harder to reason about.\n\nA conventional API would normally communicate the missing resource with:\n\n```text\n404\n```\n\n---\n\n### Mini Quiz\n\n1. What does `201` mean?\n2. What does `401` mean?\n3. What does `403` mean?\n4. What does `404` mean?\n5. What is the difference between `401` and `403`?\n\n---\n\n# 5. Authentication Inside Route Handlers\n\n### Explanation\n\nRoute Handlers are server endpoints.\n\nTherefore, they must protect themselves.\n\nFor example:\n\n```tsx\nimport { NextResponse } from \"next/server\";\n\nexport async function GET() {\n  const user = await getCurrentUser();\n\n  if (!user) {\n    return NextResponse.json(\n      {\n        error: \"Unauthorized\",\n      },\n      {\n        status: 401,\n      }\n    );\n  }\n\n  return NextResponse.json({\n    user,\n  });\n}\n```\n\n---\n\n### Visual Diagram\n\n```text\nGET /api/profile\n       │\n       ▼\nCheck session\n       │\n   ┌───┴───┐\n   │       │\n No        Yes\n   │        │\n 401        ▼\n        Get profile\n```\n\n---\n\n### Key Takeaways\n\nEvery server entry point must consider:\n\n```text\nAuthentication\nAuthorization\nValidation\n```\n\nThis includes:\n\n```text\nPages\nServer Actions\nRoute Handlers\n```\n\n---\n\n### Common Mistakes\n\nDon't assume:\n\n```text\n/dashboard\n```\n\nis protected simply because:\n\n```text\n/api/users\n```\n\nis protected.\n\nEach entry point should enforce its own security requirements.\n\n---\n\n### Mini Quiz\n\n1. Why should a Route Handler check authentication?\n2. What status should generally represent an unauthenticated request?\n3. Should a hidden frontend button be considered authorization?\n\n---\n\n# 6. Route Handlers vs Server Actions\n\n### Explanation\n\nThis distinction is extremely important.\n\nBoth can execute server-side operations.\n\nBut they solve different problems.\n\n### Server Action\n\nBest suited for:\n\n```text\nApplication UI\nForms\nMutations\nReact-driven workflows\n```\n\n### Route Handler\n\nBest suited for:\n\n```text\nHTTP API\nExternal clients\nWebhooks\nREST-style endpoints\nExplicit HTTP contracts\n```\n\n---\n\n### Visual Diagram\n\n```text\n                Server\n                  │\n        ┌─────────┴─────────┐\n        │                   │\n Server Action         Route Handler\n        │                   │\n        ▼                   ▼\n     React UI             HTTP API\n        │                   │\n        ▼                   ▼\n      Form            Mobile / External\n```\n\n---\n\n### Example\n\nA project creation form inside your Next.js application:\n\n```text\n<form action={createProject}>\n```\n\nA mobile application calling:\n\n```text\nPOST /api/projects\n```\n\nwould generally need an HTTP endpoint.\n\n---\n\n### Key Takeaways\n\nThink:\n\n```text\nServer Action\n→ React application mutation\n\nRoute Handler\n→ HTTP API\n```\n\nThere can be overlap, but this mental model is extremely useful.\n\n---\n\n### Mini Quiz\n\n1. Which is more naturally suited to a React form?\n2. Which is more appropriate for a mobile client calling an HTTP endpoint?\n3. Which would you consider for a webhook endpoint?\n\n---\n\n# 7. Building a REST-Style API\n\n### Explanation\n\nLet's design:\n\n```text\n/api/projects\n```\n\nand:\n\n```text\n/api/projects/[id]\n```\n\nArchitecture:\n\n```text\napp/\n└── api/\n    └── projects/\n        ├── route.ts\n        └── [id]/\n            └── route.ts\n```\n\nThis gives:\n\n```text\nGET    /api/projects\nPOST   /api/projects\n\nGET    /api/projects/123\nPATCH  /api/projects/123\nDELETE /api/projects/123\n```\n\n---\n\n### Code Example\n\n```tsx\n// app/api/projects/route.ts\n\nexport async function GET() {\n  const projects = await getProjects();\n\n  return Response.json(projects);\n}\n\nexport async function POST(request: Request) {\n  const body = await request.json();\n\n  const project = await createProject(body);\n\n  return Response.json(\n    project,\n    { status: 201 }\n  );\n}\n```\n\nDynamic route:\n\n```tsx\n// app/api/projects/[id]/route.ts\n\ntype Props = {\n  params: Promise<{\n    id: string;\n  }>;\n};\n\nexport async function GET(\n  request: Request,\n  { params }: Props\n) {\n  const { id } = await params;\n\n  const project = await getProject(id);\n\n  if (!project) {\n    return Response.json(\n      {\n        error: \"Project not found\",\n      },\n      {\n        status: 404,\n      }\n    );\n  }\n\n  return Response.json(project);\n}\n```\n\n---\n\n### Visual Diagram\n\n```text\n/api/projects\n      │\n      ├── GET  → list\n      └── POST → create\n\n/api/projects/123\n      │\n      ├── GET    → retrieve\n      ├── PATCH  → update\n      └── DELETE → delete\n```\n\n---\n\n### Key Takeaways\n\nThis is the same resource-oriented thinking you use when designing backend APIs.\n\n```text\nResource = projects\n\nCollection:\n /projects\n\nIndividual resource:\n /projects/:id\n```\n\n---\n\n### Common Mistakes\n\nAvoid unnecessarily complicated URLs like:\n\n```text\n/api/getAllProjects\n/api/createProject\n/api/deleteProject\n```\n\nA resource-oriented design usually makes the HTTP method carry the operation.\n\n---\n\n### Mini Quiz\n\nDesign the endpoint for:\n\n> Update project `123`.\n\nWhat should the:\n\n```text\nMethod:\nURL:\n```\n\nbe?\n\n---\n\n# 8. Webhooks\n\n### Explanation\n\nA **webhook** is an HTTP endpoint that another system calls when something happens.\n\nFor example:\n\n```text\nStripe\n   ↓\nPOST /api/webhooks/stripe\n```\n\nor:\n\n```text\nGitHub\n   ↓\nPOST /api/webhooks/github\n```\n\nThe external system is the caller.\n\n---\n\n### Visual Diagram\n\n```text\nExternal Service\n      │\n      │ POST webhook\n      ▼\nNext.js Route Handler\n      │\n      ├── Verify signature\n      ├── Validate payload\n      ├── Process event\n      └── Store/update data\n```\n\n---\n\n### Code Example\n\n```tsx\nexport async function POST(request: Request) {\n  const body = await request.text();\n\n  // Verify webhook signature here.\n\n  console.log(body);\n\n  return new Response(\"OK\", {\n    status: 200,\n  });\n}\n```\n\nIn real systems, webhook security is extremely important.\n\nYou should verify that the request actually came from the expected provider.\n\n---\n\n### Key Takeaways\n\nWebhooks are:\n\n```text\nExternal system\n      ↓\nYour HTTP endpoint\n      ↓\nYour application\n```\n\nThey are different from your frontend calling your own API.\n\n---\n\n### Common Mistakes\n\nNever blindly trust webhook payloads.\n\nA webhook endpoint should consider:\n\n```text\nSignature verification\nAuthentication\nValidation\nIdempotency\nReplay protection\n```\n\n---\n\n### Mini Quiz\n\n1. Who usually initiates a webhook request?\n2. Why should webhook signatures be verified?\n3. What happens if the same webhook is delivered twice?\n\n---\n\n# Day 10 Project — Next.js API Layer\n\nBuild a small REST API for your project application.\n\n### API structure\n\n```text\napp/\n└── api/\n    ├── projects/\n    │   ├── route.ts\n    │   └── [id]/\n    │       └── route.ts\n    │\n    └── webhooks/\n        └── example/\n            └── route.ts\n```\n\n### Implement\n\n```text\nGET    /api/projects\nPOST   /api/projects\n\nGET    /api/projects/:id\nPATCH  /api/projects/:id\nDELETE /api/projects/:id\n\nPOST   /api/webhooks/example\n```\n\nEvery protected endpoint should demonstrate:\n\n```text\nRequest\n  ↓\nAuthentication\n  ↓\nAuthorization\n  ↓\nValidation\n  ↓\nBusiness logic\n  ↓\nResponse\n```\n\n---\n\n# Day 9 + Day 10 Final Mental Model\n\nYou should now be able to see the entire server-side architecture:\n\n```text\n                         User\n                          │\n                          ▼\n                    Authentication\n                          │\n                          ▼\n                       Session\n                          │\n                          ▼\n                    Authorization\n                          │\n             ┌────────────┴────────────┐\n             │                         │\n             ▼                         ▼\n       Server Component          Server Action\n             │                         │\n             │                         ▼\n             │                    Mutation\n             │                         │\n             ▼                         ▼\n        Read Data                  Database\n             │                         │\n             └────────────┬────────────┘\n                          │\n                          ▼\n                     Revalidation\n                          │\n                          ▼\n                          UI\n\n\nExternal Client\n      │\n      │ HTTP\n      ▼\nRoute Handler\n      │\n      ├── Authentication\n      ├── Authorization\n      ├── Validation\n      ├── Business Logic\n      └── Database/API\n      │\n      ▼\nHTTP Response\n```\n\n### By the end of Day 10, you should be able to explain these without memorizing definitions:\n\n| Concept            | What you should understand                                   |\n| ------------------ | ------------------------------------------------------------ |\n| Authentication     | How the application identifies a user                        |\n| Authorization      | How the application decides what the user can do             |\n| Cookie             | Data carried by the browser between requests                 |\n| Session            | Server-side representation of authenticated state            |\n| `getCurrentUser()` | Reusable server-side identity lookup                         |\n| Protected route    | A route that verifies access before returning protected data |\n| Role-based access  | Permissions based on user roles                              |\n| Route Handler      | An HTTP endpoint inside the App Router                       |\n| `GET`              | Retrieve a resource                                          |\n| `POST`             | Create/submit data                                           |\n| `PATCH`            | Partially update a resource                                  |\n| `DELETE`           | Remove a resource                                            |\n| Status code        | Communicates the result of an HTTP request                   |\n| Webhook            | An external system calling your HTTP endpoint                |\n| Server Action      | Server-side function commonly used by React UI mutations     |\n\n**The key progression is:**\n\n```text\nDay 1–4\nNext.js + routing\n        ↓\nDay 5–6\nRendering + Server/Client Components\n        ↓\nDay 7\nReading data\n        ↓\nDay 8\nWriting data\n        ↓\nDay 9\nAuthentication + authorization\n        ↓\nDay 10\nHTTP APIs + Route Handlers\n```\n\nThat gives you a much stronger foundation before moving into the next part of the syllabus: **advanced data patterns, database integration, URL/search-param state, and production application architecture.**";
+export const NEXTJS_DAY_10_LESSONS: LessonDay = {
+  day: 10,
+  title: "Suspense and Streaming",
+  totalMinutes: 79,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "react-suspense",
+      title: "React Suspense and loading boundaries",
+      durationMinutes: 16,
+      explanation: `
+**Suspense** is a React mechanism for describing what the UI should display while part of a component tree is waiting for something to become ready.
 
-export const NEXTJS_DAY_10_LESSONS = pastedLessonDay(10, "Day 10", PASTED_CONTENT);
+In a Next.js App Router application, Suspense is especially useful around asynchronous Server Components. Instead of making the user wait for every piece of the page, you can define a fallback for a slower section.
+
+A Suspense boundary has two important parts: the content that you want to render and a fallback that can be shown while that content is not ready.
+
+### Loading boundaries
+
+Next.js also provides a route-level \`loading.tsx\` convention. A \`loading.tsx\` file gives a route a loading UI while the route segment is being prepared.
+
+A manually placed \`<Suspense>\` boundary is more precise. It lets you choose exactly which section should show a fallback.
+
+### Choosing the boundary
+
+A useful loading boundary usually represents a meaningful part of the UI. For example, an analytics card can show its own skeleton while the rest of the dashboard remains usable.
+
+A boundary that is too high can make too much of the page wait. A boundary that is too small can create many tiny loading states that are difficult to understand.
+      `,
+      diagram: `
+Dashboard
+├── Header --------------------> Ready
+├── Account summary ------------> Ready
+└── <Suspense>
+      ├── fallback -------------> "Loading analytics..."
+      └── AnalyticsPanel --------> waits for data
+                                  |
+                                  v
+                               becomes ready
+      `,
+      codeExample: {
+        title: "A focused Suspense boundary",
+        code: `import { Suspense } from "react";
+import AnalyticsPanel from "./AnalyticsPanel";
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Analytics Dashboard</h1>
+
+      <p>The page shell can be shown immediately.</p>
+
+      <Suspense fallback={<div>Loading analytics...</div>}>
+        <AnalyticsPanel />
+      </Suspense>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Suspense lets you define a fallback for UI that is not ready yet.",
+        "A focused Suspense boundary can keep unrelated UI usable.",
+        "Next.js loading.tsx provides a route-level loading boundary.",
+        "Choose boundaries around meaningful pieces of UI.",
+      ],
+      commonMistakes: [
+        "Assuming Suspense makes the underlying data source faster.",
+        "Putting the boundary around the entire application when only one section is slow.",
+        "Creating many tiny loading states that make the UI feel fragmented.",
+      ],
+      quiz: [
+        {
+          question: "What is the main purpose of a Suspense fallback?",
+          options: [
+            "To permanently replace the component.",
+            "To provide UI while the suspended content is not ready.",
+            "To make the database query faster.",
+            "To turn a Server Component into a Client Component.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "The fallback is the temporary UI shown while the suspended content is waiting.",
+        },
+      ],
+    },
+
+    {
+      id: "streaming-html",
+      title: "Streaming HTML and progressive rendering",
+      durationMinutes: 16,
+      explanation: `
+Streaming allows the server to send a page progressively rather than waiting for every part of the result to be ready.
+
+This is valuable when a page contains a mixture of fast and slow work. The fast parts can become visible first, while slower sections continue rendering behind Suspense boundaries.
+
+### Streaming HTML
+
+Think of the response as a sequence rather than one giant result. The server can send the initial shell and then send additional content as it becomes available.
+
+The browser can therefore start showing useful UI earlier.
+
+### Progressive rendering
+
+Progressive rendering is the user-facing effect of this approach. Instead of seeing a completely blank screen followed by the whole page, users can see meaningful pieces appear over time.
+
+Streaming does not remove the cost of slow work. If an analytics query takes three seconds, the query still takes three seconds. The benefit is that the rest of the page does not necessarily have to wait for that query.
+
+### Good streaming boundaries
+
+A good boundary usually separates work that can be delayed without blocking the rest of the page. Analytics, recommendations, activity feeds, and large reports are common examples.
+      `,
+      diagram: `
+Server
+  |
+  |  Chunk 1
+  v
+Browser: page shell
+  |
+  |  Chunk 2
+  v
+Browser: account summary
+  |
+  |  Chunk 3
+  v
+Browser: analytics result
+  |
+  v
+Complete UI
+      `,
+      codeExample: {
+        title: "A streamed page with two independent sections",
+        code: `import { Suspense } from "react";
+import SalesChart from "./SalesChart";
+import ActivityFeed from "./ActivityFeed";
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Dashboard</h1>
+
+      <Suspense fallback={<p>Loading sales chart...</p>}>
+        <SalesChart />
+      </Suspense>
+
+      <Suspense fallback={<p>Loading activity...</p>}>
+        <ActivityFeed />
+      </Suspense>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Streaming lets the server deliver ready UI progressively.",
+        "Suspense boundaries provide natural places where slower content can wait.",
+        "Streaming improves perceived responsiveness without making slow operations intrinsically faster.",
+        "Independent slow sections can use separate boundaries.",
+      ],
+      commonMistakes: [
+        "Calling streaming a database optimization.",
+        "Assuming every component needs its own streaming boundary.",
+        "Using generic loading text where a skeleton or meaningful placeholder would better preserve layout.",
+      ],
+      quiz: [
+        {
+          question: "What does streaming allow the browser to receive?",
+          options: [
+            "Only one final HTML response after all work finishes.",
+            "Ready portions of the UI progressively.",
+            "Only client-side JavaScript.",
+            "Only static assets.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Streaming allows ready portions of the result to be delivered while slower work continues.",
+        },
+      ],
+    },
+
+    {
+      id: "async-server-components",
+      title: "Async Server Components and data fetching",
+      durationMinutes: 15,
+      explanation: `
+Server Components can be asynchronous. This makes it natural to fetch data directly inside a Server Component and render the result on the server.
+
+An async Server Component can wait for a database query, API request, or other asynchronous operation. When that component is placed behind a Suspense boundary, the surrounding UI can continue rendering while the component waits.
+
+### Keep data fetching close to the component
+
+A useful pattern is to let a component fetch the data it actually needs. This keeps the relationship between the UI and its data visible.
+
+For example, an \`AnalyticsPanel\` can fetch analytics data, transform it, and render the result. The page does not necessarily need to fetch every piece of data and pass everything through several layers.
+
+### Server-side benefits
+
+Fetching on the server can keep credentials and server-only access away from the browser. It can also reduce the amount of data and fetching logic that needs to be shipped to the client.
+
+The important rule is to understand whether the data is server-only and whether the component actually needs browser interactivity.
+      `,
+      diagram: `
+Page
+ |
+ +--> Header
+ |
+ +--> <Suspense>
+       |
+       +--> async AnalyticsPanel
+               |
+               +--> fetch / database
+               |
+               v
+            render UI
+      `,
+      codeExample: {
+        title: "An async Server Component",
+        code: `// app/dashboard/AnalyticsPanel.tsx
+
+async function getAnalytics() {
+  const response = await fetch(
+    "https://api.example.com/analytics"
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load analytics");
+  }
+
+  return response.json();
+}
+
+export default async function AnalyticsPanel() {
+  const analytics = await getAnalytics();
+
+  return (
+    <section>
+      <h2>Analytics</h2>
+      <p>Total users: {analytics.totalUsers}</p>
+    </section>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Server Components can be async and can wait for server-side data.",
+        "Data fetching can live close to the component that uses the data.",
+        "Server-side fetching can keep sensitive access away from the browser.",
+        "Suspense can isolate a slow async Server Component from the rest of the page.",
+      ],
+      commonMistakes: [
+        "Adding use client just because a component performs asynchronous work.",
+        "Sending server-only credentials to a Client Component.",
+        "Moving every data request into the page when a smaller component owns the data.",
+      ],
+      quiz: [
+        {
+          question: "Can an App Router Server Component be async?",
+          options: [
+            "No, Server Components must always be synchronous.",
+            "Yes, an async Server Component can wait for server-side data.",
+            "Only if it uses use client.",
+            "Only in development.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Async Server Components are a natural way to perform server-side asynchronous work.",
+        },
+      ],
+    },
+
+    {
+      id: "parallel-data-fetching",
+      title: "Parallel data fetching",
+      durationMinutes: 16,
+      explanation: `
+When a page needs several independent pieces of data, fetching them one after another can create unnecessary waiting.
+
+Suppose a dashboard needs user information, sales data, and an activity feed. If each request takes one second and they are independent, sequential fetching can make the page wait for roughly three seconds before all three results are available.
+
+If the requests can safely happen at the same time, they can be started together with \`Promise.all\`. The total waiting time can then be closer to the slowest request rather than the sum of all request times.
+
+### Sequential fetching
+
+Sequential fetching means request B waits for request A, and request C waits for request B.
+
+This is necessary when one operation genuinely depends on the result of another. For example, you may need a user ID before requesting that user's private records.
+
+### Parallel fetching
+
+Parallel fetching means independent requests start without waiting for one another.
+
+The important word is **independent**. Do not parallelize operations when there is a real data dependency between them.
+      `,
+      diagram: `
+Sequential
+
+Request A ──────>
+                  Request B ──────>
+                                    Request C ──────>
+
+Parallel
+
+Request A ──────>
+Request B ──────>
+Request C ──────>
+                |
+                v
+          all results ready
+      `,
+      codeExample: {
+        title: "Sequential vs parallel requests",
+        code: `// Sequential: B starts after A finishes.
+const user = await getUser();
+const orders = await getOrders(user.id);
+
+// Parallel: these operations are independent.
+const [user, settings, notifications] = await Promise.all([
+  getUser(),
+  getSettings(),
+  getNotifications(),
+]);
+
+// Dependency-based work should remain sequential.
+const account = await getAccount();
+const invoices = await getInvoices(account.id);`,
+      },
+      keyTakeaways: [
+        "Independent requests can often be started in parallel.",
+        "Promise.all is useful when several async operations do not depend on one another.",
+        "Sequential fetching is correct when one request needs the result of another.",
+        "Parallelism can reduce unnecessary waiting time.",
+      ],
+      commonMistakes: [
+        "Using Promise.all for operations that have a dependency.",
+        "Fetching unrelated data sequentially without a reason.",
+        "Starting every possible request in parallel without considering server load or whether the data is actually needed.",
+      ],
+      quiz: [
+        {
+          question: "When is Promise.all a good fit?",
+          options: [
+            "When each request depends on the previous request.",
+            "When several asynchronous operations are independent.",
+            "Only for browser APIs.",
+            "Only for mutations.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Promise.all is useful when independent asynchronous operations can run concurrently.",
+        },
+      ],
+    },
+
+    {
+      id: "sequential-vs-parallel-streaming",
+      title: "Combining parallel fetching with streaming",
+      durationMinutes: 16,
+      explanation: `
+Parallel fetching and streaming solve different parts of the performance problem and can be combined.
+
+Parallel fetching reduces unnecessary waiting between independent data requests. Streaming allows the UI to appear progressively while slower sections continue rendering.
+
+For example, a dashboard can start fetching sales and notifications at the same time inside a section that needs both. Another independent analytics section can have its own Suspense boundary and stream separately.
+
+### A practical architecture
+
+Start by identifying the data dependencies.
+
+If two requests are independent, start them together. If a section is slow but does not need to block the page, put that section behind a Suspense boundary.
+
+This gives you two levels of optimization:
+
+1. **Data-level concurrency** — independent requests run together.
+2. **UI-level concurrency** — independent UI sections can become visible independently.
+
+### Do not optimize blindly
+
+Parallel fetching is not always automatically better. If the server or external API has strict rate limits, starting many requests simultaneously can increase load. The goal is to remove unnecessary waiting while keeping the architecture understandable and safe.
+      `,
+      diagram: `
+                    Dashboard
+                       |
+          +------------+------------+
+          |                         |
+     Fast section             Slow section
+          |                         |
+   +------+------+              Suspense
+   |             |                  |
+User data     Settings        Analytics
+   |             |
+   +------+------+
+          |
+     Promise.all
+          |
+       render
+                       |
+                       v
+                 stream when ready
+      `,
+      codeExample: {
+        title: "Parallel data inside a streamed section",
+        code: `import { Suspense } from "react";
+
+async function DashboardSummary() {
+  const [sales, notifications] = await Promise.all([
+    getSales(),
+    getNotifications(),
+  ]);
+
+  return (
+    <section>
+      <p>Sales: {sales.total}</p>
+      <p>Notifications: {notifications.length}</p>
+    </section>
+  );
+}
+
+async function SlowAnalytics() {
+  const analytics = await getSlowAnalytics();
+
+  return <section>Report: {analytics.summary}</section>;
+}
+
+export default function DashboardPage() {
+  return (
+    <main>
+      <h1>Analytics Dashboard</h1>
+
+      <DashboardSummary />
+
+      <Suspense fallback={<p>Loading report...</p>}>
+        <SlowAnalytics />
+      </Suspense>
+    </main>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Parallel fetching reduces waiting between independent data requests.",
+        "Streaming reduces the need for slow UI sections to block faster sections.",
+        "These techniques can be combined.",
+        "Optimize only where there is real independent work or meaningful waiting.",
+      ],
+      commonMistakes: [
+        "Confusing parallel data fetching with streaming.",
+        "Parallelizing requests that have real dependencies.",
+        "Creating too many concurrent external requests without considering service limits.",
+      ],
+      quiz: [
+        {
+          question: "How do parallel fetching and streaming complement each other?",
+          options: [
+            "They are exactly the same feature.",
+            "Parallel fetching reduces data wait time while streaming allows ready UI to appear progressively.",
+            "Streaming makes Promise.all unnecessary.",
+            "Parallel fetching converts Client Components into Server Components.",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Parallelism addresses independent asynchronous work, while streaming addresses progressive delivery of UI.",
+        },
+      ],
+    },
+  ],
+
+  finalQuiz: [
+    {
+      question: "What does Suspense provide?",
+      options: [
+        "A way to define fallback UI while content is not ready.",
+        "A database connection.",
+        "A replacement for Server Components.",
+        "A replacement for TypeScript.",
+      ],
+      correctIndex: 0,
+      explanation:
+        "Suspense lets React show fallback UI while suspended content is waiting.",
+    },
+    {
+      question: "What is the main user-facing benefit of streaming?",
+      options: [
+        "All database queries become faster.",
+        "Users can see useful parts of the page before every slow section is finished.",
+        "Every component becomes static.",
+        "The browser no longer needs HTML.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Streaming can improve perceived responsiveness by progressively delivering ready UI.",
+    },
+    {
+      question: "Why can async Server Components be useful?",
+      options: [
+        "They can perform server-side asynchronous work close to the component that needs the data.",
+        "They require all data to be fetched in the browser.",
+        "They can only render static text.",
+        "They are always Client Components.",
+      ],
+      correctIndex: 0,
+      explanation:
+        "Async Server Components can fetch or otherwise await server-side data before rendering.",
+    },
+    {
+      question: "When should independent requests usually be fetched in parallel?",
+      options: [
+        "When they do not depend on each other's results.",
+        "Only when they are mutations.",
+        "Never.",
+        "Only when using a Client Component.",
+      ],
+      correctIndex: 0,
+      explanation:
+        "Independent requests can often run concurrently to avoid unnecessary sequential waiting.",
+    },
+    {
+      question: "Which statement correctly distinguishes streaming from parallel fetching?",
+      options: [
+        "They are two names for the same feature.",
+        "Streaming controls progressive UI delivery, while parallel fetching controls independent asynchronous work.",
+        "Parallel fetching only works with CSS.",
+        "Streaming only works for database writes.",
+      ],
+      correctIndex: 1,
+      explanation:
+        "They address different levels of the rendering process and can be used together.",
+    },
+  ],
+
+  project: {
+    name: "Streaming analytics dashboard",
+    goal: "Build a dashboard that demonstrates Suspense, streaming, async Server Components, and parallel data fetching.",
+    brief:
+      "Create an analytics dashboard with a fast summary, independently fetched data, and one or more deliberately slow analytics sections. Use Suspense boundaries so the fast parts can appear without waiting for the slowest section.",
+    steps: [
+      "Create a dashboard route with a stable page shell.",
+      "Create an async Server Component for the dashboard summary.",
+      "Identify at least two independent data sources and fetch them in parallel.",
+      "Create a deliberately slow analytics component.",
+      "Wrap the slow analytics component in its own Suspense boundary.",
+      "Create a useful loading fallback that preserves the dashboard layout.",
+      "Add a second independent slow section if you want to demonstrate multiple streaming boundaries.",
+      "Compare sequential and parallel fetching and document the difference.",
+    ],
+    acceptance: [
+      "The dashboard uses at least one Suspense boundary.",
+      "At least one section is an async Server Component.",
+      "At least two independent requests are fetched in parallel.",
+      "A slow section has a meaningful loading fallback.",
+      "The page demonstrates progressive rendering rather than waiting for every section before showing useful UI.",
+    ],
+    stretch: [
+      "Add multiple independent Suspense boundaries.",
+      "Create skeleton components that preserve the final layout dimensions.",
+      "Add artificial delays to compare sequential, parallel, and streamed behavior.",
+      "Measure the perceived loading sequence and explain which part of the architecture controls each stage.",
+    ],
+  },
+};
