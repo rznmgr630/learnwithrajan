@@ -43,6 +43,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "production-data": { en: "production data", np: "प्रोडक्सन डेटा", jp: "本番データ" },
   "server-actions": { en: "Server Actions", np: "सर्भर कार्यहरू", jp: "サーバーアクション" },
   forms: { en: "forms", np: "फारमहरू", jp: "フォーム" },
+  "optimistic-ui": { en: "optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -139,6 +140,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
     jp: "サーバーアクション",
   },
   17: { en: "Forms", np: "फारमहरू", jp: "フォーム" },
+  18: { en: "Optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
   23: { en: "Browser security — XSS, CSRF, cookies & redirects", np: "ब्राउजर सुरक्षा — XSS, CSRF, cookies र redirects", jp: "ブラウザセキュリティ — XSS・CSRF・Cookie・リダイレクト" },
   24: { en: "Server security — SQL injection, SSRF & data exposure", np: "सर्भर सुरक्षा — SQL injection, SSRF र data exposure", jp: "サーバーセキュリティ — SQLインジェクション・SSRF・データ漏えい" },
   25: { en: "Identity, permissions, secrets & dependencies", np: "पहिचान, अनुमति, secrets र dependencies", jp: "認証・権限・シークレット・依存関係" },

@@ -79,7 +79,7 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "nextjs-phase-4", title: nextjsWeekTitle("nextjs-phase-4"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_52%,#a78bfa)]",
     days: [
-      nextjsDayRow(16, ["server-actions", "data-fetching"]), nextjsDayRow(17, ["forms", "server-actions"]), nextjsDayRow(18, ["prisma", "database"]), nextjsDayRow(19, ["upload", "cloudinary"]),
+      nextjsDayRow(16, ["server-actions", "data-fetching"]), nextjsDayRow(17, ["forms", "server-actions"]), nextjsDayRow(18, ["optimistic-ui", "server-actions"]), nextjsDayRow(19, ["upload", "cloudinary"]),
       nextjsDayRow(20, ["auth", "next-auth"]), nextjsDayRow(21, ["email", "optimization"]),
     ],
   },
