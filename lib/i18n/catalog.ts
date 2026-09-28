@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "21 saved books",
-    np: "२१ सुरक्षित पुस्तक",
-    jp: "保存した本 21冊",
+    en: "22 saved books",
+    np: "२२ सुरक्षित पुस्तक",
+    jp: "保存した本 22冊",
   },
   "library.collection": {
     en: "Collection",
@@ -252,6 +252,8 @@ export const UI_STRINGS = {
   "library.animalFarm.subtitle": { en: "George Orwell's timeless political fable about power and equality.", np: "शक्ति र समानताबारे जर्ज अर्वेलको समयहीन राजनीतिक कथा।", jp: "権力と平等を描くジョージ・オーウェルの不朽の政治寓話。" },
   "library.wizardOfOz.title": { en: "The Wizard of Oz", np: "The Wizard of Oz", jp: "The Wizard of Oz" },
   "library.wizardOfOz.subtitle": { en: "Dorothy's magical journey through the Land of Oz.", np: "ओजको भूमिमा डोरोथीको जादुई यात्रा।", jp: "オズの国を巡るドロシーの魔法の旅。" },
+  "library.frankenstein.title": { en: "Frankenstein", np: "Frankenstein", jp: "Frankenstein" },
+  "library.frankenstein.subtitle": { en: "Mary Shelley's gothic classic about creation, ambition, and consequence.", np: "सिर्जना, महत्वाकांक्षा र परिणामबारे मेरी शेलीको गोथिक क्लासिक।", jp: "創造、野心、結果を描くメアリー・シェリーのゴシック古典。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
