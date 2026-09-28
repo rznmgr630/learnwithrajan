@@ -41,6 +41,11 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "server-security": { en: "server security", np: "सर्भर सुरक्षा", jp: "サーバーセキュリティ" },
   production: { en: "production", np: "प्रोडक्सन", jp: "本番" },
   "production-data": { en: "production data", np: "प्रोडक्सन डेटा", jp: "本番データ" },
+  "advanced-routing": { en: "advanced routing", np: "उन्नत रुटिङ", jp: "高度なルーティング" },
+  "parallel-routes": { en: "parallel routes", np: "समानान्तर रुटहरू", jp: "並列ルート" },
+  metadata: { en: "metadata", np: "मेटाडाटा", jp: "メタデータ" },
+  internationalization: { en: "internationalization", np: "अन्तर्राष्ट्रियकरण", jp: "国際化" },
+  files: { en: "files", np: "फाइलहरू", jp: "ファイル" },
   "server-actions": { en: "Server Actions", np: "सर्भर कार्यहरू", jp: "サーバーアクション" },
   forms: { en: "forms", np: "फारमहरू", jp: "フォーム" },
   "optimistic-ui": { en: "optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
@@ -150,6 +155,11 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   23: { en: "Middleware / Proxy and Request Control", np: "मिडलवेयर / प्रोक्सी र अनुरोध नियन्त्रण", jp: "ミドルウェア / プロキシとリクエスト制御" },
   24: { en: "Next.js Security", np: "Next.js सुरक्षा", jp: "Next.js セキュリティ" },
   25: { en: "Production Security Architecture", np: "प्रोडक्सन सुरक्षा आर्किटेक्चर", jp: "本番セキュリティアーキテクチャ" },
+  26: { en: "Advanced Routing", np: "उन्नत रुटिङ", jp: "高度なルーティング" },
+  27: { en: "Parallel and Intercepting Routes", np: "समानान्तर र रोक्ने रुटहरू", jp: "並列ルートとインターセプトルート" },
+  28: { en: "Metadata and SEO", np: "मेटाडाटा र SEO", jp: "メタデータとSEO" },
+  29: { en: "Internationalization", np: "अन्तर्राष्ट्रियकरण", jp: "国際化" },
+  30: { en: "Files and Image Optimization", np: "फाइल र छवि अनुकूलन", jp: "ファイルと画像最適化" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -191,6 +201,11 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     en: "PHASE 5 · AUTHENTICATION AND SECURITY (Days 21–25)",
     np: "PHASE 5 · प्रमाणीकरण र सुरक्षा (दिन २१–२५)",
     jp: "PHASE 5 · 認証とセキュリティ（21〜25日目）",
+  },
+  "nextjs-phase-6": {
+    en: "PHASE 6 · ADVANCED ROUTING (Days 26–30)",
+    np: "PHASE 6 · उन्नत रुटिङ (दिन २६–३०)",
+    jp: "PHASE 6 · 高度なルーティング（26〜30日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
