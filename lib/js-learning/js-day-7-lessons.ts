@@ -305,11 +305,18 @@ console.log(basket); // ["apple", "banana", "orange"]
 basket.splice(1, 1, "mango");
 console.log(basket); // ["apple", "mango", "orange"]
 
-// ── 4. Intermediate — flat() returns a new array ──────────────────
+// ── 4. Intermediate — slice() copies without changing the original ─
+const original = ["apple", "banana", "orange"];
+const slice = original.slice(1, 3);
+
+console.log(slice);    // ["banana", "orange"]
+console.log(original); // ["apple", "banana", "orange"]
+
+// ── 5. Intermediate — flat() returns a new array ──────────────────
 console.log([1, [2, 3], [4, 5]].flat());   // [1, 2, 3, 4, 5]
 console.log([1, [2, [3, [4]]]].flat(2));   // [1, 2, 3, [4]]
 
-// ── 5. Advanced — flatMap() is map plus one flatten ───────────────
+// ── 6. Advanced — flatMap() is map plus one flatten ───────────────
 const users = [
   { name: "Rajan", skills: ["JavaScript", "React"] },
   { name: "John", skills: ["Node.js", "Python"] }
@@ -318,7 +325,7 @@ const users = [
 console.log(users.flatMap(user => user.skills));
 // ["JavaScript", "React", "Node.js", "Python"]
 
-// ── 6. Advanced — forEach() returns undefined ─────────────────────
+// ── 7. Advanced — forEach() returns undefined ─────────────────────
 const names = ["Rajan", "John", "Sam"];
 
 names.forEach(name => console.log(\`Hello \${name}\`));
