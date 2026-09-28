@@ -345,6 +345,10 @@ export function LibraryShelf() {
               <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span>
             </div>
           </Link>
+          <Link href="/library/personal-development/how-to-win-friends" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-indigo-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#e8e1d7] p-8 sm:min-h-full"><div className="relative flex h-60 w-40 flex-col justify-between bg-[#1f3559] p-5 text-[#f7e9bd] shadow-[12px_12px_0_#18294555] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]"><p className="text-xs font-semibold uppercase tracking-[0.16em]">Dale Carnegie</p><h3 className="font-serif text-3xl leading-[0.95]">How to<br />Win Friends</h3><span className="h-1 w-12 bg-[#d6ae54]" /></div></div>
+            <div className="flex flex-col p-7 sm:p-9"><div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-indigo-600"><span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />{t("library.personalDevelopment")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-indigo-600">{t("library.howToWinFriends.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.howToWinFriends.subtitle")}</p><span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span></div>
+          </Link>
         </div>
       </section>
     </main>
