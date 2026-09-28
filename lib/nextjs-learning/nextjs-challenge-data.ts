@@ -87,7 +87,7 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "nextjs-phase-5", title: nextjsWeekTitle("nextjs-phase-5"),
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#f59e0b)]",
     days: [
-      nextjsDayRow(21, ["auth", "next-auth"]), nextjsDayRow(22, ["deployment", "vercel"]), nextjsDayRow(23, ["browser-security", "security"]),
+      nextjsDayRow(21, ["auth", "next-auth"]), nextjsDayRow(22, ["auth", "security"]), nextjsDayRow(23, ["browser-security", "security"]),
       nextjsDayRow(24, ["server-security", "security"]), nextjsDayRow(25, ["auth", "security"]),
       nextjsDayRow(26, ["security", "production"]),
     ],
