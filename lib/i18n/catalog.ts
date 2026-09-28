@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "12 saved books",
-    np: "१२ सुरक्षित पुस्तक",
-    jp: "保存した本 12冊",
+    en: "13 saved books",
+    np: "१३ सुरक्षित पुस्तक",
+    jp: "保存した本 13冊",
   },
   "library.collection": {
     en: "Collection",
@@ -216,6 +216,16 @@ export const UI_STRINGS = {
     en: "Practical methods for stopping procrastination and getting more done.",
     np: "ढिलाइ रोक्न र धेरै काम गर्नका व्यावहारिक तरिकाहरू।",
     jp: "先延ばしをやめて、より多くを達成するための実践的方法。",
+  },
+  "library.atomicHabits.title": {
+    en: "Atomic Habits",
+    np: "Atomic Habits",
+    jp: "Atomic Habits",
+  },
+  "library.atomicHabits.subtitle": {
+    en: "Small changes that create remarkable results through better habits.",
+    np: "राम्रो बानीमार्फत उल्लेखनीय परिणाम सिर्जना गर्ने साना परिवर्तनहरू।",
+    jp: "より良い習慣で大きな成果を生む小さな変化。",
   },
   "hub.backend.title": {
     en: "Backend in 30 days",
