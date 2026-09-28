@@ -1,67 +1,474 @@
-import { pastedLessonDay } from "@/lib/learn/pasted-lesson-day";
+import type { LessonDay } from "@/lib/learn/lesson-types";
 
-const PASTED_CONTENT = "# Day 6 — Server Components, Client Components & Data Fetching\n\n## 1. Server Components vs Client Components\n\n### Explanation\n\nThis is one of the most important concepts in the Next.js App Router.\n\nBy default, components inside the App Router are **Server Components**.\n\nA Server Component runs on the server and can do server-side work such as:\n\n```text\nDatabase access\nAPI requests\nReading server-only resources\nRendering HTML/RSC output\n```\n\nA **Client Component** runs with browser capabilities and is used when you need:\n\n```text\nuseState\nuseEffect\nevent handlers\nbrowser APIs\ninteractive UI\n```\n\nThe basic rule is:\n\n```text\nNeed interactivity?\n        ↓\nClient Component\n\nNo browser interaction?\n        ↓\nPrefer Server Component\n```\n\n---\n\n### Visual Diagram\n\n```text\nNext.js Application\n        │\n        ├───────────────┐\n        ↓               ↓\nServer Component   Client Component\n        │               │\n        │               ├── useState\n        │               ├── useEffect\n        │               ├── onClick\n        │               └── browser APIs\n        │\n        ├── database\n        ├── server APIs\n        └── server-side work\n```\n\n---\n\n### Code Example\n\nServer Component:\n\n```tsx\nexport default async function UsersPage() {\n  const users = await getUsers();\n\n  return (\n    <ul>\n      {users.map((user) => (\n        <li key={user.id}>{user.name}</li>\n      ))}\n    </ul>\n  );\n}\n```\n\nClient Component:\n\n```tsx\n\"use client\";\n\nimport { useState } from \"react\";\n\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n\n  return (\n    <button onClick={() => setCount(count + 1)}>\n      Count: {count}\n    </button>\n  );\n}\n```\n\n---\n\n### Key Takeaways\n\n* App Router components are Server Components by default.\n* Server Components are ideal for server-side data access.\n* Client Components are required for browser interaction.\n* `\"use client\"` marks a component as a Client Component.\n* Don't use `\"use client\"` everywhere.\n\n---\n\n### Common Mistakes\n\n**Mistake 1: Adding `\"use client\"` to every component**\n\nThis unnecessarily moves components into the client bundle.\n\n**Mistake 2: Trying to use `useState` in a Server Component**\n\n```tsx\nuseState(...)\n```\n\nrequires a Client Component.\n\n**Mistake 3: Thinking Server Components mean the entire page is inaccessible to the browser**\n\nThe final rendered application is still delivered to the browser. The distinction is where component logic executes and what capabilities are available.\n\n---\n\n### Mini Quiz\n\n1. What is the default component type in the App Router?\n2. When do you need `\"use client\"`?\n3. Can a Server Component use `useState`?\n\n---\n\n# 2. The `\"use client\"` Boundary\n\n### Explanation\n\n`\"use client\"` doesn't mean:\n\n> \"Only this function runs in the browser.\"\n\nIt establishes a **Client Component boundary** (the point where a component subtree becomes part of the client-side React application).\n\nFor example:\n\n```tsx\n\"use client\";\n\nexport default function SearchBox() {\n  // Client Component\n}\n```\n\nComponents imported into this client component are part of the client-side dependency tree.\n\nThis is why you should place the boundary carefully.\n\n---\n\n### Visual Diagram\n\n```text\nServer Component\n      │\n      ├── Header\n      │\n      └── SearchBox (\"use client\")\n                │\n                ├── Input\n                └── Button\n```\n\nA common architecture is:\n\n```text\nServer Component\n        ↓\nServer data\n        ↓\nClient Component\n        ↓\nInteractive UI\n```\n\n---\n\n### Code Example\n\n```tsx\n// app/products/page.tsx\n\nimport SearchBox from \"./SearchBox\";\n\nexport default async function ProductsPage() {\n  const products = await getProducts();\n\n  return (\n    <main>\n      <h1>Products</h1>\n\n      <SearchBox />\n\n      {products.map((product) => (\n        <p key={product.id}>{product.name}</p>\n      ))}\n    </main>\n  );\n}\n```\n\n```tsx\n// app/products/SearchBox.tsx\n\n\"use client\";\n\nimport { useState } from \"react\";\n\nexport default function SearchBox() {\n  const [query, setQuery] = useState(\"\");\n\n  return (\n    <input\n      value={query}\n      onChange={(event) => setQuery(event.target.value)}\n      placeholder=\"Search products\"\n    />\n  );\n}\n```\n\n---\n\n### Key Takeaways\n\nKeep the client boundary as small as practical.\n\nInstead of:\n\n```text\nEntire page → Client\n```\n\nprefer:\n\n```text\nPage → Server\n       │\n       ├── Server content\n       │\n       └── Small interactive component → Client\n```\n\n---\n\n### Common Mistakes\n\nMaking the entire page a Client Component just because one button needs:\n\n```tsx\nonClick\n```\n\nInstead, isolate the interactive part.\n\n---\n\n### Mini Quiz\n\n1. What does `\"use client\"` establish?\n2. Why should the client boundary usually be kept small?\n3. Can a Server Component import a Client Component?\n\n---\n\n# 3. Passing Data from Server Components to Client Components\n\n### Explanation\n\nA common architecture is:\n\n```text\nServer Component\n      ↓\nFetch data\n      ↓\nClient Component\n      ↓\nInteractive UI\n```\n\nFor example:\n\n```tsx\nexport default async function ProductsPage() {\n  const products = await getProducts();\n\n  return <ProductList products={products} />;\n}\n```\n\nThen:\n\n```tsx\n\"use client\";\n\nexport default function ProductList({\n  products,\n}: {\n  products: Product[];\n}) {\n  return (\n    <div>\n      {products.map((product) => (\n        <button key={product.id}>\n          {product.name}\n        </button>\n      ))}\n    </div>\n  );\n}\n```\n\nThis lets the server handle data access while the client handles interaction.\n\n---\n\n### Visual Diagram\n\n```text\nDatabase\n   ↓\nServer Component\n   ↓\nproducts\n   ↓\nprops\n   ↓\nClient Component\n   ↓\nInteractive UI\n```\n\n---\n\n### Key Takeaways\n\n* Server Components can pass data to Client Components through props.\n* This is a common way to combine server-side data fetching with client-side interaction.\n* Keep sensitive server-only logic on the server.\n\n---\n\n### Common Mistakes\n\nNever send secrets as props:\n\n```tsx\n<ClientComponent apiSecret={secret} />\n```\n\nAnything passed into a Client Component should be considered potentially available to client-side code.\n\n---\n\n### Mini Quiz\n\n1. How can a Server Component provide data to a Client Component?\n2. Should server secrets be passed as client props?\n3. Why is this architecture useful?\n\n---\n\n# 4. Fetching Data in Server Components\n\n### Explanation\n\nOne of the major benefits of the App Router is that you can fetch data directly in Server Components.\n\n```tsx\nexport default async function UsersPage() {\n  const response = await fetch(\n    \"https://api.example.com/users\"\n  );\n\n  const users = await response.json();\n\n  return (\n    <ul>\n      {users.map((user: { id: number; name: string }) => (\n        <li key={user.id}>{user.name}</li>\n      ))}\n    </ul>\n  );\n}\n```\n\nYou don't necessarily need:\n\n```text\nuseEffect\n+\nuseState\n```\n\nfor server-side data fetching.\n\n---\n\n### Visual Diagram\n\n```text\nBrowser\n   │\n   │ request\n   ↓\nNext.js Server\n   │\n   ├── fetch API\n   │\n   ├── database\n   │\n   └── other server resources\n   │\n   ↓\nRendered result\n   ↓\nBrowser\n```\n\n---\n\n### Code Example\n\n```tsx\nexport default async function PostsPage() {\n  const response = await fetch(\n    \"https://api.example.com/posts\"\n  );\n\n  if (!response.ok) {\n    throw new Error(\"Failed to fetch posts\");\n  }\n\n  const posts = await response.json();\n\n  return (\n    <main>\n      <h1>Posts</h1>\n\n      {posts.map((post: { id: number; title: string }) => (\n        <article key={post.id}>\n          <h2>{post.title}</h2>\n        </article>\n      ))}\n    </main>\n  );\n}\n```\n\n---\n\n### Key Takeaways\n\n* Server Components can be `async`.\n* Data can be fetched directly during server rendering.\n* You don't automatically need `useEffect` for server-side data.\n* Always handle failed requests appropriately.\n\n---\n\n### Common Mistakes\n\nDon't automatically convert a component to a Client Component just because it needs data.\n\nThis:\n\n```tsx\nconst data = await fetch(...)\n```\n\ncan often remain server-side.\n\n---\n\n### Mini Quiz\n\n1. Can an App Router Server Component be `async`?\n2. Do you need `useEffect` for every API request?\n3. Where does server-side `fetch()` execute?\n\n---\n\n# 5. Caching, Revalidation and Fresh Data\n\n### Explanation\n\nWhen fetching data, you also need to understand **freshness**.\n\nDifferent data has different requirements.\n\nFor example:\n\n```text\nCompany profile\n→ can be cached\n\nNews\n→ refresh every few minutes\n\nAccount balance\n→ needs fresh data\n```\n\nIn modern Next.js, caching and revalidation behavior should be treated explicitly rather than assuming every `fetch()` behaves the same way.\n\nA common pattern is:\n\n```tsx\nfetch(url, {\n  next: {\n    revalidate: 60,\n  },\n});\n```\n\nThis means the data can be revalidated after the specified period.\n\n---\n\n### Visual Diagram\n\n```text\nRequest\n   ↓\nIs cached data usable?\n   │\n ┌─┴─┐\nYes  No\n │    │\n ↓    ↓\nCache Fetch\n │    │\n └─┬──┘\n   ↓\nResponse\n```\n\n**Revalidation** means checking for newer data and updating the cached result.\n\n---\n\n### Code Example\n\n```tsx\nconst response = await fetch(\n  \"https://api.example.com/products\",\n  {\n    next: {\n      revalidate: 60,\n    },\n  }\n);\n```\n\nFor data that should not be reused as cached content, you should choose the appropriate current Next.js caching strategy rather than relying on assumptions.\n\n---\n\n### Key Takeaways\n\nThink about data as:\n\n```text\nStatic\nDynamic\nFrequently changing\nUser-specific\n```\n\nThen choose an appropriate fetching and caching strategy.\n\n---\n\n### Common Mistakes\n\nThe biggest mistake is treating all data equally.\n\nA product catalog and a user's private account balance have very different freshness and caching requirements.\n\n---\n\n### Mini Quiz\n\n1. What does revalidation mean?\n2. Why might a product catalog tolerate caching?\n3. Why might user-specific data require a different strategy?\n\n---\n\n# 6. Server Component vs Client Component — Decision Process\n\n### Explanation\n\nBefore writing a component, ask:\n\n### Question 1\n\nDoes it need:\n\n```text\nuseState?\nuseEffect?\nonClick?\nonChange?\nbrowser API?\n```\n\nIf yes:\n\n```text\nClient Component\n```\n\n### Question 2\n\nDoes it primarily:\n\n```text\nfetch server data?\nread database data?\nrender content?\n```\n\nIf yes:\n\n```text\nServer Component\n```\n\n---\n\n### Visual Diagram\n\n```text\n             Component\n                 │\n        ┌────────┴────────┐\n        │                 │\n Needs browser        Server-side\n interaction?           work?\n        │                 │\n       Yes               Yes\n        ↓                 ↓\n     Client             Server\n```\n\nSometimes you need both:\n\n```text\nServer Page\n    │\n    ├── Server-rendered data\n    │\n    └── Client interactive component\n```\n\nThis mixed architecture is normal in Next.js.\n\n---\n\n### Mini Quiz\n\nClassify these:\n\n1. Product page fetching products from a database.\n2. Search input with live typing state.\n3. Button that opens a modal.\n4. Static documentation page.\n5. User profile fetched on the server with an interactive edit button.\n\n---\n\n# Day 6 Project — Interactive Product Dashboard\n\nBuild a small product dashboard using both Server and Client Components.\n\n### Requirements\n\n```text\napp/\n└── products/\n    ├── page.tsx\n    ├── loading.tsx\n    ├── error.tsx\n    └── components/\n        ├── SearchBox.tsx\n        └── ProductActions.tsx\n```\n\n### Server responsibilities\n\n* Fetch products.\n* Render the initial product list.\n* Handle server-side data access.\n* Handle loading and errors.\n\n### Client responsibilities\n\n* Search input.\n* Interactive buttons.\n* Local UI state.\n* Product actions.\n\n### Architecture\n\n```text\n                    /products\n                        │\n                        ▼\n              Server Component\n                        │\n                 Fetch products\n                        │\n                        ▼\n             ┌──────────────────┐\n             │ Product List     │\n             │                  │\n             │ Product A        │\n             │ Product B        │\n             │ Product C        │\n             └──────────────────┘\n                    │       │\n                    │       │\n                    ▼       ▼\n               SearchBox  Actions\n                  │          │\n                  ▼          ▼\n               Client      Client\n```\n\n## Day 5 + Day 6 Mental Model\n\nBy the end of these two days, you should understand the relationship between the App Router's UI conventions and the Server/Client architecture:\n\n```text\n                    Next.js App Router\n                           │\n          ┌────────────────┼────────────────┐\n          │                │                │\n       Layouts          Loading           Errors\n          │                │                │\n          ▼                ▼                ▼\n     Shared UI        loading.tsx       error.tsx\n          │\n          ▼\n      Templates\n          │\n          ▼\n    Route Structure\n          │\n          ▼\n    Server Components\n          │\n     ┌────┴────┐\n     │         │\n   Server    Client\n     │         │\n     │         ├── useState\n     │         ├── events\n     │         └── browser APIs\n     │\n     ├── fetch data\n     ├── database\n     └── server logic\n```\n\n**Day 5 = how the App Router manages UI around routes.**\n\n**Day 6 = where your React code executes and how Server and Client Components work together.**";
+export const NEXTJS_DAY_6_LESSONS: LessonDay = {
+  day: 6,
+  title: "Server Components",
+  totalMinutes: 78,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "what-server-components-are",
+      title: "What Server Components are and why they exist",
+      durationMinutes: 16,
+      explanation: `A <b>Server Component</b> is a React component that Next.js can render on the server instead of sending the component's JavaScript to the browser. In the App Router, components are Server Components by default.
 
-const SERVER_COMPONENT_LIMITATIONS = `
+This does not mean that the HTML is generated once and never changes. A Server Component can run again for a request or navigation and can use server-side data while producing the UI that React sends to the browser.
 
-# 7. Server Component Benefits and Limitations
+The important idea is that your application does not need to make every component interactive. A product page may need to display database data, while only its search box or button needs browser-side JavaScript.
 
-### Explanation
+Server Components exist partly to let you keep non-interactive work on the server. This can reduce the amount of JavaScript sent to the browser and lets server-side code stay close to databases, files, environment variables, and other backend resources.
 
-Server Components are a strong default because they keep database access, private environment variables, and large dependencies on the server. They can also send less JavaScript to the browser.
+Think of a Server Component as a component whose implementation is allowed to stay on the server. The browser receives the resulting UI representation, not the component's server-only implementation.`,
+      diagram: `Browser request
+      |
+      v
+Next.js server
+      |
+      +--> Server Component
+      |      |
+      |      +--> database / filesystem / private API
+      |
+      v
+Rendered UI
+      |
+      v
+Browser
 
-Their limitation is simple: they do not run in the browser. That means they cannot respond directly to a click, keep local interactive state, use browser storage, or call browser-only hooks such as \`useState\` and \`useEffect\`.
+Server Component code does not need to become browser JavaScript.`,
+      codeExample: {
+        title: "A simple Server Component",
+        code: `// app/products/page.tsx
 
-Think of the split like this:
+import { getProducts } from "@/lib/products";
 
-\`\`\`text
-Server Component
-→ data, server-only logic, initial UI
+export default async function ProductsPage() {
+  const products = await getProducts();
 
-Client Component
-→ clicks, typing, local state, browser APIs
-\`\`\`
+  return (
+    <main>
+      <h1>Products</h1>
 
-### Visual Diagram
-
-\`\`\`text
-Server Component
-  ✓ database/API reads
-  ✓ private environment variables
-  ✓ smaller browser bundle
-  ✗ useState
-  ✗ onClick
-  ✗ localStorage
-\`\`\`
-
-### Code Example
-
-\`\`\`tsx
-// Server Component: fetches the product safely on the server
-export default async function ProductPage() {
-  const product = await getProduct();
-  return <AddToCartButton productId={product.id} />;
+      {products.map((product) => (
+        <article key={product.id}>
+          <h2>{product.name}</h2>
+          <p>{product.price}</p>
+        </article>
+      ))}
+    </main>
+  );
 }
 
-// AddToCartButton is a Client Component because it handles a click.
-\`\`\`
+// No "use client" is needed.
+// This component can fetch data on the server.`,
+      },
+      keyTakeaways: [
+        "Server Components are the default component type in the Next.js App Router.",
+        "They can run server-side code without shipping that implementation to the browser.",
+        "They are useful for data fetching, database access, and non-interactive UI.",
+        "Not every component needs to be interactive.",
+        "Server Components can reduce the amount of client JavaScript your page needs.",
+      ],
+      commonMistakes: [
+        "<b>Thinking Server Components mean static HTML only.</b> They can still render dynamic data on the server.",
+        "<b>Adding `use client` to every component.</b> Only interactive or browser-dependent components need it.",
+        "<b>Thinking Server Components run in the user's browser.</b> Their implementation is executed on the server.",
+      ],
+      quiz: [
+        {
+          question: "What is the default component type in the Next.js App Router?",
+          options: [
+            "Client Component",
+            "Server Component",
+            "Static Component",
+            "Browser Component",
+          ],
+          correctIndex: 1,
+          explanation: "A component becomes a Client Component only when you explicitly create a client boundary with `use client`.",
+        },
+        {
+          question: "Why can Server Components be useful for database access?",
+          options: [
+            "The browser becomes a database server",
+            "The database credentials are sent to the browser",
+            "The component can access the database on the server without exposing that implementation to the browser",
+            "React automatically converts SQL into HTML",
+          ],
+          correctIndex: 2,
+          explanation: "Server-side execution lets sensitive server resources remain on the server.",
+        },
+      ],
+    },
+    {
+      id: "server-vs-client-components",
+      title: "Server vs Client Components",
+      durationMinutes: 17,
+      explanation: `The biggest difference between Server and Client Components is not simply where the HTML appears. The important difference is <b>where the component's JavaScript is allowed to run</b> and what APIs the component can use.
 
-### Key Takeaways
+A Server Component is the default. It is a good fit for reading data, rendering content, and accessing server-only resources. A Client Component is used when the component needs browser-side behavior such as state, event handlers, effects, or browser APIs.
 
-• Start with a Server Component when you do not need browser interaction.
-• Move only the interactive part into a Client Component.
-• The two component types are designed to work together.
+For example, a product details page can remain a Server Component while an Add to Cart button is a Client Component. The page can fetch the product on the server, while the button handles the user's click in the browser.
 
-### Common Mistakes
+This gives you a useful architectural rule: start on the server, then move only the interactive part into the client.`,
+      diagram: `                 App
+                  |
+        +---------+---------+
+        |                   |
+        v                   v
+  Server Component    Client Component
+        |                   |
+   fetch data          useState()
+   DB access            onClick
+   private APIs        browser APIs
+        |                   |
+        +---------+---------+
+                  |
+               UI output`,
+      codeExample: {
+        title: "Server page with a small Client Component",
+        code: `// app/products/[id]/page.tsx
+import AddToCartButton from "@/components/AddToCartButton";
 
-• Treating Server Components as a replacement for every Client Component.
-• Moving an entire page to the client because one small button needs an event handler.
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProduct(id);
 
-### Mini Quiz
+  return (
+    <main>
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
 
-1. Why can a Server Component safely read a private environment variable?
-2. Which component should own \`useState\`?
-3. What is a good reason to keep the client boundary small?
-`;
+      <AddToCartButton productId={product.id} />
+    </main>
+  );
+}
 
-export const NEXTJS_DAY_6_LESSONS = pastedLessonDay(6, "Day 6", `${PASTED_CONTENT}${SERVER_COMPONENT_LIMITATIONS}`);
+// components/AddToCartButton.tsx
+"use client";
+
+import { useState } from "react";
+
+export default function AddToCartButton({
+  productId,
+}: {
+  productId: string;
+}) {
+  const [added, setAdded] = useState(false);
+
+  return (
+    <button onClick={() => setAdded(true)}>
+      {added ? "Added" : "Add to cart"}
+    </button>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Server Components are the default in the App Router.",
+        "Client Components are for browser-side interactivity and APIs.",
+        "A Server Component can render a Client Component.",
+        "A Client Component does not automatically mean the entire application must become client-side.",
+        "Prefer the smallest possible client boundary.",
+      ],
+      commonMistakes: [
+        "<b>Making an entire page client-side because one button needs state.</b> Keep the page on the server and isolate the button.",
+        "<b>Using browser APIs in a Server Component.</b> APIs such as `window` and `localStorage` belong in client-side code.",
+        "<b>Assuming Server Components cannot render Client Components.</b> They commonly compose together.",
+      ],
+      quiz: [
+        {
+          question: "Which component should normally contain an `onClick` handler?",
+          options: [
+            "Server Component",
+            "Client Component",
+            "Layout only",
+            "Route Handler",
+          ],
+          correctIndex: 1,
+          explanation: "Event handlers require browser-side JavaScript, so the component must be inside a client boundary.",
+        },
+        {
+          question: "What is a good default architecture for a mostly static product page with one interactive button?",
+          options: [
+            "Make the entire page a Client Component",
+            "Make the entire app client-side",
+            "Keep the page on the server and make only the button a Client Component",
+            "Move the product data into localStorage",
+          ],
+          correctIndex: 2,
+          explanation: "This keeps the client boundary small and preserves server-side data fetching.",
+        },
+      ],
+    },
+    {
+      id: "server-component-boundaries",
+      title: "Component boundaries and server-only code",
+      durationMinutes: 17,
+      explanation: `A <b>component boundary</b> is the point where Next.js separates server-side code from client-side code. The boundary becomes especially important when a Client Component imports another module: that module is now part of the client-side dependency graph.
+
+This is why \`"use client"\` should be placed deliberately. It is not just a command saying "run this function in the browser." It establishes a boundary for the module and its imported dependencies.
+
+Server-only code includes things such as database queries, filesystem access, private environment variables, and backend SDKs that should never be exposed to the browser.
+
+A useful habit is to keep server-only operations in clearly named modules such as \`lib/server/\` and keep interactive UI in \`components/\`. In larger applications, the \`server-only\` package can also be used to make accidental imports fail during development/build time.
+
+The goal is not to avoid Client Components completely. The goal is to prevent server-only implementation details from crossing the boundary accidentally.`,
+      diagram: `app/page.tsx
+    |
+    +--> Server Component
+    |       |
+    |       +--> lib/server/products.ts
+    |               |
+    |               +--> database
+    |
+    +--> components/SearchBox.tsx
+            |
+            +--> "use client"
+                    |
+                    +--> browser APIs
+                    +--> state/events
+
+       SERVER | CLIENT
+--------------|----------------
+ database     | useState
+ secrets      | onClick
+ filesystem   | window
+ private SDK  | localStorage`,
+      codeExample: {
+        title: "Protecting a server-only module",
+        code: `// lib/server/products.ts
+import "server-only";
+
+import { db } from "@/lib/db";
+
+export async function getProducts() {
+  return db.product.findMany();
+}
+
+// app/products/page.tsx
+import { getProducts } from "@/lib/server/products";
+
+export default async function ProductsPage() {
+  const products = await getProducts();
+
+  return (
+    <ul>
+      {products.map((product) => (
+        <li key={product.id}>{product.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// Do not import lib/server/products.ts from a Client Component.`,
+      },
+      keyTakeaways: [
+        "A `use client` directive creates a client boundary.",
+        "Imported modules can become part of the client dependency graph.",
+        "Database access, private secrets, and server SDKs should stay on the server.",
+        "The `server-only` package can help catch accidental server-to-client imports.",
+        "Clear folder boundaries make architecture easier to understand.",
+      ],
+      commonMistakes: [
+        "<b>Importing a database module into a Client Component.</b> The dependency boundary is now wrong.",
+        "<b>Reading private environment variables from browser code.</b> Secrets must remain server-side.",
+        "<b>Putting server and client responsibilities in one huge component.</b> Split the component around the interaction boundary.",
+      ],
+      quiz: [
+        {
+          question: "What does a Client Component boundary affect?",
+          options: [
+            "Only CSS",
+            "The JavaScript dependency graph that can run on the client",
+            "Only the URL",
+            "Only database indexes",
+          ],
+          correctIndex: 1,
+          explanation: "Modules imported through a client boundary can become part of the browser-side bundle.",
+        },
+        {
+          question: "What is `server-only` useful for?",
+          options: [
+            "Making every component interactive",
+            "Preventing accidental use of a server-only module from client code",
+            "Creating API routes",
+            "Replacing React",
+          ],
+          correctIndex: 1,
+          explanation: "It helps make an architectural mistake visible during development or build.",
+        },
+      ],
+    },
+    {
+      id: "benefits-and-limitations",
+      title: "Benefits, limitations, and when Server Components fit",
+      durationMinutes: 15,
+      explanation: `Server Components provide several practical benefits. They can keep database and backend access on the server, reduce client JavaScript, and let data fetching happen close to the resources that provide the data.
+
+They also have limitations. A Server Component cannot use browser-only APIs such as \`window\` or \`localStorage\`, and it cannot directly attach browser event handlers such as \`onClick\`. React state and other client-side hooks that require browser interaction belong inside a Client Component.
+
+The right question is not "Should my app use Server Components or Client Components?" A real Next.js application normally uses both. The architectural question is which parts need server execution and which parts need browser interaction.
+
+A strong default is: <b>render data-heavy and non-interactive UI on the server, and isolate interactive behavior into small Client Components.</b>`,
+      diagram: `Need database/private API?
+        |
+       YES
+        |
+   Server Component
+        |
+        +---- Need click/state/browser API?
+                    |
+                   YES
+                    |
+             Small Client Component
+
+Need neither?
+        |
+        v
+Start with Server Component`,
+      codeExample: {
+        title: "A practical server-first component tree",
+        code: `// ProductPage        -> Server Component
+// ProductDetails     -> Server Component
+// ProductReviews     -> Server Component
+// QuantitySelector   -> Client Component
+// AddToCartButton    -> Client Component
+
+export default async function ProductPage() {
+  const product = await getProduct();
+
+  return (
+    <>
+      <ProductDetails product={product} />
+      <ProductReviews productId={product.id} />
+
+      <QuantitySelector />
+      <AddToCartButton productId={product.id} />
+    </>
+  );
+}`,
+      },
+      keyTakeaways: [
+        "Server Components can reduce the amount of browser JavaScript.",
+        "They are a strong fit for data-heavy, non-interactive UI.",
+        "They cannot directly use browser-only APIs or event handlers.",
+        "Most real applications use both Server and Client Components.",
+        "Start server-first and add client boundaries where interaction requires them.",
+      ],
+      commonMistakes: [
+        "<b>Treating Server Components as universally better.</b> Interactive UI still needs client-side code.",
+        "<b>Treating every hook as server-compatible.</b> Hooks that depend on browser interaction belong in Client Components.",
+        "<b>Creating large client boundaries.</b> Large boundaries can send more JavaScript than necessary.",
+      ],
+      quiz: [
+        {
+          question: "Which feature requires a Client Component?",
+          options: [
+            "Reading a database on the server",
+            "Rendering a static heading",
+            "Handling a browser click with `onClick`",
+            "Formatting a server-fetched string",
+          ],
+          correctIndex: 2,
+          explanation: "Event handlers need browser-side JavaScript.",
+        },
+        {
+          question: "What is the recommended starting point for most App Router components?",
+          options: [
+            "Start as Client Components",
+            "Start as Server Components and add client boundaries when needed",
+            "Start as static HTML",
+            "Start as API routes",
+          ],
+          correctIndex: 1,
+          explanation: "The App Router is server-first by default, and this keeps interactive JavaScript focused.",
+        },
+      ],
+    },
+  ],
+  finalQuiz: [
+    {
+      question: "What is the default component type in the App Router?",
+      options: [
+        "Client Component",
+        "Server Component",
+        "Browser Component",
+        "Static Component",
+      ],
+      correctIndex: 1,
+      explanation: "Components are Server Components by default unless you introduce a client boundary.",
+    },
+    {
+      question: "Why would you keep database access in a Server Component?",
+      options: [
+        "To expose the database to the browser",
+        "To keep server-side data access and credentials on the server",
+        "To make every component interactive",
+        "To remove React from the application",
+      ],
+      correctIndex: 1,
+      explanation: "Server execution keeps backend resources away from the browser.",
+    },
+    {
+      question: "Which feature normally requires a Client Component?",
+      options: [
+        "Database querying",
+        "Rendering a product title",
+        "Using `onClick` and `useState`",
+        "Reading a server environment variable",
+      ],
+      correctIndex: 2,
+      explanation: "Interactive browser behavior belongs in the client.",
+    },
+    {
+      question: "What is the main purpose of keeping the client boundary small?",
+      options: [
+        "To create more routes",
+        "To avoid sending unnecessary JavaScript to the browser",
+        "To disable Server Components",
+        "To replace layouts",
+      ],
+      correctIndex: 1,
+      explanation: "A focused boundary lets the rest of the UI remain server-rendered.",
+    },
+    {
+      question: "What should you do when a mostly server-rendered page needs one interactive control?",
+      options: [
+        "Make the entire page a Client Component",
+        "Move all data into localStorage",
+        "Keep the page server-side and isolate the interactive control in a Client Component",
+        "Turn the page into a Route Handler",
+      ],
+      correctIndex: 2,
+      explanation: "This is one of the most useful server-first composition patterns.",
+    },
+  ],
+  project: {
+    name: "Server-rendered product catalog",
+    goal: "Build a product page that keeps data fetching on the server while isolating interactive behavior in small Client Components.",
+    brief: "Create a product catalog with a server-rendered product list, product details, and reviews. Add a client-side quantity selector and Add to Cart interaction without turning the whole page into a Client Component.",
+    steps: [
+      "Create a product list page as a Server Component.",
+      "Fetch product data from a server-side module.",
+      "Create a dynamic product details route using `[id]`.",
+      "Keep product and review rendering in Server Components.",
+      "Create a Client Component for quantity selection.",
+      "Create a Client Component for Add to Cart behavior.",
+      "Verify that server-only modules are not imported by Client Components.",
+    ],
+    acceptance: [
+      "Product data is fetched from a Server Component.",
+      "Interactive controls use Client Components.",
+      "The main product page does not contain `use client`.",
+      "Server-only code is isolated from browser code.",
+      "The application clearly demonstrates the difference between server and client responsibilities.",
+    ],
+    stretch: [
+      "Add a server-side search form and keep only the interactive input client-side.",
+      "Add optimistic cart feedback with a small Client Component.",
+      "Use `server-only` to protect a database access module.",
+    ],
+  },
+};
