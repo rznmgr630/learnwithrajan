@@ -53,18 +53,19 @@ function notify(mode: FocusMode) {
 
 function playBell(context: AudioContext) {
   const now = context.currentTime;
-  [523.25, 659.25].forEach((frequency, index) => {
+  Array.from({ length: 5 }, (_, repeat) => repeat).forEach((repeat) => [523.25, 659.25].forEach((frequency, index) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
+    const startAt = now + repeat * 1.35 + index * 0.22;
     oscillator.type = "sine";
     oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0, now + index * 0.22);
-    gain.gain.linearRampToValueAtTime(0.12, now + index * 0.22 + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.22 + 1.2);
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(0.12, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startAt + 1.2);
     oscillator.connect(gain).connect(context.destination);
-    oscillator.start(now + index * 0.22);
-    oscillator.stop(now + index * 0.22 + 1.25);
-  });
+    oscillator.start(startAt);
+    oscillator.stop(startAt + 1.25);
+  }));
 }
 
 function isSameTimer(left: SavedTimer, right: SavedTimer) {
