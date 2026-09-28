@@ -88,8 +88,7 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_45%,#f59e0b)]",
     days: [
       nextjsDayRow(21, ["auth", "next-auth"]), nextjsDayRow(22, ["auth", "security"]), nextjsDayRow(23, ["security", "routing"]),
-      nextjsDayRow(24, ["server-security", "security"]), nextjsDayRow(25, ["auth", "security"]),
-      nextjsDayRow(26, ["security", "production"]),
+      nextjsDayRow(24, ["server-security", "security"]), nextjsDayRow(25, ["security", "production"]),
     ],
   },
 ];
