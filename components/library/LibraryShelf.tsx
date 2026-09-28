@@ -359,6 +359,15 @@ export function LibraryShelf() {
           </Link>
         </div>
       </section>
+      <section className="mt-12" aria-labelledby="fiction-heading">
+        <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-cyan-600">{t("library.collection")}</p><h2 id="fiction-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.fiction")}</h2></div><span className="hidden text-sm text-[var(--faint)] sm:block">03</span></div>
+        <div className="mt-5 space-y-4">
+          <Link href="/library/fiction/peter-pan-and-wendy" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]">
+            <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#d8ecf0] p-8 sm:min-h-full"><div className="relative flex h-60 w-40 flex-col justify-between bg-[#14647c] p-5 text-[#f5fbdf] shadow-[12px_12px_0_#0e435355] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#c5eff4]">J. M. Barrie</p><h3 className="font-serif text-3xl leading-[0.95]">Peter Pan<br />and Wendy</h3><span className="h-1 w-12 bg-[#f2cd66]" /></div></div>
+            <div className="flex flex-col p-7 sm:p-9"><div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-cyan-600"><span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />{t("library.fiction")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-cyan-600">{t("library.peterPan.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.peterPan.subtitle")}</p><span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span></div>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
