@@ -36,7 +36,7 @@ function stripCodeFences(code: string) {
 
       if (!line.trim()) return [line];
 
-      const looksLikeCode = /[{}();=<>[\]]|^\s*"[^"]+"\s*:|^\s*(?:async |await |const |let |var |import |export |return |if |else |for |while |function |class |interface |type |#|\/\/)/.test(line);
+      const looksLikeCode = /[{}();=<>[\]]|^\s*"[^"]+"\s*:|^\s*(?:async |await |const |let |var |import |export |return |if |else |for |while |function |class |interface |type |console\.|#|\/\/)/.test(line);
       return inCodeBlock && looksLikeCode ? [line] : [`// ${line.trim()}`];
     })
     .join("\n");
