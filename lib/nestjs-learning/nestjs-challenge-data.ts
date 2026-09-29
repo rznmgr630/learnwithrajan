@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 9;
+export const NESTJS_TOTAL_DAYS = 10;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -43,6 +43,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 7, title: { en: "NestJS Project Structure", np: "NestJS Project Structure", jp: "NestJS Project Structure" }, tags: [{ slug: "structure", label: { en: "structure", np: "structure", jp: "structure" } }, { slug: "structure", label: { en: "structure", np: "structure", jp: "structure" } }] },
       { day: 8, title: { en: "Controllers", np: "Controllers", jp: "Controllers" }, tags: [{ slug: "controllers", label: { en: "controllers", np: "controllers", jp: "controllers" } }, { slug: "routes", label: { en: "routes", np: "routes", jp: "routes" } }] },
       { day: 9, title: { en: "Providers & Services", np: "Providers & Services", jp: "Providers & Services" }, tags: [{ slug: "providers", label: { en: "providers", np: "providers", jp: "providers" } }, { slug: "services", label: { en: "services", np: "services", jp: "services" } }] },
+      { day: 10, title: { en: "Modules", np: "Modules", jp: "Modules" }, tags: [{ slug: "modules", label: { en: "modules", np: "modules", jp: "modules" } }, { slug: "fundamentals", label: { en: "fundamentals", np: "fundamentals", jp: "fundamentals" } }] },
     ],
   },
 ];
