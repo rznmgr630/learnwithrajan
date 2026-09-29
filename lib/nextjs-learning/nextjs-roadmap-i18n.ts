@@ -55,6 +55,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "web-vitals": { en: "Web Vitals", np: "वेब भाइटल्स", jp: "ウェブバイタル" },
   debugging: { en: "debugging", np: "डिबगिङ", jp: "デバッグ" },
   scalability: { en: "scalability", np: "स्केलेबिलिटी", jp: "スケーラビリティ" },
+  testing: { en: "testing", np: "टेस्टिङ", jp: "テスト" }, vitest: { en: "Vitest", np: "Vitest", jp: "Vitest" }, components: { en: "components", np: "कम्पोनेन्ट", jp: "コンポーネント" }, playwright: { en: "Playwright", np: "Playwright", jp: "Playwright" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -169,6 +170,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   33: { en: "Caching Architecture", np: "क्यासिङ आर्किटेक्चर", jp: "キャッシュアーキテクチャ" },
   34: { en: "Performance Debugging", np: "प्रदर्शन डिबगिङ", jp: "パフォーマンスデバッグ" },
   35: { en: "Production Scalability", np: "प्रोडक्सन स्केलेबिलिटी", jp: "本番スケーラビリティ" },
+  36: { en: "Unit and Integration Testing", np: "युनिट र इन्टिग्रेसन टेस्टिङ", jp: "ユニット・統合テスト" }, 37: { en: "Component Testing", np: "कम्पोनेन्ट टेस्टिङ", jp: "コンポーネントテスト" }, 38: { en: "End-to-End Testing", np: "एन्ड-टु-एन्ड टेस्टिङ", jp: "エンドツーエンドテスト" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -221,6 +223,7 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     np: "PHASE 7 · प्रदर्शन (दिन ३१)",
     jp: "PHASE 7 · パフォーマンス（31日目）",
   },
+  "nextjs-phase-8": { en: "PHASE 8 · TESTING AND CODE QUALITY (Days 36–39)", np: "PHASE 8 · टेस्टिङ र कोड गुणस्तर", jp: "PHASE 8 · テストとコード品質" },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
     np: "Phase 0 · तयारी",
