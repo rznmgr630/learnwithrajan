@@ -328,7 +328,7 @@ export function RichParagraph({ text, className }: RichTextProps) {
     const line = lines[j];
 
     const firstContent = lines.slice(j + 1).find((candidate) => candidate.trim());
-    if (/^(?:code )?example:\s*$/i.test(line.trim()) && firstContent && startsCodeExample(firstContent)) {
+    if (/^(?:(?:code )?example|(?:(?:a|an|the)\s+)?(?:basic|simple|complete|practical)\s+example\s+is):\s*$/i.test(line.trim()) && firstContent && startsCodeExample(firstContent)) {
       const code: string[] = [];
       j++;
       while (j < lines.length) {

@@ -42,6 +42,10 @@ import { NEXTJS_DAY_27_LESSONS } from "@/lib/nextjs-learning/nextjs-day-27-lesso
 import { NEXTJS_DAY_28_LESSONS } from "@/lib/nextjs-learning/nextjs-day-28-lessons";
 import { NEXTJS_DAY_29_LESSONS } from "@/lib/nextjs-learning/nextjs-day-29-lessons";
 import { NEXTJS_DAY_30_LESSONS } from "@/lib/nextjs-learning/nextjs-day-30-lessons";
+import { NEXTJS_DAY_31 } from "@/lib/nextjs-learning/nextjs-day-31-lessons";
+import { NEXTJS_DAY_32 } from "@/lib/nextjs-learning/nextjs-day-32-lessons";
+import { NEXTJS_DAY_33 } from "@/lib/nextjs-learning/nextjs-day-33-lessons";
+import { NEXTJS_DAY_34 } from "@/lib/nextjs-learning/nextjs-day-34-lessons";
 import { useNextjsProgress } from "@/hooks/use-nextjs-progress";
 
 const TAG_PILL =
@@ -79,6 +83,10 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   28: NEXTJS_DAY_28_LESSONS,
   29: NEXTJS_DAY_29_LESSONS,
   30: NEXTJS_DAY_30_LESSONS,
+  31: NEXTJS_DAY_31,
+  32: NEXTJS_DAY_32,
+  33: NEXTJS_DAY_33,
+  34: NEXTJS_DAY_34,
 };
 
 export function NextjsRoadmap() {
@@ -199,7 +207,7 @@ export function NextjsRoadmap() {
                             checked ? "text-[var(--muted)]" : "text-[var(--text)] group-hover:text-[var(--accent)]",
                           ].join(" ")}
                         >
-                          <RichText text={pickLocalized(d.title, locale)} />
+                          {stripRichMarkers(pickLocalized(d.title, locale))}
                         </span>
 
                         <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
