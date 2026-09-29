@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { BrandMark } from "@/components/BrandMark";
 import { useTheme } from "@/components/ThemeProvider";
 
 const links = [
@@ -92,9 +93,9 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           href="/"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[var(--elevated)] text-xs font-bold tracking-tight text-[var(--text)] transition hover:text-[var(--accent)] sm:block sm:h-auto sm:w-auto sm:bg-transparent sm:text-base sm:font-semibold"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] bg-[var(--surface)] text-[var(--accent)] transition hover:border-[var(--accent)] hover:bg-[color-mix(in_oklab,var(--accent)_12%,var(--surface))] sm:block sm:h-auto sm:w-auto sm:border-0 sm:bg-transparent sm:text-base sm:font-semibold sm:tracking-tight sm:text-[var(--text)] sm:hover:border-0 sm:hover:bg-transparent sm:hover:text-[var(--accent)]"
         >
-          <span className="sm:hidden">LR</span>
+          <BrandMark className="h-4 w-4 sm:hidden" />
           <span className="hidden whitespace-nowrap sm:inline">{t("site.title")}</span>
         </Link>
         <div className="flex min-w-0 items-center gap-1 sm:gap-3">
