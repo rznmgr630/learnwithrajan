@@ -339,6 +339,21 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.nestjs.title": {
+    en: "NestJS",
+    np: "NestJS",
+    jp: "NestJS",
+  },
+  "hub.nestjs.subtitle": {
+    en: "Build TypeScript backends with NestJS, starting with the Node.js foundations it runs on.",
+    np: "NestJS ले चल्ने Node.js आधारबाट TypeScript ब्याकएन्ड बनाउनुहोस्।",
+    jp: "NestJSが動くNode.jsの基礎から、TypeScriptバックエンドを作ります。",
+  },
+  "hub.nestjs.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
   "hub.js.title": {
     en: "JavaScript · Fundamentals to Senior",
     np: "JavaScript · Fundamentals देखि Senior सम्म",
@@ -554,6 +569,16 @@ export const UI_STRINGS = {
     en: "Node.js 24 · runtime to production",
     np: "Node.js 24 · रनटाइमदेखि उत्पादनसम्म",
     jp: "Node.js 24 · ランタイムから本番まで",
+  },
+  "nestjsRoadmap.title": {
+    en: "NestJS · backend foundations",
+    np: "NestJS · ब्याकएन्ड आधार",
+    jp: "NestJS・バックエンドの基礎",
+  },
+  "nestjsRoadmap.subtitle": {
+    en: "Start with the Node.js runtime knowledge NestJS builds on.",
+    np: "NestJS ले प्रयोग गर्ने Node.js runtime ज्ञानबाट सुरु गर्नुहोस्।",
+    jp: "NestJSの土台となるNode.jsランタイムの知識から始めます。",
   },
   "nodejsRoadmap.subtitle": {
     en: "Event loop → streams → npm & testing → Fastify → Postgres → auth → observability → performance → Docker & deploy. Behaviour is measured on Node 24, so cross-check with nodejs.org/docs.",

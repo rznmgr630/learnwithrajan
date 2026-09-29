@@ -455,7 +455,8 @@ export function LessonDayDetail({
               preserveExplanation={
                 track === "react-native" ||
                 track === "nextjs" ||
-                track === "js"
+                track === "js" ||
+                track === "nestjs"
               }
               showExampleInExplanation={
                 track === "nextjs" &&
