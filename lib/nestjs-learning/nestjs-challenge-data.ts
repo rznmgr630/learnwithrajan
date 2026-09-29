@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 7;
+export const NESTJS_TOTAL_DAYS = 8;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -41,6 +41,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [
       { day: 6, title: { en: "What NestJS Is", np: "NestJS के हो", jp: "NestJSとは" }, tags: [{ slug: "nestjs", label: { en: "NestJS", np: "NestJS", jp: "NestJS" } }, { slug: "fundamentals", label: { en: "fundamentals", np: "आधार", jp: "基礎" } }] },
       { day: 7, title: { en: "NestJS Project Structure", np: "NestJS Project Structure", jp: "NestJS Project Structure" }, tags: [{ slug: "structure", label: { en: "structure", np: "structure", jp: "structure" } }, { slug: "structure", label: { en: "structure", np: "structure", jp: "structure" } }] },
+      { day: 8, title: { en: "Controllers", np: "Controllers", jp: "Controllers" }, tags: [{ slug: "controllers", label: { en: "controllers", np: "controllers", jp: "controllers" } }, { slug: "routes", label: { en: "routes", np: "routes", jp: "routes" } }] },
     ],
   },
 ];
