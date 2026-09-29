@@ -9,6 +9,7 @@ import { useReactProgress } from "@/hooks/use-react-progress";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 import { useNextjsProgress } from "@/hooks/use-nextjs-progress";
 import { useNodejsProgress } from "@/hooks/use-nodejs-progress";
+import { useNestjsProgress } from "@/hooks/use-nestjs-progress";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 import { useDevopsProgress } from "@/hooks/use-devops-progress";
@@ -18,6 +19,7 @@ import { REACT_TOTAL_DAYS } from "@/lib/react-learning/react-challenge-data";
 import { LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
 import { NEXTJS_TOTAL_DAYS } from "@/lib/nextjs-learning/nextjs-challenge-data";
 import { NODEJS_TOTAL_DAYS } from "@/lib/nodejs-learning/nodejs-challenge-data";
+import { NESTJS_TOTAL_DAYS } from "@/lib/nestjs-learning/nestjs-challenge-data";
 import { DEVOPS_TOTAL_DAYS } from "@/lib/devops-learning/devops-challenge-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
@@ -45,6 +47,7 @@ export function ProgrammingTracks() {
   const laravel = useLaravelProgress();
   const nextjs = useNextjsProgress();
   const nodejs = useNodejsProgress();
+  const nestjs = useNestjsProgress();
   const js = useJsProgress();
   const reactNative = useReactNativeProgress();
   const devops = useDevopsProgress();
@@ -350,6 +353,26 @@ export function ProgrammingTracks() {
           <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.nodejs.cta")}
           </span>
+        </Link>
+
+        <Link href="/learn/nestjs" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("hub.nestjs.title")}</h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.nestjs.subtitle")}</p>
+            </div>
+            <PinButton id="nestjs" />
+          </div>
+          <div className="mt-6" suppressHydrationWarning>
+            <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+              <span>{t("hub.backend.progress")}</span>
+              <span className="tabular-nums text-[var(--muted)]">{nestjs.completedCount}/{NESTJS_TOTAL_DAYS} {t("hub.backend.days")}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+              <div className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500" style={{ width: `${nestjs.percent}%` }} />
+            </div>
+          </div>
+          <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">{t("hub.nestjs.cta")}</span>
         </Link>
       </HubAccordionSection>
 
