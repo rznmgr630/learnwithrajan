@@ -92,6 +92,22 @@ export function pastedLessonDay(day: number, title: string, content: string) {
         rawMiniQuiz: parts["mini quiz"],
       };
     }),
-    finalQuiz: [],
+    finalQuiz: day === 0 ? ([
+      ["Which code can access `window`?", ["Browser code", "Server-only code", "Database code"], 0, "`window` is a browser API."],
+      ["What does HTTP 401 mean?", ["Not authenticated", "Not authorized", "Not found"], 0, "401 means the user has not authenticated."],
+      ["What does HTTP 403 mean?", ["Not authorized", "Not authenticated", "Server error"], 0, "403 means identity exists but permission is missing."],
+      ["What does `HttpOnly` protect?", ["Cookie access from browser JavaScript", "Database queries", "CSS files"], 0, "It prevents normal client JavaScript from reading the cookie."],
+      ["What is SSR?", ["HTML produced on the server", "HTML produced only by CSS", "A database index"], 0, "Server-side rendering produces HTML on the server."],
+      ["What is hydration?", ["React attaching behavior to HTML", "Encrypting a cookie", "Caching a query"], 0, "Hydration makes server-rendered React UI interactive."],
+      ["What does `Promise.all()` do?", ["Waits for promises together", "Cancels requests", "Creates a cookie"], 0, "It coordinates multiple promise results."],
+      ["What is authentication?", ["Verifying identity", "Checking permissions", "Caching a route"], 0, "Authentication answers who the user is."],
+      ["What is authorization?", ["Checking allowed actions", "Verifying identity", "Rendering HTML"], 0, "Authorization answers what an identified user can do."],
+      ["Why use TypeScript?", ["To catch type mistakes earlier", "To replace React", "To avoid HTTP"], 0, "Types help catch invalid assumptions before runtime."],
+    ] as Array<[string, string[], number, string]>).map(([question, options, _correctIndex, explanation], index) => {
+      const correctIndex = (index * 2 + 1) % options.length;
+      const shuffledOptions = [...options.slice(1)];
+      shuffledOptions.splice(correctIndex, 0, options[0]);
+      return { question, options: shuffledOptions, correctIndex, explanation };
+    }) : [],
   });
 }
