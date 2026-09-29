@@ -54,6 +54,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   performance: { en: "performance", np: "प्रदर्शन", jp: "パフォーマンス" },
   "web-vitals": { en: "Web Vitals", np: "वेब भाइटल्स", jp: "ウェブバイタル" },
   debugging: { en: "debugging", np: "डिबगिङ", jp: "デバッグ" },
+  scalability: { en: "scalability", np: "स्केलेबिलिटी", jp: "スケーラビリティ" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -167,6 +168,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   32: { en: "Next.js Performance Fundamentals", np: "Next.js प्रदर्शन आधार", jp: "Next.js パフォーマンス基礎" },
   33: { en: "Caching Architecture", np: "क्यासिङ आर्किटेक्चर", jp: "キャッシュアーキテクチャ" },
   34: { en: "Performance Debugging", np: "प्रदर्शन डिबगिङ", jp: "パフォーマンスデバッグ" },
+  35: { en: "Production Scalability", np: "प्रोडक्सन स्केलेबिलिटी", jp: "本番スケーラビリティ" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {

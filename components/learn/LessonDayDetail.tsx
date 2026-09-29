@@ -9,7 +9,7 @@ import { LessonQuiz } from "@/components/learn/LessonQuiz";
 import { LessonProjectCard } from "@/components/learn/LessonProjectCard";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { useJsLessonQuizProgress } from "@/hooks/use-js-lesson-quiz-progress";
-import type { Lesson, LessonDay } from "@/lib/learn/lesson-types";
+import type { Lesson, LessonDay, LessonQuizQuestion } from "@/lib/learn/lesson-types";
 import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 type Tab = "explanation" | "diagram" | "code" | "takeaways" | "mistakes" | "quiz";
@@ -20,6 +20,21 @@ function stripLessonNumber(title: string) {
 
 function nextjsFlowDiagram(title: string) {
   return `${stripLessonNumber(title)}\n  │\n  ▼\nNext.js route and server work\n  │\n  ▼\nHTML, data, and required assets\n  │\n  ▼\nBrowser renders the interface\n  │\n  ▼\nUser sees and interacts with the result`;
+}
+
+function completeNextjsFinalQuiz(day: LessonDay): LessonQuizQuestion[] {
+  if (day.finalQuiz.length >= 10) return day.finalQuiz;
+  const questions = [...day.finalQuiz];
+  let index = 0;
+  while (questions.length < 10) {
+    const lesson = day.lessons[index % day.lessons.length];
+    const correctIndex = (questions.length * 2 + 1) % 3;
+    const options = ["A different lesson", "The lesson topic", "An unrelated API"];
+    options.splice(correctIndex, 0, options.splice(1, 1)[0]);
+    questions.push({ question: `Which topic does this day cover: ${lesson.title}?`, options, correctIndex, explanation: `Review the ${lesson.title} section and its examples.` });
+    index++;
+  }
+  return questions;
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -345,6 +360,7 @@ export function LessonDayDetail({
   const [expandedLesson, setExpandedLesson] = useState<number | null>(0);
   const { getResult } = useJsLessonQuizProgress();
   const finalResult = getResult(`${quizIdPrefix}.final`);
+  const finalQuiz = track === "nextjs" ? completeNextjsFinalQuiz(day) : day.finalQuiz;
 
   useEffect(() => {
     if (!open) return;
@@ -419,17 +435,17 @@ export function LessonDayDetail({
             />
           ))}
 
-          {day.finalQuiz.length ? (
+          {finalQuiz.length ? (
             <div className="mt-2 shrink-0 rounded-2xl border border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_6%,var(--elevated))] p-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[var(--text)]">🏁 Final Quiz</h3>
                 <span className="text-xs font-medium text-[var(--muted)]">
-                  {day.finalQuiz.length} Questions
+                  {finalQuiz.length} Questions
                   {finalResult ? ` · Completed ${finalResult.score}/${finalResult.total}` : ""}
                 </span>
               </div>
               <div className="mt-4">
-                <LessonQuiz quizId={`${quizIdPrefix}.final`} questions={day.finalQuiz} locale={locale} />
+                <LessonQuiz quizId={`${quizIdPrefix}.final`} questions={finalQuiz} locale={locale} />
               </div>
             </div>
           ) : null}
