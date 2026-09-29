@@ -16,11 +16,12 @@ import { NESTJS_DAY_9_LESSONS } from "@/lib/nestjs-learning/nestjs-day-9-lessons
 import { NESTJS_DAY_10_LESSONS } from "@/lib/nestjs-learning/nestjs-day-10-lessons";
 import { NESTJS_DAY_11_LESSONS } from "@/lib/nestjs-learning/nestjs-day-11-lessons";
 import { NESTJS_DAY_12_LESSONS } from "@/lib/nestjs-learning/nestjs-day-12-lessons";
+import { NESTJS_DAY_13_LESSONS } from "@/lib/nestjs-learning/nestjs-day-13-lessons";
 import { NESTJS_ROADMAP_WEEKS, NESTJS_TOTAL_DAYS } from "@/lib/nestjs-learning/nestjs-challenge-data";
 import { useNestjsProgress } from "@/hooks/use-nestjs-progress";
 
 const TAG_PILL = "rounded-full border border-[var(--border)]/60 bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--faint)]";
-const LESSON_DAYS = { 1: NESTJS_DAY_1_LESSONS, 2: TYPESCRIPT_DAY_2_LESSONS, 3: TYPESCRIPT_DAY_3_LESSONS, 4: HTTP_DAY_4_LESSONS, 5: REST_DAY_5_LESSONS, 6: NESTJS_DAY_6_LESSONS, 7: NESTJS_DAY_7_LESSONS, 8: NESTJS_DAY_8_LESSONS, 9: NESTJS_DAY_9_LESSONS, 10: NESTJS_DAY_10_LESSONS, 11: NESTJS_DAY_11_LESSONS, 12: NESTJS_DAY_12_LESSONS };
+const LESSON_DAYS = { 1: NESTJS_DAY_1_LESSONS, 2: TYPESCRIPT_DAY_2_LESSONS, 3: TYPESCRIPT_DAY_3_LESSONS, 4: HTTP_DAY_4_LESSONS, 5: REST_DAY_5_LESSONS, 6: NESTJS_DAY_6_LESSONS, 7: NESTJS_DAY_7_LESSONS, 8: NESTJS_DAY_8_LESSONS, 9: NESTJS_DAY_9_LESSONS, 10: NESTJS_DAY_10_LESSONS, 11: NESTJS_DAY_11_LESSONS, 12: NESTJS_DAY_12_LESSONS, 13: NESTJS_DAY_13_LESSONS };
 
 export function NestjsRoadmap() {
   const { locale, t } = useLocale();
