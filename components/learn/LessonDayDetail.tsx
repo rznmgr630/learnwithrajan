@@ -22,6 +22,12 @@ function nextjsFlowDiagram(title: string) {
   return `${stripLessonNumber(title)}\n  │\n  ▼\nNext.js route and server work\n  │\n  ▼\nHTML, data, and required assets\n  │\n  ▼\nBrowser renders the interface\n  │\n  ▼\nUser sees and interacts with the result`;
 }
 
+function stripCodeFences(code: string) {
+  return code
+    .replace(/^\s*```[^\n]*\n/, "")
+    .replace(/\n\s*```\s*$/, "");
+}
+
 function completeNextjsFinalQuiz(day: LessonDay): LessonQuizQuestion[] {
   if (day.finalQuiz.length >= 10) return day.finalQuiz;
   const questions = [...day.finalQuiz];
@@ -124,6 +130,7 @@ function LessonAccordionItem({
   showExampleInExplanation,
   stripTitleNumber,
   fallbackDiagram,
+  stripCodeFences: shouldStripCodeFences,
 }: {
   lesson: Lesson;
   index: number;
@@ -135,11 +142,15 @@ function LessonAccordionItem({
   showExampleInExplanation: boolean;
   stripTitleNumber: boolean;
   fallbackDiagram?: string;
+  stripCodeFences: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("explanation");
   const { getResult } = useJsLessonQuizProgress();
   const quizId = `${quizIdPrefix}.${lesson.id}`;
   const quizDone = getResult(quizId);
+  const codeExample = shouldStripCodeFences
+    ? stripCodeFences(lesson.codeExample.code)
+    : lesson.codeExample.code;
   const itemRef = useRef<HTMLDivElement>(null);
   const availableTabs = TABS.filter(({ id }) => {
     if (id === "diagram") return lesson.diagram.trim().length > 0 || Boolean(fallbackDiagram);
@@ -229,13 +240,13 @@ function LessonAccordionItem({
 
             {tab === "code" ? (
               <div className="space-y-4">
-                {lesson.codeExample.code ? (
+                {codeExample ? (
                   <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950">
                     <div className="border-b border-neutral-700 px-3 py-1.5 text-[11px] font-medium text-zinc-400">
                       <RichText text={pickLocalized(lesson.codeExample.title, locale)} />
                     </div>
                     <pre className="p-3 font-mono text-[11px] leading-relaxed text-zinc-100">
-                      {lesson.codeExample.code}
+                      {codeExample}
                     </pre>
                   </div>
                 ) : null}
@@ -301,7 +312,7 @@ function LessonExplanation({
 }) {
   const explanation = pickLocalized(lesson.explanation, locale);
   if (preserveExplanation) {
-    const code = lesson.codeExample.code.trim();
+    const code = stripCodeFences(lesson.codeExample.code.trim());
     const example = showExampleInExplanation && code
       ? `\n\n### Code Example: ${pickLocalized(lesson.codeExample.title, locale)}\n\n\`\`\`tsx\n${code}\n\`\`\``
       : "";
@@ -432,6 +443,7 @@ export function LessonDayDetail({
               }
               stripTitleNumber={track === "nextjs"}
               fallbackDiagram={track === "nextjs" && !lesson.diagram.trim() ? nextjsFlowDiagram(pickLocalized(lesson.title, locale)) : undefined}
+              stripCodeFences={track === "nextjs"}
             />
           ))}
 
