@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 5;
+export const NESTJS_TOTAL_DAYS = 6;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -28,6 +28,18 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 3, title: { en: "Advanced TypeScript", np: "उन्नत TypeScript", jp: "高度なTypeScript" }, tags: [{ slug: "typescript", label: { en: "TypeScript", np: "TypeScript", jp: "TypeScript" } }, { slug: "advanced", label: { en: "advanced", np: "उन्नत", jp: "応用" } }] },
       { day: 4, title: { en: "HTTP Fundamentals", np: "HTTP आधार", jp: "HTTPの基礎" }, tags: [{ slug: "http", label: { en: "HTTP", np: "HTTP", jp: "HTTP" } }, { slug: "foundations", label: { en: "foundations", np: "आधार", jp: "基礎" } }] },
       { day: 5, title: { en: "REST API Fundamentals", np: "REST API आधार", jp: "REST APIの基礎" }, tags: [{ slug: "rest", label: { en: "REST", np: "REST", jp: "REST" } }, { slug: "api", label: { en: "API", np: "API", jp: "API" } }] },
+    ],
+  },
+  {
+    id: "nestjs-phase-1",
+    title: {
+      en: "Phase 1 — NestJS Fundamentals",
+      np: "Phase 1 — NestJS आधार",
+      jp: "Phase 1 — NestJSの基礎",
+    },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_65%,#22c55e)]",
+    days: [
+      { day: 6, title: { en: "What NestJS Is", np: "NestJS के हो", jp: "NestJSとは" }, tags: [{ slug: "nestjs", label: { en: "NestJS", np: "NestJS", jp: "NestJS" } }, { slug: "fundamentals", label: { en: "fundamentals", np: "आधार", jp: "基礎" } }] },
     ],
   },
 ];
