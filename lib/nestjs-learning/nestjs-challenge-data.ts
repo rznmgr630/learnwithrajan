@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 17;
+export const NESTJS_TOTAL_DAYS = 18;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -62,6 +62,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     days: [
       { day: 16, title: { en: "Middleware", np: "Middleware", jp: "Middleware" }, tags: [{ slug: "middleware", label: { en: "middleware", np: "middleware", jp: "middleware" } }, { slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }] },
       { day: 17, title: { en: "Guards", np: "Guards", jp: "Guards" }, tags: [{ slug: "guards", label: { en: "guards", np: "guards", jp: "guards" } }, { slug: "authorization", label: { en: "authorization", np: "authorization", jp: "authorization" } }] },
+      { day: 18, title: { en: "Interceptors", np: "Interceptors", jp: "Interceptors" }, tags: [{ slug: "interceptors", label: { en: "interceptors", np: "interceptors", jp: "interceptors" } }, { slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }] },
     ],
   },
 ];
