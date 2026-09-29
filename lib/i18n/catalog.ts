@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "23 saved books",
-    np: "२३ सुरक्षित पुस्तक",
-    jp: "保存した本 23冊",
+    en: "24 saved books",
+    np: "२४ सुरक्षित पुस्तक",
+    jp: "保存した本 24冊",
   },
   "library.collection": {
     en: "Collection",
@@ -257,6 +257,8 @@ export const UI_STRINGS = {
   "library.frankenstein.subtitle": { en: "Mary Shelley's gothic classic about creation, ambition, and consequence.", np: "सिर्जना, महत्वाकांक्षा र परिणामबारे मेरी शेलीको गोथिक क्लासिक।", jp: "創造、野心、結果を描くメアリー・シェリーのゴシック古典。" },
   "library.maileDekhekoDarbar.title": { en: "Maile Dekheko Darbar", np: "मैले देखेको दरबार", jp: "मैले देखेको दरबार" },
   "library.maileDekhekoDarbar.subtitle": { en: "A Nepali account of the royal palace and the society around it.", np: "राजदरबार र त्यस वरपरको समाजबारे नेपाली विवरण।", jp: "王宮とその周囲の社会を描くネパール語の記録。" },
+  "library.gauKhaneKatha.title": { en: "GauKhane Katha", np: "गाउँ खाने कथा", jp: "गाउँ खाने कथा" },
+  "library.gauKhaneKatha.subtitle": { en: "A collection of classic Nepali riddles and wordplay.", np: "क्लासिक नेपाली गाउँखाने कथा र शब्दखेलको सङ्ग्रह।", jp: "ネパールの古典的ななぞなぞと言葉遊びのコレクション。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
