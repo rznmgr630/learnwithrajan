@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 15;
+export const NESTJS_TOTAL_DAYS = 16;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -49,6 +49,18 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 13, title: { en: "DTOs", np: "DTOs", jp: "DTOs" }, tags: [{ slug: "dto", label: { en: "dto", np: "dto", jp: "dto" } }, { slug: "validation", label: { en: "validation", np: "validation", jp: "validation" } }] },
       { day: 14, title: { en: "Validation & Pipes", np: "Validation & Pipes", jp: "Validation & Pipes" }, tags: [{ slug: "validation", label: { en: "validation", np: "validation", jp: "validation" } }, { slug: "pipes", label: { en: "pipes", np: "pipes", jp: "pipes" } }] },
       { day: 15, title: { en: "NestJS Fundamentals Project", np: "NestJS Fundamentals Project", jp: "NestJS Fundamentals Project" }, tags: [{ slug: "project", label: { en: "project", np: "project", jp: "project" } }, { slug: "fundamentals", label: { en: "fundamentals", np: "fundamentals", jp: "fundamentals" } }] },
+    ],
+  },
+  {
+    id: "nestjs-phase-2",
+    title: {
+      en: "Phase 2 — Request Lifecycle & Application Architecture",
+      np: "Phase 2 — अनुरोध जीवनचक्र र एप्लिकेसन आर्किटेक्चर",
+      jp: "Phase 2 — リクエストライフサイクルとアプリケーションアーキテクチャ",
+    },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_75%,#f59e0b)]",
+    days: [
+      { day: 16, title: { en: "Middleware", np: "Middleware", jp: "Middleware" }, tags: [{ slug: "middleware", label: { en: "middleware", np: "middleware", jp: "middleware" } }, { slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }] },
     ],
   },
 ];
