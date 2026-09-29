@@ -201,7 +201,7 @@ export class UsersService {
       durationMinutes: 16,
       explanation: `Before learning NestJS, it is useful to understand how it compares with Express.
 
-<button aria-controls="entity-content-dialog" aria-haspopup="dialog" class="x23pbtg xjyslct xjbqb8w xu82sp8 x9f619 x1heor9g x1ahelbq x1ypdohk x1rg5ohu xln7xf2 xg2cl3o xew9s4i xrxpjvj x193iq5w xtc8aji xj0wd6c xs005hw x7s97pk xj0a0fe xfu5u6t xm73x1d xnjsko4 x1n2onr6 x16tdsg8 x1aqa83g x9ojkr9 xujl8zx x130ws4e x15t23oz xi2nhp4 xyi4chj xrys4gj x1479xdx x11njtxf xeaf4i8" data-assistant-content-reference="" data-assistant-entity-reference="" data-assistant-entity-trigger="" data-assistant-entity-payload="{&quot;query&quot;:&quot;Express&quot;,&quot;category&quot;:&quot;software&quot;,&quot;extra_params&quot;:{&quot;disambiguation&quot;:&quot;Node.js web framework&quot;}}" data-content-reference-type="entity" type="button"><span class="x1ihqd33 x1q1fyn3 x187xuwc x7e1b1x x1w6yo06 xf5e0qk x1dcsqj5" data-assistant-entity-name="">Express</span></button> is a popular Node.js web framework. It gives you basic tools for building HTTP applications, such as routes, middleware, requests, and responses.
+Express is a popular Node.js web framework. It gives you basic tools for building HTTP applications, such as routes, middleware, requests, and responses.
 
 Express is intentionally fairly minimal.
 
@@ -402,7 +402,7 @@ export class UsersController {
       id: "nestjs-vs-fastify",
       title: "NestJS vs Fastify",
       durationMinutes: 14,
-      explanation: `<button aria-controls="entity-content-dialog" aria-haspopup="dialog" class="x23pbtg xjyslct xjbqb8w xu82sp8 x9f619 x1heor9g x1ahelbq x1ypdohk x1rg5ohu xln7xf2 xg2cl3o xew9s4i xrxpjvj x193iq5w xtc8aji xj0wd6c xs005hw x7s97pk xj0a0fe xfu5u6t xm73x1d xnjsko4 x1n2onr6 x16tdsg8 x1aqa83g x9ojkr9 xujl8zx x130ws4e x15t23oz xi2nhp4 xyi4chj xrys4gj x1479xdx x11njtxf xeaf4i8" data-assistant-content-reference="" data-assistant-entity-reference="" data-assistant-entity-trigger="" data-assistant-entity-payload="{&quot;query&quot;:&quot;Fastify&quot;,&quot;category&quot;:&quot;software&quot;,&quot;extra_params&quot;:{&quot;disambiguation&quot;:&quot;Node.js web framework&quot;}}" data-content-reference-type="entity" type="button"><span class="x1ihqd33 x1q1fyn3 x187xuwc x7e1b1x x1w6yo06 xf5e0qk x1dcsqj5" data-assistant-entity-name="">Fastify</span></button> is another Node.js framework for handling HTTP requests.
+      explanation: `Fastify is another Node.js framework for handling HTTP requests.
 
 At first, comparing NestJS and Fastify can be confusing because both are sometimes described as backend frameworks.
 
