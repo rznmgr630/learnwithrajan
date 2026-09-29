@@ -55,7 +55,7 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "web-vitals": { en: "Web Vitals", np: "वेब भाइटल्स", jp: "ウェブバイタル" },
   debugging: { en: "debugging", np: "डिबगिङ", jp: "デバッグ" },
   scalability: { en: "scalability", np: "स्केलेबिलिटी", jp: "スケーラビリティ" },
-  testing: { en: "testing", np: "टेस्टिङ", jp: "テスト" }, vitest: { en: "Vitest", np: "Vitest", jp: "Vitest" }, components: { en: "components", np: "कम्पोनेन्ट", jp: "コンポーネント" }, playwright: { en: "Playwright", np: "Playwright", jp: "Playwright" }, "code-quality": { en: "code quality", np: "कोड गुणस्तर", jp: "コード品質" }, environment: { en: "environment", np: "वातावरण", jp: "環境" },
+  testing: { en: "testing", np: "टेस्टिङ", jp: "テスト" }, vitest: { en: "Vitest", np: "Vitest", jp: "Vitest" }, components: { en: "components", np: "कम्पोनेन्ट", jp: "コンポーネント" }, playwright: { en: "Playwright", np: "Playwright", jp: "Playwright" }, "code-quality": { en: "code quality", np: "कोड गुणस्तर", jp: "コード品質" }, environment: { en: "environment", np: "वातावरण", jp: "環境" }, docker: { en: "Docker", np: "Docker", jp: "Docker" }, monitoring: { en: "monitoring", np: "निगरानी", jp: "監視" }, architecture: { en: "architecture", np: "आर्किटेक्चर", jp: "アーキテクチャ" }, capstone: { en: "capstone", np: "क्यापस्टोन", jp: "キャップストーン" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -170,7 +170,7 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   33: { en: "Caching Architecture", np: "क्यासिङ आर्किटेक्चर", jp: "キャッシュアーキテクチャ" },
   34: { en: "Performance Debugging", np: "प्रदर्शन डिबगिङ", jp: "パフォーマンスデバッグ" },
   35: { en: "Production Scalability", np: "प्रोडक्सन स्केलेबिलिटी", jp: "本番スケーラビリティ" },
-  36: { en: "Unit and Integration Testing", np: "युनिट र इन्टिग्रेसन टेस्टिङ", jp: "ユニット・統合テスト" }, 37: { en: "Component Testing", np: "कम्पोनेन्ट टेस्टिङ", jp: "コンポーネントテスト" }, 38: { en: "End-to-End Testing", np: "एन्ड-टु-एन्ड टेस्टिङ", jp: "エンドツーエンドテスト" }, 39: { en: "Code Quality", np: "कोड गुणस्तर", jp: "コード品質" }, 40: { en: "Environment Configuration", np: "वातावरण कन्फिगरेसन", jp: "環境設定" },
+  36: { en: "Unit and Integration Testing", np: "युनिट र इन्टिग्रेसन टेस्टिङ", jp: "ユニット・統合テスト" }, 37: { en: "Component Testing", np: "कम्पोनेन्ट टेस्टिङ", jp: "コンポーネントテスト" }, 38: { en: "End-to-End Testing", np: "एन्ड-टु-एन्ड टेस्टिङ", jp: "エンドツーエンドテスト" }, 39: { en: "Code Quality", np: "कोड गुणस्तर", jp: "コード品質" }, 40: { en: "Environment Configuration", np: "वातावरण कन्फिगरेसन", jp: "環境設定" }, 41: { en: "Deployment", np: "डिप्लोयमेन्ट", jp: "デプロイ" }, 42: { en: "Docker + Next.js", np: "Docker + Next.js", jp: "Docker + Next.js" }, 43: { en: "Logging and Monitoring", np: "लगिङ र निगरानी", jp: "ログと監視" }, 44: { en: "Next.js Architecture", np: "Next.js आर्किटेक्चर", jp: "Next.js アーキテクチャ" }, 45: { en: "Production Capstone", np: "प्रोडक्सन क्यापस्टोन", jp: "本番キャップストーン" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -224,7 +224,8 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     jp: "PHASE 7 · パフォーマンス（31日目）",
   },
   "nextjs-phase-8": { en: "PHASE 8 · TESTING AND CODE QUALITY (Days 36–39)", np: "PHASE 8 · टेस्टिङ र कोड गुणस्तर", jp: "PHASE 8 · テストとコード品質" },
-  "nextjs-phase-9": { en: "PHASE 9 · DEPLOYMENT AND PRODUCTION (Day 40)", np: "PHASE 9 · डिप्लोयमेन्ट र प्रोडक्सन", jp: "PHASE 9 · デプロイと本番運用" },
+  "nextjs-phase-9": { en: "PHASE 9 · DEPLOYMENT AND PRODUCTION (Days 40–44)", np: "PHASE 9 · डिप्लोयमेन्ट र प्रोडक्सन", jp: "PHASE 9 · デプロイと本番運用" },
+  "nextjs-phase-10": { en: "PHASE 10 · PRODUCTION CAPSTONE (Day 45)", np: "PHASE 10 · प्रोडक्सन क्यापस्टोन", jp: "PHASE 10 · 本番キャップストーン" },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
     np: "Phase 0 · तयारी",

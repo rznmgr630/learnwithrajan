@@ -16,7 +16,7 @@ import { nextjsDayTitle, nextjsTags, nextjsWeekTitle } from "@/lib/nextjs-learni
 
 export const NEXTJS_CURRENT_DAY = 1;
 
-export const NEXTJS_TOTAL_DAYS = 40;
+export const NEXTJS_TOTAL_DAYS = 45;
 
 const NEXTJS_DAY_DETAILS: Record<number, RoadmapDayDetail> = {
   0: NEXTJS_DAY_0_DETAIL,
@@ -117,7 +117,11 @@ export const NEXTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   },
   {
     id: "nextjs-phase-9", title: nextjsWeekTitle("nextjs-phase-9"), dotClass: "bg-[color-mix(in_oklab,var(--accent)_24%,#ec4899)]",
-    days: [nextjsDayRow(40, ["environment", "production"])],
+    days: [nextjsDayRow(40, ["environment", "production"]), nextjsDayRow(41, ["deployment", "production"]), nextjsDayRow(42, ["docker", "deployment"]), nextjsDayRow(43, ["monitoring", "production"]), nextjsDayRow(44, ["architecture", "production"])],
+  },
+  {
+    id: "nextjs-phase-10", title: nextjsWeekTitle("nextjs-phase-10"), dotClass: "bg-[color-mix(in_oklab,var(--accent)_20%,#8b5cf6)]",
+    days: [nextjsDayRow(45, ["capstone", "production"])],
   },
 ];
 
