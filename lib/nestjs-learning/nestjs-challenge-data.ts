@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 20;
+export const NESTJS_TOTAL_DAYS = 21;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -65,6 +65,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 18, title: { en: "Interceptors", np: "Interceptors", jp: "Interceptors" }, tags: [{ slug: "interceptors", label: { en: "interceptors", np: "interceptors", jp: "interceptors" } }, { slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }] },
       { day: 19, title: { en: "Exception Filters", np: "Exception Filters", jp: "Exception Filters" }, tags: [{ slug: "exceptions", label: { en: "exceptions", np: "exceptions", jp: "exceptions" } }, { slug: "filters", label: { en: "filters", np: "filters", jp: "filters" } }] },
       { day: 20, title: { en: "Execution Context", np: "Execution Context", jp: "Execution Context" }, tags: [{ slug: "execution-context", label: { en: "execution-context", np: "execution-context", jp: "execution-context" } }, { slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }] },
+      { day: 21, title: { en: "Custom Decorators", np: "Custom Decorators", jp: "Custom Decorators" }, tags: [{ slug: "decorators", label: { en: "decorators", np: "decorators", jp: "decorators" } }, { slug: "metadata", label: { en: "metadata", np: "metadata", jp: "metadata" } }] },
     ],
   },
 ];
