@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "22 saved books",
-    np: "२२ सुरक्षित पुस्तक",
-    jp: "保存した本 22冊",
+    en: "23 saved books",
+    np: "२३ सुरक्षित पुस्तक",
+    jp: "保存した本 23冊",
   },
   "library.collection": {
     en: "Collection",
@@ -198,6 +198,7 @@ export const UI_STRINGS = {
     jp: "自己啓発",
   },
   "library.fiction": { en: "Fiction", np: "कथा", jp: "フィクション" },
+  "library.nepali": { en: "Nepali", np: "नेपाली", jp: "ネパール語" },
   "library.subconsciousMind.title": {
     en: "The Power of Your Subconscious Mind",
     np: "The Power of Your Subconscious Mind",
@@ -254,6 +255,8 @@ export const UI_STRINGS = {
   "library.wizardOfOz.subtitle": { en: "Dorothy's magical journey through the Land of Oz.", np: "ओजको भूमिमा डोरोथीको जादुई यात्रा।", jp: "オズの国を巡るドロシーの魔法の旅。" },
   "library.frankenstein.title": { en: "Frankenstein", np: "Frankenstein", jp: "Frankenstein" },
   "library.frankenstein.subtitle": { en: "Mary Shelley's gothic classic about creation, ambition, and consequence.", np: "सिर्जना, महत्वाकांक्षा र परिणामबारे मेरी शेलीको गोथिक क्लासिक।", jp: "創造、野心、結果を描くメアリー・シェリーのゴシック古典。" },
+  "library.maileDekhekoDarbar.title": { en: "Maile Dekheko Darbar", np: "मैले देखेको दरबार", jp: "मैले देखेको दरबार" },
+  "library.maileDekhekoDarbar.subtitle": { en: "A Nepali account of the royal palace and the society around it.", np: "राजदरबार र त्यस वरपरको समाजबारे नेपाली विवरण।", jp: "王宮とその周囲の社会を描くネパール語の記録。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
