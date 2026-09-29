@@ -23,9 +23,23 @@ function nextjsFlowDiagram(title: string) {
 }
 
 function stripCodeFences(code: string) {
+  if (!code.includes("```")) return code;
+
+  let inCodeBlock = false;
   return code
-    .replace(/^\s*```[^\n]*\n/, "")
-    .replace(/\n\s*```\s*$/, "");
+    .split("\n")
+    .flatMap((line) => {
+      if (/^\s*```/.test(line)) {
+        inCodeBlock = !inCodeBlock;
+        return [];
+      }
+
+      if (!line.trim()) return [line];
+
+      const looksLikeCode = /[{}();=<>[\]]|^\s*(?:async |await |const |let |var |import |export |return |if |else |for |while |function |class |interface |type |#|\/\/)/.test(line);
+      return inCodeBlock && looksLikeCode ? [line] : [`// ${line.trim()}`];
+    })
+    .join("\n");
 }
 
 function completeNextjsFinalQuiz(day: LessonDay): LessonQuizQuestion[] {
