@@ -344,6 +344,21 @@ export function RichParagraph({ text, className }: RichTextProps) {
       }
     }
 
+    if (/^\s*`[^`]+$/.test(line)) {
+      const code = [line.replace(/^\s*`/, "")];
+      j++;
+      while (j < lines.length) {
+        const closing = lines[j].match(/^(.*)`\s*$/);
+        code.push(closing ? closing[1] : lines[j]);
+        if (closing) break;
+        j++;
+      }
+      if (j < lines.length) {
+        nodes.push(<CodeBlock key={`inline-code-${j}`} code={code.join("\n")} />);
+        continue;
+      }
+    }
+
     if (isObjectSnippetStart(line)) {
       const code: string[] = [line];
       let depth = bracketDelta(line);
