@@ -4,7 +4,8 @@ type Segment =
   | { kind: "text"; value: string }
   | { kind: "code"; value: string }
   | { kind: "bold"; children: Segment[] }
-  | { kind: "italic"; children: Segment[] };
+  | { kind: "italic"; children: Segment[] }
+  | { kind: "emphasis"; children: Segment[] };
 
 /** Split on paired ` backticks — GitHub-style inline code. Unclosed ` stays literal. */
 function parseInlineBackticks(input: string): Segment[] {
@@ -95,6 +96,36 @@ function parseBoldInText(input: string): Segment[] {
   return mergeTextRuns(out);
 }
 
+function parseQuotedText(input: string): Segment[] {
+  const out: Segment[] = [];
+  const pattern = /(["'])([^"'\n]+)\1/g;
+  let cursor = 0;
+  for (const match of input.matchAll(pattern)) {
+    const index = match.index ?? 0;
+    if (index > cursor) out.push({ kind: "text", value: input.slice(cursor, index) });
+    out.push({ kind: "text", value: match[1] });
+    out.push({ kind: "emphasis", children: [{ kind: "text", value: match[2] }] });
+    out.push({ kind: "text", value: match[1] });
+    cursor = index + match[0].length;
+  }
+  if (cursor < input.length) out.push({ kind: "text", value: input.slice(cursor) });
+  return out.length ? out : [{ kind: "text", value: input }];
+}
+
+function parseCodeLikeText(input: string): Segment[] {
+  const pattern = /https?:\/\/[A-Za-z0-9.-]+(?:\/[A-Za-z0-9@()[\].~_?&=+%-]*)?|\/[A-Za-z0-9@()[\]._-]+(?:\/[A-Za-z0-9@()[\]._-]+)*(?:\?[A-Za-z0-9&=._%-]+)?|\B@[A-Za-z][\w-]*\b|\b(?:app|src|pages|components|lib|public|messages)(?:\/[A-Za-z0-9@()[\]._-]+)+|\b[A-Za-z0-9@()[\]_-]+\.(?:tsx|ts|jsx|js|json|css|mdx?)\b|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*(?:===|!==|==|!=|>=|<=|>|<)\s*(?:\"[^\"\n]*\"|'[^'\n]*'|`[^`\n]*`|true|false|null|undefined|\d+)|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\(\)/g;
+  const out: Segment[] = [];
+  let cursor = 0;
+  for (const match of input.matchAll(pattern)) {
+    const index = match.index ?? 0;
+    if (index > cursor) out.push({ kind: "text", value: input.slice(cursor, index) });
+    out.push({ kind: "code", value: match[0] });
+    cursor = index + match[0].length;
+  }
+  if (cursor < input.length) out.push({ kind: "text", value: input.slice(cursor) });
+  return out.length ? out : [{ kind: "text", value: input }];
+}
+
 
 function mergeTextRuns(segments: Segment[]): Segment[] {
   const merged: Segment[] = [];
@@ -105,7 +136,7 @@ function mergeTextRuns(segments: Segment[]): Segment[] {
       prev.value += seg.value;
     } else if (seg.kind === "text") {
       merged.push({ kind: "text", value: seg.value });
-    } else if (seg.kind === "bold" || seg.kind === "italic") {
+    } else if (seg.kind === "bold" || seg.kind === "italic" || seg.kind === "emphasis") {
       merged.push(seg);
     } else {
       merged.push({ kind: "code", value: seg.value });
@@ -119,13 +150,26 @@ function parseInlineFormatting(input: string): Segment[] {
   const afterHtml = parseInlineHtml(input);
   const out: Segment[] = [];
   for (const seg of afterHtml) {
-    if (seg.kind === "bold" || seg.kind === "italic") {
+    if (seg.kind === "bold" || seg.kind === "italic" || seg.kind === "emphasis") {
       out.push(seg);
     } else {
       const afterTicks = parseInlineBackticks(seg.value);
       for (const s of afterTicks) {
         if (s.kind === "code") out.push(s);
-        else if (s.kind === "text") out.push(...parseBoldInText(s.value));
+        else if (s.kind === "text") {
+          for (const token of parseCodeLikeText(s.value)) {
+            if (token.kind === "code") out.push(token);
+            else if (token.kind === "text") {
+              for (const bold of parseBoldInText(token.value)) {
+                if (bold.kind === "bold") {
+                  out.push({ kind: "bold", children: parseQuotedText(bold.children.map((child) => child.kind === "text" ? child.value : "").join("")) });
+                } else if (bold.kind === "text") {
+                  out.push(...parseQuotedText(bold.value));
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -172,6 +216,34 @@ function isTableDivider(line: string): boolean {
   return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
 }
 
+function isFolderTreeLine(line: string): boolean {
+  return /[├└│]/.test(line) || /^\s*(?:app|src|pages|components|lib|public|messages)\//.test(line);
+}
+
+function startsProseAfterCode(line: string): boolean {
+  return /^(?:The|This|That|In|For|A|An|You|It|Remember|Use|Avoid|When|With)\s/.test(line.trim());
+}
+
+function startsCodeExample(line: string): boolean {
+  return /^(?:\/\/|import\s|export\s|const\s|let\s|type\s|interface\s|async\s|function\s|["']use\s|<|[A-Za-z_$][\w$]*\s*[=(])/.test(line.trim());
+}
+
+function isObjectSnippetStart(line: string): boolean {
+  return /^\s*(?:[A-Za-z_$][\w$-]*|["'][^"']+["'])\s*:\s*[{[]\s*$/.test(line);
+}
+
+function bracketDelta(line: string): number {
+  return (line.match(/[\[{]/g)?.length ?? 0) - (line.match(/[\]}]/g)?.length ?? 0);
+}
+
+function isRouteLine(line: string): boolean {
+  return /^\s*\/[^\s]+\s*$/.test(line);
+}
+
+function isRoutingQuestionLine(line: string): boolean {
+  return /^The (?:normal route|parallel slot|intercepting route) answers:/i.test(line.trim());
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -195,6 +267,13 @@ function renderSegment(part: Segment, key: number) {
       <em key={key} className={italicClass}>
         {part.children.map((child, i) => renderSegment(child, i))}
       </em>
+    );
+  }
+  if (part.kind === "emphasis") {
+    return (
+      <strong key={key} className={`${boldClass} ${italicClass}`}>
+        {part.children.map((child, i) => renderSegment(child, i))}
+      </strong>
     );
   }
   return <Fragment key={key}>{part.value}</Fragment>;
@@ -247,6 +326,88 @@ export function RichParagraph({ text, className }: RichTextProps) {
 
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
+
+    const firstContent = lines.slice(j + 1).find((candidate) => candidate.trim());
+    if (/^(?:code )?example:\s*$/i.test(line.trim()) && firstContent && startsCodeExample(firstContent)) {
+      const code: string[] = [];
+      j++;
+      while (j < lines.length) {
+        if (!lines[j].trim() && startsProseAfterCode(lines[j + 1] ?? "")) break;
+        code.push(lines[j]);
+        j++;
+      }
+      while (!code.at(-1)?.trim()) code.pop();
+      j--;
+      if (code.length) {
+        nodes.push(<CodeBlock key={`example-${j}`} code={code.join("\n")} />);
+        continue;
+      }
+    }
+
+    if (isObjectSnippetStart(line)) {
+      const code: string[] = [line];
+      let depth = bracketDelta(line);
+      while (depth > 0 && j + 1 < lines.length) {
+        j++;
+        code.push(lines[j]);
+        depth += bracketDelta(lines[j]);
+      }
+      nodes.push(<CodeBlock key={`object-${j}`} code={code.join("\n")} />);
+      continue;
+    }
+
+    if (isRouteLine(line)) {
+      const routes: string[] = [line.trim()];
+      let next = j + 1;
+      while (next < lines.length) {
+        if (!lines[next].trim()) {
+          next++;
+          continue;
+        }
+        if (!isRouteLine(lines[next])) break;
+        routes.push(lines[next].trim());
+        next++;
+      }
+      j = next - 1;
+      if (routes.length > 1) {
+        nodes.push(<CodeBlock key={`routes-${j}`} code={routes.join("\n")} />);
+      } else {
+        nodes.push(
+          <p key={`route-${j}`} className="text-sm leading-relaxed text-[var(--muted)]">
+            <code className={codeClass}>{routes[0]}</code>
+          </p>,
+        );
+      }
+      continue;
+    }
+
+    if (isRoutingQuestionLine(line)) {
+      const questions: string[] = [line.trim()];
+      let next = j + 1;
+      while (next < lines.length) {
+        if (!lines[next].trim()) {
+          next++;
+          continue;
+        }
+        if (!isRoutingQuestionLine(lines[next])) break;
+        questions.push(lines[next].trim());
+        next++;
+      }
+      j = next - 1;
+      nodes.push(<CodeBlock key={`routing-questions-${j}`} code={questions.join("\n")} />);
+      continue;
+    }
+
+    if (isFolderTreeLine(line) && (/[├└│]/.test(line) || isFolderTreeLine(lines[j + 1] ?? ""))) {
+      const tree: string[] = [];
+      while (j < lines.length && isFolderTreeLine(lines[j])) {
+        tree.push(lines[j]);
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={`tree-${j}`} code={tree.join("\n")} />);
+      continue;
+    }
 
     if (line.trim().startsWith("|") && j + 1 < lines.length && isTableDivider(lines[j + 1])) {
       const headers = tableCells(line);

@@ -398,7 +398,10 @@ export function LessonDayDetail({
                 track === "nextjs" ||
                 track === "js"
               }
-              showExampleInExplanation={track === "nextjs" && day.day >= 6 && day.day <= 15}
+              showExampleInExplanation={
+                track === "nextjs" &&
+                ((day.day >= 6 && day.day <= 15) || (day.day >= 26 && day.day <= 30))
+              }
             />
           ))}
 
