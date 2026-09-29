@@ -44,6 +44,10 @@ function stripCodeFences(code: string) {
     .join("\n");
 }
 
+function stripDiagramFences(diagram: string) {
+  return diagram.replace(/^\s*```[^\n]*\n?/gm, "");
+}
+
 function completeNextjsFinalQuiz(day: LessonDay): LessonQuizQuestion[] {
   if (day.finalQuiz.length >= 10) return day.finalQuiz;
   const questions = [...day.finalQuiz];
@@ -250,7 +254,7 @@ function LessonAccordionItem({
 
             {tab === "diagram" ? (
               <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
-                <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{lesson.diagram || fallbackDiagram}</pre>
+                <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{stripDiagramFences(lesson.diagram || fallbackDiagram || "")}</pre>
               </div>
             ) : null}
 
