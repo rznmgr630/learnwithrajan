@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 13;
+export const NESTJS_TOTAL_DAYS = 14;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -47,6 +47,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 11, title: { en: "Dependency Injection", np: "Dependency Injection", jp: "Dependency Injection" }, tags: [{ slug: "dependency-injection", label: { en: "dependency-injection", np: "dependency-injection", jp: "dependency-injection" } }, { slug: "fundamentals", label: { en: "fundamentals", np: "fundamentals", jp: "fundamentals" } }] },
       { day: 12, title: { en: "Request Lifecycle", np: "Request Lifecycle", jp: "Request Lifecycle" }, tags: [{ slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }, { slug: "request", label: { en: "request", np: "request", jp: "request" } }] },
       { day: 13, title: { en: "DTOs", np: "DTOs", jp: "DTOs" }, tags: [{ slug: "dto", label: { en: "dto", np: "dto", jp: "dto" } }, { slug: "validation", label: { en: "validation", np: "validation", jp: "validation" } }] },
+      { day: 14, title: { en: "Validation & Pipes", np: "Validation & Pipes", jp: "Validation & Pipes" }, tags: [{ slug: "validation", label: { en: "validation", np: "validation", jp: "validation" } }, { slug: "pipes", label: { en: "pipes", np: "pipes", jp: "pipes" } }] },
     ],
   },
 ];
