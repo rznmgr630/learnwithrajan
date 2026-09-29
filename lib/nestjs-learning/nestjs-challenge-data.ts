@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 1;
+export const NESTJS_TOTAL_DAYS = 2;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -24,6 +24,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
           { slug: "foundations", label: { en: "foundations", np: "आधार", jp: "基礎" } },
         ],
       },
+      { day: 2, title: { en: "TypeScript for NestJS", np: "NestJS का लागि TypeScript", jp: "NestJSのためのTypeScript" }, tags: [{ slug: "typescript", label: { en: "TypeScript", np: "TypeScript", jp: "TypeScript" } }, { slug: "foundations", label: { en: "foundations", np: "आधार", jp: "基礎" } }] },
     ],
   },
 ];
