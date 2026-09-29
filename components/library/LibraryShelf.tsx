@@ -10,14 +10,17 @@ export function LibraryShelf() {
   const financeCarouselRef = useRef<HTMLDivElement>(null);
   const personalCarouselRef = useRef<HTMLDivElement>(null);
   const fictionCarouselRef = useRef<HTMLDivElement>(null);
+  const nepaliCarouselRef = useRef<HTMLDivElement>(null);
   const financeTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const [financePage, setFinancePage] = useState(0);
   const [personalPage, setPersonalPage] = useState(0);
   const [fictionPage, setFictionPage] = useState(0);
+  const [nepaliPage, setNepaliPage] = useState(0);
   const [pinnedBook, setPinnedBook] = useState<string>();
   const financeBookCount = 10;
   const personalBookCount = 7;
   const fictionBookCount = 5;
+  const nepaliBookCount = 1;
 
   useEffect(() => {
     setPinnedBook(window.localStorage.getItem("library:pinned-book") ?? undefined);
@@ -398,6 +401,12 @@ export function LibraryShelf() {
             <div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#d9dbe0] p-8 sm:min-h-full"><div className="relative flex h-60 w-40 flex-col justify-between bg-[#293246] p-5 text-[#edf0dc] shadow-[12px_12px_0_#1a203055] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[2deg]"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#c9d8d1]">Mary Shelley</p><h3 className="font-serif text-3xl leading-[0.95]">Frankenstein</h3><span className="h-1 w-12 bg-[#a8c17a]" /></div></div>
             <div className="flex flex-col p-7 sm:p-9"><div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-600"><span className="h-1.5 w-1.5 rounded-full bg-slate-500" />{t("library.fiction")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-slate-600">{t("library.frankenstein.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.frankenstein.subtitle")}</p><span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-slate-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span></div>
           </Link>
+        </div>
+      </section>
+      <section className="mt-12" aria-labelledby="nepali-heading">
+        <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-red-600">{t("library.collection")}</p><h2 id="nepali-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.nepali")} ({nepaliBookCount})</h2></div><div className="flex gap-2"><button type="button" onClick={() => scrollShelf(nepaliCarouselRef, nepaliPage, nepaliBookCount, "left", setNepaliPage)} disabled className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] opacity-35" aria-label="Previous Nepali book">‹</button><button type="button" onClick={() => scrollShelf(nepaliCarouselRef, nepaliPage, nepaliBookCount, "right", setNepaliPage)} disabled className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] opacity-35" aria-label="Next Nepali book">›</button></div></div>
+        <div ref={nepaliCarouselRef} onScroll={() => updateShelfPage(nepaliCarouselRef, nepaliBookCount, setNepaliPage)} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2 [&>a]:w-full [&>a]:shrink-0 [&>a]:snap-start">
+          <Link href="/library/nepali/maile-dekheko-darbar" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-red-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]"><div className="relative grid min-h-72 place-items-center overflow-hidden bg-[#f1ddd4] p-8 sm:min-h-full"><div className="relative flex h-60 w-40 flex-col justify-between bg-[#9b292b] p-5 text-[#fff4dc] shadow-[12px_12px_0_#6f1b1d55] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#ffd69c]">नेपाली साहित्य</p><h3 className="font-serif text-3xl leading-[0.95]">मैले देखेको<br />दरबार</h3><span className="h-1 w-12 bg-[#efc55f]" /></div></div><div className="flex flex-col p-7 sm:p-9"><div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-red-600"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />{t("library.nepali")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-red-600">{t("library.maileDekhekoDarbar.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.maileDekhekoDarbar.subtitle")}</p><span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span></div></Link>
         </div>
       </section>
     </main>
