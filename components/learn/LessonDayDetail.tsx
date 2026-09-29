@@ -14,6 +14,14 @@ import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 type Tab = "explanation" | "diagram" | "code" | "takeaways" | "mistakes" | "quiz";
 
+function stripLessonNumber(title: string) {
+  return title.replace(/^\d+(?:\.\d+)*\.?\s*/, "");
+}
+
+function nextjsFlowDiagram(title: string) {
+  return `${stripLessonNumber(title)}\n  │\n  ▼\nNext.js route and server work\n  │\n  ▼\nHTML, data, and required assets\n  │\n  ▼\nBrowser renders the interface\n  │\n  ▼\nUser sees and interacts with the result`;
+}
+
 const TABS: { id: Tab; label: string }[] = [
   { id: "explanation", label: "Explanation" },
   { id: "diagram", label: "Visual Diagram" },
@@ -99,6 +107,8 @@ function LessonAccordionItem({
   quizIdPrefix,
   preserveExplanation,
   showExampleInExplanation,
+  stripTitleNumber,
+  fallbackDiagram,
 }: {
   lesson: Lesson;
   index: number;
@@ -108,6 +118,8 @@ function LessonAccordionItem({
   quizIdPrefix: string;
   preserveExplanation: boolean;
   showExampleInExplanation: boolean;
+  stripTitleNumber: boolean;
+  fallbackDiagram?: string;
 }) {
   const [tab, setTab] = useState<Tab>("explanation");
   const { getResult } = useJsLessonQuizProgress();
@@ -115,7 +127,7 @@ function LessonAccordionItem({
   const quizDone = getResult(quizId);
   const itemRef = useRef<HTMLDivElement>(null);
   const availableTabs = TABS.filter(({ id }) => {
-    if (id === "diagram") return lesson.diagram.trim().length > 0;
+    if (id === "diagram") return lesson.diagram.trim().length > 0 || Boolean(fallbackDiagram);
     if (id === "code") return lesson.codeExample.code.trim().length > 0 || Boolean(lesson.codeExample.details);
     if (id === "takeaways") return lesson.keyTakeaways.length > 0;
     if (id === "mistakes") return lesson.commonMistakes.length > 0;
@@ -147,7 +159,7 @@ function LessonAccordionItem({
           </span>
           <div>
             <p className="text-sm font-semibold text-[var(--text)]">
-              <RichText text={pickLocalized(lesson.title, locale)} />
+              <RichText text={stripTitleNumber ? stripLessonNumber(pickLocalized(lesson.title, locale)) : pickLocalized(lesson.title, locale)} />
             </p>
             <p className="text-xs text-[var(--muted)]">
               {lesson.durationMinutes} min
@@ -196,7 +208,7 @@ function LessonAccordionItem({
 
             {tab === "diagram" ? (
               <div className="overflow-x-auto rounded-lg border border-neutral-700 bg-neutral-950 p-3">
-                <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{lesson.diagram}</pre>
+                <pre className="font-mono text-[11px] leading-relaxed text-zinc-100">{lesson.diagram || fallbackDiagram}</pre>
               </div>
             ) : null}
 
@@ -402,6 +414,8 @@ export function LessonDayDetail({
                 track === "nextjs" &&
                 ((day.day >= 6 && day.day <= 15) || (day.day >= 26 && day.day <= 30))
               }
+              stripTitleNumber={track === "nextjs"}
+              fallbackDiagram={track === "nextjs" && !lesson.diagram.trim() ? nextjsFlowDiagram(pickLocalized(lesson.title, locale)) : undefined}
             />
           ))}
 

@@ -51,6 +51,9 @@ const NEXTJS_TAG: Record<string, LocalizedString> = {
   "optimistic-ui": { en: "optimistic UI", np: "आशावादी UI", jp: "楽観的UI" },
   "route-handlers": { en: "Route Handlers", np: "रुट ह्यान्डलरहरू", jp: "ルートハンドラー" },
   "production-apis": { en: "production APIs", np: "प्रोडक्सन APIs", jp: "本番API" },
+  performance: { en: "performance", np: "प्रदर्शन", jp: "パフォーマンス" },
+  "web-vitals": { en: "Web Vitals", np: "वेब भाइटल्स", jp: "ウェブバイタル" },
+  debugging: { en: "debugging", np: "डिबगिङ", jp: "デバッグ" },
 };
 
 export function nextjsTags(slugs: [string, string]): RoadmapTag[] {
@@ -160,6 +163,10 @@ const NEXTJS_DAY_TITLE: Record<number, LocalizedString> = {
   28: { en: "Metadata and SEO", np: "मेटाडाटा र SEO", jp: "メタデータとSEO" },
   29: { en: "Internationalization", np: "अन्तर्राष्ट्रियकरण", jp: "国際化" },
   30: { en: "Files and Image Optimization", np: "फाइल र छवि अनुकूलन", jp: "ファイルと画像最適化" },
+  31: { en: "Next.js Performance Fundamentals", np: "Next.js प्रदर्शन आधार", jp: "Next.js パフォーマンス基礎" },
+  32: { en: "Next.js Performance Fundamentals", np: "Next.js प्रदर्शन आधार", jp: "Next.js パフォーマンス基礎" },
+  33: { en: "Caching Architecture", np: "क्यासिङ आर्किटेक्चर", jp: "キャッシュアーキテクチャ" },
+  34: { en: "Performance Debugging", np: "प्रदर्शन डिबगिङ", jp: "パフォーマンスデバッグ" },
 };
 
 const NEXTJS_EXISTING_COURSE_DAY_TITLE: Record<number, LocalizedString> = {
@@ -206,6 +213,11 @@ const NEXTJS_WEEK_TITLE: Record<string, LocalizedString> = {
     en: "PHASE 6 · ADVANCED ROUTING (Days 26–30)",
     np: "PHASE 6 · उन्नत रुटिङ (दिन २६–३०)",
     jp: "PHASE 6 · 高度なルーティング（26〜30日目）",
+  },
+  "nextjs-phase-7": {
+    en: "PHASE 7 · PERFORMANCE (Day 31)",
+    np: "PHASE 7 · प्रदर्शन (दिन ३१)",
+    jp: "PHASE 7 · パフォーマンス（31日目）",
   },
   "nextjs-phase-0": {
     en: "Phase 0 · Preparation",
