@@ -8,6 +8,7 @@ import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { DayDetailPanel } from "@/components/learn/DayDetailPanel";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { NEXTJS_ROADMAP_WEEKS, NEXTJS_TOTAL_DAYS } from "@/lib/nextjs-learning/nextjs-challenge-data";
 import { NEXTJS_PHASE_0_LESSONS } from "@/lib/nextjs-learning/nextjs-phase-0-lessons";
@@ -102,11 +103,27 @@ const NEXTJS_LESSON_DAYS: Record<number, LessonDay> = {
   36: NEXTJS_DAY_36, 37: NEXTJS_DAY_37, 38: NEXTJS_DAY_38, 39: NEXTJS_DAY_39, 40: NEXTJS_DAY_40, 41: NEXTJS_DAY_41, 42: NEXTJS_DAY_42, 43: NEXTJS_DAY_43, 44: NEXTJS_DAY_44, 45: NEXTJS_DAY_45,
 };
 
+const NEXTJS_LESSON_DAY_NUMBERS = Object.keys(NEXTJS_LESSON_DAYS)
+  .map(Number)
+  .filter((day) => day > 0)
+  .sort((a, b) => a - b);
+
 export function NextjsRoadmap() {
   const { locale, t } = useLocale();
   const { completedCount, percent, toggleDay, isDone } = useNextjsProgress();
   const [lessonDay, setLessonDay] = useState<number | null>(null);
   const [detailDay, setDetailDay] = useState<number | null>(null);
+
+  const lessonNeighbours = useMemo(() => {
+    if (lessonDay === null) return { previous: null, next: null };
+    const toTarget = (day: number | undefined): LessonNavTarget | null =>
+      day === undefined ? null : { day, title: pickLocalized(NEXTJS_LESSON_DAYS[day].title, locale) };
+    const index = NEXTJS_LESSON_DAY_NUMBERS.indexOf(lessonDay);
+    return {
+      previous: toTarget(NEXTJS_LESSON_DAY_NUMBERS[index - 1]),
+      next: toTarget(NEXTJS_LESSON_DAY_NUMBERS[index + 1]),
+    };
+  }, [lessonDay, locale]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / NEXTJS_TOTAL_DAYS) * 100))}%`,
@@ -257,6 +274,9 @@ export function NextjsRoadmap() {
           open
           onClose={() => setLessonDay(null)}
           day={NEXTJS_LESSON_DAYS[lessonDay]}
+          previousDay={lessonNeighbours.previous}
+          nextDay={lessonNeighbours.next}
+          onNavigateDay={setLessonDay}
           track="nextjs"
         />
       )}
