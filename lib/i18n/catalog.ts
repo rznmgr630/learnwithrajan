@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "24 saved books",
-    np: "२४ सुरक्षित पुस्तक",
-    jp: "保存した本 24冊",
+    en: "27 saved books",
+    np: "२७ सुरक्षित पुस्तक",
+    jp: "保存した本 27冊",
   },
   "library.collection": {
     en: "Collection",
@@ -199,6 +199,7 @@ export const UI_STRINGS = {
   },
   "library.fiction": { en: "Fiction", np: "कथा", jp: "フィクション" },
   "library.nepali": { en: "Nepali", np: "नेपाली", jp: "ネパール語" },
+  "library.business": { en: "Business", np: "व्यवसाय", jp: "ビジネス" },
   "library.subconsciousMind.title": {
     en: "The Power of Your Subconscious Mind",
     np: "The Power of Your Subconscious Mind",
@@ -259,6 +260,12 @@ export const UI_STRINGS = {
   "library.maileDekhekoDarbar.subtitle": { en: "A Nepali account of the royal palace and the society around it.", np: "राजदरबार र त्यस वरपरको समाजबारे नेपाली विवरण।", jp: "王宮とその周囲の社会を描くネパール語の記録。" },
   "library.gauKhaneKatha.title": { en: "GauKhane Katha", np: "गाउँ खाने कथा", jp: "गाउँ खाने कथा" },
   "library.gauKhaneKatha.subtitle": { en: "A collection of classic Nepali riddles and wordplay.", np: "क्लासिक नेपाली गाउँखाने कथा र शब्दखेलको सङ्ग्रह।", jp: "ネパールの古典的ななぞなぞと言葉遊びのコレクション。" },
+  "library.thinkingFastSlow.title": { en: "Thinking, Fast and Slow", np: "Thinking, Fast and Slow", jp: "Thinking, Fast and Slow" },
+  "library.thinkingFastSlow.subtitle": { en: "How fast intuition and slow reasoning shape our decisions.", np: "छिटो अन्तर्ज्ञान र ढिलो तर्कले निर्णयलाई कसरी आकार दिन्छ।", jp: "速い直感と遅い思考が判断をどう形作るか。" },
+  "library.thinkAgain.title": { en: "Think Again", np: "Think Again", jp: "Think Again" },
+  "library.thinkAgain.subtitle": { en: "Build the habit of rethinking what you know and believe.", np: "आफूले जानेका र विश्वास गरेका कुरा पुनर्विचार गर्ने बानी बनाउनुहोस्।", jp: "知識や信念を再考する習慣を身につけます。" },
+  "library.innovatorsDilemma.title": { en: "The Innovator's Dilemma", np: "The Innovator's Dilemma", jp: "The Innovator's Dilemma" },
+  "library.innovatorsDilemma.subtitle": { en: "Why successful companies can fail when new technology changes markets.", np: "नयाँ प्रविधिले बजार बदल्दा सफल कम्पनी किन असफल हुन सक्छन्।", jp: "新技術が市場を変えるとき、成功企業が失敗する理由。" },
   "hub.backend.title": {
     en: "Backend in 30 days",
     np: "३० दिनमा ब्याकएन्ड",
