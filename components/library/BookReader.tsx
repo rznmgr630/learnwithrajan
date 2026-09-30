@@ -23,7 +23,8 @@ interface WordMeaning {
 
 export function BookReader({ title, pdfUrl }: BookReaderProps) {
   const pageStorageKey = `library:book-page:${pdfUrl}`;
-  const pinStorageKey = "library:pinned-book";
+  const pinCategory = ["finance-book", "psychology-of-money", "richest-man-in-babylon", "the-simple-path-to-wealth", "the-millionaire-next-door", "i-will-teach-you-to-be-rich", "your-money-or-your-life", "the-intelligent-investor", "a-random-walk-down-wall-street", "the-total-money-makeover"].some((slug) => pdfUrl.endsWith(slug)) ? "finance" : ["power-of-your-subconscious-mind", "eat-that-frog", "atomic-habits", "the-7-habits", "how-to-win-friends", "mindset", "the-mountain-is-you", "thinking-fast-and-slow", "think-again"].some((slug) => pdfUrl.endsWith(slug)) ? "personal" : ["peter-pan-and-wendy", "the-jungle-book", "animal-farm", "the-wizard-of-oz", "frankenstein"].some((slug) => pdfUrl.endsWith(slug)) ? "fiction" : ["maile-dekheko-darbar", "gaukhane-katha"].some((slug) => pdfUrl.endsWith(slug)) ? "nepali" : "business";
+  const pinStorageKey = `library:pinned-book:${pinCategory}`;
   const [pageCount, setPageCount] = useState<number>();
   const [pageNumber, setPageNumber] = useState(() => {
     if (typeof window === "undefined") {

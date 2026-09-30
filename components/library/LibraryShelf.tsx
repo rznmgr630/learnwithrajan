@@ -27,12 +27,27 @@ export function LibraryShelf() {
   const businessBookCount = 1;
 
   useEffect(() => {
-    setPinnedBook(window.localStorage.getItem("library:pinned-book") ?? undefined);
+    setPinnedBook(window.localStorage.getItem("library:pinned-book:finance") ?? undefined);
   }, []);
 
   useEffect(() => {
     financeCarouselRef.current?.scrollTo({ left: 0 });
+    personalCarouselRef.current?.scrollTo({ left: 0 });
+    fictionCarouselRef.current?.scrollTo({ left: 0 });
+    nepaliCarouselRef.current?.scrollTo({ left: 0 });
+    businessCarouselRef.current?.scrollTo({ left: 0 });
     setFinancePage(0);
+    setPersonalPage(0);
+    setFictionPage(0);
+    setNepaliPage(0);
+    setBusinessPage(0);
+    document.querySelectorAll<HTMLAnchorElement>('main a[href*="/library/"]').forEach((book) => {
+      const path = new URL(book.href).pathname;
+      const category = path.includes("/finance/") ? "finance" : path.includes("/personal-development/") ? "personal" : path.includes("/fiction/") ? "fiction" : path.includes("/nepali/") ? "nepali" : "business";
+      if (category === "finance") return;
+      const pdfUrl = `/api/library/${path.split("/").pop()}`;
+      book.style.order = window.localStorage.getItem(`library:pinned-book:${category}`) === pdfUrl ? "-1" : "0";
+    });
   }, [pinnedBook]);
 
   function getBookOrder(pdfUrl: string) {
