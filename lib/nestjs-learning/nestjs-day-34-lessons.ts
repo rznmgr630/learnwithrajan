@@ -953,16 +953,22 @@ That is where migrations come in.
 
 Imagine your application starts with:
 
+\`\`\`
 User
-- id
-- email
+----
+id
+email
+\`\`\`
 
 Later, your product manager asks for:
 
+\`\`\`
 User
-- id
-- email
-- displayName
+----
+id
+email
+displayName
+\`\`\`
 
 You change the Prisma schema.
 
