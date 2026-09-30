@@ -79,11 +79,11 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
 
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        setPageNumber((page) => Math.max(1, page - 1));
+        setPageNumber((page) => Math.max(1, page - (window.innerWidth >= 1280 ? 2 : 1)));
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        setPageNumber((page) => Math.min(pageCount, page + 1));
+        setPageNumber((page) => Math.min(pageCount, page + (window.innerWidth >= 1280 ? 2 : 1)));
       }
     };
 
@@ -178,7 +178,8 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
       return;
     }
 
-    setPageNumber((page) => horizontalDistance < 0 ? Math.min(pageCount, page + 1) : Math.max(1, page - 1));
+    const pageStep = window.innerWidth >= 1280 ? 2 : 1;
+    setPageNumber((page) => horizontalDistance < 0 ? Math.min(pageCount, page + pageStep) : Math.max(1, page - pageStep));
   }
 
   return (
