@@ -113,7 +113,7 @@ function parseQuotedText(input: string): Segment[] {
 }
 
 function parseCodeLikeText(input: string): Segment[] {
-  const pattern = /https?:\/\/[A-Za-z0-9.-]+(?:\/[A-Za-z0-9@()[\].~_?&=+%-]*)?|\/[A-Za-z0-9@()[\]._-]+(?:\/[A-Za-z0-9@()[\]._-]+)*(?:\?[A-Za-z0-9&=._%-]+)?|\B@[A-Za-z][\w-]*\b|\b(?:app|src|pages|components|lib|public|messages)(?:\/[A-Za-z0-9@()[\]._-]+)+|\b[A-Za-z0-9@()[\]_-]+\.(?:tsx|ts|jsx|js|json|css|mdx?)\b|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*(?:===|!==|==|!=|>=|<=|>|<)\s*(?:\"[^\"\n]*\"|'[^'\n]*'|`[^`\n]*`|true|false|null|undefined|\d+)|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\(\)/g;
+  const pattern = /https?:\/\/[A-Za-z0-9.-]+(?:\/[A-Za-z0-9@()[\].~_?&=+%-]*)?|\/[A-Za-z0-9@()[\]._-]+(?:\/[A-Za-z0-9@()[\]._-]+)*(?:\?[A-Za-z0-9&=._%-]+)?|\B@[A-Za-z][\w-]*\b|\b(?:app|src|pages|components|lib|public|messages)(?:\/[A-Za-z0-9@()[\]._-]+)+|\b[A-Za-z0-9@()[\]_-]+\.(?:tsx|ts|jsx|js|json|css|mdx?)\b|\bprocess\.env(?:\.[A-Za-z_$][\w$]*)?\b|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*(?:===|!==|==|!=|>=|<=|>|<)\s*(?:\"[^\"\n]*\"|'[^'\n]*'|`[^`\n]*`|true|false|null|undefined|\d+)|\b[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\(\)/g;
   const out: Segment[] = [];
   let cursor = 0;
   for (const match of input.matchAll(pattern)) {
@@ -244,6 +244,10 @@ function isRoutingQuestionLine(line: string): boolean {
   return /^The (?:normal route|parallel slot|intercepting route) answers:/i.test(line.trim());
 }
 
+function isFlowStart(line: string, nextLine: string): boolean {
+  return /^[\w./ -]+$/.test(line.trim()) && /^(?:[|↓↑←→v]|\+[-]+>)/.test(nextLine.trim());
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -326,6 +330,29 @@ export function RichParagraph({ text, className }: RichTextProps) {
 
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
+
+    if (isFlowStart(line, lines[j + 1] ?? "")) {
+      const flow = [line];
+      j++;
+      while (j < lines.length && lines[j].trim()) {
+        flow.push(lines[j]);
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={j} code={flow.join("\n")} />);
+      continue;
+    }
+
+    if (line.includes("<code>") && lines[j + 1]?.includes("<code>")) {
+      const code = [];
+      while (j < lines.length && lines[j].trim() && lines[j].includes("<code>")) {
+        code.push(decodeCodeEntities(lines[j].replaceAll("<code>", "").replaceAll("</code>", "")));
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={j} code={code.join("\n")} />);
+      continue;
+    }
 
     const firstContent = lines.slice(j + 1).find((candidate) => candidate.trim());
     if (/^(?:(?:code )?example|(?:(?:a|an|the)\s+)?(?:basic|simple|complete|practical)\s+example\s+is):\s*$/i.test(line.trim()) && firstContent && startsCodeExample(firstContent)) {
@@ -460,6 +487,25 @@ export function RichParagraph({ text, className }: RichTextProps) {
         </div>,
       );
       continue;
+    }
+
+    const multilineCode = line.match(/^\s*<code>([\s\S]*)$/);
+    if (multilineCode && !multilineCode[1].includes("</code>")) {
+      const code = [multilineCode[1]];
+      j++;
+      while (j < lines.length) {
+        const closing = lines[j].match(/^(.*)<\/code>\s*$/);
+        if (closing) {
+          code.push(closing[1]);
+          break;
+        }
+        code.push(lines[j]);
+        j++;
+      }
+      if (j < lines.length) {
+        nodes.push(<CodeBlock key={j} code={decodeCodeEntities(code.join("\n"))} />);
+        continue;
+      }
     }
 
     const standaloneCode = line.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);

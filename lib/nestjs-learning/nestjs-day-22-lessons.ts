@@ -14,13 +14,17 @@ export const NESTJS_DAY_22_LESSONS: LessonDay = {
 
 During development, your application might connect to a local database:
 
+\`\`\`env
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
+\`\`\`
 
 But when you deploy the same application to production, the database could be somewhere completely different:
 
+\`\`\`env
 DATABASE_HOST=production-db.example.com
 DATABASE_PORT=5432
+\`\`\`
 
 You do not want to change your TypeScript source code every time the environment changes.
 
@@ -66,13 +70,16 @@ The package can load environment variables and expose them through <code>ConfigS
 
 A typical NestJS application can have:
 
-<code>.env</code>
-<code>ConfigModule</code>
-<code>ConfigService</code>
-<code>feature services</code>
+\`\`\`text
+.env
+ConfigModule
+ConfigService
+feature services
+\`\`\`text
 
 The flow becomes much easier to understand:
 
+\`\`\`text
 Environment
     |
     | PORT=3000
@@ -88,6 +95,7 @@ ConfigService
     +----> ProductsService
     |
     +----> OrdersService
+\`\`\`
 
 <b>Real-world example:</b>
 
@@ -109,7 +117,7 @@ The email service should not contain different hard-coded values for each enviro
 
 Instead, the environment provides the value and the application reads it.
 
-NestJS's <code>@nestjs/config</code> package loads a root <code>.env</code> file by default and merges it with environment variables supplied by the runtime. Runtime environment variables take precedence unless the configuration is set to allow the .env file to override them. The current documentation also supports loading a custom env file path and ignoring the env file entirely when values are supplied by the runtime. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+NestJS's <code>@nestjs/config</code> package loads a root <code>.env</code> file by default and merges it with environment variables supplied by the runtime. Runtime environment variables take precedence unless the configuration is set to allow the .env file to override them. The current documentation also supports loading a custom env file path and ignoring the env file entirely when values are supplied by the runtime.
 `,
       diagram: `                 Development
                      |
@@ -235,6 +243,7 @@ NestJS loads the configuration and registers the <code>ConfigService</code> prov
 
 The simplest setup looks like this:
 
+\`\`\`text
 AppModule
     |
     +--> ConfigModule.forRoot()
@@ -244,19 +253,22 @@ AppModule
     +--> ProductsModule
     |
     +--> OrdersModule
+\`\`\`
 
 Then your services can access configuration through <code>ConfigService</code>.
 
-By default, <code>ConfigModule.forRoot()</code> looks for a <code>.env</code> file in the application's working directory. It also merges those values with values already available through <code>process.env</code>. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+By default, <code>ConfigModule.forRoot()</code> looks for a <code>.env</code> file in the application's working directory. It also merges those values with values already available through <code>process.env</code>.
 
 
 You can also make the configuration module global.
 
 For example:
 
-<code>ConfigModule.forRoot({
+\`\`\`ts
+ConfigModule.forRoot({
   isGlobal: true,
-})</code>
+})
+\`\`\`
 
 A global module can be used across the application without repeatedly importing <code>ConfigModule</code> into every feature module.
 
@@ -264,6 +276,7 @@ This is convenient for configuration because many different parts of the applica
 
 Think about a large application:
 
+\`\`\`text
 ConfigModule
     |
     +--> DatabaseModule
@@ -275,6 +288,7 @@ ConfigModule
     +--> PaymentModule
     |
     +--> StorageModule
+\`\`\`
 
 All of these may need configuration.
 
@@ -284,9 +298,11 @@ NestJS also allows you to specify a custom env file.
 
 For example:
 
-<code>ConfigModule.forRoot({
+\`\`\`ts
+ConfigModule.forRoot({
   envFilePath: ".development.env",
-})</code>
+})
+\`\`\`
 
 This can be useful when you intentionally maintain separate environment files.
 
@@ -296,9 +312,11 @@ Another useful option is <code>ignoreEnvFile</code>.
 
 For example:
 
-<code>ConfigModule.forRoot({
+\`\`\`ts
+ConfigModule.forRoot({
   ignoreEnvFile: true,
-})</code>
+})
+\`\`\`
 
 This tells the configuration system not to load a .env file. This can make sense when your deployment platform already provides all environment variables.
 
@@ -310,10 +328,12 @@ You do not necessarily want to upload a production <code>.env</code> file with y
 
 Instead, the platform can provide:
 
-<code>DATABASE_URL</code>
-<code>JWT_SECRET</code>
-<code>REDIS_URL</code>
-<code>STRIPE_SECRET_KEY</code>
+\`\`\`text
+DATABASE_URL
+JWT_SECRET
+REDIS_URL
+STRIPE_SECRET_KEY
+\`\`\`text
 
 Your NestJS application simply reads them through the configuration system.
 
@@ -416,6 +436,7 @@ Then you can read a value:
 
 The flow is:
 
+\`\`\`text
 Service
    |
    | asks for ConfigService
@@ -427,6 +448,7 @@ ConfigService
    |
    v
 configuration value
+\`\`\`
 
 This is much cleaner than scattering <code>process.env</code> throughout your application.
 
@@ -463,6 +485,7 @@ Instead of having hundreds of unrelated top-level configuration variables, you c
 
 For example:
 
+\`\`\`text
 database.host
 database.port
 database.name
@@ -475,6 +498,7 @@ mail.port
 
 storage.bucket
 storage.region
+\`\`\`
 
 <b>Beginner example:</b>
 
@@ -492,9 +516,11 @@ you can use:
 
 Suppose your payment service needs three settings:
 
-<code>PAYMENT_API_URL</code>
-<code>PAYMENT_TIMEOUT</code>
-<code>PAYMENT_MODE</code>
+\`\`\`text
+PAYMENT_API_URL
+PAYMENT_TIMEOUT
+PAYMENT_MODE
+\`\`\`text
 
 Injecting ConfigService gives the payment service one clear dependency for configuration.
 
@@ -502,7 +528,7 @@ Injecting ConfigService gives the payment service one clear dependency for confi
 
 You can also type your configuration so TypeScript can help catch invalid keys.
 
-The current NestJS documentation supports using generic typing with <code>ConfigService</code> to describe known configuration properties. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/v7/techniques/configuration?utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+The current NestJS documentation supports using generic typing with <code>ConfigService</code> to describe known configuration properties.
 
 
 The important idea is not that ConfigService magically makes values safe. You still need proper validation and conversion.
@@ -728,7 +754,7 @@ The business logic should remain mostly the same.
 
 Only configuration changes.
 
-NestJS supports custom env file paths, and the current documentation also supports using the runtime environment directly when you do not want Nest to load a .env file. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS, 2 sources" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/v6/techniques/configuration?utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;},{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:1,&quot;isSupporting&quot;:true,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span><span class="x1ir3puv xe6aan1 xdl72j9 x1c4vz4f x2lah0s xxhswux x101abm8 xryxfnj x1b2iylo xwgcxoh" data-assistant-supporting-count="">+1</span></button></span></span></span>
+NestJS supports custom env file paths, and the current documentation also supports using the runtime environment directly when you do not want Nest to load a .env file.
 
 
 One important production lesson: do not treat <code>.env.production</code> as a magical security system. The important thing is that sensitive production values are supplied securely and are not accidentally committed to source control.`,
@@ -801,9 +827,11 @@ DATABASE_HOST=localhost
 
 Imagine your application requires:
 
-<code>DATABASE_URL</code>
-<code>JWT_SECRET</code>
-<code>PAYMENT_API_KEY</code>
+\`\`\`text
+DATABASE_URL
+JWT_SECRET
+PAYMENT_API_KEY
+\`\`\`text
 
 You deploy the application.
 
@@ -839,7 +867,7 @@ This is called <b>fail fast</b>.
 
 If the application cannot run safely without a required configuration value, it is usually better to discover that immediately.
 
-The current NestJS configuration package supports schema-based validation. The current documentation shows examples using Zod and also supports a custom <code>validate()</code> function. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+The current NestJS configuration package supports schema-based validation. The current documentation shows examples using Zod and also supports a custom <code>validate()</code> function.
 
 
 For example, with Zod:
@@ -850,7 +878,7 @@ For example, with Zod:
 
 <code>JWT_SECRET</code> should be required.
 
-Because environment variables are strings, Zod's <code>z.coerce.number()</code> can convert a string such as <code>"3000"</code> into the number <code>3000</code>. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+Because environment variables are strings, Zod's <code>z.coerce.number()</code> can convert a string such as <code>"3000"</code> into the number <code>3000</code>.
 
 
 This is much safer than manually converting values throughout your application.
@@ -875,9 +903,11 @@ The application rejects the configuration during startup.
 
 Your application accepts only:
 
-<code>development</code>
-<code>test</code>
-<code>production</code>
+\`\`\`text
+development
+test
+production
+\`\`\`text
 
 If somebody writes:
 
@@ -1220,20 +1250,22 @@ export class AuthService {
 
 Imagine this:
 
-<code>DATABASE_HOST</code>
-<code>DATABASE_PORT</code>
-<code>DATABASE_NAME</code>
-<code>DATABASE_USER</code>
-<code>JWT_SECRET</code>
-<code>JWT_EXPIRES_IN</code>
-<code>SMTP_HOST</code>
-<code>SMTP_PORT</code>
-<code>SMTP_USER</code>
-<code>S3_BUCKET</code>
-<code>S3_REGION</code>
-<code>S3_ENDPOINT</code>
-<code>PAYMENT_API_URL</code>
-<code>PAYMENT_SECRET_KEY</code>
+\`\`\`text
+DATABASE_HOST
+DATABASE_PORT
+DATABASE_NAME
+DATABASE_USER
+JWT_SECRET
+JWT_EXPIRES_IN
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+S3_BUCKET
+S3_REGION
+S3_ENDPOINT
+PAYMENT_API_URL
+PAYMENT_SECRET_KEY
+\`\`\`text
 
 There is nothing inherently wrong with environment variables, but your application code should not have to understand every raw environment variable.
 
@@ -1243,15 +1275,19 @@ A configuration factory is a function that reads environment variables and creat
 
 For example:
 
-<code>database.host</code>
-<code>database.port</code>
-<code>database.name</code>
+\`\`\`text
+database.host
+database.port
+database.name
+\`\`\`text
 
 instead of:
 
-<code>DATABASE_HOST</code>
-<code>DATABASE_PORT</code>
-<code>DATABASE_NAME</code>
+\`\`\`text
+DATABASE_HOST
+DATABASE_PORT
+DATABASE_NAME
+\`\`\`text
 
 The factory acts as a translation layer.
 
@@ -1284,7 +1320,7 @@ normalize values
 perform custom validation
 hide raw environment variable names from the rest of the application
 
-The current NestJS documentation supports custom configuration files through the <code>load</code> option. It also supports namespaced configuration through <code>registerAs()</code>. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS, 2 sources" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/v11/techniques/configuration?utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;},{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:1,&quot;isSupporting&quot;:true,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span><span class="x1ir3puv xe6aan1 xdl72j9 x1c4vz4f x2lah0s xxhswux x101abm8 xryxfnj x1b2iylo xwgcxoh" data-assistant-supporting-count="">+1</span></button></span></span></span>
+The current NestJS documentation supports custom configuration files through the <code>load</code> option. It also supports namespaced configuration through <code>registerAs()</code>.
 
 
 <b>Beginner example:</b>
@@ -1351,7 +1387,7 @@ It does not care whether the value came from a .env file, Docker, Kubernetes, a 
 
 That is a powerful architectural boundary.
 
-One important current NestJS detail is that configuration loaded through custom configuration files is not automatically validated by the root <code>validationSchema</code> in the same way as raw environment variables. If you need validation or transformation for values created inside a configuration factory, perform that logic inside the factory itself. <span data-assistant-content-reference="" class="xeh6zmm xt0psk2 x1ghz6dp" data-assistant-grouped-webpages="" data-content-reference-type="grouped_webpages"><span aria-label="Sources" class="xt0psk2 xxhswux x11njtxf" data-assistant-grouped-webpages-list="" role="group"><span class="x1lziwak x13q3soa" data-assistant-grouped-webpages-item=""><button aria-controls="assistant-sources-dialog" aria-haspopup="dialog" aria-label="NestJS" class="x1qviprw xjtw7fp xomzcpc x1cpjm7i xt81g8a xm4btww x7qwmre xrd0f8c x1hmns74 xy5mcqj x6s0dn4 xjyslct xjbqb8w xrt0l5h xu82sp8 x13yhu5o x4kf0vy xe6aan1 x1ypdohk x3nfvp2 xjb2p0i x1ivwg07 x1gqwrcx x13vifvy xc8icb0 xtu1cor x1scn00m x1lvh1i4 xsnit4v xk2swo9 xt970qd x1cg44al x1005jv x1n2onr6 xkrqix3 xxymvpz" data-assistant-sources-trigger="" data-assistant-sources-payload="[{&quot;title&quot;:&quot;Configuration | NestJS - A progressive Node.js framework&quot;,&quot;url&quot;:&quot;https://docs.nestjs.com/techniques/configuration?source=post_page---------------------------&utm_source=chatgpt.com&quot;,&quot;sourceIndex&quot;:0,&quot;attribution&quot;:&quot;NestJS&quot;}]" data-assistant-grouped-webpages-trigger="" type="button"><span aria-hidden="true" class="x1d5dutw x4aliy7 x1r7ld26 x16rqkct x1y0btm7 xmkeg23 x12116fd x13yhu5o xe6aan1 xwz0xwf xdl72j9 x1c4vz4f x2lah0s x6phcfz x7amdea x1poez60 xo5v014 xfi1dq xb3r6kr x1ku5rj1 x1n2onr6" data-assistant-source-icon="">N<img alt="" class="x-default-marker x5yr21d xh8yej3 x10a8y8t xl1xv1r x10l6tqk" data-assistant-source-icon-image="" src="https://www.google.com/s2/favicons?domain=https%3A%2F%2Fdocs.nestjs.com&sz=128" ></span><span class="x1heor9g x1qlqyl8 x1pd3egz xeuugli x101abm8 xryxfnj x1b2iylo xwgcxoh xlyipyv xuxw1ft" data-assistant-reference-title="">NestJS</span></button></span></span></span>
+One important current NestJS detail is that configuration loaded through custom configuration files is not automatically validated by the root <code>validationSchema</code> in the same way as raw environment variables. If you need validation or transformation for values created inside a configuration factory, perform that logic inside the factory itself.
 
 
 For larger applications, this distinction is very useful:
@@ -1464,18 +1500,22 @@ export default registerAs("database", () => ({
 
 Imagine your modular e-commerce API:
 
+\`\`\`text
 Users
 Products
 Orders
+\`\`\`
 
 Now the application grows and needs:
 
+\`\`\`text
 PostgreSQL
 JWT authentication
 Redis
 Email
 Object storage
 Payments
+\`\`\`
 
 You could simply create dozens of environment variables and read them everywhere.
 
@@ -1483,6 +1523,7 @@ But a larger application benefits from a clear configuration architecture.
 
 A practical structure could look like this:
 
+\`\`\`text
 src/
   config/
     database.config.ts
@@ -1491,9 +1532,11 @@ src/
     mail.config.ts
     storage.config.ts
     payment.config.ts
+\`\`\`
 
 Then:
 
+\`\`\`text
 AppModule
     |
     +--> ConfigModule
@@ -1504,11 +1547,13 @@ AppModule
             +--> mail
             +--> storage
             +--> payment
+\`\`\`
 
 Feature modules then depend on the configuration they actually need.
 
 For example:
 
+\`\`\`text
 OrdersModule
     |
     +--> PaymentService
@@ -1522,6 +1567,7 @@ UsersModule
              |
              v
           AuthConfig
+\`\`\`
 
 This is much easier to maintain than having every service know the entire environment.
 
@@ -1529,8 +1575,10 @@ This is much easier to maintain than having every service know the entire enviro
 
 A small application only needs:
 
-<code>PORT</code>
-<code>DATABASE_URL</code>
+\`\`\`text
+PORT
+DATABASE_URL
+\`\`\`text
 
 You can start with <code>ConfigService.get()</code>.
 
@@ -1540,9 +1588,11 @@ There is no need to create ten configuration files on day one.
 
 Your application now has:
 
+\`\`\`text
 database
 auth
 mail
+\`\`\`
 
 Create one configuration namespace for each.
 
@@ -1635,12 +1685,14 @@ Configuration says:
 
 The application should not need to know whether those values came from:
 
+\`\`\`text
 a .env file
 Docker
 Kubernetes
 a CI/CD pipeline
 a cloud platform
 a secret manager
+\`\`\`
 
 That separation is what makes configuration scalable.`,
       diagram: `                         Infrastructure
@@ -1943,6 +1995,7 @@ Your application should support development, test, and production environments.
 
 The goal is not simply to create a .env file. Build the complete flow:
 
+\`\`\`text
 Environment
     ↓
 ConfigModule
@@ -1954,6 +2007,7 @@ Configuration factories
 ConfigService / typed configuration
     ↓
 Users / Products / Orders / Database / Auth / Payments
+\`\`\`
 
 By the end of the project, your business services should not need to know where configuration comes from.`,
     steps: [
