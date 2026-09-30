@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 35;
+export const NESTJS_TOTAL_DAYS = 46;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -93,4 +93,13 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 35, title: { en: "Persistence Architecture", np: "Persistence Architecture", jp: "Persistence Architecture" }, tags: [{ slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }, { slug: "persistence", label: { en: "persistence", np: "persistence", jp: "persistence" } }] },
     ],
   },
+  {
+    id: "nestjs-phase-4",
+    title: { en: "Phase 4 — Authentication & Authorization", np: "Phase 4 — Authentication & Authorization", jp: "Phase 4 — Authentication & Authorization" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_90%,#ec4899)]",
+    days: [
+      { day: 36, title: { en: "Authentication Architecture", np: "Authentication Architecture", jp: "Authentication Architecture" }, tags: [] }, { day: 37, title: { en: "Passport", np: "Passport", jp: "Passport" }, tags: [] }, { day: 38, title: { en: "JWT", np: "JWT", jp: "JWT" }, tags: [] }, { day: 39, title: { en: "Password Security", np: "Password Security", jp: "Password Security" }, tags: [] }, { day: 40, title: { en: "RBAC", np: "RBAC", jp: "RBAC" }, tags: [] }, { day: 41, title: { en: "ABAC", np: "ABAC", jp: "ABAC" }, tags: [] }, { day: 42, title: { en: "OAuth 2.0", np: "OAuth 2.0", jp: "OAuth 2.0" }, tags: [] }, { day: 43, title: { en: "OpenID Connect", np: "OpenID Connect", jp: "OpenID Connect" }, tags: [] }, { day: 44, title: { en: "Authentication Security", np: "Authentication Security", jp: "Authentication Security" }, tags: [] }, { day: 45, title: { en: "Authentication Project", np: "Authentication Project", jp: "Authentication Project" }, tags: [] },
+    ],
+  },
+  { id: "nestjs-phase-5", title: { en: "Phase 5 — Production REST API Engineering", np: "Phase 5 — Production REST API Engineering", jp: "Phase 5 — Production REST API Engineering" }, dotClass: "bg-[var(--accent)]", days: [{ day: 46, title: { en: "API Architecture", np: "API Architecture", jp: "API Architecture" }, tags: [] }] },
 ];
