@@ -200,6 +200,7 @@ export const UI_STRINGS = {
   "library.fiction": { en: "Fiction", np: "कथा", jp: "フィクション" },
   "library.nepali": { en: "Nepali", np: "नेपाली", jp: "ネパール語" },
   "library.business": { en: "Business", np: "व्यवसाय", jp: "ビジネス" },
+  "library.softwareEngineering": { en: "Software Engineering", np: "सफ्टवेयर इन्जिनियरिङ", jp: "ソフトウェアエンジニアリング" },
   "library.subconsciousMind.title": {
     en: "The Power of Your Subconscious Mind",
     np: "The Power of Your Subconscious Mind",

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { SOFTWARE_ENGINEERING_BOOKS } from "@/lib/library/software-engineering-books";
 
 export function LibraryShelf() {
   const { t } = useLocale();
@@ -14,6 +15,7 @@ export function LibraryShelf() {
     ["Rich Dad Poor Dad", "Robert T. Kiyosaki", "/library/finance/finance-book"], ["The Psychology of Money", "Morgan Housel", "/library/finance/the-psychology-of-money"], ["The Richest Man in Babylon", "George S. Clason", "/library/finance/the-richest-man-in-babylon"], ["The Simple Path to Wealth", "J. L. Collins", "/library/finance/the-simple-path-to-wealth"], ["The Millionaire Next Door", "Thomas J. Stanley", "/library/finance/the-millionaire-next-door"], ["I Will Teach You to Be Rich", "Ramit Sethi", "/library/finance/i-will-teach-you-to-be-rich"], ["Your Money or Your Life", "Vicki Robin", "/library/finance/your-money-or-your-life"], ["The Intelligent Investor", "Benjamin Graham", "/library/finance/the-intelligent-investor"], ["A Random Walk Down Wall Street", "Burton G. Malkiel", "/library/finance/a-random-walk-down-wall-street"], ["The Total Money Makeover", "Dave Ramsey", "/library/finance/the-total-money-makeover"],
     ["The Power of Your Subconscious Mind", "Joseph Murphy", "/library/personal-development/power-of-your-subconscious-mind"], ["Eat That Frog!", "Brian Tracy", "/library/personal-development/eat-that-frog"], ["Atomic Habits", "James Clear", "/library/personal-development/atomic-habits"], ["The 7 Habits of Highly Effective People", "Stephen R. Covey", "/library/personal-development/the-7-habits"], ["How to Win Friends and Influence People", "Dale Carnegie", "/library/personal-development/how-to-win-friends"], ["Mindset", "Carol S. Dweck", "/library/personal-development/mindset"], ["The Mountain Is You", "Brianna Wiest", "/library/personal-development/the-mountain-is-you"], ["Thinking, Fast and Slow", "Daniel Kahneman", "/library/personal-development/thinking-fast-and-slow"], ["Think Again", "Adam Grant", "/library/personal-development/think-again"],
     ["Peter Pan and Wendy", "J. M. Barrie", "/library/fiction/peter-pan-and-wendy"], ["The Jungle Book", "Rudyard Kipling", "/library/fiction/the-jungle-book"], ["Animal Farm", "George Orwell", "/library/fiction/animal-farm"], ["The Wizard of Oz", "L. Frank Baum", "/library/fiction/the-wizard-of-oz"], ["Frankenstein", "Mary Shelley", "/library/fiction/frankenstein"], ["Maile Dekheko Darbar", "Nepali literature", "/library/nepali/maile-dekheko-darbar"], ["GauKhane Katha", "Nepali literature", "/library/nepali/gaukhane-katha"], ["The Innovator's Dilemma", "Clayton Christensen", "/library/business/the-innovators-dilemma"],
+    ...SOFTWARE_ENGINEERING_BOOKS.map((book) => [book.title, book.author, `/library/software-engineering/${book.slug}`]),
   ];
   const searchResults = search.trim() ? books.filter(([title, author]) => `${title} ${author}`.toLowerCase().includes(search.trim().toLowerCase())) : [];
 
@@ -30,6 +32,7 @@ export function LibraryShelf() {
   const fictionCarouselRef = useRef<HTMLDivElement>(null);
   const nepaliCarouselRef = useRef<HTMLDivElement>(null);
   const businessCarouselRef = useRef<HTMLDivElement>(null);
+  const softwareEngineeringCarouselRef = useRef<HTMLDivElement>(null);
   const financeTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const shelfTouchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const [financePage, setFinancePage] = useState(0);
@@ -37,12 +40,14 @@ export function LibraryShelf() {
   const [fictionPage, setFictionPage] = useState(0);
   const [nepaliPage, setNepaliPage] = useState(0);
   const [businessPage, setBusinessPage] = useState(0);
+  const [softwareEngineeringPage, setSoftwareEngineeringPage] = useState(0);
   const [pinnedBook, setPinnedBook] = useState<string>();
   const financeBookCount = 10;
   const personalBookCount = 9;
   const fictionBookCount = 5;
   const nepaliBookCount = 2;
   const businessBookCount = 1;
+  const softwareEngineeringBookCount = SOFTWARE_ENGINEERING_BOOKS.length;
 
   useEffect(() => {
     setPinnedBook(window.localStorage.getItem("library:pinned-book:finance") ?? undefined);
@@ -54,14 +59,16 @@ export function LibraryShelf() {
     fictionCarouselRef.current?.scrollTo({ left: 0 });
     nepaliCarouselRef.current?.scrollTo({ left: 0 });
     businessCarouselRef.current?.scrollTo({ left: 0 });
+    softwareEngineeringCarouselRef.current?.scrollTo({ left: 0 });
     setFinancePage(0);
     setPersonalPage(0);
     setFictionPage(0);
     setNepaliPage(0);
     setBusinessPage(0);
+    setSoftwareEngineeringPage(0);
     document.querySelectorAll<HTMLAnchorElement>('main a[href*="/library/"]').forEach((book) => {
       const path = new URL(book.href).pathname;
-      const category = path.includes("/finance/") ? "finance" : path.includes("/personal-development/") ? "personal" : path.includes("/fiction/") ? "fiction" : path.includes("/nepali/") ? "nepali" : "business";
+      const category = path.includes("/finance/") ? "finance" : path.includes("/personal-development/") ? "personal" : path.includes("/fiction/") ? "fiction" : path.includes("/nepali/") ? "nepali" : path.includes("/software-engineering/") ? "software-engineering" : "business";
       if (category === "finance") return;
       const pdfUrl = `/api/library/${path.split("/").pop()}`;
       book.style.order = window.localStorage.getItem(`library:pinned-book:${category}`) === pdfUrl ? "-1" : "0";
@@ -472,6 +479,12 @@ export function LibraryShelf() {
         <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-fuchsia-600">{t("library.collection")}</p><h2 id="business-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.business")} ({businessBookCount})</h2></div></div>
         <div ref={businessCarouselRef} onScroll={() => updateShelfPage(businessCarouselRef, businessBookCount, setBusinessPage)} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2 [&>a]:w-full [&>a]:shrink-0 [&>a]:snap-start">
           <Link href="/library/business/the-innovators-dilemma" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-fuchsia-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]"><div className="relative grid min-h-72 place-items-center bg-[#eaddec] p-8 sm:min-h-full"><div className="flex h-60 w-40 flex-col justify-between bg-[#573263] p-5 text-white shadow-[12px_12px_0_#39214055]"><p className="text-xs uppercase tracking-[0.16em]">Clayton Christensen</p><h3 className="font-serif text-3xl leading-[0.95]">The<br />Innovator's<br />Dilemma</h3><span className="h-1 w-12 bg-[#e4be5f]" /></div></div><div className="flex flex-col p-7 sm:p-9"><div className="text-xs font-medium uppercase tracking-[0.16em] text-fuchsia-600">{t("library.business")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.innovatorsDilemma.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.innovatorsDilemma.subtitle")}</p><span className="mt-8 inline-flex w-fit rounded-xl bg-fuchsia-600 px-4 py-2.5 text-sm font-medium text-white">{t("library.continueReading")} →</span></div></Link>
+        </div>
+      </section>
+      <section className="mt-12" aria-labelledby="software-engineering-heading">
+        <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-cyan-600">{t("library.collection")}</p><h2 id="software-engineering-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.softwareEngineering")} ({softwareEngineeringBookCount})</h2></div><div className="flex gap-2"><button type="button" onClick={() => scrollShelf(softwareEngineeringCarouselRef, softwareEngineeringPage, softwareEngineeringBookCount, "left", setSoftwareEngineeringPage)} disabled={softwareEngineeringPage === 0} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] disabled:opacity-35" aria-label="Previous software engineering book">‹</button><button type="button" onClick={() => scrollShelf(softwareEngineeringCarouselRef, softwareEngineeringPage, softwareEngineeringBookCount, "right", setSoftwareEngineeringPage)} disabled={softwareEngineeringPage === softwareEngineeringBookCount - 1} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--border)] bg-[var(--elevated)] disabled:opacity-35" aria-label="Next software engineering book">›</button></div></div>
+        <div ref={softwareEngineeringCarouselRef} onScroll={() => updateShelfPage(softwareEngineeringCarouselRef, softwareEngineeringBookCount, setSoftwareEngineeringPage)} onTouchStart={handleShelfTouchStart} onTouchEnd={(event) => handleShelfTouchEnd(event, softwareEngineeringCarouselRef, softwareEngineeringPage, softwareEngineeringBookCount, setSoftwareEngineeringPage)} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2 [&>a]:w-full [&>a]:shrink-0 [&>a]:snap-start">
+          {SOFTWARE_ENGINEERING_BOOKS.map((book) => <Link key={book.slug} href={`/library/software-engineering/${book.slug}`} className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-cyan-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]"><div className="relative grid min-h-72 place-items-center overflow-hidden bg-cyan-950 p-8 sm:min-h-full"><div className="flex h-60 w-40 flex-col justify-between bg-cyan-700 p-5 text-white shadow-[12px_12px_0_#164e6355] transition duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg]"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">Software Engineering</p><h3 className="font-serif text-2xl leading-[0.95]">{book.title}</h3><span className="h-1 w-12 bg-amber-300" /></div></div><div className="flex flex-col p-7 sm:p-9"><div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-cyan-600"><span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />{t("library.softwareEngineering")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)] group-hover:text-cyan-600">{book.title}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{book.author}</p><span className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-medium text-white transition group-hover:brightness-110">{t("library.continueReading")}<span aria-hidden="true">→</span></span></div></Link>)}
         </div>
       </section>
     </main>
