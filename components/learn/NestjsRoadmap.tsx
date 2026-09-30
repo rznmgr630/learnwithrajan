@@ -39,11 +39,23 @@ import { NESTJS_DAY_32_LESSONS } from "@/lib/nestjs-learning/nestjs-day-32-lesso
 import { NESTJS_DAY_33_LESSONS } from "@/lib/nestjs-learning/nestjs-day-33-lessons";
 import { NESTJS_DAY_34_LESSONS } from "@/lib/nestjs-learning/nestjs-day-34-lessons";
 import { NESTJS_DAY_35_LESSONS } from "@/lib/nestjs-learning/nestjs-day-35-lessons";
+import { AUTHENTICATION_ARCHITECTURE_DAY_36_LESSONS } from "@/lib/nestjs-learning/nestjs-day-36-lessons";
+import { PASSPORT_DAY_37_LESSONS } from "@/lib/nestjs-learning/nestjs-day-37-lessons";
+import { JWT_DAY_38_LESSONS } from "@/lib/nestjs-learning/nestjs-day-38-lessons";
+import { PASSWORD_SECURITY_DAY_39_LESSONS } from "@/lib/nestjs-learning/nestjs-day-39-lessons";
+import { RBAC_DAY_40_LESSONS } from "@/lib/nestjs-learning/nestjs-day-40-lessons";
+import { ABAC_DAY_41_LESSONS } from "@/lib/nestjs-learning/nestjs-day-41-lessons";
+import { OAUTH_2_DAY_42_LESSONS } from "@/lib/nestjs-learning/nestjs-day-42-lessons";
+import { OPENID_CONNECT_DAY_43_LESSONS } from "@/lib/nestjs-learning/nestjs-day-43-lessons";
+import { AUTHENTICATION_SECURITY_DAY_44_LESSONS } from "@/lib/nestjs-learning/nestjs-day-44-lessons";
+import { AUTHENTICATION_PROJECT_DAY_45_LESSONS } from "@/lib/nestjs-learning/nestjs-day-45-lessons";
+import { API_ARCHITECTURE_DAY_46_LESSONS } from "@/lib/nestjs-learning/nestjs-day-46-lessons";
 import { NESTJS_ROADMAP_WEEKS, NESTJS_TOTAL_DAYS } from "@/lib/nestjs-learning/nestjs-challenge-data";
 import { useNestjsProgress } from "@/hooks/use-nestjs-progress";
 
 const TAG_PILL = "rounded-full border border-[var(--border)]/60 bg-[color-mix(in_oklab,var(--surface)_70%,transparent)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--faint)]";
 const LESSON_DAYS = { 1: NESTJS_DAY_1_LESSONS, 2: TYPESCRIPT_DAY_2_LESSONS, 3: TYPESCRIPT_DAY_3_LESSONS, 4: HTTP_DAY_4_LESSONS, 5: REST_DAY_5_LESSONS, 6: NESTJS_DAY_6_LESSONS, 7: NESTJS_DAY_7_LESSONS, 8: NESTJS_DAY_8_LESSONS, 9: NESTJS_DAY_9_LESSONS, 10: NESTJS_DAY_10_LESSONS, 11: NESTJS_DAY_11_LESSONS, 12: NESTJS_DAY_12_LESSONS, 13: NESTJS_DAY_13_LESSONS, 14: NESTJS_DAY_14_LESSONS, 15: NESTJS_DAY_15_LESSONS, 16: NESTJS_DAY_16_LESSONS, 17: NESTJS_DAY_17_LESSONS, 18: NESTJS_DAY_18_LESSONS, 19: NESTJS_DAY_19_LESSONS, 20: NESTJS_DAY_20_LESSONS, 21: NESTJS_DAY_21_LESSONS, 22: NESTJS_DAY_22_LESSONS, 23: NESTJS_DAY_23_LESSONS, 24: NESTJS_DAY_24_LESSONS, 25: NESTJS_DAY_25_LESSONS, 26: NESTJS_DAY_26_LESSONS, 27: NESTJS_DAY_27_LESSONS, 28: NESTJS_DAY_28_LESSONS, 29: NESTJS_DAY_29_LESSONS, 30: NESTJS_DAY_30_LESSONS, 31: NESTJS_DAY_31_LESSONS, 32: NESTJS_DAY_32_LESSONS, 33: NESTJS_DAY_33_LESSONS, 34: NESTJS_DAY_34_LESSONS, 35: NESTJS_DAY_35_LESSONS };
+Object.assign(LESSON_DAYS, { 36: AUTHENTICATION_ARCHITECTURE_DAY_36_LESSONS, 37: PASSPORT_DAY_37_LESSONS, 38: JWT_DAY_38_LESSONS, 39: PASSWORD_SECURITY_DAY_39_LESSONS, 40: RBAC_DAY_40_LESSONS, 41: ABAC_DAY_41_LESSONS, 42: OAUTH_2_DAY_42_LESSONS, 43: OPENID_CONNECT_DAY_43_LESSONS, 44: AUTHENTICATION_SECURITY_DAY_44_LESSONS, 45: AUTHENTICATION_PROJECT_DAY_45_LESSONS, 46: API_ARCHITECTURE_DAY_46_LESSONS });
 
 export function NestjsRoadmap() {
   const { locale, t } = useLocale();
