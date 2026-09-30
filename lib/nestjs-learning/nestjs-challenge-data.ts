@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 25;
+export const NESTJS_TOTAL_DAYS = 35;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -70,6 +70,27 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 23, title: { en: "Application Bootstrap", np: "Application Bootstrap", jp: "Application Bootstrap" }, tags: [{ slug: "bootstrap", label: { en: "bootstrap", np: "bootstrap", jp: "bootstrap" } }, { slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }] },
       { day: 24, title: { en: "Lifecycle Events", np: "Lifecycle Events", jp: "Lifecycle Events" }, tags: [{ slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }, { slug: "shutdown", label: { en: "shutdown", np: "shutdown", jp: "shutdown" } }] },
       { day: 25, title: { en: "Architecture Project", np: "Architecture Project", jp: "Architecture Project" }, tags: [{ slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }, { slug: "project", label: { en: "project", np: "project", jp: "project" } }] },
+    ],
+  },
+  {
+    id: "nestjs-phase-3",
+    title: {
+      en: "Phase 3 — Database & Persistence",
+      np: "Phase 3 — Database & Persistence",
+      jp: "Phase 3 — Database & Persistence",
+    },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_85%,#8b5cf6)]",
+    days: [
+      { day: 26, title: { en: "PostgreSQL Fundamentals", np: "PostgreSQL Fundamentals", jp: "PostgreSQL Fundamentals" }, tags: [{ slug: "postgresql", label: { en: "PostgreSQL", np: "PostgreSQL", jp: "PostgreSQL" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 27, title: { en: "TypeORM Fundamentals", np: "TypeORM Fundamentals", jp: "TypeORM Fundamentals" }, tags: [{ slug: "typeorm", label: { en: "TypeORM", np: "TypeORM", jp: "TypeORM" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 28, title: { en: "Entity Relationships", np: "Entity Relationships", jp: "Entity Relationships" }, tags: [{ slug: "typeorm", label: { en: "TypeORM", np: "TypeORM", jp: "TypeORM" } }, { slug: "relationships", label: { en: "relationships", np: "relationships", jp: "relationships" } }] },
+      { day: 29, title: { en: "Repository Pattern", np: "Repository Pattern", jp: "Repository Pattern" }, tags: [{ slug: "repository", label: { en: "repository", np: "repository", jp: "repository" } }, { slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }] },
+      { day: 30, title: { en: "Advanced Queries", np: "Advanced Queries", jp: "Advanced Queries" }, tags: [{ slug: "queries", label: { en: "queries", np: "queries", jp: "queries" } }, { slug: "typeorm", label: { en: "TypeORM", np: "TypeORM", jp: "TypeORM" } }] },
+      { day: 31, title: { en: "Database Migrations", np: "Database Migrations", jp: "Database Migrations" }, tags: [{ slug: "migrations", label: { en: "migrations", np: "migrations", jp: "migrations" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 32, title: { en: "Transactions", np: "Transactions", jp: "Transactions" }, tags: [{ slug: "transactions", label: { en: "transactions", np: "transactions", jp: "transactions" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 33, title: { en: "Database Performance", np: "Database Performance", jp: "Database Performance" }, tags: [{ slug: "performance", label: { en: "performance", np: "performance", jp: "performance" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 34, title: { en: "Prisma", np: "Prisma", jp: "Prisma" }, tags: [{ slug: "prisma", label: { en: "Prisma", np: "Prisma", jp: "Prisma" } }, { slug: "database", label: { en: "database", np: "database", jp: "database" } }] },
+      { day: 35, title: { en: "Persistence Architecture", np: "Persistence Architecture", jp: "Persistence Architecture" }, tags: [{ slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }, { slug: "persistence", label: { en: "persistence", np: "persistence", jp: "persistence" } }] },
     ],
   },
 ];
