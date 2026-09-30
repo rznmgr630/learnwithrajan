@@ -67,15 +67,12 @@ A user can follow many users, and a user can be followed by many users. This is 
 
 The database might represent this using:
 
-user
------
-id
-name
-
-user_followers
---------------
-follower_id
-following_id
+\`\`\`
+user            user_followers
+----            --------------
+id              follower_id
+name            following_id
+\`\`\`
 
 Understanding relationships at this level helps you design database structures instead of simply adding decorators until TypeORM stops showing errors.`,
       diagram: `USER
@@ -200,19 +197,25 @@ A simple example is a User and UserProfile.
 
 The User table might contain authentication and account information:
 
+\`\`\`
 User
-- id
-- email
-- passwordHash
+----
+id
+email
+passwordHash
+\`\`\`
 
 The UserProfile table might contain information that is not required for authentication:
 
+\`\`\`
 UserProfile
-- id
-- firstName
-- lastName
-- avatarUrl
-- bio
+-----------
+id
+firstName
+lastName
+avatarUrl
+bio
+\`\`\`
 
 One user has one profile, and one profile belongs to one user.
 
@@ -222,17 +225,14 @@ This is important because a relationship needs to eventually be represented in t
 
 For example, the database might contain:
 
-user
------
-id
-email
-
-user_profile
------------
-id
-firstName
-lastName
-userId
+\`\`\`
+user            user_profile
+----            ------------
+id              id
+email           firstName
+                lastName
+                userId
+\`\`\`
 
 Here, \`userId\` is the foreign key.
 
@@ -430,16 +430,13 @@ The important database detail is that the foreign key normally lives on the many
 
 For example:
 
-users
------
-id
-name
-
-orders
-------
-id
-total
-userId
+\`\`\`
+users          orders
+-----          ------
+id             id
+name           total
+               userId
+\`\`\`
 
 There is no need to store an array of order IDs inside the User row.
 
@@ -652,39 +649,37 @@ Instead, it creates an intermediate table called a <b>join table</b>.
 
 For example:
 
-students
---------
-id
-name
-
-courses
--------
-id
-title
-
-student_courses
----------------
-student_id
-course_id
+\`\`\`
+students        courses         student_courses
+--------        -------         ---------------
+id              id              student_id
+name            title           course_id
+\`\`\`
 
 The join table contains one row for each connection.
 
 If Alice takes Mathematics and Physics:
 
+\`\`\`
 student_courses
-
+---------------
 student_id | course_id
 -----------|----------
 1          | 10
 1          | 20
+\`\`\`
 
 If Bob also takes Mathematics:
 
+\`\`\`
+student_courses
+---------------
 student_id | course_id
 -----------|----------
 1          | 10
 1          | 20
 2          | 10
+\`\`\`
 
 This is extremely useful because the relationship itself can be represented independently.
 

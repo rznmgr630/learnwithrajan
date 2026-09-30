@@ -248,6 +248,10 @@ function isFlowStart(line: string, nextLine: string): boolean {
   return /^[\w./ -]+$/.test(line.trim()) && /^(?:[|↓↑←→v]|\+[-]+>)/.test(nextLine.trim());
 }
 
+function isEntityTableStart(line: string, nextLine: string): boolean {
+  return /^[A-Z][A-Za-z0-9_ ]*$/.test(line.trim()) && /^\s*-\s+\w+/.test(nextLine);
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -315,6 +319,8 @@ export function RichParagraph({ text, className }: RichTextProps) {
   if (!text.includes("\n")) {
     const standaloneCode = text.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
     if (standaloneCode) return <CodeBlock code={decodeCodeEntities(standaloneCode[1])} />;
+    const standalonePre = text.match(/^\s*<pre>([\s\S]*)<\/pre>\s*$/);
+    if (standalonePre) return <CodeBlock code={decodeCodeEntities(standalonePre[1])} />;
     const standaloneHeading = text.trim().match(/^(#{1,6})\s+(.+)$/);
     if (standaloneHeading) {
       return (
@@ -330,6 +336,32 @@ export function RichParagraph({ text, className }: RichTextProps) {
 
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
+
+    if (line.trim() === "<pre>") {
+      const code: string[] = [];
+      j++;
+      while (j < lines.length && lines[j].trim() !== "</pre>") {
+        code.push(lines[j]);
+        j++;
+      }
+      if (j < lines.length) {
+        nodes.push(<CodeBlock key={`pre-${j}`} code={decodeCodeEntities(code.join("\n"))} />);
+        continue;
+      }
+    }
+
+    if (isEntityTableStart(line, lines[j + 1] ?? "")) {
+      const title = line.trim();
+      const table = [title, "-".repeat(title.length)];
+      j++;
+      while (j < lines.length && /^\s*-\s+\w+/.test(lines[j])) {
+        table.push(lines[j].replace(/^\s*-\s+/, ""));
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={`entity-table-${j}`} code={table.join("\n")} />);
+      continue;
+    }
 
     if (isFlowStart(line, lines[j + 1] ?? "")) {
       const flow = [line];

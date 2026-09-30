@@ -326,22 +326,14 @@ Imagine an online store.
 
 You have:
 
-User
-- id
-- name
-- email
-
-Order
-- id
-- user_id
-- total
-- status
-
-OrderItem
-- id
-- order_id
-- product_id
-- quantity
+\`\`\`
+User             Order            OrderItem
+----             -----            ---------
+id               id               id
+name             user_id          order_id
+email            total            product_id
+                 status           quantity
+\`\`\`
 
 Product
 - id
