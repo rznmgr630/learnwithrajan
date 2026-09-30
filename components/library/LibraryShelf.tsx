@@ -7,6 +7,24 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function LibraryShelf() {
   const { t } = useLocale();
+  const [search, setSearch] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const books = [
+    ["Rich Dad Poor Dad", "Robert T. Kiyosaki", "/library/finance/finance-book"], ["The Psychology of Money", "Morgan Housel", "/library/finance/the-psychology-of-money"], ["The Richest Man in Babylon", "George S. Clason", "/library/finance/the-richest-man-in-babylon"], ["The Simple Path to Wealth", "J. L. Collins", "/library/finance/the-simple-path-to-wealth"], ["The Millionaire Next Door", "Thomas J. Stanley", "/library/finance/the-millionaire-next-door"], ["I Will Teach You to Be Rich", "Ramit Sethi", "/library/finance/i-will-teach-you-to-be-rich"], ["Your Money or Your Life", "Vicki Robin", "/library/finance/your-money-or-your-life"], ["The Intelligent Investor", "Benjamin Graham", "/library/finance/the-intelligent-investor"], ["A Random Walk Down Wall Street", "Burton G. Malkiel", "/library/finance/a-random-walk-down-wall-street"], ["The Total Money Makeover", "Dave Ramsey", "/library/finance/the-total-money-makeover"],
+    ["The Power of Your Subconscious Mind", "Joseph Murphy", "/library/personal-development/power-of-your-subconscious-mind"], ["Eat That Frog!", "Brian Tracy", "/library/personal-development/eat-that-frog"], ["Atomic Habits", "James Clear", "/library/personal-development/atomic-habits"], ["The 7 Habits of Highly Effective People", "Stephen R. Covey", "/library/personal-development/the-7-habits"], ["How to Win Friends and Influence People", "Dale Carnegie", "/library/personal-development/how-to-win-friends"], ["Mindset", "Carol S. Dweck", "/library/personal-development/mindset"], ["The Mountain Is You", "Brianna Wiest", "/library/personal-development/the-mountain-is-you"], ["Thinking, Fast and Slow", "Daniel Kahneman", "/library/personal-development/thinking-fast-and-slow"], ["Think Again", "Adam Grant", "/library/personal-development/think-again"],
+    ["Peter Pan and Wendy", "J. M. Barrie", "/library/fiction/peter-pan-and-wendy"], ["The Jungle Book", "Rudyard Kipling", "/library/fiction/the-jungle-book"], ["Animal Farm", "George Orwell", "/library/fiction/animal-farm"], ["The Wizard of Oz", "L. Frank Baum", "/library/fiction/the-wizard-of-oz"], ["Frankenstein", "Mary Shelley", "/library/fiction/frankenstein"], ["Maile Dekheko Darbar", "Nepali literature", "/library/nepali/maile-dekheko-darbar"], ["GauKhane Katha", "Nepali literature", "/library/nepali/gaukhane-katha"], ["The Innovator's Dilemma", "Clayton Christensen", "/library/business/the-innovators-dilemma"],
+  ];
+  const searchResults = search.trim() ? books.filter(([title, author]) => `${title} ${author}`.toLowerCase().includes(search.trim().toLowerCase())) : [];
+
+  useEffect(() => {
+    function closeSearch(event: MouseEvent) {
+      if (!searchRef.current?.contains(event.target as Node)) setIsSearchOpen(false);
+    }
+
+    document.addEventListener("mousedown", closeSearch);
+    return () => document.removeEventListener("mousedown", closeSearch);
+  }, []);
   const financeCarouselRef = useRef<HTMLDivElement>(null);
   const personalCarouselRef = useRef<HTMLDivElement>(null);
   const fictionCarouselRef = useRef<HTMLDivElement>(null);
@@ -135,7 +153,7 @@ export function LibraryShelf() {
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl overflow-x-hidden px-4 py-10 sm:px-6 sm:py-14">
-      <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_76%,transparent)] px-6 py-9 shadow-sm sm:px-10 sm:py-12">
+      <section className="relative overflow-visible rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_76%,transparent)] px-6 py-9 shadow-sm sm:px-10 sm:py-12">
         <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[var(--accent)] opacity-15 blur-3xl" />
         <div className="absolute -bottom-32 left-1/3 h-52 w-52 rounded-full bg-violet-500 opacity-10 blur-3xl" />
         <div className="relative max-w-2xl">
@@ -150,6 +168,7 @@ export function LibraryShelf() {
           </div>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">{t("library.title")}</h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-[var(--muted)]">{t("library.subtitle")}</p>
+          <div ref={searchRef} className="relative mt-6 max-w-xl"><input value={search} onFocus={() => setIsSearchOpen(true)} onChange={(event) => { setSearch(event.target.value); setIsSearchOpen(true); }} placeholder="Search books or authors" className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none placeholder:text-[var(--faint)] focus:border-[var(--accent)]" />{isSearchOpen && searchResults.length > 0 && <div className="absolute z-10 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--elevated)] shadow-xl">{searchResults.map(([title, author, href]) => <Link key={href} href={href} onClick={() => { setSearch(""); setIsSearchOpen(false); }} className="block border-b border-[var(--border)] px-4 py-3 last:border-0 hover:bg-[var(--surface)]"><span className="block text-sm font-medium text-[var(--text)]">{title}</span><span className="text-xs text-[var(--muted)]">{author}</span></Link>)}</div>}</div>
           <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_76%,transparent)] px-3 py-2 text-sm text-[var(--muted)]">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             {t("library.savedBooks")}
