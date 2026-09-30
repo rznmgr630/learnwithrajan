@@ -1,4 +1,5 @@
 export const FICTION_BOOKS = [
+  { slug: "pride-and-prejudice", title: "Pride and Prejudice", author: "Jane Austen", fileId: "1jlVx---okHr_vozxuHv_1mk8kruG2WyC" },
   { slug: "the-wonderful-wizard-of-oz", title: "The Wonderful Wizard of Oz", author: "L. Frank Baum", fileId: "1MkBLcmVPrJ4z6BxpuEyBj1ZueY5zDU9T" },
   { slug: "alices-adventures-in-wonderland", title: "Alice's Adventures in Wonderland", author: "Lewis Carroll", fileId: "1jAUD1XSAn1dGreWidoUl5bvIhiE79Pjo" },
   { slug: "pinocchio", title: "Pinocchio", author: "Carlo Collodi", fileId: "1jozuT4GCruBBmSSM77hs7rmns6hs9tV0" },
