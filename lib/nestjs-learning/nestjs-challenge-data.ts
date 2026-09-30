@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 24;
+export const NESTJS_TOTAL_DAYS = 25;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -69,6 +69,7 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 22, title: { en: "Configuration", np: "Configuration", jp: "Configuration" }, tags: [{ slug: "configuration", label: { en: "configuration", np: "configuration", jp: "configuration" } }, { slug: "environment", label: { en: "environment", np: "environment", jp: "environment" } }] },
       { day: 23, title: { en: "Application Bootstrap", np: "Application Bootstrap", jp: "Application Bootstrap" }, tags: [{ slug: "bootstrap", label: { en: "bootstrap", np: "bootstrap", jp: "bootstrap" } }, { slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }] },
       { day: 24, title: { en: "Lifecycle Events", np: "Lifecycle Events", jp: "Lifecycle Events" }, tags: [{ slug: "lifecycle", label: { en: "lifecycle", np: "lifecycle", jp: "lifecycle" } }, { slug: "shutdown", label: { en: "shutdown", np: "shutdown", jp: "shutdown" } }] },
+      { day: 25, title: { en: "Architecture Project", np: "Architecture Project", jp: "Architecture Project" }, tags: [{ slug: "architecture", label: { en: "architecture", np: "architecture", jp: "architecture" } }, { slug: "project", label: { en: "project", np: "project", jp: "project" } }] },
     ],
   },
 ];
