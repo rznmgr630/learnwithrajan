@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "42 saved books",
-    np: "४२ सुरक्षित पुस्तक",
-    jp: "保存した本 42冊",
+    en: "52 saved books",
+    np: "५२ सुरक्षित पुस्तक",
+    jp: "保存した本 52冊",
   },
   "library.collection": {
     en: "Collection",
