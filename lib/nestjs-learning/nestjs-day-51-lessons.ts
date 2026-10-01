@@ -50,6 +50,7 @@ The frontend would break because it was depending on the message.
 
 Instead, the API should provide a stable error code.
 
+
 {
   "code": "USER_NOT_FOUND",
   "message": "The requested user could not be found."
@@ -378,13 +379,311 @@ Now the application has one central source for valid error codes.` },
       id: "day-51-lesson-2",
       title: "Validation Errors",
       durationMinutes: 18,
-      explanation: `Validation errors occur when a request is syntactically acceptable but its input does not satisfy the API contract. NestJS commonly handles DTO validation with ValidationPipe, class-validator, and class-transformer. The important architectural decision is how validation failures are converted into your standard error format.
+      explanation: `<b>What Are Validation Errors?</b>
 
-A validation response should provide enough structured information for a client to correct the request. For example, a details array can identify the field, validation rule, and message. This is much more useful than returning one long string containing every validation failure.
+Validation errors occur when a client sends a request that does not satisfy the API's input requirements.
 
-Validation belongs at the API boundary, but business rules may still need to be checked deeper in the application. A DTO can validate that age is an integer, while a domain service may determine that the selected product cannot legally be purchased by that customer. These are different categories of failure and should not be mixed together.
+For example, suppose a NestJS API expects:
 
-Do not rely only on frontend validation. Backend validation remains mandatory because API clients can be browsers, mobile applications, integrations, scripts, or malicious callers.`,
+\`\`\`json
+{
+  "email": "user@example.com",
+  "password": "strong-password"
+}
+\`\`\`
+
+But the client sends:
+
+\`\`\`json
+{
+  "email": "not-an-email",
+  "password": "123"
+}
+\`\`\`
+
+The request reached the server, but the input does not satisfy the API contract. This is a validation error.
+
+Validation errors are different from internal server failures. The server may be working correctly; the request data is simply invalid.
+
+<b>Why Validation Matters</b>
+
+Validation protects the application from invalid input before that input reaches business logic, databases, or external services.
+
+Without validation, invalid data can travel through multiple layers:
+
+\`\`\`text
+Controller
+    ↓
+Service
+    ↓
+Business Logic
+    ↓
+Database
+\`\`\`
+
+Every layer may then need to protect itself from malformed input.
+
+With NestJS validation, the request can be rejected at the API boundary:
+
+\`\`\`text
+HTTP Request
+     ↓
+ValidationPipe
+     ↓
+Valid? ───── No ───→ Validation Error
+  │
+ Yes
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Database
+\`\`\`
+
+This keeps invalid request data away from the rest of the application.
+
+<b>DTOs and Validation</b>
+
+NestJS commonly uses DTOs (Data Transfer Objects) together with class-validator.
+
+A DTO describes the expected structure of incoming data and can declare validation rules for each property.
+
+For example:
+
+\`\`\`ts
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+} from "class-validator";
+
+export class CreateUserDto {
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+}
+\`\`\`
+
+Now NestJS can validate that:
+
+- email has a valid email format
+- password is a string
+- password contains at least 8 characters
+
+<b>Enable ValidationPipe</b>
+
+The validation decorators on a DTO do not perform validation by themselves. NestJS needs a ValidationPipe to run the validation process.
+
+A common application-wide configuration is:
+
+\`\`\`ts
+import { ValidationPipe } from "@nestjs/common";
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe(),
+  );
+
+  await app.listen(3000);
+}
+\`\`\`
+
+With a global ValidationPipe, DTO validation can be applied consistently across controllers.
+
+<b>Whitelist and Transform</b>
+
+Production applications commonly configure ValidationPipe with options such as whitelist and transform.
+
+\`\`\`ts
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }),
+);
+\`\`\`
+
+<b>whitelist</b>
+
+The whitelist option removes properties that are not defined by the DTO.
+
+For example, if the DTO contains:
+
+\`\`\`ts
+export class CreateUserDto {
+  @IsEmail()
+  email!: string;
+}
+\`\`\`
+
+and the client sends:
+
+\`\`\`json
+{
+  "email": "user@example.com",
+  "isAdmin": true
+}
+\`\`\`
+
+the unexpected isAdmin property can be removed when whitelist is enabled.
+
+This helps keep incoming data aligned with the DTO contract.
+
+<b>transform</b>
+
+The transform option allows NestJS to transform incoming values into the types expected by the application when the necessary transformation metadata is available.
+
+This is especially useful for query and route parameters, because HTTP values commonly arrive as strings.
+
+For example:
+
+\`\`\`text
+GET /users?page=10
+\`\`\`
+
+The application may want page to be treated as a number rather than a raw string.
+
+<b>Validation at the API Boundary</b>
+
+Validation should happen as early as possible.
+
+\`\`\`text
+                 Client Request
+                       │
+                       ▼
+              ┌─────────────────┐
+              │  ValidationPipe  │
+              └────────┬────────┘
+                       │
+                Validate DTO
+                       │
+              ┌────────┴────────┐
+              │                 │
+            Valid             Invalid
+              │                 │
+              ▼                 ▼
+          Controller      Validation Error
+              │                 │
+              ▼                 ▼
+           Service          4xx Response
+              │
+              ▼
+        Domain Rules
+\`\`\`
+
+The ValidationPipe handles request-shape validation before the controller's business logic runs.
+
+<b>Request Validation vs Domain Validation</b>
+
+Not every rule belongs in a DTO.
+
+A DTO can validate that:
+
+\`\`\`text
+age is an integer
+email has a valid format
+password has a minimum length
+\`\`\`
+
+But a domain service may need to determine whether:
+
+\`\`\`text
+the selected product can be purchased
+the order can be cancelled
+the user can perform an operation
+the account is allowed to access a resource
+\`\`\`
+
+These are different categories of validation.
+
+Request validation asks:
+
+> Is this input structurally valid?
+
+Domain validation asks:
+
+> Is this operation allowed according to the business rules?
+
+Keeping these responsibilities separate prevents DTOs from becoming a place for every business rule in the application.
+
+<b>Standardizing Validation Errors</b>
+
+Validation failures should follow the same error format introduced in the previous lesson.
+
+For example:
+
+\`\`\`json
+{
+  "statusCode": 400,
+  "code": "VALIDATION_FAILED",
+  "message": "Request validation failed.",
+  "requestId": "req_01JABC",
+  "details": [
+    {
+      "field": "email",
+      "code": "IS_EMAIL",
+      "message": "email must be a valid email address"
+    }
+  ]
+}
+\`\`\`
+
+The details field contains structured information so the client can identify exactly which field failed validation.
+
+The client should not need to parse a message such as:
+
+\`\`\`text
+"email is invalid, password is too short, name is required"
+\`\`\`
+
+Structured details are easier for web applications, mobile applications, and other API consumers to process.
+
+<b>Customizing ValidationPipe</b>
+
+NestJS allows you to customize validation exceptions using exceptionFactory.
+
+For example:
+
+\`\`\`ts
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    exceptionFactory: (errors) => {
+      return new BadRequestException({
+        code: "VALIDATION_FAILED",
+        message: "Request validation failed.",
+        details: errors,
+      });
+    },
+  }),
+);
+\`\`\`
+
+In a production application, the raw validation errors should normally be transformed into the application's documented error structure rather than exposing framework-specific objects directly.
+
+<b>Never Trust Frontend Validation</b>
+
+Frontend validation improves user experience, but it is not a security boundary.
+
+A backend API can be called by:
+
+- a web browser
+- a mobile application
+- another backend service
+- a command-line client
+- an integration
+- a malicious caller
+
+Therefore, validation must always be enforced on the server.
+
+The frontend can provide early feedback, but the NestJS API remains responsible for enforcing the actual API contract.`,
       diagram: `HTTP Request
     |
     v
@@ -395,11 +694,18 @@ ValidationPipe
     +---- valid ------> Controller
                            |
                            v
-                     Application Service
+                      Application Service
                            |
                            v
-                     Domain Rules`,
-      codeExample: { title: "Example", code: `import { IsEmail, IsInt, Min, IsString } from "class-validator";
+                       Domain Rules`,
+      codeExample: {
+        title: "Code Example",
+        code: `import {
+  IsEmail,
+  IsInt,
+  IsString,
+  Min,
+} from "class-validator";
 
 export class CreateUserDto {
   @IsString()
@@ -413,11 +719,19 @@ export class CreateUserDto {
   age!: number;
 }
 
-// Standardized validation response
+// main.ts
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }),
+);
+
+// Example standardized validation response
 {
   "statusCode": 400,
   "code": "VALIDATION_FAILED",
-  "message": "Request validation failed",
+  "message": "Request validation failed.",
   "details": [
     {
       "field": "email",
@@ -426,78 +740,431 @@ export class CreateUserDto {
     }
   ],
   "requestId": "req_01JABC"
-}` },
+}`,
+      },
       keyTakeaways: [
-        "DTO validation protects the API boundary.",
-        "Structured validation details are better than parsing human-readable messages.",
+        "DTO validation protects the API boundary from invalid request data.",
+        "ValidationPipe is responsible for running DTO validation in NestJS.",
+        "whitelist helps remove properties that are not defined by the DTO.",
+        "transform can convert incoming values into the expected application types.",
+        "Structured validation details are better than forcing clients to parse human-readable messages.",
         "Request validation and domain validation solve different problems.",
-        "Never assume frontend validation is sufficient."
+        "Backend validation is mandatory even when frontend validation exists.",
       ],
       commonMistakes: [
-        "Accepting unvalidated request bodies.",
-        "Returning inconsistent validation shapes between endpoints.",
+        "Accepting request bodies without server-side validation.",
+        "Returning inconsistent validation-error shapes from different endpoints.",
         "Putting every business rule into DTO decorators.",
-        "Trusting values because a frontend already validated them."
+        "Trusting values simply because a frontend already validated them.",
+        "Returning raw framework validation objects as the long-term public API contract.",
       ],
       quiz: [
         {
-          question: "Which is the best reason to return structured validation details?",
+          question: "Which NestJS feature is responsible for running DTO validation?",
           options: [
-            "It makes HTTP unnecessary",
-            "Clients can identify exactly which fields need correction",
-            "It hides all validation behavior from clients",
-            "It prevents all server-side validation"
+            "ValidationPipe",
+            "AuthGuard",
+            "Interceptor",
+            "Middleware",
           ],
-          correctIndex: 1,
-          explanation: "Structured details let clients associate errors with individual fields and validation rules."
-        }
-      ]
+          correctIndex: 0,
+          explanation: "ValidationPipe runs validation for DTOs and can also transform and standardize validation failures.",
+        },
+      ],
     },
     {
       id: "day-51-lesson-3",
       title: "Domain, Infrastructure, and Internal Errors",
       durationMinutes: 22,
-      explanation: `Not every failure has the same origin. Domain errors represent meaningful business conditions: an order may already be cancelled, a wallet may have insufficient funds, or a user may not own a resource. These errors can often be translated into intentional 4xx responses.
+      explanation: `<b>Why Error Categories Matter</b>
 
-Infrastructure errors come from dependencies such as PostgreSQL, Redis, object storage, queues, email providers, or external APIs. A database connection failure is not the same thing as a business rule failure. Infrastructure errors should usually be logged with diagnostic context and translated into a safe API response.
+Not every failure in a NestJS application has the same meaning.
 
-Internal errors are unexpected failures that the application did not intentionally model. A programming bug, an unexpected null value, or an unhandled dependency failure may become an internal server error. The public response should remain safe and generic while the internal logs contain enough information to debug the incident.
+A production application can encounter errors from different layers:
 
-The architecture should preserve the original error context internally while preventing implementation details from leaking across the API boundary. An exception filter or centralized error handler is a natural place to perform this final translation.`,
+\`\`\`text
+Application
+│
+├── Validation Errors
+├── Domain Errors
+├── Infrastructure Errors
+└── Internal Errors
+\`\`\`
+
+These categories should not automatically be handled in the same way.
+
+For example:
+
+\`\`\`text
+ORDER_ALREADY_CANCELLED
+\`\`\`
+
+is very different from:
+
+\`\`\`text
+DATABASE_CONNECTION_FAILED
+\`\`\`
+
+The first represents a business condition that the application intentionally understands.
+
+The second represents a failure in a technical dependency.
+
+<b>Domain Errors</b>
+
+A domain error represents a business rule that prevents an operation from completing.
+
+The application itself may be functioning correctly. The requested operation is simply not allowed according to the current business state.
+
+Examples include:
+
+\`\`\`text
+ORDER_ALREADY_PAID
+ORDER_ALREADY_CANCELLED
+INSUFFICIENT_BALANCE
+USER_ALREADY_EXISTS
+APPOINTMENT_ALREADY_BOOKED
+INVALID_ORDER_STATE
+\`\`\`
+
+For example:
+
+\`\`\`ts
+if (order.status === OrderStatus.PAID) {
+  throw new OrderAlreadyPaidException();
+}
+\`\`\`
+
+This is not an infrastructure failure.
+
+The database may be completely healthy. The service is intentionally rejecting the operation because the business rule does not allow it.
+
+<b>Domain Errors and HTTP Responses</b>
+
+A domain error can often be translated into an intentional 4xx response.
+
+For example, if a client tries to pay an order that has already been paid:
+
+\`\`\`json
+{
+  "statusCode": 409,
+  "code": "ORDER_ALREADY_PAID",
+  "message": "This order has already been paid.",
+  "requestId": "req_123"
+}
+\`\`\`
+
+The \`409 Conflict\` communicates the HTTP-level category, while \`ORDER_ALREADY_PAID\` identifies the specific application condition.
+
+<b>Infrastructure Errors</b>
+
+Infrastructure errors originate from technical dependencies required by the application.
+
+Examples include:
+
+\`\`\`text
+PostgreSQL unavailable
+Redis unavailable
+RabbitMQ unavailable
+Object storage unavailable
+External API unavailable
+Network timeout
+DNS failure
+\`\`\`
+
+Consider a NestJS service that calls a payment provider:
+
+\`\`\`text
+NestJS Application
+       │
+       ├── PostgreSQL
+       ├── Redis
+       ├── RabbitMQ
+       └── Payment Provider
+\`\`\`
+
+If the payment provider becomes unavailable, the application may receive a low-level technical error.
+
+That error should not automatically become part of the public API contract.
+
+For example, do not expose:
+
+\`\`\`text
+ECONNREFUSED 10.0.2.15:5432
+\`\`\`
+
+or:
+
+\`\`\`text
+Redis connection refused at redis-prod-01:6379
+\`\`\`
+
+Instead, log the technical details internally and translate the failure into a safe application-level error.
+
+For example:
+
+\`\`\`json
+{
+  "statusCode": 503,
+  "code": "PAYMENT_PROVIDER_UNAVAILABLE",
+  "message": "Payment service is temporarily unavailable.",
+  "requestId": "req_456"
+}
+\`\`\`
+
+<b>Internal Errors</b>
+
+Internal errors are unexpected failures that the application did not intentionally model.
+
+Examples include:
+
+\`\`\`text
+Unexpected null value
+Programming bug
+Unhandled exception
+Unexpected type error
+Unhandled dependency failure
+\`\`\`
+
+For example:
+
+\`\`\`ts
+const user = await this.userService.findById(id);
+
+return user.profile.name;
+\`\`\`
+
+If \`profile\` unexpectedly contains \`null\`, the application may throw a runtime error.
+
+This is not an error that the client needs to understand in technical detail.
+
+The public response should remain safe:
+
+\`\`\`json
+{
+  "statusCode": 500,
+  "code": "INTERNAL_SERVER_ERROR",
+  "message": "An unexpected error occurred.",
+  "requestId": "req_789"
+}
+\`\`\`
+
+The original exception should be logged with enough diagnostic information for developers to investigate it.
+
+<b>Error Translation</b>
+
+One of the most important patterns in production error architecture is translating low-level errors into application-level errors.
+
+The general flow is:
+
+\`\`\`text
+Low-Level Error
+      │
+      ▼
+Repository / Infrastructure Layer
+      │
+      ▼
+Application or Domain Error
+      │
+      ▼
+Global Exception Filter
+      │
+      ▼
+Standard HTTP Response
+\`\`\`
+
+For example, PostgreSQL might report a duplicate-key violation.
+
+The client should not have to know that PostgreSQL generated the error.
+
+Instead:
+
+\`\`\`text
+PostgreSQL duplicate key
+        ↓
+USER_ALREADY_EXISTS
+        ↓
+HTTP 409
+        ↓
+Safe API response
+\`\`\`
+
+This keeps the public API contract independent from the database implementation.
+
+<b>Preserving Error Context</b>
+
+Error translation does not mean throwing away the original error.
+
+The application should preserve the original error internally so that logs and observability systems contain enough information to diagnose the problem.
+
+A useful architecture is:
+
+\`\`\`text
+                     Error
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+          ▼            ▼            ▼
+       Domain     Infrastructure   Internal
+          │            │            │
+          ▼            ▼            ▼
+       Intentional   Translate      Generic
+         4xx        to safe 5xx      500
+          │            │            │
+          └────────────┼────────────┘
+                       ▼
+              Global Exception Filter
+                       │
+              ┌────────┴────────┐
+              │                 │
+           Client        Logs / Tracing
+\`\`\`
+
+The client receives a safe, documented response.
+
+The server retains the detailed diagnostic context.
+
+<b>Do Not Catch Every Error as 500</b>
+
+A common mistake is to catch every exception and replace it with an internal server error.
+
+For example:
+
+\`\`\`ts
+try {
+  const order = await this.findOrder(id);
+
+  if (order.status === "PAID") {
+    throw new OrderAlreadyPaidException();
+  }
+} catch {
+  throw new InternalServerErrorException();
+}
+\`\`\`
+
+This destroys the meaning of the domain error.
+
+\`ORDER_ALREADY_PAID\` is an expected business condition, not an unexpected internal failure.
+
+The application should preserve meaningful errors and only convert errors when there is a reason to translate them.
+
+<b>Centralized Error Translation</b>
+
+A global exception filter is a natural place to perform the final HTTP-level translation.
+
+Conceptually:
+
+\`\`\`text
+Controller / Service
+        │
+        ▼
+     Exception
+        │
+        ▼
+Global Exception Filter
+        │
+        ├── Known Domain Error
+        │       ↓
+        │    Documented 4xx
+        │
+        ├── Known Infrastructure Error
+        │       ↓
+        │    Safe 5xx
+        │
+        └── Unknown Error
+                ↓
+             Safe 500
+\`\`\`
+
+This prevents every controller and service from implementing its own error-response logic.
+
+<b>Client vs Server Information</b>
+
+A production API should separate information intended for clients from information intended for developers.
+
+The client might receive:
+
+\`\`\`json
+{
+  "statusCode": 500,
+  "code": "INTERNAL_SERVER_ERROR",
+  "message": "An unexpected error occurred.",
+  "requestId": "req_789"
+}
+\`\`\`
+
+While server-side logs might contain:
+
+\`\`\`text
+requestId: req_789
+exception: TypeError
+message: Cannot read properties of undefined
+stack: ...
+service: orders-api
+environment: production
+\`\`\`
+
+This gives developers the information they need without exposing implementation details through the public API.
+
+<b>Error Categories</b>
+
+A useful mental model is:
+
+\`\`\`text
+Validation
+→ Request data does not satisfy the API contract
+
+Domain
+→ Business rule prevents the operation
+
+Infrastructure
+→ Technical dependency or platform failure
+
+Internal
+→ Unexpected application failure
+\`\`\`
+
+These categories help determine how an error should be translated, logged, and exposed to clients.
+
+The exact HTTP status depends on the semantics of the error, but the architectural distinction should remain clear.`,
       diagram: `                 Error
                    |
-        +----------+----------+
-        |          |          |
-      Domain   Infrastructure Internal
-        |          |          |
-        v          v          v
-       4xx       safe 5xx    safe 5xx
-        |          |          |
-        +----------+----------+
+         +---------+---------+
+         |         |         |
+       Domain  Infrastructure Internal
+         |         |         |
+         v         v         v
+        4xx      safe 5xx   safe 5xx
+         |         |         |
+         +---------+---------+
                    |
-          Central Error Filter
+           Global Exception Filter
                    |
-          +--------+--------+
-          |                 |
-       Client            Logs/Tracing`,
-      codeExample: { title: "Example", code: `export class OrderAlreadyCancelledError extends Error {
+             +-----+-----+
+             |           |
+          Client    Logs/Tracing`,
+      codeExample: {
+        title: "Code Example",
+        code: `export class OrderAlreadyCancelledError extends Error {
   readonly code = "ORDER_ALREADY_CANCELLED";
 }
 
 export class PaymentProviderUnavailableError extends Error {
   readonly code = "PAYMENT_PROVIDER_UNAVAILABLE";
-  constructor(public readonly provider: string) {
+
+  constructor(
+    public readonly provider: string,
+  ) {
     super("Payment provider is unavailable");
   }
 }
 
-// Unexpected errors should not expose their raw message.
+// Translate known errors into safe public responses.
 function toPublicError(error: unknown) {
   if (error instanceof OrderAlreadyCancelledError) {
     return {
       statusCode: 409,
       code: error.code,
-      message: "Order is already cancelled",
+      message: "Order is already cancelled.",
     };
   }
 
@@ -505,27 +1172,33 @@ function toPublicError(error: unknown) {
     return {
       statusCode: 503,
       code: error.code,
-      message: "Payment service is temporarily unavailable",
+      message: "Payment service is temporarily unavailable.",
     };
   }
 
+  // Unknown errors should not expose their raw message.
   return {
     statusCode: 500,
     code: "INTERNAL_SERVER_ERROR",
-    message: "An unexpected error occurred",
+    message: "An unexpected error occurred.",
   };
-}` },
+}`,
+      },
       keyTakeaways: [
-        "Domain errors represent business conditions.",
-        "Infrastructure errors represent dependency or platform failures.",
+        "Domain errors represent intentional business conditions.",
+        "Infrastructure errors represent failures in technical dependencies or platforms.",
         "Unexpected internal errors should be safe externally but detailed internally.",
-        "Centralized translation prevents error handling from becoming inconsistent."
+        "Low-level errors should be translated into stable application-level errors before reaching the API client.",
+        "A global exception filter provides a central place for final error-response translation.",
+        "Preserve original error context in logs and observability systems even when the public response is generic.",
       ],
       commonMistakes: [
-        "Treating every exception as a 500 error.",
-        "Returning raw PostgreSQL, Redis, or provider messages to clients.",
+        "Treating every exception as a 500 Internal Server Error.",
+        "Returning raw PostgreSQL, Redis, queue, or external-provider messages to clients.",
         "Catching an error and silently discarding its original context.",
-        "Putting business rules into infrastructure-specific exception handlers."
+        "Converting meaningful domain errors into generic internal errors.",
+        "Putting business rules into infrastructure-specific exception handlers.",
+        "Making the public API contract depend on a specific database or external provider.",
       ],
       quiz: [
         {
@@ -534,13 +1207,13 @@ function toPublicError(error: unknown) {
             "Domain error",
             "Infrastructure error",
             "Network error",
-            "Unknown internal error"
+            "Unknown internal error",
           ],
           correctIndex: 0,
-          explanation: "The condition is a business rule and can be intentionally represented as a domain error."
-        }
-      ]
-    }
+          explanation: "The condition is a business rule and can be intentionally represented as a domain error.",
+        },
+      ],
+    },
   ],
   finalQuiz: [
     {
