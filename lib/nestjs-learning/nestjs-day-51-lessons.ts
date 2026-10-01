@@ -10,60 +10,339 @@ export const DAY_51_LESSONS: LessonDay = {
       id: "day-51-lesson-1",
       title: "Error Codes and a Standard Error Format",
       durationMinutes: 20,
-      explanation: `A production API should not make clients guess what an error means from a human-readable message. Error codes provide stable machine-readable identifiers such as USER_NOT_FOUND, ORDER_ALREADY_PAID, or VALIDATION_FAILED. The message can change for readability, but the code should remain stable enough for clients to build reliable behavior around it.
+      explanation: `1. Explanation
+What Is an API Error?
 
-A standard error format gives every endpoint a predictable response shape. A useful format normally contains an HTTP status, application error code, human-readable message, request or trace identifier, and optional details. The details field can carry structured information such as validation failures without forcing clients to parse strings.
+An API error happens when the server cannot successfully complete a request.
 
-HTTP status codes and application error codes have different jobs. HTTP status communicates the broad protocol-level category, while the application code identifies the specific application condition. For example, both an unknown user and an unknown order may use 404, but USER_NOT_FOUND and ORDER_NOT_FOUND tell the client exactly what happened.
+For example, a client might send:
 
-Do not expose stack traces, SQL errors, internal hostnames, access tokens, or other implementation details in production responses. Those details belong in server-side logs and observability systems.`,
-      diagram: `Client
-  |
-  | GET /orders/123
-  v
-NestJS Controller
-  |
-  v
-Service / Domain
-  |
-  +----> ORDER_NOT_FOUND
-  |
-  v
-Exception Filter
-  |
-  v
-Standard Error Response
+GET /users/123
+
+If user 123 does not exist, the server needs to tell the client that the requested resource could not be found.
+
+A simple API might return:
+
 {
-  "statusCode": 404,
-  "code": "ORDER_NOT_FOUND",
-  "message": "Order was not found",
-  "requestId": "req_123"
-}`,
-      codeExample: { title: "Example", code: `// error-response.ts
-export interface ApiErrorResponse {
-  statusCode: number;
-  code: string;
-  message: string;
-  requestId?: string;
-  details?: unknown;
+  "message": "User not found"
 }
 
-// domain error
-export class OrderNotFoundError extends Error {
-  readonly code = "ORDER_NOT_FOUND";
+This looks reasonable, but it creates a problem for applications.
 
-  constructor(public readonly orderId: string) {
-    super("Order was not found");
+The frontend now has to understand the meaning of the human-readable message:
+
+if (error.message === "User not found") {
+  // show something
+}
+
+This is fragile because someone could later change the message:
+
+"User not found"
+
+to:
+
+"The requested user does not exist"
+
+The frontend would break because it was depending on the message.
+
+Instead, the API should provide a stable error code.
+
+{
+  "code": "USER_NOT_FOUND",
+  "message": "The requested user could not be found."
+}
+
+Now the client can depend on:
+
+if (error.code === "USER_NOT_FOUND") {
+  // handle missing user
+}
+
+The message can change without breaking the client's logic.
+
+2. Error Code vs Error Message
+
+These two fields have different responsibilities.
+
+Error code
+
+The error code is intended for machines.
+
+USER_NOT_FOUND
+ORDER_ALREADY_PAID
+VALIDATION_FAILED
+INSUFFICIENT_BALANCE
+
+It should be:
+
+stable
+predictable
+documented
+machine-readable
+independent of wording
+Error message
+
+The message is intended primarily for humans.
+
+The requested user could not be found.
+
+It can be changed for:
+
+readability
+better explanations
+localization
+improved UX
+
+For example:
+
+{
+  "code": "USER_NOT_FOUND",
+  "message": "We couldn't find a user with that ID."
+}
+
+The code remains the same.
+
+Good design
+{
+  "code": "USER_NOT_FOUND",
+  "message": "The requested user could not be found."
+}
+Bad design
+{
+  "code": "The requested user could not be found."
+}
+
+The second approach makes the code dependent on human-readable text.
+
+3. HTTP Status Codes vs Application Error Codes
+
+These are not the same thing.
+
+HTTP status codes describe the broad category of the result.
+
+For example:
+
+200 → Success
+400 → Bad Request
+401 → Unauthenticated
+403 → Forbidden
+404 → Resource Not Found
+409 → Conflict
+422 → Validation Problem
+429 → Too Many Requests
+500 → Internal Server Error
+
+Application error codes provide more specific information.
+
+For example:
+
+404
+ ├── USER_NOT_FOUND
+ ├── ORDER_NOT_FOUND
+ └── PRODUCT_NOT_FOUND
+
+All three can use HTTP 404, but the application codes tell the client exactly what was missing.
+
+Another example:
+
+409
+ ├── EMAIL_ALREADY_EXISTS
+ ├── ORDER_ALREADY_PAID
+ └── RESOURCE_VERSION_CONFLICT
+
+Therefore:
+
+HTTP status = broad category
+Application error code = specific application condition
+
+4. Why Both Are Necessary
+
+Imagine an API returns:
+
+{
+  "code": "ORDER_ALREADY_PAID",
+  "message": "This order has already been paid."
+}
+
+without an HTTP status.
+
+The client has to inspect the response body to determine whether the request succeeded or failed.
+
+That's not ideal.
+
+Instead:
+
+HTTP/1.1 409 Conflict
+
+and:
+
+{
+  "code": "ORDER_ALREADY_PAID",
+  "message": "This order has already been paid."
+}
+
+Now both layers communicate useful information.
+
+The HTTP status tells the client:
+
+This request conflicts with the current state.
+
+The application code tells the client:
+
+The specific conflict is that the order has already been paid.
+
+5. Standard Error Response Format
+
+A production API should use a consistent error structure.
+
+For example:
+
+{
+  "statusCode": 404,
+  "code": "USER_NOT_FOUND",
+  "message": "The requested user could not be found.",
+  "requestId": "req_01JXYZ123",
+  "details": null
+}
+
+Each field has a specific responsibility.
+
+statusCode
+
+The HTTP status associated with the error.
+
+"statusCode": 404
+code
+
+The stable application-level error identifier.
+
+"code": "USER_NOT_FOUND"
+message
+
+A human-readable explanation.
+
+"message": "The requested user could not be found."
+requestId
+
+An identifier associated with the request.
+
+"requestId": "req_01JXYZ123"
+
+This is extremely useful when debugging production problems.
+
+A user can report:
+
+"I received error req_01JXYZ123."
+
+The engineering team can search logs using that identifier.
+
+details
+
+Optional structured information about the error.
+
+For example:
+
+"details": {
+  "field": "email"
+}
+
+or for validation:
+
+"details": {
+  "fields": {
+    "email": [
+      "Email must be valid."
+    ],
+    "password": [
+      "Password must contain at least 8 characters."
+    ]
+  }
+}
+6. A More Complete Production Error Format
+
+A production API might standardize errors like this:
+
+{
+  "statusCode": 422,
+  "code": "VALIDATION_FAILED",
+  "message": "One or more fields are invalid.",
+  "requestId": "req_01JXYZ123",
+  "details": {
+    "fields": {
+      "email": [
+        "Email must be a valid email address."
+      ],
+      "password": [
+        "Password must contain at least 8 characters."
+      ]
+    }
   }
 }
 
-// Example response
-{
-  "statusCode": 404,
-  "code": "ORDER_NOT_FOUND",
-  "message": "Order was not found",
-  "requestId": "req_01JABC"
-}` },
+The important point is that details contains structured data, rather than forcing the client to parse the message.
+`,
+      diagram: `                    API REQUEST
+                         │
+                         ▼
+               ┌─────────────────┐
+               │   Server/API    │
+               └────────┬────────┘
+                        │
+                  Request fails
+                        │
+                        ▼
+             ┌─────────────────────┐
+             │   Error Handling    │
+             └──────────┬──────────┘
+                        │
+           ┌────────────┼─────────────┐
+           │            │             │
+           ▼            ▼             ▼
+     HTTP Status    Error Code     Message
+        404        USER_NOT_FOUND   Human text
+           │            │             │
+           └────────────┼─────────────┘
+                        │
+                        ▼
+                 Standard Response
+                        │
+                        ▼
+              ┌───────────────────┐
+              │ statusCode: 404   │
+              │ code: USER_...    │
+              │ message: "..."    │
+              │ requestId: "..."  │
+              │ details: null     │
+              └───────────────────┘
+                        │
+                        ▼
+                     Client`,
+      codeExample: { title: "Code Example", code: `A good TypeScript implementation can start with an error-code definition.
+
+export const ErrorCode = {
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+
+  AUTHENTICATION_REQUIRED: 'AUTHENTICATION_REQUIRED',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+
+  ACCESS_DENIED: 'ACCESS_DENIED',
+
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  USER_ALREADY_EXISTS: 'USER_ALREADY_EXISTS',
+
+  ORDER_NOT_FOUND: 'ORDER_NOT_FOUND',
+  ORDER_ALREADY_PAID: 'ORDER_ALREADY_PAID',
+
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+} as const;
+
+export type ErrorCode =
+  (typeof ErrorCode)[keyof typeof ErrorCode];
+
+Now the application has one central source for valid error codes.` },
       keyTakeaways: [
         "HTTP status codes describe the broad category of failure.",
         "Application error codes provide stable machine-readable meaning.",
