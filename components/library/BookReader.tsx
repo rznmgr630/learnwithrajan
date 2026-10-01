@@ -27,8 +27,9 @@ interface WordMeaning {
 
 export function BookReader({ title, pdfUrl }: BookReaderProps) {
   const pageStorageKey = `library:book-page:${pdfUrl}`;
-  const pinCategory = ["finance-book", "psychology-of-money", "richest-man-in-babylon", "the-simple-path-to-wealth", "the-millionaire-next-door", "i-will-teach-you-to-be-rich", "your-money-or-your-life", "the-intelligent-investor", "a-random-walk-down-wall-street", "the-total-money-makeover"].some((slug) => pdfUrl.endsWith(slug)) ? "finance" : ["power-of-your-subconscious-mind", "eat-that-frog", "atomic-habits", "the-7-habits", "how-to-win-friends", "mindset", "the-mountain-is-you", "thinking-fast-and-slow", "think-again"].some((slug) => pdfUrl.endsWith(slug)) ? "personal" : pdfUrl.includes("/fiction/") ? "fiction" : ["maile-dekheko-darbar", "gaukhane-katha"].some((slug) => pdfUrl.endsWith(slug)) ? "nepali" : "business";
+  const pinCategory = ["finance-book", "psychology-of-money", "richest-man-in-babylon", "the-simple-path-to-wealth", "the-millionaire-next-door", "i-will-teach-you-to-be-rich", "your-money-or-your-life", "the-intelligent-investor", "a-random-walk-down-wall-street", "the-total-money-makeover"].some((slug) => pdfUrl.endsWith(slug)) ? "finance" : ["power-of-your-subconscious-mind", "eat-that-frog", "atomic-habits", "the-7-habits", "how-to-win-friends", "mindset", "the-mountain-is-you", "thinking-fast-and-slow", "think-again"].some((slug) => pdfUrl.endsWith(slug)) ? "personal" : pdfUrl.includes("/fiction/") || ["peter-pan-and-wendy", "the-jungle-book", "animal-farm", "the-wizard-of-oz", "frankenstein"].some((slug) => pdfUrl.endsWith(slug)) ? "fiction" : pdfUrl.includes("/software-engineering/") ? "software-engineering" : ["maile-dekheko-darbar", "gaukhane-katha"].some((slug) => pdfUrl.endsWith(slug)) ? "nepali" : "business";
   const pinStorageKey = `library:pinned-book:${pinCategory}`;
+  const readStorageKey = `library:read-books:${pinCategory}`;
   const [pageCount, setPageCount] = useState<number>();
   const [pageNumber, setPageNumber] = useState(() => {
     if (typeof window === "undefined") {
@@ -43,6 +44,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
   const [failed, setFailed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPinned, setIsPinned] = useState(() => typeof window !== "undefined" && window.localStorage.getItem(pinStorageKey) === pdfUrl);
+  const [isRead, setIsRead] = useState(() => typeof window !== "undefined" && getReadBooks().includes(pdfUrl));
   const [selectedWord, setSelectedWord] = useState<string>();
   const [meaning, setMeaning] = useState<WordMeaning>();
   const [meaningError, setMeaningError] = useState<string>();
@@ -146,6 +148,26 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
     window.localStorage.removeItem(pinStorageKey);
   }
 
+  function getReadBooks() {
+    try {
+      const readBooks = JSON.parse(window.localStorage.getItem(readStorageKey) ?? "[]");
+      return Array.isArray(readBooks) ? readBooks.filter((book): book is string => typeof book === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function toggleRead() {
+    const readBooks = new Set(getReadBooks());
+    if (isRead) {
+      readBooks.delete(pdfUrl);
+    } else {
+      readBooks.add(pdfUrl);
+    }
+    window.localStorage.setItem(readStorageKey, JSON.stringify([...readBooks]));
+    setIsRead(!isRead);
+  }
+
   function showSelectedWordMeaning() {
     const selection = window.getSelection();
     const word = selection?.toString().trim().toLowerCase() ?? "";
@@ -199,6 +221,9 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
       <div className="absolute right-4 top-5 z-10 flex flex-col gap-2 sm:right-6">
         <button type="button" onClick={togglePin} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--elevated)] text-[var(--text)] shadow-sm transition hover:brightness-110" aria-label={isPinned ? "Unpin book" : "Pin book"} title={isPinned ? "Unpin book" : "Pin book"}>
           <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-4 w-4 stroke-current ${isPinned ? "fill-[var(--accent)]" : "fill-none"}`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+        </button>
+        <button type="button" onClick={toggleRead} className={`grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--elevated)] text-[var(--text)] shadow-sm transition hover:brightness-110 ${isRead ? "text-emerald-500" : ""}`} aria-label={isRead ? "Mark as unread" : "Mark as read"} title={isRead ? "Mark as unread" : "Mark as read"}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6" /></svg>
         </button>
         <button type="button" onClick={() => setZoom((value) => Math.max(0.8, Number((value - 0.1).toFixed(1))))} disabled={zoom === 0.8} className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--elevated)] text-[var(--text)] shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Zoom out" title="Zoom out">
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.2-4.2M8 11h6" /></svg>
