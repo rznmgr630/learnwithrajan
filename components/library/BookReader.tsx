@@ -11,6 +11,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
+const pdfOptions = {
+  wasmUrl: "/pdfjs/wasm/",
+};
+
 interface BookReaderProps {
   title: string;
   pdfUrl: string;
@@ -215,6 +219,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
         ) : (
           <Document
             file={pdfUrl}
+            options={pdfOptions}
             loading={<div className="grid min-h-80 place-items-center"><BookLoader /></div>}
             onLoadSuccess={({ numPages }) => {
               setPageCount(numPages);
