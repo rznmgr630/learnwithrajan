@@ -73,9 +73,9 @@ export const UI_STRINGS = {
     jp: "金融",
   },
   "library.savedBooks": {
-    en: "43 saved books",
-    np: "४३ सुरक्षित पुस्तक",
-    jp: "保存した本 43冊",
+    en: "42 saved books",
+    np: "४२ सुरक्षित पुस्तक",
+    jp: "保存した本 42冊",
   },
   "library.collection": {
     en: "Collection",
@@ -201,6 +201,12 @@ export const UI_STRINGS = {
   "library.nepali": { en: "Nepali", np: "नेपाली", jp: "ネパール語" },
   "library.business": { en: "Business", np: "व्यवसाय", jp: "ビジネス" },
   "library.softwareEngineering": { en: "Software Engineering", np: "सफ्टवेयर इन्जिनियरिङ", jp: "ソフトウェアエンジニアリング" },
+  "library.financeCollection": { en: "Finance & Investing", np: "वित्त र लगानी", jp: "金融と投資" },
+  "library.personalDevelopmentCollection": { en: "Personal Development & Psychology", np: "व्यक्तिगत विकास र मनोविज्ञान", jp: "自己啓発と心理学" },
+  "library.classicsCollection": { en: "Classics & Children's Literature", np: "क्लासिक र बाल साहित्य", jp: "古典と児童文学" },
+  "library.nepaliCollection": { en: "Nepali Literature & Culture", np: "नेपाली साहित्य र संस्कृति", jp: "ネパール文学と文化" },
+  "library.businessCollection": { en: "Business & Strategy", np: "व्यवसाय र रणनीति", jp: "ビジネスと戦略" },
+  "library.softwareEngineeringCollection": { en: "Software Engineering & Computer Science", np: "सफ्टवेयर इन्जिनियरिङ र कम्प्युटर विज्ञान", jp: "ソフトウェア工学とコンピュータサイエンス" },
   "library.subconsciousMind.title": {
     en: "The Power of Your Subconscious Mind",
     np: "The Power of Your Subconscious Mind",
