@@ -10,8 +10,7 @@ export const DAY_51_LESSONS: LessonDay = {
       id: "day-51-lesson-1",
       title: "Error Codes and a Standard Error Format",
       durationMinutes: 20,
-      explanation: `1. Explanation
-What Is an API Error?
+      explanation: `<b>What Is an API Error?</b>
 
 An API error happens when the server cannot successfully complete a request.
 
@@ -23,17 +22,21 @@ If user 123 does not exist, the server needs to tell the client that the request
 
 A simple API might return:
 
+\`\`\`json
 {
   "message": "User not found"
 }
+\`\`\`
 
 This looks reasonable, but it creates a problem for applications.
 
 The frontend now has to understand the meaning of the human-readable message:
 
+\`\`\`ts
 if (error.message === "User not found") {
   // show something
 }
+\`\`\`
 
 This is fragile because someone could later change the message:
 
@@ -60,7 +63,7 @@ if (error.code === "USER_NOT_FOUND") {
 
 The message can change without breaking the client's logic.
 
-2. Error Code vs Error Message
+<b>Error Code vs Error Message</b>
 
 These two fields have different responsibilities.
 
@@ -68,10 +71,12 @@ Error code
 
 The error code is intended for machines.
 
+\`\`\`text
 USER_NOT_FOUND
 ORDER_ALREADY_PAID
 VALIDATION_FAILED
 INSUFFICIENT_BALANCE
+\`\`\`
 
 It should be:
 
@@ -114,7 +119,7 @@ Bad design
 
 The second approach makes the code dependent on human-readable text.
 
-3. HTTP Status Codes vs Application Error Codes
+<b>HTTP Status Codes vs Application Error Codes</b>
 
 These are not the same thing.
 
@@ -155,7 +160,7 @@ Therefore:
 HTTP status = broad category
 Application error code = specific application condition
 
-4. Why Both Are Necessary
+<b>Why Both Are Necessary</b>
 
 Imagine an API returns:
 
@@ -191,7 +196,7 @@ The application code tells the client:
 
 The specific conflict is that the order has already been paid.
 
-5. Standard Error Response Format
+<b>Standard Error Response Format</b>
 
 A production API should use a consistent error structure.
 
@@ -258,7 +263,7 @@ or for validation:
     ]
   }
 }
-6. A More Complete Production Error Format
+<b>A More Complete Production Error Format</b>
 
 A production API might standardize errors like this:
 
