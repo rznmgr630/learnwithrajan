@@ -418,6 +418,20 @@ export function RichParagraph({ text, className }: RichTextProps) {
       }
     }
 
+    if (line.trim() === "{") {
+      const code = [line];
+      j++;
+      while (j < lines.length) {
+        code.push(lines[j]);
+        if (lines[j].trim() === "}") break;
+        j++;
+      }
+      if (j < lines.length) {
+        nodes.push(<CodeBlock key={`json-${j}`} code={code.join("\n")} />);
+        continue;
+      }
+    }
+
     if (isObjectSnippetStart(line)) {
       const code: string[] = [line];
       let depth = bracketDelta(line);
