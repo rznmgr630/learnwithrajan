@@ -47,6 +47,7 @@ export function LibraryShelf() {
   const [businessPage, setBusinessPage] = useState(0);
   const [softwareEngineeringPage, setSoftwareEngineeringPage] = useState(0);
   const [pinnedBook, setPinnedBook] = useState<string>();
+  const [orderingVersion, setOrderingVersion] = useState(0);
   const financeBookCount = 10;
   const personalBookCount = 9;
   const fictionBookCount = 4 + FICTION_BOOKS.length;
@@ -56,6 +57,7 @@ export function LibraryShelf() {
 
   useEffect(() => {
     setPinnedBook(window.localStorage.getItem("library:pinned-book:finance") ?? undefined);
+    setOrderingVersion((version) => version + 1);
   }, []);
 
   useEffect(() => {
@@ -75,21 +77,36 @@ export function LibraryShelf() {
       const path = new URL(book.href).pathname;
       const category = path.includes("/finance/") ? "finance" : path.includes("/personal-development/") ? "personal" : path.includes("/fiction/") ? "fiction" : path.includes("/nepali/") ? "nepali" : path.includes("/software-engineering/") ? "software-engineering" : "business";
       if (category === "finance") return;
-      const pdfUrl = `/api/library/${path.split("/").pop()}`;
-      book.style.order = window.localStorage.getItem(`library:pinned-book:${category}`) === pdfUrl ? "-1" : "0";
+      const slug = path.split("/").pop()!;
+      const pdfUrl = category === "fiction" ? ["peter-pan-and-wendy", "the-jungle-book", "animal-farm", "the-wizard-of-oz", "frankenstein"].includes(slug) ? `/api/library/${slug}` : `/api/library/fiction/${slug}` : category === "software-engineering" ? `/api/library/software-engineering/${slug}` : `/api/library/${slug}`;
+      let readBooks: string[] = [];
+      try {
+        const storedBooks = JSON.parse(window.localStorage.getItem(`library:read-books:${category}`) ?? "[]");
+        readBooks = Array.isArray(storedBooks) ? storedBooks.filter((readBook): readBook is string => typeof readBook === "string") : [];
+      } catch {
+        readBooks = [];
+      }
+      book.style.order = window.localStorage.getItem(`library:pinned-book:${category}`) === pdfUrl ? "-2" : readBooks.includes(pdfUrl) ? "1" : "0";
     });
-  }, [pinnedBook]);
+  }, [orderingVersion, pinnedBook]);
 
   function getBookOrder(pdfUrl: string) {
-    return pinnedBook === pdfUrl ? -1 : 0;
+    if (!orderingVersion || typeof window === "undefined") {
+      return 0;
+    }
+    try {
+      const storedBooks = JSON.parse(window.localStorage.getItem("library:read-books:finance") ?? "[]");
+      const readBooks = Array.isArray(storedBooks) ? storedBooks.filter((readBook): readBook is string => typeof readBook === "string") : [];
+      return pinnedBook === pdfUrl ? -2 : readBooks.includes(pdfUrl) ? 1 : 0;
+    } catch {
+      return pinnedBook === pdfUrl ? -2 : 0;
+    }
   }
 
   function getFinanceSlideWidth() {
     const carousel = financeCarouselRef.current;
     const firstSlide = carousel?.children[0] as HTMLElement | undefined;
-    const secondSlide = carousel?.children[1] as HTMLElement | undefined;
-
-    return secondSlide && firstSlide ? Math.abs(secondSlide.offsetLeft - firstSlide.offsetLeft) : carousel?.clientWidth ?? 0;
+    return firstSlide ? firstSlide.offsetWidth + 16 : carousel?.clientWidth ?? 0;
   }
 
   function scrollFinance(direction: "left" | "right") {
