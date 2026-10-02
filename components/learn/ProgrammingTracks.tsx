@@ -24,6 +24,7 @@ import { DEVOPS_TOTAL_DAYS } from "@/lib/devops-learning/devops-challenge-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
 import { HubAccordionSection } from "@/components/learn/HubAccordionSection";
+import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
@@ -65,6 +66,7 @@ export function ProgrammingTracks() {
 
   return (
     <div className="flex flex-col gap-4">
+      <ProgrammingSearch />
       <HubAccordionSection
         sectionId={`${baseId}-frontend`}
         titleKey="hub.programming.groupFrontend"
@@ -605,6 +607,28 @@ export function ProgrammingTracks() {
         titleKey="hub.programming.groupTools"
         hintKey="hub.programming.groupToolsHint"
       >
+        <Link href="/learn/compiler" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.compiler.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.compiler.subtitle")}</p>
+            </div>
+            <PinButton id="compiler" />
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["JavaScript", "TypeScript", "Console"].map((tag) => (
+              <span key={tag} className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]">
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.compiler.cta")}
+          </span>
+        </Link>
+
         <Link href="/learn/git-7-days" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
