@@ -58,9 +58,11 @@ Instead, the API should provide a stable error code.
 
 Now the client can depend on:
 
+\`\`\`typescript
 if (error.code === "USER_NOT_FOUND") {
   // handle missing user
 }
+\`\`\`
 
 The message can change without breaking the client's logic.
 
