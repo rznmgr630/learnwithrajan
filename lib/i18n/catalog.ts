@@ -383,6 +383,21 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.compiler.title": {
+    en: "Code Compiler",
+    np: "कोड कम्पाइलर",
+    jp: "コードコンパイラ",
+  },
+  "hub.compiler.subtitle": {
+    en: "Write and run JavaScript or TypeScript in your browser.",
+    np: "ब्राउजरमै JavaScript वा TypeScript लेख्नुहोस् र चलाउनुहोस्।",
+    jp: "ブラウザでJavaScriptまたはTypeScriptを書いて実行します。",
+  },
+  "hub.compiler.cta": {
+    en: "Open compiler →",
+    np: "कम्पाइलर खोल्नुहोस् →",
+    jp: "コンパイラを開く →",
+  },
   "jsOutline.statsSections": {
     en: "topic areas",
     np: "विषय क्षेत्र",
