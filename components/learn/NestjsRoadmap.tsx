@@ -72,6 +72,13 @@ import { DAY_65_LESSONS } from "@/lib/nestjs-learning/nestjs-day-65-lessons";
 import { DAY_66_LESSONS } from "@/lib/nestjs-learning/nestjs-day-66-lessons";
 import { DAY_67_LESSONS } from "@/lib/nestjs-learning/nestjs-day-67-lessons";
 import { DAY_68_LESSONS } from "@/lib/nestjs-learning/nestjs-day-68-lessons";
+import { DAY_69_LESSONS } from "@/lib/nestjs-learning/nestjs-day-69-lessons";
+import { DAY_70_LESSONS } from "@/lib/nestjs-learning/nestjs-day-70-lessons";
+import { DAY_71_LESSONS } from "@/lib/nestjs-learning/nestjs-day-71-lessons";
+import { DAY_72_LESSONS } from "@/lib/nestjs-learning/nestjs-day-72-lessons";
+import { DAY_73_LESSONS } from "@/lib/nestjs-learning/nestjs-day-73-lessons";
+import { DAY_74_LESSONS } from "@/lib/nestjs-learning/nestjs-day-74-lessons";
+import { DAY_75_LESSONS } from "@/lib/nestjs-learning/nestjs-day-75-lessons";
 import { NESTJS_ROADMAP_WEEKS, NESTJS_TOTAL_DAYS } from "@/lib/nestjs-learning/nestjs-challenge-data";
 import { useNestjsProgress } from "@/hooks/use-nestjs-progress";
 
@@ -85,6 +92,11 @@ Object.assign(LESSON_DAYS, { 62: DAY_62_LESSONS, 63: DAY_63_LESSONS });
 Object.assign(LESSON_DAYS, { 64: DAY_64_LESSONS, 65: DAY_65_LESSONS });
 Object.assign(LESSON_DAYS, { 66: DAY_66_LESSONS, 67: DAY_67_LESSONS });
 Object.assign(LESSON_DAYS, { 68: DAY_68_LESSONS });
+Object.assign(LESSON_DAYS, { 69: DAY_69_LESSONS });
+Object.assign(LESSON_DAYS, { 70: DAY_70_LESSONS });
+Object.assign(LESSON_DAYS, { 71: DAY_71_LESSONS, 72: DAY_72_LESSONS });
+Object.assign(LESSON_DAYS, { 73: DAY_73_LESSONS, 74: DAY_74_LESSONS });
+Object.assign(LESSON_DAYS, { 75: DAY_75_LESSONS });
 
 export function NestjsRoadmap() {
   const { locale, t } = useLocale();
