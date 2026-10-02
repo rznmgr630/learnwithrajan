@@ -10,6 +10,7 @@ import { useLaravelProgress } from "@/hooks/use-laravel-progress";
 import { useNextjsProgress } from "@/hooks/use-nextjs-progress";
 import { useNodejsProgress } from "@/hooks/use-nodejs-progress";
 import { useNestjsProgress } from "@/hooks/use-nestjs-progress";
+import { usePythonProgress } from "@/hooks/use-python-progress";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 import { useDevopsProgress } from "@/hooks/use-devops-progress";
@@ -20,11 +21,11 @@ import { LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-dat
 import { NEXTJS_TOTAL_DAYS } from "@/lib/nextjs-learning/nextjs-challenge-data";
 import { NODEJS_TOTAL_DAYS } from "@/lib/nodejs-learning/nodejs-challenge-data";
 import { NESTJS_TOTAL_DAYS } from "@/lib/nestjs-learning/nestjs-challenge-data";
+import { PYTHON_TOTAL_DAYS } from "@/lib/python-learning/python-challenge-data";
 import { DEVOPS_TOTAL_DAYS } from "@/lib/devops-learning/devops-challenge-data";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
 import { HubAccordionSection } from "@/components/learn/HubAccordionSection";
-import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
 import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
@@ -50,6 +51,7 @@ export function ProgrammingTracks() {
   const nextjs = useNextjsProgress();
   const nodejs = useNodejsProgress();
   const nestjs = useNestjsProgress();
+  const python = usePythonProgress();
   const js = useJsProgress();
   const reactNative = useReactNativeProgress();
   const devops = useDevopsProgress();
@@ -66,7 +68,6 @@ export function ProgrammingTracks() {
   const rnBullets = reactNativeOutlineBulletCount(REACT_NATIVE_TOPIC_OUTLINE);
 
   return (
-      <ProgrammingSearch />
     <div className="flex flex-col gap-4">
       <ProgrammingSearch />
       <HubAccordionSection
