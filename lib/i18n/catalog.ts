@@ -609,6 +609,16 @@ export const UI_STRINGS = {
     np: "NestJS ले प्रयोग गर्ने Node.js runtime ज्ञानबाट सुरु गर्नुहोस्।",
     jp: "NestJSの土台となるNode.jsランタイムの知識から始めます。",
   },
+  "pythonRoadmap.title": {
+    en: "Python · Foundations",
+    np: "Python · आधार",
+    jp: "Python・基礎",
+  },
+  "pythonRoadmap.subtitle": {
+    en: "Build a working Python environment, then write, run, and debug your first programs.",
+    np: "काम गर्ने Python environment बनाउनुहोस्, त्यसपछि पहिलो program लेख्नुहोस्, चलाउनुहोस् र debug गर्नुहोस्।",
+    jp: "動くPython環境を作り、最初のプログラムを書き、実行し、デバッグします。",
+  },
   "nodejsRoadmap.subtitle": {
     en: "Event loop → streams → npm & testing → Fastify → Postgres → auth → observability → performance → Docker & deploy. Behaviour is measured on Node 24, so cross-check with nodejs.org/docs.",
     np: "इभेन्ट लूप → स्ट्रिम → npm र परीक्षण → Fastify → Postgres → प्रमाणीकरण → अवलोकनीयता → performance → Docker र डिप्लोइ। व्यवहार Node 24 मा मापन गरिएको, nodejs.org/docs सँग जाँच्नुहोस्।",

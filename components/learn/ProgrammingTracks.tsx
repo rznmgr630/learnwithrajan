@@ -378,6 +378,29 @@ export function ProgrammingTracks() {
           </div>
           <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">{t("hub.nestjs.cta")}</span>
         </Link>
+
+        <Link href="/learn/python" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">{t("hub.python.title")}</h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.python.subtitle")}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]" suppressHydrationWarning>{python.percent}%</span>
+              <PinButton id="python" />
+            </div>
+          </div>
+          <div className="mt-6" suppressHydrationWarning>
+            <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+              <span>{t("hub.backend.progress")}</span>
+              <span className="tabular-nums text-[var(--muted)]">{python.completedCount}/{PYTHON_TOTAL_DAYS} {t("hub.backend.days")}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+              <div className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500" style={{ width: `${python.percent}%` }} />
+            </div>
+          </div>
+          <span className="mt-3 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">{t("hub.python.cta")}</span>
+        </Link>
       </HubAccordionSection>
 
       <HubAccordionSection
