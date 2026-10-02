@@ -368,6 +368,21 @@ export const UI_STRINGS = {
     np: "रोडम्याप खोल्नुहोस् →",
     jp: "ロードマップを開く →",
   },
+  "hub.python.title": {
+    en: "Python · Foundations",
+    np: "Python · आधार",
+    jp: "Python・基礎",
+  },
+  "hub.python.subtitle": {
+    en: "Start with a clean setup, the interpreter, virtual environments, and your first programs.",
+    np: "सफा सेटअप, interpreter, virtual environment र पहिलो प्रोग्रामबाट सुरु गर्नुहोस्।",
+    jp: "セットアップ、インタープリター、仮想環境、最初のプログラムから始めます。",
+  },
+  "hub.python.cta": {
+    en: "Open roadmap →",
+    np: "रोडम्याप खोल्नुहोस् →",
+    jp: "ロードマップを開く →",
+  },
   "hub.js.title": {
     en: "JavaScript · Fundamentals to Senior",
     np: "JavaScript · Fundamentals देखि Senior सम्म",

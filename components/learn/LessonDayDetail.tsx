@@ -456,7 +456,8 @@ export function LessonDayDetail({
                 track === "react-native" ||
                 track === "nextjs" ||
                 track === "js" ||
-                track === "nestjs"
+                track === "nestjs" ||
+                track === "python"
               }
               showExampleInExplanation={
                 track === "nextjs" &&
