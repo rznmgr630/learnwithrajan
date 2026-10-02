@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const NESTJS_TOTAL_DAYS = 55;
+export const NESTJS_TOTAL_DAYS = 58;
 
 export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -102,4 +102,5 @@ export const NESTJS_ROADMAP_WEEKS: RoadmapWeek[] = [
     ],
   },
   { id: "nestjs-phase-5", title: { en: "Phase 5 — Production REST API Engineering", np: "Phase 5 — Production REST API Engineering", jp: "Phase 5 — Production REST API Engineering" }, dotClass: "bg-[var(--accent)]", days: [{ day: 46, title: { en: "API Architecture", np: "API Architecture", jp: "API Architecture" }, tags: [] }, { day: 47, title: { en: "Pagination", np: "Pagination", jp: "Pagination" }, tags: [] }, { day: 48, title: { en: "Filtering & Searching", np: "Filtering & Searching", jp: "Filtering & Searching" }, tags: [] }, { day: 49, title: { en: "API Versioning", np: "API Versioning", jp: "API Versioning" }, tags: [] }, { day: 50, title: { en: "OpenAPI & Swagger", np: "OpenAPI & Swagger", jp: "OpenAPI & Swagger" }, tags: [] }, { day: 51, title: { en: "Error Handling", np: "Error Handling", jp: "Error Handling" }, tags: [] }, { day: 52, title: { en: "Idempotency", np: "Idempotency", jp: "Idempotency" }, tags: [] }, { day: 53, title: { en: "Rate Limiting", np: "Rate Limiting", jp: "Rate Limiting" }, tags: [] }, { day: 54, title: { en: "Caching", np: "Caching", jp: "Caching" }, tags: [] }, { day: 55, title: { en: "Production REST API Project", np: "Production REST API Project", jp: "Production REST API Project" }, tags: [] }] },
+  { id: "nestjs-phase-6", title: { en: "Phase 6 — Redis, Caching & Background Jobs", np: "Phase 6 — Redis, Caching & Background Jobs", jp: "Phase 6 — Redis, Caching & Background Jobs" }, dotClass: "bg-[color-mix(in_oklab,var(--accent)_70%,#ef4444)]", days: [{ day: 56, title: { en: "Advanced Redis: Pub/Sub, Streams, Lua Scripting & Redlock", np: "Advanced Redis: Pub/Sub, Streams, Lua Scripting & Redlock", jp: "Advanced Redis: Pub/Sub, Streams, Lua Scripting & Redlock" }, tags: [] }, { day: 57, title: { en: "Redis + NestJS: Caching, Invalidations & Architecture", np: "Redis + NestJS: Caching, Invalidations & Architecture", jp: "Redis + NestJS: Caching, Invalidations & Architecture" }, tags: [] }, { day: 58, title: { en: "Message Queues & Background Processing with BullMQ", np: "Message Queues & Background Processing with BullMQ", jp: "Message Queues & Background Processing with BullMQ" }, tags: [] }] },
 ];
