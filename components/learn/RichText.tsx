@@ -32,7 +32,7 @@ function parseInlineBackticks(input: string): Segment[] {
 }
 
 /**
- * Split <b>bold</b> and <i>italic</i> HTML tags inside plain text runs.
+ * Split supported inline HTML tags inside plain text runs.
  * Unclosed tags stay literal. Content inside a span is parsed again from the
  * top, so tags nest and inline code survives — parsing backticks globally
  * first would cut the tags into separate fragments whenever a code span sits
@@ -41,6 +41,7 @@ function parseInlineBackticks(input: string): Segment[] {
 function parseInlineHtml(input: string): Segment[] {
   const tags = [
     { open: "<b>", close: "</b>", kind: "bold" as const },
+    { open: "<h3>", close: "</h3>", kind: "bold" as const },
     { open: "<i>", close: "</i>", kind: "italic" as const },
     { open: "<code>", close: "</code>", kind: "code" as const },
   ];
@@ -337,10 +338,10 @@ export function RichParagraph({ text, className }: RichTextProps) {
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
 
-    if (line.trim() === "<pre>") {
+    if (/^\s*<pre>(?:<code(?:\s[^>]*)?>)?\s*$/.test(line)) {
       const code: string[] = [];
       j++;
-      while (j < lines.length && lines[j].trim() !== "</pre>") {
+      while (j < lines.length && !/^\s*(?:<\/code>)?<\/pre>\s*$/.test(lines[j])) {
         code.push(lines[j]);
         j++;
       }
