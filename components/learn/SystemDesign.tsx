@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 import { SYSTEM_DESIGN_CONCEPTS, CONCEPT_COUNT, SYSTEM_DESIGN_SECTIONS, type SystemDesignConcept } from "@/lib/system-design/concepts";
@@ -321,7 +322,13 @@ function neighbourOf(concept: SystemDesignConcept | null, offset: -1 | 1): Lesso
 }
 
 export function SystemDesign() {
+  const searchParams = useSearchParams();
   const [active, setActive] = useState<SystemDesignConcept | null>(null);
+
+  useEffect(() => {
+    const conceptId = Number(searchParams.get("concept"));
+    if (Number.isInteger(conceptId)) setActive(SYSTEM_DESIGN_CONCEPTS.find((concept) => concept.id === conceptId) ?? null);
+  }, [searchParams]);
 
   return (
     <>

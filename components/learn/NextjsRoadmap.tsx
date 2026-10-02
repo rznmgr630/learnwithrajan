@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
@@ -110,9 +111,17 @@ const NEXTJS_LESSON_DAY_NUMBERS = Object.keys(NEXTJS_LESSON_DAYS)
 
 export function NextjsRoadmap() {
   const { locale, t } = useLocale();
+  const searchParams = useSearchParams();
   const { completedCount, percent, toggleDay, isDone } = useNextjsProgress();
   const [lessonDay, setLessonDay] = useState<number | null>(null);
   const [detailDay, setDetailDay] = useState<number | null>(null);
+
+  useEffect(() => {
+    const day = Number(searchParams.get("day"));
+    if (!Number.isInteger(day)) return;
+    if (NEXTJS_LESSON_DAYS[day]) setLessonDay(day);
+    else if (NEXTJS_ROADMAP_WEEKS.some((week) => week.days.some((roadmapDay) => roadmapDay.day === day))) setDetailDay(day);
+  }, [searchParams]);
 
   const lessonNeighbours = useMemo(() => {
     if (lessonDay === null) return { previous: null, next: null };

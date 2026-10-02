@@ -25,6 +25,7 @@ import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
 import { HubAccordionSection } from "@/components/learn/HubAccordionSection";
 import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
+import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
@@ -65,6 +66,7 @@ export function ProgrammingTracks() {
   const rnBullets = reactNativeOutlineBulletCount(REACT_NATIVE_TOPIC_OUTLINE);
 
   return (
+      <ProgrammingSearch />
     <div className="flex flex-col gap-4">
       <ProgrammingSearch />
       <HubAccordionSection

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
@@ -97,9 +98,17 @@ const LARAVEL_DAY_TITLES = new Map(
 
 export function LaravelRoadmap() {
   const { locale, t } = useLocale();
+  const searchParams = useSearchParams();
   const { completedCount, percent, toggleDay, isDone } = useLaravelProgress();
   const [detailDay, setDetailDay] = useState<number | null>(null);
   const [lessonDay, setLessonDay] = useState<number | null>(null);
+
+  useEffect(() => {
+    const day = Number(searchParams.get("day"));
+    if (!Number.isInteger(day)) return;
+    if (LARAVEL_LESSON_DAYS[day]) setLessonDay(day);
+    else if (LARAVEL_DAY_TITLES.has(day)) setDetailDay(day);
+  }, [searchParams]);
 
   const lessonNeighbours = useMemo(() => {
     if (lessonDay === null) return { previous: null, next: null };
