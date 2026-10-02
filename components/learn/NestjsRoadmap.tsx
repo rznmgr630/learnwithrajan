@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import { pickLocalized } from "@/lib/i18n/pick";
@@ -100,8 +101,14 @@ Object.assign(LESSON_DAYS, { 75: DAY_75_LESSONS });
 
 export function NestjsRoadmap() {
   const { locale, t } = useLocale();
+  const searchParams = useSearchParams();
   const { completedCount, percent, toggleDay, isDone } = useNestjsProgress();
   const [lessonDay, setLessonDay] = useState<number | null>(null);
+
+  useEffect(() => {
+    const day = Number(searchParams.get("day"));
+    if (Number.isInteger(day) && LESSON_DAYS[day as keyof typeof LESSON_DAYS]) setLessonDay(day);
+  }, [searchParams]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { RichText } from "@/components/learn/RichText";
 import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
@@ -14,9 +15,15 @@ const TAG_PILL =
 
 export function DevopsRoadmap() {
   const { locale, t } = useLocale();
+  const searchParams = useSearchParams();
   const { completedCount, percent, toggleDay, isDone } = useDevopsProgress();
   const [openWeekIds, setOpenWeekIds] = useState<Set<string>>(() => new Set(["devops-w1"]));
   const [detailDay, setDetailDay] = useState<number | null>(null);
+
+  useEffect(() => {
+    const day = Number(searchParams.get("day"));
+    if (Number.isInteger(day) && DEVOPS_ROADMAP_WEEKS.some((week) => week.days.some((roadmapDay) => roadmapDay.day === day))) setDetailDay(day);
+  }, [searchParams]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / DEVOPS_TOTAL_DAYS) * 100))}%`,
