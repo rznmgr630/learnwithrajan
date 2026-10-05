@@ -1,0 +1,2966 @@
+export const day29 = {
+  day: 29,
+  title: "Logging",
+  duration: "150 min",
+  level: "Advanced",
+  lessons: [
+    {
+      id: 1,
+      title: "Logging Levels",
+      duration: "18 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Logging is the process of recording information about what an application is doing while it is running.
+
+When you build a small Python program, you can use print():
+
+print("User logged in")
+
+This is fine while learning Python or quickly testing something.
+
+However, production applications need much more than print statements.
+
+Imagine that your API is running on a production server and a user reports:
+
+"I tried to place an order, but something went wrong."
+
+If your application only contains print statements, you may have no useful information about:
+
+- When the request happened
+- Which endpoint was called
+- Which user made the request
+- Whether the database was available
+- What exception occurred
+- How long the request took
+- Which service failed
+- What environment the application was running in
+
+Logging gives you a structured way to record this information.
+
+Python provides a built-in logging module, so you do not need to install an external package for basic logging.
+
+You can start with:
+
+import logging
+
+logging.warning("Something may be wrong")
+
+The logging module provides different levels.
+
+The standard levels are:
+
+DEBUG
+INFO
+WARNING
+ERROR
+CRITICAL
+
+These levels communicate how important the message is.
+
+DEBUG is used for detailed information that is mainly useful while developing or troubleshooting an application.
+
+For example:
+
+logging.debug("Received request payload")
+
+You normally do not want huge amounts of DEBUG information in production because it can create unnecessary log volume.
+
+INFO represents normal application events.
+
+For example:
+
+logging.info("User successfully logged in")
+
+INFO messages are useful when you want to understand the normal flow of an application.
+
+WARNING means something unexpected happened, but the application can continue.
+
+For example:
+
+logging.warning("Payment provider response was slower than expected")
+
+The application has not necessarily failed, but the event deserves attention.
+
+ERROR means an operation failed.
+
+For example:
+
+logging.error("Failed to save order")
+
+The application may continue processing other requests, but the particular operation failed.
+
+CRITICAL represents a very serious problem that may prevent the application from continuing correctly.
+
+For example:
+
+logging.critical("Database connection pool is unavailable")
+
+The exact meaning of each level depends somewhat on your application's architecture, but the important idea is that logs should communicate severity consistently.
+
+Real-world example — Web application
+
+Imagine an API endpoint:
+
+POST /orders
+
+A normal successful request might produce:
+
+INFO: Order created successfully
+
+A temporary problem might produce:
+
+WARNING: Payment provider response exceeded expected latency
+
+A failed database operation might produce:
+
+ERROR: Failed to persist order
+
+A complete database outage might produce:
+
+CRITICAL: Database connection unavailable
+
+The levels help developers and operations teams quickly identify what deserves attention.
+
+Logging levels also allow you to control how much information your application records.
+
+For example:
+
+logging.basicConfig(level=logging.INFO)
+
+Now DEBUG messages are ignored by the logger configuration while INFO, WARNING, ERROR, and CRITICAL messages are allowed.
+
+This becomes extremely useful in production.
+
+You may use DEBUG during local development:
+
+DEBUG
+INFO
+WARNING
+ERROR
+CRITICAL
+
+But production may use:
+
+INFO
+WARNING
+ERROR
+CRITICAL
+
+This reduces unnecessary log volume.
+
+Another important concept is that logging levels are hierarchical.
+
+DEBUG has the lowest standard severity.
+
+CRITICAL has the highest.
+
+If the logging level is configured as WARNING, then WARNING, ERROR, and CRITICAL messages can be emitted, while DEBUG and INFO messages are ignored.
+
+This is useful because you can change the amount of logging without changing every logging statement in your application.
+
+Consider a production server receiving thousands of requests every minute.
+
+If every tiny internal detail is logged at INFO level, the logs can become extremely large.
+
+You may eventually spend more money storing and processing logs than necessary.
+
+Therefore, logging levels are not simply labels.
+
+They are part of your application's observability strategy.
+
+You should ask:
+
+"Who needs this information?"
+
+"How frequently can this event happen?"
+
+"Would this log help someone diagnose a problem?"
+
+"Does this event require immediate attention?"
+
+For example, logging every successful database query at ERROR would make the ERROR level meaningless.
+
+Similarly, logging a complete application failure as DEBUG would hide an important problem.
+
+A good production application uses levels consistently.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+                    Logging Severity
+
+DEBUG
+  |
+  | Detailed troubleshooting information
+  |
+INFO
+  |
+  | Normal application events
+  |
+WARNING
+  |
+  | Unexpected but recoverable situation
+  |
+ERROR
+  |
+  | Operation failed
+  |
+CRITICAL
+  |
+  | Severe application/system failure
+
+
+If configured with:
+
+level = WARNING
+
+Python allows:
+
+WARNING
+ERROR
+CRITICAL
+
+Python ignores:
+
+DEBUG
+INFO
+
+
+Typical environment:
+
+Development
+-------------------------
+DEBUG
+INFO
+WARNING
+ERROR
+CRITICAL
+
+
+Production
+-------------------------
+INFO
+WARNING
+ERROR
+CRITICAL
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic logging:
+
+import logging
+
+logging.debug("Debug message")
+logging.info("Application started")
+logging.warning("Configuration is missing")
+logging.error("Request failed")
+logging.critical("System is unavailable")
+
+
+Configuring the level:
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO
+)
+
+logging.debug("This will not normally appear")
+logging.info("Application started")
+logging.warning("Something looks unusual")
+logging.error("Operation failed")
+logging.critical("System is unavailable")
+
+
+Intermediate example:
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(message)s"
+)
+
+def create_order(order_id):
+    logging.info(
+        "Creating order %s",
+        order_id
+    )
+
+    try:
+        # Simulate some operation
+        success = True
+
+        if not success:
+            raise RuntimeError("Order creation failed")
+
+        logging.info(
+            "Order %s created successfully",
+            order_id
+        )
+
+    except Exception:
+        logging.exception(
+            "Failed to create order %s",
+            order_id
+        )
+
+
+create_order(1001)
+
+
+Production-style level selection:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_payment(payment_id):
+    logger.debug(
+        "Starting payment processing: %s",
+        payment_id
+    )
+
+    logger.info(
+        "Processing payment: %s",
+        payment_id
+    )
+
+    # Temporary issue
+    logger.warning(
+        "Payment provider latency is high"
+    )
+
+    # Failed operation
+    logger.error(
+        "Payment processing failed: %s",
+        payment_id
+    )
+
+    # Severe system problem
+    logger.critical(
+        "Payment service is unavailable"
+    )
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+Logging levels allow an application to communicate the severity and purpose of an event.
+
+DEBUG is primarily for detailed troubleshooting information.
+
+INFO is for normal application events.
+
+WARNING is for unexpected situations that do not necessarily stop the application.
+
+ERROR represents a failed operation.
+
+CRITICAL represents a severe failure that may affect the entire application or system.
+
+Logging levels also control which messages are emitted.
+
+Use levels consistently. If everything is ERROR, the ERROR level stops being useful.
+
+Production logging should focus on useful operational information rather than logging every possible internal detail.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Using print() everywhere
+
+print() does not provide the structured logging features needed by production applications.
+
+Mistake 2 — Logging everything as ERROR
+
+An error should represent an actual failed operation or problem.
+
+Mistake 3 — Logging normal events as WARNING
+
+If normal events are logged as warnings, real warnings become difficult to identify.
+
+Mistake 4 — Putting too much information at INFO level
+
+Very high-volume INFO logs can become expensive and difficult to search.
+
+Mistake 5 — Never using DEBUG
+
+DEBUG logs can be extremely useful when diagnosing complicated problems.
+
+Mistake 6 — Exposing sensitive information
+
+Never casually log passwords, authentication tokens, API keys, credit card information, or other sensitive data.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is the purpose of logging?
+
+2. What is DEBUG normally used for?
+
+3. What is the difference between WARNING and ERROR?
+
+4. When would you use CRITICAL?
+
+5. If the configured logging level is WARNING, which standard levels are emitted?
+
+6. Why can logging everything as ERROR be harmful?
+
+7. Why should sensitive information not be written to logs?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 2,
+      title: "Logger",
+      duration: "18 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+A logger is the object your application uses to create log records.
+
+You can create a logger with:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+Then instead of using:
+
+logging.info("Application started")
+
+you can use:
+
+logger.info("Application started")
+
+This distinction becomes very important in larger applications.
+
+The __name__ value represents the current Python module.
+
+Suppose your project contains:
+
+app/
+    main.py
+    users.py
+    payments.py
+
+Inside users.py:
+
+logger = logging.getLogger(__name__)
+
+the logger name will normally be:
+
+app.users
+
+Inside payments.py:
+
+logger = logging.getLogger(__name__)
+
+the logger name will normally be:
+
+app.payments
+
+This gives you a hierarchy of loggers.
+
+A large application can therefore identify which module produced a particular log record.
+
+Real-world example — Backend application
+
+Imagine a production API with:
+
+app/
+    auth/
+    users/
+    orders/
+    payments/
+    notifications/
+
+Each module can create its own logger:
+
+logger = logging.getLogger(__name__)
+
+Now your logs can tell you whether an event came from:
+
+app.auth
+app.users
+app.orders
+app.payments
+app.notifications
+
+This becomes extremely useful when debugging production problems.
+
+For example:
+
+2026-10-06 15:10:32 app.payments ERROR Payment failed
+
+is much more informative than:
+
+ERROR Something failed
+
+The logger is responsible for creating the log record.
+
+The logger does not necessarily decide where the message ultimately goes.
+
+That responsibility is commonly handled by handlers.
+
+This separation is important.
+
+Think of the logger as the person creating a package.
+
+The handler is responsible for deciding where the package should be delivered.
+
+A logger can also have a logging level.
+
+For example:
+
+logger.setLevel(logging.INFO)
+
+However, in larger applications, logging configuration is often centralized rather than configuring every logger independently.
+
+Logger hierarchy is another important concept.
+
+Suppose you have:
+
+app
+app.users
+app.users.service
+app.users.repository
+
+These names form a hierarchy.
+
+A child logger can propagate records to its parent logger.
+
+This allows a project to configure logging centrally.
+
+For example, the application can configure:
+
+app
+
+and child modules such as:
+
+app.users
+app.orders
+app.payments
+
+can inherit appropriate configuration.
+
+This is one reason using:
+
+logging.getLogger(__name__)
+
+is preferred over creating random logger names throughout your application.
+
+A logger can also contain contextual information.
+
+For example, when processing an HTTP request, you may want logs to contain:
+
+request_id
+user_id
+endpoint
+
+Instead of manually writing these into every message, advanced logging systems can attach contextual information to records.
+
+This becomes particularly important in distributed applications.
+
+Imagine a request moving through:
+
+API
+  |
+  v
+Authentication service
+  |
+  v
+Order service
+  |
+  v
+Payment service
+  |
+  v
+Notification service
+
+If every service includes the same request ID, you can search for that ID and reconstruct what happened to the request.
+
+This is one of the foundations of production observability.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Application
+    |
+    +-- app.auth
+    |
+    +-- app.users
+    |      |
+    |      +-- app.users.service
+    |      |
+    |      +-- app.users.repository
+    |
+    +-- app.orders
+    |
+    +-- app.payments
+
+
+Each module:
+
+logger = logging.getLogger(__name__)
+
+              |
+              v
+
+           Logger
+              |
+              v
+          LogRecord
+              |
+              v
+          Handler(s)
+          /        \
+         v          v
+       File       Console
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic logger:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info("Application started")
+
+
+Logger with module name:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+print(logger.name)
+
+
+Application example:
+
+# users/service.py
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def create_user(user_id):
+    logger.info(
+        "Creating user %s",
+        user_id
+    )
+
+
+# payments/service.py
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def charge_payment(payment_id):
+    logger.info(
+        "Charging payment %s",
+        payment_id
+    )
+
+
+Central configuration:
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=(
+        "%(asctime)s "
+        "%(name)s "
+        "%(levelname)s "
+        "%(message)s"
+    )
+)
+
+logger = logging.getLogger(__name__)
+
+logger.info("Application started")
+
+
+Advanced logger hierarchy:
+
+import logging
+
+root_logger = logging.getLogger("app")
+
+users_logger = logging.getLogger(
+    "app.users"
+)
+
+payments_logger = logging.getLogger(
+    "app.payments"
+)
+
+users_logger.info(
+    "User service started"
+)
+
+payments_logger.info(
+    "Payment service started"
+)
+
+
+Production-style module:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+class UserService:
+
+    def create_user(self, user_id):
+        logger.info(
+            "Creating user",
+            extra={
+                "user_id": user_id,
+            },
+        )
+
+        # Business logic here
+        return {
+            "id": user_id,
+        }
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+A logger is the object used by application code to create log records.
+
+logging.getLogger(__name__) is a common pattern because it automatically gives the logger the current module's name.
+
+Logger names create a hierarchy.
+
+Child loggers can inherit configuration from parent loggers.
+
+Application code should generally use module-level loggers rather than repeatedly calling the root logging functions.
+
+Context such as request IDs and user IDs becomes increasingly important in production systems.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Creating a new logger with a random name in every function
+
+Use module-level loggers instead.
+
+Mistake 2 — Using only the root logger in a large application
+
+Module-specific loggers provide much better context.
+
+Mistake 3 — Configuring logging differently in every module
+
+Central configuration is usually easier to maintain.
+
+Mistake 4 — Forgetting logger hierarchy
+
+Child loggers can propagate records to parent loggers.
+
+Mistake 5 — Logging user information without considering privacy
+
+Only include information that is genuinely needed for debugging and operations.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What does logging.getLogger(__name__) do?
+
+2. Why are module-level loggers useful?
+
+3. What is logger hierarchy?
+
+4. What is a child logger?
+
+5. Why is centralized logging configuration useful?
+
+6. Why might request IDs be included in logs?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 3,
+      title: "Handler",
+      duration: "18 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+A handler determines where a log record should be sent.
+
+This is an important distinction:
+
+Logger -> creates the log record.
+
+Handler -> decides where the record goes.
+
+For example, an application may want logs to appear in:
+
+- Terminal
+- File
+- Rotating file
+- Network service
+- Monitoring system
+
+Python's logging module provides different handlers for different destinations.
+
+A StreamHandler can send logs to a stream such as the console.
+
+A FileHandler writes logs to a file.
+
+RotatingFileHandler can rotate log files when they reach a certain size.
+
+TimedRotatingFileHandler can rotate logs based on time.
+
+You can attach more than one handler to a logger.
+
+For example:
+
+Logger
+  |
+  +-- ConsoleHandler
+  |
+  +-- FileHandler
+
+Now the same log record can be written both to the terminal and a file.
+
+This is useful during development and in some production environments.
+
+A production application may have:
+
+Console
+  |
+  +-- INFO and above
+
+File
+  |
+  +-- DEBUG and above
+
+Monitoring system
+  |
+  +-- ERROR and above
+
+The exact architecture depends on the deployment environment.
+
+Handlers also have their own levels.
+
+This means the logger and handler can both participate in deciding whether a record is emitted.
+
+Imagine:
+
+logger level = DEBUG
+
+console handler = INFO
+
+file handler = DEBUG
+
+Then:
+
+DEBUG
+  -> console: ignored
+  -> file: written
+
+INFO
+  -> console: written
+  -> file: written
+
+This allows different destinations to receive different levels.
+
+Another important concept is formatting.
+
+A handler can have a Formatter.
+
+The Formatter controls how a log record becomes text.
+
+For example:
+
+2026-10-06 15:30:10 app.users INFO User created
+
+The handler sends the record somewhere, while the formatter determines its representation.
+
+Handlers therefore form part of a pipeline:
+
+Logger
+   |
+   v
+LogRecord
+   |
+   v
+Handler
+   |
+   v
+Formatter
+   |
+   v
+Destination
+
+In modern production systems, logs are often sent to stdout/stderr and collected by the infrastructure.
+
+For example:
+
+Python application
+       |
+       v
+stdout
+       |
+       v
+Docker
+       |
+       v
+Log collector
+       |
+       v
+Central logging platform
+
+In such environments, writing directly to local files may not always be the best architecture.
+
+This is why understanding handlers is important even if your application eventually uses an external log aggregation system.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+                 Logger
+                    |
+                    v
+                LogRecord
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+    Console Handler      File Handler
+          |                   |
+          v                   v
+      Terminal             app.log
+
+
+Another example:
+
+Logger
+   |
+   +---------------- Console Handler
+   |                       |
+   |                       v
+   |                    stdout
+   |
+   +---------------- File Handler
+   |                       |
+   |                       v
+   |                    app.log
+   |
+   +---------------- Error Handler
+                           |
+                           v
+                    Monitoring system
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Console handler:
+
+import logging
+
+logger = logging.getLogger("app")
+
+handler = logging.StreamHandler()
+
+logger.addHandler(handler)
+
+logger.setLevel(logging.INFO)
+
+logger.info("Application started")
+
+
+File handler:
+
+import logging
+
+logger = logging.getLogger("app")
+
+handler = logging.FileHandler(
+    "app.log"
+)
+
+logger.addHandler(handler)
+
+logger.setLevel(logging.INFO)
+
+logger.info("Application started")
+
+
+Different levels:
+
+import logging
+
+logger = logging.getLogger("app")
+logger.setLevel(logging.DEBUG)
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+
+file_handler = logging.FileHandler(
+    "debug.log"
+)
+file_handler.setLevel(logging.DEBUG)
+
+logger.addHandler(console)
+logger.addHandler(file_handler)
+
+logger.debug("Debug information")
+logger.info("Application started")
+logger.error("Something failed")
+
+
+Production-style setup:
+
+import logging
+import sys
+
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
+
+console_handler = logging.StreamHandler(
+    sys.stdout
+)
+
+console_handler.setLevel(
+    logging.INFO
+)
+
+error_handler = logging.StreamHandler(
+    sys.stderr
+)
+
+error_handler.setLevel(
+    logging.ERROR
+)
+
+logger.addHandler(console_handler)
+logger.addHandler(error_handler)
+
+logger.info("Request received")
+logger.error("Request failed")
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+A handler controls where log records are sent.
+
+Common handlers include StreamHandler, FileHandler, RotatingFileHandler, and TimedRotatingFileHandler.
+
+A logger can have multiple handlers.
+
+Handlers can have their own logging levels.
+
+This allows different destinations to receive different types of logs.
+
+In containerized production environments, logs are often written to stdout/stderr and collected by the infrastructure.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Adding the same handler repeatedly
+
+If configuration code runs multiple times and repeatedly adds handlers, you can get duplicate log messages.
+
+Mistake 2 — Assuming a logger and handler are the same thing
+
+The logger creates the log record.
+
+The handler sends it somewhere.
+
+Mistake 3 — Ignoring handler levels
+
+A handler can filter messages independently.
+
+Mistake 4 — Writing huge production logs to one file forever
+
+Files can grow indefinitely. Rotation or centralized log management may be required.
+
+Mistake 5 — Assuming local files are always appropriate in production
+
+Containers and cloud environments often work better with stdout/stderr plus centralized log collection.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is the responsibility of a handler?
+
+2. What is the difference between Logger and Handler?
+
+3. Can one logger have multiple handlers?
+
+4. What is StreamHandler commonly used for?
+
+5. Why would a production application use different handlers?
+
+6. What problem can occur if handlers are repeatedly added?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 4,
+      title: "Formatter",
+      duration: "18 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+A formatter controls how a log record is represented.
+
+Without a useful format, logs can be difficult to understand.
+
+For example:
+
+User created
+
+This tells us almost nothing.
+
+A more useful log might be:
+
+2026-10-06 15:30:20 app.users INFO User created
+
+Now we know:
+
+- Time
+- Application/module
+- Severity
+- Message
+
+Python's logging.Formatter allows you to define this format.
+
+Example:
+
+formatter = logging.Formatter(
+    "%(asctime)s %(name)s %(levelname)s %(message)s"
+)
+
+You can attach the formatter to a handler.
+
+The formatter can include many useful fields.
+
+Common fields include:
+
+%(asctime)s
+The time when the log record was created.
+
+%(name)s
+The logger name.
+
+%(levelname)s
+The logging level.
+
+%(message)s
+The actual log message.
+
+%(filename)s
+The source filename.
+
+%(module)s
+The module name.
+
+%(funcName)s
+The function name.
+
+%(lineno)d
+The source line number.
+
+For example:
+
+"%(asctime)s %(name)s %(levelname)s %(filename)s:%(lineno)d %(message)s"
+
+could produce:
+
+2026-10-06 15:31:20 app.users INFO service.py:42 User created
+
+This can be very useful while troubleshooting.
+
+However, production logging requires balance.
+
+Including too much information in every log can increase log size and reduce readability.
+
+Structured logging takes this idea further.
+
+Instead of producing only text:
+
+User created: id=123 country=Nepal
+
+you can represent the information as structured fields:
+
+{
+  "event": "user_created",
+  "user_id": 123,
+  "country": "Nepal"
+}
+
+Structured logs are easier for machines to search and analyze.
+
+For example, a centralized logging system can search:
+
+user_id = 123
+
+without trying to parse a human-written sentence.
+
+This becomes especially important when applications generate millions of log records.
+
+A human-readable log message is useful for developers.
+
+Structured fields are useful for machines.
+
+Production systems often need both.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+LogRecord
+   |
+   +-- timestamp
+   +-- logger name
+   +-- level
+   +-- message
+   +-- filename
+   +-- function
+   +-- line number
+   |
+   v
+Formatter
+   |
+   v
+Formatted Output
+
+
+Example:
+
+LogRecord
+   |
+   v
+Formatter
+   |
+   v
+2026-10-06 15:30:10
+app.users
+INFO
+User created
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic formatter:
+
+import logging
+
+formatter = logging.Formatter(
+    "%(levelname)s: %(message)s"
+)
+
+
+Detailed formatter:
+
+formatter = logging.Formatter(
+    "%(asctime)s "
+    "%(name)s "
+    "%(levelname)s "
+    "%(filename)s:%(lineno)d "
+    "%(message)s"
+)
+
+
+Using a handler:
+
+import logging
+
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+
+formatter = logging.Formatter(
+    "%(asctime)s "
+    "%(name)s "
+    "%(levelname)s "
+    "%(message)s"
+)
+
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+logger.info("Application started")
+
+
+Production-style formatter:
+
+formatter = logging.Formatter(
+    "%(asctime)s | "
+    "%(levelname)s | "
+    "%(name)s | "
+    "%(message)s"
+)
+
+logger.info(
+    "Order created: order_id=%s",
+    12345
+)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+A formatter controls the final representation of a log record.
+
+Useful fields include timestamp, logger name, level, message, filename, function name, and line number.
+
+Readable logs are helpful for humans.
+
+Structured fields are helpful for machines and log aggregation systems.
+
+Do not automatically include every possible field. Log formats should be consistent and useful.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Creating inconsistent formats
+
+Different modules should not produce completely different log structures without a good reason.
+
+Mistake 2 — Including excessive information
+
+More information does not always mean better logs.
+
+Mistake 3 — Logging sensitive information through formatted fields
+
+Formatting makes it easy to accidentally expose secrets.
+
+Mistake 4 — Treating the message itself as the only structured data
+
+Production logging often benefits from separate fields such as request_id, user_id, service, and duration.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What does a Formatter do?
+
+2. What does %(asctime)s represent?
+
+3. Why is %(name)s useful?
+
+4. What is the difference between human-readable and structured logs?
+
+5. Why should production logs use consistent formats?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 5,
+      title: "File Logging",
+      duration: "18 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+File logging means writing application logs to files instead of only displaying them in the terminal.
+
+For a small application:
+
+import logging
+
+logging.basicConfig(
+    filename="app.log",
+    level=logging.INFO
+)
+
+logging.info("Application started")
+
+Python writes the log into app.log.
+
+File logging can be useful when:
+
+- Running a local application
+- Debugging a server
+- Maintaining a traditional server deployment
+- Keeping a temporary local diagnostic log
+- Working with environments that explicitly require local files
+
+However, production file logging requires careful design.
+
+Imagine a server running continuously for one year.
+
+If your application writes 10 MB of logs every day:
+
+10 MB × 365 = 3.65 GB
+
+If the application produces 500 MB per day:
+
+500 MB × 365 = 182.5 GB
+
+Without log rotation, files can grow indefinitely.
+
+Python provides RotatingFileHandler for size-based rotation.
+
+For example, you can configure:
+
+maxBytes=10_000_000
+
+and:
+
+backupCount=5
+
+When the file reaches the configured size, it is rotated.
+
+You might end up with:
+
+app.log
+app.log.1
+app.log.2
+app.log.3
+app.log.4
+app.log.5
+
+This prevents a single log file from growing forever.
+
+TimedRotatingFileHandler rotates logs based on time.
+
+For example, you might rotate daily.
+
+This can produce files such as:
+
+app.log
+app.log.2026-10-05
+app.log.2026-10-06
+
+File rotation is important because disk space is a finite resource.
+
+A production server should never silently allow logs to consume the entire disk.
+
+There is another important consideration.
+
+Modern cloud applications often do not depend on local log files.
+
+For example:
+
+Application
+   |
+   v
+stdout/stderr
+   |
+   v
+Container runtime
+   |
+   v
+Log collector
+   |
+   v
+Central logging platform
+
+In this architecture, the application simply writes logs to stdout/stderr and the infrastructure handles storage, retention, search, and rotation.
+
+Therefore, you should understand file logging, but you should not assume that every modern production application should store logs in local files.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Traditional server:
+
+Application
+    |
+    v
+app.log
+    |
+    v
+Log rotation
+    |
+    +-- app.log
+    +-- app.log.1
+    +-- app.log.2
+    +-- app.log.3
+
+
+Modern containerized system:
+
+Application
+    |
+    v
+stdout / stderr
+    |
+    v
+Container runtime
+    |
+    v
+Log collector
+    |
+    v
+Centralized logging
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic file logging:
+
+import logging
+
+logging.basicConfig(
+    filename="app.log",
+    level=logging.INFO,
+    format=(
+        "%(asctime)s "
+        "%(levelname)s "
+        "%(message)s"
+    )
+)
+
+logging.info("Application started")
+
+
+FileHandler:
+
+import logging
+
+logger = logging.getLogger("app")
+
+handler = logging.FileHandler(
+    "app.log"
+)
+
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+logger.info("Application started")
+
+
+Rotating file:
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
+
+handler = RotatingFileHandler(
+    "app.log",
+    maxBytes=10_000_000,
+    backupCount=5,
+)
+
+logger.addHandler(handler)
+
+logger.info("Application started")
+
+
+Timed rotation:
+
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
+
+handler = TimedRotatingFileHandler(
+    "app.log",
+    when="midnight",
+    backupCount=7,
+)
+
+logger.addHandler(handler)
+
+logger.info("Application started")
+
+
+Production-style configuration:
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+logger = logging.getLogger("app")
+
+logger.setLevel(logging.INFO)
+
+handler = RotatingFileHandler(
+    "app.log",
+    maxBytes=20_000_000,
+    backupCount=10,
+    encoding="utf-8",
+)
+
+formatter = logging.Formatter(
+    "%(asctime)s "
+    "%(levelname)s "
+    "%(name)s "
+    "%(message)s"
+)
+
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+File logging stores logs on disk.
+
+FileHandler provides basic file logging.
+
+RotatingFileHandler helps prevent log files from growing indefinitely.
+
+TimedRotatingFileHandler rotates logs according to time.
+
+Log rotation is important for long-running applications.
+
+Modern containerized applications often prefer stdout/stderr with centralized log collection instead of relying on local files.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Never rotating logs
+
+A continuously running application can eventually fill the disk.
+
+Mistake 2 — Keeping too many old logs
+
+Retention should be intentional.
+
+Mistake 3 — Logging sensitive data to files
+
+Anyone who can access the files may be able to read the information.
+
+Mistake 4 — Assuming local files are always available
+
+Containers and ephemeral cloud instances may not preserve local files reliably.
+
+Mistake 5 — Ignoring encoding
+
+Applications that process international text should explicitly consider file encoding.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is FileHandler used for?
+
+2. Why is log rotation important?
+
+3. What does maxBytes control?
+
+4. What does backupCount control?
+
+5. When would TimedRotatingFileHandler be useful?
+
+6. Why do modern cloud applications often prefer stdout/stderr?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 6,
+      title: "Structured Logging Concepts",
+      duration: "20 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Traditional logging often produces plain text.
+
+For example:
+
+2026-10-06 INFO User 123 created order 456
+
+Humans can read this.
+
+But machines have to interpret the sentence if you want to search or analyze individual values.
+
+A structured log stores important values as separate fields.
+
+For example:
+
+{
+    "timestamp": "2026-10-06T15:30:00Z",
+    "level": "INFO",
+    "event": "order_created",
+    "user_id": 123,
+    "order_id": 456
+}
+
+Now a logging system can easily search:
+
+user_id = 123
+
+or:
+
+order_id = 456
+
+or:
+
+event = "order_created"
+
+This becomes extremely useful when applications generate large volumes of logs.
+
+Structured logging is especially useful in distributed systems.
+
+Imagine one request moving through:
+
+API Gateway
+    |
+    v
+User Service
+    |
+    v
+Order Service
+    |
+    v
+Payment Service
+    |
+    v
+Notification Service
+
+A request_id can be included in every log.
+
+For example:
+
+{
+    "request_id": "abc-123",
+    "service": "order-service",
+    "event": "order_created"
+}
+
+and:
+
+{
+    "request_id": "abc-123",
+    "service": "payment-service",
+    "event": "payment_started"
+}
+
+Now you can search for:
+
+request_id = "abc-123"
+
+and reconstruct the request's journey across multiple services.
+
+This is one of the most important concepts in production observability.
+
+Structured logs may include fields such as:
+
+timestamp
+level
+service
+environment
+request_id
+trace_id
+user_id
+event
+duration_ms
+status_code
+error_code
+
+The exact fields depend on your application.
+
+Do not simply add every possible field.
+
+Good structured logging focuses on information that helps developers and operators understand system behavior.
+
+Another important concept is event naming.
+
+Instead of:
+
+"Something happened with the order"
+
+use a stable event name:
+
+"order_created"
+
+"order_payment_failed"
+
+"order_cancelled"
+
+Stable event names make logs easier to search and analyze.
+
+Structured logging also helps monitoring systems calculate metrics.
+
+For example, if every request log contains:
+
+duration_ms
+
+a logging platform may be able to calculate latency distributions.
+
+If every error contains:
+
+error_code
+
+you can identify which error types occur most frequently.
+
+This means logs are not only for reading after something breaks.
+
+They can become a source of operational information.
+
+However, structured logging does not mean "put everything into JSON."
+
+The important idea is that important data should be represented as machine-readable fields rather than hidden inside free-form text.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Traditional log:
+
+"User 123 created order 456"
+
+
+Structured log:
+
+{
+    "event": "order_created",
+    "user_id": 123,
+    "order_id": 456
+}
+
+
+Distributed request:
+
+request_id = abc123
+
+API Service
+   |
+   | request_id=abc123
+   v
+Order Service
+   |
+   | request_id=abc123
+   v
+Payment Service
+   |
+   | request_id=abc123
+   v
+Notification Service
+
+
+Centralized logs can then search:
+
+request_id = abc123
+
+and show the complete request flow.
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Conceptual structured logging:
+
+logger.info(
+    "Order created",
+    extra={
+        "event": "order_created",
+        "order_id": 123,
+        "user_id": 456,
+    },
+)
+
+
+Structured application context:
+
+logger.info(
+    "Payment completed",
+    extra={
+        "event": "payment_completed",
+        "payment_id": 789,
+        "order_id": 123,
+        "user_id": 456,
+        "duration_ms": 245,
+    },
+)
+
+
+Production-style event:
+
+logger.info(
+    "Order created",
+    extra={
+        "event": "order_created",
+        "request_id": request_id,
+        "user_id": user_id,
+        "order_id": order_id,
+        "environment": "production",
+    },
+)
+
+
+Error event:
+
+logger.error(
+    "Payment failed",
+    extra={
+        "event": "payment_failed",
+        "request_id": request_id,
+        "payment_id": payment_id,
+        "error_code": "PAYMENT_PROVIDER_TIMEOUT",
+    },
+)
+
+
+Conceptual JSON output:
+
+{
+    "timestamp": "2026-10-06T15:30:10Z",
+    "level": "ERROR",
+    "service": "payment-service",
+    "event": "payment_failed",
+    "request_id": "abc123",
+    "payment_id": 789,
+    "error_code": "PAYMENT_PROVIDER_TIMEOUT"
+}
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+Structured logging represents important information as machine-readable fields.
+
+request_id is extremely useful for tracing a request through a system.
+
+Stable event names make logs easier to search.
+
+Structured fields are more useful for automated analysis than hiding values inside free-form text.
+
+Useful production fields often include request IDs, service names, environment, event names, status codes, durations, and error codes.
+
+Structured logging is especially valuable in distributed systems.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Putting everything into one message string
+
+"User 123 order 456 failed because timeout"
+
+Important values should ideally be separate fields.
+
+Mistake 2 — Using inconsistent field names
+
+Do not use:
+
+userId
+user_id
+userid
+
+randomly across services.
+
+Choose a consistent convention.
+
+Mistake 3 — Logging secrets
+
+Never log passwords, access tokens, private keys, or sensitive payment information.
+
+Mistake 4 — Missing request correlation
+
+Distributed systems become much harder to debug when requests cannot be traced across services.
+
+Mistake 5 — Creating unstable event names
+
+Prefer predictable names such as order_created and payment_failed rather than constantly changing natural-language messages.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is structured logging?
+
+2. Why are separate fields better than putting everything into one message?
+
+3. What is request_id used for?
+
+4. What is an event name?
+
+5. Give three useful fields that might appear in a production log.
+
+6. Why is structured logging particularly useful in distributed systems?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 7,
+      title: "Exception Logging",
+      duration: "20 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Applications will eventually encounter exceptions.
+
+For example:
+
+def divide(a, b):
+    return a / b
+
+divide(10, 0)
+
+Python raises ZeroDivisionError.
+
+In production, simply allowing the exception to disappear is not enough.
+
+You need to know:
+
+- What failed
+- Where it failed
+- When it failed
+- What operation was being performed
+- Which request caused the problem
+- Whether the problem is recoverable
+
+Python provides logger.exception() specifically for logging exceptions from an active exception handler.
+
+Example:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+try:
+    result = 10 / 0
+except Exception:
+    logger.exception("Failed to calculate result")
+
+The output includes the exception traceback.
+
+This is important because the traceback shows the path the program followed before the exception occurred.
+
+Compare:
+
+logger.error("Failed to calculate result")
+
+with:
+
+logger.exception("Failed to calculate result")
+
+inside an except block.
+
+logger.error() records the message.
+
+logger.exception() records the message and includes exception traceback information.
+
+This makes logger.exception() extremely useful when diagnosing unexpected failures.
+
+You can also use:
+
+logger.error(
+    "Failed to process payment",
+    exc_info=True
+)
+
+This includes exception information.
+
+However, logger.exception() is usually clearer when you are directly inside an except block.
+
+Exception logging should also contain useful context.
+
+Bad:
+
+logger.exception("Something failed")
+
+Better:
+
+logger.exception(
+    "Failed to process order %s",
+    order_id
+)
+
+Even better in a structured system:
+
+logger.exception(
+    "Failed to process order",
+    extra={
+        "event": "order_processing_failed",
+        "order_id": order_id,
+        "request_id": request_id,
+    },
+)
+
+The goal is to provide enough information to investigate the problem without exposing sensitive information.
+
+There is also an important distinction between expected business errors and unexpected programming errors.
+
+Suppose a user enters an invalid email address.
+
+That may be a validation error.
+
+You might not need a full traceback for every invalid input.
+
+If 10,000 users submit invalid emails, logging 10,000 stack traces can generate huge amounts of unnecessary log data.
+
+On the other hand, if your database driver unexpectedly crashes, the traceback is extremely valuable.
+
+Production logging therefore requires judgment.
+
+Not every exception deserves the same treatment.
+
+For expected exceptions, you may log a concise warning or error.
+
+For unexpected exceptions, you generally want the full traceback.
+
+Another important issue is exception chaining.
+
+Suppose your application catches a low-level database exception and raises a domain-level exception.
+
+You can preserve the original cause:
+
+try:
+    save_to_database()
+except DatabaseError as exc:
+    raise OrderPersistenceError(
+        "Could not save order"
+    ) from exc
+
+This allows the original cause to be inspected.
+
+When logging exceptions, preserving the traceback and original cause can make debugging much easier.
+
+Never log and silently ignore serious exceptions unless the application has a deliberate recovery strategy.
+
+For example:
+
+try:
+    process_payment()
+except Exception:
+    logger.exception("Payment failed")
+
+If you then continue as though payment succeeded, you have a much more serious business logic problem.
+
+Logging does not replace error handling.
+
+Logging tells you what happened.
+
+Error handling determines what the application does about it.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Exception occurs
+       |
+       v
+    try block
+       |
+       X
+       |
+       v
+ except Exception
+       |
+       +------> logger.exception()
+       |             |
+       |             v
+       |        Message + traceback
+       |
+       v
+ Recovery / re-raise / response
+
+
+Production flow:
+
+Request
+   |
+   v
+Business logic
+   |
+   X
+Exception
+   |
+   v
+Log context
+   |
+   +-- request_id
+   +-- user_id
+   +-- operation
+   +-- error type
+   |
+   v
+Traceback
+   |
+   v
+Centralized logs
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic exception logging:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+try:
+    result = 10 / 0
+except Exception:
+    logger.exception(
+        "Calculation failed"
+    )
+
+
+Logging specific exceptions:
+
+try:
+    value = int("abc")
+except ValueError:
+    logger.warning(
+        "Invalid numeric value"
+    )
+
+
+Production-style context:
+
+def process_order(
+    order_id,
+    request_id,
+):
+    try:
+        save_order(order_id)
+
+    except Exception:
+        logger.exception(
+            "Failed to save order",
+            extra={
+                "event": "order_save_failed",
+                "order_id": order_id,
+                "request_id": request_id,
+            },
+        )
+
+        raise
+
+
+Using exc_info:
+
+try:
+    process_payment()
+except Exception:
+    logger.error(
+        "Payment processing failed",
+        exc_info=True,
+    )
+
+
+Exception chaining:
+
+class OrderPersistenceError(Exception):
+    pass
+
+
+try:
+    save_to_database()
+except Exception as exc:
+    raise OrderPersistenceError(
+        "Could not persist order"
+    ) from exc
+
+
+Logging before re-raising:
+
+try:
+    process_order()
+except Exception:
+    logger.exception(
+        "Unexpected order processing failure"
+    )
+    raise
+
+
+Avoiding unnecessary traceback:
+
+try:
+    validate_email(email)
+except ValueError:
+    logger.info(
+        "User provided invalid email"
+    )
+
+
+Production principle:
+
+try:
+    result = process_payment()
+
+except PaymentProviderTimeout:
+    logger.warning(
+        "Payment provider timed out"
+    )
+    retry_payment()
+
+except Exception:
+    logger.exception(
+        "Unexpected payment failure"
+    )
+    raise
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+logger.exception() is designed for logging exceptions inside an except block.
+
+It includes traceback information.
+
+Tracebacks are extremely valuable for diagnosing unexpected application failures.
+
+Not every expected business exception requires a full traceback.
+
+Exception logging should include useful context such as operation IDs and request IDs.
+
+Logging an error does not mean the application has handled the error.
+
+After logging, the application must decide whether to recover, return an error, retry, or re-raise the exception.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Logging only the exception message
+
+The message alone may not tell you where the failure occurred.
+
+Mistake 2 — Logging every validation error with a full traceback
+
+This can create huge amounts of unnecessary log data.
+
+Mistake 3 — Catching Exception and silently continuing
+
+This can hide serious application bugs.
+
+Mistake 4 — Logging an exception and then accidentally succeeding
+
+If a payment failed, the application must not behave as though payment succeeded merely because the error was logged.
+
+Mistake 5 — Losing the original exception
+
+Use exception chaining when converting low-level errors into higher-level application errors.
+
+Mistake 6 — Logging sensitive exception details
+
+Exception messages and tracebacks can sometimes contain sensitive information.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is the difference between logger.error() and logger.exception()?
+
+2. Why is traceback information useful?
+
+3. Should every expected validation error include a full traceback?
+
+4. Why might request_id be included when logging an exception?
+
+5. What is exception chaining?
+
+6. Why does logging an exception not mean the exception has been handled?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 8,
+      title: "Production Logging Patterns",
+      duration: "20 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Production logging is not simply about writing more logs.
+
+The goal is to produce logs that help you answer important operational questions.
+
+When something goes wrong, you should be able to determine:
+
+What happened?
+
+When did it happen?
+
+Which service was involved?
+
+Which request caused it?
+
+Which user or resource was involved?
+
+What operation failed?
+
+What was the error?
+
+How severe was the problem?
+
+A production logging strategy should therefore be intentional.
+
+One common pattern is to create a logger per module:
+
+logger = logging.getLogger(__name__)
+
+Then configure the logging system centrally.
+
+Another pattern is to use consistent fields.
+
+For example:
+
+timestamp
+level
+service
+environment
+request_id
+event
+duration_ms
+status_code
+
+This consistency allows centralized systems to search and analyze logs.
+
+Another important production pattern is correlation IDs.
+
+Imagine a request:
+
+POST /orders
+
+It enters your API and receives:
+
+request_id = abc123
+
+The request then reaches:
+
+Order Service
+Payment Service
+Notification Service
+
+Every service includes:
+
+request_id=abc123
+
+Now an engineer can search the centralized logging system for abc123 and see the entire request flow.
+
+This is especially important in microservices.
+
+Another pattern is to separate operational events from debugging details.
+
+For example:
+
+INFO:
+order_created
+
+DEBUG:
+Calculated tax using regional rule X
+
+The INFO event may be useful in production.
+
+The DEBUG event may only be useful during troubleshooting.
+
+Another important pattern is avoiding sensitive information.
+
+Never log:
+
+passwords
+access tokens
+refresh tokens
+API keys
+private keys
+full credit card numbers
+security secrets
+
+Even if a value is useful for debugging, putting secrets into logs can create a serious security vulnerability.
+
+Another production pattern is controlling log volume.
+
+Imagine your API handles 1 million requests per day.
+
+If every request produces 20 large INFO messages:
+
+1,000,000 × 20 = 20 million log records per day.
+
+This can become expensive and difficult to search.
+
+You should therefore decide which events are genuinely valuable.
+
+Another important pattern is logging request duration.
+
+For example:
+
+{
+    "event": "http_request_completed",
+    "method": "POST",
+    "path": "/orders",
+    "status_code": 201,
+    "duration_ms": 245
+}
+
+Now you can identify slow requests.
+
+You can also log important external calls:
+
+{
+    "event": "payment_provider_call",
+    "duration_ms": 1200,
+    "status": "timeout"
+}
+
+This helps identify whether your application's performance problems are caused by an external dependency.
+
+Another useful pattern is logging stable error codes.
+
+For example:
+
+PAYMENT_PROVIDER_TIMEOUT
+USER_NOT_FOUND
+ORDER_ALREADY_PAID
+DATABASE_UNAVAILABLE
+
+An error code should be stable even if the human-readable message changes.
+
+This makes logs easier to search and analyze.
+
+Another production pattern is centralized log collection.
+
+A typical architecture might be:
+
+Application
+    |
+    v
+stdout/stderr
+    |
+    v
+Container / Runtime
+    |
+    v
+Log Collector
+    |
+    v
+Central Logging Platform
+    |
+    +-- Search
+    +-- Dashboards
+    +-- Alerts
+    +-- Retention
+
+This allows engineers to search logs across many servers.
+
+Another important concept is log retention.
+
+Not every log needs to be kept forever.
+
+Retention may depend on:
+
+- Operational needs
+- Compliance requirements
+- Security requirements
+- Storage costs
+- Debugging requirements
+
+Production logging is therefore part of system design.
+
+It involves application architecture, infrastructure, security, performance, monitoring, and operations.
+
+A mature logging strategy answers:
+
+"What information do we need when this system fails at 3 AM?"
+
+That is a much better question than:
+
+"Where can we add another print statement?"
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Production Application
+        |
+        v
+     Logger
+        |
+        v
+ Structured Log
+        |
+        +-------------------+
+        |                   |
+        v                   v
+    stdout              stderr
+        |                   |
+        +---------+---------+
+                  |
+                  v
+            Log Collector
+                  |
+                  v
+        Central Logging System
+                  |
+       +----------+----------+
+       |          |          |
+       v          v          v
+    Search     Alerts    Dashboards
+
+
+Request correlation:
+
+Request
+  |
+  | request_id = abc123
+  v
+API
+  |
+  | abc123
+  v
+Order Service
+  |
+  | abc123
+  v
+Payment Service
+  |
+  | abc123
+  v
+Notification Service
+
+One request ID
+       |
+       v
+Complete request story
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic production logger:
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def create_order(
+    order_id,
+    user_id,
+    request_id,
+):
+    logger.info(
+        "Creating order",
+        extra={
+            "event": "order_create_started",
+            "order_id": order_id,
+            "user_id": user_id,
+            "request_id": request_id,
+        },
+    )
+
+    try:
+        # Business logic
+        pass
+
+    except Exception:
+        logger.exception(
+            "Order creation failed",
+            extra={
+                "event": "order_create_failed",
+                "order_id": order_id,
+                "user_id": user_id,
+                "request_id": request_id,
+            },
+        )
+        raise
+
+
+Request timing:
+
+import time
+
+start = time.perf_counter()
+
+try:
+    process_request()
+
+finally:
+    duration_ms = (
+        time.perf_counter() - start
+    ) * 1000
+
+    logger.info(
+        "Request completed",
+        extra={
+            "event": "request_completed",
+            "duration_ms": round(
+                duration_ms,
+                2,
+            ),
+        },
+    )
+
+
+Stable error code:
+
+logger.error(
+    "Payment provider timeout",
+    extra={
+        "event": "payment_failed",
+        "error_code": (
+            "PAYMENT_PROVIDER_TIMEOUT"
+        ),
+        "payment_id": payment_id,
+        "request_id": request_id,
+    },
+)
+
+
+Production service logging:
+
+logger.info(
+    "Calling payment provider",
+    extra={
+        "event": "external_service_call",
+        "service": "payment-provider",
+        "operation": "charge",
+        "request_id": request_id,
+    },
+)
+
+
+logger.info(
+    "Payment provider response received",
+    extra={
+        "event": "external_service_response",
+        "service": "payment-provider",
+        "operation": "charge",
+        "duration_ms": duration_ms,
+        "status": "success",
+        "request_id": request_id,
+    },
+)
+
+
+Production exception:
+
+try:
+    charge_payment(payment)
+
+except PaymentProviderTimeout:
+    logger.warning(
+        "Payment provider timeout",
+        extra={
+            "event": "payment_provider_timeout",
+            "payment_id": payment.id,
+            "request_id": request_id,
+        },
+    )
+
+    retry_payment(payment)
+
+except Exception:
+    logger.exception(
+        "Unexpected payment failure",
+        extra={
+            "event": "payment_failed",
+            "payment_id": payment.id,
+            "request_id": request_id,
+            "error_code": "PAYMENT_FAILED",
+        },
+    )
+
+    raise
+
+
+A simplified complete configuration:
+
+import logging
+import sys
+
+logger = logging.getLogger("app")
+
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(
+    sys.stdout
+)
+
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter(
+    "%(asctime)s "
+    "%(levelname)s "
+    "%(name)s "
+    "%(message)s"
+)
+
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+
+logger.info(
+    "Application started"
+)
+
+
+Production checklist represented in code:
+
+def log_request(
+    method,
+    path,
+    status_code,
+    duration_ms,
+    request_id,
+):
+    logger.info(
+        "HTTP request completed",
+        extra={
+            "event": "http_request_completed",
+            "method": method,
+            "path": path,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+            "request_id": request_id,
+        },
+    )
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+Production logging should help engineers understand system behavior and diagnose failures.
+
+Use module-level loggers.
+
+Configure logging centrally.
+
+Use consistent logging levels.
+
+Include useful context such as request IDs and stable event names.
+
+Use structured fields when logs need to be searched and analyzed automatically.
+
+Log request duration and important external service calls when useful.
+
+Use stable error codes for important failure categories.
+
+Never log secrets or unnecessary sensitive information.
+
+Control log volume.
+
+Use log rotation when writing to local files.
+
+In modern cloud environments, stdout/stderr plus centralized collection is often preferable to relying on local application files.
+
+Think of logging as part of system observability rather than simply as a debugging feature.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Logging everything
+
+More logs do not automatically mean better observability.
+
+Mistake 2 — Logging secrets
+
+This is a security problem, not merely a logging problem.
+
+Mistake 3 — No request correlation
+
+Without request IDs, distributed request debugging can become extremely difficult.
+
+Mistake 4 — Inconsistent event names
+
+Stable event names make centralized analysis much easier.
+
+Mistake 5 — No log retention strategy
+
+Logs can become expensive and may create unnecessary security exposure if kept indefinitely.
+
+Mistake 6 — Writing sensitive request payloads to logs
+
+Request bodies can contain passwords, tokens, medical information, financial information, or other sensitive data.
+
+Mistake 7 — Using logging as a replacement for monitoring
+
+Logs tell you what happened.
+
+Metrics can tell you how frequently something happens.
+
+Traces can tell you how a request moved through distributed services.
+
+Production observability often combines all three.
+
+Mistake 8 — Logging without thinking about failure modes
+
+Ask what information would actually be needed to diagnose the problem.
+
+Mistake 9 — Creating duplicate log records
+
+Poor handler configuration can cause the same event to appear multiple times.
+
+Mistake 10 — Ignoring operational cost
+
+Log storage, indexing, processing, and retention can become expensive at scale.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. Why is logging considered part of observability?
+
+2. What is a correlation/request ID?
+
+3. Why are stable event names useful?
+
+4. Why should passwords and API keys never be logged?
+
+5. Why is log volume an operational concern?
+
+6. Why might stdout/stderr be preferred in containerized applications?
+
+7. What is the purpose of logging request duration?
+
+8. What is the difference between logs, metrics, and traces?
+
+9. Why are stable error codes useful in production logs?
+
+10. Imagine a request travels through four microservices and fails in the final service. How would a request ID help you diagnose the failure?
+
+11. Imagine your API handles one million requests per day. Why might logging ten messages for every request be a problem?
+
+12. What information would you want in a production log when an external payment provider fails?
+          `,
+        },
+      ],
+    },
+  ],
+};
