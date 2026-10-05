@@ -1,0 +1,942 @@
+```typescript
+/**
+ * DAY 02: Phase 0 · Python Foundations — Variables & Data Types
+ * 
+ * Total Duration: 110 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase0VariablesAndDataTypes = {
+  day: 1,
+  topic: "Phase 0 · Python Foundations — Variables & Data Types",
+  totalMinutes: 110,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Variables Name Values, Not Boxes",
+      durationMinutes: 20,
+      explanation: `
+<b>Mental Model Shift: Names vs. Boxes</b><br/>
+In many traditional programming languages like C or C++, developers learn to think of a variable as a labeled physical box in memory. When you assign a value, you put the value into the box. If you assign a new value, you throw away the contents of the box and put something else in.<br/><br/>
+
+<b>In Python, this mental model will cause severe bugs.</b><br/>
+In Python, <b>variables are tags or sticky notes attached to objects in memory</b>, not physical boxes. The object exists independently in Python's memory heap, and a variable name is simply a reference pointing to that object.<br/><br/>
+
+<b>Real-World Analogy:</b><br/>
+Imagine a warehouse storage container containing package <code>"PKG-8812"</code>. Instead of moving the entire physical cargo every time someone wants to track it, workers attach sticky notes labeled <code>active_shipment</code>, <code>priority_item</code>, and <code>driver_assignment</code> to the container. The container is the <b>object in memory</b>; the sticky notes are <b>variable names</b> pointing to it.<br/><br/>
+
+<b>Why does this matter?</b><br/>
+1. <b>Multiple Names, One Object:</b> If you assign <code>a = [1, 2, 3]</code> and then <code>b = a</code>, you did <i>not</i> make a copy of the list. You attached a second sticky note (<code>b</code>) to the exact same list object in memory.<br/>
+2. <b>Rebinding:</b> Reassigning a variable (<code>x = 20</code>) does not overwrite the old value <code>10</code>. It simply peels the sticky note <code>x</code> off the object <code>10</code> and sticks it onto a newly created object <code>20</code>. If no other names point to <code>10</code>, Python's Garbage Collector reclaims its memory.<br/>
+3. <b>Memory Efficiency:</b> Python reuses small immutable objects (like numbers between -5 and 256 or short strings) across different variable names through internal optimization called <i>interning</i>.
+      `,
+      diagram: `
+TRADITIONAL "BOX" MODEL (C/C++):
+  +--------+
+x |   10   |  (x physically holds the integer value 10)
+  +--------+
+
+PYTHON "NAME POINTER" MODEL:
+  Variable Names                 Memory Heap (Objects)
+  +--------------+               +------------------+
+  | package_code | ------------> | "PKG-8812"       | (String Object)
+  +--------------+               +------------------+
+                                           ^
+  +--------------+                         |
+  | current_item | ------------------------+
+  +--------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Variables as Names Pointing to Objects
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Variable Rebinding vs Object Mutation
+# ------------------------------------------------------------------------------
+
+# Create string object "In Transit" and attach label 'status_label'
+status_label = "In Transit"
+
+# Create a second label pointing to the SAME string object
+current_display = status_label
+
+print("--- BEGINNER: Object Referencing ---")
+print("status_label:", status_label)
+print("current_display:", current_display)
+
+# Rebind 'status_label' to a brand-new string object "Out for Delivery"
+status_label = "Out for Delivery"
+
+# 'current_display' STILL points to the original "In Transit" object!
+print("\nAfter rebinding status_label:")
+print("status_label:", status_label)       # Out for Delivery
+print("current_display:", current_display) # In Transit
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Memory Identity with id()
+# ------------------------------------------------------------------------------
+# Python's built-in id() function returns the memory address of the target object.
+
+package_weight = 15.5
+label_a = package_weight
+label_b = package_weight
+
+print("\n--- INTERMEDIATE: Memory Address Verification ---")
+print("Memory address of label_a:", id(label_a))
+print("Memory address of label_b:", id(label_b))
+print("Are they pointing to the exact same object?", id(label_a) == id(label_b))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Tracking Metadata Manager
+# ------------------------------------------------------------------------------
+
+def analyze_reference_binding(tracking_record: dict) -> None:
+    \"\"\"
+    Demonstrates how variable rebinding inside functions affects external
+    object references in logistics tracking systems.
+    \"\"\"
+    print("\n--- ADVANCED: Reference & Rebinding Analysis ---")
+    
+    # Extract reference to status field
+    status_ref = tracking_record["status"]
+    print("Initial extracted status reference:", status_ref)
+    print("Record status ID:", id(tracking_record["status"]))
+    print("Extracted ref ID:", id(status_ref))
+    
+    # Rebinding local reference does NOT mutate dictionary entry
+    status_ref = "CANCELLED"
+    print("\nRebound local 'status_ref' variable to 'CANCELLED'.")
+    print("Dictionary 'status' field remains:", tracking_record["status"])
+    print("Are dictionary and local status identical?", tracking_record["status"] == status_ref)
+
+# Test logistics dictionary
+shipment_data = {
+    "tracking_id": "TRK-9901",
+    "status": "PROCESSING_AT_HUB"
+}
+
+analyze_reference_binding(shipment_data)
+      `,
+      keyTakeaways: [
+        "In Python, variables are named references (sticky notes) attached to objects, not physical containers.",
+        "Reassigning a variable (`x = y`) changes which object the name points to; it does not alter the underlying object.",
+        "Multiple variables can point to the exact same object in memory simultaneously.",
+        "The built-in `id()` function returns the unique memory address of an object."
+      ],
+      commonMistakes: [
+        "<b>Assuming variable assignment copies the underlying data:</b> Writing <code>b = a</code> attaches a second reference rather than creating a duplicate object.",
+        "<b>Confusing object mutation with variable rebinding:</b> Expecting changing a rebound variable to automatically update other variables that were pointing to the original object.",
+        "<b>Overusing `id()` comparisons instead of equality (`==`):</b> Using memory addresses to test for value equality when `==` should be used."
+      ],
+      quizzes: [
+        {
+          question: "What actually happens when you execute `x = 100` followed by `x = 200` in Python?",
+          options: [
+            "The value 100 inside memory box 'x' is overwritten by 200.",
+            "Python creates a new integer object 200, and rebinds the label 'x' to point to 200.",
+            "The number 100 is deleted from the computer's hard drive.",
+            "An error occurs because variables cannot change values once declared."
+          ],
+          correctIndex: 1,
+          explanation: "Python variables are sticky notes. `x = 200` peels label 'x' off the object `100` and attaches it to the new integer object `200`."
+        },
+        {
+          question: "If `a = [10, 20]` and `b = a`, what is true about `a` and `b`?",
+          options: [
+            "a and b point to two completely separate lists in memory that happen to have identical contents.",
+            "b is an immutable snapshot of a.",
+            "a and b are two variable names referencing the exact same list object in memory.",
+            "Modifying a will crash Python because b is locked."
+          ],
+          correctIndex: 2,
+          explanation: "Assignment (`b = a`) does not create a copy of the list. Both `a` and `b` point to the single list object in memory."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Choose Int, Float, Str, Bool, and None Deliberately",
+      durationMinutes: 22,
+      explanation: `
+<b>Selecting the Right Native Data Type</b><br/>
+Python provides several core primitive data types. Picking the correct data type for your application data represents the difference between a reliable system and one full of subtle bugs.<br/><br/>
+
+<b>1. Integer (<code>int</code>):</b> Whole numbers (positive, negative, zero) with arbitrary precision.
+<ul>
+  <li><b>Use cases:</b> Discrete item counts, package quantities, database primary keys.</li>
+  <li><b>Key feature:</b> Never suffers from rounding errors regardless of size.</li>
+</ul>
+
+<b>2. Floating-Point Number (<code>float</code>):</b> Real numbers with fractional decimal components.
+<ul>
+  <li><b>Use cases:</b> GPS coordinates, package weight, distance measurements.</li>
+  <li><b>Warning (Floating-Point Inaccuracy):</b> Binary representation of floating-point numbers causes inaccuracies in decimal representation (e.g., <code>0.1 + 0.2 == 0.30000000000000004</code>). <i>Never use standard floats for financial calculations or monetary transactions; use <code>decimal.Decimal</code> instead.</i></li>
+</ul>
+
+<b>3. String (<code>str</code>):</b> Sequence of Unicode characters for text processing.
+<ul>
+  <li><b>Use cases:</b> Package tracking numbers, addresses, driver comments.</li>
+  <li><b>Key feature:</b> Strings are immutable; modifying a string creates a new string object.</li>
+</ul>
+
+<b>4. Boolean (<code>bool</code>):</b> Truth values (<code>True</code> or <code>False</code>).
+<ul>
+  <li><b>Use cases:</b> Status flags (<code>is_delivered</code>, <code>requires_signature</code>).</li>
+  <li><b>Key feature:</b> Evaluates conditions in control statements.</li>
+</ul>
+
+<b>5. NoneType (<code>None</code>):</b> Represents the deliberate absence of a value or an uninitialized state.
+<ul>
+  <li><b>Use cases:</b> Unassigned delivery timestamp (<code>delivery_time = None</code> before dropoff occurs).</li>
+  <li><b>Warning:</b> Do not confuse <code>None</code> with empty string <code>""</code> or zero <code>0</code>. Zero is a numeric value; <code>None</code> explicitly indicates "nothing exists here yet."</li>
+</ul>
+      `,
+      diagram: `
++--------------------------------------------------------------------+
+|                       PYTHON CORE PRIMITIVES                       |
++--------------------------------------------------------------------+
+|  Type    | Examples              | Purpose / Use Case              |
++----------+-----------------------+---------------------------------+
+| int      | 42, -10, 0            | Counts, Discrete items          |
+| float    | 12.5, -0.041, 3.14    | Continuous measures (weight, gps|
+| str      | "TRK-102", 'Chicago'  | Textual data & IDs              |
+| bool     | True, False           | Binary flags & condition logic  |
+| NoneType | None                  | Uninitialized / Missing state   |
++--------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Core Native Data Types in Logistics Modeling
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Standard Primitive Declarations
+# ------------------------------------------------------------------------------
+
+package_count: int = 14                       # Integer
+package_weight_kg: float = 3.45               # Float
+tracking_code: str = "TRACK-883-CHI"         # String
+is_express_delivery: bool = True              # Boolean
+delivered_timestamp: None = None              # NoneType (Not delivered yet)
+
+print("--- BEGINNER: Type Representations ---")
+print(f"Tracking Code: {tracking_code} ({type(tracking_code).__name__})")
+print(f"Delivery Timestamp: {delivered_timestamp} ({type(delivered_timestamp).__name__})")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: The Danger of Floats in Monetary Calculations
+# ------------------------------------------------------------------------------
+
+item_1_price = 0.10
+item_2_price = 0.20
+calculated_total = item_1_price + item_2_price
+
+print("\n--- INTERMEDIATE: Floating Point Precision Pitfall ---")
+print(f"0.1 + 0.2 calculated as float: {calculated_total}")
+print("Is calculated_total exactly equal to 0.3?", calculated_total == 0.3)
+
+# Proper Financial Handling using Decimal
+from decimal import Decimal
+exact_total = Decimal("0.10") + Decimal("0.20")
+print(f"Decimal standard calculated total: $ {exact_total}")
+print("Is Decimal calculation exact?", exact_total == Decimal("0.30"))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package State Model
+# ------------------------------------------------------------------------------
+
+class PackageStateRecord:
+    \"\"\"
+    Models the complete domain state of a package in transit using explicit types.
+    \"\"\"
+    def __init__(
+        self, 
+        package_id: str, 
+        weight_lbs: float, 
+        quantity: int, 
+        signature_required: bool
+    ):
+        self.package_id: str = package_id
+        self.weight_lbs: float = weight_lbs
+        self.quantity: int = quantity
+        self.signature_required: bool = signature_required
+        
+        # State begins explicitly as None prior to driver assignment
+        self.assigned_driver_id: str | None = None
+        self.signed_by_recipient: str | None = None
+
+    def assign_driver(self, driver_id: str) -> None:
+        if not driver_id or not driver_id.strip():
+            raise ValueError("Driver ID cannot be empty.")
+        self.assigned_driver_id = driver_id
+
+    def get_summary(self) -> dict:
+        return {
+            "id": self.package_id,
+            "weight": self.weight_lbs,
+            "has_driver": self.assigned_driver_id is not None,
+            "driver_id": self.assigned_driver_id
+        }
+
+# Usage example
+print("\n--- ADVANCED: Domain Package State ---")
+pkg = PackageStateRecord("PKG-4004", 18.2, 1, True)
+print("Initial state (Driver unassigned):", pkg.get_summary())
+
+pkg.assign_driver("DRIVER-JAMES-88")
+print("Updated state (Driver assigned):", pkg.get_summary())
+      `,
+      keyTakeaways: [
+        "Choose `int` for discrete counts, `float` for continuous measurements, `str` for text, `bool` for flags, and `None` for uninitialized states.",
+        "Floating-point numbers (`float`) suffer from binary representation inaccuracies; never use them for money.",
+        "Use `decimal.Decimal` when exact precision is required (e.g., pricing, taxes, billing).",
+        "`None` represents the deliberate absence of a value; check for `None` using the identity operator `is` or `is not` (`if status is None:`)."
+      ],
+      commonMistakes: [
+        "<b>Using standard `float` for money/pricing:</b> Causes tiny rounding bugs like `$19.990000000000002` during fee aggregation.",
+        "<b>Confusing `None` with `0` or `""`:</b> `0` is a number and `""` is a text string; `None` means no value has been supplied.",
+        "<b>Comparing against `None` using `==` instead of `is`:</b> The idiomatic Python standard (PEP 8) requires `if value is None:`."
+      ],
+      quizzes: [
+        {
+          question: "Why should you avoid using standard `float` data types when calculating package billing totals or invoice amounts?",
+          options: [
+            "Floating-point numbers cannot represent negative values.",
+            "Floating-point numbers are restricted to a maximum value of 1,000.",
+            "Binary floating-point arithmetic can introduce subtle rounding inaccuracies (e.g., 0.1 + 0.2 != 0.3).",
+            "Python automatically converts floats into strings during calculations."
+          ],
+          correctIndex: 2,
+          explanation: "Because computers represent floats using base-2 fractions, simple decimal fractions like 0.1 cannot be represented precisely, causing small precision errors."
+        },
+        {
+          question: "What is the recommended, idiomatic way (PEP 8) to test whether a variable `delivery_time` holds a `None` value?",
+          options: [
+            "if delivery_time == None:",
+            "if delivery_time is None:",
+            "if delivery_time.equals(None):",
+            "if type(delivery_time) == 'None':"
+          ],
+          correctIndex: 1,
+          explanation: "PEP 8 specifies using the identity operator `is` when comparing against `None` (`if delivery_time is None:`)."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Dynamic Typing Still Has Strong Rules",
+      durationMinutes: 20,
+      explanation: `
+<b>Dynamic Typing vs. Strong Typing</b><br/>
+A common misconception among beginners is that because Python is <b>dynamically typed</b>, it allows you to do whatever you want with variables. In reality, Python is both <b>dynamically typed</b> AND <b>strongly typed</b>.<br/><br/>
+
+<b>1. Dynamically Typed:</b><br/>
+Variable labels do not have fixed types bound to them at declaration time. A single variable name can point to an integer at one moment and be rebound to point to a string later.<br/>
+<code>x = 100</code> (x points to an int)<br/>
+<code>x = "DELIVERED"</code> (x now points to a str)<br/><br/>
+
+<b>2. Strongly Typed:</b><br/>
+Objects themselves have strict, enforced types. Python will <i>never</i> automatically coerce or convert incompatible types behind your back during operations.
+If you try to add a string and an integer: <code>"Package Count: " + 5</code>, Python throws an immediate <code>TypeError</code> rather than implicitly converting <code>5</code> to a string or <code>"Package Count: "</code> to a number (unlike JavaScript which evaluates <code>"5" + 5</code> to <code>"55"</code>).<br/><br/>
+
+<b>Type Hints (PEP 484):</b><br/>
+Modern Python uses explicit <b>Type Hints</b> (e.g., <code>weight: float = 12.5</code>). Type hints do not change runtime behavior or slow down execution, but they allow IDEs (like VS Code) and static analysis tools (like <code>mypy</code>) to highlight bugs before you even run your program.
+      `,
+      diagram: `
+DYNAMIC TYPING:
+  x = 100          ---> Label 'x' points to <int: 100>
+  x = "Completed"  ---> Label 'x' points to <str: "Completed"> (Valid)
+
+STRONG TYPING ENFORCEMENT:
+  "Weight: " + 12.5  ---> TypeError! 
+  (Python refuses to implicitly guess whether you want text concatenation or math)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Dynamic Binding & Strong Type Checking
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Demonstrating Dynamic Rebinding vs Strong Type Exceptions
+# ------------------------------------------------------------------------------
+
+# Dynamic binding: The type of object pointed to by 'data' changes over time
+data = 101
+print("--- BEGINNER: Dynamic Rebinding ---")
+print("Value:", data, "| Object Type:", type(data))
+
+data = "Hub Chicago South"
+print("Value:", data, "| Object Type:", type(data))
+
+# Strong typing enforcement:
+print("\nDemonstrating Strong Typing Exception:")
+try:
+    # Attempting to add str + int directly
+    invalid_combination = "Tracking ID: " + 99201
+except TypeError as err:
+    print("Caught expected TypeError:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Using Type Hints for IDE IntelliSense and Clarity
+# ------------------------------------------------------------------------------
+
+def format_shipment_label(tracking_number: str, priority_level: int) -> str:
+    \"\"\"
+    Converts inputs explicitly to avoid strong typing runtime exceptions.
+    \"\"\"
+    # Explicit conversion avoids TypeError
+    return "LABEL[" + tracking_number + "] - PRIORITY-" + str(priority_level)
+
+formatted_label = format_shipment_label("TRK-5511", 1)
+print("\n--- INTERMEDIATE: Explicit String Conversion ---")
+print("Formatted Output:", formatted_label)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Input Evaluator with Type Hints
+# ------------------------------------------------------------------------------
+
+from typing import Union
+
+def calculate_express_surcharge(weight: float | int, rate: float) -> float:
+    \"\"\"
+    Calculates surcharge while verifying types dynamically at runtime 
+    to defend against external unvalidated API payloads.
+    \"\"\"
+    # Guard clause enforcing strong numeric types
+    if not isinstance(weight, (int, float)):
+        raise TypeError(f"Expected numeric weight (int/float), got {type(weight).__name__}")
+    
+    if not isinstance(rate, (int, float)):
+        raise TypeError(f"Expected numeric rate (int/float), got {type(rate).__name__}")
+
+    return float(weight) * float(rate)
+
+print("\n--- ADVANCED: Strong Type Guard Execution ---")
+try:
+    surcharge = calculate_express_surcharge(weight=14.5, rate=1.25)
+    print(f"Calculated Surcharge: ${surcharge:.2f}")
+    
+    # Intentionally passing bad type to trigger guard
+    calculate_express_surcharge(weight="14.5_lbs", rate=1.25)
+except TypeError as type_err:
+    print("Runtime Guard Blocked Invalid Payload:", type_err)
+      `,
+      keyTakeaways: [
+        "Python is dynamically typed (variable names can be rebound to different types) AND strongly typed (types are enforced strictly during operations).",
+        "Python will never implicitly convert incompatible types in operations (e.g., string + int raises a `TypeError`).",
+        "Use type hints (`name: str`, `count: int`) to document expected types and enable IDE static analysis.",
+        "Use `isinstance(val, TargetType)` for runtime type validation when handling external untrusted data."
+      ],
+      commonMistakes: [
+        "<b>Assuming Python is weakly typed:</b> Expecting Python to automatically concatenate numbers to strings like JavaScript does.",
+        "<b>Thinking type hints enforce types at runtime:</b> Type hints are ignored by the Python interpreter at runtime; they are for human readability and static analysis tools like `mypy`.",
+        "<b>Using `type(x) == int` instead of `isinstance(x, int)`:</b> `isinstance` is preferred because it correctly handles class inheritance."
+      ],
+      quizzes: [
+        {
+          question: "What happens when you execute `'Package Weight: ' + 15.5` in Python?",
+          options: [
+            "It evaluates smoothly to `'Package Weight: 15.5'`.",
+            "It converts the string to a float and performs addition.",
+            "It throws an immediate `TypeError` because Python is strongly typed.",
+            "It returns `None`."
+          ],
+          correctIndex: 2,
+          explanation: "Because Python is strongly typed, it refuses to implicitly concatenate a string (`str`) and a float (`float`), raising a `TypeError`."
+        },
+        {
+          question: "What is the primary purpose of Type Hints (e.g., `def calculate(weight: float) -> float:`) in Python?",
+          options: [
+            "They speed up code execution time by 50%.",
+            "They force Python to convert incoming arguments into the requested type automatically.",
+            "They provide documentation for developers and allow static analysis tools (like VS Code/mypy) to catch type bugs before execution.",
+            "They prevent variables from being reassigned later in the code."
+          ],
+          correctIndex: 2,
+          explanation: "Type hints are purely informational for developers and static code analyzers; the Python runtime does not enforce them automatically."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Convert and Validate Input Safely",
+      durationMinutes: 20,
+      explanation: `
+<b>Type Conversion and Input Validation</b><br/>
+In real applications, data entering your program from external sources (e.g., terminal inputs, JSON web requests, CSV files, or database queries) almost always arrives as <b>text strings</b> (<code>str</code>).<br/><br/>
+
+<b>Explicit Type Conversion (Casting):</b><br/>
+To perform mathematical operations or logical evaluations on user inputs, you must explicitly convert (cast) strings into numbers or booleans using type constructors:
+<ul>
+  <li><code>int("42")</code> -&gt; <code>42</code></li>
+  <li><code>float("18.5")</code> -&gt; <code>18.5</code></li>
+  <li><code>str(100)</code> -&gt; <code>"100"</code></li>
+  <li><code>bool("True")</code> -&gt; <code>True</code></li>
+</ul>
+
+<b>The Danger of Unsafe Casting:</b><br/>
+If a user inputs invalid data (e.g., typing <code>"twelve"</code> or <code>""</code> when prompted for weight), calling <code>float("twelve")</code> causes Python to crash immediately with a <code>ValueError</code>.<br/><br/>
+
+<b>Production Validation Pattern:</b><br/>
+Never assume external input is formatted correctly. Always validate inputs defensively using parsing guards and <code>try / except ValueError</code> blocks before applying the data to business operations.
+      `,
+      diagram: `
+UNTRUSTED EXTERNAL INPUT
+   [ "24.5" ] (str)
+       |
+       v
++------------------------------------+
+| Validation Guard (try/except)      |
+| Attempts float("24.5")             |
++------------------------------------+
+       |
+       +---> SUCCESS: Returns float 24.5 ---> Used in Logistics Calculations
+       |
+       +---> FAILURE (e.g. "twenty"): Catches ValueError ---> Prompts User / Logs Error
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Defensive Parsing and Type Conversion
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Casting & Unsafe Parsing Crash
+# ------------------------------------------------------------------------------
+
+raw_input_weight = "14.2"
+parsed_weight = float(raw_input_weight)
+
+print("--- BEGINNER: Successful Casting ---")
+print(f"Parsed weight: {parsed_weight} (Type: {type(parsed_weight).__name__})")
+
+print("\nDemonstrating Crash on Bad Input:")
+try:
+    # Passing non-numeric text to float constructor
+    bad_weight = float("14.2 lbs")
+except ValueError as err:
+    print("Caught expected parsing failure:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Safe Parsing Utility Function
+# ------------------------------------------------------------------------------
+
+def parse_package_count(raw_value: str, default: int = 1) -> int:
+    \"\"\"
+    Safely attempts to convert an input string to an integer count.
+    Returns the default value if parsing fails.
+    \"\"\"
+    if not raw_value or not raw_value.strip():
+        return default
+        
+    try:
+        return int(raw_value.strip())
+    except ValueError:
+        print(f"Warning: Unable to parse '{raw_value}' as integer. Falling back to default: {default}")
+        return default
+
+print("\n--- INTERMEDIATE: Safe Parser Testing ---")
+print("Valid string '5' parsed:", parse_package_count("5"))
+print("Invalid string 'five' parsed:", parse_package_count("five", default=1))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Ingestion Payload Sanitizer
+# ------------------------------------------------------------------------------
+
+def ingest_raw_package_payload(payload: dict) -> dict:
+    \"\"\"
+    Sanitizes and converts raw external payload string dictionary into typed 
+    domain values suitable for logistics calculations.
+    \"\"\"
+    print("\n--- ADVANCED: External Payload Ingestion & Validation ---")
+    
+    errors = []
+    sanitized_data = {}
+    
+    # 1. Parse Tracking ID (String validation)
+    raw_id = payload.get("tracking_id", "")
+    if isinstance(raw_id, str) and raw_id.strip():
+        sanitized_data["tracking_id"] = raw_id.strip().upper()
+    else:
+        errors.append("Invalid or missing 'tracking_id'.")
+        
+    # 2. Parse Weight (Float validation)
+    try:
+        raw_weight = payload.get("weight")
+        weight_val = float(raw_weight)
+        if weight_val <= 0:
+            errors.append("Weight must be greater than zero.")
+        else:
+            sanitized_data["weight_lbs"] = weight_val
+    except (ValueError, TypeError):
+        errors.append(f"Invalid weight format: '{payload.get('weight')}'")
+
+    # 3. Parse Priority (Boolean string conversion)
+    raw_priority = str(payload.get("is_priority", "")).lower().strip()
+    sanitized_data["is_priority"] = raw_priority in ["true", "1", "yes"]
+
+    if errors:
+        return {"success": False, "errors": errors}
+        
+    return {"success": True, "data": sanitized_data}
+
+# Test with invalid external payload
+raw_api_payload_bad = {
+    "tracking_id": "   trk-chicago-909   ",
+    "weight": "INVALID_WEIGHT_STRING",
+    "is_priority": "TRUE"
+}
+
+ingest_result = ingest_raw_package_payload(raw_api_payload_bad)
+print("Validation Failure Payload Output:", ingest_result)
+
+# Test with valid external payload
+raw_api_payload_good = {
+    "tracking_id": "   trk-chicago-909   ",
+    "weight": "22.8",
+    "is_priority": "TRUE"
+}
+
+ingest_result_good = ingest_raw_package_payload(raw_api_payload_good)
+print("\nValidation Success Payload Output:", ingest_result_good)
+      `,
+      keyTakeaways: [
+        "External inputs (user terminal prompts, web APIs, CSV files) always enter Python as text strings (`str`).",
+        "Convert strings to numeric values explicitly using `int()` or `float()` constructors.",
+        "Unsafe conversion of non-numeric strings raises a `ValueError` exception.",
+        "Always use `try/except ValueError` blocks or validation rules when ingesting external data to prevent crashes."
+      ],
+      commonMistakes: [
+        "<b>Assuming user input is automatically numeric:</b> Calling `input()` and directly adding the result to a number causes a `TypeError`.",
+        "<b>Failing to strip whitespace:</b> Strings like `' 42\\n'` can cause unexpected issues if not cleaned with `.strip()`.",
+        "<b>Expecting `bool("False")` to evaluate to `False`:</b> In Python, any non-empty string evaluates to `True` when passed to `bool()`. `"False"` is a non-empty string!"
+      ],
+      quizzes: [
+        {
+          question: "What is the boolean result of executing `bool('False')` in Python?",
+          options: [
+            "False",
+            "True",
+            "None",
+            "ValueError"
+          ],
+          correctIndex: 1,
+          explanation: "In Python, casting a non-empty string to `bool()` returns `True` regardless of the characters inside the string. Only `bool('')` (empty string) returns `False`."
+        },
+        {
+          question: "Which exception type is raised when attempting to execute `float('twenty.five')`?",
+          options: [
+            "TypeError",
+            "KeyError",
+            "ValueError",
+            "AttributeError"
+          ],
+          correctIndex: 2,
+          explanation: "Passing a string that cannot be converted into a valid numeric float causes Python to raise a `ValueError`."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Understand Mutability, Identity, and Shared References",
+      durationMinutes: 22,
+      explanation: `
+<b>Mutability, Identity, and Shared References</b><br/>
+To write bug-free Python software, you must understand the difference between <b>Mutable</b> and <b>Immutable</b> objects.<br/><br/>
+
+<b>1. Immutable Objects (Cannot be modified after creation):</b>
+<ul>
+  <li>Types: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>, <code>tuple</code>, <code>None</code>.</li>
+  <li>If you attempt to modify an immutable object, Python creates a <i>new object</i> in memory and rebinds the variable reference.</li>
+</ul>
+
+<b>2. Mutable Objects (Can be modified in-place):</b>
+<ul>
+  <li>Types: <code>list</code>, <code>dict</code>, <code>set</code>.</li>
+  <li>Modifying a mutable object alters its contents in memory <i>without changing its memory address (`id`)</i>.</li>
+</ul>
+
+<b>The "Shared Reference" Pitfall:</b><br/>
+When two variable names point to the same <b>mutable</b> object (e.g., a shared list or dictionary), modifying the object through <i>one</i> variable name alters the data seen by <i>both</i> variables!<br/><br/>
+
+<b>Real-World Analogy:</b><br/>
+Imagine two delivery dispatch managers editing a shared Google Sheet containing today's delivery route. Manager A adds Package #104. Manager B opens their window and immediately sees Package #104 because both managers are looking at a single shared, mutable document.<br/><br/>
+
+<b>Identity (`is`) vs. Equality (`==`):</b>
+<ul>
+  <li><code>a == b</code> tests <b>Equality</b>: Do both objects contain the same data values?</li>
+  <li><code>a is b</code> tests <b>Identity</b>: Do both variable names point to the exact same physical memory address (<code>id(a) == id(b)</code>)?</li>
+</ul>
+      `,
+      diagram: `
+MUTABLE SHARED REFERENCE:
+  list_a = [1, 2]
+  list_b = list_a
+
+  list_a ---------> [ Memory Address 0x7F80 ] : [1, 2]
+                       ^
+  list_b --------------+
+
+  list_a.append(3)
+
+  Result: list_b ALSO evaluates to [1, 2, 3] !
+
+IDENTITY vs EQUALITY:
+  x = [1, 2]
+  y = [1, 2]
+
+  x == y  ---> TRUE  (Same contents)
+  x is y  ---> FALSE (Different objects in memory addresses)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Mutability, Shared References, and Object Identity
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Immutable In-Place Modification Illusion vs True Mutation
+# ------------------------------------------------------------------------------
+
+# Immutable string behavior
+city = "Chicago"
+initial_str_id = id(city)
+
+# String modification creates a NEW string object in memory
+city = city + ", IL"
+new_str_id = id(city)
+
+print("--- BEGINNER: Immutable String Rebinding ---")
+print("Original string memory ID:", initial_str_id)
+print("Modified string memory ID:", new_str_id)
+print("Are string memory addresses identical?", initial_str_id == new_str_id)
+
+
+# Mutable list behavior (In-Place Mutation)
+packages_list = ["PKG-101", "PKG-102"]
+initial_list_id = id(packages_list)
+
+packages_list.append("PKG-103")
+new_list_id = id(packages_list)
+
+print("\nMutable List In-Place Modification:")
+print("Original list memory ID:", initial_list_id)
+print("Modified list memory ID:", new_list_id)
+print("Are list memory addresses identical?", initial_list_id == new_list_id)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Identity (is) vs Equality (==)
+# ------------------------------------------------------------------------------
+
+route_alpha = ["Hub A", "Hub B"]
+route_beta = ["Hub A", "Hub B"]
+route_shared = route_alpha
+
+print("\n--- INTERMEDIATE: Identity vs Equality ---")
+print("route_alpha == route_beta (Equal values?):", route_alpha == route_beta)     # True
+print("route_alpha is route_beta (Same memory object?):", route_alpha is route_beta) # False
+
+print("route_alpha is route_shared (Shared reference?):", route_alpha is route_shared) # True
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Defensive Copying in Logistics Systems
+# ------------------------------------------------------------------------------
+
+import copy
+
+class LogisticsManifestManager:
+    \"\"\"
+    Demonstrates how shared reference mutations can cause catastrophic 
+    bugs in dispatch pipelines, and how defensive copying solves it.
+    \"\"\"
+    def __init__(self, master_manifest: list[str]):
+        # Unsafe: self.manifest = master_manifest (Creates shared reference!)
+        # Safe: Create explicit shallow/deep copy to protect caller's original data
+        self.manifest: list[str] = list(master_manifest)
+
+    def process_and_clear(self) -> list[str]:
+        processed = []
+        while self.manifest:
+            item = self.manifest.pop(0)  # Mutates internal list in-place
+            processed.append(f"PROCESSED: {item}")
+        return processed
+
+# Dispatch testing scenario
+master_dispatch_queue = ["DELIV-901", "DELIV-902", "DELIV-903"]
+
+print("\n--- ADVANCED: Dispatch Queue Copying Guard ---")
+print("Master queue state before processing:", master_dispatch_queue)
+
+# Initialize manager with copy protection
+manager = LogisticsManifestManager(master_dispatch_queue)
+results = manager.process_and_clear()
+
+print("Processed Results:", results)
+print("Master queue state after processing (Uncorrupted):", master_dispatch_queue)
+      `,
+      keyTakeaways: [
+        "Immutable objects (`int`, `float`, `str`, `tuple`) cannot be modified in-place; changes create new objects.",
+        "Mutable objects (`list`, `dict`, `set`) can be updated in-place without changing their memory address.",
+        "Assigning a mutable object to a new variable name creates a shared reference, not a standalone copy.",
+        "Use `==` to test if two objects have equal values; use `is` to test if two variables point to the exact same object in memory.",
+        "Use explicit list slicing `list(original)` or `copy.deepcopy()` to avoid unintended side effects from shared references."
+      ],
+      commonMistakes: [
+        "<b>Modifying a list or dictionary while assuming other references remain unchanged:</b> Unexpected side effects occur when two components share a mutable object.",
+        "<b>Using `is` to compare string or number equality:</b> `x is y` checks memory identity, not value equality. Always use `x == y` for value checks.",
+        "<b>Passing default mutable arguments in functions (e.g., `def add_item(item, queue=[]):`):</b> The default list is created once when the function is defined and shared across all calls!"
+      ],
+      quizzes: [
+        {
+          question: "What is the key difference between the equality operator (`==`) and the identity operator (`is`) in Python?",
+          options: [
+            "`==` checks if two values are equal; `is` checks if two variables point to the exact same object in memory.",
+            "`==` only works for strings; `is` only works for numbers.",
+            "`is` compares object values; `==` converts data types before comparing.",
+            "There is no difference; they are completely interchangeable."
+          ],
+          correctIndex: 0,
+          explanation: "`==` evaluates whether the data contents match, while `is` evaluates whether the two variables share the same memory location (`id`)."
+        },
+        {
+          question: "Given `a = [1, 2]` and `b = a`, what happens if you run `b.append(3)`?",
+          options: [
+            "3 is added to `b` only; `a` remains `[1, 2]`.",
+            "3 is added to both `a` and `b` because both variables point to the same mutable list object.",
+            "Python throws a `MutationError`.",
+            "`a` becomes `None`."
+          ],
+          correctIndex: 1,
+          explanation: "Because lists are mutable and `b = a` assigns a shared reference, mutating `b` modifies the underlying list that `a` also points to."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "In Python's memory model, what is a variable name?",
+      options: [
+        "A physical, fixed-size container on the CPU register.",
+        "A reference label (sticky note) attached to an object in memory.",
+        "A pointer that can only store numeric values.",
+        "A temporary file created on the computer hard drive."
+      ],
+      correctIndex: 1,
+      explanation: "Variables in Python are named references or sticky notes attached to objects residing in memory."
+    },
+    {
+      question: "Which of the following data types is MUTABLE in Python?",
+      options: [
+        "str (String)",
+        "tuple (Tuple)",
+        "list (List)",
+        "int (Integer)"
+      ],
+      correctIndex: 2,
+      explanation: "Lists are mutable, meaning their contents can be changed in-place without altering the list's memory address."
+    },
+    {
+      question: "What happens if you execute `"Package Count: " + 10` in Python?",
+      options: [
+        "It evaluates to `"Package Count: 10"`.",
+        "It raises a `TypeError` because Python is strongly typed and refuses to implicitly combine strings and integers.",
+        "It raises a `ValueError`.",
+        "It evaluates to `"Package Count: 10.0"`."
+      ],
+      correctIndex: 1,
+      explanation: "Python enforces strong typing strictly at runtime, raising a `TypeError` when performing invalid cross-type operations."
+    },
+    {
+      question: "What is the result of casting an unassigned or uninitialized status variable `delivery_time = None` using `bool(delivery_time)`?",
+      options: [
+        "True",
+        "False",
+        "None",
+        "ValueError"
+      ],
+      correctIndex: 1,
+      explanation: "`None` is falsy in Python; converting `None` to a boolean returns `False`."
+    },
+    {
+      question: "Why is `decimal.Decimal` preferred over standard binary floats (`float`) for calculating financial transactions?",
+      options: [
+        "Floats cannot store values larger than $1,000.",
+        "Binary floating-point arithmetic introduces representation inaccuracies (e.g., 0.1 + 0.2 != 0.3), whereas Decimal guarantees exact decimal representation.",
+        "Decimal calculation runs 10x faster than standard floats.",
+        "Floats automatically round all numbers down to the nearest integer."
+      ],
+      correctIndex: 1,
+      explanation: "Decimal accurately represents base-10 fractional values without floating-point representation bugs."
+    },
+    {
+      question: "What exception type is raised when calling `int('abc')`?",
+      options: [
+        "TypeError",
+        "ValueError",
+        "AttributeError",
+        "KeyError"
+      ],
+      correctIndex: 1,
+      explanation: "Passing an invalid text string that cannot be parsed as an integer to `int()` causes a `ValueError`."
+    },
+    {
+      question: "What is the recommended, idiomatic Python syntax to check if variable `x` points to `None`?",
+      options: [
+        "if x == None:",
+        "if x is None:",
+        "if x.is_none():",
+        "if type(x) == None:"
+      ],
+      correctIndex: 1,
+      explanation: "PEP 8 specifies using `if x is None:` for identity comparisons against `None`."
+    },
+    {
+      question: "If `x = [1, 2]` and `y = [1, 2]`, what do `x == y` and `x is y` evaluate to?",
+      options: [
+        "`x == y` is True, `x is y` is True",
+        "`x == y` is True, `x is y` is False",
+        "`x == y` is False, `x is y` is True",
+        "`x == y` is False, `x is y` is False"
+      ],
+      correctIndex: 1,
+      explanation: "`x == y` is True because their contents match. `x is y` is False because they are two distinct list objects stored at different memory addresses."
+    }
+  ],
+  project: {
+    name: "Safe Delivery Record Parser & Memory Auditor (Phase 0 Project)",
+    goal: "Build a robust Python delivery record ingestion module that parses external raw text data safely, converts types explicitly, validates state invariants, and verifies memory reference safety.",
+    brief: "Your logistics company ingests incoming package delivery manifests from legacy partner APIs. The payloads arrive as unstructured text dictionaries containing invalid numbers, missing fields, and extra whitespace. Additionally, previous developers caused bugs by mutating shared record lists in memory. You must build a clean, defensive parser module that sanitizes inputs and audits object references.",
+    steps: [
+      "Create a dedicated script file named `record_parser.py` within your workspace.",
+      "Define a raw test dataset containing dirty incoming dictionaries (e.g., weight as `'12.4 lbs'`, missing tracking IDs, priority as `'YES'`, empty timestamps represented as `None` or `''`).",
+      "Write a safe numeric parsing function `safe_parse_float(raw_val: str, default: float = 0.0) -> float` using `try/except ValueError` to extract numbers cleanly.",
+      "Write a boolean parsing function `safe_parse_bool(raw_val: str) -> bool` that explicitly handles text inputs like `'true'`, `'yes'`, and `'1'`.",
+      "Implement a core ingestion function `parse_delivery_record(raw_record: dict) -> dict` that returns a sanitized dictionary containing cleanly typed attributes (`tracking_id: str`, `weight_kg: float`, `is_priority: bool`, `delivery_time: str | None`).",
+      "Demonstrate object identity safety by implementing defensive copying for package tags lists using `list.copy()` to ensure modifying an ingested package record does not corrupt original raw master records.",
+      "Add runtime assertion logging that outputs the memory identity (`id()`) of objects before and after parsing to prove memory isolation."
+    ],
+    acceptance: [
+      "Dirty inputs containing text units (e.g., `'15.2 kg'`) or invalid strings do not crash the script with unhandled `ValueError` or `TypeError` exceptions.",
+      "The parser outputs cleanly typed values (`float`, `str`, `bool`, `NoneType`).",
+      "Master input dictionaries and list objects remain completely uncorrupted when parsed records are modified.",
+      "Executing `python3 record_parser.py` outputs a structured memory audit report verifying safe parsing and reference isolation."
+    ],
+    stretch: [
+      "Integrate `decimal.Decimal` to compute accurate non-float shipping charges for sanitized packages.",
+      "Add static type annotations across all functions and run `mypy record_parser.py` in your virtual environment to verify zero static type check errors."
+    ]
+  }
+};
+
+```
