@@ -70,6 +70,15 @@ function SettingsMenu() {
       </button>
       {isOpen && (
         <div role="menu" className="absolute right-0 top-10 z-30 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl">
+          <Link
+            href="/learn/compiler"
+            role="menuitem"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>
+            Code Compiler
+          </Link>
           <div className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-[var(--muted)]">
             <span>Theme</span>
             <ThemeToggle />
