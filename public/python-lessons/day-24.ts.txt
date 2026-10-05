@@ -1,0 +1,911 @@
+/**
+ * DAY 24: Phase 4 · Errors, Files & Real-World Python — Dates & Times
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase1DatesAndTimes = {
+  day: 24,
+  topic: "Phase 4 · Errors, Files & Real-World Python — Dates & Times",
+  totalMinutes: 80,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Representing Points in Time: date, time, and datetime",
+      durationMinutes: 18,
+      explanation: `
+<b>Temporal Data Abstractions in Python</b><br/>
+Real-world software must manage temporal information constantly: scheduling delivery slots, calculating package transit times, recording event audit timestamps, and setting expiration deadlines. Python's built-in <code>datetime</code> module provides specialized classes to represent different aspects of time without resorting to raw string manipulation.<br/><br/>
+
+<b>1. The Three Primary Temporal Classes:</b>
+<ul>
+  <li><code>date(year, month, day)</code>: Represents a calendar date (Year, Month, Day) with no time of day or time zone.
+    <br/><i>Use case:</i> Birthdays, holidays, estimated delivery days (e.g., <code>date(2026, 10, 5)</code>).</li>
+  <li><code>time(hour, minute, second, microsecond)</code>: Represents a time of day independent of any specific date.
+    <br/><i>Use case:</i> Store opening hours, daily dispatch cutoff times (e.g., <code>time(17, 30, 0)</code> for 5:30 PM).</li>
+  <li><code>datetime(year, month, day, hour, minute, second)</code>: Combines both calendar date and time of day into a single object pointing to a specific moment.
+    <br/><i>Use case:</i> Package scan timestamps, database event creation logs (e.g., <code>datetime(2026, 10, 5, 14, 15, 0)</code>).</li>
+</ul>
+
+<b>2. Naive vs. Aware Objects:</b>
+<ul>
+  <li><b>Naive Objects:</b> Contain no time zone information. A naive <code>datetime(2026, 10, 5, 10, 0, 0)</code> is ambiguous because it does not specify whether it represents 10:00 AM in Chicago, London, or Tokyo.</li>
+  <li><b>Aware Objects:</b> Contain explicit time zone offsets, removing all ambiguity. Always strive to use Aware objects in production!</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Flight Departure Board</b><br/>
+Think of a <code>date</code> object as the calendar day printed at the top of a flight ticket ("October 5, 2026"). A <code>time</code> object is the daily scheduled departure time ("10:30 AM"). A <code>datetime</code> object combines both into a single exact flight instance ("October 5, 2026 at 10:30 AM").
+      `,
+      diagram: `
+DATETIME MODULE CLASS TAXONOMY:
+
+          +-------------------------------------------------+
+          |              datetime Module                    |
+          +-------------------------------------------------+
+            |                       |                     |
+            v                       v                     v
+     +--------------+       +--------------+      +----------------+
+     |     date     |       |     time     |      |    datetime    |
+     | (Year, Month,|       | (Hour, Min,  |      | (Date + Time   |
+     |     Day)     |       | Sec, Micro)  |      |   Combined)    |
+     +--------------+       +--------------+      +----------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Representing Points in Time (date, time, datetime)
+# ==============================================================================
+
+from datetime import date, time, datetime
+
+# ------------------------------------------------------------------------------
+# Beginner: Instantiating and Inspecting Temporal Objects
+# ------------------------------------------------------------------------------
+
+# 1. Calendar Date Object
+scheduled_delivery_date = date(2026, 10, 5)
+
+# 2. Time of Day Object (5:30 PM)
+dispatch_cutoff_time = time(17, 30, 0)
+
+# 3. Combined Datetime Object
+package_scanned_at = datetime(2026, 10, 5, 14, 15, 30)
+
+print("--- BEGINNER: Class Inspection ---")
+print("Date Object    :", scheduled_delivery_date, "| Year:", scheduled_delivery_date.year)
+print("Time Object    :", dispatch_cutoff_time, "| Hour:", dispatch_cutoff_time.hour)
+print("Datetime Object:", package_scanned_at, "| Day :", package_scanned_at.day)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Fetching Current System Moments
+# ------------------------------------------------------------------------------
+
+# Current local date and naive local datetime
+today_date = date.today()
+now_local_dt = datetime.now()
+
+print("\n--- INTERMEDIATE: System Clocks ---")
+print("Current Local Date    :", today_date)
+print("Current Local Datetime:", now_local_dt.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Scan Event Constructor
+# ------------------------------------------------------------------------------
+
+def create_package_scan_record(
+    tracking_id: str,
+    scan_date: date,
+    scan_time: time
+) -> dict:
+    \"\"\"
+    Combines separate date and time objects into a unified datetime
+    timestamp record for logistics database indexing.
+    \"\"\"
+    print(f"\n--- ADVANCED: Constructing Scan Record [{tracking_id}] ---")
+
+    # Combine date and time instances using datetime.combine()
+    combined_timestamp = datetime.combine(scan_date, scan_time)
+
+    return {
+        "tracking_id": tracking_id,
+        "combined_datetime": combined_timestamp,
+        "formatted_iso": combined_timestamp.isoformat(),
+        "is_weekend": scan_date.weekday() >= 5 # 5=Saturday, 6=Sunday
+    }
+
+# Execute record creation
+d = date(2026, 10, 5)
+t = time(9, 45, 0)
+record = create_package_scan_record("TRK-1004", d, t)
+
+print("Constructed Record:", record)
+      `,
+      keyTakeaways: [
+        "Use `date` for calendar days, `time` for time of day, and `datetime` for combined moments.",
+        "Construct objects using integer parameters: `date(YYYY, MM, DD)` and `time(HH, MM, SS)`.",
+        "Combine separate `date` and `time` instances using `datetime.combine(d, t)`.",
+        "Naive datetime objects contain no time zone context; always use aware objects in production systems."
+      ],
+      commonMistakes: [
+        "<b>Confusing `date.today()` with `datetime.now()`:</b> Using `date.today()` when hour, minute, and second precision is required.",
+        "<b>Using 1-based indexing for hours or 0-based for months:</b> Months range from 1 to 12; hours range from 0 to 23.",
+        "<b>Attempting to subtract `date` from `datetime` directly:</b> Python raises a `TypeError` when mixing types directly without calling `.date()` first."
+      ],
+      quizzes: [
+        {
+          question: "Which Python `datetime` class should be used to represent a recurring store closing time of 9:00 PM independent of any specific day?",
+          options: [
+            "`datetime.date`",
+            "`datetime.time`",
+            "`datetime.datetime`",
+            "`datetime.timedelta`"
+          ],
+          correctIndex: 1,
+          explanation: "The `time` class represents a time of day (hours, minutes, seconds) without binding to any specific calendar date."
+        },
+        {
+          question: "How do you combine an existing `date` object `d` and a `time` object `t` into a single `datetime` object?",
+          options: [
+            "`d + t`",
+            "`datetime.combine(d, t)`",
+            "`d.merge(t)`",
+            "`datetime.join(d, t)`"
+          ],
+          correctIndex: 1,
+          explanation: "`datetime.combine(date_obj, time_obj)` merges separate date and time objects into a single datetime object."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Measuring Durations with timedelta and Date Arithmetic",
+      durationMinutes: 18,
+      explanation: `
+<b>Durations, Offsets, and Temporal Math</b><br/>
+Applications don't just record static timestamps; they perform math on time: "When will a package arrive if transit takes 48 hours?", "How many days until an invoice expires?", "Is a driver's mandatory 10-hour rest break completed?" Python represents durations and time differences using the <b><code>timedelta</code></b> class.<br/><br/>
+
+<b>1. What is a <code>timedelta</code>?</b><br/>
+A <code>timedelta</code> represents a duration—the difference between two dates or datetimes.
+<ul>
+  <li>Constructing durations: <code>timedelta(days=2, hours=5, minutes=30)</code>.</li>
+  <li>Supported parameters: `days`, `seconds`, `microseconds`, `milliseconds`, `minutes`, `hours`, and `weeks`.</li>
+</ul>
+
+<b>2. Date & Datetime Arithmetic:</b>
+<ul>
+  <li><b>Datetime - Datetime = Timedelta:</b> Subtracting two timestamps returns a `timedelta` object representing the elapsed time between them.
+    <br/><code>elapsed = scan_time_2 - scan_time_1</code></li>
+  <li><b>Datetime +/- Timedelta = Datetime:</b> Adding or subtracting a `timedelta` offset to a timestamp computes a new future or past timestamp.
+    <br/><code>estimated_arrival = dispatch_time + timedelta(hours=36)</code></li>
+</ul>
+
+<b>Real-World Logistics Analogy: Delivery Countdown Timer</b><br/>
+If a delivery truck leaves Chicago at 8:00 AM on Monday with a 36-hour transit guarantee, you don't manually count calendar hours. You take the departure timestamp object and add <code>timedelta(hours=36)</code>, and Python automatically calculates the exact destination timestamp (8:00 PM on Tuesday), handling month and year boundary crossovers seamlessly!
+      `,
+      diagram: `
+TIMEDELTA ARITHMETIC PIPELINE:
+
+  [ Departure Datetime ]  +  [ Transit Duration ]  =  [ Arrival Datetime ]
+  2026-10-05 08:00:00      +  timedelta(hours=36)   =  2026-10-06 20:00:00
+
+  ELAPSED TIME CALCULATION:
+  [ Delivery Datetime ]   -  [ Dispatch Datetime ]  =  [ Elapsed Timedelta ]
+  2026-10-06 20:00:00      -  2026-10-05 08:00:00   =  1 day, 12:00:00
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Timedelta Durations and Date Arithmetic
+# ==============================================================================
+
+from datetime import datetime, timedelta
+
+# ------------------------------------------------------------------------------
+# Beginner: Calculating Future Deadlines and Elapsed Time
+# ------------------------------------------------------------------------------
+
+dispatch_timestamp = datetime(2026, 10, 5, 8, 0, 0)
+standard_transit_duration = timedelta(days=2, hours=6) # 54 total hours
+
+# Adding duration to timestamp
+estimated_delivery = dispatch_timestamp + standard_transit_duration
+
+print("--- BEGINNER: Date Arithmetic ---")
+print("Dispatch Timestamp  :", dispatch_timestamp)
+print("Estimated Arrival   :", estimated_delivery)
+
+# Subtracting timestamps to measure actual elapsed duration
+actual_delivery = datetime(2026, 10, 7, 12, 30, 0)
+elapsed_duration = actual_delivery - dispatch_timestamp
+
+print("\nActual Arrival      :", actual_delivery)
+print("Elapsed Duration    :", elapsed_duration)
+print("Total Elapsed Hours :", elapsed_duration.total_seconds() / 3600.0)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Total Seconds vs Attribute Components
+# ------------------------------------------------------------------------------
+
+duration = timedelta(days=1, hours=4, minutes=15)
+
+print("\n--- INTERMEDIATE: Timedelta Inspection ---")
+print("timedelta.days     :", duration.days)          # 1
+print("timedelta.seconds  :", duration.seconds)       # 15300 (4 hours + 15 mins in seconds)
+# total_seconds() converts the entire duration to float seconds
+print("total_seconds()    :", duration.total_seconds()) # 101700.0
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: SLA Violation Detector
+# ------------------------------------------------------------------------------
+
+def Audit_SLA_performance(
+    dispatch_dt: datetime,
+    delivered_dt: datetime,
+    max_allowed_hours: float
+) -> dict:
+    \"\"\"
+    Audits carrier delivery performance against SLA thresholds using timedelta.
+    \"\"\"
+    print(f"\n--- ADVANCED: SLA Transit Audit ---")
+
+    # Calculate transit time
+    actual_transit = delivered_dt - dispatch_dt
+    actual_hours = actual_transit.total_seconds() / 3600.0
+
+    sla_limit = timedelta(hours=max_allowed_hours)
+    is_compliant = actual_transit <= sla_limit
+
+    variance_hours = actual_hours - max_allowed_hours
+
+    return {
+        "dispatch_time": dispatch_dt.isoformat(),
+        "delivered_time": delivered_dt.isoformat(),
+        "actual_transit_hours": round(actual_hours, 2),
+        "sla_max_hours": max_allowed_hours,
+        "sla_met": is_compliant,
+        "variance_hours": round(variance_hours, 2)
+    }
+
+# Execute SLA check
+dispatch = datetime(2026, 10, 5, 8, 0)
+delivered = datetime(2026, 10, 6, 18, 30) # 34.5 hours actual
+audit_report = Audit_SLA_performance(dispatch, delivered, max_allowed_hours=24.0)
+
+print("SLA Audit Summary:", audit_report)
+      `,
+      keyTakeaways: [
+        "`timedelta` objects represent temporal durations (days, seconds, microseconds).",
+        "Adding/subtracting a `timedelta` to a `datetime` produces a new `datetime` object.",
+        "Subtracting two `datetime` objects returns a `timedelta` object.",
+        "Use `timedelta.total_seconds()` to measure the exact overall duration in float seconds rather than reading `.seconds`."
+      ],
+      commonMistakes: [
+        "<b>Confusing `timedelta.seconds` with `timedelta.total_seconds()`:</b> `.seconds` returns only the remaining seconds component within the current day (0 to 86399), ignoring the `.days` attribute! Always use `.total_seconds()` for overall duration math.",
+        "<b>Attempting to initialize `timedelta` with years or months:</b> `timedelta` does not accept `years` or `months` keywords because month/year lengths vary.",
+        "<b>Adding two `datetime` objects together:</b> `datetime + datetime` raises a `TypeError`. You can only add a `timedelta` duration to a `datetime`."
+      ],
+      quizzes: [
+        {
+          question: "What is returned when you subtract one `datetime` object from another `datetime` object in Python?",
+          options: [
+            "A float representing epoch seconds.",
+            "A `timedelta` object.",
+            "An integer representing the number of days.",
+            "A new `datetime` object."
+          ],
+          correctIndex: 1,
+          explanation: "Subtracting two `datetime` objects calculates the duration between them, returning a `timedelta` object."
+        },
+        {
+          question: "Why should you use `duration.total_seconds()` instead of `duration.seconds` when measuring an overall elapsed timedelta duration?",
+          options: [
+            "`duration.seconds` converts time to string text.",
+            "`duration.seconds` only returns the remainder seconds within a single 24-hour period, completely ignoring any full days stored in `duration.days`.",
+            "`duration.total_seconds()` converts output to UTC timezone.",
+            "They return the exact same value."
+          ],
+          correctIndex: 1,
+          explanation: "The `.seconds` attribute only holds the sub-day seconds component (0–86399). `.total_seconds()` computes the entire duration across all days in float seconds."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Parsing, Formatting, and ISO 8601 Standards",
+      durationMinutes: 22,
+      explanation: `
+<b>String Conversion: strftime, strptime, and ISO 8601</b><br/>
+Timestamps enter and leave applications as plain text strings (JSON payloads, CSV files, terminal inputs, database strings). Python provides methods to parse incoming text strings into <code>datetime</code> objects and format <code>datetime</code> objects into clean display text strings.<br/><br/>
+
+<b>1. Formatting Datetime to String (<code>strftime</code> - String Format Time):</b><br/>
+Converts a <code>datetime</code> object into a custom formatted text string using directive placeholders:
+<ul>
+  <li><code>%Y</code>: 4-digit year (e.g., <code>2026</code>)</li>
+  <li><code>%m</code>: 2-digit zero-padded month (e.g., <code>10</code>)</li>
+  <li><code>%d</code>: 2-digit zero-padded day (e.g., <code>05</code>)</li>
+  <li><code>%H</code>: 24-hour zero-padded hour (e.g., <code>14</code>)</li>
+  <li><code>%M</code>: 2-digit zero-padded minute (e.g., <code>30</code>)</li>
+  <li><code>%S</code>: 2-digit zero-padded second (e.g., <code>00</code>)</li>
+</ul>
+
+<b>2. Parsing String to Datetime (<code>strptime</code> - String Parse Time):</b><br/>
+Parses a text string into a formal <code>datetime</code> object given an explicit format mask:<br/>
+<code>dt = datetime.strptime("2026-10-05 14:30:00", "%Y-%m-%d %H:%M:%S")</code><br/><br/>
+
+<b>3. The Universal Standard: ISO 8601 Strings:</b><br/>
+<b>ISO 8601</b> (e.g., <code>"2026-10-05T14:30:00Z"</code> or <code>"2026-10-05T14:30:00-05:00"</code>) is the international standard for timestamp strings across APIs and web services.
+<ul>
+  <li><code>datetime.isoformat()</code>: Exports a timestamp to a standard ISO 8601 string.</li>
+  <li><code>datetime.fromisoformat(iso_str)</code>: Modern Python 3.11+ method that parses ISO 8601 strings directly without needing manual `strptime` masks!</li>
+</ul>
+      `,
+      diagram: `
+DATETIME STRING CONVERSION PIPELINE:
+
+  Parsing (String -> Datetime):
+  "2026-10-05 14:30"  ---> strptime("%Y-%m-%d %H:%M") ---> datetime(2026, 10, 5, 14, 30)
+
+  Formatting (Datetime -> String):
+  datetime(2026, 10, 5, 14, 30) ---> strftime("%Y/%m/%d") ---> "2026/10/05"
+
+  ISO 8601 Standard:
+  datetime.fromisoformat("2026-10-05T14:30:00") <---> datetime(2026, 10, 5, 14, 30)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: strftime, strptime, and ISO 8601 Conversions
+# ==============================================================================
+
+from datetime import datetime
+
+# ------------------------------------------------------------------------------
+# Beginner: Custom Formatting with strftime and Parsing with strptime
+# ------------------------------------------------------------------------------
+
+now = datetime(2026, 10, 5, 14, 30, 45)
+
+# Formatting datetime -> custom string
+formatted_custom = now.strftime("%A, %B %d, %Y at %I:%M %p")
+print("--- BEGINNER: Custom Formatting (strftime) ---")
+print("Formatted Output:", formatted_custom) # e.g. "Monday, October 05, 2026 at 02:30 PM"
+
+# Parsing custom string -> datetime object
+raw_date_text = "05/10/2026 14:30" # DD/MM/YYYY HH:MM
+parsed_dt = datetime.strptime(raw_date_text, "%d/%m/%Y %H:%M")
+
+print("\nParsed Datetime Object (strptime):", parsed_dt)
+print("Extracted Month:", parsed_dt.month) # 10
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: ISO 8601 Standard Handling
+# ------------------------------------------------------------------------------
+
+# Generating ISO 8601 String
+iso_string = now.isoformat()
+print("\n--- INTERMEDIATE: ISO 8601 Conversions ---")
+print("Exported ISO 8601 String:", iso_string) # "2026-10-05T14:30:45"
+
+# Direct Parsing from ISO 8601 string (Python 3.11+ feature)
+incoming_api_timestamp = "2026-10-05T18:45:00"
+parsed_iso_dt = datetime.fromisoformat(incoming_api_timestamp)
+
+print("Parsed ISO String to Datetime :", parsed_iso_dt)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Format External API Payload Parser
+# ------------------------------------------------------------------------------
+
+def parse_external_scan_timestamp(raw_timestamp_str: str) -> datetime:
+    \"\"\"
+    Attempts parsing external timestamp payloads using ISO 8601 first,
+    falling back to legacy custom format masks defensively.
+    \"\"\"
+    print(f"\n--- ADVANCED: Parsing Payload [{raw_timestamp_str}] ---")
+
+    # Try ISO 8601 first
+    try:
+        return datetime.fromisoformat(raw_timestamp_str)
+    except ValueError:
+        pass # Fallback to custom masks
+
+    fallback_formats = [
+        "%Y-%m-%d %H:%M:%S",
+        "%d-%b-%Y %H:%M",
+        "%m/%d/%Y %I:%M:%S %p"
+    ]
+
+    for fmt_mask in fallback_formats:
+        try:
+            return datetime.strptime(raw_timestamp_str, fmt_mask)
+        except ValueError:
+            continue
+
+    raise ValueError(f"CRITICAL: Unable to parse timestamp '{raw_timestamp_str}' with known format masks.")
+
+# Test execution across different string formats
+print("Parsed ISO  :", parse_external_scan_timestamp("2026-10-05T14:30:00"))
+print("Parsed Legacy:", parse_external_scan_timestamp("05-Oct-2026 14:30"))
+      `,
+      keyTakeaways: [
+        "Use `strftime(format_mask)` to format a `datetime` object into a custom string.",
+        "Use `datetime.strptime(string, format_mask)` to parse a custom text string into a `datetime` object.",
+        "ISO 8601 (`YYYY-MM-DDTHH:MM:SS`) is the industry standard format for timestamps in web APIs.",
+        "Use `datetime.fromisoformat()` to parse standard ISO 8601 strings cleanly."
+      ],
+      commonMistakes: [
+        "<b>Confusing `%m` and `%M` in format directives:</b> `%m` represents 2-digit month; `%M` represents 2-digit minute! Using `%m` for minutes corrupts parsed timestamps.",
+        "<b>Confusing `strftime` and `strptime`:</b> `strftime` = String From Time (format object to text); `strptime` = String Parse Time (parse text to object).",
+        "<b>Hardcoding custom format masks for ISO 8601 strings:</b> Writing complex `strptime` strings for ISO 8601 instead of calling `datetime.fromisoformat()`."
+      ],
+      quizzes: [
+        {
+          question: "Which directive symbol in `strftime` / `strptime` represents the zero-padded 2-digit Month (01–12)?",
+          options: [
+            "`%M`",
+            "`%m`",
+            "`%d`",
+            "`%Y`"
+          ],
+          correctIndex: 1,
+          explanation: "`%m` (lowercase) represents month. `%M` (uppercase) represents minutes."
+        },
+        {
+          question: "Which method converts a `datetime` object directly into an international standard ISO 8601 text string (e.g., `\"2026-10-05T14:30:00\"`)?",
+          options: [
+            "`dt.to_string()`",
+            "`dt.isoformat()`",
+            "`dt.strftime_iso()`",
+            "`dt.export_utc()`"
+          ],
+          correctIndex: 1,
+          explanation: "`dt.isoformat()` exports a `datetime` object directly as an ISO 8601 compliant string."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Time Zones, UTC, and ZoneInfo",
+      durationMinutes: 20,
+      explanation: `
+<b>Global Time Alignment and Standard Library ZoneInfo</b><br/>
+Running logistics software across regional hubs requires handling time zones correctly. A parcel scanned at 3:00 PM in Chicago (CDT / UTC-5) occurs at the exact same physical instant as 1:00 PM in Los Angeles (PDT / UTC-7) and 8:00 PM in London (UTC+0). Failing to handle time zones causes incorrect package tracking order and broken SLAs.<br/><br/>
+
+<b>1. The Golden Rule of System Architecture: Always Store UTC!</b><br/>
+<b>Coordinated Universal Time (UTC)</b> is the primary time standard by which the world regulates clocks.
+<ul>
+  <li><b>Golden Rule:</b> Convert all timestamps to <b>UTC</b> as soon as they enter your application, store them in UTC in your databases, and perform all date arithmetic in UTC. Convert UTC timestamps to local time zones <i>only</i> when displaying dates to human users in a UI!</li>
+</ul>
+
+<b>2. Python 3.9+ Standard Library <code>zoneinfo</code>:</b><br/>
+Python 3.9 introduced the built-in <code>zoneinfo</code> module, which uses the system's IANA Time Zone Database (e.g., <code>"America/Chicago"</code>, <code>"Europe/London"</code>, <code>"Asia/Tokyo"</code>).<br/><br/>
+
+<b>3. Creating Aware Timestamps & Converting Zones:</b>
+<ul>
+  <li><b>Create Aware UTC Timestamp:</b> <code>datetime.now(timezone.utc)</code></li>
+  <li><b>Attach Timezone to Naive Datetime:</b> <code>naive_dt.replace(tzinfo=ZoneInfo("America/Chicago"))</code></li>
+  <li><b>Convert Aware Datetime to Different Zone:</b> <code>chicago_dt.astimezone(ZoneInfo("Asia/Tokyo"))</code></li>
+</ul>
+      `,
+      diagram: `
+UTC CENTRIC ARCHITECTURE:
+
+  [ User Input: Chicago (CDT / UTC-5) ]
+  2026-10-05 10:00:00-05:00
+             |
+             v  .astimezone(timezone.utc)
+  [ DATABASE / INTERNAL LOGIC (UTC) ]
+  2026-10-05 15:00:00+00:00
+             |
+             v  .astimezone(ZoneInfo("Asia/Tokyo"))
+  [ User UI: Tokyo (JST / UTC+9) ]
+  2026-10-06 00:00:00+09:00
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Time Zones, UTC, and ZoneInfo
+# ==============================================================================
+
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+# ------------------------------------------------------------------------------
+# Beginner: Creating Aware UTC Timestamps
+# ------------------------------------------------------------------------------
+
+# Aware UTC timestamp (contains explicit tzinfo=timezone.utc)
+utc_now = datetime.now(timezone.utc)
+
+print("--- BEGINNER: Aware UTC Timestamp ---")
+print("UTC Current Datetime:", utc_now)
+print("Timezone Info       :", utc_now.tzinfo) # timezone.utc
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Converting Between Regional Time Zones
+# ------------------------------------------------------------------------------
+
+# Define specific IANA time zones
+chicago_tz = ZoneInfo("America/Chicago")
+tokyo_tz = ZoneInfo("Asia/Tokyo")
+london_tz = ZoneInfo("Europe/London")
+
+# Create aware timestamp for Chicago hub departure
+chicago_dispatch = datetime(2026, 10, 5, 10, 0, 0, tzinfo=chicago_tz)
+
+# Convert exact same physical instant to London and Tokyo times
+london_time = chicago_dispatch.astimezone(london_tz)
+tokyo_time = chicago_dispatch.astimezone(tokyo_tz)
+
+print("\n--- INTERMEDIATE: Time Zone Conversions ---")
+print("Chicago Departure (CDT):", chicago_dispatch)
+print("London Display   (BST):", london_time)
+print("Tokyo Display    (JST):", tokyo_time)
+
+# Verify physical equality across time zones
+print("Do all three timestamps point to the exact same physical instant?",
+      chicago_dispatch == london_time == tokyo_time) # True!
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Hub Event Ingestion Engine
+# ------------------------------------------------------------------------------
+
+def ingest_regional_scan_event(
+    raw_scan_time: str,
+    hub_iana_zone: str
+) -> dict:
+    \"\"\"
+    Ingests a naive local scan timestamp string, attaches regional IANA timezone,
+    and normalizes the event to UTC for database storage.
+    \"\"\"
+    print(f"\n--- ADVANCED: Ingesting Event from [{hub_iana_zone}] ---")
+
+    # Parse naive timestamp
+    naive_dt = datetime.fromisoformat(raw_scan_time)
+
+    # Attach regional IANA timezone (replace tzinfo)
+    regional_tz = ZoneInfo(hub_iana_zone)
+    regional_aware_dt = naive_dt.replace(tzinfo=regional_tz)
+
+    # Normalize to UTC for database storage (.astimezone)
+    utc_normalized_dt = regional_aware_dt.astimezone(timezone.utc)
+
+    return {
+        "local_input": raw_scan_time,
+        "regional_aware_iso": regional_aware_dt.isoformat(),
+        "utc_storage_iso": utc_normalized_dt.isoformat(),
+        "utc_timestamp_obj": utc_normalized_dt
+    }
+
+# Ingest scan from Chicago Hub
+chicago_event = ingest_regional_scan_event("2026-10-05T10:13:00", "America/Chicago")
+print("Chicago Ingestion Result:\n ", chicago_event["utc_storage_iso"])
+
+# Ingest scan from Tokyo Hub
+tokyo_event = ingest_regional_scan_event("2026-10-06T00:13:00", "Asia/Tokyo")
+print("Tokyo Ingestion Result  :\n ", tokyo_event["utc_storage_iso"])
+
+# Compare UTC storage equality
+print("Are both regional events physically simultaneous?",
+      chicago_event["utc_timestamp_obj"] == tokyo_event["utc_timestamp_obj"])
+      `,
+      keyTakeaways: [
+        "Always store and process timestamps internally in Coordinated Universal Time (UTC).",
+        "Python 3.9+ provides `zoneinfo.ZoneInfo(\"Region/City\")` for IANA time zones.",
+        "Use `dt.replace(tzinfo=...)` to attach time zone context to a naive timestamp.",
+        "Use `dt.astimezone(...)` to convert an aware timestamp to a different time zone."
+      ],
+      commonMistakes: [
+        "<b>Using `datetime.now()` without arguments:</b> Produces a naive local timestamp that lacks time zone context.",
+        "<b>Confusing `replace(tzinfo=...)` and `astimezone(...)`:</b> `replace()` changes the time zone tag without adjusting hour values (used to attach tz to naive objects). `astimezone()` converts the hours/minutes to match a new time zone physically.",
+        "<b>Hardcoding fixed UTC offset integers (e.g., -5):</b> Ignoring Daylight Saving Time (DST) changes! Always use IANA named zones (like `\"America/Chicago\"`) so Python handles DST automatically."
+      ],
+      quizzes: [
+        {
+          question: "Which Python method converts an aware `datetime` object from its current time zone to a different target time zone (adjusting hours/minutes accordingly)?",
+          options: [
+            "`dt.replace(tzinfo=target_tz)`",
+            "`dt.astimezone(target_tz)`",
+            "`dt.convert(target_tz)`",
+            "`dt.set_zone(target_tz)`"
+          ],
+          correctIndex: 1,
+          explanation: "`dt.astimezone(target_tz)` converts an aware datetime to a new target time zone, shifting clock hour values to match the target region."
+        },
+        {
+          question: "Why should software systems store timestamps internally in UTC using IANA named zones (e.g., `ZoneInfo(\"America/Chicago\")`) rather than fixed offsets (e.g., `-05:00`)?",
+          options: [
+            "Fixed offsets cause syntax errors in Python.",
+            "IANA named zones automatically handle Daylight Saving Time (DST) clock shifts, whereas fixed offsets do not.",
+            "UTC only works on Linux operating systems.",
+            "Fixed offsets require 10x more disk space."
+          ],
+          correctIndex: 1,
+          explanation: "Named IANA time zones automatically account for seasonal Daylight Saving Time transitions, preventing offset errors."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Common Timezone Bugs and Defensive Patterns",
+      durationMinutes: 18,
+      explanation: `
+<b>Daylight Saving Time Pitfalls and Ambiguous Times</b><br/>
+Date and time logic is notoriously prone to bugs. Two specific categories of time zone bugs plague production logistics systems: **Daylight Saving Time (DST) Transitions** and **Naive-vs-Aware Comparisons**.<br/><br/>
+
+<b>1. Daylight Saving Time Transitions:</b>
+<ul>
+  <li><b>Spring Forward (Spring DST Gap):</b> When clocks jump forward from 2:00 AM to 3:00 AM, local times between 2:00 AM and 2:59 AM <i>do not exist</i> on the local clock!</li>
+  <li><b>Fall Back (Fall DST Overlap):</b> When clocks fall back from 2:00 AM to 1:00 AM, local times between 1:00 AM and 1:59 AM <i>occur twice</i>! Without explicit fold tracking or UTC normalization, the system cannot tell if "1:30 AM" refers to the first or second occurrence.</li>
+</ul>
+
+<b>2. Naive vs. Aware Comparison Crash:</b><br/>
+Attempting to compare or subtract a naive `datetime` object and an aware `datetime` object raises a fatal `TypeError` crash!<br/>
+<code>naive_dt = datetime.now()</code><br/>
+<code>aware_dt = datetime.now(timezone.utc)</code><br/>
+<code>if naive_dt &lt; aware_dt: # CRASH! Raises TypeError: can't compare offset-naive and offset-aware datetimes</code><br/><br/>
+
+<b>3. Defensive Timestamp Sanitation Rules:</b>
+1. **Never perform date math across local DST boundaries.** Convert to UTC first, perform math/timedelta addition in UTC, then convert back to local time.
+2. **Sanitize incoming timestamps at boundary entry points.** Ensure every incoming payload is checked and converted to an aware UTC timestamp before processing.
+      `,
+      diagram: `
+DAYLIGHT SAVING TIME TRANSITION HAZARDS:
+
+  Spring Forward (Non-Existent Local Hour):
+  [ 01:59 AM ] ---> [ CLOCK JUMPS TO 03:00 AM ]
+  (Local time 02:30 AM does NOT exist!)
+
+  Fall Back (Ambiguous Repeated Local Hour):
+  [ 01:00 AM First Pass ] ---> [ 01:59 AM ]
+                                   | (Clock drops back 1 hour)
+  [ 01:00 AM Second Pass ] -> [ 01:59 AM ]
+  (Which 01:30 AM is it? Solved by UTC conversion!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Defensive Timezone Patterns and Bug Prevention
+# ==============================================================================
+
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
+
+# ------------------------------------------------------------------------------
+# Beginner: Naive vs Aware Comparison Crash Guard
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: Naive vs Aware Comparison Guard ---")
+
+naive_dt = datetime(2026, 10, 5, 10, 0, 0)
+aware_dt = datetime(2026, 10, 5, 10, 0, 0, tzinfo=timezone.utc)
+
+try:
+    # Attempting direct comparison between naive and aware timestamps
+    is_earlier = naive_dt < aware_dt
+except TypeError as err:
+    print("Caught Expected TypeError Crash:", err)
+
+# Safe Comparison Pattern: Normalize naive timestamp to UTC first
+safe_aware_dt = naive_dt.replace(tzinfo=timezone.utc)
+print("Safe Comparison Result:", safe_aware_dt == aware_dt) # True
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Performing Math Across DST Boundaries Safely
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Safe Date Math Across DST Boundaries ---")
+
+chicago_tz = ZoneInfo("America/Chicago")
+
+# Fall DST Transition in Chicago: Clocks fall back on Nov 1, 2026
+pre_dst_local = datetime(2026, 11, 1, 0, 0, 0, tzinfo=chicago_tz)
+
+# WRONG: Adding timedelta directly to local DST datetime can cause offset drift!
+# RIGHT: Convert to UTC -> Add timedelta -> Convert back to Local
+utc_dt = pre_dst_local.astimezone(timezone.utc)
+future_utc_dt = utc_dt + timedelta(hours=24) # 24 physical hours later
+future_local_dt = future_utc_dt.astimezone(chicago_tz)
+
+print("Pre-DST Local Time :", pre_dst_local)
+print("24 Physical Hours Later Local Time:", future_local_dt)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Production Timestamp Sanitizer Pipeline
+# ------------------------------------------------------------------------------
+
+def sanitize_and_normalize_timestamp(
+    raw_timestamp: str,
+    fallback_iana_zone: str = "America/Chicago"
+) -> datetime:
+    \"\"\"
+    Defensively parses untrusted external timestamp strings,
+    attaches fallback timezones if naive, and returns an aware UTC datetime object.
+    \"\"\"
+    print(f"\n--- ADVANCED: Sanitizing Raw Timestamp [{raw_timestamp}] ---")
+
+    parsed_dt = datetime.fromisoformat(raw_timestamp)
+
+    # Guard 1: Check if input timestamp is naive
+    if parsed_dt.tzinfo is None or parsed_dt.tzinfo.utcoffset(parsed_dt) is None:
+        print("  Notice: Input timestamp is naive. Attaching fallback timezone...")
+        fallback_tz = ZoneInfo(fallback_iana_zone)
+        parsed_dt = parsed_dt.replace(tzinfo=fallback_tz)
+    else:
+        print("  Notice: Input timestamp is already timezone-aware.")
+
+    # Guard 2: Normalize to UTC
+    utc_dt = parsed_dt.astimezone(timezone.utc)
+
+    return utc_dt
+
+# Test with naive timestamp string
+naive_input = "2026-10-05T10:13:00"
+normalized_1 = sanitize_and_normalize_timestamp(naive_input)
+print("Normalized Output 1:", normalized_1.isoformat())
+
+# Test with aware timestamp string
+aware_input = "2026-10-05T10:13:00+09:00" # Tokyo offset
+normalized_2 = sanitize_and_normalize_timestamp(aware_input)
+print("Normalized Output 2:", normalized_2.isoformat())
+      `,
+      keyTakeaways: [
+        "Comparing or subtracting naive and aware `datetime` objects raises a fatal `TypeError`.",
+        "Never perform `timedelta` arithmetic directly on local time zone timestamps during DST transition periods.",
+        "Always perform date arithmetic in UTC, then convert results back to local display zones.",
+        "Check if a datetime is naive using `dt.tzinfo is None` before performing operations."
+      ],
+      commonMistakes: [
+        "<b>Mixing naive and aware timestamps in operations:</b> Triggers unhandled `TypeError` crashes in production.",
+        "<b>Adding `timedelta(days=1)` to local time during DST transitions:</b> Can result in 23-hour or 25-hour shifts that misalign local clock hours unless processed in UTC.",
+        "<b>Ignoring regional DST transition rules:</b> Assuming every day has exactly 24 hours in local time zone clocks."
+      ],
+      quizzes: [
+        {
+          question: "What happens if you attempt to compare a naive datetime `dt1 = datetime(2026, 10, 5)` with an aware datetime `dt2 = datetime(2026, 10, 5, tzinfo=timezone.utc)` using `dt1 < dt2`?",
+          options: [
+            "Python automatically converts `dt1` to UTC.",
+            "Python raises a `TypeError`.",
+            "The comparison evaluates to `True`.",
+            "Python returns `None`."
+          ],
+          correctIndex: 1,
+          explanation: "Python strictly forbids direct comparison or subtraction between naive and timezone-aware datetime objects, raising a `TypeError`."
+        },
+        {
+          question: "What is the defensive strategy to prevent Daylight Saving Time (DST) bugs when adding long durations (e.g., 48 hours) to a local timestamp?",
+          options: [
+            "Add 48 hours in local time and manually subtract 1 hour.",
+            "Convert the local timestamp to UTC first, add `timedelta(hours=48)` in UTC, and convert the result back to local time.",
+            "Disable time zones on the operating system.",
+            "Use integer strings instead of `datetime` objects."
+          ],
+          correctIndex: 1,
+          explanation: "UTC time does not observe Daylight Saving Time shifts. Performing arithmetic in UTC guarantees accurate physical time progression."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which `datetime` class represents calendar dates (Year, Month, Day) without hours or time zone context?",
+      options: [
+        "`datetime.time`",
+        "`datetime.date`",
+        "`datetime.datetime`",
+        "`datetime.timedelta`"
+      ],
+      correctIndex: 1,
+      explanation: "`datetime.date` represents calendar dates without time of day."
+    },
+    {
+      question: "Which class represents a duration or difference between two points in time?",
+      options: [
+        "`datetime.date`",
+        "`datetime.time`",
+        "`datetime.timedelta`",
+        "`datetime.zoneinfo`"
+      ],
+      correctIndex: 2,
+      explanation: "`datetime.timedelta` represents temporal durations."
+    },
+    {
+      question: "Which method in Python 3.11+ parses an international standard ISO 8601 string (e.g., `\"2026-10-05T14:30:00\"`) directly into a `datetime` object?",
+      options: [
+        "`datetime.strptime()`",
+        "`datetime.fromisoformat()`",
+        "`datetime.parse_iso()`",
+        "`datetime.load()`"
+      ],
+      correctIndex: 1,
+      explanation: "`datetime.fromisoformat()` parses ISO 8601 strings directly into `datetime` objects."
+    },
+    {
+      question: "What directive placeholder in `strftime` represents 2-digit zero-padded Minutes (00–59)?",
+      options: [
+        "`%m`",
+        "`%M`",
+        "`%S`",
+        "`%H`"
+      ],
+      correctIndex: 1,
+      explanation: "`%M` (uppercase) represents minutes. `%m` (lowercase) represents months."
+    },
+    {
+      question: "What is the recommended architectural practice for storing timestamps internally in databases?",
+      options: [
+        "Store timestamps in local server time zone formatted as text strings.",
+        "Store timestamps normalized to UTC in timezone-aware objects or ISO 8601 UTC strings.",
+        "Store timestamps as integer day counts.",
+        "Store timestamps in the client user's regional time zone."
+      ],
+      correctIndex: 1,
+      explanation: "Storing timestamps normalized to UTC prevents time zone ambiguity and daylight saving time bugs."
+    },
+    {
+      question: "Which built-in Python module (Python 3.9+) provides IANA time zone support (e.g., `ZoneInfo(\"America/Chicago\")`)?",
+      options: [
+        "`pytz`",
+        "`zoneinfo`",
+        "`tz`",
+        "`time`"
+      ],
+      correctIndex: 1,
+      explanation: "`zoneinfo` was added to Python's standard library in version 3.9."
+    },
+    {
+      question: "What method should be used to convert an aware `datetime` object from its current time zone to a new target time zone?",
+      options: [
+        "`dt.replace(tzinfo=new_tz)`",
+        "`dt.astimezone(new_tz)`",
+        "`dt.shift(new_tz)`",
+        "`dt.convert(new_tz)`"
+      ],
+      correctIndex: 1,
+      explanation: "`dt.astimezone(new_tz)` converts an aware datetime to a new target time zone, adjusting clock hours accordingly."
+    },
+    {
+      question: "What exception is raised if you attempt to subtract a naive datetime object from a timezone-aware datetime object?",
+      options: [
+        "ValueError",
+        "TypeError",
+        "AttributeError",
+        "TimezoneError"
+      ],
+      correctIndex: 1,
+      explanation: "Python strictly forbids mixing naive and aware datetimes in binary operations, raising a `TypeError`."
+    }
+  ],
+  project: {
+    name: "Global Delivery ETA & SLA Audit Engine (Phase 1 Project)",
+    goal: "Build an international delivery tracking and SLA compliance audit engine that ingests regional scan timestamps, converts timestamps to UTC using zoneinfo, calculates transit durations using timedelta, and checks SLA targets against time zone boundaries.",
+    brief: "Your global logistics corporation requires a temporal audit module (`time_audit_engine.py`). The engine must ingest regional package scan strings across global hubs (Chicago, London, Tokyo), attach IANA time zone info using `zoneinfo`, normalize timestamps to UTC, compute elapsed transit durations using `timedelta`, and format compliant ISO 8601 audit reports.",
+    steps: [
+      "Create a script file named `time_audit_engine.py` in your workspace.",
+      "Define regional scan event dictionaries containing raw local timestamp strings, tracking IDs, and hub IANA time zone names (`America/Chicago`, `Europe/London`, `Asia/Tokyo`).",
+      "Write a function `normalize_to_utc(raw_iso_str: str, iana_zone: str) -> datetime` that parses timestamp text, attaches `ZoneInfo`, and converts the timestamp to UTC using `.astimezone(timezone.utc)`.",
+      "Write a duration calculation function `calculate_transit_time(dispatch_utc: datetime, delivery_utc: datetime) -> timedelta` that verifies inputs are timezone-aware before subtracting.",
+      "Implement an SLA audit function `check_sla_compliance(actual_duration: timedelta, max_allowed_hours: float) -> bool` using `.total_seconds()`.",
+      "Format output timestamps in ISO 8601 format (`.isoformat()`) and custom regional display strings (`.strftime()`).",
+      "Run `python3 time_audit_engine.py` in your integrated terminal and print a complete temporal audit report."
+    ],
+    acceptance: [
+      "Regional timestamps across Chicago, London, and Tokyo normalize to accurate, physically simultaneous UTC timestamps.",
+      "Date arithmetic uses `timedelta` and `.total_seconds()` to compute exact transit durations.",
+      "Naive timestamps are defensively intercepted and normalized before comparison operations.",
+      "Executing `python3 time_audit_engine.py` outputs a structured global SLA compliance audit report without runtime errors."
+    ],
+    stretch: [
+      "Simulate a Fall Daylight Saving Time clock shift event and prove that UTC date arithmetic correctly calculates 24 physical transit hours.",
+      "Annotate all temporal functions with strict type hints (`datetime`, `timedelta`, `ZoneInfo`) and pass static type verification."
+    ]
+  }
+};
