@@ -104,7 +104,7 @@ function project(source: string): LessonProject | undefined {
   };
 }
 
-function parse(source: string, day: 1 | 2): LessonDay {
+function parse(source: string, day: 1 | 2 | 3): LessonDay {
   const lessons = blocks(fieldArray(source, "lessons")).map((block, index) => ({
     id: textField(block, "id") || `lesson-${index + 1}`,
     title: same(textField(block, "title") || "Lesson"),
@@ -128,7 +128,7 @@ function parse(source: string, day: 1 | 2): LessonDay {
   };
 }
 
-export function RawPythonLessonDay({ day, onClose }: { day: 1 | 2; onClose: () => void }) {
+export function RawPythonLessonDay({ day, onClose }: { day: 1 | 2 | 3; onClose: () => void }) {
   const [lessonDay, setLessonDay] = useState<LessonDay | null>(null);
 
   useEffect(() => {
