@@ -92,6 +92,19 @@ export function PersonalDevelopmentTracks() {
               </span>
             </Link>
 
+            <Link href="/learn/motivation" className={subCardClass}>
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--accent)_16%,transparent)] text-lg">🔥</span>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[var(--text)]">Motivation</h3>
+                  <p className="mt-0.5 text-sm leading-relaxed text-[var(--muted)]">
+                    8 motivational videos from successful people
+                  </p>
+                </div>
+              </div>
+              <PinButton id="motivation" />
+            </Link>
+
             <Link href="/learn/devotion" className={subCardClass}>
               <div className="flex items-start justify-between gap-2">
                 <div>
