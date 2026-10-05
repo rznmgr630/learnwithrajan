@@ -101,9 +101,19 @@ function day26FinalQuiz(): LessonQuizQuestion[] {
   ];
 }
 
+function day29FinalQuiz(): LessonQuizQuestion[] {
+  return [
+    { question: same("Which logging level is usually used for detailed diagnostic information?"), options: [same("DEBUG"), same("WARNING"), same("ERROR"), same("CRITICAL")], correctIndex: 0, explanation: same("DEBUG records detailed information useful while diagnosing behavior.") },
+    { question: same("What does a logging handler do?"), options: [same("Sends log records to an output destination"), same("Changes Python syntax"), same("Stores environment variables"), same("Creates a virtual environment")], correctIndex: 0, explanation: same("Handlers decide where log records go, such as the console or a file.") },
+    { question: same("Which call records a stack trace with an exception?"), options: [same("logger.exception(...)"), same("logger.debug(...)"), same("print(...)"), same("raise logger")], correctIndex: 0, explanation: same("logger.exception records the active exception and traceback inside an except block.") },
+    { question: same("Why prefer logging over print in production code?"), options: [same("Logging has levels, routing, and structured context"), same("print cannot show strings"), same("Logging removes all errors"), same("print only works on Windows")], correctIndex: 0, explanation: same("Logging can be filtered, formatted, written to destinations, and searched later.") },
+  ];
+}
+
 function parseSectionDay(source: string, day: number): LessonDay {
   const lessons = blocks(fieldArray(source, "lessons")).map(parseSectionLesson);
   const isCollectionsDay = day === 26;
+  const isLoggingDay = day === 29;
 
   return {
     day,
@@ -111,7 +121,7 @@ function parseSectionDay(source: string, day: number): LessonDay {
     totalMinutes: Number(source.match(/duration:\s*"(\d+)/)?.[1] ?? 0),
     difficulty: same(textField(source, "level") || "Beginner"),
     lessons,
-    finalQuiz: isCollectionsDay ? day26FinalQuiz() : [],
+    finalQuiz: isCollectionsDay ? day26FinalQuiz() : isLoggingDay ? day29FinalQuiz() : [],
     project: isCollectionsDay ? {
       name: same("Log Processing Pipeline"),
       goal: same("Process a large stream of delivery events with the right collection and itertools tools."),
@@ -119,6 +129,13 @@ function parseSectionDay(source: string, day: number): LessonDay {
       steps: [same("Read delivery events as an iterator."), same("Count event types with Counter."), same("Group package IDs with defaultdict(list)."), same("Use deque as a fixed-size recent-event queue."), same("Process a transformed iterator pipeline and print a summary.")],
       acceptance: [same("The report uses Counter and defaultdict for their natural jobs."), same("A deque keeps recent events."), same("At least one itertools tool processes values lazily."), same("The final output reports counts and grouped package data.")],
       stretch: [same("Use islice to inspect only the first 100 failed events."), same("Add a namedtuple or dataclass event record.")],
+    } : isLoggingDay ? {
+      name: same("Production Log Pipeline"),
+      goal: same("Configure clear, searchable logs for a delivery-processing script."),
+      brief: same("Replace ad-hoc prints with a logger that writes useful context to the console and a file while preserving exception details."),
+      steps: [same("Create a named logger for the delivery tracker."), same("Add console and file handlers with readable formatters."), same("Log normal processing at INFO level and detailed data at DEBUG level."), same("Wrap one risky operation in try/except and use logger.exception."), same("Include package ID and event type in relevant log messages.")],
+      acceptance: [same("Logs appear in both the console and a file."), same("Log levels are used consistently."), same("Exceptions include a traceback in the log."), same("Each package event includes enough context to investigate later.")],
+      stretch: [same("Emit JSON-like structured log fields."), same("Add a rotating file handler for long-running processing.")],
     } : undefined,
   };
 }
