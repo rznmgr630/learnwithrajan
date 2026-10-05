@@ -63,9 +63,64 @@ function textField(source: string, field: string): string {
   if (delimiter !== '"' && delimiter !== "`") return "";
   const content = source.slice(start + 1);
   const end = delimiter === "`"
-    ? content.search(/`(?=,\s*\n\s*[A-Za-z_$][\w$]*\s*:)/)
+    ? content.search(/`(?=,\s*(?:\n\s*[A-Za-z_$][\w$]*\s*:|}))/)
     : content.indexOf(delimiter);
   return end === -1 ? "" : content.slice(0, end).trim();
+}
+
+function sectionContent(source: string, title: string): string {
+  return blocks(fieldArray(source, "sections"))
+    .find((section) => textField(section, "title") === title)
+    ?.trim() ?? "";
+}
+
+function parseSectionLesson(source: string, index: number) {
+  const duration = Number(source.match(/duration:\s*"(\d+)/)?.[1] ?? 0);
+  const quizText = sectionContent(source, "Mini Quiz");
+
+  return {
+    id: `lesson-${source.match(/id:\s*(\d+)/)?.[1] ?? index + 1}`,
+    title: same(textField(source, "title") || "Lesson"),
+    durationMinutes: duration,
+    explanation: same(sectionContent(source, "Explanation")),
+    diagram: sectionContent(source, "Visual Diagram"),
+    codeExample: { title: same("Code example"), code: sectionContent(source, "Code Example") },
+    keyTakeaways: [same(sectionContent(source, "Key Takeaways"))].filter((item) => item.en.length > 0),
+    commonMistakes: [same(sectionContent(source, "Common Mistakes"))].filter((item) => item.en.length > 0),
+    quiz: [],
+    rawMiniQuiz: quizText ? same(quizText) : undefined,
+  };
+}
+
+function day26FinalQuiz(): LessonQuizQuestion[] {
+  return [
+    { question: same("Which collection is designed to count repeated values?"), options: [same("Counter"), same("deque"), same("namedtuple"), same("range")], correctIndex: 0, explanation: same("Counter stores counts for each value.") },
+    { question: same("When is defaultdict(list) a good fit?"), options: [same("Grouping values under keys"), same("Sorting numbers"), same("Reading files"), same("Creating classes")], correctIndex: 0, explanation: same("It creates an empty list for each new grouping key.") },
+    { question: same("Why use a deque for a queue?"), options: [same("Fast work at both ends"), same("It automatically sorts items"), same("It only stores strings"), same("It replaces dictionaries")], correctIndex: 0, explanation: same("deque supports efficient appends and removals from either end.") },
+    { question: same("What is the main benefit of iterator pipelines?"), options: [same("They can process data without loading all of it at once"), same("They always make code faster"), same("They convert every value to a list"), same("They remove validation")], correctIndex: 0, explanation: same("Iterators can reduce memory use by producing values as needed.") },
+  ];
+}
+
+function parseSectionDay(source: string, day: number): LessonDay {
+  const lessons = blocks(fieldArray(source, "lessons")).map(parseSectionLesson);
+  const isCollectionsDay = day === 26;
+
+  return {
+    day,
+    title: same(textField(source, "title") || "Python lesson"),
+    totalMinutes: Number(source.match(/duration:\s*"(\d+)/)?.[1] ?? 0),
+    difficulty: same(textField(source, "level") || "Beginner"),
+    lessons,
+    finalQuiz: isCollectionsDay ? day26FinalQuiz() : [],
+    project: isCollectionsDay ? {
+      name: same("Log Processing Pipeline"),
+      goal: same("Process a large stream of delivery events with the right collection and itertools tools."),
+      brief: same("Build a small command-line report that groups, counts, and processes delivery events without loading unnecessary intermediate data."),
+      steps: [same("Read delivery events as an iterator."), same("Count event types with Counter."), same("Group package IDs with defaultdict(list)."), same("Use deque as a fixed-size recent-event queue."), same("Process a transformed iterator pipeline and print a summary.")],
+      acceptance: [same("The report uses Counter and defaultdict for their natural jobs."), same("A deque keeps recent events."), same("At least one itertools tool processes values lazily."), same("The final output reports counts and grouped package data.")],
+      stretch: [same("Use islice to inspect only the first 100 failed events."), same("Add a namedtuple or dataclass event record.")],
+    } : undefined,
+  };
 }
 
 function strings(source: string): string[] {
@@ -108,6 +163,8 @@ function project(source: string): LessonProject | undefined {
 }
 
 function parse(source: string, day: number): LessonDay {
+  if (source.includes("sections: [")) return parseSectionDay(source, day);
+
   const lessons = blocks(fieldArray(source, "lessons")).map((block, index) => ({
     id: textField(block, "id") || `lesson-${index + 1}`,
     title: same(textField(block, "title") || "Lesson"),

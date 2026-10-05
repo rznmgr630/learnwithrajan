@@ -1,0 +1,2894 @@
+```ts
+export const day26 = {
+  day: 26,
+  title: "Collections & Itertools",
+  duration: "120 min",
+  level: "Advanced",
+  lessons: [
+    {
+      id: 1,
+      title: "The collections Module",
+      duration: "25 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Python gives you several built-in data structures such as lists, tuples, sets, and dictionaries. These are enough for many everyday programs, but as your programs become larger, you will often run into problems where one of these basic structures is not the most convenient or efficient choice.
+
+For example, imagine that you are building a website and want to know how many times each page was visited:
+
+const visits = [
+  "/",
+  "/products",
+  "/",
+  "/login",
+  "/products",
+  "/",
+];
+
+You could use a normal dictionary and manually check whether a key exists before increasing its value. That works, but Python provides a specialized collection called Counter that is designed specifically for counting.
+
+The collections module is part of Python's standard library. You do not need to install anything separately.
+
+The module contains specialized data structures that solve common programming problems in a cleaner and often more efficient way.
+
+The most important structures we will study in this lesson are:
+
+- Counter
+- defaultdict
+- deque
+- namedtuple
+
+Think of the collections module as a toolbox. A normal dictionary is like a general-purpose toolbox, while Counter, defaultdict, and deque are specialized tools designed for specific jobs.
+
+A good Python developer does not simply ask, "Can I solve this problem with a list or dictionary?"
+
+Instead, they ask:
+
+"What data structure naturally represents this problem?"
+
+That small change in thinking becomes very important when you start working with large applications and large amounts of data.
+
+For example, a list is a good choice when you need an ordered collection of items and frequently access items by position.
+
+A dictionary is a good choice when you need to associate a key with a value.
+
+A Counter is a good choice when the main question is:
+
+"How many times did each value occur?"
+
+A defaultdict is useful when your dictionary values need to be created automatically.
+
+A deque is useful when you need efficient operations at both ends of a sequence.
+
+A namedtuple is useful when you want tuple behavior but also want meaningful names for each field.
+
+Real-world example 1 — Counting page visits
+
+Imagine a small website analytics system. Every time a user visits a page, your application records the URL.
+
+You might receive:
+
+const visits = [
+  "/",
+  "/products",
+  "/products",
+  "/login",
+  "/",
+  "/products",
+];
+
+The business question might be:
+
+"Which pages are visited most frequently?"
+
+This is a counting problem, so Counter is a natural solution.
+
+Real-world example 2 — Grouping employees
+
+Imagine that your application receives employees with their departments:
+
+const employees = [
+  ["Rajan", "Engineering"],
+  ["Alice", "Marketing"],
+  ["John", "Engineering"],
+];
+
+Now you want:
+
+Engineering -> ["Rajan", "John"]
+Marketing -> ["Alice"]
+
+This is a grouping problem. defaultdict(list) is a natural solution because every new department can automatically start with an empty list.
+
+Real-world example 3 — Processing requests
+
+Imagine a web server receiving thousands of requests. You want to maintain a queue of requests waiting to be processed.
+
+You need to add requests to the right side and remove processed requests from the left side.
+
+A deque is designed for this kind of problem.
+
+Real-world example 4 — Returning structured data
+
+Imagine that you have a function that returns information about a user.
+
+Instead of returning:
+
+("Rajan", 30, "Nepal")
+
+and making the caller remember what index 0, 1, and 2 mean, a namedtuple can allow:
+
+user.name
+user.age
+user.country
+
+This makes code easier to understand.
+
+The important idea is not to memorize every object in collections.
+
+The important idea is to recognize the problem you are solving and select the data structure that naturally represents that problem.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Think of the collections module as a collection of specialized tools:
+
+Python collections
+       |
+       +---------------- Counter
+       |                    |
+       |                    +-- Count values
+       |
+       +---------------- defaultdict
+       |                    |
+       |                    +-- Automatically create missing values
+       |
+       +---------------- deque
+       |                    |
+       |                    +-- Fast operations at both ends
+       |
+       +---------------- namedtuple
+                            |
+                            +-- Tuple with named fields
+
+The decision process can look like this:
+
+Do I need to count things?
+        |
+        +-- Yes --> Counter
+
+Do I need to group or accumulate values?
+        |
+        +-- Yes --> defaultdict
+
+Do I need a queue or frequent operations at both ends?
+        |
+        +-- Yes --> deque
+
+Do I need a lightweight immutable record with named fields?
+        |
+        +-- Yes --> namedtuple
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic example:
+
+from collections import Counter, defaultdict, deque, namedtuple
+
+print("collections module loaded")
+
+
+Intermediate example:
+
+from collections import Counter
+
+requests = [
+    "/",
+    "/products",
+    "/",
+    "/login",
+    "/products",
+    "/",
+]
+
+page_visits = Counter(requests)
+
+print(page_visits)
+
+print(page_visits["/"])
+print(page_visits["/products"])
+
+
+Advanced example:
+
+from collections import Counter
+
+requests = [
+    ("GET", "/"),
+    ("GET", "/products"),
+    ("POST", "/login"),
+    ("GET", "/"),
+    ("GET", "/products"),
+    ("GET", "/products"),
+]
+
+methods = Counter(method for method, path in requests)
+paths = Counter(path for method, path in requests)
+
+print("Methods:", methods)
+print("Paths:", paths)
+
+
+Production-style example:
+
+from collections import Counter
+
+def analyze_requests(requests: list[tuple[str, str]]) -> dict:
+    method_counts = Counter()
+    path_counts = Counter()
+
+    for method, path in requests:
+        method_counts[method] += 1
+        path_counts[path] += 1
+
+    return {
+        "methods": method_counts,
+        "paths": path_counts,
+    }
+
+
+requests = [
+    ("GET", "/users"),
+    ("GET", "/users"),
+    ("POST", "/users"),
+    ("GET", "/products"),
+]
+
+result = analyze_requests(requests)
+
+print(result)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+The collections module provides specialized data structures for problems that appear frequently in real applications.
+
+Counter is designed for counting.
+
+defaultdict is useful when dictionary values need to be created automatically.
+
+deque is designed for efficient operations at both ends.
+
+namedtuple provides named fields while keeping tuple-like immutable behavior.
+
+The goal is not to replace list and dict everywhere. The goal is to recognize when a specialized structure makes the code simpler, clearer, and more appropriate for the problem.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Using a list for every problem
+
+A list can store almost anything, but that does not mean it is the best structure for every situation.
+
+If you frequently remove items from the beginning of a list, you should consider deque.
+
+Mistake 2 — Manually counting when Counter is more appropriate
+
+This code works:
+
+counts = {}
+
+for item in items:
+    if item not in counts:
+        counts[item] = 0
+
+    counts[item] += 1
+
+But if your primary goal is counting values, Counter communicates your intention more clearly.
+
+Mistake 3 — Choosing a specialized collection without understanding the operation
+
+Do not use deque simply because it sounds more advanced than list.
+
+Choose the structure based on the operations your application performs frequently.
+
+Mistake 4 — Treating collections as completely different from normal Python structures
+
+Counter behaves similarly to a dictionary.
+
+defaultdict is also dictionary-like.
+
+deque behaves like a sequence.
+
+namedtuple behaves like a tuple.
+
+Understanding their relationship with Python's basic structures makes them much easier to learn.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What problem is Counter designed to solve?
+
+2. Which collection would you choose for a queue where values are frequently removed from the left?
+
+3. Why might defaultdict(list) be useful when grouping data?
+
+4. Is namedtuple mutable?
+
+5. Why should you not automatically replace every list with deque?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 2,
+      title: "Counter & defaultdict",
+      duration: "25 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+Counter is one of the most useful tools in collections because counting values is an extremely common programming task.
+
+Suppose you have:
+
+numbers = [1, 2, 1, 3, 2, 1]
+
+and you want:
+
+1 -> 3
+2 -> 2
+3 -> 1
+
+A normal dictionary can solve this, but you have to write the counting logic yourself.
+
+Counter gives you a structure specifically designed for this problem.
+
+from collections import Counter
+
+numbers = [1, 2, 1, 3, 2, 1]
+
+counts = Counter(numbers)
+
+print(counts)
+
+The result is:
+
+Counter({1: 3, 2: 2, 3: 1})
+
+You can think of Counter as a dictionary where the values represent frequencies.
+
+Real-world beginner example — Counting votes
+
+Imagine you are building a voting application.
+
+votes = [
+    "Alice",
+    "Bob",
+    "Alice",
+    "Alice",
+    "Bob",
+]
+
+You want to know how many votes each candidate received.
+
+Counter makes this extremely simple:
+
+from collections import Counter
+
+votes = [
+    "Alice",
+    "Bob",
+    "Alice",
+    "Alice",
+    "Bob",
+]
+
+results = Counter(votes)
+
+print(results)
+
+You can then ask:
+
+print(results["Alice"])
+
+The answer is 3.
+
+Real-world intermediate example — API error analysis
+
+Imagine your backend stores HTTP status codes:
+
+status_codes = [
+    200,
+    200,
+    404,
+    500,
+    200,
+    401,
+    404,
+    500,
+]
+
+You can use:
+
+from collections import Counter
+
+statuses = Counter(status_codes)
+
+print(statuses)
+
+Now you can quickly see which errors happen most often.
+
+Real-world advanced example — Log analysis
+
+Suppose each application log contains a severity:
+
+logs = [
+    "INFO",
+    "INFO",
+    "ERROR",
+    "WARNING",
+    "ERROR",
+    "ERROR",
+]
+
+You can calculate:
+
+from collections import Counter
+
+levels = Counter(logs)
+
+print(levels.most_common())
+
+This becomes useful when building monitoring or reporting tools.
+
+Counter also supports useful methods such as most_common().
+
+from collections import Counter
+
+languages = [
+    "Python",
+    "JavaScript",
+    "Python",
+    "Go",
+    "Python",
+    "JavaScript",
+]
+
+counts = Counter(languages)
+
+print(counts.most_common())
+
+You can ask for only the top results:
+
+print(counts.most_common(2))
+
+This is useful when you only care about the most frequent values.
+
+Counter can also be updated.
+
+counts.update(["Python", "Python", "Rust"])
+
+The existing counts are increased instead of replaced.
+
+Counter can also be created directly from a mapping:
+
+counts = Counter({
+    "Python": 5,
+    "JavaScript": 3,
+})
+
+A Counter behaves like a dictionary in many situations:
+
+print(counts["Python"])
+
+You can also inspect its keys:
+
+print(counts.keys())
+
+and values:
+
+print(counts.values())
+
+defaultdict solves a different but equally common problem.
+
+Consider this normal dictionary:
+
+users_by_country = {}
+
+Suppose you want to group users by country.
+
+You might write:
+
+if "Nepal" not in users_by_country:
+    users_by_country["Nepal"] = []
+
+users_by_country["Nepal"].append("Rajan")
+
+This becomes repetitive when you have many countries.
+
+defaultdict can automatically create the missing list.
+
+from collections import defaultdict
+
+users_by_country = defaultdict(list)
+
+users_by_country["Nepal"].append("Rajan")
+users_by_country["Nepal"].append("Sita")
+users_by_country["Japan"].append("Taro")
+
+Now you have:
+
+Nepal -> ["Rajan", "Sita"]
+Japan -> ["Taro"]
+
+The important part is defaultdict(list).
+
+The list here is a factory. When a missing key is accessed, Python creates an empty list automatically.
+
+You can also use defaultdict(int).
+
+from collections import defaultdict
+
+counts = defaultdict(int)
+
+for item in ["a", "b", "a", "c", "a"]:
+    counts[item] += 1
+
+The int() function returns 0, so a missing key starts at zero.
+
+This is similar to Counter.
+
+That leads to an important question:
+
+"When should I use Counter instead of defaultdict(int)?"
+
+If your main problem is counting, Counter usually communicates your intention better.
+
+If you are accumulating more complex information, defaultdict is often more flexible.
+
+For example:
+
+from collections import defaultdict
+
+scores = defaultdict(list)
+
+scores["Rajan"].append(90)
+scores["Rajan"].append(85)
+scores["Alice"].append(92)
+
+Here you are not simply counting. You are grouping scores.
+
+Another real-world example is grouping products by category:
+
+products = [
+    ("Laptop", "Electronics"),
+    ("Phone", "Electronics"),
+    ("Desk", "Furniture"),
+    ("Chair", "Furniture"),
+]
+
+from collections import defaultdict
+
+products_by_category = defaultdict(list)
+
+for product, category in products:
+    products_by_category[category].append(product)
+
+print(products_by_category)
+
+This pattern appears frequently in backend systems, analytics, reporting, and data processing.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Counter:
+
+Input
+  |
+  v
+["Python", "Go", "Python", "Python"]
+  |
+  v
+Counter
+  |
+  +-- Python -> 3
+  +-- Go     -> 1
+
+
+defaultdict(list):
+
+Input
+  |
+  v
+("Rajan", "Engineering")
+("Alice", "Engineering")
+("John", "Marketing")
+  |
+  v
+defaultdict(list)
+  |
+  +-- Engineering -> ["Rajan", "Alice"]
+  |
+  +-- Marketing   -> ["John"]
+
+
+defaultdict(int):
+
+Missing key
+    |
+    v
+int()
+    |
+    v
+0
+
+So:
+
+counts["Python"] += 1
+
+can safely start from zero.
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic Counter:
+
+from collections import Counter
+
+items = ["apple", "banana", "apple"]
+
+counts = Counter(items)
+
+print(counts)
+
+
+Intermediate Counter:
+
+from collections import Counter
+
+responses = [
+    200,
+    200,
+    404,
+    500,
+    404,
+    200,
+]
+
+counts = Counter(responses)
+
+print("All:", counts)
+print("Most common:", counts.most_common())
+print("Top 2:", counts.most_common(2))
+
+
+Advanced Counter:
+
+from collections import Counter
+
+events = [
+    ("login", "success"),
+    ("login", "failure"),
+    ("login", "success"),
+    ("payment", "success"),
+    ("payment", "failure"),
+]
+
+event_types = Counter(event for event, result in events)
+results = Counter(result for event, result in events)
+
+print(event_types)
+print(results)
+
+
+Basic defaultdict:
+
+from collections import defaultdict
+
+groups = defaultdict(list)
+
+groups["engineering"].append("Rajan")
+groups["engineering"].append("Alice")
+groups["marketing"].append("John")
+
+print(groups)
+
+
+Intermediate grouping:
+
+from collections import defaultdict
+
+orders = [
+    ("order-1", "Rajan"),
+    ("order-2", "Rajan"),
+    ("order-3", "Alice"),
+]
+
+orders_by_user = defaultdict(list)
+
+for order_id, user in orders:
+    orders_by_user[user].append(order_id)
+
+print(orders_by_user)
+
+
+Advanced grouping:
+
+from collections import defaultdict
+
+transactions = [
+    ("Rajan", "food", 20),
+    ("Rajan", "travel", 100),
+    ("Alice", "food", 30),
+    ("Rajan", "food", 15),
+]
+
+spending = defaultdict(list)
+
+for user, category, amount in transactions:
+    spending[user].append({
+        "category": category,
+        "amount": amount,
+    })
+
+print(spending)
+
+
+Production-style example:
+
+from collections import defaultdict
+
+def group_transactions(transactions):
+    grouped = defaultdict(list)
+
+    for transaction in transactions:
+        user_id = transaction["user_id"]
+        grouped[user_id].append(transaction)
+
+    return grouped
+
+
+transactions = [
+    {
+        "id": 1,
+        "user_id": 100,
+        "amount": 50,
+    },
+    {
+        "id": 2,
+        "user_id": 100,
+        "amount": 75,
+    },
+    {
+        "id": 3,
+        "user_id": 200,
+        "amount": 20,
+    },
+]
+
+result = group_transactions(transactions)
+
+print(result)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+Counter is best when the central operation is counting.
+
+defaultdict is best when missing dictionary values need to be created automatically.
+
+Counter can be treated like a frequency dictionary.
+
+most_common() is useful when ranking values by frequency.
+
+defaultdict(list) is excellent for grouping.
+
+defaultdict(int) is useful for accumulating numeric values.
+
+A useful rule is:
+
+Counting -> Counter
+
+Grouping -> defaultdict(list)
+
+Accumulating numbers -> defaultdict(int)
+
+More complex accumulation -> defaultdict with an appropriate factory
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Forgetting that Counter returns zero for missing keys
+
+from collections import Counter
+
+counts = Counter()
+
+print(counts["Python"])
+
+This prints:
+
+0
+
+A normal dictionary would raise KeyError.
+
+Mistake 2 — Accidentally creating keys in defaultdict
+
+from collections import defaultdict
+
+data = defaultdict(list)
+
+print(data["missing"])
+
+The access itself creates the key.
+
+Mistake 3 — Using Counter for data that is not really a counting problem
+
+If you need to store multiple records per key, defaultdict(list) is usually a better fit.
+
+Mistake 4 — Using defaultdict when a missing key should be considered an error
+
+Sometimes a missing key means your data is invalid.
+
+In those cases, a normal dictionary may be more appropriate because KeyError makes the problem visible.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is Counter designed to do?
+
+2. What does Counter(...).most_common(3) return?
+
+3. Why is defaultdict(list) useful for grouping?
+
+4. What value does defaultdict(int) create for a missing key?
+
+5. When would you prefer defaultdict(list) over Counter?
+
+6. What happens when you access a missing key in defaultdict(list)?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 3,
+      title: "deque & namedtuple",
+      duration: "20 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+deque stands for double-ended queue.
+
+A queue is a data structure where items are normally processed in the order they arrive.
+
+For example, imagine a restaurant.
+
+Customers arrive:
+
+Rajan
+Alice
+John
+
+The first customer who arrived should normally be served first.
+
+This is called FIFO:
+
+First In, First Out.
+
+A simple Python list can represent a queue:
+
+queue = []
+
+queue.append("Rajan")
+queue.append("Alice")
+queue.append("John")
+
+Then:
+
+queue.pop(0)
+
+works, but removing the first item from a large list can be inefficient because Python may need to move the remaining elements.
+
+deque is designed specifically for efficient insertion and removal from both ends.
+
+from collections import deque
+
+queue = deque()
+
+queue.append("Rajan")
+queue.append("Alice")
+queue.append("John")
+
+customer = queue.popleft()
+
+print(customer)
+
+The result is:
+
+Rajan
+
+The queue now contains:
+
+Alice
+John
+
+This is useful for real-world systems such as:
+
+- Job queues
+- Message processing
+- Background task processing
+- Web request queues
+- Customer service queues
+- Breadth-first search
+- Recent activity tracking
+
+deque can also work like a stack.
+
+A stack follows LIFO:
+
+Last In, First Out.
+
+stack = deque()
+
+stack.append("A")
+stack.append("B")
+stack.append("C")
+
+print(stack.pop())
+
+The result is C.
+
+This means the same deque structure can be used for both queue-like and stack-like operations.
+
+deque also supports appendleft():
+
+queue.appendleft("Priority Task")
+
+Now the item is inserted at the beginning.
+
+This can be useful when you have urgent work that should be placed at the front of a processing queue.
+
+Another powerful feature is maxlen.
+
+Suppose your application needs to remember only the last five actions performed by a user.
+
+You could manually remove old items, but deque can do this automatically:
+
+from collections import deque
+
+recent_actions = deque(maxlen=5)
+
+recent_actions.append("login")
+recent_actions.append("view-product")
+recent_actions.append("add-to-cart")
+recent_actions.append("checkout")
+recent_actions.append("logout")
+
+If another action is added:
+
+recent_actions.append("login")
+
+the oldest item automatically disappears.
+
+This makes bounded deques useful for:
+
+- Recent logs
+- Recent requests
+- Sliding windows
+- Recent searches
+- Recent user actions
+- Small rolling caches
+
+namedtuple solves a different problem.
+
+Suppose a function returns:
+
+user = ("Rajan", 30, "Nepal")
+
+You know that:
+
+user[0] means name
+user[1] means age
+user[2] means country
+
+But another developer reading this code has to remember those positions.
+
+namedtuple lets you create meaningful field names.
+
+from collections import namedtuple
+
+User = namedtuple("User", ["name", "age", "country"])
+
+user = User("Rajan", 30, "Nepal")
+
+Now:
+
+user.name
+user.age
+user.country
+
+are much easier to understand.
+
+Real-world beginner example — Product information
+
+Product = namedtuple(
+    "Product",
+    ["name", "price"]
+)
+
+product = Product("MacBook", 2000)
+
+print(product.name)
+print(product.price)
+
+Real-world intermediate example — Coordinates
+
+Point = namedtuple(
+    "Point",
+    ["x", "y"]
+)
+
+point = Point(100, 200)
+
+print(point.x)
+print(point.y)
+
+Real-world advanced example — API response
+
+Response = namedtuple(
+    "Response",
+    ["status", "data", "error"]
+)
+
+response = Response(
+    status=200,
+    data={"users": []},
+    error=None,
+)
+
+print(response.status)
+print(response.data)
+
+namedtuple creates immutable objects.
+
+This means:
+
+response.status = 500
+
+will fail.
+
+That immutability can be useful when you want to make sure a small data record is not accidentally changed.
+
+However, modern Python applications often use dataclass when they need richer data structures.
+
+For example:
+
+from dataclasses import dataclass
+
+@dataclass
+class User:
+    name: str
+    age: int
+    country: str
+
+A dataclass is usually more appropriate when you need a model with behavior, defaults, type annotations, validation logic, or other application-level functionality.
+
+namedtuple remains useful when you specifically want tuple behavior, immutability, and lightweight named fields.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+deque as a queue:
+
+append()
+   |
+   v
+[A] -> [B] -> [C]
+ ^
+ |
+popleft()
+
+After popleft():
+
+[B] -> [C]
+
+
+deque as a stack:
+
+append A
+append B
+append C
+
+[A] [B] [C]
+          ^
+          |
+         pop()
+
+Result:
+
+[A] [B]
+
+
+Bounded deque:
+
+maxlen = 3
+
+Before:
+[A] [B] [C]
+
+append(D)
+
+After:
+[B] [C] [D]
+
+The oldest value disappears automatically.
+
+
+namedtuple:
+
+User(
+    name="Rajan",
+    age=30,
+    country="Nepal"
+)
+
+        User
+       /    \
+   name     age     country
+    |        |         |
+  Rajan     30       Nepal
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic deque:
+
+from collections import deque
+
+queue = deque()
+
+queue.append("A")
+queue.append("B")
+queue.append("C")
+
+print(queue)
+
+print(queue.popleft())
+
+print(queue)
+
+
+Intermediate queue:
+
+from collections import deque
+
+queue = deque(["job-1", "job-2", "job-3"])
+
+while queue:
+    job = queue.popleft()
+    print("Processing:", job)
+
+
+Advanced bounded deque:
+
+from collections import deque
+
+recent_requests = deque(maxlen=3)
+
+for request in [
+    "GET /",
+    "GET /users",
+    "POST /login",
+    "GET /products",
+]:
+    recent_requests.append(request)
+
+print(recent_requests)
+
+
+Priority insertion:
+
+from collections import deque
+
+queue = deque([
+    "normal-1",
+    "normal-2",
+    "normal-3",
+])
+
+queue.appendleft("urgent")
+
+print(queue)
+
+
+Basic namedtuple:
+
+from collections import namedtuple
+
+User = namedtuple(
+    "User",
+    ["name", "age"]
+)
+
+user = User("Rajan", 30)
+
+print(user.name)
+print(user.age)
+
+
+Intermediate namedtuple:
+
+Product = namedtuple(
+    "Product",
+    ["id", "name", "price"]
+)
+
+product = Product(
+    101,
+    "Keyboard",
+    100,
+)
+
+print(product.name)
+
+
+Advanced example:
+
+from collections import namedtuple
+
+HttpResponse = namedtuple(
+    "HttpResponse",
+    ["status", "headers", "body"]
+)
+
+response = HttpResponse(
+    status=200,
+    headers={
+        "content-type": "application/json"
+    },
+    body='{"success": true}',
+)
+
+print(response.status)
+print(response.headers)
+print(response.body)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+deque is designed for efficient operations on both ends.
+
+append() adds to the right.
+
+appendleft() adds to the left.
+
+pop() removes from the right.
+
+popleft() removes from the left.
+
+deque can be used as both a queue and a stack.
+
+maxlen allows you to maintain a fixed-size rolling collection.
+
+namedtuple creates tuple-like objects with readable field names.
+
+namedtuple values are immutable.
+
+For richer application models, dataclass is often a better modern choice.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Using list.pop(0) for a large queue
+
+For a queue with frequent removals from the beginning, deque is generally the better choice.
+
+Mistake 2 — Assuming deque is always faster than list
+
+deque is optimized for operations at both ends.
+
+A list is often better for random indexing and some other workloads.
+
+Mistake 3 — Forgetting maxlen behavior
+
+When maxlen is reached, adding a new value removes an old value automatically.
+
+Mistake 4 — Trying to modify namedtuple fields
+
+namedtuple instances are immutable.
+
+If you need mutable structured objects, consider dataclass.
+
+Mistake 5 — Using namedtuple for a complex domain model
+
+namedtuple is lightweight. It is not intended to replace every class or dataclass.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What does deque stand for?
+
+2. Why is deque useful for queues?
+
+3. What does popleft() do?
+
+4. What happens when a deque(maxlen=3) already contains three items and receives a fourth?
+
+5. What problem does namedtuple solve?
+
+6. Are namedtuple fields mutable?
+
+7. When might dataclass be a better choice than namedtuple?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 4,
+      title: "Iterators & itertools",
+      duration: "30 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+To understand itertools properly, you first need to understand iterables and iterators.
+
+You have already used objects such as lists:
+
+numbers = [10, 20, 30]
+
+A list is iterable.
+
+That means Python can retrieve its values one by one.
+
+For example:
+
+for number in numbers:
+    print(number)
+
+When Python executes a for loop, it internally works with an iterator.
+
+You can create one yourself:
+
+iterator = iter(numbers)
+
+Then retrieve values with next():
+
+print(next(iterator))
+print(next(iterator))
+print(next(iterator))
+
+The output is:
+
+10
+20
+30
+
+The iterator remembers where it currently is.
+
+After all values have been consumed:
+
+next(iterator)
+
+raises:
+
+StopIteration
+
+This is how Python knows that the iteration has finished.
+
+The difference between iterable and iterator is important.
+
+An iterable is an object that can provide an iterator.
+
+Examples include:
+
+- list
+- tuple
+- set
+- dictionary
+- string
+- range
+
+An iterator is an object that keeps track of its current position and produces the next value when requested.
+
+You can think about it like a book.
+
+A list is the complete book.
+
+An iterator is like a bookmark that tells Python where to read next.
+
+This becomes extremely important when working with large data.
+
+Imagine a file containing 10 million lines.
+
+You could load everything:
+
+lines = file.readlines()
+
+Now all 10 million lines may be held in memory.
+
+Instead, you can process the file one line at a time:
+
+for line in file:
+    process(line)
+
+The file object provides values progressively.
+
+This is called lazy processing.
+
+Lazy processing means that values are produced when they are needed instead of creating the entire result immediately.
+
+Consider:
+
+numbers = [x * 2 for x in range(1_000_000)]
+
+This creates a list containing one million values.
+
+A generator expression:
+
+numbers = (x * 2 for x in range(1_000_000))
+
+does not create all one million values immediately.
+
+Instead, it produces each value as you request it.
+
+This is particularly useful for:
+
+- Large files
+- Database records
+- API responses
+- Data processing
+- ETL pipelines
+- Log processing
+- Streaming data
+
+The itertools module builds on this idea.
+
+itertools provides functions that create efficient iterators.
+
+You import it with:
+
+import itertools
+
+Some important functions include:
+
+chain()
+islice()
+count()
+cycle()
+repeat()
+takewhile()
+dropwhile()
+filterfalse()
+compress()
+groupby()
+product()
+permutations()
+combinations()
+zip_longest()
+
+chain() lets you process multiple iterables as if they were one.
+
+For example:
+
+from itertools import chain
+
+first = [1, 2, 3]
+second = [4, 5, 6]
+
+for number in chain(first, second):
+    print(number)
+
+The values are produced:
+
+1
+2
+3
+4
+5
+6
+
+You don't have to create:
+
+combined = first + second
+
+This can be useful when working with large collections because chain can process the input iterables lazily.
+
+islice() works like slicing, but for iterators.
+
+For example:
+
+from itertools import islice
+
+numbers = range(1_000_000)
+
+first_ten = islice(numbers, 10)
+
+for number in first_ten:
+    print(number)
+
+This lets you take only the required portion.
+
+count() creates an infinite counting iterator.
+
+from itertools import count
+
+counter = count(1)
+
+print(next(counter))
+print(next(counter))
+print(next(counter))
+
+Output:
+
+1
+2
+3
+
+You can use a step:
+
+counter = count(10, 5)
+
+This produces:
+
+10
+15
+20
+25
+30
+
+Because count can continue forever, you should be careful about converting it to a list.
+
+This would never finish:
+
+list(count())
+
+cycle() repeatedly cycles through an iterable.
+
+from itertools import cycle
+
+colors = cycle(["red", "green", "blue"])
+
+print(next(colors))
+print(next(colors))
+print(next(colors))
+print(next(colors))
+
+Output:
+
+red
+green
+blue
+red
+
+This can be useful for repeating patterns.
+
+repeat() repeatedly produces the same value.
+
+from itertools import repeat
+
+values = repeat("Python", 3)
+
+print(list(values))
+
+Output:
+
+["Python", "Python", "Python"]
+
+These tools are especially useful when you start thinking in terms of data pipelines rather than creating large temporary lists.
+
+For example:
+
+raw data
+   |
+   v
+filter
+   |
+   v
+transform
+   |
+   v
+process
+
+Each stage can produce values for the next stage without necessarily storing the entire intermediate result.
+
+Real-world beginner example — Processing numbers
+
+Imagine that you receive a sequence of numbers and only want to process the first five.
+
+Instead of creating a new list:
+
+numbers = list(range(1_000_000))
+
+you can use islice:
+
+from itertools import islice
+
+numbers = range(1_000_000)
+
+for number in islice(numbers, 5):
+    print(number)
+
+Real-world intermediate example — Combining data sources
+
+Imagine that you receive users from two sources:
+
+database_users = [...]
+api_users = [...]
+
+You can process both:
+
+from itertools import chain
+
+for user in chain(database_users, api_users):
+    process_user(user)
+
+You don't need to create one giant combined list first.
+
+Real-world advanced example — Large log processing
+
+Imagine a 20 GB application log.
+
+You want to find the first 100 ERROR lines.
+
+You don't want to load 20 GB into memory.
+
+You can create a lazy pipeline:
+
+from itertools import islice
+
+def errors(file):
+    for line in file:
+        if "ERROR" in line:
+            yield line
+
+with open("application.log") as file:
+    first_errors = islice(errors(file), 100)
+
+    for error in first_errors:
+        print(error)
+
+The file is read progressively.
+
+The program stops after it finds 100 matching lines.
+
+This is the type of thinking that makes iterators important in production systems.
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Iterable
+   |
+   | iter()
+   v
+Iterator
+   |
+   | next()
+   v
+Value
+   |
+   | next()
+   v
+Next Value
+   |
+   | next()
+   v
+Next Value
+   |
+   v
+StopIteration
+
+
+Lazy processing:
+
+Large Dataset
+      |
+      v
+   Iterator
+      |
+      v
+   Filter
+      |
+      v
+ Transform
+      |
+      v
+   Process
+      |
+      v
+   Output
+
+The entire dataset does not need to exist
+in memory at the same time.
+
+
+itertools:
+
+Iterable A ----\
+                \
+                 chain() ---> one lazy stream
+                /
+Iterable B ----/
+
+
+islice():
+
+Huge iterator
+     |
+     +-- item 1
+     +-- item 2
+     +-- item 3
+     +-- ...
+     |
+     +-- only requested items are consumed
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic iterator:
+
+numbers = [10, 20, 30]
+
+iterator = iter(numbers)
+
+print(next(iterator))
+print(next(iterator))
+print(next(iterator))
+
+
+Intermediate iterator:
+
+numbers = iter(range(1, 6))
+
+while True:
+    try:
+        number = next(numbers)
+        print(number)
+    except StopIteration:
+        break
+
+
+Basic generator:
+
+def numbers():
+    yield 1
+    yield 2
+    yield 3
+
+for number in numbers():
+    print(number)
+
+
+Intermediate generator:
+
+def even_numbers(limit):
+    for number in range(limit):
+        if number % 2 == 0:
+            yield number
+
+for number in even_numbers(10):
+    print(number)
+
+
+Advanced generator pipeline:
+
+def numbers(limit):
+    for number in range(limit):
+        yield number
+
+
+def only_even(values):
+    for value in values:
+        if value % 2 == 0:
+            yield value
+
+
+def double(values):
+    for value in values:
+        yield value * 2
+
+
+pipeline = double(
+    only_even(
+        numbers(1_000_000)
+    )
+)
+
+for value in pipeline:
+    print(value)
+
+
+Using chain:
+
+from itertools import chain
+
+users_from_db = ["Rajan", "Alice"]
+users_from_api = ["John", "Bob"]
+
+for user in chain(users_from_db, users_from_api):
+    print(user)
+
+
+Using islice:
+
+from itertools import islice
+
+numbers = range(1_000_000)
+
+for number in islice(numbers, 100):
+    print(number)
+
+
+Using count:
+
+from itertools import count
+
+counter = count(1, 2)
+
+for _ in range(5):
+    print(next(counter))
+
+
+Using cycle:
+
+from itertools import cycle
+
+statuses = cycle([
+    "pending",
+    "processing",
+    "completed",
+])
+
+for _ in range(7):
+    print(next(statuses))
+
+
+Using repeat:
+
+from itertools import repeat
+
+for value in repeat("Python", 3):
+    print(value)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+An iterable can provide values for iteration.
+
+An iterator produces values one at a time and remembers its current position.
+
+iter() creates an iterator from an iterable.
+
+next() retrieves the next value.
+
+StopIteration signals that an iterator has no more values.
+
+Generators are a convenient way to create iterators using yield.
+
+Lazy evaluation means values are created when they are needed.
+
+Lazy processing can reduce memory usage significantly.
+
+itertools provides specialized iterator-building functions.
+
+chain() combines iterables lazily.
+
+islice() takes a portion of an iterator.
+
+count() creates an infinite counter.
+
+cycle() repeats values.
+
+repeat() repeats one value.
+
+The most important production-level idea is that large datasets do not always need to be loaded completely into memory before processing begins.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Thinking iterable and iterator mean exactly the same thing
+
+A list is iterable but is not itself an iterator.
+
+This fails:
+
+numbers = [1, 2, 3]
+
+next(numbers)
+
+Instead:
+
+iterator = iter(numbers)
+
+next(iterator)
+
+Mistake 2 — Accidentally consuming an iterator
+
+An iterator is generally consumed as you read from it.
+
+For example:
+
+iterator = iter([1, 2, 3])
+
+print(list(iterator))
+print(list(iterator))
+
+The second result is empty because the iterator has already been consumed.
+
+Mistake 3 — Turning a huge iterator into a list
+
+This:
+
+list(huge_iterator)
+
+removes the main memory advantage of lazy processing.
+
+Mistake 4 — Creating an infinite loop with count or cycle
+
+count() and cycle() can continue forever.
+
+Always make sure your program has a stopping condition.
+
+Mistake 5 — Assuming generators store all results
+
+Generators are useful partly because they do not need to store all generated values at once.
+
+Mistake 6 — Using itertools without understanding the underlying data flow
+
+itertools is powerful, but using a complicated pipeline does not automatically make code better.
+
+The pipeline should remain understandable to the next developer who has to maintain it.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. What is an iterable?
+
+2. What is an iterator?
+
+3. What does iter() do?
+
+4. What does next() do?
+
+5. What happens when an iterator has no more values?
+
+6. Why are generators useful for large datasets?
+
+7. What does itertools.chain() do?
+
+8. Why can itertools.count() be dangerous?
+
+9. What is the advantage of islice() over creating a huge list and slicing it?
+
+10. Why can lazy processing reduce memory usage?
+          `,
+        },
+      ],
+    },
+
+    {
+      id: 5,
+      title: "Advanced itertools & Efficient Data Processing",
+      duration: "20 min",
+      sections: [
+        {
+          title: "Explanation",
+          content: `
+The basic itertools functions become much more powerful when you start combining them.
+
+This is where Python can become extremely useful for data-processing tasks.
+
+Instead of repeatedly creating temporary lists, you can create a pipeline where each stage produces values for the next stage.
+
+One important function is groupby().
+
+groupby() groups consecutive values according to a key.
+
+For example:
+
+from itertools import groupby
+
+data = [
+    ("Rajan", "Engineering"),
+    ("Alice", "Engineering"),
+    ("John", "Marketing"),
+    ("Bob", "Marketing"),
+]
+
+for department, users in groupby(
+    data,
+    key=lambda item: item[1]
+):
+    print(department, list(users))
+
+The result is:
+
+Engineering -> [...]
+Marketing -> [...]
+
+There is an important detail here.
+
+groupby() groups consecutive values. It does not automatically search the entire dataset for every matching value.
+
+Consider:
+
+data = [
+    ("Rajan", "Engineering"),
+    ("Alice", "Marketing"),
+    ("John", "Engineering"),
+]
+
+If you group this directly, Engineering appears twice because the Engineering records are separated.
+
+This is why data is often sorted first:
+
+data.sort(key=lambda item: item[1])
+
+Then groupby() can process consecutive records with the same key.
+
+Another important itertools function is product().
+
+product() creates the Cartesian product of input collections.
+
+Imagine an online store with:
+
+colors = ["black", "white"]
+sizes = ["S", "M", "L"]
+
+You want every possible product variation.
+
+from itertools import product
+
+for color, size in product(colors, sizes):
+    print(color, size)
+
+This produces:
+
+black S
+black M
+black L
+white S
+white M
+white L
+
+This is useful for:
+
+- Product variants
+- Test combinations
+- Configuration generation
+- Feature combinations
+- Parameter testing
+
+However, product() can create a very large number of combinations, so you must understand how quickly the result grows.
+
+permutations() generates ordered arrangements.
+
+For:
+
+["A", "B", "C"]
+
+permutations(..., 2) produces:
+
+A B
+A C
+B A
+B C
+C A
+C B
+
+Here A,B and B,A are different because order matters.
+
+combinations() is different.
+
+combinations(..., 2) produces:
+
+A B
+A C
+B C
+
+Here A,B and B,A are treated as the same selection because order does not matter.
+
+This distinction appears in real applications.
+
+For example, if you are generating possible team pairings, combinations may be appropriate.
+
+If you are generating possible execution orders, permutations may be appropriate.
+
+zip_longest() solves a different problem.
+
+Normal zip() stops when the shortest iterable is exhausted.
+
+a = [1, 2, 3]
+b = ["A", "B"]
+
+print(list(zip(a, b)))
+
+Result:
+
+[(1, "A"), (2, "B")]
+
+The third item from a is ignored.
+
+zip_longest() allows processing to continue:
+
+from itertools import zip_longest
+
+result = zip_longest(
+    a,
+    b,
+    fillvalue=None
+)
+
+print(list(result))
+
+Result:
+
+[
+    (1, "A"),
+    (2, "B"),
+    (3, None),
+]
+
+This is useful when processing datasets that may have different lengths.
+
+Another useful function is filterfalse().
+
+It returns values for which the condition is false.
+
+from itertools import filterfalse
+
+numbers = range(10)
+
+result = filterfalse(
+    lambda x: x % 2 == 0,
+    numbers
+)
+
+print(list(result))
+
+This gives the odd numbers.
+
+takewhile() keeps values while a condition remains true.
+
+from itertools import takewhile
+
+numbers = [2, 4, 6, 8, 9, 10, 12]
+
+result = takewhile(
+    lambda x: x % 2 == 0,
+    numbers
+)
+
+print(list(result))
+
+The result stops at 9 because the condition becomes false.
+
+dropwhile() does the opposite at the beginning.
+
+It ignores values while the condition is true and then returns the remaining values.
+
+These tools become especially interesting when building data-processing pipelines.
+
+For example, imagine a large transaction stream.
+
+You might want:
+
+1. Read transactions.
+2. Remove invalid transactions.
+3. Select successful transactions.
+4. Transform the data.
+5. Process the results.
+
+You do not necessarily need to create a separate list after every step.
+
+You can build a pipeline.
+
+This matters when the input contains millions of records.
+
+Real-world beginner example — Product combinations
+
+Imagine an e-commerce application.
+
+colors = ["black", "white"]
+sizes = ["S", "M", "L"]
+
+You can generate every possible variant:
+
+from itertools import product
+
+for color, size in product(colors, sizes):
+    print({
+        "color": color,
+        "size": size,
+    })
+
+Real-world intermediate example — Test cases
+
+Suppose you have:
+
+browsers = ["Chrome", "Firefox"]
+languages = ["English", "Japanese"]
+environments = ["dev", "staging"]
+
+You can generate test combinations:
+
+from itertools import product
+
+test_cases = product(
+    browsers,
+    languages,
+    environments,
+)
+
+for browser, language, environment in test_cases:
+    print(browser, language, environment)
+
+This can generate a complete matrix of test scenarios without manually writing each combination.
+
+Real-world advanced example — Large log processing
+
+Imagine your application generates a 20 GB log file.
+
+You need to find the first 100 ERROR lines.
+
+A poor implementation might do:
+
+with open("application.log") as file:
+    lines = file.readlines()
+
+errors = [
+    line
+    for line in lines
+    if "ERROR" in line
+]
+
+print(errors[:100])
+
+This can consume a huge amount of memory.
+
+A better approach is lazy processing:
+
+from itertools import islice
+
+def error_lines(file):
+    for line in file:
+        if "ERROR" in line:
+            yield line
+
+with open("application.log") as file:
+    first_errors = islice(
+        error_lines(file),
+        100,
+    )
+
+    for error in first_errors:
+        print(error)
+
+Now the application reads the file progressively.
+
+It does not need to store all 20 GB.
+
+This is a very important production concept.
+
+Efficient data processing is not only about making code execute faster.
+
+It is also about controlling:
+
+- Memory usage
+- CPU usage
+- Database load
+- Network traffic
+- Temporary allocations
+- Processing latency
+
+Consider a database migration.
+
+Suppose a database contains 10 million users.
+
+A dangerous approach might be:
+
+users = database.get_all_users()
+
+for user in users:
+    migrate(user)
+
+This potentially loads millions of records into memory.
+
+A better architecture may process records in batches or stream them.
+
+The same principle applies to Python iterators.
+
+Instead of thinking:
+
+"Get everything first, then process everything."
+
+you should learn to think:
+
+"Get what I need, process it, and move forward."
+
+This is one of the most valuable ideas in this entire lesson.
+
+You will use this thinking later when working with:
+
+- APIs
+- databases
+- queues
+- files
+- ETL pipelines
+- background workers
+- cloud storage
+- large datasets
+- log processing
+- streaming systems
+          `,
+        },
+        {
+          title: "Visual Diagram",
+          content: `
+Efficient data pipeline:
+
+Large Input
+     |
+     v
+   Reader
+     |
+     v
+   Filter
+     |
+     v
+ Transform
+     |
+     v
+   Validate
+     |
+     v
+   Process
+     |
+     v
+   Output
+
+
+Instead of:
+
+Large Input
+     |
+     v
+Load everything
+     |
+     v
+Create list 1
+     |
+     v
+Create list 2
+     |
+     v
+Create list 3
+     |
+     v
+Process everything
+
+The first approach can dramatically reduce temporary memory usage.
+
+
+product():
+
+Colors       Sizes
+  |             |
+  v             v
+["black"]     ["S"]
+["white"]     ["M"]
+              ["L"]
+       \       /
+        \     /
+       product()
+           |
+           v
+black-S
+black-M
+black-L
+white-S
+white-M
+white-L
+
+
+permutations:
+
+A B
+B A
+
+Order matters.
+
+
+combinations:
+
+A B
+
+B A is not generated.
+
+Order does not matter.
+          `,
+        },
+        {
+          title: "Code Example",
+          content: `
+Basic groupby:
+
+from itertools import groupby
+
+data = [
+    ("Rajan", "Engineering"),
+    ("Alice", "Engineering"),
+    ("John", "Marketing"),
+    ("Bob", "Marketing"),
+]
+
+for department, users in groupby(
+    data,
+    key=lambda item: item[1],
+):
+    print(department, list(users))
+
+
+Correct groupby usage with sorting:
+
+from itertools import groupby
+
+data = [
+    ("Rajan", "Engineering"),
+    ("John", "Marketing"),
+    ("Alice", "Engineering"),
+]
+
+data.sort(key=lambda item: item[1])
+
+for department, users in groupby(
+    data,
+    key=lambda item: item[1],
+):
+    print(department, list(users))
+
+
+Basic product:
+
+from itertools import product
+
+colors = ["black", "white"]
+sizes = ["S", "M"]
+
+for color, size in product(colors, sizes):
+    print(color, size)
+
+
+Intermediate product:
+
+from itertools import product
+
+browsers = [
+    "Chrome",
+    "Firefox",
+]
+
+languages = [
+    "English",
+    "Japanese",
+]
+
+environments = [
+    "development",
+    "staging",
+]
+
+for browser, language, environment in product(
+    browsers,
+    languages,
+    environments,
+):
+    print(
+        browser,
+        language,
+        environment,
+    )
+
+
+Permutations:
+
+from itertools import permutations
+
+items = ["A", "B", "C"]
+
+for result in permutations(items, 2):
+    print(result)
+
+
+Combinations:
+
+from itertools import combinations
+
+items = ["A", "B", "C"]
+
+for result in combinations(items, 2):
+    print(result)
+
+
+zip_longest:
+
+from itertools import zip_longest
+
+names = ["Rajan", "Alice", "John"]
+scores = [90, 95]
+
+for name, score in zip_longest(
+    names,
+    scores,
+    fillvalue=None,
+):
+    print(name, score)
+
+
+filterfalse:
+
+from itertools import filterfalse
+
+numbers = range(10)
+
+odd_numbers = filterfalse(
+    lambda number: number % 2 == 0,
+    numbers,
+)
+
+for number in odd_numbers:
+    print(number)
+
+
+takewhile:
+
+from itertools import takewhile
+
+numbers = [2, 4, 6, 8, 9, 10]
+
+result = takewhile(
+    lambda number: number % 2 == 0,
+    numbers,
+)
+
+print(list(result))
+
+
+dropwhile:
+
+from itertools import dropwhile
+
+numbers = [1, 2, 3, 5, 8, 10]
+
+result = dropwhile(
+    lambda number: number < 5,
+    numbers,
+)
+
+print(list(result))
+
+
+Advanced lazy pipeline:
+
+from itertools import islice
+
+def read_numbers(limit):
+    for number in range(limit):
+        yield number
+
+
+def only_even(numbers):
+    for number in numbers:
+        if number % 2 == 0:
+            yield number
+
+
+def greater_than_ten(numbers):
+    for number in numbers:
+        if number > 10:
+            yield number
+
+
+pipeline = greater_than_ten(
+    only_even(
+        read_numbers(1_000_000)
+    )
+)
+
+for number in islice(pipeline, 20):
+    print(number)
+
+
+Production-style log processor:
+
+from itertools import islice
+
+def error_lines(file):
+    for line in file:
+        if "ERROR" in line:
+            yield line
+
+
+def clean_lines(lines):
+    for line in lines:
+        yield line.strip()
+
+
+def process_logs(path, limit=100):
+    with open(path, "r", encoding="utf-8") as file:
+        errors = error_lines(file)
+        cleaned = clean_lines(errors)
+
+        for line in islice(cleaned, limit):
+            print(line)
+
+
+process_logs(
+    "application.log",
+    limit=100,
+)
+
+
+Advanced transaction pipeline:
+
+def read_transactions(transactions):
+    for transaction in transactions:
+        yield transaction
+
+
+def valid_transactions(transactions):
+    for transaction in transactions:
+        if transaction["amount"] > 0:
+            yield transaction
+
+
+def successful_transactions(transactions):
+    for transaction in transactions:
+        if transaction["status"] == "success":
+            yield transaction
+
+
+def transaction_amounts(transactions):
+    for transaction in transactions:
+        yield transaction["amount"]
+
+
+transactions = [
+    {
+        "id": 1,
+        "amount": 100,
+        "status": "success",
+    },
+    {
+        "id": 2,
+        "amount": -10,
+        "status": "success",
+    },
+    {
+        "id": 3,
+        "amount": 200,
+        "status": "failed",
+    },
+    {
+        "id": 4,
+        "amount": 300,
+        "status": "success",
+    },
+]
+
+pipeline = transaction_amounts(
+    successful_transactions(
+        valid_transactions(
+            read_transactions(transactions)
+        )
+    )
+)
+
+for amount in pipeline:
+    print(amount)
+
+
+Production-style large dataset processing:
+
+def process_large_dataset(records):
+    for record in records:
+        if not record["active"]:
+            continue
+
+        if record["amount"] <= 0:
+            continue
+
+        yield {
+            "id": record["id"],
+            "amount": record["amount"] * 1.1,
+        }
+
+
+records = (
+    {
+        "id": number,
+        "active": number % 2 == 0,
+        "amount": number,
+    }
+    for number in range(1_000_000)
+)
+
+for result in process_large_dataset(records):
+    save_result(result)
+          `,
+        },
+        {
+          title: "Key Takeaways",
+          content: `
+groupby() groups consecutive values based on a key. If the same key can appear in different parts of the input, sort the data by that key before using groupby().
+
+product() creates Cartesian products and is useful for generating combinations of independent options.
+
+permutations() generates ordered arrangements where order matters.
+
+combinations() generates selections where order does not matter.
+
+zip_longest() allows different-sized iterables to be processed until the longest iterable is exhausted.
+
+takewhile() takes values while a condition remains true.
+
+dropwhile() skips values while a condition remains true and then continues with the remaining values.
+
+filterfalse() keeps values that do not satisfy the provided condition.
+
+Iterator pipelines can process large datasets without creating large intermediate lists.
+
+For production systems, memory efficiency can be just as important as execution speed.
+
+When processing millions of records, think carefully about whether you really need every record in memory at the same time.
+
+A strong data-processing design often looks like:
+
+Read -> Filter -> Transform -> Validate -> Process -> Output
+
+Each stage can be lazy when appropriate.
+
+This allows large amounts of data to move through the system without requiring the entire dataset to exist in memory simultaneously.
+          `,
+        },
+        {
+          title: "Common Mistakes",
+          content: `
+Mistake 1 — Misunderstanding groupby()
+
+groupby() does not perform a global database-style GROUP BY operation.
+
+It groups consecutive values.
+
+If your data is:
+
+[
+    ("Rajan", "Engineering"),
+    ("Alice", "Marketing"),
+    ("John", "Engineering"),
+]
+
+Engineering appears in two separate groups.
+
+Sort first when appropriate.
+
+Mistake 2 — Generating an enormous Cartesian product
+
+product() can grow extremely quickly.
+
+If you have:
+
+100 colors
+100 sizes
+100 countries
+
+you could potentially create:
+
+100 × 100 × 100 = 1,000,000
+
+combinations.
+
+Always understand the size of the generated search space.
+
+Mistake 3 — Confusing permutations with combinations
+
+If order matters, use permutations.
+
+If order does not matter, use combinations.
+
+Mistake 4 — Creating a list from an iterator unnecessarily
+
+This:
+
+results = list(product(...))
+
+may allocate a very large amount of memory.
+
+If you only need to process each result once, iterate directly:
+
+for result in product(...):
+    process(result)
+
+Mistake 5 — Building unnecessary intermediate lists
+
+Instead of:
+
+filtered = [x for x in data if condition(x)]
+transformed = [transform(x) for x in filtered]
+final = [process(x) for x in transformed]
+
+consider whether a generator pipeline would be more appropriate for a large dataset.
+
+Mistake 6 — Assuming lazy processing automatically makes everything faster
+
+Lazy processing primarily changes how values are produced and stored.
+
+It can reduce memory usage and sometimes improve performance, but it is not automatically faster in every situation.
+
+Mistake 7 — Ignoring database batching
+
+Python iterators can help with application memory, but if your database query loads millions of rows into memory before Python sees them, the database access layer may still be the bottleneck.
+
+Production data processing requires looking at the entire pipeline, not only the Python code.
+          `,
+        },
+        {
+          title: "Mini Quiz",
+          content: `
+1. Why does groupby() usually require data to be sorted by the grouping key?
+
+2. What is the difference between permutations() and combinations()?
+
+3. What does product() generate?
+
+4. Why can product() become expensive?
+
+5. What does zip_longest() do differently from zip()?
+
+6. What does takewhile() do?
+
+7. What does dropwhile() do?
+
+8. Why might you avoid converting an itertools result to a list?
+
+9. Why are iterator pipelines useful when processing millions of records?
+
+10. Does lazy processing always make a program faster? Explain why or why not.
+
+11. Imagine you have a 20 GB log file and only need the first 100 ERROR entries. How would you design the processing flow?
+
+12. Imagine an application has 1 million users and you need to migrate them. Why might processing users one at a time or in batches be better than loading every user into a list?
+          `,
+        },
+      ],
+    },
+  ],
+};
+```
