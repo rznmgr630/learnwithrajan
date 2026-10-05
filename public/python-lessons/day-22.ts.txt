@@ -1,0 +1,924 @@
+/**
+ * DAY 22: Phase 4 · Errors, Files & Real-World Python — Files, Directories, and Metadata
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase1FilesAndDirectories = {
+  day: 22,
+  topic: "Phase 4 · Errors, Files & Real-World Python — Files, Directories, and Metadata",
+  totalMinutes: 80,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "File Operating Modes and Safe Open with Context Managers",
+      durationMinutes: 18,
+      explanation: `
+<b>Persistent Data Storage and Context Safety</b><br/>
+In-memory variables, lists, and dictionaries disappear the moment a Python script finishes executing or the host server restarts. Real-world applications—such as delivery tracking engines, inventory managers, and e-commerce platforms—must read from and write to permanent disk storage. Python handles disk files using the built-in <code>open()</code> function paired with explicit <b>File Operating Modes</b>.<br/><br/>
+
+<b>1. Common File Operating Modes:</b>
+<ul>
+  <li><code>"r"</code> (Read Mode - Default): Opens an existing file for reading text. Raises a <code>FileNotFoundError</code> if the target file does not exist.</li>
+  <li><code>"w"</code> (Write Mode): Opens a file for writing text. <b>Warning:</b> If the file already exists, <code>"w"</code> completely truncates (deletes/overwrites) all existing contents without warning! If missing, it creates a new file.</li>
+  <li><code>"a"</code> (Append Mode): Opens a file for writing text, appending new data to the very end of the file without overwriting existing contents. If missing, it creates a new file.</li>
+  <li><code>"+"</code> (Read/Write Update Modifier): Combines reading and writing (e.g., <code>"r+"</code> opens for reading and writing without truncation; <code>"w+"</code> truncates and opens for reading/writing).</li>
+</ul>
+
+<b>2. Resource Leaks vs. Context Managers (<code>with</code> Statement):</b><br/>
+Opening a file allocates a system file descriptor. Unclosed files cause memory leaks, file lock contention, and corrupted un-flushed write buffers.
+<ul>
+  <li><b>Unsafe Manual Cleanup:</b> <code>f = open("log.txt", "w"); f.write("data"); f.close()</code>. If an exception occurs before <code>.close()</code> executes, the file remains open indefinitely!</li>
+  <li><b>Safe Context Manager:</b> <code>with open("log.txt", "w") as f: f.write("data")</code>. The <code>with</code> statement guarantees that Python automatically closes the file descriptor the instant code exits the block—even if a fatal runtime exception occurs inside!</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Warehouse Manifest Filing Cabinet</b><br/>
+Think of a disk file as a physical paper filing cabinet. Using <code>"r"</code> is like pulling out a folder to read its sheets. Using <code>"w"</code> is like throwing the entire folder into the paper shredder before putting in a fresh blank sheet. Using <code>"a"</code> is like sliding a new printed page into the back of an existing folder. The <code>with</code> statement is an automated security spring that pulls and locks the filing cabinet drawer shut the moment you step away from the desk.
+      `,
+      diagram: `
+SAFE CONTEXT MANAGER LIFECYCLE (with open(...) as f):
+
+  [ Execute 'with open("manifest.csv", "r") as f:' ]
+                         |
+                         v
+       [ System Allocates File Descriptor ]
+                         |
+                         v
+  [ Read/Write Operations inside 'with' Block ]
+                         |
+           +-------------+-------------+
+           |                           |
+      (No Errors)              (Exception Raised)
+           |                           |
+           +-------------+-------------+
+                         |
+                         v
+  [ AUTOMATIC CLEANUP: Context Manager Closes File Descriptor ]
+  (Guarantees disk buffers are flushed and file handles released!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: File Operating Modes and Safe Context Managers
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Writing and Appending Text Safely
+# ------------------------------------------------------------------------------
+
+manifest_file_path = "dispatch_manifest.txt"
+
+# 1. Writing new data with "w" mode (Creates or overwrites)
+with open(manifest_file_path, mode="w", encoding="utf-8") as file:
+    file.write("MANIFEST_ID: MAN-2026-001\n")
+    file.write("ORIGIN_HUB: CHICAGO_CENTRAL\n")
+
+print("--- BEGINNER: File Write Complete ---")
+
+# 2. Appending new entries with "a" mode (Preserves existing lines)
+with open(manifest_file_path, mode="a", encoding="utf-8") as file:
+    file.write("DISPATCH_STATUS: IN_TRANSIT\n")
+    file.write("DRIVER_ASSIGNED: DRIVER_MARCUS\n")
+
+# 3. Reading full contents with "r" mode
+with open(manifest_file_path, mode="r", encoding="utf-8") as file:
+    content = file.read()
+
+print("\nFile Contents Read from Disk:")
+print(content)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Line-by-Line Efficient File Processing
+# ------------------------------------------------------------------------------
+
+# Appending multiple log entries
+log_file_path = "system_events.log"
+
+with open(log_file_path, "w", encoding="utf-8") as f:
+    f.write("2026-10-05 10:00:00 [INFO] Package TRK-101 scanned\n")
+    f.write("2026-10-05 10:01:12 [WARN] Weight sensor calibration drift\n")
+    f.write("2026-10-05 10:02:45 [INFO] Package TRK-102 scanned\n")
+
+print("\n--- INTERMEDIATE: Efficient Line Iteration ---")
+# Iterating over file object directly streams line-by-line without loading entire file into RAM!
+with open(log_file_path, "r", encoding="utf-8") as f:
+    for line_num, line in enumerate(f, start=1):
+        clean_line = line.strip()
+        if "[WARN]" in clean_line:
+            print(f"Warning detected on Line {line_num}: {clean_line}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Manifest Audit Logger
+# ------------------------------------------------------------------------------
+
+import os
+
+def append_audit_event_record(file_path: str, event_data: dict) -> bool:
+    \"\"\"
+    Appends structured logistics event lines to disk using encoding-safe
+    context managers and defensive error handling.
+    \"\"\"
+    print(f"\n--- ADVANCED: Appending Audit Record to [{file_path}] ---")
+
+    timestamp = event_data.get("timestamp", "UNKNOWN_TIME")
+    event_type = event_data.get("type", "EVENT")
+    tracking_id = event_data.get("id", "UNKNOWN_ID")
+
+    formatted_line = f"{timestamp} | [{event_type}] | ID: {tracking_id}\n"
+
+    try:
+        # Use UTF-8 explicitly to prevent OS-specific default encoding corruption
+        with open(file_path, mode="a", encoding="utf-8") as audit_file:
+            audit_file.write(formatted_line)
+        return True
+    except (OSError, IOError) as err:
+        print(f"CRITICAL: Failed to write audit record to disk: {err}")
+        return False
+
+# Test audit appending
+event = {"timestamp": "2026-10-05 10:11:32", "type": "DISPATCH_CONFIRMED", "id": "TRK-9004"}
+append_audit_event_record("audit_trail.log", event)
+
+# Read back and verify
+with open("audit_trail.log", "r", encoding="utf-8") as f:
+    print("Audit Log Tail:", f.readlines()[-1].strip())
+      `,
+      keyTakeaways: [
+        "Always use the `with` statement (context manager) when opening files to guarantee automatic file closure.",
+        "Mode `\"w\"` overwrites existing files completely; mode `\"a\"` appends new data to the end.",
+        "Iterating over a file object directly (`for line in file:`) streams line-by-line, conserving RAM.",
+        "Always specify `encoding=\"utf-8\"` explicitly when opening text files to ensure cross-platform compatibility."
+      ],
+      commonMistakes: [
+        "<b>Opening files without a `with` statement:</b> Leaving file handles open can cause file locks and buffer corruption.",
+        "<b>Accidentally wiping files with `"w"` mode:</b> Opening an existing log file with `"w"` instead of `"a"`, instantly deleting historical data.",
+        "<b>Omitting the explicit `encoding="utf-8"` parameter:</b> Relying on OS default encodings (which differ between Windows, macOS, and Linux), causing character decoding crashes."
+      ],
+      quizzes: [
+        {
+          question: "What occurs if you open an existing 500-line text file using mode `open(\"data.txt\", \"w\")`?",
+          options: [
+            "The file is opened and new text is appended after line 500.",
+            "The existing 500 lines are completely truncated (deleted), resulting in an empty 0-byte file.",
+            "Python raises a `FileExistsError`.",
+            "The file is opened in read-only mode."
+          ],
+          correctIndex: 1,
+          explanation: "Mode `\"w\"` truncates (erases) all existing content in a file upon opening. To keep existing lines, mode `\"a\"` must be used."
+        },
+        {
+          question: "Why is using a `with open(...)` context manager considered a best practice in Python file handling?",
+          options: [
+            "It automatically converts binary data into UTF-8 text.",
+            "It guarantees that the file descriptor is closed and disk write buffers are flushed, even if an exception occurs inside the block.",
+            "It speeds up disk read speeds by 10x.",
+            "It allows editing files without needing disk permissions."
+          ],
+          correctIndex: 1,
+          explanation: "The `with` statement manages the file lifecycle, automatically closing file handles and flushing buffers when exiting the block."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Reading Files: .read(), .readline(), and .readlines()",
+      durationMinutes: 18,
+      explanation: `
+<b>Methods for Extracting Disk File Data</b><br/>
+Once a file is open for reading, Python provides several methods to extract text from disk into memory. Selecting the right extraction method depends directly on file size and RAM constraints.<br/><br/>
+
+<b>1. The Three Primary Read Methods:</b>
+<ul>
+  <li><code>.read(size=-1)</code>: Reads the <b>entire file into a single string variable</b>. If a numeric `size` argument is provided, it reads at most `size` bytes/characters.
+    <br/><i>When to use:</i> Small configuration files (e.g., 5 KB JSON/YAML files).
+    <br/><i>When NOT to use:</i> Multi-gigabyte log files (causes `MemoryError` crashes by exceeding available RAM!).</li>
+  <li><code>.readline()</code>: Reads a <b>single line</b> from the file up to and including the trailing newline character (<code>\n</code>). Returns an empty string <code>""</code> when reaching the End-Of-File (EOF).
+    <br/><i>When to use:</i> Processing files line-by-line inside a <code>while</code> loop.</li>
+  <li><code>.readlines()</code>: Reads <b>all lines from the file into a list of strings</b>, where each element represents one line ending with <code>\n</code>.
+    <br/><i>When to use:</i> Medium files where list indexing or slicing is required.</li>
+</ul>
+
+<b>2. Memory-Efficient Streaming Iteration (Industry Standard):</b><br/>
+Instead of loading entire files into lists using <code>.readlines()</code>, iterating over the open file handle directly streams lines one-by-one with constant $O(1)$ memory usage:<br/>
+<code>with open("huge_log.txt", "r") as file:</code><br/>
+<code>    for line in file:</code><br/>
+<code>        process(line) # Processes 10 GB files using only 5 MB of RAM!</code>
+      `,
+      diagram: `
+FILE READING METHODS COMPARISON:
+
+  File on Disk (1,000,000 Lines):
+
+  1. .read()        ---> [ Whole File String ]         (Loads 500 MB into RAM at once)
+  2. .readlines()   ---> [ "Line 1\n", "Line 2\n" ]    (Loads 1,000,000 item list into RAM)
+  3. for line in f: ---> "Line 1\n" -> "Line 2\n" ...   (Streams 1 line at a time; 0.01 MB RAM!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: File Reading Methods and Memory Efficiency
+# ==============================================================================
+
+# Setup test manifest data file
+sample_csv_path = "packages.csv"
+with open(sample_csv_path, "w", encoding="utf-8") as f:
+    f.write("tracking_id,destination,weight_lbs\n")
+    f.write("TRK-1001,CHICAGO,14.5\n")
+    f.write("TRK-1002,AUSTIN,42.0\n")
+    f.write("TRK-1003,SEATTLE,8.2\n")
+
+
+# ------------------------------------------------------------------------------
+# Beginner: Comparing .read(), .readline(), and .readlines()
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: File Reading Methods ---")
+
+# Method 1: .read() - Whole file as single string
+with open(sample_csv_path, "r", encoding="utf-8") as f:
+    raw_text = f.read()
+print("1. .read() Output (Single String):\n", repr(raw_text))
+
+# Method 2: .readline() - Reading single lines sequentially
+with open(sample_csv_path, "r", encoding="utf-8") as f:
+    header = f.readline().strip()
+    first_row = f.readline().strip()
+print("\n2. .readline() Output:")
+print("   Header Line :", header)
+print("   First Row   :", first_row)
+
+# Method 3: .readlines() - All lines as a list of strings
+with open(sample_csv_path, "r", encoding="utf-8") as f:
+    all_lines_list = f.readlines()
+print("\n3. .readlines() Output (List of Strings):")
+print("   Line Count:", len(all_lines_list))
+print("   Line List :", [line.strip() for line in all_lines_list])
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Memory-Efficient Streaming Parser
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Memory-Efficient Streaming ---")
+
+def Stream_csv_records(file_path: str):
+    """Streams CSV lines one-by-one without loading full file into memory."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        header = f.readline().strip().split(",")
+        for line in f: # Streams remaining data rows line-by-line
+            parts = line.strip().split(",")
+            if len(parts) == len(header):
+                yield dict(zip(header, parts))
+
+for record in Stream_csv_records(sample_csv_path):
+    print("Streamed Record:", record)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Chunked File Processor
+# ------------------------------------------------------------------------------
+
+def process_file_in_fixed_chunks(file_path: str, chunk_bytes: int = 64) -> int:
+    \"\"\"
+    Reads binary or text files in fixed-size memory chunks (useful for network streaming
+    or processing ultra-large files).
+    \"\"\"
+    print(f"\n--- ADVANCED: Reading [{file_path}] in {chunk_bytes}-byte Chunks ---")
+
+    total_bytes_read = 0
+    chunk_count = 0
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        while True:
+            chunk = f.read(chunk_bytes)
+            if not chunk: # Empty string indicates End-Of-File (EOF)
+                break
+            chunk_count += 1
+            total_bytes_read += len(chunk)
+            print(f"  Chunk #{chunk_count} ({len(chunk)} bytes) read.")
+
+    return total_bytes_read
+
+process_file_in_fixed_chunks(sample_csv_path, chunk_bytes=32)
+      `,
+      keyTakeaways: [
+        "`.read()` loads the entire file into memory as a single string; avoid on huge files.",
+        "`.readline()` reads one line at a time; returns an empty string `\"\"` at End-Of-File (EOF).",
+        "`.readlines()` returns a list containing all lines as strings.",
+        "Streaming lines via `for line in file:` is the most memory-efficient approach for large text datasets."
+      ],
+      commonMistakes: [
+        "<b>Calling `.read()` on multi-gigabyte log files:</b> Causes severe memory pressure and `MemoryError` crashes.",
+        "<b>Forgetting that `.readline()` and `.readlines()` preserve `\n`:</b> Leaving trailing newline characters in parsed output without calling `.strip()`.",
+        "<b>Attempting to re-read an open file handle that reached EOF:</b> Once a file handle reads to the end, subsequent `.read()` calls return empty strings `\"\"` unless reset with `.seek(0)`."
+      ],
+      quizzes: [
+        {
+          question: "Which file reading approach consumes the LEAST amount of memory when processing a 10 GB log file?",
+          options: [
+            "`data = file.read()`",
+            "`lines = file.readlines()`",
+            "`for line in file:`",
+            "`data = list(file)`"
+          ],
+          correctIndex: 2,
+          explanation: "Iterating directly over the open file object (`for line in file:`) streams one line at a time into RAM, using negligible memory regardless of file size."
+        },
+        {
+          question: "What does `file.readline()` return when it encounters the End-Of-File (EOF)?",
+          options: [
+            "`None`",
+            "An empty string `\"\"`",
+            "A `StopIteration` exception",
+            "`\"EOF\"`"
+          ],
+          correctIndex: 1,
+          explanation: "When `readline()` reaches the end of a file, it returns an empty string `\"\"`."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Text vs. Binary File Modes",
+      durationMinutes: 20,
+      explanation: `
+<b>Handling Plain Text vs. Raw Byte Streams</b><br/>
+Not all files on disk contain human-readable text. While configuration files, CSVs, and logs contain Unicode characters, files like images, PDFs, compressed ZIP archives, and compiled binaries consist of raw sequence bytes.<br/><br/>
+
+<b>1. Text Mode (<code>"t"</code> - Default):</b>
+<ul>
+  <li>Opens files using character string encoding/decoding (e.g., UTF-8).</li>
+  <li>Automatically performs line-ending translation (e.g., converting Windows <code>\r\n</code> to standard Python <code>\n</code>).</li>
+  <li>Interacts with standard <code>str</code> objects.</li>
+</ul>
+
+<b>2. Binary Mode (<code>"b"</code>):</b>
+<ul>
+  <li>Bypasses string encoding/decoding and newline translations.</li>
+  <li>Reads and writes raw sequence bytes directly (interacts with Python <code>bytes</code> objects written as <code>b"data"</code>).</li>
+  <li>Modes: <code>"rb"</code> (Read Binary), <code>"wb"</code> (Write Binary), <code>"ab"</code> (Append Binary).</li>
+</ul>
+
+<b>When to use Binary Mode:</b>
+1. Processing non-text media files (PNG/JPEG images, PDF reports, zip archives).
+2. Calculating cryptographic hashes (MD5, SHA-256 checksums) for file integrity verification.
+3. Sending raw byte streams over network sockets.
+      `,
+      diagram: `
+TEXT MODE vs BINARY MODE:
+
+  Text Mode ("r" / "w"):
+  Disk Bytes (0x50 0x4B) ---> [ Encoding / UTF-8 Decoder ] ---> Python 'str' ("PK")
+                               (Translates \r\n to \n)
+
+  Binary Mode ("rb" / "wb"):
+  Disk Bytes (0x50 0x4B) ------------------------------------> Python 'bytes' (b"PK")
+                               (Raw byte passthrough)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Text Mode vs Binary Mode Operations
+# ==============================================================================
+
+import hashlib
+
+# Setup dummy binary artifact file (ZIP file header magic bytes + dummy data)
+binary_file_path = "payload_archive.bin"
+dummy_bytes = b"PK\x03\x04\x00\x00\x08\x00LogisticsDataPayload"
+
+# Write raw bytes using "wb" mode
+with open(binary_file_path, "wb") as bin_file:
+    bin_file.write(dummy_bytes)
+
+print("--- BEGINNER: Binary File Mode (wb / rb) ---")
+print(f"Successfully wrote {len(dummy_bytes)} raw bytes to [{binary_file_path}].")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Reading Binary Data and Calculating Hashes
+# ------------------------------------------------------------------------------
+
+# Read raw bytes using "rb" mode
+with open(binary_file_path, "rb") as bin_file:
+    raw_data = bin_file.read()
+
+print("\n--- INTERMEDIATE: Binary Inspection ---")
+print("Data Type Read:", type(raw_data).__name__) # 'bytes'
+print("Raw Bytes Representation:", raw_data)
+print("Magic Byte Header Check (ZIP PK):", raw_data[:2] == b"PK")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: File Integrity Checksum Generator
+# ------------------------------------------------------------------------------
+
+def calculate_file_sha256(file_path: str, chunk_size: int = 4096) -> str:
+    \"\"\"
+    Calculates SHA-256 cryptographic hash checksum of a binary file on disk
+    streaming in fixed-size byte chunks to verify file integrity.
+    \"\"\"
+    print(f"\n--- ADVANCED: SHA-256 Binary Integrity Check for [{file_path}] ---")
+
+    sha256_hash = hashlib.sha256()
+
+    # Must use "rb" mode to read raw bytes for cryptographic hashing!
+    with open(file_path, "rb") as b_file:
+        while True:
+            byte_block = b_file.read(chunk_size)
+            if not byte_block:
+                break
+            sha256_hash.update(byte_block)
+
+    digest_hex = sha256_hash.hexdigest()
+    return digest_hex
+
+# Calculate integrity checksum
+file_checksum = calculate_file_sha256(binary_file_path)
+print(f"File SHA-256 Checksum: {file_checksum}")
+      `,
+      keyTakeaways: [
+        "Text mode (`\"t\"`) handles string encodings and newline translations; binary mode (`\"b\"`) handles raw `bytes`.",
+        "Use binary modes (`\"rb\"`, `\"wb\"`) for non-text files like images, PDFs, ZIP archives, and encrypted payloads.",
+        "Binary mode returns `bytes` objects (e.g., `b\"data\"`) rather than `str` objects.",
+        "Cryptographic checksums (SHA-256) require reading files in binary mode."
+      ],
+      commonMistakes: [
+        "<b>Opening images or PDFs in text mode (`"r"`):</b> Attempting UTF-8 decoding on binary bytes throws a `UnicodeDecodeError`.",
+        "<b>Writing string objects to binary files:</b> Calling `f.write(\"text\")` in `"wb"` mode raises `TypeError: a bytes-like object is required, not 'str'`.",
+        "<b>Relying on text mode for checksum calculation:</b> Line-ending translations in text mode alter character bytes, corrupting cryptographic hash checksums."
+      ],
+      quizzes: [
+        {
+          question: "What exception is raised if you attempt to write a string variable `f.write(\"Hello\")` to a file opened in binary write mode `open(\"file.bin\", \"wb\")`?",
+          options: [
+            "UnicodeDecodeError",
+            "TypeError",
+            "ValueError",
+            "FileNotFoundError"
+          ],
+          correctIndex: 1,
+          explanation: "Binary mode (`\"wb\"`) expects a `bytes` object (e.g., `b\"Hello\"`). Passing a `str` object raises a `TypeError`."
+        },
+        {
+          question: "Why must binary mode (`\"rb\"`) be used when calculating SHA-256 cryptographic checksums of files?",
+          options: [
+            "Because binary mode runs 100x faster than text mode.",
+            "Because text mode performs automatic newline conversions and character decoding, which alters raw disk bytes and invalidates hash checksums.",
+            "Because SHA-256 hashing only works on Windows operating systems.",
+            "Text mode cannot read files larger than 1 MB."
+          ],
+          correctIndex: 1,
+          explanation: "Text mode modifies line-ending bytes during reading. Hashing requires exact, unaltered raw disk bytes accessed via `\"rb\"`."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Modern File System Navigation with pathlib",
+      durationMinutes: 22,
+      explanation: `
+<b>Object-Oriented Path Manipulation with <code>pathlib.Path</code></b><br/>
+Historically, Python developers manipulated file system paths using string concatenation or legacy functions from the <code>os.path</code> module (e.g., <code>os.path.join("data", "logs", "file.txt")</code>). String path manipulations are prone to bugs across different operating systems due to path separator differences (Windows uses backslashes <code>\\</code>; Linux/macOS use forward slashes <code>/</code>).<br/><br/>
+
+Python 3.4 introduced the standard library <b><code>pathlib</code></b> module, providing object-oriented, cross-platform path handling.<br/><br/>
+
+<b>1. Key Features of <code>pathlib.Path</code>:</b>
+<ul>
+  <li><b>Cross-Platform Path Construction (<code>/</code> Operator):</b> Overloads the division operator <code>/</code> to join path components safely across OS boundaries:<br/>
+  <code>log_dir = Path("var") / "logistics" / "logs"</code></li>
+  <li><b>Path Property Inspection:</b>
+    <ul>
+      <li><code>path.name</code>: Returns full filename with extension (e.g., <code>"manifest.csv"</code>).</li>
+      <li><code>path.stem</code>: Returns filename without extension (e.g., <code>"manifest"</code>).</li>
+      <li><code>path.suffix</code>: Returns file extension (e.g., <code>".csv"</code>).</li>
+      <li><code>path.parent</code>: Returns parent directory Path object.</li>
+    </ul>
+  </li>
+  <li><b>Directory Verification & Existence:</b>
+    <ul>
+      <li><code>path.exists()</code>: Returns boolean indicating if path exists on disk.</li>
+      <li><code>path.is_file()</code> / <code>path.is_dir()</code>: Verifies file vs directory types.</li>
+    </ul>
+  </li>
+  <li><b>Direct Read/Write Shortcuts:</b>
+    <ul>
+      <li><code>path.read_text(encoding="utf-8")</code>: Reads full file content directly.</li>
+      <li><code>path.write_text("content", encoding="utf-8")</code>: Writes string directly to disk.</li>
+    </ul>
+  </li>
+</ul>
+      `,
+      diagram: `
+PATHLIB OBJECT PROPERTY BREAKDOWN:
+
+  Path("var/logistics/reports/monthly_manifest.csv")
+                          |
+   +----------------------+----------------------+
+   |                      |                      |
+   v                      v                      v
+  .parent                .stem                  .suffix
+  Path("var/logistics")  "monthly_manifest"    ".csv"
+                          \\                    /
+                           +--------+----------+
+                                    |
+                                    v
+                                  .name
+                                  "monthly_manifest.csv"
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Object-Oriented Path Handling with pathlib
+# ==============================================================================
+
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# Beginner: Constructing Paths and Inspecting Properties
+# ------------------------------------------------------------------------------
+
+# Construct path object using overloaded '/' operator
+file_path = Path("workspace") / "delivery_data" / "shipment_record.csv"
+
+print("--- BEGINNER: pathlib Path Inspection ---")
+print("Full Path Representation:", file_path)
+print("Parent Directory        :", file_path.parent)
+print("Filename (.name)        :", file_path.name)
+print("File Stem (.stem)      :", file_path.stem)
+print("File Extension (.suffix):", file_path.suffix)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Direct Read/Write Shortcuts & Existence Checks
+# ------------------------------------------------------------------------------
+
+target_dir = Path("logistics_storage")
+target_file = target_dir / "quick_note.txt"
+
+# Create directory if missing (parents=True creates parent folders; exist_ok=True prevents error if existing)
+target_dir.mkdir(parents=True, exist_ok=True)
+
+# Direct write shortcut (no manual open/close needed!)
+target_file.write_text("STATUS: ALL_SYSTEMS_OPERATIONAL\n", encoding="utf-8")
+
+print("\n--- INTERMEDIATE: pathlib File Verification ---")
+print("Does directory exist? :", target_dir.exists())
+print("Is target path a file?:", target_file.is_file())
+
+# Direct read shortcut
+file_text = target_file.read_text(encoding="utf-8")
+print("Read text via .read_text():", repr(file_text.strip()))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Workspace Initializer
+# ------------------------------------------------------------------------------
+
+def initialize_project_directory_tree(base_root: str, required_subdirs: list[str]) -> dict:
+    \"\"\"
+    Builds a structured workspace directory tree using pathlib,
+    verifying write access and existing folders safely.
+    \"\"\"
+    print(f"\n--- ADVANCED: Initializing Project Tree at [{base_root}] ---")
+
+    root_path = Path(base_root).resolve() # Resolves absolute path
+    created_folders = []
+
+    for subdir_name in required_subdirs:
+        folder_path = root_path / subdir_name
+        # mkdir with safety flags
+        folder_path.mkdir(parents=True, exist_ok=True)
+        created_folders.append(folder_path)
+        print(f"  Verified folder: {folder_path.relative_to(root_path.parent)}")
+
+    return {
+        "root_absolute_path": str(root_path),
+        "folder_count": len(created_folders),
+        "is_ready": root_path.exists()
+    }
+
+# Execute workspace setup
+tree_status = initialize_project_directory_tree("app_workspace", ["logs", "incoming_manifests", "archive"])
+print("Directory Tree Readiness:", tree_status["is_ready"])
+      `,
+      keyTakeaways: [
+        "`pathlib.Path` provides cross-platform, object-oriented path handling.",
+        "Use the `/` operator to concatenate path segments safely across OS boundaries.",
+        "Inspect path components easily using `.name`, `.stem`, `.suffix`, and `.parent`.",
+        "Use `path.write_text()` and `path.read_text()` for quick one-line file IO operations."
+      ],
+      commonMistakes: [
+        "<b>Concatenating paths using string addition (`\"dir/\" + \"file.txt\"`):</b> Breaks cross-platform compatibility when switching between Windows and UNIX systems.",
+        "<b>Forgetting `exist_ok=True` when calling `path.mkdir()`:</b> Calling `.mkdir()` on an existing directory without `exist_ok=True` raises a `FileExistsError`.",
+        "<b>Passing `Path` objects to legacy functions expecting strings:</b> Convert Path objects to strings using `str(path)` when interfacing with legacy C libraries."
+      ],
+      quizzes: [
+        {
+          question: "Given `p = Path(\"reports/2026/january_manifest.csv\")`, what is the value of `p.stem`?",
+          options: [
+            "`\"january_manifest.csv\"`",
+            "`\"january_manifest\"`",
+            "`\".csv\"`",
+            "`\"reports/2026\"`"
+          ],
+          correctIndex: 1,
+          explanation: "The `.stem` property returns the filename without its file extension (`\"january_manifest\"`)."
+        },
+        {
+          question: "How do you create a directory using `pathlib.Path` without crashing if the folder already exists?",
+          options: [
+            "`path.mkdir(exist_ok=True)`",
+            "`path.create_folder(force=True)`",
+            "`path.make_dir(ignore_errors=True)`",
+            "`path.mkdir(overwrite=False)`"
+          ],
+          correctIndex: 0,
+          explanation: "Passing `exist_ok=True` to `path.mkdir()` prevents a `FileExistsError` if the folder already exists on disk."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Directory Operations, Globbing, and File Metadata",
+      durationMinutes: 20,
+      explanation: `
+<b>Directory Iteration, Pattern Matching, and File Inspection</b><br/>
+Real applications must organize files into directory structures, search for specific file patterns (such as finding all <code>.csv</code> manifest files generated today), and inspect file metadata (file size, modification timestamps, and permissions).<br/><br/>
+
+<b>1. Searching Directories with Globbing (<code>.glob()</code> and <code>.rglob()</code>):</b>
+<ul>
+  <li><code>dir_path.glob(pattern)</code>: Searches the current directory for files matching a wildcard pattern (e.g., <code>"*.csv"</code> finds all CSV files in that folder).</li>
+  <li><code>dir_path.rglob(pattern)</code>: Performs a **recursive search** through the current directory AND all nested subdirectories for matching files (e.g., <code>"**/*.log"</code> finds all log files in the entire sub-tree!).</li>
+</ul>
+
+<b>2. Inspecting File Metadata (<code>.stat()</code>):</b><br/>
+Calling <code>path.stat()</code> returns an <code>os.stat_result</code> object containing physical metadata:
+<ul>
+  <li><code>st_size</code>: File size in bytes.</li>
+  <li><code>st_mtime</code>: Last modification time as a UNIX epoch timestamp.</li>
+  <li><code>st_ctime</code>: File creation time (or metadata change time on UNIX).</li>
+</ul>
+
+<b>3. Cleaning Up (Deleting Files and Directories):</b>
+<ul>
+  <li><code>path.unlink(missing_ok=True)</code>: Deletes a single file from disk.</li>
+  <li><code>path.rmdir()</code>: Deletes an **empty** directory. (To delete non-empty directory trees, use <code>shutil.rmtree()</code>).</li>
+</ul>
+      `,
+      diagram: `
+GLOBBING vs RECURSIVE GLOBBING (rglob):
+
+  directory_root/
+  │── manifest_1.csv          <-- Matched by .glob("*.csv") AND .rglob("*.csv")
+  │── notes.txt
+  └── archive_2026/
+      └── manifest_2.csv      <-- Matched ONLY by .rglob("*.csv") (Recursive!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Directory Globbing and File Metadata Inspection
+# ==============================================================================
+
+from pathlib import Path
+import datetime
+import time
+
+# Setup test directory environment
+base_dir = Path("logistics_workspace")
+archive_dir = base_dir / "archive"
+archive_dir.mkdir(parents=True, exist_ok=True)
+
+# Create dummy sample files across subdirectories
+(base_dir / "today_manifest.csv").write_text("data_1", encoding="utf-8")
+(base_dir / "notes.txt").write_text("notes", encoding="utf-8")
+(archive_dir / "old_manifest.csv").write_text("data_2", encoding="utf-8")
+
+
+# ------------------------------------------------------------------------------
+# Beginner: Directory Iteration and Shallow Globbing
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: Globbing Single Directory ---")
+print("Finding all .csv files in root directory using .glob('*.csv'):")
+
+# Shallow search (only top folder)
+for csv_file in base_dir.glob("*.csv"):
+    print("  Located CSV:", csv_file.name)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Recursive Globbing and File Metadata Inspection
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Recursive Globbing (.rglob) ---")
+print("Finding all .csv files recursively using .rglob('*.csv'):")
+
+# Recursive search (includes archive/ subdirectory)
+for csv_file in base_dir.rglob("*.csv"):
+    # Inspect physical metadata
+    file_stat = csv_file.stat()
+    size_bytes = file_stat.st_size
+    mod_time = datetime.datetime.fromtimestamp(file_stat.st_mtime)
+
+    print(f"  Located: {csv_file.relative_to(base_dir):<25} | Size: {size_bytes} bytes | Modified: {mod_time.strftime('%Y-%m-%d %H:%M')}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Log Pruning & Maintenance Service
+# ------------------------------------------------------------------------------
+
+def prune_stale_log_files(target_folder: Path, max_age_days: float = 7.0) -> dict:
+    \"\"\"
+    Recursively scans target directory for .log files older than max_age_days
+    and removes them safely using path.unlink().
+    \"\"\"
+    print(f"\n--- ADVANCED: Log Maintenance Audit for [{target_folder}] ---")
+
+    if not target_folder.exists() or not target_folder.is_dir():
+        return {"success": False, "error": "Invalid target directory."}
+
+    current_time = time.time()
+    max_age_seconds = max_age_days * 86400.0
+
+    pruned_files = []
+    retained_files = []
+
+    for log_file in target_folder.rglob("*.log"):
+        file_age_seconds = current_time - log_file.stat().st_mtime
+
+        if file_age_seconds > max_age_seconds:
+            # Unlink deletes file safely
+            log_file.unlink(missing_ok=True)
+            pruned_files.append(log_file.name)
+            print(f"  PRUNED STALE LOG: {log_file.name}")
+        else:
+            retained_files.append(log_file.name)
+
+    return {
+        "success": True,
+        "pruned_count": len(pruned_files),
+        "retained_count": len(retained_files),
+        "pruned_files": pruned_files
+    }
+
+# Create test log file and test pruner
+test_log = base_dir / "old_system.log"
+test_log.write_text("old log data", encoding="utf-8")
+
+audit_summary = prune_stale_log_files(base_dir, max_age_days=0.0001) # Low age threshold for testing
+print("Pruning Audit Summary:", audit_summary)
+      `,
+      keyTakeaways: [
+        "Use `path.glob(\"pattern\")` for shallow searches inside a single directory.",
+        "Use `path.rglob(\"pattern\")` for recursive searches through nested subdirectory trees.",
+        "Call `path.stat()` to read file size (`st_size`) and modification timestamps (`st_mtime`).",
+        "Delete single files using `path.unlink(missing_ok=True)` and empty directories using `path.rmdir()`."
+      ],
+      commonMistakes: [
+        "<b>Confusing `.glob()` and `.rglob()`:</b> Expecting `.glob(\"*.csv\")` to search subdirectories recursively when `.rglob()` or `\"**/*.csv\"` is required.",
+        "<b>Calling `path.rmdir()` on a non-empty directory:</b> Raises an `OSError: Directory not empty`. Use `shutil.rmtree()` for non-empty folders.",
+        "<b>Assuming file timestamps are human-readable strings:</b> `st_mtime` returns raw UNIX epoch float seconds; convert using `datetime.fromtimestamp()`."
+      ],
+      quizzes: [
+        {
+          question: "Which `pathlib` method recursively searches a directory AND all its subdirectories for matching file patterns?",
+          options: [
+            "`dir_path.search()`",
+            "`dir_path.glob()`",
+            "`dir_path.rglob()`",
+            "`dir_path.find_all()`"
+          ],
+          correctIndex: 2,
+          explanation: "The `.rglob()` method performs recursive globbing through subdirectories."
+        },
+        {
+          question: "How do you delete a single file from disk using a `pathlib.Path` object?",
+          options: [
+            "`path.delete()`",
+            "`path.unlink()`",
+            "`path.remove()`",
+            "`path.close()`"
+          ],
+          correctIndex: 1,
+          explanation: "`path.unlink()` removes a file from disk."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which file mode truncates (erases) existing file contents upon opening?",
+      options: [
+        "\"r\"",
+        "\"a\"",
+        "\"w\"",
+        "\"rb\""
+      ],
+      correctIndex: 2,
+      explanation: "Mode `\"w\"` truncates existing file contents upon opening."
+    },
+    {
+      question: "Why should files always be opened using the `with open(...)` context manager statement?",
+      options: [
+        "It automatically encrypts file contents.",
+        "It guarantees that file handles are closed and disk write buffers are flushed even if an exception occurs.",
+        "It prevents file modification.",
+        "It speeds up read performance."
+      ],
+      correctIndex: 1,
+      explanation: "Context managers handle automatic file closure and resource cleanup."
+    },
+    {
+      question: "Which file reading method consumes the LEAST memory when processing large multi-gigabyte text files?",
+      options: [
+        "`file.read()`",
+        "`file.readlines()`",
+        "`for line in file:`",
+        "`list(file)`"
+      ],
+      correctIndex: 2,
+      explanation: "Streaming lines via `for line in file:` processes one line at a time in memory."
+    },
+    {
+      question: "Which file mode should be used to read non-text binary files like images, PDFs, or ZIP archives?",
+      options: [
+        "\"r\"",
+        "\"rb\"",
+        "\"rt\"",
+        "\"r+\""
+      ],
+      correctIndex: 1,
+      explanation: "Binary read mode `\"rb\"` bypasses string decoding and loads raw `bytes`."
+    },
+    {
+      question: "Which `pathlib.Path` property retrieves the filename WITHOUT its file extension?",
+      options: [
+        "`.name`",
+        "`.stem`",
+        "`.suffix`",
+        "`.parent`"
+      ],
+      correctIndex: 1,
+      explanation: "`.stem` returns the filename without extension (e.g., `\"manifest\"` from `\"manifest.csv\"`)."
+    },
+    {
+      question: "Which operator is overloaded in `pathlib` to concatenate path segments cleanly across OS boundaries?",
+      options: [
+        "`+`",
+        "`/`",
+        "`\\`",
+        "`*`"
+      ],
+      correctIndex: 1,
+      explanation: "`pathlib` overloads the division operator `/` to join path components."
+    },
+    {
+      question: "How do you create missing nested parent directories using `pathlib` without raising an error if the directory already exists?",
+      options: [
+        "`path.mkdir(parents=True, exist_ok=True)`",
+        "`path.create_all()`",
+        "`path.mkdir(force=True)`",
+        "`path.make_dir()`"
+      ],
+      correctIndex: 0,
+      explanation: "`parents=True` creates missing parent directories; `exist_ok=True` ignores existing directories."
+    },
+    {
+      question: "Which method reads physical file metadata like size and modification time?",
+      options: [
+        "`path.info()`",
+        "`path.stat()`",
+        "`path.metadata()`",
+        "`path.properties()`"
+      ],
+      correctIndex: 1,
+      explanation: "`path.stat()` returns file size (`st_size`) and modification timestamps (`st_mtime`)."
+    }
+  ],
+  project: {
+    name: "Logistics File System Manager & Archival Pruner (Phase 1 Project)",
+    goal: "Build an automated file system management utility that generates structured project workspaces, reads and appends dispatch manifests, computes SHA-256 binary file checksums, glob-searches for log archives, and prunes stale disk records.",
+    brief: "Your enterprise logistics platform requires a disk storage manager utility (`storage_manager.py`). The utility must initialize workspace directories using `pathlib`, write and append structured CSV/text manifests safely using UTF-8 context managers, compute binary file SHA-256 checksums to verify archive integrity, scan directory trees recursively using `.rglob()`, and prune old log records based on file `.stat()` metadata.",
+    steps: [
+      "Create a script file named `storage_manager.py` in your workspace.",
+      "Initialize project storage directory trees (`logs/`, `manifests/`, `archives/`) using `pathlib.Path` and `.mkdir(parents=True, exist_ok=True)`.",
+      "Write a function `write_manifest_csv(file_path: Path, records: list[dict])` that safely writes CSV text lines using `with open(..., \"w\", encoding=\"utf-8\")`.",
+      "Write a binary checksum function `compute_archive_checksum(file_path: Path) -> str` that reads raw bytes in chunks using `\"rb\"` and returns a SHA-256 hex digest.",
+      "Implement a recursive glob search function `find_all_manifests(root_dir: Path) -> list[Path]` using `.rglob(\"*.csv\")`.",
+      "Implement a directory cleanup service `prune_logs_older_than(log_dir: Path, days: float)` that inspects `.stat().st_mtime` and deletes stale files with `.unlink()`.",
+      "Run `python3 storage_manager.py` in your integrated terminal and print a disk maintenance audit report."
+    ],
+    acceptance: [
+      "Directory trees are initialized safely using `pathlib.Path` without path separator string concatenation.",
+      "File IO operations use context managers (`with`) with explicit `encoding=\"utf-8\"`.",
+      "Binary files are read in `\"rb\"` mode for cryptographic SHA-256 calculation.",
+      "Executing `python3 storage_manager.py` outputs a complete disk audit and file maintenance report without errors."
+    ],
+    stretch: [
+      "Integrate `shutil.copy2` to move manifest files to an `archive/` directory before pruning.",
+      "Annotate all functions with strict type hints (`Path`, `list[Path]`, `dict[str, Any]`) and pass static type checks."
+    ]
+  }
+};
