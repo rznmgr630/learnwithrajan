@@ -89,8 +89,8 @@ export function PythonRoadmap() {
         ))}
       </div>
 
-      {lessonDay !== null && lessonDay <= 3 ? <RawPythonLessonDay day={lessonDay as 1 | 2 | 3} onClose={() => setLessonDay(null)} /> : null}
-      {lessonDay !== null && lessonDay > 3 ? <LessonDayDetail open onClose={() => setLessonDay(null)} day={LESSON_DAYS[lessonDay as keyof typeof LESSON_DAYS]} previousDay={lessonDay > 1 ? { day: lessonDay - 1, title: pickLocalized(LESSON_DAYS[(lessonDay - 1) as keyof typeof LESSON_DAYS].title, locale) } : null} nextDay={lessonDay < PYTHON_TOTAL_DAYS ? { day: lessonDay + 1, title: pickLocalized(LESSON_DAYS[(lessonDay + 1) as keyof typeof LESSON_DAYS].title, locale) } : null} onNavigateDay={setLessonDay} track="python" /> : null}
+      {lessonDay !== null && lessonDay <= 4 ? <RawPythonLessonDay day={lessonDay as 1 | 2 | 3 | 4} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 4 ? <LessonDayDetail open onClose={() => setLessonDay(null)} day={LESSON_DAYS[lessonDay as keyof typeof LESSON_DAYS]} previousDay={lessonDay > 1 ? { day: lessonDay - 1, title: pickLocalized(LESSON_DAYS[(lessonDay - 1) as keyof typeof LESSON_DAYS].title, locale) } : null} nextDay={lessonDay < PYTHON_TOTAL_DAYS ? { day: lessonDay + 1, title: pickLocalized(LESSON_DAYS[(lessonDay + 1) as keyof typeof LESSON_DAYS].title, locale) } : null} onNavigateDay={setLessonDay} track="python" /> : null}
     </div>
   );
 }
