@@ -1,0 +1,774 @@
+/**
+ * DAY 10: Phase 1 · Core Python — Comprehensions
+ * 
+ * Total Duration: 75 minutes
+ * Difficulty: Beginner
+ * Lessons: 4
+ */
+
+export const phase1Comprehensions = {
+  day: 9,
+  topic: "Phase 1 · Core Python — Comprehensions",
+  totalMinutes: 75,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Build Lists from a Clear Transformation",
+      durationMinutes: 20,
+      explanation: `
+<b>Declarative List Transformations with List Comprehensions</b><br/>
+In software development, you constantly transform collections of data: converting a list of raw tracking IDs to uppercase, extracting weight values from package dictionaries, or calculating final shipping prices with sales tax. Traditionally, you would write a 4-line <code>for</code> loop with an empty accumulator list and manual <code>.append()</code> calls.<br/><br/>
+
+Python provides a concise, declarative syntax called a <b>List Comprehension</b> to construct new lists from existing iterables in a single, highly readable line of code.<br/><br/>
+
+<b>1. List Comprehension Syntax:</b><br/>
+<code>new_list = [expression for item in iterable]</code><br/><br/>
+
+<b>2. Anatomical Comparison:</b><br/>
+<i>Traditional Loop (Imperative):</i><br/>
+<pre><code>uppercase_ids = []
+for tracking_id in raw_ids:
+    uppercase_ids.append(tracking_id.upper())</code></pre>
+
+<i>List Comprehension (Declarative):</i><br/>
+<pre><code>uppercase_ids = [tracking_id.upper() for tracking_id in raw_ids]</code></pre><br/>
+
+<b>Why use List Comprehensions?</b>
+<ol>
+  <li><b>Conciseness & Readability:</b> Expresses "what data transformation you want" directly without boilerplate accumulator code.</li>
+  <li><b>Performance Optimization:</b> List comprehensions execute at C-speed inside the Python interpreter, running noticeably faster than manual Python <code>for</code> loop <code>.append()</code> calls!</li>
+</ol>
+
+<b>Real-World Logistics Analogy: Automated Package Re-Labeling Belt</b><br/>
+Think of a traditional <code>for</code> loop as a warehouse worker picking up each package box one by one, walking over to a table, slapping on a new address label, and placing it into a new output crate. A List Comprehension is an automated high-speed conveyor belt that applies the new label to every passing box seamlessly as it moves along the line.
+      `,
+      diagram: `
+LIST COMPREHENSION EXECUTION FLOW:
+
+  [ expression  for item in iterable ]
+        |             |         |
+        |             |         +---> Source Iterable (e.g., raw_ids)
+        |             +-------------> Loop Variable (e.g., tracking_id)
+        +---------------------------> Output Value Transformation (e.g., tracking_id.upper())
+
+  Input List:  ["trk-101", "trk-202", "trk-303"]
+  Output List: ["TRK-101", "TRK-202", "TRK-303"]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Building Lists via Clear Transformations
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Transforming Strings and Numeric Calculations
+# ------------------------------------------------------------------------------
+
+raw_tracking_codes = ["  trk-chicago-901 ", " trk-austin-902  ", "trk-seattle-903"]
+
+# Traditional loop approach (4 lines)
+cleaned_codes_loop = []
+for code in raw_tracking_codes:
+    cleaned_codes_loop.append(code.strip().upper())
+
+# List comprehension approach (1 line)
+cleaned_codes_comp = [code.strip().upper() for code in raw_tracking_codes]
+
+print("--- BEGINNER: List Transformation ---")
+print("Cleaned Codes (Loop):", cleaned_codes_loop)
+print("Cleaned Codes (Comp):", cleaned_codes_comp)
+
+# Math calculation: Convert weights from kilograms to pounds (1 kg = 2.20462 lbs)
+weights_kg = [10.0, 5.5, 22.8]
+weights_lbs = [round(w * 2.20462, 2) for w in weights_kg]
+print("Converted Weights (lbs):", weights_lbs)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Extracting Fields from Structured Dictionaries
+# ------------------------------------------------------------------------------
+
+manifest_batch = [
+    {"id": "PKG-101", "destination": "Chicago", "fee": 15.00},
+    {"id": "PKG-102", "destination": "Austin", "fee": 22.50},
+    {"id": "PKG-103", "destination": "Seattle", "fee": 18.00}
+]
+
+# Extracting a list of destination cities
+destination_list = [item["destination"] for item in manifest_batch]
+
+# Extracting calculated total fees including 10% express surcharge
+total_fees_express = [round(item["fee"] * 1.10, 2) for item in manifest_batch]
+
+print("\n--- INTERMEDIATE: Field Extraction ---")
+print("Destinations:", destination_list)
+print("Express Surcharged Fees:", total_fees_express)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dynamic Cargo Pricing Engine
+# ------------------------------------------------------------------------------
+
+def transform_package_billing_manifest(
+    package_records: list[dict], 
+    tax_rate: float = 0.08
+) -> list[dict]:
+    \"\"\"
+    Applies financial calculations to package records using list comprehensions 
+    to generate standardized billing invoices.
+    \"\"\"
+    print(f"\n--- ADVANCED: Bulk Billing Transformation ({len(package_records)} items) ---")
+    
+    # Declarative list comprehension transforming records into invoice summary dicts
+    invoice_summaries = [
+        {
+            "tracking_id": record["id"].upper(),
+            "base_fee": record["base_fee"],
+            "tax_amount": round(record["base_fee"] * tax_rate, 2),
+            "total_due": round(record["base_fee"] * (1.0 + tax_rate), 2)
+        }
+        for record in package_records
+    ]
+    
+    return invoice_summaries
+
+# Test execution
+sample_records = [
+    {"id": "deliv-1001", "base_fee": 100.00},
+    {"id": "deliv-1002", "base_fee": 250.50}
+]
+
+billing_output = transform_package_billing_manifest(sample_records)
+print("Billing Invoices Output:", billing_output)
+      `,
+      keyTakeaways: [
+        "List comprehensions construct new lists declaratively using the syntax `[expression for item in iterable]`.",
+        "They replace repetitive `for` loop `.append()` boilerplate code with a single readable line.",
+        "List comprehensions execute faster inside the Python interpreter than manual `for` loops.",
+        "Use list comprehensions when performing clean, single-expression element transformations."
+      ],
+      commonMistakes: [
+        "<b>Forgetting the square brackets `[...]`:</b> Using parentheses `(...)` instead of brackets creates a *Generator Expression* rather than a List!",
+        "<b>Overcomplicating the expression:</b> Writing multi-statement side effects inside a comprehension rather than using a standard `for` loop.",
+        "<b>Mutating external variables inside a comprehension:</b> Comprehensions should construct and return new lists, not perform external state mutations."
+      ],
+      quizzes: [
+        {
+          question: "What is the result of evaluating `[x * 2 for x in [1, 2, 3]]` in Python?",
+          options: [
+            "`[1, 2, 3, 1, 2, 3]`",
+            "`[2, 4, 6]`",
+            "`[1, 4, 9]`",
+            "`6`"
+          ],
+          correctIndex: 1,
+          explanation: "The expression `x * 2` multiplies each element in `[1, 2, 3]` by 2, yielding `[2, 4, 6]`."
+        },
+        {
+          question: "Why do List Comprehensions execute faster than standard `for` loops with `.append()` calls?",
+          options: [
+            "Because they automatically run on multiple CPU cores simultaneously.",
+            "Because list construction is optimized at C-speed internally within the Python bytecode interpreter, avoiding repeated function lookup overhead for `.append()`.",
+            "Because they skip data type checking.",
+            "Because they convert all data to integers."
+          ],
+          correctIndex: 1,
+          explanation: "List comprehensions optimize list building internally, avoiding Python-level attribute lookups and method call overhead associated with `.append()`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Filter Values Without Losing the Rule",
+      durationMinutes: 18,
+      explanation: `
+<b>Filtering Collections with Conditional Comprehensions</b><br/>
+Data transformation rarely happens in isolation; usually, you only want to process items that meet specific criteria. For example, selecting packages that weigh over 50 lbs, filtering for pending deliveries in Chicago, or isolating failed API telemetry logs. List comprehensions allow you to append an optional <code>if</code> condition to filter source data cleanly.<br/><br/>
+
+<b>1. Filtering Syntax (Trailing <code>if</code> Condition):</b><br/>
+<code>filtered_list = [expression for item in iterable if condition]</code><br/><br/>
+
+<b>Notice the Order:</b><br/>
+The filtering <code>if condition</code> appears at the **very end** of the comprehension. Python evaluates the `if condition` for every item in the iterable; if the condition evaluates to `True`, the `expression` is evaluated and added to the output list. If `False`, the item is completely skipped.<br/><br/>
+
+<b>2. Transformation + Filtering Combined:</b><br/>
+You can perform transformations and filtering simultaneously in one clean pass:<br/>
+<code>heavy_tracking_ids = [pkg["id"].upper() for pkg in packages if pkg["weight"] &gt; 50.0]</code><br/><br/>
+
+<b>3. Trailing `if` vs Inline `if/else` Conditional Expression (Crucial Syntax Distinction):</b>
+<ul>
+  <li><b>Trailing `if` (Filtering / Dropping Items):</b><br/>
+  <code>[x for x in data if x &gt; 0]</code> -&gt; Filters out negative numbers, producing a <b>shorter list</b>.</li>
+  <li><b>Inline `if/else` (Value Replacement / Keeping Same List Length):</b><br/>
+  <code>[x if x &gt; 0 else 0 for x in data]</code> -&gt; Replaces negative numbers with 0, keeping the <b>exact same list length</b>!</li>
+</ul>
+      `,
+      diagram: `
+FILTERING COMPREHENSION FLOW:
+
+  [ expression  for item in iterable  if condition ]
+        |             |         |            |
+        |             |         |            +---> Filtering Guard (e.g., weight > 50.0)
+        |             |         +----------------> Source Collection
+        |             +--------------------------> Loop Variable
+        +----------------------------------------> Output Transformation
+
+  Source List: [10, 65, 5, 80]
+  Filter Check (x > 50): 10 (Skip), 65 (Keep), 5 (Skip), 80 (Keep)
+  Output List: [65, 80]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Filtering Data with Conditional Comprehensions
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Filtering with Trailing 'if'
+# ------------------------------------------------------------------------------
+
+all_package_weights = [12.5, 68.0, 5.2, 85.4, 22.0, 110.0]
+
+# Filter heavy packages (> 50.0 lbs) using trailing if
+heavy_packages = [w for w in all_package_weights if w > 50.0]
+
+print("--- BEGINNER: Filtering Data ---")
+print("All Weights:", all_package_weights)
+print("Filtered Heavy Packages (>50 lbs):", heavy_packages)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Filtering + Transformation & Inline if/else Value Replacement
+# ------------------------------------------------------------------------------
+
+shipment_logs = [
+    {"id": "TRK-101", "status": "DELIVERED", "fee": 15.00},
+    {"id": "TRK-102", "status": "IN_TRANSIT", "fee": 25.00},
+    {"id": "TRK-103", "status": "DELIVERED", "fee": 10.00},
+    {"id": "TRK-104", "status": "CANCELLED", "fee": 0.00}
+]
+
+# 1. Trailing 'if': Filter delivered packages and extract their IDs (Shorter List)
+delivered_ids = [s["id"] for s in shipment_logs if s["status"] == "DELIVERED"]
+
+# 2. Inline 'if/else': Keep all packages, but flag status labels (Same List Length)
+flagged_statuses = [
+    f"{s['id']}: PRIORITY_FREE" if s["fee"] == 0.0 else f"{s['id']}: BILLABLE"
+    for s in shipment_logs
+]
+
+print("\n--- INTERMEDIATE: Filtering vs Value Replacement ---")
+print("Delivered Package IDs (Filtered):", delivered_ids)
+print("Flagged Status Labels (Replacement):", flagged_statuses)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dispatch Route Inspector
+# ------------------------------------------------------------------------------
+
+def filter_express_dispatch_queue(
+    raw_orders: list[dict], 
+    target_zone: str, 
+    min_weight_threshold: float = 10.0
+) -> list[str]:
+    \"\"\"
+    Filters incoming orders for express dispatch based on destination zone, 
+    payment validation, and minimum weight thresholds.
+    \"\"\"
+    print(f"\n--- ADVANCED: Route Inspection Filter (Target Zone: {target_zone}) ---")
+    
+    # Declarative filtering comprehension combining multi-variable logic
+    express_queue = [
+        order["tracking_id"].upper()
+        for order in raw_orders
+        if order.get("destination_zone") == target_zone
+        and order.get("is_paid", False)
+        and order.get("weight_lbs", 0.0) >= min_weight_threshold
+    ]
+    
+    return express_queue
+
+# Test dataset
+orders_data = [
+    {"tracking_id": "trk-001", "destination_zone": "ZONE_MIDWEST", "is_paid": True, "weight_lbs": 15.5},
+    {"tracking_id": "trk-002", "destination_zone": "ZONE_MIDWEST", "is_paid": False, "weight_lbs": 25.0}, # Unpaid!
+    {"tracking_id": "trk-003", "destination_zone": "ZONE_WEST", "is_paid": True, "weight_lbs": 30.0},    # Wrong zone!
+    {"tracking_id": "trk-004", "destination_zone": "ZONE_MIDWEST", "is_paid": True, "weight_lbs": 5.0}    # Too light!
+]
+
+dispatch_ready = filter_express_dispatch_queue(orders_data, target_zone="ZONE_MIDWEST")
+print("Filtered Dispatch Ready Queue:", dispatch_ready)
+      `,
+      keyTakeaways: [
+        "Append a trailing `if condition` at the end of a comprehension to filter items out of the target collection.",
+        "Trailing `if` filters and shortens lists; inline `if/else` replaces values while maintaining the original list length.",
+        "Filtering comprehensions express data extraction rules clearly in a single line.",
+        "Combine multiple boolean conditions in a trailing `if` using standard logical operators (`and`, `or`, `not`)."
+      ],
+      commonMistakes: [
+        "<b>Confusing trailing `if` with inline `if/else` syntax:</b> Writing `[x if x > 5 for x in data]` without an `else` clause causes a `SyntaxError`.",
+        "<b>Creating unreadable multi-line filtering logic:</b> Stacking 5 complex logical conditions inside a comprehension filter instead of extracting explanatory variables or using a standard `for` loop.",
+        "<b>Filtering by modifying original objects:</b> Accidentally calling mutating methods inside the condition check."
+      ],
+      quizzes: [
+        {
+          question: "Where must a filtering `if` condition be placed inside a List Comprehension?",
+          options: [
+            "At the very beginning, before the expression.",
+            "At the very end, after the `for item in iterable` statement.",
+            "Between the expression and the `for` keyword.",
+            "Inside square brackets before the list variable."
+          ],
+          correctIndex: 1,
+          explanation: "Filtering conditions are placed at the end of the comprehension: `[expr for item in collection if condition]`."
+        },
+        {
+          question: "What is the difference between `[x for x in data if x > 0]` and `[x if x > 0 else 0 for x in data]`?",
+          options: [
+            "The first produces a filtered shorter list; the second maintains original list length by replacing non-positive values with 0.",
+            "The first raises an error; the second works.",
+            "They produce identical output lists.",
+            "The second filters out zero values."
+          ],
+          correctIndex: 0,
+          explanation: "Trailing `if` filters out non-matching elements (reducing list length). Inline `if/else` replaces non-matching values, preserving original length."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Use Set and Dictionary Comprehensions Deliberately",
+      durationMinutes: 20,
+      explanation: `
+<b>Comprehensions for Sets and Dictionaries</b><br/>
+Comprehensions in Python are not limited to list building. The exact same declarative syntax applies to constructing **Sets** (for deduplicated unique items) and **Dictionaries** (for key-value mappings).<br/><br/>
+
+<b>1. Set Comprehensions (Curly Braces <code>{...}</code>):</b><br/>
+Creates a deduplicated set of unique items from an iterable in one step.<br/>
+<code>unique_cities = {pkg["city"].upper() for pkg in package_list}</code><br/>
+Syntax: <code>{expression for item in iterable if condition}</code><br/><br/>
+
+<b>2. Dictionary Comprehensions (Key-Value Pair Syntax <code>{key: value}</code>):</b><br/>
+Creates a new dictionary by mapping keys to transformed values.<br/>
+<code>package_weight_map = {pkg["id"]: pkg["weight"] for pkg in package_list}</code><br/>
+Syntax: <code>{key_expr: value_expr for item in iterable if condition}</code><br/><br/>
+
+<b>Real-World Logistics Application:</b>
+<ul>
+  <li><b>Set Comprehension:</b> Extracting a deduplicated set of active delivery zip codes from 100,000 raw tracking logs.</li>
+  <li><b>Dictionary Comprehension:</b> Building a fast $O(1)$ lookup table that maps package tracking IDs directly to their current status string.</li>
+</ul>
+      `,
+      diagram: `
+DICTIONARY COMPREHENSION STRUCTURE:
+
+  { key_expr : value_expr  for item in iterable  if condition }
+       |           |            |         |            |
+       |           |            |         |            +---> Optional Filter Guard
+       |           |            |         +----------------> Source Collection
+       |           |            +--------------------------> Loop Variable
+       +-----------+---------------------------------------> Key:Value Mapping Output
+
+  Input List:  [{"id": "T1", "status": "OK"}, {"id": "T2", "status": "HOLD"}]
+  Output Dict: {"T1": "OK", "T2": "HOLD"}
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Set and Dictionary Comprehensions
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Set Comprehensions for Deduplication
+# ------------------------------------------------------------------------------
+
+raw_dispatch_logs = [
+    {"hub": "Chicago", "driver": "Marcus"},
+    {"hub": "Austin", "driver": "Sarah"},
+    {"hub": "Chicago", "driver": "Marcus"}, # Duplicate entry!
+    {"hub": "Seattle", "driver": "James"}
+]
+
+# Set comprehension automatically deduplicates output hub names
+active_hubs_set = {log["hub"].upper() for log in raw_dispatch_logs}
+
+print("--- BEGINNER: Set Comprehension ---")
+print("Unique Deduplicated Hubs:", active_hubs_set) # {'CHICAGO', 'AUSTIN', 'SEATTLE'}
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Dictionary Comprehensions for Lookup Tables
+# ------------------------------------------------------------------------------
+
+packages_list = [
+    {"tracking_id": "TRK-101", "status": "IN_TRANSIT", "weight": 12.5},
+    {"tracking_id": "TRK-102", "status": "DELIVERED", "weight": 45.0},
+    {"tracking_id": "TRK-103", "status": "DELAYED", "weight": 8.2}
+]
+
+# Building an O(1) status lookup dict mapping tracking_id -> status
+status_lookup_map = {pkg["tracking_id"]: pkg["status"] for pkg in packages_list}
+
+# Building a filtered dict mapping tracking_id -> weight for heavy packages only
+heavy_package_weights = {
+    pkg["tracking_id"]: pkg["weight"] 
+    for pkg in packages_list 
+    if pkg["weight"] > 10.0
+}
+
+print("\n--- INTERMEDIATE: Dictionary Comprehensions ---")
+print("Status Lookup Map:", status_lookup_map)
+print("Heavy Packages Map (>10 lbs):", heavy_package_weights)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Inverting Dictionaries & Telemetry Indexer
+# ------------------------------------------------------------------------------
+
+def build_inverted_hub_manifest_index(hub_to_packages: dict[str, list[str]]) -> dict[str, str]:
+    \"\"\"
+    Inverts a 1-to-many hub dictionary (Hub -> List of Package IDs) 
+    into a fast 1-to-1 lookup map (Package ID -> Hub) using a dictionary comprehension.
+    \"\"\"
+    print("\n--- ADVANCED: Inverting Dictionary Index ---")
+    
+    # Dictionary comprehension flattening nested hub dictionary lists
+    package_to_hub_index = {
+        pkg_id: hub_name
+        for hub_name, pkg_list in hub_to_packages.items()
+        for pkg_id in pkg_list
+    }
+    
+    return package_to_hub_index
+
+# Test dataset mapping hubs to package lists
+hub_manifests = {
+    "CHICAGO_HUB": ["PKG-101", "PKG-102"],
+    "AUSTIN_HUB": ["PKG-201", "PKG-202", "PKG-203"]
+}
+
+inverted_index = build_inverted_hub_manifest_index(hub_manifests)
+print("Inverted Package -> Hub Index:", inverted_index)
+print("Which hub holds PKG-202?", inverted_index.get("PKG-202"))
+      `,
+      keyTakeaways: [
+        "Set comprehensions `{expr for item in iterable}` construct deduplicated sets of unique items.",
+        "Dictionary comprehensions `{key_expr: val_expr for item in iterable}` build key-value mappings declaratively.",
+        "Dictionary comprehensions are ideal for creating fast $O(1)$ lookup tables from structured lists.",
+        "Comprehensions maintain the native mutability and performance benefits of sets and dictionaries."
+      ],
+      commonMistakes: [
+        "<b>Confusing Set and Dict comprehension syntax:</b> Forgetting the colon `:` in key-value pairs creates a Set comprehension instead of a Dictionary comprehension!",
+        "<b>Using unhashable types in Set comprehensions:</b> Trying `{pkg for pkg in list_of_dicts}` raises `TypeError: unhashable type: 'dict'`. Set elements must be hashable.",
+        "<b>Overwriting keys accidentally in Dict comprehensions:</b> If the source collection contains duplicate keys, earlier key-value pairs will be silently overwritten by later ones!"
+      ],
+      quizzes: [
+        {
+          question: "Which comprehension syntax creates a Dictionary mapping numbers to their squares?",
+          options: [
+            "`[x: x**2 for x in range(5)]`",
+            "`{x: x**2 for x in range(5)}`",
+            "`(x: x**2 for x in range(5))`",
+            "`{x, x**2 for x in range(5)}`"
+          ],
+          correctIndex: 1,
+          explanation: "Dictionary comprehensions require curly braces and key-value colon pairing: `{key: value for item in iterable}`."
+        },
+        {
+          question: "What happens if a Dictionary comprehension generates duplicate key names during execution?",
+          options: [
+            "Python raises a `DuplicateKeyError`.",
+            "Later key-value pairs silently overwrite earlier ones with matching key names.",
+            "All duplicate keys are converted into a list of values.",
+            "The program enters an infinite loop."
+          ],
+          correctIndex: 1,
+          explanation: "Dictionary keys must be unique. If a comprehension encounters duplicate key outputs, the newest value overwrites the old value for that key."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Choose Readability Over Compression",
+      durationMinutes: 17,
+      explanation: `
+<b>When Comprehensions Go Too Far: Clean Code Boundaries</b><br/>
+Comprehensions are one of Python's most beloved features, but they are frequently abused by beginners trying to cram complex logic into single lines. When a comprehension becomes unreadable, it ceases to be clever and becomes a severe maintenance hazard.<br/><br/>
+
+<b>1. The "Single-Line Abuse" Anti-Pattern:</b><br/>
+If a comprehension spans multiple lines, contains deeply nested loops, or includes complex conditional logic with inline ternary operators, <b>refactor it into a standard `for` loop!</b><br/><br/>
+
+<b>Compare These Two Examples:</b><br/>
+<i>Unreadable Nested Comprehension (Bad):</i><br/>
+<pre><code># Unreadable single line
+report = [f"{p['id']}:{s}" for h in hubs for p in h['pkgs'] if p['wt'] &gt; 10 for s in p['logs'] if 'ERR' in s]</code></pre><br/>
+
+<i>Clean Standard Loops (Good):</i><br/>
+<pre><code>report = []
+for hub in hubs:
+    for package in hub["pkgs"]:
+        if package["wt"] &gt; 10:
+            for log in package["logs"]:
+                if "ERR" in log:
+                    report.append(f"{package['id']}:{log}")</code></pre><br/>
+
+<b>2. Rules of Thumb for Comprehension Readability:</b>
+<ol>
+  <li><b>Max 1 Loop Level:</b> Single `for` loops in comprehensions are great. Avoid 2+ nested `for` clauses in a single comprehension.</li>
+  <li><b>Max 1 Condition Level:</b> Simple trailing `if` checks are clean. Avoid mixing complex inline `if/else` ternary logic with trailing `if` filters.</li>
+  <li><b>No Side Effects:</b> Never execute function calls that mutate global state or write to disk inside a comprehension (e.g., `[print(x) for x in data]` is an anti-pattern!).</li>
+</ol>
+      `,
+      diagram: `
+COMPREHENSION READABILITY DECISION MATRIX:
+
+  Is transformation 1 line & 1 loop level?   ---> USE COMPREHENSION! (Clean & Fast)
+  Does it require nested loops or 3+ rules?  ---> USE STANDARD FOR LOOP! (Maintainable)
+  Does it perform side-effect mutations?      ---> USE STANDARD FOR LOOP! (Correct)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Comprehension Refactoring and Clean Code Rules
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Refactoring Unreadable Nested Comprehensions
+# ------------------------------------------------------------------------------
+
+warehouse_inventory = [
+    {"aisle": "Aisle 1", "packages": [{"id": "P101", "heavy": True}, {"id": "P102", "heavy": False}]},
+    {"aisle": "Aisle 2", "packages": [{"id": "P201", "heavy": True}]}
+]
+
+# Anti-pattern: Hard-to-read nested comprehension
+unreadable_heavy_ids = [
+    pkg["id"] 
+    for aisle in warehouse_inventory 
+    for pkg in aisle["packages"] 
+    if pkg["heavy"]
+]
+
+# Readable Refactored Standard Loop Alternative
+readable_heavy_ids = []
+for aisle in warehouse_inventory:
+    for pkg in aisle["packages"]:
+        if pkg["heavy"]:
+            readable_heavy_ids.append(pkg["id"])
+
+print("--- BEGINNER: Refactoring Comprehensions ---")
+print("Unreadable Result:", unreadable_heavy_ids)
+print("Readable Result  :", readable_heavy_ids)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Anti-Pattern - Side Effects in Comprehensions
+# ------------------------------------------------------------------------------
+
+package_ids = ["TRK-1", "TRK-2", "TRK-3"]
+
+# Anti-pattern: Using comprehension purely for side effects (print)
+# [print(f"Dispatching {p}") for p in package_ids] # Creates useless [None, None, None] list in memory!
+
+# Clean Pythonic standard loop for side effects:
+print("\n--- INTERMEDIATE: Clean Side Effect Execution ---")
+for p in package_ids:
+    print(f"Dispatching package to hub: {p}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Maintainable Telemetry Pipeline
+# ------------------------------------------------------------------------------
+
+def process_complex_telemetry_batch(telemetry_batches: list[dict]) -> list[dict]:
+    \"\"\"
+    Demonstrates breaking complex data transformations into clean, 
+    maintainable helper functions and standard loops rather than unreadable single-liners.
+    \"\"\"
+    print("\n--- ADVANCED: Maintainable Telemetry Pipeline ---")
+    
+    def is_critical_error(record: dict) -> bool:
+        return record.get("status") == "FAILED" and record.get("retry_count", 0) >= 3
+
+    # Clean, self-documenting processing loop
+    critical_alerts = []
+    
+    for batch in telemetry_batches:
+        hub_name = batch.get("hub_code", "UNKNOWN")
+        records = batch.get("telemetry_logs", [])
+        
+        # Single-level clean list comprehension for filtered batch logs
+        flagged_logs = [r for r in records if is_critical_error(r)]
+        
+        for log in flagged_logs:
+            critical_alerts.append({
+                "hub": hub_name,
+                "device_id": log.get("device_id"),
+                "failure_reason": log.get("error_msg", "Unspecified Error")
+            })
+            
+    return critical_alerts
+
+# Test execution
+sample_telemetry = [
+    {
+        "hub_code": "HUB_CHICAGO",
+        "telemetry_logs": [
+            {"device_id": "DEV-01", "status": "FAILED", "retry_count": 3, "error_msg": "Timeout"},
+            {"device_id": "DEV-02", "status": "OK", "retry_count": 0}
+        ]
+    }
+]
+
+print("Critical Alerts Output:", process_complex_telemetry_batch(sample_telemetry))
+      `,
+      keyTakeaways: [
+        "Readability takes priority over short code; do not sacrifice code clarity to fit logic onto a single line.",
+        "Refactor comprehensions containing nested loops or complex inline branching into standard `for` loops.",
+        "Never use comprehensions solely for side effects (like printing or disk I/O); use standard `for` loops instead.",
+        "Extract complex filtering or transformation expressions into helper functions."
+      ],
+      commonMistakes: [
+        "<b>Using list comprehensions for side-effect operations:</b> Writing `[print(x) for x in items]` constructs an unused list of `None` values in memory.",
+        "<b>Writing multi-nested comprehensions:</b> Creating 3-level nested comprehensions that teammates cannot review or debug.",
+        "<b>Sacrificing debuggability:</b> Cramming complex multi-variable transformations onto a single line that cannot be inspected step-by-step in a debugger."
+      ],
+      quizzes: [
+        {
+          question: "Why is writing `[print(item) for item in item_list]` considered an anti-pattern in Python?",
+          options: [
+            "Because `print()` throws an exception inside comprehensions.",
+            "Because comprehensions are meant for constructing data collections; using them for side effects constructs an unnecessary list of `None` objects in memory.",
+            "Because `for` loops are forbidden in modern Python.",
+            "Because it runs 10x slower than a `while` loop."
+          ],
+          correctIndex: 1,
+          explanation: "Comprehensions are designed for building value collections. Using them for side effects allocates memory for a list of `None` outputs; use a standard `for` loop instead."
+        },
+        {
+          question: "When should a developer refactor a List Comprehension back into a standard `for` loop?",
+          options: [
+            "Whenever the comprehension contains more than one line of simple code.",
+            "When the comprehension requires nested loops or complex multi-tier branching that reduces code readability.",
+            "Only when processing numbers larger than 1,000.",
+            "List comprehensions should never be refactored."
+          ],
+          correctIndex: 1,
+          explanation: "When logic requires multiple loop levels or complex branching, standard `for` loops improve readability, maintainability, and debugging ease."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the primary structural syntax of a basic List Comprehension?",
+      options: [
+        "`{expression for item in iterable}`",
+        "`[expression for item in iterable]`",
+        "`(expression for item in iterable)`",
+        "`[for item in iterable do expression]`"
+      ],
+      correctIndex: 1,
+      explanation: "List comprehensions use square brackets: `[expression for item in iterable]`."
+    },
+    {
+      question: "Where is a filtering condition placed in a List Comprehension to filter out unwanted source elements?",
+      options: [
+        "At the beginning before the expression.",
+        "At the end after the `for item in iterable` clause.",
+        "Inside a `where` block after the list.",
+        "Between the square brackets and the variable name."
+      ],
+      correctIndex: 1,
+      explanation: "Filtering conditions are placed at the very end of the comprehension: `[expr for item in collection if condition]`."
+    },
+    {
+      question: "What type of object is created by evaluating `{x.upper() for x in ['a', 'b', 'a']}`?",
+      options: [
+        "A List: `['A', 'B', 'A']`",
+        "A Set: `{'A', 'B'}`",
+        "A Dictionary: `{'a': 'A', 'b': 'B'}`",
+        "A Tuple: `('A', 'B')`"
+      ],
+      correctIndex: 1,
+      explanation: "Curly braces without key-value colons construct a deduplicated Set: `{'A', 'B'}`."
+    },
+    {
+      question: "Which comprehension syntax creates a Dictionary mapping item IDs to their statuses?",
+      options: [
+        "`[item['id']: item['status'] for item in items]`",
+        "`{item['id']: item['status'] for item in items}`",
+        "`(item['id']: item['status'] for item in items)`",
+        "`{item['id'], item['status'] for item in items}`"
+      ],
+      correctIndex: 1,
+      explanation: "Dictionary comprehensions use curly braces with key-value colon syntax: `{key_expr: val_expr for item in collection}`."
+    },
+    {
+      question: "What is the difference between `[x for x in data if x > 0]` and `[x if x > 0 else 0 for x in data]`?",
+      options: [
+        "The first filters items out (shortening list length); the second replaces non-positive items with 0 (preserving original list length).",
+        "The first raises a `SyntaxError`.",
+        "They produce identical output collections.",
+        "The second creates a dictionary."
+      ],
+      correctIndex: 0,
+      explanation: "Trailing `if` filters elements out of the collection. Inline `if/else` evaluates ternary value replacements while preserving total list length."
+    },
+    {
+      question: "Why are List Comprehensions generally faster than standard `for` loops with `.append()` calls?",
+      options: [
+        "They run on background server threads automatically.",
+        "They bypass Python bytecode interpretation and execute optimized list construction at internal C-speed.",
+        "They delete unused memory registers.",
+        "They skip type checking."
+      ],
+      correctIndex: 1,
+      explanation: "List comprehensions optimize list building internally within Python's C-level interpreter engine."
+    },
+    {
+      question: "Which rule of thumb indicates that a comprehension should be refactored into a standard `for` loop?",
+      options: [
+        "When the collection contains more than 10 items.",
+        "When the transformation requires nested loops or complex multi-branching logic that hurts readability.",
+        "When transforming strings to uppercase.",
+        "When calculating float values."
+      ],
+      correctIndex: 1,
+      explanation: "When comprehensions become overly complex or nested, refactoring them into clear `for` loops improves code maintainability."
+    },
+    {
+      question: "What is created if you use parentheses instead of square brackets: `(x * 2 for x in range(5))`?",
+      options: [
+        "A Tuple Comprehension",
+        "A Generator Expression",
+        "A List Comprehension",
+        "A Set Comprehension"
+      ],
+      correctIndex: 1,
+      explanation: "Parentheses around a comprehension syntax construct a lazy-evaluating *Generator Expression*."
+    }
+  ],
+  project: {
+    name: "Telemetry Transformation & Manifest Indexer Engine (Phase 1 Project)",
+    goal: "Build a data transformation engine that uses list comprehensions for cleanup and filtering, set comprehensions for zone deduplication, and dictionary comprehensions for $O(1)$ telemetry status indexing.",
+    brief: "Your logistics tech stack requires a batch telemetry pipeline (`telemetry_pipeline.py`). The pipeline ingests raw incoming package payloads, strips whitespace and converts codes using list comprehensions, filters out invalid or unpaid shipments, extracts unique hub coverage sets using set comprehensions, and builds fast tracking lookup tables using dictionary comprehensions.",
+    steps: [
+      "Create a script file named `telemetry_pipeline.py` in your workspace.",
+      "Define a test suite of raw package payload dictionaries containing tracking codes, weights, statuses, payment flags, and hub names.",
+      "Write a function `clean_tracking_identifiers(raw_records: list[dict]) -> list[str]` using a list comprehension to strip whitespace and capitalize IDs.",
+      "Write a function `filter_heavy_express_packages(raw_records: list[dict]) -> list[dict]` using a conditional list comprehension to extract packages where `weight >= 20.0` and `is_paid` is True.",
+      "Implement a function `extract_unique_active_hubs(raw_records: list[dict]) -> set[str]` using a set comprehension to produce a deduplicated hub set.",
+      "Implement a function `build_status_lookup_index(raw_records: list[dict]) -> dict[str, str]` using a dictionary comprehension mapping `tracking_id` to `status`.",
+      "Refactor any complex nested comprehension into a clean, maintainable standard `for` loop following Python readable code guidelines.",
+      "Run `python3 telemetry_pipeline.py` in your integrated terminal and output a summary report."
+    ],
+    acceptance: [
+      "List comprehensions transform and filter package records cleanly in single-pass statements.",
+      "Set comprehensions produce deduplicated hub sets automatically.",
+      "Dictionary comprehensions construct valid $O(1)$ status lookup tables.",
+      "Executing `python3 telemetry_pipeline.py` prints a structured telemetry report without syntax or runtime errors."
+    ],
+    stretch: [
+      "Benchmark the execution speed of your list comprehension filter against a traditional `for` loop with `.append()` using Python's `time` module.",
+      "Annotate all pipeline functions with strict type hints (`list[dict[str, Any]]`, `set[str]`) and verify with static type tools."
+    ]
+  }
+};
