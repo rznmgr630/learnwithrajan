@@ -61,8 +61,11 @@ function textField(source: string, field: string): string {
   if (start === -1) return "";
   const delimiter = source[start];
   if (delimiter !== '"' && delimiter !== "`") return "";
-  const end = source.indexOf(delimiter, start + 1);
-  return end === -1 ? "" : source.slice(start + 1, end).trim();
+  const content = source.slice(start + 1);
+  const end = delimiter === "`"
+    ? content.search(/`(?=,\s*\n\s*[A-Za-z_$][\w$]*\s*:)/)
+    : content.indexOf(delimiter);
+  return end === -1 ? "" : content.slice(0, end).trim();
 }
 
 function strings(source: string): string[] {
