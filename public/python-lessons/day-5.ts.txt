@@ -1,0 +1,185 @@
+/**
+ * DAY 05: Phase 0 · Python Foundations — Conditional Logic
+ * 
+ * Total Duration: 85 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase0ConditionalLogic = {
+  day: 4,
+  topic: "Phase 0 · Python Foundations — Conditional Logic",
+  totalMinutes: 85,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Choose a Path with If, Elif, and Else",
+      durationMinutes: 18,
+      explanation: `
+<b>Branching Execution Paths in Python</b><br/>
+Programs cannot treat every piece of data identically. In real-world software, code must make decisions and execute different instructions depending on the situation. For example, a delivery tracking app must show different status updates depending on whether a package is <b>In Transit</b>, <b>Out for Delivery</b>, or <b>Delivered</b>. Python handles this decision-making using conditional branching statements: <code>if</code>, <code>elif</code> (short for "else if"), and <code>else</code>.<br/><br/>
+
+<b>1. The <code>if</code> Statement (The Initial Branch):</b><br/>
+The <code>if</code> statement checks a boolean condition. If the condition evaluates to <code>True</code>, Python executes the indented block of code directly beneath it. If it evaluates to <code>False</code>, Python completely skips that block.<br/><br/>
+
+<b>2. The <code>elif</code> Statement (Alternative Mutually Exclusive Paths):</b><br/>
+When you have multiple mutually exclusive conditions to test sequentially, use <code>elif</code>. Python evaluates <code>elif</code> conditions one by one from top to bottom <b>only if all preceding conditions evaluated to <code>False</code></b>. As soon as Python finds an <code>elif</code> condition that evaluates to <code>True</code>, it executes that branch's block and skips all remaining <code>elif</code> and <code>else</code> branches in that chain!<br/><br/>
+
+<b>3. The <code>else</code> Statement (The Fallback Catch-All):</b><br/>
+The <code>else</code> block sits at the very end of a conditional chain. It takes no condition and executes <i>only</i> if every preceding <code>if</code> and <code>elif</code> condition evaluated to <code>False</code>.<br/><br/>
+
+<b>Real-World Logistics Analogy: Automated Package Sorting Conveyor</b><br/>
+Imagine an automated logistics scanner at a FedEx sorting hub:
+<ul>
+  <li><b><code>if weight &gt; 70.0:</code></b> Route package to the Heavy Freight conveyor line.</li>
+  <li><b><code>elif weight &gt; 20.0:</code></b> Route package to the Standard Cargo conveyor line.</li>
+  <li><b><code>elif weight &gt; 0.0:</code></b> Route package to the Light Envelope sorting bin.</li>
+  <li><b><code>else:</code></b> Sound an alarm and push package into the Manual Inspection bin (handles zero or negative weights).</li>
+</ul>
+      `,
+      diagram: `
+CONDITIONAL EXECUTION FLOW:
+
+         [ Check: weight > 70.0 ] 
+                |           |
+             (True)      (False)
+                |           |
+                v           v
+    [ Heavy Freight ]   [ Check: weight > 20.0 ]
+                            |           |
+                         (True)      (False)
+                            |           |
+                            v           v
+                [ Standard Cargo ]  [ Check: weight > 0.0 ]
+                                        |           |
+                                     (True)      (False)
+                                        |           |
+                                        v           v
+                            [ Light Envelope ]  [ else: Manual Inspection ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Core Conditional Branching (if / elif / else)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Multi-Branch Classification
+# ------------------------------------------------------------------------------
+
+package_weight_lbs = 14.5
+
+# Order matters! Python checks conditions top-to-bottom.
+if package_weight_lbs > 70.0:
+    shipping_category = "HEAVY_FREIGHT"
+elif package_weight_lbs > 20.0:
+    shipping_category = "STANDARD_FREIGHT"
+elif package_weight_lbs > 0.0:
+    shipping_category = "LIGHT_PARCEL"
+else:
+    shipping_category = "INVALID_WEIGHT"
+
+print("--- BEGINNER: Package Classification ---")
+print(f"Weight: {package_weight_lbs} lbs | Category: {shipping_category}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Sequential Mutually Exclusive Status Mapper
+# ------------------------------------------------------------------------------
+
+def get_delivery_status_display(status_code: int) -> str:
+    \"\"\"
+    Maps numeric logistics database codes to user-friendly UI strings.
+    \"\"\"
+    if status_code == 100:
+        return "ORDER_RECEIVED: Order registered in system."
+    elif status_code == 200:
+        return "IN_TRANSIT: Package is en route between hubs."
+    elif status_code == 300:
+        return "OUT_FOR_DELIVERY: Driver is currently on delivery route."
+    elif status_code == 400:
+        return "DELIVERED: Package handed off to recipient."
+    else:
+        return f"UNKNOWN_STATUS ({status_code}): Please contact support."
+
+print("\n--- INTERMEDIATE: Status Code Lookup ---")
+print(get_delivery_status_display(300))
+print(get_delivery_status_display(999)) # Unrecognized code triggers else fallback
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Priority Fleet Dispatcher
+# ------------------------------------------------------------------------------
+
+def determine_dispatch_vehicle(
+    weight_lbs: float, 
+    distance_miles: float, 
+    requires_refrigeration: bool
+) -> dict:
+    \"\"\"
+    Determines optimal vehicle assignment using priority-ordered multi-variable branching.
+    \"\"\"
+    print("\n--- ADVANCED: Dispatch Fleet Decision ---")
+    
+    # Priority Branch 1: Cold-chain items require temperature-controlled vehicles regardless of weight
+    if requires_refrigeration:
+        vehicle_type = "REFRIGERATED_VAN"
+        max_capacity_lbs = 2500.0
+        est_cost = 350.00
+    # Priority Branch 2: Long-haul heavy freight
+    elif weight_lbs > 1000.0 or distance_miles > 500.0:
+        vehicle_type = "SEMI_TRAILER_TRUCK"
+        max_capacity_lbs = 40000.0
+        est_cost = 1200.00
+    # Priority Branch 3: Medium regional cargo
+    elif weight_lbs > 100.0:
+        vehicle_type = "BOX_TRUCK"
+        max_capacity_lbs = 10000.0
+        est_cost = 450.00
+    # Priority Branch 4: Small local express parcel
+    elif weight_lbs > 0.0:
+        vehicle_type = "ELECTRIC_VAN"
+        max_capacity_lbs = 1000.0
+        est_cost = 85.00
+    # Fallback Branch: Non-positive weight handling
+    else:
+        return {"success": False, "error": f"Invalid cargo weight: {weight_lbs} lbs."}
+        
+    return {
+        "success": True,
+        "assigned_vehicle": vehicle_type,
+        "capacity_lbs": max_capacity_lbs,
+        "is_overloaded": weight_lbs > max_capacity_lbs,
+        "dispatch_cost_usd": est_cost
+    }
+
+# Execute fleet dispatcher testing
+print("Cold Cargo Result:", determine_dispatch_vehicle(weight_lbs=45.0, distance_miles=15.0, requires_refrigeration=True))
+print("Standard Parcel Result:", determine_dispatch_vehicle(weight_lbs=12.0, distance_miles=25.0, requires_refrigeration=False))
+print("Invalid Cargo Result:", determine_dispatch_vehicle(weight_lbs=-5.0, distance_miles=10.0, requires_refrigeration=False))
+      `,
+      keyTakeaways: [
+        "Use `if` for the initial condition check, `elif` for mutually exclusive alternatives, and `else` for a catch-all fallback.",
+        "Python evaluates `if/elif` statements sequentially top-to-bottom and exits the chain as soon as ONE condition evaluates to `True`.",
+        "Order matters: place more specific conditions (or higher thresholds) before broader ones.",
+        "An `else` block executes strictly when ALL preceding `if` and `elif` checks evaluate to `False`."
+      ],
+      commonMistakes: [
+        "<b>Wrong condition ordering:</b> Placing broader conditions before specific ones (e.g., checking `if weight > 0:` before `elif weight > 100:` ensures the second check is never reached).",
+        "<b>Writing independent `if` statements instead of `elif`:</b> Using a sequence of unlinked `if` checks can cause multiple blocks to run sequentially when you intended mutually exclusive choices.",
+        "<b>Forgetting the colon (`:`):</b> Omitting the required trailing colon at the end of `if`, `elif`, or `else` lines causes a `SyntaxError`."
+      ],
+      quizzes: [
+        {
+          question: "In an `if / elif / else` block, how many code blocks will execute at maximum?",
+          options: [
+            "Every block whose condition evaluates to True.",
+            "Exactly one block (the first one whose condition evaluates to True, or the else block).",
+            "At least two blocks.",
+            "All of them."
+          ],
+          correctIndex: 1,
+          explanation: "In a single `if / elif / else` chain, Python exits the entire block immediately after executing the first matching branch."
+        },
+        {
+          question: "Given `x = 15`, what will be printed by:\n```python\nif x > 5:\n    print('A')\nelif x > 10:\n    print('B')\n
