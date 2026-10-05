@@ -1,0 +1,955 @@
+/**
+ * DAY 35: Phase 6 · Advanced Python — Metaprogramming & Introspection
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1Metaprogramming = {
+  day: 35,
+  topic: "Phase 6 · Advanced Python — Metaprogramming & Introspection",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Dynamic Class Creation with type()",
+      durationMinutes: 16,
+      explanation: `
+<b>Constructing Classes Dynamically at Runtime</b><br/>
+In Python, class definitions (using the <code>class</code> keyword) are not static compile-time declarations. Everything in Python is executed dynamically at runtime—including class creation! While you normally declare classes statically, Python allows constructing brand-new classes on the fly using the 3-argument signature of the built-in <b><code>type()</code></b> function.<br/><br/>
+
+<b>1. The Dual Nature of <code>type()</code>:</b>
+<ul>
+  <li><b>1-Argument Signature:</b> <code>type(obj)</code> returns the class/type of an existing object (e.g., <code>type(42) == int</code>).</li>
+  <li><b>3-Argument Signature (Dynamic Class Factory):</b> <code>type(name, bases, dict)</code> dynamically creates and returns a **brand-new Class object** at runtime!</li>
+</ul>
+
+<b>2. The 3-Argument Signature Parameters:</b><br/>
+<code>NewClass = type(name, bases, attributes_dict)</code>
+<ol>
+  <li><code>name</code> (str): The name string of the new class (e.g., <code>"DynamicParcel"</code>). Bound to <code>__name__</code>.</li>
+  <li><code>bases</code> (tuple): A tuple of parent base classes to inherit from (e.g., <code>(BaseModel,)</code> or <code>()</code> for object). Bound to <code>__bases__</code>.</li>
+  <li><code>attributes_dict</code> (dict): A dictionary containing class-level attributes, methods, and descriptors (e.g., <code>{"category": "EXPRESS", "get_status": my_func}</code>). Bound to <code>__dict__</code>.</li>
+</ol>
+
+<b>3. Syntactic Equivalence:</b><br/>
+Writing:<br/>
+<pre><code>DynamicClass = type("DynamicParcel", (BaseModel,), {"category": "EXPRESS"})</code></pre><br/>
+is 100% equivalent to writing:<br/>
+<pre><code>class DynamicParcel(BaseModel):
+    category = "EXPRESS"</code></pre><br/>
+
+<b>Real-World Logistics Analogy: Dynamic 3D Printing of Assembly Blueprints</b><br/>
+Think of a standard <code>class</code> statement as an architect hand-drawing a blueprint on paper before building a warehouse. Using 3-argument <code>type()</code> is like attaching a computer program to a 3D printer that generates a brand-new architectural blueprint on-demand based on incoming JSON API schema specs.
+      `,
+      diagram: `
+DYNAMIC CLASS CREATION WITH TYPE():
+
+  3-Argument type() Signature:
+  type( name_str, (base_classes,), {attribute_dictionary} )
+           |               |                  |
+           v               v                  v
+     Class Name      Inheritance        Class Attributes
+    "DynamicModel"    (ParentClass,)     & Method Functions
+
+                            |
+                            v
+         Returns Brand-New Class Object in RAM!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Dynamic Class Creation with 3-Argument type()
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Creating a Simple Class with type()
+# ------------------------------------------------------------------------------
+
+# 1. Define a function to attach as a method
+def display_info(self):
+    return f"Parcel ID: {self.tracking_id} | Tier: {self.tier}"
+
+# 2. Dynamically construct class using type(name, bases, dict)
+DynamicParcel = type(
+    "DynamicParcel",                  # 1. Class Name
+    (object,),                        # 2. Base Classes Tuple
+    {                                 # 3. Class Attributes & Methods
+        "tier": "EXPRESS_AIR",
+        "get_summary": display_info
+    }
+)
+
+print("--- BEGINNER: Dynamic Class Inspection ---")
+print("Class Type    :", type(DynamicParcel)) # <class 'type'>
+print("Class Name    :", DynamicParcel.__name__) # 'DynamicParcel'
+
+# Instantiating the dynamically created class
+pkg = DynamicParcel()
+pkg.tracking_id = "TRK-9001"
+
+print("Method Output :", pkg.get_summary())
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Dynamic Model Generation from External Schemas
+# ------------------------------------------------------------------------------
+
+def generate_model_class_from_schema(class_name: str, schema_fields: dict) -> type:
+    """Dynamically builds a custom model class from a dictionary field schema."""
+
+    def __init__(self, **kwargs):
+        for field_name, default_val in schema_fields.items():
+            # Assign kwarg or fallback default
+            setattr(self, field_name, kwargs.get(field_name, default_val))
+
+    def to_dict(self):
+        return {field: getattr(self, field) for field in schema_fields}
+
+    # Construct class dynamically
+    generated_class = type(
+        class_name,
+        (object,),
+        {
+            "__init__": __init__,
+            "to_dict": to_dict,
+            "_schema": schema_fields
+        }
+    )
+    return generated_class
+
+print("\n--- INTERMEDIATE: Schema-Driven Class Factory ---")
+# Generate class dynamically from a schema specification
+PackageSchemaModel = generate_model_class_from_schema(
+    "PackageSchemaModel",
+    {"tracking_id": "UNKNOWN", "weight_lbs": 1.0, "is_paid": False}
+)
+
+instance = PackageSchemaModel(tracking_id="TRK-8802", weight_lbs=42.5, is_paid=True)
+print("Generated Instance Dict:", instance.to_dict())
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dynamic API Event Data-Transfer-Object (DTO) Factory
+# ------------------------------------------------------------------------------
+
+class BaseEventDTO:
+    """Base class for dynamically generated Event DTOs."""
+    def validate(self) -> bool:
+        return True
+
+
+def create_event_dto_class(event_type_name: str, mandatory_fields: list[str]) -> type:
+    \"\"\"
+    Factory constructing validated event DTO classes inheriting from BaseEventDTO.
+    \"\"\"
+    print(f"\n--- ADVANCED: Generating Event DTO Class [{event_type_name}] ---")
+
+    def __init__(self, **kwargs):
+        missing = [f for f in mandatory_fields if f not in kwargs]
+        if missing:
+            raise ValueError(f"Missing mandatory fields for {event_type_name}: {missing}")
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def get_event_type(self):
+        return event_type_name
+
+    # Create subclass dynamically inheriting from BaseEventDTO
+    dto_class = type(
+        f"{event_type_name}DTO",
+        (BaseEventDTO,),
+        {
+            "__init__": __init__,
+            "get_event_type": get_event_type,
+            "MANDATORY_FIELDS": mandatory_fields
+        }
+    )
+    return dto_class
+
+# Generate custom DTO classes at runtime
+ShipmentCreatedDTO = create_event_dto_class("ShipmentCreated", ["tracking_id", "hub_code"])
+
+# Test DTO instantiation
+event_dto = ShipmentCreatedDTO(tracking_id="TRK-7711", hub_code="CHICAGO")
+print("DTO Class Name   :", type(event_dto).__name__)
+print("Is BaseEventDTO? :", isinstance(event_dto, BaseEventDTO))
+print("Event Type       :", event_dto.get_event_type())
+      `,
+      keyTakeaways: [
+        "In Python, classes are runtime objects created dynamically by `type`.",
+        "The 3-argument signature `type(name, bases, dict)` creates and returns a brand-new Class object.",
+        "Dynamic class creation is ideal for ORMs, API DTO factories, and schema-driven frameworks.",
+        "Classes generated via `type()` support inheritance, methods, and attributes identically to standard `class` statements."
+      ],
+      commonMistakes: [
+        "<b>Forgetting that `bases` must be a tuple:</b> Writing `type(\"MyClass\", BaseClass, {})` instead of passing a tuple `(BaseClass,)` raises a `TypeError`.",
+        "<b>Passing string names instead of class objects in `bases`:</b> Passing `(\"BaseClass\",)` instead of the actual parent class object `(BaseClass,)`.",
+        "<b>Overusing dynamic class creation for simple tasks:</b> Creating dynamic classes when a standard dictionary or dataclass is simpler and more readable."
+      ],
+      quizzes: [
+        {
+          question: "What are the three required parameters passed to `type()` when creating a class dynamically at runtime?",
+          options: [
+            "`(class_name, method_list, module_name)`",
+            "`(name_str, bases_tuple, attributes_dict)`",
+            "`(object_instance, attributes_dict, parent_class)`",
+            "`(class_name, constructor_func, fields_list)`"
+          ],
+          correctIndex: 1,
+          explanation: "`type(name, bases, dict)` expects: 1) Class name string, 2) Tuple of base parent classes, 3) Dictionary of attributes and methods."
+        },
+        {
+          question: "What happens if you pass `(BaseModel)` without a trailing comma as the second parameter to `type(\"NewClass\", (BaseModel), {})`?",
+          options: [
+            "Python automatically converts it to a tuple.",
+            "It raises a `TypeError` because `(BaseModel)` is evaluated as a parenthesized object expression rather than a 1-element tuple `(BaseModel,)`.",
+            "It creates a static method.",
+            "The new class becomes immutable."
+          ],
+          correctIndex: 1,
+          explanation: "In Python, `(BaseModel)` without a comma is just a parenthesized object. A single-element tuple requires a trailing comma: `(BaseModel,)`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Hooking Subclass Creation with __init_subclass__",
+      durationMinutes: 18,
+      explanation: `
+<b>Modern Framework Registration without Metaclasses</b><br/>
+Historically, if a framework author wanted to execute setup code every time a developer created a subclass (such as registering model classes in a registry or validating class attributes), they had to write complex Metaclasses. Python 3.6 introduced <b><code>__init_subclass__()</code></b> to simplify subclass registration and initialization.<br/><br/>
+
+<b>1. What is <code>__init_subclass__()</code>?</b><br/>
+<code>__init_subclass__()</code> is a special hook method defined on a parent class that executes **automatically whenever any child class inherits from it**.<br/><br/>
+
+<b>2. Key Characteristics:</b>
+<ul>
+  <li>It is implicitly a <code>@classmethod</code> (the first parameter is <code>cls</code>, referring to the newly created child subclass).</li>
+  <li>It runs at class creation time (when the module is imported/executed), long before any instances of the class are instantiated!</li>
+  <li>It can accept custom keyword arguments passed directly in the subclass inheritance signature:<br/>
+  <code>class ChicagoHub(BaseHub, region="MIDWEST"): pass</code></li>
+</ul>
+
+<b>Why use <code>__init_subclass__</code>?</b><br/>
+It replaces 90% of traditional Metaclass use cases (subclass auto-registration, field validation, plugin architectures) with simple, clean, and readable class-based code!
+      `,
+      diagram: `
+SUBCLASS CREATION HOOK (__init_subclass__):
+
+  Parent Class:
+  class BaseHubModel:
+      def __init_subclass__(cls, region="GLOBAL", **kwargs):
+          cls.REGISTERED_HUBS[cls.__name__] = region
+
+  Child Subclass Declaration:
+  class ChicagoHub(BaseHubModel, region="MIDWEST"):
+      pass
+
+  Result: __init_subclass__ executes automatically upon class creation!
+          ChicagoHub registered with region="MIDWEST" in BaseHubModel.
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Hooking Subclass Creation with __init_subclass__
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Auto-Registering Subclasses in a Registry Dictionary
+# ------------------------------------------------------------------------------
+
+class BaseLogisticsPlugin:
+    """Parent plugin class that auto-registers all child subclasses."""
+
+    # Class-level plugin registry dictionary
+    PLUGIN_REGISTRY = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Auto-register newly defined child class in registry!
+        plugin_name = cls.__name__.upper()
+        cls.PLUGIN_REGISTRY[plugin_name] = cls
+        print(f"  [AUTO-REGISTER] Registered plugin subclass '{cls.__name__}'")
+
+
+# Declaring child subclasses triggers __init_subclass__ automatically!
+print("--- BEGINNER: __init_subclass__ Auto-Registration ---")
+
+class GPSNotificationPlugin(BaseLogisticsPlugin):
+    pass
+
+class SMSAlertPlugin(BaseLogisticsPlugin):
+    pass
+
+print("\nRegistered Plugin Classes in BaseLogisticsPlugin.PLUGIN_REGISTRY:")
+for name, class_obj in BaseLogisticsPlugin.PLUGIN_REGISTRY.items():
+    print(f"  Key '{name}' -> Class: {class_obj}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Passing Custom Inheritance Keyword Arguments
+# ------------------------------------------------------------------------------
+
+class BaseHubFacility:
+    """Parent hub class accepting custom keyword arguments during inheritance."""
+
+    FACILITY_CATALOG = []
+
+    def __init_subclass__(cls, region: str = "UNASSIGNED", max_bays: int = 10, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.region = region
+        cls.max_bays = max_bays
+        cls.FACILITY_CATALOG.append(cls)
+
+# Subclasses pass custom parameters in the inheritance parentheses!
+class ChicagoCentralHub(BaseHubFacility, region="MIDWEST", max_bays=50):
+    pass
+
+class AustinRegionalDepot(BaseHubFacility, region="TEXAS", max_bays=25):
+    pass
+
+print("\n--- INTERMEDIATE: Subclass Parameter Passing ---")
+print(f"Chicago Hub Region: {ChicagoCentralHub.region} | Bays: {ChicagoCentralHub.max_bays}")
+print(f"Austin Depot Region : {AustinRegionalDepot.region} | Bays: {AustinRegionalDepot.max_bays}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Subclass Field Validation Hook
+# ------------------------------------------------------------------------------
+
+class BaseValidatedORMModel:
+    \"\"\"
+    Parent ORM class that validates subclass attributes during class creation time.
+    \"\"\"
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        # Enforce that all subclasses define a mandatory 'TABLE_NAME' class attribute
+        if not hasattr(cls, "TABLE_NAME") or not cls.TABLE_NAME:
+            raise AttributeError(f"Subclass '{cls.__name__}' MUST define a non-empty 'TABLE_NAME' class attribute!")
+
+        print(f"  [ORM VALIDATED] Subclass '{cls.__name__}' successfully bound to table '{cls.TABLE_NAME}'")
+
+print("\n--- ADVANCED: Subclass Attribute Validation ---")
+
+class PackageOrderModel(BaseValidatedORMModel):
+    TABLE_NAME = "tbl_package_orders"
+
+try:
+    # Attempting to declare a subclass without TABLE_NAME fails at import/definition time!
+    class BrokenModel(BaseValidatedORMModel):
+        pass
+except AttributeError as err:
+    print("Caught Subclass Validation Error:", err)
+      `,
+      keyTakeaways: [
+        "`__init_subclass__()` is a class-level hook method executed automatically whenever a child subclass inherits from a parent.",
+        "The first parameter of `__init_subclass__` is `cls`, referring to the newly created child subclass.",
+        "Subclasses can pass custom parameters directly in the inheritance statement: `class Child(Parent, key=val):`.",
+        "Always call `super().__init_subclass__(**kwargs)` to ensure cooperative multiple-inheritance chains work properly."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `super().__init_subclass__(**kwargs)`:</b> Blocking other parent classes in multiple-inheritance hierarchies from processing subclass hooks.",
+        "<b>Confusing `__init_subclass__` with `__init__`:</b> `__init_subclass__` runs once when the *class itself* is created; `__init__` runs every time an *object instance* is created.",
+        "<b>Forgetting `**kwargs` in parameter signatures:</b> Failing to accept `**kwargs` when subclasses pass unexpected inheritance arguments."
+      ],
+      quizzes: [
+        {
+          question: "When does the `__init_subclass__()` hook method execute in Python?",
+          options: [
+            "Every time an object instance of a subclass is created.",
+            "Once automatically when a child class inherits from the parent class (at class definition time).",
+            "When the parent class is deleted.",
+            "When a class method is called."
+          ],
+          correctIndex: 1,
+          explanation: "`__init_subclass__()` runs at class creation/definition time as soon as a child class inherits from the parent."
+        },
+        {
+          question: "What is the first argument passed to `__init_subclass__()`?",
+          options: [
+            "`self` (the instance of the child class)",
+            "`cls` (the newly created child subclass object itself)",
+            "`parent` (the parent class object)",
+            "`name` (the string name of the class)"
+          ],
+          correctIndex: 1,
+          explanation: "`__init_subclass__` is implicitly a classmethod, so its first parameter `cls` refers to the newly created child subclass."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Understanding Metaclasses and Class Creation Mechanics",
+      durationMinutes: 20,
+      explanation: `
+<b>The Class of a Class: Deep Metaprogramming with Metaclasses</b><br/>
+In Python, "everything is an object." Integers are objects instantiated from the <code>int</code> class; strings are objects instantiated from the <code>str</code> class. But if classes themselves are objects in memory, what class creates the Class objects?<br/><br/>
+
+The answer is a <b>Metaclass</b>. A Metaclass is simply "the class of a Class." Just as a class defines how an instance object behaves, a Metaclass defines how a Class object itself is constructed and behaves.<br/><br/>
+
+<b>1. The Default Metaclass: <code>type</code>:</b><br/>
+By default, every class in Python is an instance of the default metaclass <code>type</code>:<br/>
+<code>type(int) == type</code><br/>
+<code>type(str) == type</code><br/>
+<code>type(ParcelPackage) == type</code><br/><br/>
+
+<b>2. Defining a Custom Metaclass:</b><br/>
+To build a custom Metaclass, inherit from the base <code>type</code> class:<br/>
+<pre><code>class MetaRegistry(type):
+    def __new__(mcs, name, bases, namespace):
+        # mcs = Metaclass, name = Class Name, bases = Parents, namespace = Class Attributes
+        # Modify class namespace before class creation!
+        return super().__new__(mcs, name, bases, namespace)</code></pre><br/>
+
+<b>3. Binding a Metaclass to a Class (<code>metaclass=...</code>):</b><br/>
+Attach a custom metaclass to a class using the <code>metaclass=</code> keyword argument in the class definition:<br/>
+<code>class ParcelModel(metaclass=MetaRegistry):</code><br/>
+<code>    pass</code><br/><br/>
+
+<b>4. The Metaclass Creation Lifecycle:</b>
+<ol>
+  <li><code>__new__(mcs, name, bases, namespace)</code>: Allocates and returns the Class object in memory. (Use `__new__` to modify the class attributes/methods before the class is born!).</li>
+  <li><code>__init__(cls, name, bases, namespace)</code>: Initializes the newly created Class object.</li>
+</ol>
+      `,
+      diagram: `
+THE METACLASS HIERARCHY ("Everything is an Object"):
+
+  Metaclass (type) ---------> Instantiates ---------> Class (ParcelModel)
+                                                          |
+                                                          | Instantiates
+                                                          v
+                                                  Instance Object (pkg_1)
+
+  Relationships:
+  type(pkg_1)       == ParcelModel
+  type(ParcelModel) == type
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Metaclasses (type Inheritance, __new__, and metaclass=)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Custom Metaclass Enforcing Attribute Naming Conventions
+# ------------------------------------------------------------------------------
+
+class UpperCaseAttributeMeta(type):
+    """Metaclass that converts all class-level string attributes to UPPERCASE upon class creation."""
+
+    def __new__(mcs, name, bases, namespace):
+        print(f"--- METACLASS __new__: Constructing Class '{name}' ---")
+
+        # Modify the class namespace before class object creation
+        new_namespace = {}
+        for attr_name, attr_val in namespace.items():
+            if isinstance(attr_val, str) and not attr_name.startswith("__"):
+                new_namespace[attr_name] = attr_val.upper()
+            else:
+                new_namespace[attr_name] = attr_val
+
+        # Delegate actual Class object allocation to super().__new__
+        return super().__new__(mcs, name, bases, new_namespace)
+
+
+# Bind custom metaclass using metaclass=
+class LogisticsConstants(metaclass=UpperCaseAttributeMeta):
+    default_hub = "chicago central"
+    service_status = "operational"
+
+print("\n--- BEGINNER: Metaclass Execution Results ---")
+print("Class Attribute default_hub   :", LogisticsConstants.default_hub)    # 'CHICAGO CENTRAL'
+print("Class Attribute service_status:", LogisticsConstants.service_status) # 'OPERATIONAL'
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Enterprise Singleton Metaclass
+# ------------------------------------------------------------------------------
+
+class SingletonMeta(type):
+    \"\"\"
+    Production Metaclass enforcing the Singleton Pattern.
+    Guarantees that only ONE instance of a class ever exists in memory.
+    \"\"\"
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        """__call__ executes whenever a user instantiates the Class: my_obj = MyClass()"""
+        if cls not in cls._instances:
+            print(f"  [SINGLETON META] Creating FIRST instance for class '{cls.__name__}'")
+            # Instantiate instance object via super().__call__
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        else:
+            print(f"  [SINGLETON META] Returning EXISTING instance for class '{cls.__name__}'")
+
+        return cls._instances[cls]
+
+
+class GlobalLogisticsConfig(metaclass=SingletonMeta):
+    def __init__(self):
+        self.api_endpoint = "https://api.logistics.com/v1"
+        self.max_retries = 3
+
+print("\n--- ADVANCED: Singleton Metaclass Pattern ---")
+
+# First instantiation
+config_1 = GlobalLogisticsConfig()
+
+# Second instantiation
+config_2 = GlobalLogisticsConfig()
+
+print("Are config_1 and config_2 the exact same object in memory?", config_1 is config_2) # True!
+      `,
+      keyTakeaways: [
+        "A Metaclass is a class that creates Class objects (the class of a Class).",
+        "The base metaclass in Python is `type`.",
+        "Override `__new__(mcs, name, bases, namespace)` in a metaclass to intercept and modify class attributes before class creation.",
+        "Attach a metaclass to a class using `class MyClass(metaclass=MyMeta):`."
+      ],
+      commonMistakes: [
+        "<b>Inheriting from `object` instead of `type` when writing a Metaclass:</b> A metaclass MUST inherit from `type` (`class MyMeta(type):`), not `object`.",
+        "<b>Using Metaclasses when `__init_subclass__` or Class Decorators work:</b> Metaclasses add cognitive friction and complexity. Prefer `__init_subclass__` whenever possible.",
+        "<b>Forgetting to return `super().__new__()` in `__new__`:</b> Returning `None` from `__new__` results in the class object failing to be created."
+      ],
+      quizzes: [
+        {
+          question: "Which base class MUST a custom Metaclass inherit from in Python?",
+          options: [
+            "`object`",
+            "`type`",
+            "`MetaClass`",
+            "`BaseModel`"
+          ],
+          correctIndex: 1,
+          explanation: "Custom metaclasses must inherit from Python's base metaclass `type`."
+        },
+        {
+          question: "How do you attach a custom Metaclass `MyMeta` to a class definition `MyClass`?",
+          options: [
+            "`class MyClass(MyMeta):`",
+            "`class MyClass(metaclass=MyMeta):`",
+            "`@MyMeta\nclass MyClass:`",
+            "`class MyClass(using=MyMeta):`"
+          ],
+          correctIndex: 1,
+          explanation: "Metaclasses are attached using the `metaclass=` keyword argument in the class inheritance signature."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Reflection and Introspection Utilities",
+      durationMinutes: 14,
+      explanation: `
+<b>Runtime Type Inspection and Attribute Discovery</b><br/>
+Metaprogramming relies heavily on **Introspection** (the ability of a program to examine the type or properties of an object at runtime) and **Reflection** (the ability of a program to manipulate objects and execution state dynamically at runtime).<br/><br/>
+
+<b>1. Core Introspection Functions:</b>
+<ul>
+  <li><code>type(obj)</code>: Returns the class type of an object.</li>
+  <li><code>isinstance(obj, Class)</code>: Checks if an object is an instance of a class (or subclass).</li>
+  <li><code>issubclass(Child, Parent)</code>: Checks if a class is a subclass of another class.</li>
+  <li><code>dir(obj)</code>: Returns a list of all valid attribute and method names available on an object.</li>
+  <li><code>callable(obj)</code>: Returns <code>True</code> if the object can be called like a function.</li>
+</ul>
+
+<b>2. Dynamic Reflection Functions (Attribute Manipulation):</b>
+<ul>
+  <li><code>getattr(obj, "attr_name", default)</code>: Dynamically reads an attribute value by string name.</li>
+  <li><code>setattr(obj, "attr_name", value)</code>: Dynamically assigns an attribute value by string name.</li>
+  <li><code>hasattr(obj, "attr_name")</code>: Checks if an attribute name exists on an object.</li>
+  <li><code>delattr(obj, "attr_name")</code>: Dynamically deletes an attribute by string name.</li>
+</ul>
+
+<b>3. Advanced Introspection with the <code>inspect</code> Module:</b><br/>
+Python's built-in <code>inspect</code> module provides deeper introspection: inspecting function signatures (<code>inspect.signature(func)</code>), reading source code, and extracting parameter defaults.
+      `,
+      diagram: `
+INTROSPECTION vs REFLECTION:
+
+  Introspection (Examining State):
+  type(obj)              ---> What class am I?
+  isinstance(obj, Class) ---> Am I a type of Class?
+  dir(obj)               ---> What methods do I have?
+  inspect.signature(fn)  ---> What parameters do I accept?
+
+  Reflection (Manipulating State):
+  getattr(obj, "name")   ---> Dynamically read attribute "name"
+  setattr(obj, "name", v)---> Dynamically write attribute "name" = v
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Introspection and Reflection Utilities
+# ==============================================================================
+
+import inspect
+
+# ------------------------------------------------------------------------------
+# Beginner: Dynamic Reflection with getattr, setattr, hasattr
+# ------------------------------------------------------------------------------
+
+class ParcelShipment:
+    def __init__(self, tracking_id: str):
+        self.tracking_id = tracking_id
+        self.status = "QUEUED"
+
+shipment = ParcelShipment("TRK-1001")
+
+print("--- BEGINNER: Reflection (getattr / setattr / hasattr) ---")
+
+# 1. Checking attribute existence dynamically
+print("Has 'tracking_id'?", hasattr(shipment, "tracking_id")) # True
+print("Has 'delivery_date'?", hasattr(shipment, "delivery_date")) # False
+
+# 2. Reading attributes dynamically by string name
+status_val = getattr(shipment, "status", "UNKNOWN")
+print("Dynamic getattr status:", status_val) # 'QUEUED'
+
+# 3. Writing attributes dynamically by string name
+setattr(shipment, "status", "DISPATCHED_IN_TRANSIT")
+print("Updated status via setattr:", shipment.status)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Deep Introspection with dir() and callable()
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Introspection with dir() and callable() ---")
+
+# Discovering all public methods on ParcelShipment
+public_attributes = [attr for attr in dir(shipment) if not attr.startswith("_")]
+print("Public Attributes/Methods on shipment object:", public_attributes)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated API Route Handler Inspector
+# ------------------------------------------------------------------------------
+
+class LogisticsAPIRoutes:
+    """Class hosting API endpoint handler methods."""
+    def get_parcel(self, tracking_id: str) -> dict:
+        """Endpoint retrieving parcel status."""
+        return {"id": tracking_id}
+
+    def update_weight(self, tracking_id: str, weight_lbs: float = 1.0) -> bool:
+        """Endpoint updating parcel weight."""
+        return True
+
+
+def inspect_class_endpoint_signatures(target_class: type) -> dict:
+    \"\"\"
+    Uses the inspect module to extract parameter signatures and docstrings
+    from all public methods on a class automatically.
+    \"\"\"
+    print(f"\n--- ADVANCED: Inspecting Class [{target_class.__name__}] ---")
+
+    endpoint_catalog = {}
+
+    for attr_name in dir(target_class):
+        if attr_name.startswith("_"):
+            continue
+
+        attr_val = getattr(target_class, attr_name)
+
+        # Verify attribute is a callable function/method
+        if callable(attr_val):
+            sig = inspect.signature(attr_val)
+            doc = inspect.getdoc(attr_val) or "No docstring provided."
+
+            endpoint_catalog[attr_name] = {
+                "parameters": [p for p in sig.parameters.keys() if p != "self"],
+                "signature": str(sig),
+                "docstring": doc
+            }
+
+    return endpoint_catalog
+
+# Run class inspector
+catalog = inspect_class_endpoint_signatures(LogisticsAPIRoutes)
+
+print("Generated Endpoint Catalog:")
+for method_name, details in catalog.items():
+    print(f"  Method: {method_name:<15} Signature: {details['signature']}")
+    print(f"          Docstring: {details['docstring']}")
+      `,
+      keyTakeaways: [
+        "Use `getattr()`, `setattr()`, `hasattr()`, and `delattr()` for dynamic attribute reflection by string name.",
+        "Use `dir(obj)` to discover available attributes and methods on an object.",
+        "Use `callable(obj)` to check if an object can be called like a function.",
+        "Use `inspect.signature(func)` to extract parameter metadata from callable functions."
+      ],
+      commonMistakes: [
+        "<b>Using `getattr(obj, name)` without a default value:</b> Raises a `AttributeError` if the attribute is missing. Always supply a fallback: `getattr(obj, name, default)`.",
+        "<b>Using string manipulation instead of `isinstance()` or `issubclass()`:</b> Writing `type(obj).__name__ == \"MyClass\"` instead of `isinstance(obj, MyClass)`, which breaks inheritance checks.",
+        "<b>Mutating private attributes (`_attr`) dynamically:</b> Bypassing internal class encapsulation rules using `setattr()` on private fields."
+      ],
+      quizzes: [
+        {
+          question: "Which Python function dynamically sets an attribute value on an object using a string name variable (e.g. `setattr(obj, \"weight\", 15.0)`)?",
+          options: [
+            "`assignattr()`",
+            "`setattr()`",
+            "`putattr()`",
+            "`writeattr()`"
+          ],
+          correctIndex: 1,
+          explanation: "`setattr(object, name_str, value)` assigns an attribute dynamically using a string name."
+        },
+        {
+          question: "Which built-in function checks whether an object can be called as a function (e.g. `callable(my_obj)`)?",
+          options: [
+            "`is_function()`",
+            "`callable()`",
+            "`is_executable()`",
+            "`can_call()`"
+          ],
+          correctIndex: 1,
+          explanation: "`callable(obj)` returns `True` if the object implements `__call__()` or is a function/method."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "When Metaprogramming Should Be Avoided",
+      durationMinutes: 12,
+      explanation: `
+<b>Pragmatic Engineering Boundaries and Code Maintainability</b><br/>
+Metaprogramming (dynamic class generation, metaclasses, custom attribute lookup manipulation) is one of Python's most sophisticated capabilities. However, with great power comes great responsibility. Tim Peters, author of *The Zen of Python*, famously wrote:<br/><br/>
+
+> <b>"Metaclasses are deeper magic than 99% of users should ever worry about. If you wonder whether you need them, you don't."</b><br/><br/>
+
+<b>1. The Hidden Costs of Metaprogramming:</b>
+<ul>
+  <li><b>Cognitive Load & Readability Loss:</b> Code that dynamically generates attributes or classes at runtime cannot be easily read or traced by human developers scanning the source code.</li>
+  <li><b>IDE & Static Analysis Breakdown:</b> Language servers (like VS Code, PyCharm, or `mypy`) rely on static source code. Heavy metaprogramming breaks autocomplete, type checking, and refactoring tools!</li>
+  <li><b>Debugging & Traceback Complexity:</b> Stack tracebacks originating inside metaclasses or `__getattribute__` overrides are notoriously difficult to step through in debuggers.</li>
+</ul>
+
+<b>2. The Metaprogramming Refactoring Hierarchy:</b><br/>
+Before writing a Metaclass or dynamic `type()` factory, evaluate simpler alternatives in this order:
+<ol>
+  <li><b>Functions & Dictionaries:</b> Can standard functions, dictionaries, or `dataclasses` solve the problem?</li>
+  <li><b>Decorators (`@decorator`):</b> Can a Function or Class Decorator wrap the class cleanly?</li>
+  <li><b>`__init_subclass__`:</b> Can a parent class hook manage subclass registration or validation?</li>
+  <li><b>Descriptors:</b> Can reusable attribute descriptors manage field validation?</li>
+  <li><b>Metaclasses (Last Resort):</b> Use metaclasses ONLY when building core frameworks or when modification of class creation before class object birth is mandatory.</li>
+</ol>
+      `,
+      diagram: `
+REFACTORING HIERARCHY (Avoid Unnecessary Metaprogramming):
+
+  Complexity Level:
+  [ 1. Simple Functions & Dataclasses ]  <--- PREFERRED (Readable & Fast)
+                 |
+                 v
+  [ 2. Decorators (@decorator) ]         <--- Great for wrapping
+                 |
+                 v
+  [ 3. __init_subclass__ Hook ]          <--- Great for subclass registration
+                 |
+                 v
+  [ 4. Custom Descriptors ]              <--- Great for field validation
+                 |
+                 v
+  [ 5. Metaclasses (metaclass=Type) ]    <--- LAST RESORT ONLY!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Refactoring Metaclasses to Cleaner Alternatives
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Complex Anti-Pattern: Unnecessary Metaclass
+# ------------------------------------------------------------------------------
+
+class UnnecessaryComplexMeta(type):
+    """Over-engineered Metaclass used just to add a 'created_at' class attribute."""
+    def __new__(mcs, name, bases, namespace):
+        namespace["created_at"] = "2026-10-05"
+        return super().__new__(mcs, name, bases, namespace)
+
+class OverEngineeredPackage(metaclass=UnnecessaryComplexMeta):
+    pass
+
+
+# ------------------------------------------------------------------------------
+# Clean Solution: Refactored with __init_subclass__ or Class Decorators
+# ------------------------------------------------------------------------------
+
+# Alternative 1: Clean Class Decorator
+def add_timestamp_decorator(cls):
+    cls.created_at = "2026-10-05"
+    return cls
+
+@add_timestamp_decorator
+class CleanPackageWithDecorator:
+    pass
+
+# Alternative 2: Clean __init_subclass__ Parent Hook
+class BaseTimestampedModel:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.created_at = "2026-10-05"
+
+class CleanPackageWithHook(BaseTimestampedModel):
+    pass
+
+print("--- LESSON 5: Metaprogramming Simplification ---")
+print("Complex Metaclass Output :", OverEngineeredPackage.created_at)
+print("Clean Decorator Output   :", CleanPackageWithDecorator.created_at)
+print("Clean Parent Hook Output :", CleanPackageWithHook.created_at)
+      `,
+      keyTakeaways: [
+        "Metaprogramming introduces cognitive complexity; prefer simpler alternatives whenever possible.",
+        "Refactoring hierarchy: Functions/Dicts -> Decorators -> `__init_subclass__` -> Descriptors -> Metaclasses.",
+        "Overusing metaclasses breaks IDE autocomplete, static type checkers (`mypy`), and code maintainability.",
+        "Use metaprogramming strictly when building frameworks or when dynamic class creation cannot be solved with simpler tools."
+      ],
+      commonMistakes: [
+        "<b>Using Metaclasses for simple subclass registration:</b> Writing complex `type` subclasses when `__init_subclass__` is built specifically for that purpose.",
+        "<b>Breaking IDE Autocomplete:</b> Synthesizing dozens of dynamic attributes via `__getattr__` without providing type stubs or docstrings, confusing teammates.",
+        "<b>Sacrificing 'Explicit is better than implicit':</b> Creating 'magic' code where attributes appear without clear source definitions."
+      ],
+      quizzes: [
+        {
+          question: "Which feature added in Python 3.6 replaced the vast majority of traditional Metaclass use cases for subclass auto-registration?",
+          options: [
+            "`__getattr__`",
+            "`__init_subclass__`",
+            "`__getattribute__`",
+            "`__set_name__`"
+          ],
+          correctIndex: 1,
+          explanation: "`__init_subclass__` allows parent classes to hook into subclass creation cleanly without needing custom metaclasses."
+        },
+        {
+          question: "What is a major engineering drawback of heavy metaprogramming (such as dynamically synthesizing attributes at runtime)?",
+          options: [
+            "Python forbids dynamic attributes.",
+            "It breaks IDE autocomplete, static type checking (mypy), and makes code harder to read and debug for human developers.",
+            "It forces all variables to become global.",
+            "It prevents file IO."
+          ],
+          correctIndex: 1,
+          explanation: "Dynamic runtime attribute generation hides structure from static analysis tools (IDEs, mypy) and increases cognitive load."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What function signature of `type()` dynamically creates a brand-new Class object at runtime?",
+      options: [
+        "`type(object)`",
+        "`type(name, bases_tuple, dict)`",
+        "`type(class_name, method_list)`",
+        "`type(instance, attributes)`"
+      ],
+      correctIndex: 1,
+      explanation: "`type(name, bases, dict)` creates and returns a new Class object dynamically."
+    },
+    {
+      question: "Which hook method runs automatically on a parent class whenever a child class inherits from it?",
+      options: [
+        "`__init__()`",
+        "`__init_subclass__()`",
+        "`__new__()`",
+        "`__class_init__()`"
+      ],
+      correctIndex: 1,
+      explanation: "`__init_subclass__()` executes automatically when a child class inherits from a parent."
+    },
+    {
+      question: "What base class MUST a custom Metaclass inherit from?",
+      options: [
+        "`object`",
+        "`type`",
+        "`Meta`",
+        "`BaseClass`"
+      ],
+      correctIndex: 1,
+      explanation: "Custom metaclasses must inherit from `type`."
+    },
+    {
+      question: "Which dunder method inside a Metaclass allocates and returns the Class object in memory?",
+      options: [
+        "`__init__()`",
+        "`__new__()`",
+        "`__call__()`",
+        "`__create__()`"
+      ],
+      correctIndex: 1,
+      explanation: "`__new__(mcs, name, bases, namespace)` allocates and returns the Class object."
+    },
+    {
+      question: "When is the `__getattr__()` dunder method called during attribute lookup?",
+      options: [
+        "For every attribute access attempt.",
+        "Only when the attribute is missing from the instance dict and class hierarchy.",
+        "When an attribute is deleted.",
+        "When calling constructors."
+      ],
+      correctIndex: 1,
+      explanation: "`__getattr__()` is a fallback executed only when standard attribute lookup fails."
+    },
+    {
+      question: "Which reflection function reads an attribute value dynamically using a string name?",
+      options: [
+        "`setattr()`",
+        "`getattr()`",
+        "`hasattr()`",
+        "`readattr()`"
+      ],
+      correctIndex: 1,
+      explanation: "`getattr(object, name_str, default)` reads attributes dynamically by string name."
+    },
+    {
+      question: "Which standard library module provides the `inspect.signature()` function to extract parameter metadata from callable functions?",
+      options: [
+        "`sys`",
+        "`inspect`",
+        "`reflection`",
+        "`types`"
+      ],
+      correctIndex: 1,
+      explanation: "The `inspect` module provides `inspect.signature()`."
+    },
+    {
+      question: "According to Python design principles, when should custom Metaclasses be used?",
+      options: [
+        "For every class definition.",
+        "As a last resort when simpler tools (functions, decorators, `__init_subclass__`) cannot solve the framework creation requirement.",
+        "Only when writing loops.",
+        "When working with integers."
+      ],
+      correctIndex: 1,
+      explanation: "Metaclasses add complexity and should be used only when simpler mechanisms are insufficient."
+    }
+  ],
+  project: {
+    name: "Plugin-Architecture Framework & Dynamic DTO Engine (Phase 1 Final Project)",
+    goal: "Build a plugin architecture framework that uses __init_subclass__ for auto-registering plugin classes, 3-argument type() for dynamic DTO generation from schemas, inspect for route discovery, and getattr/setattr for dynamic reflection.",
+    brief: "Your enterprise platform requires a core framework engine (`framework_engine.py`). The framework must auto-register logistics plugin subclasses using `__init_subclass__`, generate dynamic data transfer objects (DTOs) from JSON schemas using 3-argument `type()`, inspect plugin endpoint signatures using `inspect.signature()`, and support dynamic attribute reflection with fallback `__getattr__` mechanisms.",
+    steps: [
+      "Create a script file named `framework_engine.py` in your workspace.",
+      "Implement a base plugin class `BasePlugin` using `__init_subclass__(cls, plugin_type=\"GENERAL\")` to auto-register subclasses into a central `PLUGIN_CATALOG` dictionary.",
+      "Write a dynamic DTO generator function `build_dynamic_dto_class(schema_name: str, fields: dict) -> type` using 3-argument `type()`.",
+      "Implement an API endpoint inspection utility using `inspect.signature()` and `callable()` to auto-discover plugin handler methods.",
+      "Build a dynamic reflection wrapper that uses `getattr()` and `setattr()` to map incoming JSON dictionaries to model properties safely.",
+      "Declare 2 plugin subclasses (`GPSPlugin`, `BarcodeScannerPlugin`), generate a DTO class dynamically, and execute a framework inspection audit.",
+      "Run `python3 framework_engine.py` in your integrated terminal and print a complete framework audit report."
+    ],
+    acceptance: [
+      "`__init_subclass__` auto-registers plugin subclasses into the catalog upon class definition.",
+      "Dynamic DTO classes are constructed using 3-argument `type()`.",
+      "`inspect.signature()` extracts callable method parameters accurately.",
+      "Executing `python3 framework_engine.py` prints a clean, fully registered framework audit report without errors."
+    ],
+    stretch: [
+      "Implement a Singleton Metaclass `SingletonFrameworkMeta(type)` for the central plugin manager service.",
+      "Annotate all framework functions with strict type hints (`type`, `dict[str, Any]`) and pass static type checks."
+    ]
+  }
+};
