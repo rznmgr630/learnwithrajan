@@ -138,7 +138,7 @@ export function PythonRoadmap() {
         ))}
       </div>
 
-      {lessonDay !== null && lessonDay <= 10 ? <RawPythonLessonDay day={lessonDay} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && (lessonDay <= 10 || lessonDay === 21) ? <RawPythonLessonDay day={lessonDay} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 11 ? <LessonDayDetail open day={PYTHON_DAY_11_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 12 ? <LessonDayDetail open day={PYTHON_DAY_12_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 13 ? <LessonDayDetail open day={PYTHON_DAY_13_LESSONS} onClose={() => setLessonDay(null)} /> : null}
@@ -149,7 +149,7 @@ export function PythonRoadmap() {
       {lessonDay === 18 ? <LessonDayDetail open day={PYTHON_DAY_18_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 19 ? <LessonDayDetail open day={PYTHON_DAY_19_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 20 ? <LessonDayDetail open day={PYTHON_DAY_20_LESSONS} onClose={() => setLessonDay(null)} /> : null}
-      {lessonDay !== null && lessonDay > 20 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 20 && lessonDay !== 21 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
     </div>
   );
 }
