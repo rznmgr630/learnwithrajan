@@ -182,4 +182,772 @@ print("Invalid Cargo Result:", determine_dispatch_vehicle(weight_lbs=-5.0, dista
           explanation: "In a single `if / elif / else` chain, Python exits the entire block immediately after executing the first matching branch."
         },
         {
-          question: "Given `x = 15`, what will be printed by:\n```python\nif x > 5:\n    print('A')\nelif x > 10:\n    print('B')\n
+          question: "Given `x = 15`, what will be printed by:\n```python\nif x > 5:\n    print('A')\nelif x > 10:\n    print('B')\n```",
+          options: [
+            "Both 'A' and 'B'",
+            "Only 'B'",
+            "Only 'A'",
+            "Nothing"
+          ],
+          correctIndex: 2,
+          explanation: "Because `x > 5` evaluates to `True`, Python prints 'A' and exits the chain immediately, skipping the `elif x > 10` branch entirely."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Write Conditions People Can Review",
+      durationMinutes: 17,
+      explanation: `
+<b>Readable and Intentional Conditional Expressions</b><br/>
+Code is read by human developers far more often than it is written. Writing messy, convoluted conditional statements with unneeded double negations or redundant boolean checks leads directly to software bugs during code reviews and maintenance.<br/><br/>
+
+<b>1. Avoid Redundant Boolean Comparisons:</b><br/>
+Beginners often explicitly compare boolean variables against `True` or `False`. This adds unnecessary clutter.<br/>
+- <b>Cluttered:</b> <code>if is_delivered == True:</code><br/>
+- <b>Clean & Idiomatic:</b> <code>if is_delivered:</code><br/>
+- <b>Cluttered:</b> <code>if is_delivered == False:</code><br/>
+- <b>Clean & Idiomatic:</b> <code>if not is_delivered:</code><br/><br/>
+
+<b>2. Eliminate Double Negations:</b><br/>
+Combining `not` with negative variable names creates mental tax for developers reading the code.<br/>
+- <b>Confusing:</b> <code>if not is_unpaid:</code><br/>
+- <b>Readable:</b> <code>if is_paid:</code><br/><br/>
+
+<b>3. Extract Complex Boolean Expressions into Meaningful Variable Names:</b><br/>
+When a condition involves multiple `and`, `or`, and comparison operators, extract the evaluation into descriptive explanatory variables before using it in the `if` statement.<br/><br/>
+
+<b>Real-World Analogy: Fleet Inspection Checklist</b><br/>
+Instead of writing:<br/>
+<code>if (driver.has_license and driver.age &gt;= 21) and (not vehicle.needs_oil_change and vehicle.tire_pressure &gt; 30) and (fuel_level &gt; 0.25):</code><br/><br/>
+
+Extract the business concepts into self-documenting variables:<br/>
+<code>is_driver_qualified = driver.has_license and driver.age &gt;= 21</code><br/>
+<code>is_vehicle_roadworthy = (not vehicle.needs_oil_change) and (vehicle.tire_pressure &gt; 30)</code><br/>
+<code>has_sufficient_fuel = fuel_level &gt; 0.25</code><br/><br/>
+<code>if is_driver_qualified and is_vehicle_roadworthy and has_sufficient_fuel:</code>
+      `,
+      diagram: `
+READABILITY REFACTORING:
+
+  MESSY / HARD TO REVIEW:
+  if (w > 10 and d > 500 and not p == False) and (c == "CHI" or c == "NY"):
+      ...
+
+  CLEAN / SELF-DOCUMENTING:
+  is_long_haul_freight = (weight > 10) and (distance > 500)
+  is_target_hub = city in ["CHI", "NY"]
+  
+  if is_long_haul_freight and is_paid and is_target_hub:
+      ...
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Readable Conditions and Explanatory Variables
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Removing Redundant Boolean Comparisons
+# ------------------------------------------------------------------------------
+
+is_priority_package = True
+is_signature_required = False
+
+# Cluttered anti-pattern:
+if is_priority_package == True and is_signature_required == False:
+    print("Anti-pattern detected!")
+
+# Clean Pythonic standard:
+if is_priority_package and not is_signature_required:
+    print("--- BEGINNER: Clean Boolean Inspection ---")
+    print("Package is express priority with no signature required.")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Extracting Complex Expressions into Explanatory Variables
+# ------------------------------------------------------------------------------
+
+package_weight_lbs = 45.0
+distance_miles = 650.0
+destination_state = "AK" # Alaska
+is_express_tier = True
+
+# Hard-to-read composite expression:
+# if package_weight_lbs > 30.0 and distance_miles > 500.0 or destination_state in ["AK", "HI"] and is_express_tier: ...
+
+# Clean refactored version with explicit explanatory variables:
+is_heavy_long_haul = (package_weight_lbs > 30.0) and (distance_miles > 500.0)
+is_offshore_express = (destination_state in ["AK", "HI"]) and is_express_tier
+
+requires_cargo_plane = is_heavy_long_haul or is_offshore_express
+
+print("\n--- INTERMEDIATE: Explanatory Variable Evaluation ---")
+print(f"Requires Air Cargo Transport? {requires_cargo_plane}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Clean Audit Rule Engine
+# ------------------------------------------------------------------------------
+
+def EvaluateDeliverySLACompliance(
+    transit_hours: float, 
+    promised_hours: float, 
+    weather_delay: bool, 
+    customer_tier: str
+) -> dict:
+    \"\"\"
+    Evaluates SLA compliance using domain-driven, highly readable conditions.
+    \"\"\"
+    print("\n--- ADVANCED: SLA Compliance Audit ---")
+    
+    # 1. Define clean business state flags
+    is_delivered_on_time = transit_hours <= promised_hours
+    is_excused_by_weather = weather_delay and (transit_hours <= promised_hours + 12.0)
+    is_vip_customer = customer_tier.upper() in ["PLATINUM", "ENTERPRISE"]
+    
+    # 2. Readable composite logic
+    is_sla_met = is_delivered_on_time or is_excused_by_weather
+    requires_refund_credit = (not is_sla_met) or (is_vip_customer and not is_delivered_on_time)
+    
+    return {
+        "sla_met": is_sla_met,
+        "excused_delay": is_excused_by_weather,
+        "refund_required": requires_refund_credit,
+        "audit_note": "SLA Compliant" if is_sla_met else ("VIP Breach Credit" if requires_refund_credit else "Standard Breach")
+    }
+
+# Execute compliance check
+print(EvaluateDeliverySLACompliance(transit_hours=28.0, promised_hours=24.0, weather_delay=True, customer_tier="ENTERPRISE"))
+      `,
+      keyTakeaways: [
+        "Never compare booleans directly to `True` or `False` (use `if is_active:` or `if not is_active:`).",
+        "Avoid double negations like `if not is_unpaid:` that force readers to perform mental gymnastics.",
+        "Break complex multi-operator conditions down into clear, descriptive explanatory variables.",
+        "Code readability directly reduces production bugs during team maintenance."
+      ],
+      commonMistakes: [
+        "<b>Writing redundant equality comparisons:</b> Writing `if flag == True:` instead of `if flag:`.",
+        "<b>Cramming five logical operators onto a single `if` line:</b> Making code impossible to debug or inspect in step-through debuggers.",
+        "<b>Using misleading or negative variable names:</b> Naming a variable `no_delivery_failed` where `delivery_succeeded` makes the logic clear."
+      ],
+      quizzes: [
+        {
+          question: "Which of the following represents the clean, idiomatic Python way to check if a boolean variable `is_urgent` is False?",
+          options: [
+            "if is_urgent == False:",
+            "if not is_urgent:",
+            "if is_urgent is False:",
+            "if is_urgent != True:"
+          ],
+          correctIndex: 1,
+          explanation: "In Python, `if not is_urgent:` is the clean, standard (PEP 8) syntax to test if a boolean condition is false."
+        },
+        {
+          question: "Why should a developer extract a complex conditional expression into explanatory variables?",
+          options: [
+            "To make the Python interpreter execute the code faster.",
+            "To simplify readable business intent and allow inspecting intermediate boolean states during debugging.",
+            "Because Python forbids writing more than two operators on an `if` line.",
+            "To automatically save memory."
+          ],
+          correctIndex: 1,
+          explanation: "Explanatory variables make complex business rules self-documenting and much easier to debug and review."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Nest Only When Decisions Depend on Earlier Ones",
+      durationMinutes: 16,
+      explanation: `
+<b>Deep Nesting vs. Flat Conditional Logic</b><br/>
+<b>Nested Conditionals</b> occur when you place an <code>if</code> statement inside another <code>if</code> statement block. While nesting is sometimes necessary when a secondary check depends strictly on a primary check passing, excessive nesting creates the dreaded "Pyramid of Doom" code anti-pattern.<br/><br/>
+
+<b>1. When Nesting IS Appropriate:</b><br/>
+Nest conditions when the inner check is completely meaningless (or would cause an error) unless the outer check passes first.<br/>
+<i>Example:</i> Check if a package exists first; ONLY if it exists, check its internal address property.<br/><br/>
+
+<b>2. When Nesting IS AN ANTI-PATTERN (The Pyramid of Doom):</b><br/>
+Deeply indented code (4+ indentation levels deep) is difficult to read and track mentally. When multiple conditions must ALL be true simultaneously, combine them using logical <code>and</code> operators or flatten the logic using early returns instead of nesting endless <code>if</code> statements.<br/><br/>
+
+<b>Refactoring Example:</b><br/>
+<i>Deeply Nested (Bad):</i><br/>
+<pre><code>if is_paid:
+    if is_in_stock:
+        if is_address_valid:
+            ship_package()</code></pre>
+
+<i>Flattened with Logical AND (Good):</i><br/>
+<pre><code>if is_paid and is_in_stock and is_address_valid:
+    ship_package()</code></pre>
+      `,
+      diagram: `
+DEEP NESTING ANTI-PATTERN (Pyramid of Doom):
+  if check_1:
+      if check_2:
+          if check_3:
+              if check_4:
+                  # Hard to read & maintain!
+
+FLATTENED COMBINED STRUCTURE:
+  if check_1 and check_2 and check_3 and check_4:
+      # Clear, flat, single indentation level!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Appropriate Nesting vs Flattened Logic
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Legitimate Necessary Nesting
+# ------------------------------------------------------------------------------
+
+# Inner check depends on outer container check
+customer_payload = {"name": "Acme Corp", "account_active": True}
+
+print("--- BEGINNER: Safe Dependency Nesting ---")
+if customer_payload is not None:
+    # Safely inspect inner dictionary key only after verifying payload exists
+    if customer_payload.get("account_active"):
+        print("Customer account verified for dispatch.")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Refactoring Deep Nesting with Logical Operators
+# ------------------------------------------------------------------------------
+
+is_payment_verified = True
+is_inventory_reserved = True
+is_address_validated = True
+
+# Anti-pattern: Deeply nested checks
+print("\n--- INTERMEDIATE: Flattening Nested Logic ---")
+if is_payment_verified:
+    if is_inventory_reserved:
+        if is_address_validated:
+            print("Order processed via deep nesting (harder to read).")
+
+# Clean refactored flat alternative:
+if is_payment_verified and is_inventory_reserved and is_address_validated:
+    print("Order processed via clean flattened conjunction (easy to read).")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Delivery Access Gatekeeper
+# ------------------------------------------------------------------------------
+
+def process_secure_facility_dropoff(
+    security_badge: dict | None, 
+    package_metadata: dict
+) -> dict:
+    \"\"\"
+    Demonstrates structuring nested conditions safely without unreadable nesting levels.
+    \"\"\"
+    print("\n--- ADVANCED: Secure Facility Gatekeeper ---")
+    
+    # Outer Check: Authentication presence
+    if security_badge is None or not security_badge.get("is_valid"):
+        return {"access_granted": False, "reason": "SECURITY_DENIED: Invalid security badge."}
+        
+    # Inner Check 1: Facility authorization match
+    required_facility = package_metadata.get("destination_facility")
+    authorized_facilities = security_badge.get("authorized_hubs", [])
+    
+    if required_facility not in authorized_facilities:
+        return {"access_granted": False, "reason": f"SECURITY_DENIED: Badge unauthorized for {required_facility}."}
+        
+    # Inner Check 2: Hazmat clearance if package requires it
+    if package_metadata.get("is_hazmat") and not security_badge.get("hazmat_cleared"):
+        return {"access_granted": False, "reason": "SECURITY_DENIED: Hazmat certification required."}
+
+    # All checks passed cleanly
+    return {"access_granted": True, "reason": "ACCESS_GRANTED: Clearance verified."}
+
+# Test secure gatekeeper execution
+badge = {"is_valid": True, "authorized_hubs": ["CHICAGO_HUB_1"], "hazmat_cleared": False}
+package = {"destination_facility": "CHICAGO_HUB_1", "is_hazmat": True}
+
+print(process_secure_facility_dropoff(badge, package))
+      `,
+      keyTakeaways: [
+        "Nest `if` statements only when the inner check strictly depends on the outer check succeeding.",
+        "Avoid the 'Pyramid of Doom' (deeply nested `if` statements) because it reduces code readability.",
+        "Flatten nested conditions by combining independent boolean checks using logical `and` operators.",
+        "Combine outer guard checks with early returns to keep main logic at a flat indentation level."
+      ],
+      commonMistakes: [
+        "<b>Nesting independent conditions:</b> Nesting three `if` statements when an `and` operator could express the logic in a single line.",
+        "<b>Losing track of `else` bindings:</b> Deep nesting makes it easy to accidentally bind an `else` block to the wrong inner `if` statement.",
+        "<b>Nesting past 3 levels:</b> Writing code indented so far to the right that it requires horizontal scrolling to read."
+      ],
+      quizzes: [
+        {
+          question: "When is nesting an `if` statement inside another `if` statement necessary?",
+          options: [
+            "Whenever you have more than two variables.",
+            "When the inner condition depends on the outer condition succeeding first (e.g., verifying an object is not None before reading its properties).",
+            "To make Python run the code faster.",
+            "Nesting is never necessary under any circumstances."
+          ],
+          correctIndex: 1,
+          explanation: "Nesting is appropriate when inner evaluations rely on outer conditions passing first, such as guarding against null or uninitialized objects."
+        },
+        {
+          question: "What is the primary danger of the 'Pyramid of Doom' anti-pattern?",
+          options: [
+            "It causes Python to throw a `MemoryError`.",
+            "Excessive indentation levels make code difficult to read, track, debug, and maintain.",
+            "Nested `if` statements run in reverse order.",
+            "It forces all variables to become global."
+          ],
+          correctIndex: 1,
+          explanation: "Deep nesting creates cognitive overload for developers, making it easy to introduce subtle logic bugs."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Stop Early with Guard Clauses",
+      durationMinutes: 18,
+      explanation: `
+<b>Guard Clauses and Bouncer Pattern</b><br/>
+A <b>Guard Clause</b> (also known as the <i>Bouncer Pattern</i>) is a design pattern where a function evaluates invalid or edge-case conditions at the very top of the function and exits early (using <code>return</code> or <code>raise</code>).<br/><br/>
+
+<b>Traditional Nesting vs. Guard Clause Pattern:</b><br/>
+In traditional code, developers wrap the entire "happy path" (the main business logic) inside a huge `if` block, putting error handling at the very bottom of the function. Guard clauses flip this structure: handle error cases and invalid inputs first at the top, exit immediately, and leave the rest of the function for the unindented, clean happy path!<br/><br/>
+
+<b>Benefits of Guard Clauses:</b>
+1. <b>Eliminates Indentation:</b> Keeps the main happy path execution flat at the root indentation level of the function.
+2. <b>Fails Fast:</b> Invalid inputs are caught and rejected immediately before expensive calculations or database queries run.
+3. <b>Improves Scannability:</b> Developers can quickly inspect what preconditions a function requires by scanning the top few lines.
+      `,
+      diagram: `
+TRADITIONAL NESTED FUNCTION:
+  def process(pkg):
+      if pkg is not None:
+          if pkg.is_valid:
+              if pkg.is_paid:
+                  # ... Main Happy Path Execution ...
+              else:
+                  return "Not paid"
+          else:
+              return "Invalid"
+      else:
+          return "Null"
+
+GUARD CLAUSE PATTERN (FLAT):
+  def process(pkg):
+      if pkg is None:          return "Null"       # Guard 1
+      if not pkg.is_valid:     return "Invalid"    # Guard 2
+      if not pkg.is_paid:      return "Not paid"   # Guard 3
+
+      # ... Main Happy Path Execution ... (Flat & Clear!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Early Exits and Guard Clauses
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Converting Nested Checks to Guard Clauses
+# ------------------------------------------------------------------------------
+
+# Unfactored nested function
+def calculate_shipping_nested(weight: float) -> float:
+    if weight > 0:
+        if weight <= 100:
+            return weight * 2.50
+        else:
+            return -1.0 # Error: overweight
+    else:
+        return -1.0 # Error: invalid weight
+
+# Clean Refactored Guard Clause Function
+def calculate_shipping_guarded(weight: float) -> float:
+    # Guard 1: Reject non-positive weight
+    if weight <= 0:
+        return -1.0
+        
+    # Guard 2: Reject overweight cargo
+    if weight > 100:
+        return -1.0
+        
+    # Main Happy Path (Unindented!)
+    return weight * 2.50
+
+print("--- BEGINNER: Guard Clause Execution ---")
+print("Valid Weight Cost ($):", calculate_shipping_guarded(20.0))
+print("Invalid Weight Guard Output:", calculate_shipping_guarded(-5.0))
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Raising Explicit Exceptions in Guard Clauses
+# ------------------------------------------------------------------------------
+
+def dispatch_package_to_hub(package_id: str, hub_code: str) -> str:
+    \"\"\"
+    Uses guard clauses to raise explicit exceptions for invalid parameters.
+    \"\"\"
+    # Guard 1: Empty tracking ID
+    if not package_id or not package_id.strip():
+        raise ValueError("Package ID cannot be empty or whitespace.")
+        
+    # Guard 2: Invalid hub code format
+    if not hub_code.startswith("HUB_"):
+        raise ValueError(f"Invalid hub identifier '{hub_code}'. Must start with 'HUB_'.")
+        
+    # Main Happy Path
+    return f"SUCCESS: Package {package_id} dispatched to {hub_code}."
+
+print("\n--- INTERMEDIATE: Guard Exception Handling ---")
+try:
+    print(dispatch_package_to_hub("TRK-9001", "HUB_CHICAGO"))
+    # Intentionally trigger Guard 2
+    dispatch_package_to_hub("TRK-9001", "INVALID_HUB")
+except ValueError as err:
+    print(f"Guard Triggered Handled Error: {err}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Pipeline Order Processing Engine
+# ------------------------------------------------------------------------------
+
+def process_package_order_pipeline(order_payload: dict) -> dict:
+    \"\"\"
+    Production pipeline utilizing multiple guard clauses to validate incoming API 
+    order records before executing financial transactions and shipping bookings.
+    \"\"\"
+    print("\n--- ADVANCED: Order Pipeline Execution ---")
+    
+    # Guard 1: Payload existence check
+    if not order_payload:
+        return {"success": False, "stage": "VALIDATION", "error": "Empty payload."}
+        
+    # Guard 2: Required keys check
+    required_keys = ["order_id", "weight_lbs", "payment_status"]
+    missing_keys = [k for k in required_keys if k not in order_payload]
+    if missing_keys:
+        return {"success": False, "stage": "VALIDATION", "error": f"Missing payload keys: {missing_keys}"}
+        
+    # Guard 3: Payment status check
+    if order_payload["payment_status"] != "SETTLED":
+        return {"success": False, "stage": "PAYMENT", "error": f"Payment status '{order_payload['payment_status']}' is not SETTLED."}
+        
+    # Guard 4: Weight sanity check
+    weight = order_payload["weight_lbs"]
+    if weight <= 0 or weight > 150.0:
+        return {"success": False, "stage": "LOGISTICS", "error": f"Weight {weight} lbs exceeds single-parcel limits (0-150 lbs)."}
+
+    # ==========================================================================
+    # MAIN HAPPY PATH EXECUTION
+    # ==========================================================================
+    order_id = order_payload["order_id"]
+    computed_fee = round(15.00 + (weight * 0.85), 2)
+    
+    return {
+        "success": True,
+        "stage": "COMPLETE",
+        "order_id": order_id,
+        "shipping_fee_usd": computed_fee,
+        "status": "LABEL_GENERATED_READY_FOR_PICKUP"
+    }
+
+# Execute testing across guard conditions
+bad_payment_order = {"order_id": "ORD-551", "weight_lbs": 25.0, "payment_status": "PENDING"}
+print("Blocked Order:", process_package_order_pipeline(bad_payment_order))
+
+good_order = {"order_id": "ORD-552", "weight_lbs": 25.0, "payment_status": "SETTLED"}
+print("Processed Order:", process_package_order_pipeline(good_order))
+      `,
+      keyTakeaways: [
+        "Guard clauses evaluate error and edge-case conditions at the top of a function and exit early.",
+        "Failing fast via guard clauses keeps the main happy path flat, readable, and unindented.",
+        "Use `return` or `raise ValueError` inside guard clauses to reject invalid parameters immediately.",
+        "Guard clauses eliminate deep nested `if/else` structures."
+      ],
+      commonMistakes: [
+        "<b>Wrapping the main logic in an `else` block after a returning `if` guard:</b> Writing `if invalid: return; else: # main logic`. The `else` is completely unnecessary because `return` exits the function immediately!",
+        "<b>Performing expensive computations before checking inputs:</b> Running database queries or heavy calculations before running guard clauses on input parameters.",
+        "<b>Failing to check for `None` or empty payloads first:</b> Accessing keys before guarding against `None` payload objects."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary structural goal of using Guard Clauses in Python functions?",
+          options: [
+            "To force functions to run inside a virtual environment.",
+            "To handle error cases early and exit immediately, keeping the main 'happy path' logic flat and unindented.",
+            "To remove the need for `elif` statements completely.",
+            "To speed up integer addition."
+          ],
+          correctIndex: 1,
+          explanation: "Guard clauses handle errors up front and exit early, keeping the primary business logic flat and easy to read."
+        },
+        {
+          question: "In the following guarded code, why is an `else` keyword unnecessary?\n```python\nif weight <= 0:\n    return 'Invalid'\nreturn weight * 2.5\n```",
+          options: [
+            "Because Python does not support `else` in functions.",
+            "Because if `weight <= 0` holds true, `return` exits the function immediately, so the second line only executes when `weight > 0`.",
+            "Because `weight` is a float.",
+            "An `else` is required or a `SyntaxError` occurs."
+          ],
+          correctIndex: 1,
+          explanation: "Since `return` terminates function execution, code following a returning `if` guard naturally acts as the alternative branch without needing an explicit `else` block."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Use a Conditional Expression for Small Choices",
+      durationMinutes: 16,
+      explanation: `
+<b>Inline Ternary Conditional Expressions</b><br/>
+When you need to choose between two simple values based on a condition and assign the result to a variable, writing a 4-line `if / else` block can feel verbose. Python provides a compact 1-line syntax called a <b>Conditional Expression</b> (often referred to as a <i>Ternary Operator</i>).<br/><br/>
+
+<b>Conditional Expression Syntax:</b><br/>
+<code>variable = value_if_true if condition else value_if_false</code><br/><br/>
+
+<b>Notice the Order of Keywords:</b><br/>
+1. The <code>value_if_true</code> comes FIRST.<br/>
+2. The <code>if condition</code> comes SECOND.<br/>
+3. The <code>else value_if_false</code> comes THIRD.<br/><br/>
+
+<b>When to Use Conditional Expressions:</b><br/>
+- Assigning simple values or flags based on a single condition.<br/>
+- Selecting formatting strings dynamically inside f-strings or return statements.<br/><br/>
+
+<b>When NOT to Use Conditional Expressions:</b><br/>
+- <b>Never nest conditional expressions:</b> Writing <code>a if x else b if y else c</code> is unreadable and leads to severe logic bugs. Use a standard `if / elif / else` block instead.<br/>
+- <b>Never execute side-effect actions inside ternary expressions:</b> Ternary expressions are meant for evaluating <i>values</i>, not for running multi-line statements or complex function side effects.
+      `,
+      diagram: `
+TERNARY CONDITIONAL SYNTAX:
+
+  fee = (15.00) if (is_express) else (5.00)
+         |              |             |
+         |              |             +---> Value assigned if condition is FALSE
+         |              +-----------------> Boolean Condition Tested
+         +--------------------------------> Value assigned if condition is TRUE
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Conditional Expressions (Ternary Operator)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Standard if/else vs Inline Ternary Assignment
+# ------------------------------------------------------------------------------
+
+is_express_delivery = True
+
+# Verbose 4-line standard approach
+if is_express_delivery:
+    shipping_fee = 15.00
+else:
+    shipping_fee = 5.00
+
+# Concise 1-line conditional expression
+ternary_shipping_fee = 15.00 if is_express_delivery else 5.00
+
+print("--- BEGINNER: Conditional Expression Assignment ---")
+print(f"Verbose Fee: ${shipping_fee:.2f}")
+print(f"Ternary Fee: ${ternary_shipping_fee:.2f}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Inline Ternary inside F-Strings & Return Statements
+# ------------------------------------------------------------------------------
+
+package_weight_lbs = 22.5
+is_overweight = package_weight_lbs > 20.0
+
+# Dynamic label formatting using inline ternary inside f-string
+status_msg = f"Package Weight: {package_weight_lbs} lbs ({'OVERWEIGHT SURCHARGE APPLIES' if is_overweight else 'STANDARD WEIGHT'})"
+
+print("\n--- INTERMEDIATE: Inline f-string Formatting ---")
+print(status_msg)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dispatch Priority Assignment System
+# ------------------------------------------------------------------------------
+
+def generate_dispatch_manifest_entry(
+    package_id: str, 
+    weight_lbs: float, 
+    is_vip_client: bool
+) -> dict:
+    \"\"\"
+    Uses clean conditional expressions for value mapping while avoiding 
+    unreadable nested ternary anti-patterns.
+    \"\"\"
+    print(f"\n--- ADVANCED: Generating Entry for [{package_id}] ---")
+    
+    # Clean single-line ternary value selections
+    handling_priority = "HIGH_PRIORITY" if is_vip_client else "STANDARD_PRIORITY"
+    base_charge = 10.00 if weight_lbs <= 10.0 else 25.00
+    insurance_required = True if (weight_lbs > 50.0 or is_vip_client) else False
+    
+    return {
+        "package_id": package_id,
+        "priority": handling_priority,
+        "base_charge_usd": base_charge,
+        "requires_insurance": insurance_required,
+        "summary": f"Manifest Code: {package_id} | Tier: {'VIP' if is_vip_client else 'REGULAR'}"
+    }
+
+# Execute dispatch entry generation
+print("VIP Client Entry:", generate_dispatch_manifest_entry("PKG-701", 8.5, True))
+print("Standard Client Entry:", generate_dispatch_manifest_entry("PKG-702", 18.0, False))
+      `,
+      keyTakeaways: [
+        "Conditional expressions use the 1-line syntax `value_if_true if condition else value_if_false`.",
+        "Use ternary expressions for simple value assignments and dynamic string formatting.",
+        "Do not nest conditional expressions; use standard `if/elif/else` blocks when dealing with more than two options.",
+        "Conditional expressions evaluate to a single resulting value."
+      ],
+      commonMistakes: [
+        "<b>Nesting ternary expressions:</b> Writing `a if x else b if y else c` creates unreadable code.",
+        "<b>Getting the keyword order backwards:</b> Writing `if condition x else y` instead of `x if condition else y`.",
+        "<b>Using ternary expressions for complex logic with side effects:</b> Using ternary syntax to run function calls that perform actions rather than assigning simple values."
+      ],
+      quizzes: [
+        {
+          question: "What is the correct Python syntax for a conditional expression (ternary operator)?",
+          options: [
+            "condition ? value_if_true : value_if_false",
+            "value_if_true if condition else value_if_false",
+            "if condition (value_if_true) else (value_if_false)",
+            "value_if_true when condition otherwise value_if_false"
+          ],
+          correctIndex: 1,
+          explanation: "In Python, conditional expressions follow the format `value_if_true if condition else value_if_false`."
+        },
+        {
+          question: "When should you AVOID using a conditional expression?",
+          options: [
+            "When assigning a value to a variable based on a single boolean flag.",
+            "When formatting a dynamic message inside an f-string.",
+            "When you have multiple complex branching choices that would require nesting ternary expressions.",
+            "When the condition evaluates to a boolean."
+          ],
+          correctIndex: 2,
+          explanation: "Nested ternary expressions are hard to read and debug. Use standard `if / elif / else` blocks for multi-branch logic."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which keyword is used in Python to test alternative mutually exclusive conditions in a multi-branch chain?",
+      options: [
+        "else if",
+        "elseif",
+        "elif",
+        "case"
+      ],
+      correctIndex: 2,
+      explanation: "`elif` is Python's keyword for 'else if'."
+    },
+    {
+      question: "What happens in an `if / elif / else` block when an `elif` condition evaluates to `True`?",
+      options: [
+        "Python executes that branch and then continues checking all remaining `elif` conditions.",
+        "Python executes that branch's block and exits the entire conditional chain immediately.",
+        "Python executes the `else` block next.",
+        "Python restarts the `if` check from the top."
+      ],
+      correctIndex: 1,
+      explanation: "Python evaluates `if/elif` chains sequentially and exits the chain immediately after running the first matching branch."
+    },
+    {
+      question: "What is the PEP 8 recommended way to test if a boolean variable `is_active` is True?",
+      options: [
+        "if is_active == True:",
+        "if is_active is True:",
+        "if is_active:",
+        "if is_active.equals(True):"
+      ],
+      correctIndex: 2,
+      explanation: "The idiomatic Python standard is `if is_active:` without explicit comparison to `True`."
+    },
+    {
+      question: "What design pattern uses early returns at the top of a function to handle error conditions and keep main logic unindented?",
+      options: [
+        "Pyramid of Doom",
+        "Guard Clause (Bouncer Pattern)",
+        "Ternary Chain",
+        "Nested Fallback"
+      ],
+      correctIndex: 1,
+      explanation: "Guard Clauses validate parameters up front and exit early, avoiding deep nesting and keeping the main happy path flat."
+    },
+    {
+      question: "What is the value of `status` after executing: `status = 'EXPRESS' if weight > 10 else 'GROUND'` when `weight = 5`?",
+      options: [
+        "'EXPRESS'",
+        "'GROUND'",
+        "True",
+        "None"
+      ],
+      correctIndex: 1,
+      explanation: "Since `weight > 10` evaluates to `False` (`5 > 10` is False), the expression evaluates to the `else` value `'GROUND'`."
+    },
+    {
+      question: "Why is deep nesting of multiple `if` statements (the 'Pyramid of Doom') considered an anti-pattern?",
+      options: [
+        "It causes Python to skip compiling the file.",
+        "It makes code difficult to read, debug, and maintain due to excessive indentation levels.",
+        "It converts float variables to integers automatically.",
+        "Nested `if` statements can only contain two lines of code."
+      ],
+      correctIndex: 1,
+      explanation: "Deep nesting creates cognitive friction for developers reading the code, making logic bugs more likely."
+    },
+    {
+      question: "Which of the following expressions correctly uses explanatory variables to refactor `if w > 50 and d > 500 and not p:`?",
+      options: [
+        "is_heavy = w > 50; is_long = d > 500; is_unpaid = not p; if is_heavy and is_long and is_unpaid:",
+        "if (w > 50) + (d > 500) + (not p):",
+        "if w > 50: if d > 500: if not p:",
+        "if check_all(w, d, p) == True:"
+      ],
+      correctIndex: 0,
+      explanation: "Breaking complex logical checks into descriptive boolean variables (`is_heavy`, `is_long`, `is_unpaid`) makes the final `if` check clear and readable."
+    },
+    {
+      question: "When does the `else` block in an `if / elif / else` structure execute?",
+      options: [
+        "Every time the `if` check evaluates to True.",
+        "Only when ALL preceding `if` and `elif` checks evaluate to False.",
+        "Before any `elif` check runs.",
+        "Only when an exception is raised."
+      ],
+      correctIndex: 1,
+      explanation: "The `else` fallback block runs strictly when every preceding condition in the conditional chain evaluates to `False`."
+    }
+  ],
+  project: {
+    name: "Delivery Exception & Route Decision Engine (Phase 0 Project)",
+    goal: "Build an automated route decision engine that processes package metadata, evaluates delivery exception conditions using clean guard clauses, assigns vehicle tiers, and formats dispatch statuses with conditional expressions.",
+    brief: "Your courier logistics firm needs a core decision-making module (`route_decision_engine.py`) to process incoming delivery orders before dispatching drivers. The engine must validate package payloads using guard clauses, classify delivery priority tiers using clear `if/elif/else` chains, evaluate weather and security exception flags without unreadable nesting, and format output messages using concise conditional expressions.",
+    steps: [
+      "Create a script file named `route_decision_engine.py` in your workspace.",
+      "Define test package payload dictionaries containing tracking codes, weights, transit distances, payment statuses, and weather condition flags.",
+      "Write a validation guard function `validate_package_payload(payload: dict)` that uses early `return` statements to reject missing keys or non-positive weights.",
+      "Write a classification function `determine_shipping_tier(weight_lbs: float, distance_miles: float) -> str` using an `if / elif / else` chain to assign categories (`LOCAL_EXPRESS`, `REGIONAL_GROUND`, `HEAVY_FREIGHT`).",
+      "Implement a route clearance function `check_route_clearance(is_paid: bool, weather_alert: bool, security_hold: bool) -> dict` that uses explanatory variables to combine exception flags cleanly without deep nesting.",
+      "Format dispatch notification messages using conditional expressions (`'PRIORITY_HANDLING' if is_priority else 'STANDARD_HANDLING'`).",
+      "Run `python3 route_decision_engine.py` in your integrated terminal and print a structured dispatch decision report for all test packages."
+    ],
+    acceptance: [
+      "Invalid package payloads (missing keys, zero weight, unpaid status) are caught up front by guard clauses and returned with clear error messages.",
+      "Shipping tier classification uses clean, non-overlapping `if / elif / else` branches.",
+      "Conditions avoid unnecessary boolean equality comparisons (e.g., uses `if is_paid:` rather than `if is_paid == True:`).",
+      "The script runs cleanly via `python3 route_decision_engine.py` without syntax errors or unexpected crashes."
+    ],
+    stretch: [
+      "Add runtime logging that records which specific guard clause caught invalid test payloads.",
+      "Annotate all functions with explicit type hints and run static type verification."
+    ]
+  }
+};
