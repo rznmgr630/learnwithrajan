@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
+import { RawPythonLessonDay } from "@/components/learn/RawPythonLessonDay";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { PYTHON_DAY_1_LESSONS } from "@/lib/python-learning/python-day-1-lessons";
 import { PYTHON_DAY_2_LESSONS } from "@/lib/python-learning/python-day-2-lessons";
@@ -88,7 +89,8 @@ export function PythonRoadmap() {
         ))}
       </div>
 
-      {lessonDay !== null ? <LessonDayDetail open onClose={() => setLessonDay(null)} day={LESSON_DAYS[lessonDay as keyof typeof LESSON_DAYS]} previousDay={lessonDay > 1 ? { day: lessonDay - 1, title: pickLocalized(LESSON_DAYS[(lessonDay - 1) as keyof typeof LESSON_DAYS].title, locale) } : null} nextDay={lessonDay < PYTHON_TOTAL_DAYS ? { day: lessonDay + 1, title: pickLocalized(LESSON_DAYS[(lessonDay + 1) as keyof typeof LESSON_DAYS].title, locale) } : null} onNavigateDay={setLessonDay} track="python" /> : null}
+      {lessonDay === 1 ? <RawPythonLessonDay day={lessonDay} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 1 ? <LessonDayDetail open onClose={() => setLessonDay(null)} day={LESSON_DAYS[lessonDay as keyof typeof LESSON_DAYS]} previousDay={lessonDay > 1 ? { day: lessonDay - 1, title: pickLocalized(LESSON_DAYS[(lessonDay - 1) as keyof typeof LESSON_DAYS].title, locale) } : null} nextDay={lessonDay < PYTHON_TOTAL_DAYS ? { day: lessonDay + 1, title: pickLocalized(LESSON_DAYS[(lessonDay + 1) as keyof typeof LESSON_DAYS].title, locale) } : null} onNavigateDay={setLessonDay} track="python" /> : null}
     </div>
   );
 }

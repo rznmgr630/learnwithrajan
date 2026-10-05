@@ -1,0 +1,881 @@
+/**
+ * DAY 01: Phase 0 · Python Foundations — Python Setup & Programming Fundamentals
+ * 
+ * Total Duration: 120 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase0PythonFoundations = {
+  day: 0,
+  topic: "Phase 0 · Python Foundations — Python Setup & Programming Fundamentals",
+  totalMinutes: 120,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Install Python and Verify the Interpreter",
+      durationMinutes: 22,
+      explanation: `
+<b>Welcome to Python!</b> Before we can build complex software like automated package delivery trackers or e-commerce backends, we need to install the engine that runs our code: the <b>Python Interpreter</b>.<br/><br/>
+
+<b>What is the Python Interpreter and why does it exist?</b><br/>
+Computers do not understand human languages, nor do they directly understand Python code. At the hardware level, CPUs only process binary instructions (1s and 0s). Python is a <b>high-level, interpreted programming language</b>. This means you write human-readable code, and a special program called the <b>Python Interpreter</b> reads your code line-by-line and translates it into machine execution instructions on the fly.<br/><br/>
+
+<b>Real-World Analogy:</b><br/>
+Imagine you are managing an international package delivery logistics center in Chicago. A customer hands you instructions written in English ("Ship Package #1042 to Seattle via Express Flight"). The airport tarmac crew only understands local radio signaling protocols. The Python interpreter acts like an on-site translator standing next to the airport crew, reading your English instructions one by one and translating them into immediate actions for the tarmac workers.<br/><br/>
+
+<b>What problem does it solve?</b><br/>
+Without an interpreter or compiler, you would have to write raw machine code or assembly language just to display a package status on a screen. The Python interpreter abstracts away hardware complexities like RAM allocation and CPU register management.<br/><br/>
+
+<b>When to use / verify it?</b><br/>
+You need to verify your Python interpreter installation every time you set up a new developer workstation or server environment. If the interpreter version is outdated (e.g., Python 2.7 instead of Python 3.10+), modern language features like advanced pattern matching or strict type hinting will throw syntax errors.<br/><br/>
+
+<b>What can go wrong if installed incorrectly?</b><br/>
+1. <b>PATH Environment Variable Missing:</b> Operating systems search specific system folders (PATH) to find executable programs. If Python isn't added to your PATH during installation, typing <code>python</code> or <code>python3</code> in your terminal returns <code>'python' is not recognized as an internal or external command</code>.<br/>
+2. <b>System Python Collisions:</b> macOS and Linux often come with a pre-installed system Python used internally by the operating system. Modifying or polluting this system Python can break system utilities. We always install a separate user version (or use <code>python3</code>).
+      `,
+      diagram: `
++-------------------------------------------------------------+
+|                      Developer Code                         |
+|           print("Package #1042: Out for Delivery")         |
++-------------------------------------------------------------+
+                              |
+                              v
++-------------------------------------------------------------+
+|                  Python Interpreter (python3)               |
+|   1. Lexing/Parsing -> 2. Bytecode (.pyc) -> 3. PVM Exec   |
++-------------------------------------------------------------+
+                              |
+                              v
++-------------------------------------------------------------+
+|                     Operating System & CPU                  |
+|                   [ Hardware Binary Execution ]             |
++-------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Verifying Python Installation and Environment
+# ==============================================================================
+
+import sys
+import os
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic System Check
+# ------------------------------------------------------------------------------
+# 'sys.version' holds a string with the exact version of the active Python interpreter.
+print("--- BEGINNER: Python Version Check ---")
+print("Python Interpreter Version:", sys.version)
+
+# Check if we are running Python 3
+if sys.version_info.major < 3:
+    print("WARNING: You are using Python 2! Please upgrade to Python 3.x immediately.")
+else:
+    print("SUCCESS: Python 3 environment detected.")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Path and Executable Diagnostics
+# ------------------------------------------------------------------------------
+# In a real delivery tracking application, knowing the exact path of the interpreter
+# prevents script execution errors across different environments (staging vs prod).
+print("\n--- INTERMEDIATE: Environment Diagnostics ---")
+print("Interpreter Location:", sys.executable)
+print("Operating System Platform:", sys.platform)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: System Readiness Check for Automated Scripts
+# ------------------------------------------------------------------------------
+def verify_system_readiness() -> dict:
+    """
+    Validates that the host system meets minimum runtime requirements 
+    for running the Logistics & Delivery Status Tracker service.
+    """
+    required_major = 3
+    required_minor = 10
+    
+    current_major = sys.version_info.major
+    current_minor = sys.version_info.minor
+    
+    is_compatible = (current_major == required_major and current_minor >= required_minor) or (current_major > required_major)
+    
+    status_report = {
+        "status": "HEALTHY" if is_compatible else "UNSUPPORTED_PYTHON_VERSION",
+        "python_version": f"{current_major}.{current_minor}.{sys.version_info.micro}",
+        "executable_path": sys.executable,
+        "is_production_ready": is_compatible
+    }
+    
+    return status_report
+
+# Run the production system readiness verification
+system_status = verify_system_readiness()
+print("\n--- ADVANCED: Delivery Tracker Environment Status ---")
+print(system_status)
+      `,
+      keyTakeaways: [
+        "Python is an interpreted language that translates code into execution steps line-by-line.",
+        "Always use Python 3.10+ for modern production application development.",
+        "Ensure Python is added to your operating system's PATH variable during installation.",
+        "Use `sys.version` and `sys.executable` to programmatically verify which interpreter is active."
+      ],
+      commonMistakes: [
+        "<b>Forgetting to check 'Add Python to PATH' on Windows:</b> Leads to 'command not found' errors in terminal.",
+        "<b>Confusing Python 2 and Python 3:</b> Commands like <code>python</code> might point to legacy Python 2 on older systems; always test with <code>python3 --version</code>.",
+        "<b>Modifying the OS System Python:</b> Installing packages directly into macOS/Linux system Python can corrupt operating system tools."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary role of the Python Interpreter?",
+          options: [
+            "To compile Python code directly into permanent machine code executables before running.",
+            "To read Python code line-by-line and translate/execute it on the target operating system.",
+            "To style the code and format indentation automatically.",
+            "To host web applications directly on cloud servers."
+          ],
+          correctIndex: 1,
+          explanation: "The Python interpreter reads Python instructions, translates them into intermediate bytecode, and executes them line-by-line on the host CPU."
+        },
+        {
+          question: "What occurs if Python is installed without adding it to the system PATH environment variable?",
+          options: [
+            "Python scripts run twice as slow.",
+            "The computer refuses to boot up.",
+            "The terminal will report that 'python' or 'python3' is not recognized as a command.",
+            "Python automatically switches to Python 2 mode."
+          ],
+          correctIndex: 2,
+          explanation: "The PATH environment variable tells the command line which directories to search for executable tools. Without it, the shell cannot find the `python` program."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Use the Interpreter, REPL, Files, Statements, and Expressions",
+      durationMinutes: 22,
+      explanation: `
+<b>Interacting with Python: REPL vs. Script Files</b><br/>
+Once Python is installed, you can interact with it in two distinct ways: through the <b>REPL (Read-Eval-Print Loop)</b> or by executing <b>Script Files (<code>.py</code> files)</b>.<br/><br/>
+
+<b>1. The REPL (Interactive Shell)</b><br/>
+When you type <code>python3</code> in your terminal without any arguments, you enter an interactive session indicated by the <code>&gt;&gt;&gt;</code> prompt. 
+<ul>
+  <li><b>Read:</b> Takes the line of code you type.</li>
+  <li><b>Eval:</b> Evaluates/executes the code immediately.</li>
+  <li><b>Print:</b> Prints the result to the console.</li>
+  <li><b>Loop:</b> Waits for your next input.</li>
+</ul>
+<b>When to use REPL:</b> Quick calculations, testing a single function or regex pattern, or inspecting library methods.<br/>
+<b>When NOT to use REPL:</b> Building real multi-step software. Once you close the REPL session, all code is lost permanently.<br/><br/>
+
+<b>2. Script Files (.py)</b><br/>
+For building real applications like our Delivery Status Tracker, code is written in plain text files saved with a <code>.py</code> extension (e.g., <code>tracker.py</code>) and executed using <code>python3 tracker.py</code>.<br/><br/>
+
+<b>Expressions vs. Statements</b><br/>
+Understanding the fundamental difference between an expression and a statement is critical for avoiding syntax bugs:
+<ul>
+  <li><b>Expression:</b> A combination of values, variables, and operators that <i>evaluates to a single resulting value</i>. Example: <code>5 + 10</code> or <code>package_weight * 2.5</code>.</li>
+  <li><b>Statement:</b> An instruction that <i>performs an action</i> or controls execution flow, but does not evaluate to a value by itself. Example: variable assignments (<code>status = "SHIPPED"</code>), conditional checks (<code>if / else</code>), or loop constructs.</li>
+</ul>
+      `,
+      diagram: `
++-------------------------------------------------------------------+
+|                        REPL Execution Flow                        |
+|  [ User Input ] ---> Read ---> Evaluate ---> Print ---> Loop     |
++-------------------------------------------------------------------+
+
++-------------------------------------------------------------------+
+|                    Script File (.py) Execution                    |
+|  [ tracker.py ] ---> Interpreter Reads File ---> Line-by-Line Exec|
++-------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: REPL, Scripting, Expressions, and Statements
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Expressions vs Statements
+# ------------------------------------------------------------------------------
+
+# Expressions (they evaluate to a single value):
+base_shipping_cost = 5.00                       # Statement (Assignment)
+weight_kg = 3.2                                 # Statement (Assignment)
+rate_per_kg = 1.50                              # Statement (Assignment)
+
+# The following line contains expressions evaluated on the right-hand side:
+calculated_cost = base_shipping_cost + (weight_kg * rate_per_kg)  # Expression -> 9.8
+print("--- BEGINNER: Expression Evaluation ---")
+print("Total Calculated Shipping Cost: $", calculated_cost)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Combining Expressions in Statements for Delivery Logic
+# ------------------------------------------------------------------------------
+
+package_id = "PKG-9082"
+is_express = True
+distance_miles = 450
+
+# Conditional statement containing logical expressions
+if is_express and (distance_miles > 300):
+    estimated_days = 1
+else:
+    estimated_days = 3
+
+print("\n--- INTERMEDIATE: Delivery Estimation Statement ---")
+print(f"Package {package_id} Estimated Delivery: {estimated_days} day(s)")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Delivery Processing Engine
+# ------------------------------------------------------------------------------
+
+def process_package_delivery_status(tracking_number: str, weight: float, distance: int, priority: str) -> dict:
+    """
+    Evaluates package metadata using structured expressions and statements
+    to produce a standardized status output for logistics systems.
+    """
+    # Expressions determining pricing tiers
+    is_heavy = weight > 20.0
+    is_long_haul = distance > 500
+    
+    # Base fee calculation statement containing complex arithmetic expressions
+    surcharge = (25.0 if is_heavy else 0.0) + (15.50 if is_long_haul else 5.0)
+    total_fee = round(10.0 + (weight * 0.75) + surcharge, 2)
+    
+    # State control statement
+    if priority.upper() == "CRITICAL":
+        status_code = "IN_TRANSIT_EXPRESS"
+    elif priority.upper() == "STANDARD":
+        status_code = "IN_TRANSIT_GROUND"
+    else:
+        status_code = "PENDING_CLASSIFICATION"
+        
+    return {
+        "tracking_number": tracking_number,
+        "status": status_code,
+        "total_fee_usd": total_fee,
+        "heavy_package": is_heavy
+    }
+
+# Execute script functionality
+delivery_summary = process_package_delivery_status("DELIV-7721", 24.5, 620, "CRITICAL")
+print("\n--- ADVANCED: Delivery Engine Output ---")
+print(delivery_summary)
+      `,
+      keyTakeaways: [
+        "The REPL (`python3`) is an interactive environment for quick experimentation and testing.",
+        "Production Python code is written in persistent script files with a `.py` extension.",
+        "Expressions produce/evaluate to a value (e.g., `10 + 5`), whereas Statements execute an action or structure (e.g., `x = 10` or `if/else`).",
+        "Combining expressions inside control statements forms the foundational structure of all Python applications."
+      ],
+      commonMistakes: [
+        "<b>Trying to write entire multi-file applications inside the REPL:</b> When the session closes, all work is lost.",
+        "<b>Confusing expression assignment with comparison:</b> Writing <code>if status = 'DELIVERED':</code> (single equals assignment statement) instead of <code>if status == 'DELIVERED':</code> (comparison expression).",
+        "<b>Expecting statements to return values directly:</b> Trying to assign an <code>if</code> block directly to a variable in ways invalid to Python syntax."
+      ],
+      quizzes: [
+        {
+          question: "Which of the following is an example of an Expression in Python?",
+          options: [
+            "if package_weight > 10:",
+            "package_status = 'PENDING'",
+            "distance_miles * 1.609",
+            "import os"
+          ],
+          correctIndex: 2,
+          explanation: "`distance_miles * 1.609` is an expression because it calculates and evaluates directly to a numerical value."
+        },
+        {
+          question: "When is it most appropriate to use the Python REPL instead of writing a `.py` script file?",
+          options: [
+            "When building an e-commerce backend with database models.",
+            "When quickly testing how a single string method or mathematical operation works.",
+            "When writing code that needs to run on a scheduled cron job on a cloud server.",
+            "When creating automated test suites for a delivery tracker."
+          ],
+          correctIndex: 1,
+          explanation: "The REPL is designed for immediate, temporary experimentation, quick checks, and testing small snippets of logic."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Set Up VS Code as a Project Workspace",
+      durationMinutes: 20,
+      explanation: `
+<b>Professional Workspaces with Visual Studio Code (VS Code)</b><br/>
+While you can write Python code in simple text editors like Notepad or TextEdit, professional software development requires a feature-rich Integrated Development Environment (IDE) or Code Editor. <b>VS Code</b> is currently the industry standard editor for Python development.<br/><br/>
+
+<b>Why use VS Code?</b><br/>
+VS Code provides key developer tools integrated into one window:
+<ul>
+  <li><b>Syntax Highlighting & Formatting:</b> Colors code keywords, variables, and strings to make code instantly readable and highlight structural errors.</li>
+  <li><b>IntelliSense / Autocomplete:</b> Suggests variable names, module methods, and function signatures as you type.</li>
+  <li><b>Integrated Terminal:</b> Allows you to execute scripts, manage git repositories, and activate virtual environments without leaving the editor.</li>
+  <li><b>Python Extension (by Microsoft):</b> Connects VS Code directly to your installed Python interpreter and virtual environments.</li>
+</ul>
+
+<b>Setting Up a Dedicated Project Folder:</b><br/>
+A common beginner mistake is creating loose Python files randomly across the Desktop or Downloads folder. Professional projects are organized inside a dedicated workspace root folder (e.g., <code>delivery_tracker/</code>). Opening this folder in VS Code via <code>File -&gt; Open Folder</code> creates a clean workspace context where relative file paths, configuration files, and terminal commands work seamlessly.<br/><br/>
+
+<b>Essential VS Code Configuration for Python:</b><br/>
+1. Install the official <b>Python Extension</b> (ms-python.python).<br/>
+2. Select your interpreter: Press <code>Ctrl+Shift+P</code> (or <code>Cmd+Shift+P</code> on Mac), type <code>Python: Select Interpreter</code>, and select your Python binary.<br/>
+3. Configure settings to format code on save (e.g., using Black or Ruff formatting).
+      `,
+      diagram: `
++-------------------------------------------------------------------+
+|                        VS CODE WORKSPACE                          |
+|                                                                   |
+| [ File Explorer ]         [ Code Editor: tracker.py ]             |
+|  v delivery_tracker/        1 | tracking_num = "TRK-100"            |
+|    > .venv/                 2 | print("Status:", tracking_num)    |
+|    # tracker.py                                                   |
+|    # config.json          --------------------------------------- |
+|                           [ Integrated Terminal ]                 |
+|                           $ python3 tracker.py                    |
+|                           Status: TRK-100                         |
++-------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: VS Code Workspace Configuration & Inspection
+# ==============================================================================
+
+import os
+import sys
+
+# ------------------------------------------------------------------------------
+# Beginner: Workspace Directory Check
+# ------------------------------------------------------------------------------
+# When running scripts inside VS Code, the Current Working Directory (CWD)
+# defaults to the folder opened in the VS Code File Explorer sidebar.
+
+cwd = os.getcwd()
+print("--- BEGINNER: Active Workspace Directory ---")
+print("Current Working Directory:", cwd)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Inspecting Workspace Environment Variables
+# ------------------------------------------------------------------------------
+# VS Code allows setting custom environment variables in a .env file located at
+# the workspace root, which Python can read dynamically.
+
+print("\n--- INTERMEDIATE: Workspace Environment Setup ---")
+app_env = os.environ.get("APP_ENV", "development_local")
+print(f"Current Application Environment: {app_env}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Workspace Verification & Asset Path Resolver
+# ------------------------------------------------------------------------------
+class WorkspaceConfigurator:
+    """
+    Ensures that the script is executing inside a properly configured 
+    VS Code workspace directory with required assets present.
+    """
+    def __init__(self, project_name: str):
+        self.project_name = project_name
+        self.root_dir = os.getcwd()
+
+    def validate_workspace_structure(self) -> bool:
+        print(f"\n--- ADVANCED: Validating Workspace [{self.project_name}] ---")
+        print(f"Project Root Path: {self.root_dir}")
+        
+        # Check if running within a standard workspace structure
+        expected_files = ["tracker.py"]
+        existing_files = os.listdir(self.root_dir)
+        
+        missing = [f for f in expected_files if f not in existing_files]
+        if missing:
+            print(f"Notice: Workspace missing typical files: {missing}")
+            return False
+        
+        print("Workspace structure verified successfully.")
+        return True
+
+# Run workspace validator
+workspace = WorkspaceConfigurator(project_name="LogisticsDeliveryTracker")
+workspace.validate_workspace_structure()
+      `,
+      keyTakeaways: [
+        "VS Code is a lightweight, industry-standard editor featuring integrated terminals, debugging, and IntelliSense.",
+        "Always open a dedicated project folder (`File -> Open Folder`), rather than individual detached `.py` files.",
+        "Use `Ctrl+Shift+P` / `Cmd+Shift+P` -> `Python: Select Interpreter` to bind VS Code to your environment.",
+        "The integrated terminal runs directly from your workspace directory, keeping relative paths consistent."
+      ],
+      commonMistakes: [
+        "<b>Editing detached single files without opening a workspace folder:</b> Disables relative module imports and autocomplete across files.",
+        "<b>Selecting the wrong interpreter in VS Code:</b> Causes VS Code to show false import errors ('Import could not be resolved') even when packages are installed.",
+        "<b>Ignoring workspace file organization:</b> Leaving scripts scattered on the Desktop makes managing projects impossible."
+      ],
+      quizzes: [
+        {
+          question: "Why should you open a dedicated folder in VS Code (`File -> Open Folder`) when starting a project?",
+          options: [
+            "Because Python scripts will not run at all without a workspace file.",
+            "To establish a unified root directory for relative file paths, integrated terminal commands, and virtual environments.",
+            "To automatically upload code to a cloud server.",
+            "Because VS Code deletes files that are not inside a project folder."
+          ],
+          correctIndex: 1,
+          explanation: "Opening a folder establishes the root working directory, ensuring relative paths, configuration files, and virtual environments resolve correctly."
+        },
+        {
+          question: "How do you select or change the Python interpreter used by VS Code?",
+          options: [
+            "Delete and reinstall VS Code.",
+            "Type `select python` into a text file and save it.",
+            "Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and choose `Python: Select Interpreter`.",
+            "Restart your operating system."
+          ],
+          correctIndex: 2,
+          explanation: "The VS Code Command Palette provides quick access to commands, including selecting the target Python interpreter."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Use Pip and Virtual Environments Without Mixing Projects",
+      durationMinutes: 24,
+      explanation: `
+<b>Dependency Isolation with Virtual Environments (<code>venv</code>) and <code>pip</code></b><br/><br/>
+
+<b>What is <code>pip</code>?</b><br/>
+<code>pip</code> is Python's standard package manager. It connects to the official Python Package Index (PyPI) to download and install third-party libraries (e.g., <code>requests</code> for HTTP API calls or <code>pandas</code> for data analysis).<br/><br/>
+
+<b>The Problem with Global Package Installation:</b><br/>
+Suppose Project A (an old legacy delivery tool) requires <code>requests==2.18.0</code>. Project B (our new real-time delivery status tracker) requires <code>requests==2.31.0</code> due to security updates. If you install packages globally on your computer, Project B's installation will overwrite Project A's version, breaking Project A! This situation is often called "Dependency Hell."<br/><br/>
+
+<b>The Solution: Virtual Environments (<code>venv</code>)</b><br/>
+A <b>Virtual Environment</b> is an isolated folder containing its own dedicated copy of the Python interpreter, standard library, and installed <code>pip</code> packages. Each project gets its own isolated sandbox.<br/><br/>
+
+<b>Workflow for Virtual Environments:</b>
+<ol>
+  <li><b>Create:</b> Run <code>python3 -m venv .venv</code> in your project root folder.</li>
+  <li><b>Activate:</b>
+    <ul>
+      <li><i>macOS/Linux:</i> <code>source .venv/bin/activate</code></li>
+      <li><i>Windows:</i> <code>.venv\\Scripts\\activate</code></li>
+    </ul>
+  </li>
+  <li><b>Install Dependencies:</b> Run <code>pip install package_name</code>. The package installs strictly into <code>.venv/</code>.</li>
+  <li><b>Freeze Dependencies:</b> Run <code>pip freeze &gt; requirements.txt</code> to save a record of your dependencies for teammates or production servers.</li>
+  <li><b>Deactivate:</b> Run <code>deactivate</code> when finished.</li>
+</ol>
+      `,
+      diagram: `
++-------------------------------------------------------------------+
+|                        HOST OPERATING SYSTEM                      |
+|                                                                   |
+|  +---------------------------+     +---------------------------+  |
+|  | Project A: Legacy Tracker |     | Project B: Modern Tracker |  |
+|  | Directory: /project_a     |     | Directory: /project_b     |  |
+|  |                           |     |                           |  |
+|  |  +---------------------+  |     |  +---------------------+  |  |
+|  |  | Virtual Env (.venv) |  |     |  | Virtual Env (.venv) |  |  |
+|  |  | Python 3.10         |  |     |  | Python 3.11         |  |  |
+|  |  | requests == 2.18.0  |  |     |  | requests == 2.31.0  |  |  |
+|  |  +---------------------+  |     |  +---------------------+  |  |
+|  +---------------------------+     +---------------------------+  |
++-------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Inspecting Virtual Environment and Package Isolation
+# ==============================================================================
+
+import sys
+import os
+
+# ------------------------------------------------------------------------------
+# Beginner: Detecting if Script is Running inside a Virtual Environment
+# ------------------------------------------------------------------------------
+
+def is_in_virtualenv() -> bool:
+    # 'sys.prefix' changes to the .venv directory when activated
+    # 'sys.base_prefix' holds the base system Python path
+    return sys.prefix != sys.base_prefix
+
+print("--- BEGINNER: Virtual Environment Isolation Check ---")
+in_venv = is_in_virtualenv()
+print("Is Virtual Environment Active?", in_venv)
+print("Current Environment Prefix:", sys.prefix)
+print("Base System Python Prefix:", sys.base_prefix)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Checking Package Resolution Paths
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Module Search Paths (sys.path) ---")
+print("Python searches the following directories for installed packages:")
+for index, path in enumerate(sys.path[:3], 1):
+    print(f"  {index}. {path}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Requirements & Dependency Guard
+# ------------------------------------------------------------------------------
+
+def verify_project_dependencies(requirements_file: str = "requirements.txt") -> None:
+    """
+    Validates that the current python environment is isolated 
+    and verifies that project dependency manifest exists.
+    """
+    print("\n--- ADVANCED: Dependency Guard & Environment Inspection ---")
+    
+    # Enforce Virtual Environment Usage in Production / Staging
+    if not is_in_virtualenv():
+        print("CRITICAL WARNING: Script running in GLOBAL environment!")
+        print("Please activate your project virtual environment (.venv) before proceeding.")
+    else:
+        print("SECURITY CHECK PASSED: Isolated virtual environment detected.")
+        
+    if os.path.exists(requirements_file):
+        print(f"Manifest Found: '{requirements_file}' is present.")
+        with open(requirements_file, "r") as f:
+            deps = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        print(f"Total Declared Dependencies: {len(deps)}")
+    else:
+        print(f"Manifest Missing: '{requirements_file}' not found in root workspace.")
+
+# Run dependency verification
+verify_project_dependencies()
+      `,
+      keyTakeaways: [
+        "Never install project dependencies globally; always create a virtual environment (`python3 -m venv .venv`).",
+        "Virtual environments create an isolated directory containing a project-specific Python interpreter and site-packages.",
+        "Activate virtual environments using `source .venv/bin/activate` (Mac/Linux) or `.venv\\Scripts\\activate` (Windows).",
+        "Use `pip freeze > requirements.txt` to capture project dependencies for reproducible deployment."
+      ],
+      commonMistakes: [
+        "<b>Installing packages without activating the virtual environment:</b> Pollutes the global OS Python installation.",
+        "<b>Committing the `.venv` folder to Git:</b> `.venv` contains binary files specific to your operating system; add `.venv/` to `.gitignore` and commit `requirements.txt` instead.",
+        "<b>Forgetting to activate `.venv` when opening a new terminal tab:</b> Causes missing module errors (`ModuleNotFoundError`)."
+      ],
+      quizzes: [
+        {
+          question: "What problem do Python Virtual Environments (`venv`) solve?",
+          options: [
+            "They make Python code execute twice as fast.",
+            "They prevent dependency conflicts by isolating packages per project rather than installing them globally.",
+            "They automatically fix syntax errors in your script files.",
+            "They allow Python code to run on systems without Python installed."
+          ],
+          correctIndex: 1,
+          explanation: "Virtual environments isolate package dependencies per project, preventing conflicting versions from overwriting each other."
+        },
+        {
+          question: "Which file should be committed to version control (Git) to share package dependencies with team members?",
+          options: [
+            "The entire `.venv/` folder.",
+            "The Python executable binary file.",
+            "A `requirements.txt` file generated by `pip freeze`.",
+            "The operating system PATH settings file."
+          ],
+          correctIndex: 2,
+          explanation: "`requirements.txt` lists package names and exact versions in plain text. `.venv/` contains system-specific binaries and should be excluded via `.gitignore`."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Write, Indent, Comment, and Debug a First Program",
+      durationMinutes: 22,
+      explanation: `
+<b>Writing Clean Python Code: Indentation, Comments, and Debugging</b><br/><br/>
+
+<b>1. Indentation as Syntax Structure</b><br/>
+Unlike languages such as JavaScript, C++, or Java that use curly braces <code>{}</code> to define blocks of code, <b>Python uses white space indentation</b>.
+<ul>
+  <li>Standard Python convention (PEP 8) requires <b>4 spaces per indentation level</b>.</li>
+  <li>Mixing spaces and tabs causes an immediate <code>IndentationError</code> or <code>TabError</code>.</li>
+  <li>An indented block tells Python that certain statements belong inside a function, loop, or conditional block.</li>
+</ul>
+
+<b>2. Intentional Commenting</b><br/>
+Comments explain <i>WHY</i> code was written a certain way, not just <i>WHAT</i> the code does.
+<ul>
+  <li><b>Single-line comments:</b> Start with a hash symbol <code>#</code>.</li>
+  <li><b>Docstrings (Multi-line comments):</b> Enclosed in triple quotes <code>\"\"\" docstring here \"\"\"</code> at the start of modules, classes, or functions to document usage.</li>
+</ul>
+
+<b>3. Basic Debugging Techniques</b><br/>
+When your code crashes, Python prints a <b>Traceback</b>. A Traceback tells you:
+1. The exact file and line number where the error occurred.
+2. The sequence of function calls leading to the error.
+3. The specific error type (e.g., <code>NameError</code>, <code>TypeError</code>, <code>SyntaxError</code>, <code>ZeroDivisionError</code>).<br/><br/>
+
+<b>Real-World Logistics Example:</b><br/>
+Imagine calculated delivery time equals <code>total_distance / speed</code>. If <code>speed</code> is accidentally set to <code>0</code> (e.g., vehicle breakdown), Python throws a <code>ZeroDivisionError</code>. Learning to read the traceback allows you to instantly fix the line causing the failure.
+      `,
+      diagram: `
++-------------------------------------------------------------------+
+|                        READING A TRACEBACK                        |
+|                                                                   |
+| Traceback (most recent call last):                                |
+|   File "tracker.py", line 18, in <module>                         |
+|     eta = calculate_eta(distance=100, speed=0)                    |
+|   File "tracker.py", line 12, in calculate_eta                    |
+|     return distance / speed                                       |
+| ZeroDivisionError: division by zero                               |
+| ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^                               |
+|    Error Name         Error Description                           |
++-------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Indentation, Documentation, and Traceback Debugging
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Clean Indentation & Comments (PEP 8)
+# ------------------------------------------------------------------------------
+
+# Single-line comment: Define base parameters for package shipping
+package_weight_lbs = 12.5
+destination_zone = "WEST_COAST"
+
+# Python requires exactly 4 spaces for the block under the 'if' statement
+if package_weight_lbs > 10.0:
+    # Indented block level 1
+    shipping_tier = "HEAVY_FREIGHT"
+    is_oversized = True
+else:
+    # Indented block level 1
+    shipping_tier = "STANDARD_PARCEL"
+    is_oversized = False
+
+print("--- BEGINNER: Indentation & Rules ---")
+print(f"Package Tier: {shipping_tier}, Oversized: {is_oversized}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Structured Docstrings & Exception Handling
+# ------------------------------------------------------------------------------
+
+def calculate_delivery_hours(distance_miles: float, speed_mph: float) -> float:
+    \"\"\"
+    Calculates estimated transit hours for a delivery vehicle.
+    
+    Args:
+        distance_miles (float): Total route distance in miles.
+        speed_mph (float): Average transit speed in miles per hour.
+        
+    Returns:
+        float: Total transit time in hours.
+        
+    Raises:
+        ValueError: If speed is less than or equal to 0.
+    \"\"\"
+    if speed_mph <= 0:
+        # Raising an explicit exception with a clear message prevents ZeroDivisionError
+        raise ValueError("Transit speed must be greater than zero miles per hour.")
+    
+    return round(distance_miles / speed_mph, 2)
+
+print("\n--- INTERMEDIATE: Safe Function Execution ---")
+try:
+    eta_hours = calculate_delivery_hours(distance_miles=240.0, speed_mph=60.0)
+    print(f"Estimated Transit Time: {eta_hours} hours")
+except ValueError as error:
+    print(f"Handled Error: {error}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Delivery Tracker Program with Robust Debugging
+# ------------------------------------------------------------------------------
+
+def run_delivery_status_tool(tracking_id: str, distance: float, speed: float) -> dict:
+    \"\"\"
+    Main entry point for evaluating package delivery status.
+    Demonstrates defensive error handling and traceback capture.
+    \"\"\"
+    print(f"\n--- ADVANCED: Running Delivery Tool for [{tracking_id}] ---")
+    
+    status_report = {
+        "tracking_id": tracking_id,
+        "success": False,
+        "eta_hours": None,
+        "error_message": None
+    }
+    
+    try:
+        # Calculation attempt
+        status_report["eta_hours"] = calculate_delivery_hours(distance, speed)
+        status_report["success"] = True
+    except ValueError as val_err:
+        status_report["error_message"] = f"Validation Error: {str(val_err)}"
+    except Exception as unexpected_err:
+        status_report["error_message"] = f"Unexpected Exception: {type(unexpected_err).__name__} - {str(unexpected_err)}"
+    
+    return status_report
+
+# Test successful execution
+report_success = run_delivery_status_tool("TRACK-101", 350.0, 55.0)
+print("Success Run Output:", report_success)
+
+# Test handled error condition (speed = 0)
+report_failure = run_delivery_status_tool("TRACK-102", 350.0, 0.0)
+print("Failure Run Output:", report_failure)
+      `,
+      keyTakeaways: [
+        "Python relies on whitespace indentation (PEP 8 standard: 4 spaces) to define code block structures.",
+        "Mixing tabs and spaces causes syntax errors (`TabError` / `IndentationError`).",
+        "Use docstrings (`\"\"\"...\"\"\"`) to document function parameters, return values, and behavior.",
+        "Read Tracebacks from bottom to top to identify the error type, message, and line number."
+      ],
+      commonMistakes: [
+        "<b>Mixing spaces and tabs for indentation:</b> Causes subtle, difficult-to-spot syntax crashes.",
+        "<b>Reading tracebacks from top to bottom:</b> The most specific error type and exact line number are located at the very bottom of the traceback message.",
+        "<b>Writing redundant comments:</b> Commenting `x = 5 # sets x to 5` adds clutter without explaining business context."
+      ],
+      quizzes: [
+        {
+          question: "How does Python determine where a code block (such as an `if` statement or function body) starts and ends?",
+          options: [
+            "Using opening and closing curly braces `{}`.",
+            "Using explicit `begin` and `end` keywords.",
+            "Using consistent whitespace indentation (conventionally 4 spaces).",
+            "By writing the entire code block on a single line."
+          ],
+          correctIndex: 2,
+          explanation: "Python uses whitespace indentation levels to group code blocks together, replacing curly braces found in other languages."
+        },
+        {
+          question: "When reading a Python execution Traceback after a crash, where is the specific error description and line number usually found?",
+          options: [
+            "At the very bottom of the traceback text.",
+            "At the top of the terminal screen.",
+            "In the system control panel.",
+            "Tracebacks do not contain error messages or line numbers."
+          ],
+          correctIndex: 0,
+          explanation: "Python prints tracebacks chronologically; the final line displays the exact error type and message, with the immediate file/line location right above it."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the primary function of the Python Interpreter?",
+      options: [
+        "To compile Python files into Windows .exe binaries.",
+        "To translate and execute Python code line-by-line into machine execution instructions.",
+        "To host web interfaces for Python scripts.",
+        "To manage virtual machine cloud servers."
+      ],
+      correctIndex: 1,
+      explanation: "The Python interpreter evaluates human-written code line-by-line, converting it into instructions executed by the OS."
+    },
+    {
+      question: "What is the key structural difference between an Expression and a Statement in Python?",
+      options: [
+        "An expression performs an action with no output, while a statement always evaluates to a single value.",
+        "An expression evaluates to a single value, whereas a statement performs an action or dictates execution flow.",
+        "Expressions can only contain numbers; statements can only contain text.",
+        "Statements only work inside virtual environments."
+      ],
+      correctIndex: 1,
+      explanation: "Expressions evaluate to a value (e.g., `5 + 5`), while Statements perform an action or control flow (e.g., `if`, `for`, `x = 10`)."
+    },
+    {
+      question: "Why should every Python project use a Virtual Environment (`.venv`) instead of installing packages globally?",
+      options: [
+        "To prevent version conflicts between dependencies required by different projects on the same machine.",
+        "Because `pip` throws an error if used globally.",
+        "Virtual environments make file sizes 90% smaller.",
+        "To encrypt Python code from unauthorized users."
+      ],
+      correctIndex: 0,
+      explanation: "Virtual environments isolate package dependencies per project, avoiding conflicts when different applications require different package versions."
+    },
+    {
+      question: "What PEP 8 standard indentation rule is recommended across the Python community?",
+      options: [
+        "1 tab character per block level.",
+        "2 spaces per block level.",
+        "4 spaces per block level.",
+        "8 spaces per block level."
+      ],
+      correctIndex: 2,
+      explanation: "PEP 8 specifies exactly 4 spaces per indentation level for Python source code."
+    },
+    {
+      question: "In VS Code, which tool allows you to run terminal commands inside your project workspace root directory?",
+      options: [
+        "The Code Outline View.",
+        "The Integrated Terminal.",
+        "The Theme Customizer.",
+        "The Source Control Diff View."
+      ],
+      correctIndex: 1,
+      explanation: "The Integrated Terminal in VS Code opens directly at your current workspace folder, making script execution and virtual environment activation seamless."
+    },
+    {
+      question: "Which command exports your active virtual environment dependencies into a manifest file for deployment?",
+      options: [
+        "pip export > requirements.txt",
+        "pip freeze > requirements.txt",
+        "python save requirements.txt",
+        "venv save dependencies.txt"
+      ],
+      correctIndex: 1,
+      explanation: "`pip freeze` lists all installed package versions, and `>` redirects that output into `requirements.txt`."
+    },
+    {
+      question: "What error occurs if you mix tabs and spaces for code block indentation in Python 3?",
+      options: [
+        "ZeroDivisionError",
+        "TabError / IndentationError",
+        "NameError",
+        "ImportError"
+      ],
+      correctIndex: 1,
+      explanation: "Python 3 forbids mixing tabs and spaces for indentation, throwing a `TabError` or `IndentationError`."
+    },
+    {
+      question: "What happens when you close an interactive Python REPL session?",
+      options: [
+        "All code typed during the session is saved automatically to `repl.py`.",
+        "All variables, functions, and inputs in memory are cleared and lost.",
+        "The Python interpreter uninstalls itself.",
+        "A virtual environment is automatically generated."
+      ],
+      correctIndex: 1,
+      explanation: "The REPL stores state strictly in volatile memory. Closing the session purges all variables and logic typed during that session."
+    }
+  ],
+  project: {
+    name: "Logistics Delivery Status & ETA Tool (Phase 0 Project)",
+    goal: "Build a repeatable Python project workspace and construct a modular, runnable command-line tool that calculates package delivery statuses, shipping fees, and estimated delivery times.",
+    brief: "You are working as a software developer for a regional parcel logistics company. The dispatch team requires a standalone Python utility script to evaluate incoming package shipments. You must set up a isolated Python workspace with a virtual environment, create a clean modular script (`tracker.py`), and handle package evaluation logic defensively without system crashes.",
+    steps: [
+      "Create a dedicated project root directory named `delivery_tracker` and open it as a workspace in VS Code.",
+      "Initialize an isolated Python virtual environment inside `.venv` using `python3 -m venv .venv` and activate it.",
+      "Create a `.gitignore` file to ensure `.venv/` is excluded from git tracking, and create an empty `requirements.txt` file.",
+      "Create a main script named `tracker.py` using standard PEP 8 formatting (4-space indentation) and structured module docstrings.",
+      "Define variables representing package parameters: `tracking_id` (str), `weight_lbs` (float), `distance_miles` (float), and `is_priority` (bool).",
+      "Write mathematical expressions to compute base shipping costs ($5.00 base + $0.50/lb + $0.10/mile) with a $15 priority surcharge if `is_priority` is True.",
+      "Implement conditional statements (`if/elif/else`) to calculate estimated delivery days based on distance (<= 100 miles = 1 day, <= 500 miles = 2 days, > 500 miles = 4 days).",
+      "Encapsulate the evaluation logic inside a robust function `calculate_delivery_status()` that includes defensive checks for negative distance or weight values.",
+      "Execute the script from the VS Code integrated terminal using `python3 tracker.py` and print structured status output to the terminal."
+    ],
+    acceptance: [
+      "The script executes cleanly via `python3 tracker.py` without throwing syntax or indentation errors.",
+      "Virtual environment (.venv) is activated and independent of global Python packages.",
+      "Package status, shipping fees, and estimated transit times calculate accurately based on weight, distance, and priority flag.",
+      "Negative or invalid numeric inputs are handled gracefully with explicit error messages rather than unexpected script crashes."
+    ],
+    stretch: [
+      "Add a batch processor function that accepts a list of package dictionary records and outputs a summary report containing total revenue and average delivery time.",
+      "Use `pip freeze > requirements.txt` after installing a third-party formatting tool (such as `black` or `flake8`) inside `.venv` to enforce professional code formatting."
+    ]
+  }
+};

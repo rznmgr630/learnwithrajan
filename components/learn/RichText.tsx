@@ -253,6 +253,62 @@ function isEntityTableStart(line: string, nextLine: string): boolean {
   return /^[A-Z][A-Za-z0-9_ ]*$/.test(line.trim()) && /^\s*-\s+\w+/.test(nextLine);
 }
 
+function isDatabaseTableStart(line: string, nextLine: string, afterNextLine: string): boolean {
+  return /^[A-Z][A-Za-z0-9_ ]*$/.test(line.trim()) && /^\s*-{3,}\s*$/.test(nextLine) && /^\s*[a-z][\w]*(?:\s*[|:]|$)/i.test(afterNextLine);
+}
+
+function isEnvironmentOrCommandLine(line: string): boolean {
+  const value = line.trim();
+  return /^(?:[A-Z][A-Z0-9_]*=|\$\s*)?(?:npm|npx|pnpm|yarn|node|nest|docker(?:\s|$)|git\s|curl\s|psql\s)/.test(value)
+    || /^[A-Z][A-Z0-9_]*=(?:[^\s]|\s+[^=])+$/.test(value);
+}
+
+function isModuleOrPathLine(line: string): boolean {
+  const value = line.trim();
+  return /^(?:[├└│]|\.\/|\.?\/?(?:src|app|config|test|prisma|database|modules|services|controllers|entities|dto|guards|interceptors|filters)(?:\/|$))/.test(value)
+    || /(?:Module|Service|Controller|Repository|Gateway|Guard|Interceptor|Filter)$/.test(value);
+}
+
+function normalizeOrderedLists(value: string): string {
+  return value.replace(/\\?<ol(?:\s[^>]*)?>([\s\S]*?)<`?\/ol`?>/gi, (_, body: string) => {
+    let item = 0;
+    let nested = false;
+    return body.split("\n").map((line) => {
+      const trimmed = line.trim();
+      if (/^\\?<ul(?:\s[^>]*)?>$/i.test(trimmed)) {
+        nested = true;
+        return "";
+      }
+      if (/^<`?\/ul`?>$/i.test(trimmed)) {
+        nested = false;
+        return "";
+      }
+      const listItem = trimmed.replace(/^\\?<li(?:\s[^>]*)?>/i, "").replace(/<`?\/li`?>$/i, "").trim();
+      if (!listItem) return "";
+      if (/^\\?<li(?:\s[^>]*)?>/i.test(trimmed)) return `${nested ? "↳" : `${++item}.`} ${listItem}`;
+      if (!nested && /^\*\*[^*]+:\*\*/.test(listItem)) return `${++item}. ${listItem}`;
+      return nested ? `↳ ${listItem}` : listItem;
+    }).join("\n");
+  });
+}
+
+function normalizePastedMarkup(value: string): string {
+  return normalizeOrderedLists(value)
+    .replace(/\r\n/g, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<hr\s*\/?>/gi, "\n---\n")
+    .replace(/<h([1-6])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>/gi, "\n### $2\n")
+    .replace(/<(?:pre|code)(?:\s[^>]*)?>/gi, (tag) => tag.startsWith("<pre") ? "<pre>" : "<code>")
+    .replace(/<\/(?:pre|code)>/gi, (tag) => tag.toLowerCase() === "</pre>" ? "</pre>" : "</code>")
+    .replace(/\\?<\/?ul(?:\s[^>]*)?>/gi, "\n")
+    .replace(/\\?<\/?ol(?:\s[^>]*)?>/gi, "\n")
+    .replace(/\\?<li(?:\s[^>]*)?>/gi, "\n• ")
+    .replace(/<`?\/li`?>/gi, "\n")
+    .replace(/<\/?(?:div|section|article|main|p|span)(?:\s[^>]*)?>/gi, "\n")
+    .replace(/<\/?(?:button|input|select|textarea|svg|path)(?:\s[^>]*)?>/gi, "")
+    .replace(/\s*\[citation:\d+\]/gi, "");
+}
+
 /**
  * Renders plain text with inline `code`, **bold** / <b>bold</b> and <i>italic</i>.
  */
@@ -317,12 +373,13 @@ const headingClass: Record<number, string> = {
  * Matches the System Design module's rendering style.
  */
 export function RichParagraph({ text, className }: RichTextProps) {
-  if (!text.includes("\n")) {
-    const standaloneCode = text.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
+  const normalizedText = normalizePastedMarkup(text);
+  if (!normalizedText.includes("\n")) {
+    const standaloneCode = normalizedText.match(/^\s*<code>([\s\S]*)<\/code>\s*$/);
     if (standaloneCode) return <CodeBlock code={decodeCodeEntities(standaloneCode[1])} />;
-    const standalonePre = text.match(/^\s*<pre>([\s\S]*)<\/pre>\s*$/);
+    const standalonePre = normalizedText.match(/^\s*<pre>([\s\S]*)<\/pre>\s*$/);
     if (standalonePre) return <CodeBlock code={decodeCodeEntities(standalonePre[1])} />;
-    const standaloneHeading = text.trim().match(/^(#{1,6})\s+(.+)$/);
+    const standaloneHeading = normalizedText.trim().match(/^(#{1,6})\s+(.+)$/);
     if (standaloneHeading) {
       return (
         <p className={headingClass[standaloneHeading[1].length]}>
@@ -330,9 +387,9 @@ export function RichParagraph({ text, className }: RichTextProps) {
         </p>
       );
     }
-    return <span className={className}>{renderInlineLine(text)}</span>;
+    return <span className={className}>{renderInlineLine(normalizedText)}</span>;
   }
-  const lines = text.split("\n");
+  const lines = normalizedText.split("\n");
   const nodes: ReactNode[] = [];
 
   for (let j = 0; j < lines.length; j++) {
@@ -361,6 +418,18 @@ export function RichParagraph({ text, className }: RichTextProps) {
       }
       j--;
       nodes.push(<CodeBlock key={`entity-table-${j}`} code={table.join("\n")} />);
+      continue;
+    }
+
+    if (isDatabaseTableStart(line, lines[j + 1] ?? "", lines[j + 2] ?? "")) {
+      const table = [line.trim(), lines[j + 1].trim()];
+      j += 2;
+      while (j < lines.length && /^\s*[a-z][\w]*(?:\s*[|:]|\s{2,}|$)/i.test(lines[j])) {
+        table.push(lines[j]);
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={`database-table-${j}`} code={table.join("\n")} />);
       continue;
     }
 
@@ -487,6 +556,30 @@ export function RichParagraph({ text, className }: RichTextProps) {
       continue;
     }
 
+    if (isEnvironmentOrCommandLine(line)) {
+      const block = [line];
+      j++;
+      while (j < lines.length && (isEnvironmentOrCommandLine(lines[j]) || /^\s*#/.test(lines[j]))) {
+        block.push(lines[j]);
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={`environment-command-${j}`} code={block.join("\n")} />);
+      continue;
+    }
+
+    if (isModuleOrPathLine(line) && isModuleOrPathLine(lines[j + 1] ?? "")) {
+      const block = [line];
+      j++;
+      while (j < lines.length && isModuleOrPathLine(lines[j])) {
+        block.push(lines[j]);
+        j++;
+      }
+      j--;
+      nodes.push(<CodeBlock key={`module-path-${j}`} code={block.join("\n")} />);
+      continue;
+    }
+
     if (isFolderTreeLine(line) && (/[├└│]/.test(line) || isFolderTreeLine(lines[j + 1] ?? ""))) {
       const tree: string[] = [];
       while (j < lines.length && isFolderTreeLine(lines[j])) {
@@ -499,40 +592,14 @@ export function RichParagraph({ text, className }: RichTextProps) {
     }
 
     if (line.trim().startsWith("|") && j + 1 < lines.length && isTableDivider(lines[j + 1])) {
-      const headers = tableCells(line);
-      const rows: string[][] = [];
+      const table = [line];
       j += 2;
       while (j < lines.length && lines[j].trim().startsWith("|")) {
-        rows.push(tableCells(lines[j]));
+        table.push(lines[j]);
         j++;
       }
       j--;
-      nodes.push(
-        <div key={`table-${j}`} className="my-3 overflow-x-auto rounded-xl border border-[var(--border)]">
-          <table className="w-full min-w-md border-collapse text-left text-sm">
-            <thead className="bg-[var(--elevated)]">
-              <tr>
-                {headers.map((header, index) => (
-                  <th key={index} scope="col" className="border-b border-[var(--border)] px-4 py-2.5 font-semibold text-[var(--text)]">
-                    {renderInlineLine(header)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {rows.map((row, rowIndex) => (
-                <tr key={rowIndex} className="bg-[var(--surface)] align-top">
-                  {headers.map((_, cellIndex) => (
-                    <td key={cellIndex} className="px-4 py-2.5 text-[var(--muted)]">
-                      {renderInlineLine(row[cellIndex] ?? "")}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>,
-      );
+      nodes.push(<CodeBlock key={`table-${j}`} code={table.join("\n")} />);
       continue;
     }
 
