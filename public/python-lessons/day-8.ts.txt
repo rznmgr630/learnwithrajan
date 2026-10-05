@@ -1,0 +1,664 @@
+/**
+ * DAY 08: Phase 1 · Core Python — Dictionaries
+ * 
+ * Total Duration: 85 minutes
+ * Difficulty: Beginner
+ * Lessons: 3
+ */
+
+export const phase1Dictionaries = {
+  day: 7,
+  topic: "Phase 1 · Core Python — Dictionaries",
+  totalMinutes: 85,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Keys Connect Names to Values",
+      durationMinutes: 19,
+      explanation: `
+<b>Key-Value Association & Hash Table Fundamentals</b><br/>
+In real-world applications, data is rarely stored as an unindexed sequence of standalone values. An order tracking record isn't just a list of random values <code>["TRK-9001", "Chicago", 14.5, "IN_TRANSIT"]</code>. To understand what those values mean, we need named fields. Python's <b>dictionary</b> (<code>dict</code>) provides key-value mappings that connect descriptive names directly to data values.<br/><br/>
+
+<b>1. What is a Dictionary?</b><br/>
+A dictionary in Python is an <b>ordered</b>, <b>mutable</b> mapping of <b>unique, hashable keys</b> to arbitrary values, written with curly braces <code>{key: value}</code>.
+<ul>
+  <li><b>Keys:</b> Act as unique identifiers (labels). Keys must be <b>immutable/hashable</b> types (e.g., <code>str</code>, <code>int</code>, <code>float</code>, <code>tuple</code>). You can <i>never</i> use a mutable object like a <code>list</code> or another <code>dict</code> as a key!</li>
+  <li><b>Values:</b> The data associated with each key. Values can be anything: integers, floats, strings, lists, nested dictionaries, or custom objects.</li>
+  <li><b>Fast $O(1)$ Lookup Speed:</b> Under the hood, Python dictionaries use a <b>hash table</b>. Reading a value by key (`package["status"]`) takes constant time $O(1)$ regardless of whether the dictionary contains 10 key-value pairs or 10,000,000!</li>
+</ul>
+
+<b>2. Accessing Keys Safely: Bracket Notation vs. `.get()`</b><br/>
+Understanding how to handle missing keys separates beginner code from production-ready code:
+<ul>
+  <li><b>Bracket Lookup (<code>dict[key]</code>):</b> Reads the value associated with `key`. <b>Danger:</b> If `key` does not exist in the dictionary, Python raises an unhandled <code>KeyError</code> crash!</li>
+  <li><b>Safe Lookup (<code>dict.get(key, default)</code>):</b> Searches for `key`. If found, it returns the value. If missing, it safely returns <code>None</code> (or a custom default value like `"UNKNOWN"`) without crashing.</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Shipping Package Label</b><br/>
+Think of a dictionary as a physical shipping label pasted onto a parcel box. Instead of guessing what value is written at line 3, you look up specific named field boxes: <code>"Tracking Number" -&gt; "TRK-9001"</code>, <code>"Destination" -&gt; "Chicago, IL"</code>, <code>"Weight" -&gt; 14.5 lbs</code>.
+      `,
+      diagram: `
+DICTIONARY HASH TABLE STRUCTURE:
+
+  package_dict = {
+      "tracking_id": "TRK-9001",
+      "destination": "Chicago, IL",
+      "weight_lbs": 14.5
+  }
+
+  BRACKET ACCESS:
+  package_dict["tracking_id"] -------> Returns "TRK-9001"
+  package_dict["missing_key"] -------> CRASH! Raises KeyError!
+
+  SAFE .get() ACCESS:
+  package_dict.get("missing_key") ----> Returns None (No crash!)
+  package_dict.get("missing_key", "DEFAULT") -> Returns "DEFAULT"
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Dictionary Key-Value Mapping & Safe Lookups
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Creating Dictionaries and Key Lookup Safety
+# ------------------------------------------------------------------------------
+
+# Modeling a delivery package record
+package_record = {
+    "tracking_id": "TRK-9001",
+    "destination": "Chicago, IL",
+    "weight_lbs": 14.5,
+    "is_priority": True
+}
+
+print("--- BEGINNER: Dictionary Reading & Key Safety ---")
+print("Tracking ID:", package_record["tracking_id"])
+print("Destination:", package_record["destination"])
+
+# Demonstrating bracket lookup crash vs safe .get()
+print("\nDemonstrating KeyError Prevention:")
+try:
+    # Bracket lookup on non-existent key raises KeyError
+    delivered_time = package_record["delivery_timestamp"]
+except KeyError as err:
+    print(f"Caught expected KeyError for missing field: {err}")
+
+# Safe lookup using .get() with fallback
+safe_timestamp = package_record.get("delivery_timestamp", "NOT_DELIVERED_YET")
+print("Safe .get() output for missing field:", safe_timestamp)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Checking Key Membership with 'in' Operator
+# ------------------------------------------------------------------------------
+
+shipment_payload = {
+    "order_id": "ORD-5501",
+    "status": "IN_TRANSIT",
+    "current_hub": "HUB_CHICAGO_SOUTH"
+}
+
+print("\n--- INTERMEDIATE: Key Membership Inspection ---")
+# The 'in' operator checks for KEY existence (not value existence!)
+if "status" in shipment_payload:
+    print(f"Status field present: '{shipment_payload['status']}'")
+
+if "driver_id" not in shipment_payload:
+    print("Notice: 'driver_id' key is missing from payload record.")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe External Payload Ingestion Guard
+# ------------------------------------------------------------------------------
+
+def extract_manifest_metadata(raw_payload: dict) -> dict:
+    \"\"\"
+    Safely parses external untrusted API dictionary records using defensive .get() 
+    and membership guards.
+    \"\"\"
+    print("\n--- ADVANCED: Payload Metadata Extraction ---")
+    
+    # Structural check
+    if not isinstance(raw_payload, dict):
+        return {"valid": False, "error": "Payload must be a valid dictionary."}
+        
+    # Extract values with safe defaults
+    tracking_id = raw_payload.get("tracking_id", "UNKNOWN_TRACKING").strip().upper()
+    weight = raw_payload.get("weight_kg", 0.0)
+    status = raw_payload.get("status", "PENDING_CLASSIFICATION")
+    
+    # Required keys verification
+    required_keys = ["tracking_id", "status"]
+    missing_fields = [k for k in required_keys if k not in raw_payload]
+    
+    if missing_fields:
+        return {
+            "valid": False,
+            "error": f"Missing critical mandatory dictionary keys: {missing_fields}"
+        }
+        
+    return {
+        "valid": True,
+        "tracking_id": tracking_id,
+        "weight_kg": float(weight),
+        "status": status,
+        "is_heavy": float(weight) > 20.0
+    }
+
+# Test good payload
+payload_ok = {"tracking_id": "   trk-8812   ", "weight_kg": 24.5, "status": "DISPATCHED"}
+print("Valid Payload Extraction:", extract_manifest_metadata(payload_ok))
+
+# Test incomplete payload
+payload_bad = {"weight_kg": 10.0}
+print("Incomplete Payload Extraction:", extract_manifest_metadata(payload_bad))
+      `,
+      keyTakeaways: [
+        "Dictionaries map immutable, unique keys to arbitrary data values (`{key: value}`).",
+        "Key lookups run in constant $O(1)$ time due to internal hash table indexing.",
+        "Bracket lookup (`dict[key]`) raises an unhandled `KeyError` if the key is missing.",
+        "Use `dict.get(key, default)` or `'key' in dict` to inspect dictionary contents safely."
+      ],
+      commonMistakes: [
+        "<b>Using mutable objects (like lists or dicts) as dictionary keys:</b> Raises `TypeError: unhashable type: 'list'`. Keys must be immutable (str, int, tuple).",
+        "<b>Relying on bracket access `dict[key]` for optional fields:</b> Causes unexpected `KeyError` crashes in production when external APIs return missing fields.",
+        "<b>Confusing key checks with value checks:</b> Writing `'IN_TRANSIT' in my_dict` searches for key names, not values! To search values, write `'IN_TRANSIT' in my_dict.values()`."
+      ],
+      quizzes: [
+        {
+          question: "What exception is raised if you attempt to access `pkg['delivery_date']` when `'delivery_date'` is NOT in the dictionary `pkg`?",
+          options: [
+            "IndexError",
+            "KeyError",
+            "ValueError",
+            "AttributeError"
+          ],
+          correctIndex: 1,
+          explanation: "Accessing a missing key using bracket notation raises a `KeyError`."
+        },
+        {
+          question: "Which expression safely retrieves the value of `'status'` from dictionary `data`, returning `'UNKNOWN'` if `'status'` is missing?",
+          options: [
+            "data['status'] or 'UNKNOWN'",
+            "data.get('status', 'UNKNOWN')",
+            "data.fetch('status', default='UNKNOWN')",
+            "data.read('status', 'UNKNOWN')"
+          ],
+          correctIndex: 1,
+          explanation: "The `.get(key, default)` method safely returns the custom default value if the key does not exist."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Update, Inspect, and Unpack Mappings",
+      durationMinutes: 20,
+      explanation: `
+<b>Mutating, Iterating, and Merging Dictionaries</b><br/>
+In real-world software, dictionaries are active dynamic state models. Package statuses progress, fuel levels drop, and new tracking metadata is merged into existing records.<br/><br/>
+
+<b>1. Updating and Deleting Keys:</b>
+<ul>
+  <li><b>Adding / Modifying Keys:</b> Assign directly via bracket notation (<code>dict["status"] = "DELIVERED"</code>). If the key exists, its value is overwritten; if missing, a new key-value pair is inserted.</li>
+  <li><b>Merging Dictionaries (<code>.update()</code> / Union Operator <code>|</code>):</b>
+    <ul>
+      <li><code>dict_a.update(dict_b)</code>: Modifies `dict_a` in-place by overwriting keys with values from `dict_b`.</li>
+      <li><code>merged_dict = dict_a | dict_b</code> (Python 3.9+ Union Operator): Returns a <b>new merged dictionary object</b> without modifying original inputs.</li>
+    </ul>
+  </li>
+  <li><b>Removing Keys:</b>
+    <ul>
+      <li><code>del dict["key"]</code>: Deletes the key-value pair (raises `KeyError` if missing).</li>
+      <li><code>val = dict.pop("key", default)</code>: Removes and <b>returns</b> the value (safely returns default if missing).</li>
+    </ul>
+  </li>
+</ul>
+
+<b>2. Inspecting Dictionaries (Views):</b>
+<ul>
+  <li><code>dict.keys()</code>: Returns a dynamic view of all key names.</li>
+  <li><code>dict.values()</code>: Returns a dynamic view of all values.</li>
+  <li><code>dict.items()</code>: Returns a dynamic view of key-value pairs as <code>(key, value)</code> tuples. Perfect for <code>for key, val in dict.items():</code> loops!</li>
+</ul>
+
+<b>3. Dictionary Unpacking (<code>**</code>):</b><br/>
+The double asterisk <code>**</code> unpacks key-value pairs from one dictionary into a new dictionary or function call argument list: <code>combined = {**base_config, **override_config}</code>.
+      `,
+      diagram: `
+DICTIONARY MERGING (dict_a | dict_b):
+
+  dict_a = {"id": "TRK-101", "status": "PENDING", "weight": 10.0}
+  dict_b = {"status": "IN_TRANSIT", "driver": "JAMES"}
+
+  merged = dict_a | dict_b
+  
+  Resulting merged object:
+  {
+      "id": "TRK-101", 
+      "status": "IN_TRANSIT",  <-- Overwritten by dict_b!
+      "weight": 10.0,
+      "driver": "JAMES"        <-- Newly added key!
+  }
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Dictionary Mutations, Iteration Views, and Unpacking
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: In-Place Key Mutations and Safe Pop
+# ------------------------------------------------------------------------------
+
+package_data = {
+    "tracking_id": "TRK-8810",
+    "status": "IN_HUB",
+    "temp_notes": "Handle with care"
+}
+
+# Update existing key & insert new key
+package_data["status"] = "OUT_FOR_DELIVERY" # In-place update
+package_data["driver_assigned"] = "DRIVER_42" # Insertion
+
+# Remove key safely using .pop()
+removed_note = package_data.pop("temp_notes", "NO_NOTE_FOUND")
+
+print("--- BEGINNER: Dictionary Mutation ---")
+print("Updated Dictionary:", package_data)
+print("Safely Popped Note:", removed_note)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Iterating over .items() and Merging with '|'
+# ------------------------------------------------------------------------------
+
+base_manifest = {"id": "PKG-100", "hub": "CHICAGO", "priority": "LOW"}
+updates_manifest = {"priority": "HIGH_EXPRESS", "eta": "14:00 CST"}
+
+# Modern Python 3.9+ merging using union operator '|'
+merged_manifest = base_manifest | updates_manifest
+
+print("\n--- INTERMEDIATE: Iterating Dict Views ---")
+print("Merged Dictionary Output:", merged_manifest)
+
+print("\nIterating over key-value pairs via .items():")
+for key, value in merged_manifest.items():
+    print(f"  Field [{key:<10}] -> Value: {value}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Config & Patch Pipeline with ** Unpacking
+# ------------------------------------------------------------------------------
+
+def apply_shipping_system_patch(
+    base_defaults: dict, 
+    environmental_overrides: dict, 
+    user_patches: dict
+) -> dict:
+    \"\"\"
+    Merges multi-tiered system settings using double-asterisk ** unpacking 
+    to create clean runtime application configurations.
+    \"\"\"
+    print("\n--- ADVANCED: Multi-Tier Config Merging Pipeline ---")
+    
+    # Layer 1 Defaults -> Layer 2 Env Overrides -> Layer 3 User Patches
+    # Rightmost keys overwrite matching leftmost keys!
+    final_runtime_config = {
+        **base_defaults,
+        **environmental_overrides,
+        **user_patches
+    }
+    
+    # Clean verification loop
+    print("Final Applied System Parameters:")
+    for param_name, param_val in final_runtime_config.items():
+        print(f"  Config param -> {param_name:20}: {param_val}")
+        
+    return final_runtime_config
+
+# Test config setup
+defaults = {"timeout_sec": 30, "max_retries": 3, "hub_endpoint": "https://api.logistics.com"}
+env_overrides = {"hub_endpoint": "https://staging.logistics.com"} # Overrides endpoint
+user_overrides = {"max_retries": 5}                               # Overrides retries
+
+apply_shipping_system_patch(defaults, env_overrides, user_overrides)
+      `,
+      keyTakeaways: [
+        "Assigning `dict[key] = value` modifies an existing key or inserts a new key-value pair.",
+        "Use `dict.pop(key, default)` to safely remove and return a value by key without risking a `KeyError`.",
+        "Iterate over `dict.items()` to loop through `(key, value)` pairs cleanly in `for` loops.",
+        "Merge dictionaries using the union operator `dict_a | dict_b` (Python 3.9+) or `**` unpacking `{**dict_a, **dict_b}`."
+      ],
+      commonMistakes: [
+        "<b>Using `del dict[key]` without checking key existence:</b> Raises an unhandled `KeyError` if `key` is missing. Use `dict.pop(key, None)` instead.",
+        "<b>Modifying dictionary keys while iterating directly over the dictionary:</b> Raises `RuntimeError: dictionary changed size during iteration`. Iterate over a list copy `list(dict.keys())` instead.",
+        "<b>Assuming `dict_a.update(dict_b)` returns a new dictionary:</b> `.update()` modifies `dict_a` in-place and returns `None`!"
+      ],
+      quizzes: [
+        {
+          question: "What is the return value of executing `data.pop('missing_key', 'DEFAULT_VAL')` when `'missing_key'` is NOT inside `data`?",
+          options: [
+            "`'DEFAULT_VAL'`",
+            "`None`",
+            "A `KeyError` is raised.",
+            "`False`"
+          ],
+          correctIndex: 0,
+          explanation: "Providing a default fallback value to `.pop()` prevents a `KeyError` and safely returns the default fallback."
+        },
+        {
+          question: "Which dictionary method view should you use in a `for` loop to iterate over BOTH key names and value contents simultaneously?",
+          options: [
+            "`dict.keys()`",
+            "`dict.values()`",
+            "`dict.items()`",
+            "`dict.pairs()`"
+          ],
+          correctIndex: 2,
+          explanation: "`dict.items()` yields `(key, value)` tuple pairs, allowing clean iteration: `for k, v in dict.items():`."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Group and Count with Defaultdict and Counter",
+      durationMinutes: 22,
+      explanation: `
+<b>Specialized Standard Library Mappings (`collections` Module)</b><br/>
+While standard dictionaries are powerful, common grouping and counting tasks require repetitive boilerplate code. For example, grouping 10,000 packages by destination city or counting frequencies of package status codes. Python's built-in <code>collections</code> module provides specialized dictionary subclasses designed specifically for these patterns: <b>`defaultdict`</b> and <b>`Counter`</b>.<br/><br/>
+
+<b>1. The `defaultdict` (Automatic Default Value Initialization):</b><br/>
+With a standard dictionary, grouping items into lists requires defensive initialization code:<br/>
+<code># Boilerplate Standard Dict Grouping:</code><br/>
+<code>if city not in packages_by_city:</code><br/>
+<code>    packages_by_city[city] = []</code><br/>
+<code>packages_by_city[city].append(package_id)</code><br/><br/>
+
+A <b>`defaultdict`</b> automatically initializes missing keys using a factory function (like `list`, `int`, or `set`) the first time a key is accessed!<br/>
+<code># Clean defaultdict Grouping:</code><br/>
+<code>from collections import defaultdict</code><br/>
+<code>packages_by_city = defaultdict(list)</code><br/>
+<code>packages_by_city[city].append(package_id) # Missing keys automatically create an empty list []!</code><br/><br/>
+
+<b>2. The `Counter` (Frequency Counting & Multi-sets):</b><br/>
+The <b>`Counter`</b> class is a dictionary subclass designed specifically for tallying object counts.<br/>
+<ul>
+  <li><b>Automatic Frequency Tally:</b> Pass any sequence (like a list of status strings) into `Counter(status_list)` to generate a frequency count dictionary automatically.</li>
+  <li><b>Missing Keys Return `0`:</b> Accessing a missing key on a `Counter` instance returns `0` instead of raising a `KeyError`!</li>
+  <li><b>`most_common(n)`:</b> Returns the top $N$ most frequent elements as a list of `(item, count)` tuples.</li>
+</ul>
+
+<b>Real-World Analogy: Sorting Mail into Postal Bins</b><br/>
+Imagine a postal worker sorting letters into city bins. With a standard dict, the worker must check "Does a bin for Chicago exist? If not, go fetch an empty bin from the back room." With a `defaultdict(list)`, the moment the worker sees a letter for a new city, an empty bin instantly materializes in front of them!
+      `,
+      diagram: `
+DEFAULTDICT(LIST) AUTOMATIC INITIALIZATION:
+
+  packages_by_city = defaultdict(list)
+
+  Execution: packages_by_city["CHICAGO"].append("TRK-101")
+  
+  Step 1: Is "CHICAGO" in dict? NO.
+  Step 2: Automatically invoke factory list() ---> Creates key "CHICAGO": []
+  Step 3: Execute .append("TRK-101")        ---> Result: {"CHICAGO": ["TRK-101"]}
+  (Zero boilerplate if/else checks required!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: collections.defaultdict and collections.Counter
+# ==============================================================================
+
+from collections import defaultdict, Counter
+
+# ------------------------------------------------------------------------------
+# Beginner: Automatic Grouping with defaultdict(list)
+# ------------------------------------------------------------------------------
+
+shipments = [
+    ("CHICAGO", "PKG-101"),
+    ("AUSTIN", "PKG-102"),
+    ("CHICAGO", "PKG-103"),
+    ("SEATTLE", "PKG-104"),
+    ("AUSTIN", "PKG-105")
+]
+
+# Instantiate defaultdict with list factory function
+grouped_packages = defaultdict(list)
+
+for city, tracking_id in shipments:
+    # Missing city keys automatically initialize as empty list []
+    grouped_packages[city].append(tracking_id)
+
+print("--- BEGINNER: Grouping with defaultdict ---")
+print("Packages Grouped by City:")
+for city, pkgs in grouped_packages.items():
+    print(f"  Hub {city:<10} -> Packages: {pkgs}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Frequency Counting with Counter
+# ------------------------------------------------------------------------------
+
+status_logs = [
+    "DELIVERED", "IN_TRANSIT", "DELIVERED", "DELAYED", 
+    "IN_TRANSIT", "DELIVERED", "IN_TRANSIT", "DELIVERED"
+]
+
+# Instantiate Counter with raw list
+status_counts = Counter(status_logs)
+
+print("\n--- INTERMEDIATE: Frequency Counting with Counter ---")
+print("Status Tally Dictionary:", status_counts)
+print("Count for 'DELIVERED':", status_counts["DELIVERED"])
+print("Count for unrecorded status 'CANCELLED':", status_counts["CANCELLED"]) # Returns 0 (No KeyError!)
+
+print("\nTop 2 Most Frequent Statuses:")
+for status, count in status_counts.most_common(2):
+    print(f"  Status '{status}' occurred {count} times.")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Dimensional Analytics Engine
+# ------------------------------------------------------------------------------
+
+def analyze_warehouse_dispatch_telemetry(telemetry_records: list[dict]) -> dict:
+    \"\"\"
+    Analyzes telemetry logs using defaultdict and Counter to aggregate 
+    hub workloads and frequency diagnostics.
+    \"\"\"
+    print("\n--- ADVANCED: Warehouse Telemetry Aggregator ---")
+    
+    # 1. Group package IDs by Hub using defaultdict(set) for automatic deduplication
+    hub_packages = defaultdict(set)
+    
+    # 2. Track total weight per hub using defaultdict(float)
+    hub_weights = defaultdict(float)
+    
+    # 3. Tally error codes using Counter
+    error_counter = Counter()
+    
+    for record in telemetry_records:
+        hub = record.get("hub_id", "UNKNOWN_HUB")
+        pkg_id = record.get("package_id")
+        weight = record.get("weight_lbs", 0.0)
+        error = record.get("error_code")
+        
+        if pkg_id:
+            hub_packages[hub].add(pkg_id)
+            hub_weights[hub] += weight
+            
+        if error:
+            error_counter[error] += 1
+
+    return {
+        "hub_unique_package_counts": {hub: len(pkgs) for hub, pkgs in hub_packages.items()},
+        "hub_total_weight_lbs": {hub: round(weight, 2) for hub, weight in hub_weights.items()},
+        "most_common_errors": error_counter.most_common(3)
+    }
+
+# Test telemetry records
+raw_telemetry = [
+    {"hub_id": "HUB_CHI", "package_id": "PKG-1", "weight_lbs": 12.5, "error_code": "LABEL_UNREADABLE"},
+    {"hub_id": "HUB_CHI", "package_id": "PKG-2", "weight_lbs": 45.0},
+    {"hub_id": "HUB_AUS", "package_id": "PKG-3", "weight_lbs": 18.2, "error_code": "ADDRESS_INVALID"},
+    {"hub_id": "HUB_CHI", "package_id": "PKG-1", "weight_lbs": 12.5, "error_code": "LABEL_UNREADABLE"} # Duplicate event
+]
+
+print("Analytics Output Summary:")
+analytics = analyze_warehouse_dispatch_telemetry(raw_telemetry)
+print("Package Counts per Hub:", analytics["hub_unique_package_counts"])
+print("Total Weight per Hub:", analytics["hub_total_weight_lbs"])
+print("Top Error Diagnostics:", analytics["most_common_errors"])
+      `,
+      keyTakeaways: [
+        "`collections.defaultdict` automatically initializes values for missing keys using a provided factory function (like `list`, `set`, or `int`).",
+        "`collections.Counter` automatically tallies object frequencies and returns `0` for missing keys instead of raising a `KeyError`.",
+        "Use `Counter.most_common(n)` to retrieve the top $N$ most frequent elements.",
+        "Using `defaultdict` and `Counter` eliminates repetitive key-existence initialization boilerplate."
+      ],
+      commonMistakes: [
+        "<b>Passing an instantiated object instead of a factory function to `defaultdict`:</b> Writing `defaultdict([])` instead of `defaultdict(list)`. You must pass the class constructor itself!",
+        "<b>Using standard dict manual checks when `defaultdict` is cleaner:</b> Writing 4 lines of `if key not in dict: dict[key] = []` boilerplate.",
+        "<b>Expecting `Counter` to raise a `KeyError`:</b> `Counter` instances return `0` for missing keys, which can mask typos if you expect standard dictionary key errors."
+      ],
+      quizzes: [
+        {
+          question: "What happens when you access a missing key on a `defaultdict(list)` instance?",
+          options: [
+            "A `KeyError` is raised.",
+            "It automatically creates the missing key with an empty list `[]` as its value and returns it.",
+            "It returns `None`.",
+            "It deletes the dictionary."
+          ],
+          correctIndex: 1,
+          explanation: "When a missing key is accessed on a `defaultdict(list)`, it invokes the `list` factory function, creates a new key bound to `[]`, and returns it."
+        },
+        {
+          question: "What does `Counter(['A', 'B', 'A', 'C'])['D']` return?",
+          options: [
+            "`0`",
+            "`None`",
+            "Raises a `KeyError`",
+            "`1`"
+          ],
+          correctIndex: 0,
+          explanation: "`collections.Counter` is designed for counting frequencies; accessing a missing key returns `0` count rather than crashing."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which of the following data types CANNOT be used as a key inside a Python dictionary?",
+      options: [
+        "str (String)",
+        "int (Integer)",
+        "list (List)",
+        "tuple (Tuple containing strings)"
+      ],
+      correctIndex: 2,
+      explanation: "Dictionary keys must be immutable (hashable). Lists are mutable, so attempting to use a list as a key raises `TypeError: unhashable type: 'list'`."
+    },
+    {
+      question: "What is the Big-O time complexity of looking up a value by key in a Python dictionary?",
+      options: [
+        "$O(1)$ Constant Time",
+        "$O(N)$ Linear Time",
+        "$O(N^2)$ Quadratic Time",
+        "$O(\\log N)$ Logarithmic Time"
+      ],
+      correctIndex: 0,
+      explanation: "Dictionaries utilize hash tables, giving them average $O(1)$ constant time performance for key lookups."
+    },
+    {
+      question: "What happens when executing `merged = dict_a | dict_b` if both dictionaries contain the key `'status'`?",
+      options: [
+        "Python raises a `DuplicateKeyError`.",
+        "The value from `dict_b` overwrites the value from `dict_a` in `merged`.",
+        "The value from `dict_a` is preserved; `dict_b`'s value is ignored.",
+        "Both values are concatenated into a list."
+      ],
+      correctIndex: 1,
+      explanation: "In dictionary union operations (`dict_a | dict_b`), keys in the right operand (`dict_b`) overwrite matching keys from the left operand (`dict_a`)."
+    },
+    {
+      question: "Which expression safely retrieves key `'weight'` from dictionary `pkg`, returning `0.0` if `'weight'` is missing?",
+      options: [
+        "pkg['weight'] or 0.0",
+        "pkg.get('weight', 0.0)",
+        "pkg.find('weight', 0.0)",
+        "pkg.read('weight', default=0.0)"
+      ],
+      correctIndex: 1,
+      explanation: "`pkg.get('weight', 0.0)` safely returns the default value `0.0` if `'weight'` does not exist."
+    },
+    {
+      question: "Which method yields `(key, value)` tuple pairs suitable for iterating through dictionaries in `for` loops?",
+      options: [
+        "dict.keys()",
+        "dict.values()",
+        "dict.items()",
+        "dict.elements()"
+      ],
+      correctIndex: 2,
+      explanation: "`dict.items()` yields `(key, value)` tuple pairs."
+    },
+    {
+      question: "Why is `collections.defaultdict(list)` preferred over standard dictionaries when grouping items into lists?",
+      options: [
+        "It makes dictionary lookups run 10x faster.",
+        "It eliminates manual key-existence initialization boilerplate by automatically creating an empty list `[]` for missing keys.",
+        "It prevents values from being overwritten.",
+        "It forces all keys to be integers."
+      ],
+      correctIndex: 1,
+      explanation: "`defaultdict(list)` automatically creates an empty list `[]` when a missing key is accessed, eliminating defensive `if key not in dict:` checks."
+    },
+    {
+      question: "What does `Counter.most_common(1)` return?",
+      options: [
+        "A dictionary containing all key counts.",
+        "A list containing a single `(element, count)` tuple representing the most frequent element.",
+        "An integer representing the total element count.",
+        "The single most frequent key as a string."
+      ],
+      correctIndex: 1,
+      explanation: "`most_common(N)` returns a list of $N$ tuples representing the most frequent elements and their counts."
+    },
+    {
+      question: "Which syntax unpacks key-value pairs from dictionary `extra_data` into a new dictionary?",
+      options: [
+        "`{*extra_data}`",
+        "`{**extra_data}`",
+        "`{unpack(extra_data)}`",
+        "`{&extra_data}`"
+      ],
+      correctIndex: 1,
+      explanation: "The double asterisk `**` unpacks key-value pairs from a dictionary."
+    }
+  ],
+  project: {
+    name: "Logistics Hub Telemetry & Dispatch Aggregator (Phase 1 Project)",
+    goal: "Build a telemetry aggregation engine that processes raw package shipment dictionaries, updates status mappings safely, groups regional workloads using defaultdict, and tallies operational error frequencies using Counter.",
+    brief: "Your logistics company requires a telemetry processing engine (`telemetry_aggregator.py`). The tool must ingest incoming shipment records, validate mandatory keys safely using `.get()` and `in` operators, merge status patch updates using the union operator `|`, group active packages by hub using `defaultdict(list)`, and calculate top operational error codes using `Counter`.",
+    steps: [
+      "Create a script file named `telemetry_aggregator.py` in your workspace.",
+      "Define raw test telemetry lists containing package dictionaries with tracking IDs, destination hubs, weights, and optional error flags.",
+      "Write a safe extraction function `extract_package_info(record: dict) -> dict` that uses `.get()` with default values to prevent `KeyError` crashes.",
+      "Implement a patch update function `apply_status_patch(original: dict, patch: dict) -> dict` using dictionary merging (`dict_a | dict_b`).",
+      "Group package records by destination hub using `collections.defaultdict(list)` and eliminate manual key initialization checks.",
+      "Tally system error frequencies across all records using `collections.Counter` and extract the top 2 diagnostic issues using `.most_common(2)`.",
+      "Iterate over aggregated hub dictionaries using `.items()` and format a complete telemetry report in the integrated terminal."
+    ],
+    acceptance: [
+      "Missing record keys are handled safely via `.get()` without unhandled `KeyError` exceptions.",
+      "Dictionary merging cleanly updates status fields while preserving un-patched metadata.",
+      "Package grouping uses `defaultdict(list)` cleanly without repetitive boilerplate checks.",
+      "Executing `python3 telemetry_aggregator.py` prints a structured hub workload and error diagnostic report."
+    ],
+    stretch: [
+      "Integrate `defaultdict(float)` to accumulate total shipping weight per regional hub concurrently.",
+      "Annotate all functions with strict type hints (`dict[str, Any]`, `defaultdict[str, list]`) and pass static type verification."
+    ]
+  }
+};
