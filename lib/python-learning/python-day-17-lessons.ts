@@ -6,172 +6,85 @@ const q = (question: string, options: string[], correctIndex: number, explanatio
 export const PYTHON_DAY_17_LESSONS: LessonDay = {
   day: 17,
   label: same("Day 17 · Phase 2 · Objects"),
-  title: same("Encapsulation & Properties"),
-  overview: same("Learn about encapsulation, properties, getters/setters, and static/class methods to enhance your Python code's structure and maintainability."),
-  totalMinutes: 120,
-  difficulty: same("Intermediate"),
+  title: same("Encapsulation & Properties: Protect State, Expose Clear Access"),
+  overview: same("Mark public and internal attributes with clear naming conventions, replace risky direct access with properties, write getters and setters the Python way using @property, and add @staticmethod and @classmethod helpers when behavior belongs to the class rather than one instance. The delivery-tracker project learns to protect package state while keeping call sites clean."),
+  totalMinutes: 145,
+  difficulty: same("Beginner"),
   lessons: [
     {
-      id: "python-day-17-encapsulation",
-      title: same("Encapsulation and Naming Conventions"),
-      durationMinutes: 30,
-      explanation: same("<b>Encapsulation:</b> Encapsulation is the practice of hiding the internal representation of an object and exposing only necessary details through public interfaces. This helps in maintaining data integrity and preventing accidental modification.\n\n<b>Naming Conventions:</b> Use descriptive names for attributes and methods to make your code readable and maintainable. Follow PEP 8 guidelines for consistent naming conventions."),
-      diagram: "Encapsulation\n  │\n  ├─ Private Attributes\n  │  └─ Protected Attributes\n  │\n  └─ Public Methods\n          │\n          ▼\n     Exposes only necessary details",
-      codeExample: { title: same("Encapsulation Example"), code: `
-class DeliveryTracker:
-    def __init__(self, package_id: str, status: str):
-        self.__package_id = package_id  # Private attribute
-        self._status = status           # Protected attribute
-
-    def get_package_id(self) -> str:
-        return self.__package_id
-
-    def set_status(self, new_status: str):
-        self._status = new_status
-
-    def print_status(self):
-        if self._status == "packed":
-            print(f"{self.get_package_id()} is ready for dispatch")
-        else:
-            print(f"{self.get_package_id()} needs review")
-      `, details: same("Use `__` before an attribute name to make it private. Use `_` to indicate protected attributes.") },
-      keyTakeaways: [same("Private attributes should not be accessed directly."), same("Protected attributes can be accessed but should not be modified outside the class."), same("Public methods provide controlled access to private and protected attributes.")],
-      commonMistakes: [same("<b>Accessing private attributes directly.</b> This can lead to bugs and violates encapsulation principles."), same("<b>Overusing public attributes.</b> Expose only what is necessary to maintain data integrity.")],
-      quiz: [q("What does `__` before an attribute name signify?", ["Private attribute", "Protected attribute", "Public attribute", "Static attribute"], 0, "Private attributes cannot be accessed directly from outside the class."), q("Which method allows controlled access to a private attribute?", ["`__get_attribute()`", "`get_attribute()`", "`set_attribute()`", "`print_attribute()`"], 0, "Public methods like `get_package_id()` allow controlled access to private attributes.")],
+      id: "python-day-17-public-internal",
+      title: same("Public attributes, internal attributes, and naming conventions"),
+      durationMinutes: 28,
+      explanation: same("<b>Encapsulation means keeping an object's internal details under control while exposing a clear public surface.</b> In Python this is guided more by convention and careful design than by strict private keywords.\n\n<b>Beginner:</b> A normal name such as `status` is treated as public. A single leading underscore such as `_status` is an internal attribute: other code should not touch it casually. A double leading underscore such as `__cache` triggers name mangling and is used less often for ordinary application code.\n\n<b>Why conventions matter:</b> Python trusts developers to respect boundaries. The underscore is a signal, not a hard lock. Teams still rely on it because readers immediately know what is safe to use and what is an implementation detail.\n\n<b>Real-world beginner example:</b> A Package exposes `id` as public because callers need it. It may keep `_last_scan_code` internal because that value is only used by methods inside the class.\n\n<b>Real-world intermediate example:</b> A route planner reads public package fields for display and routing decisions. Internal bookkeeping fields such as temporary validation flags stay underscored so outside code does not depend on them.\n\n<b>Real-world advanced example:</b> Libraries document their public attributes and methods as the stable contract. Internal names can change between versions without promising compatibility. The naming convention becomes part of the API policy.\n\n<b>Production habits:</b> Prefer public names for values that callers are meant to use. Mark helpers and bookkeeping with a single leading underscore. Avoid relying on double-underscore mangling unless you have a specific reason. Write code as if the underscore boundary will be respected."),
+      diagram: "Package\n  id              ← public\n  status          ← public\n  weight_kg       ← public\n  _last_scan_code ← internal by convention\n  _needs_review   ← internal by convention\n\nPublic = intended for callers\nInternal = implementation detail",
+      codeExample: { title: same("Signal intent with attribute names"), code: "class Package:\n    def __init__(self, package_id, status, weight_kg):\n        self.id = package_id              # public\n        self.status = status              # public\n        self.weight_kg = weight_kg        # public\n        self._last_scan_code = None       # internal\n        self._needs_review = False        # internal\n\n    def register_scan(self, code):\n        self._last_scan_code = code\n        if code.startswith(\"X-\"):\n            self._needs_review = True\n\n    def describe(self):\n        return f\"{self.id} is {self.status} ({self.weight_kg} kg)\"\n\npkg = Package(\"PKG-1042\", \"packed\", 2.4)\npkg.register_scan(\"X-99\")\nprint(pkg.describe())\nprint(pkg.id)              # normal public use\n# print(pkg._needs_review)  # possible, but discouraged outside the class", details: same("Public attributes use plain names. A single leading underscore marks internal attributes by convention. Outside code should prefer public methods and attributes rather than reaching into underscored details.") },
+      keyTakeaways: [same("Encapsulation protects internal details behind a clear public surface."), same("Plain names are treated as public."), same("A single leading underscore marks internal attributes by convention."), same("Python conventions guide access more than hard privacy locks."), same("Public names form the stable contract for callers.")],
+      commonMistakes: [same("<b>Treating underscores as optional decoration.</b> They communicate design intent to every reader."), same("<b>Making everything public and letting outside code rewrite internal bookkeeping.</b> Invalid state becomes harder to prevent."), same("<b>Overusing double-underscore names for ordinary app code.</b> Single-underscore internal names are usually enough.")],
+      quiz: [q("What does a leading underscore in _needs_review signal?", ["The attribute is internal by convention", "The attribute is required by the operating system", "The attribute cannot store numbers", "The attribute is automatically global"], 0, "A single leading underscore marks an implementation detail."), q("What should callers prefer when an object has internal attributes?", ["Public attributes and methods", "Direct access to every underscored field always", "Editing the class body at runtime only", "Avoiding the object completely"], 0, "The public surface is the intended contract.")],
     },
     {
-      id: "python-day-17-properties",
-      title: same("Properties and Getters/Setters"),
-      durationMinutes: 30,
-      explanation: same("<b>Properties:</b> Properties are a way to implement custom accessors for attributes. They provide a way to control the behavior of accessing and modifying attributes. <b>Getters</b> and <b>Setters</b> are used to add validation or side effects when getting or setting an attribute.\n\n<b>@property decorator:</b> Used to create a getter method. <b>@<attribute_name>.setter decorator:</b> Used to create a setter method."),
-      diagram: "Property Decorators\n  │\n  ├─ @property\n  │  └─ Getter Method\n  │\n  └─ @<attribute_name>.setter\n          │\n          ▼\n     Setter Method",
-      codeExample: { title: same("Properties Example"), code: `
-class DeliveryTracker:
-    def __init__(self, package_id: str, status: str):
-        self.__package_id = package_id
-        self._status = status
-
-    @property
-    def package_id(self):
-        return self.__package_id
-
-    @package_id.setter
-    def package_id(self, new_id: str):
-        if len(new_id) > 5:
-            raise ValueError("Package ID must be less than 6 characters.")
-        self.__package_id = new_id
-
-    def print_status(self):
-        if self._status == "packed":
-            print(f"{self.package_id} is ready for dispatch")
-        else:
-            print(f"{self.package_id} needs review")
-      `, details: same("The `@property` decorator creates a getter method, and the `@<attribute_name>.setter` decorator creates a setter method. These methods provide validation and side effects.") },
-      keyTakeaways: [same("Properties provide a way to control access to attributes."), same("Getters and setters add validation or side effects when accessing or modifying attributes."), same("Use properties for complex attribute behavior.")],
-      commonMistakes: [same("<b>Not using validation in setters.</b> This can lead to invalid state in your objects."), same("<b>Misusing properties for simple attribute access.</b> Properties are useful for complex behaviors, not just simple access.")],
-      quiz: [q("What is the purpose of the `@property` decorator?", ["To create a getter method", "To create a setter method", "To create a property", "To create a method"], 0, "The `@property` decorator creates a getter method."), q("Which decorator would you use to validate input before setting an attribute?", ["`@<attribute_name>.getter`", "`@<attribute_name>.setter`", "`@property`", "`@classmethod`"], 0, "The `@<attribute_name>.setter` decorator allows you to validate input before setting an attribute.")],
+      id: "python-day-17-getters-setters",
+      title: same("Getters, setters, and controlled access"),
+      durationMinutes: 28,
+      explanation: same("<b>Getters and setters are methods that read or update state in a controlled way.</b> Instead of letting every caller write to fields freely, the object provides methods that validate, normalize, or reject changes.\n\n<b>Beginner:</b> A getter returns a value. A setter receives a new value and decides how to store it. For example, `set_status` can reject empty text or normalize case before assignment. This is the first step toward safer state changes.\n\n<b>Why controlled access helps:</b> Free attribute assignment is convenient, but it also allows illegal values. A setter can guarantee that status is never empty, weight is never negative, and related flags stay consistent.\n\n<b>Real-world beginner example:</b> `set_weight_kg` rejects negative numbers so a package never stores impossible weight data.\n\n<b>Real-world intermediate example:</b> `set_status` accepts only known status values. Unknown statuses raise an error or mark the package for review instead of silently polluting later routing logic.\n\n<b>Real-world advanced example:</b> Controlled setters update related fields together, such as timestamping the last status change whenever status changes. Callers still make one clear request; the object maintains consistency.\n\n<b>Production habits:</b> Use controlled access where invalid values are costly. Do not invent ceremony for fields that are truly simple and safe. In modern Python, many getter/setter pairs are expressed more elegantly with `@property`, which the next lesson covers."),
+      diagram: "caller\n  │\n  ├─ get_status() → read through control point\n  │\n  └─ set_status(\"loaded\")\n         │\n         ▼\n     validate / normalize\n         │\n         ▼\n     store internal value",
+      codeExample: { title: same("Validate changes through methods"), code: "class Package:\n    def __init__(self, package_id, status, weight_kg):\n        self.id = package_id\n        self._status = status\n        self._weight_kg = weight_kg\n\n    def get_status(self):\n        return self._status\n\n    def set_status(self, new_status):\n        cleaned = new_status.strip().lower()\n        if not cleaned:\n            raise ValueError(\"status cannot be empty\")\n        self._status = cleaned\n\n    def get_weight_kg(self):\n        return self._weight_kg\n\n    def set_weight_kg(self, value):\n        if value < 0:\n            raise ValueError(\"weight cannot be negative\")\n        self._weight_kg = value\n\npkg = Package(\"PKG-1042\", \"packed\", 2.4)\nprint(pkg.get_status())\npkg.set_status(\"Loaded\")\nprint(pkg.get_status())\npkg.set_weight_kg(3.0)\nprint(pkg.get_weight_kg())", details: same("Getters read state. Setters validate or normalize before storing. Internal attributes hold the real values while methods provide the controlled doorway.") },
+      keyTakeaways: [same("Getters read state through a method."), same("Setters update state through validation or normalization."), same("Controlled access prevents illegal values."), same("Internal attributes often store the real data behind setters."), same("Use this pattern where invalid state is costly.")],
+      commonMistakes: [same("<b>Writing setters that never validate anything.</b> Then the extra method adds noise without safety."), same("<b>Keeping both free public attributes and setters for the same field without a clear rule.</b> Callers will not know which path is required."), same("<b>Failing with unclear errors.</b> Raise precise messages so bad values are easy to fix.")],
+      quiz: [q("What is the main job of a setter method?", ["Update state after validation or normalization", "Delete the object", "Import a module", "Create a virtual environment"], 0, "Setters control how new values enter the object."), q("Why might set_weight_kg reject negative numbers?", ["Negative weight is invalid business state", "Python cannot store floats", "Setters cannot accept numbers", "Negative numbers break indentation"], 0, "Setters protect invariants such as non-negative weight.")],
     },
     {
-      id: "python-day-17-static-class-method",
-      title: same("Static and Class Methods"),
+      id: "python-day-17-property",
+      title: same("Properties with @property"),
       durationMinutes: 30,
-      explanation: same("<b>Static Methods:</b> These methods belong to the class rather than an instance of the class. They are used for utility functions that do not require access to any class or instance attributes.\n\n<b>Class Methods:</b> These methods belong to the class and take `cls` as their first parameter, which refers to the class itself. They are often used for factory methods or when you want to create instances of a class in a specific way."),
-      diagram: "Static and Class Methods\n  │\n  ├─ @staticmethod\n  │  └─ Utility Function\n  │\n  └─ @classmethod\n          │\n          ▼\n     Factory Method",
-      codeExample: { title: same("Static and Class Methods Example"), code: `
-class DeliveryTracker:
-    count = 0
-
-    def __init__(self, package_id: str, status: str):
-        self.__package_id = package_id
-        self._status = status
-        DeliveryTracker.count += 1
-
-    @staticmethod
-    def is_valid_id(id: str) -> bool:
-        return len(id) <= 5
-
-    @classmethod
-    def from_status(cls, package_id: str, status: str) -> 'DeliveryTracker':
-        if cls.is_valid_id(package_id):
-            return cls(package_id, status)
-        else:
-            raise ValueError("Invalid package ID")
-
-    def print_status(self):
-        if self._status == "packed":
-            print(f"{self.package_id} is ready for dispatch")
-        else:
-            print(f"{self.package_id} needs review")
-      `, details: same("Static methods do not have access to `cls` or `self`. Class methods have access to `cls` but not `self`. Both can be called on the class itself.") },
-      keyTakeaways: [same("Static methods are utility functions that do not depend on class state."), same("Class methods are used for creating instances or manipulating class-level data."), same("Use static methods for functions that do not need to interact with class or instance attributes.")],
-      commonMistakes: [same("<b>Misusing static methods for instance behavior.</b> Static methods should not reference instance attributes."), same("<b>Not using class methods for factory patterns.</b> Class methods are ideal for creating instances in specific ways.")],
-      quiz: [q("What does a static method belong to?", ["The class", "An instance", "Both the class and an instance", "Neither"], 0, "Static methods belong to the class and do not have access to instance or class attributes."), q("Which method would you use to create a new `DeliveryTracker` instance based on status?", ["`__init__`", "`from_status`", "`print_status`", "`is_valid_id`"], 0, "The `from_status` class method creates a new instance based on given parameters.")],
+      explanation: same("<b>@property lets you keep attribute-style access while running getter or setter logic behind the scenes.</b> Callers write `package.status` instead of `package.get_status()`, but you still control what happens on read and write.\n\n<b>Beginner:</b> Decorate a method with `@property` to make it act like a readable attribute. Add a setter with `@status.setter` to control assignment. Inside, store the real value on an internal name such as `_status`.\n\n<b>Why properties are the Pythonic approach:</b> They preserve clean call sites. You can start with a public attribute and later upgrade it to a property without forcing every caller to switch from attribute access to method calls. That flexibility is a major design advantage.\n\n<b>Real-world beginner example:</b> `package.weight_kg` still looks like normal attribute access, but the setter blocks negative values.\n\n<b>Real-world intermediate example:</b> A read-only property computes a display label from several fields without storing a separate stale attribute.\n\n<b>Real-world advanced example:</b> Properties can enforce invariants, normalize inputs, and derive values lazily. Teams still keep them lightweight; expensive network work usually belongs in explicit methods rather than attribute reads.\n\n<b>Production habits:</b> Use properties for attribute-like access with light validation or derivation. Keep property logic fast and predictable. Prefer explicit methods for actions with side effects, such as sending notifications or writing files."),
+      diagram: "package.status          → @property getter\npackage.status = \"...\"  → @status.setter\n\nCaller syntax stays simple.\nValidation stays inside the class.",
+      codeExample: { title: same("Attribute-style access with validation"), code: "class Package:\n    def __init__(self, package_id, status, weight_kg):\n        self.id = package_id\n        self._status = status\n        self._weight_kg = weight_kg\n\n    @property\n    def status(self):\n        return self._status\n\n    @status.setter\n    def status(self, new_status):\n        cleaned = new_status.strip().lower()\n        if not cleaned:\n            raise ValueError(\"status cannot be empty\")\n        self._status = cleaned\n\n    @property\n    def weight_kg(self):\n        return self._weight_kg\n\n    @weight_kg.setter\n    def weight_kg(self, value):\n        if value < 0:\n            raise ValueError(\"weight cannot be negative\")\n        self._weight_kg = value\n\n    @property\n    def label(self):\n        return f\"{self.id}:{self.status}\"\n\npkg = Package(\"PKG-1042\", \"packed\", 2.4)\nprint(pkg.status)\npkg.status = \"Loaded\"\nprint(pkg.status)\nprint(pkg.label)\npkg.weight_kg = 2.8\nprint(pkg.weight_kg)", details: same("@property turns a method into a readable attribute. @name.setter provides controlled assignment. Derived read-only properties need only the getter.") },
+      keyTakeaways: [same("@property provides attribute-style reads with method power."), same("@name.setter provides controlled writes."), same("Internal names such as _status store the real values."), same("Properties can be read-only when only a getter is defined."), same("Keep property logic light and predictable.")],
+      commonMistakes: [same("<b>Putting heavy side effects inside property getters.</b> Attribute reads should not surprise callers with slow or risky work."), same("<b>Forgetting the internal attribute name and creating recursion by assigning to the property inside its own setter.</b> Store values on _name."), same("<b>Using properties for action-like operations.</b> Methods better express commands such as ship() or cancel().")],
+      quiz: [q("What does @property allow?", ["Attribute-style access backed by method logic", "Automatic database installation", "Removal of indentation rules", "Creation of circular imports"], 0, "Properties keep clean access while allowing validation or derivation."), q("How do you define a controlled setter for status?", ["Use @status.setter on a method named status", "Use only a global function", "Rename the class to Setter", "Properties cannot set values"], 0, "The setter decorator is named after the property.")],
     },
     {
-      id: "python-day-17-practice-project",
-      title: same("Practice Project"),
-      durationMinutes: 30,
-      explanation: same("Apply what you've learned by creating a more complex delivery tracker application. Use encapsulation, properties, and static/class methods to build a robust system."),
-      diagram: "Practice Project\n  │\n  ├─ Encapsulation\n  │  └─ Properties\n  │\n  └─ Static/Class Methods\n          │\n          ▼\n     Robust Delivery Tracker Application",
-      codeExample: { title: same("Practice Project Code"), code: `
-class DeliveryTracker:
-    count = 0
-
-    def __init__(self, package_id: str, status: str):
-        self.__package_id = package_id
-        self._status = status
-        DeliveryTracker.count += 1
-
-    @property
-    def package_id(self):
-        return self.__package_id
-
-    @package_id.setter
-    def package_id(self, new_id: str):
-        if len(new_id) > 5:
-            raise ValueError("Package ID must be less than 6 characters.")
-        self.__package_id = new_id
-
-    @staticmethod
-    def is_valid_id(id: str) -> bool:
-        return len(id) <= 5
-
-    @classmethod
-    def from_status(cls, package_id: str, status: str) -> 'DeliveryTracker':
-        if cls.is_valid_id(package_id):
-            return cls(package_id, status)
-        else:
-            raise ValueError("Invalid package ID")
-
-    def print_status(self):
-        if self._status == "packed":
-            print(f"{self.package_id} is ready for dispatch")
-        else:
-            print(f"{self.package_id} needs review")
-
-# Usage example
-tracker = DeliveryTracker.from_status("PKG-42", "packed")
-tracker.print_status()
-      `, details: same("Create a robust delivery tracker application using encapsulation, properties, and static/class methods.") },
-      keyTakeaways: [same("Combine encapsulation, properties, and static/class methods to build robust applications."), same("Use static methods for utility functions and class methods for factory patterns or class-level operations.")],
-      commonMistakes: [same("<b>Misusing properties and static/class methods.</b> Ensure you use them appropriately for encapsulation and utility functions."), same("<b>Not testing your implementation thoroughly.</b> Test all aspects of your application to ensure it works as expected.")],
-      quiz: [q("What is the purpose of a class method?", ["To perform operations on class-level data", "To modify instance attributes", "To perform operations on instance attributes", "To modify static attributes"], 0, "Class methods operate on class-level data and can be used for factory patterns or other class-level operations.")],
+      id: "python-day-17-staticmethod",
+      title: same("Utilities with @staticmethod"),
+      durationMinutes: 26,
+      explanation: same("<b>A static method belongs to a class's namespace but does not receive self or cls automatically.</b> It is a function grouped with the class because the concept fits there, not because it needs instance state.\n\n<b>Beginner:</b> Decorate with `@staticmethod`. Call it on the class or on an instance: `Package.is_valid_id(\"PKG-1042\")`. Inside the method, work only with the arguments you were given.\n\n<b>When static methods help:</b> Some helpers are tightly related to a class concept yet do not need one concrete object's data. Validation of ID format, conversion helpers, or pure calculations can fit this pattern.\n\n<b>Real-world beginner example:</b> `Package.is_valid_id(text)` checks whether a package ID starts with the expected prefix before you create the object.\n\n<b>Real-world intermediate example:</b> A charge helper such as `Package.calculate_base_fee(weight_kg)` can live near package logic even if it does not require a fully built instance.\n\n<b>Real-world advanced example:</b> Teams use static methods sparingly for pure helpers that are conceptually tied to a type. If the function is broadly useful beyond the class, a plain module-level function is often clearer.\n\n<b>Production habits:</b> Choose @staticmethod when the function is related to the class concept but needs no instance or class object. Prefer module functions when the behavior is general. Prefer instance methods when the logic needs object state."),
+      diagram: "Package.is_valid_id(\"PKG-1042\")\n        │\n        └── @staticmethod\n              no self\n              no cls\n              only explicit arguments",
+      codeExample: { title: same("Class-namespaced helpers without self"), code: "class Package:\n    def __init__(self, package_id, status, weight_kg):\n        if not Package.is_valid_id(package_id):\n            raise ValueError(\"invalid package id\")\n        self.id = package_id\n        self.status = status\n        self.weight_kg = weight_kg\n\n    @staticmethod\n    def is_valid_id(package_id):\n        return isinstance(package_id, str) and package_id.startswith(\"PKG-\")\n\n    @staticmethod\n    def calculate_base_fee(weight_kg, base_fee=5.00, per_kg_rate=1.25):\n        return base_fee + (weight_kg * per_kg_rate)\n\nprint(Package.is_valid_id(\"PKG-1042\"))\nprint(Package.is_valid_id(\"ABC-9\"))\nprint(Package.calculate_base_fee(2.4))\n\npkg = Package(\"PKG-1042\", \"packed\", 2.4)\nprint(pkg.id)", details: same("@staticmethod defines a function in the class namespace without passing self or cls. Use it for pure helpers that are conceptually tied to the class.") },
+      keyTakeaways: [same("@staticmethod does not receive self or cls automatically."), same("Call static methods on the class or an instance."), same("Use them for pure helpers related to the class concept."), same("Module-level functions are better for broadly general utilities."), same("Instance methods remain the right choice when object state is needed.")],
+      commonMistakes: [same("<b>Using a static method when the logic needs instance attributes.</b> That should be an ordinary method with self."), same("<b>Hiding general utilities inside a class for no reason.</b> A module function may be simpler."), same("<b>Assuming static methods are the same as class methods.</b> Class methods receive the class object; static methods do not.")],
+      quiz: [q("What is special about a @staticmethod?", ["It does not receive self or cls automatically", "It cannot accept arguments", "It always modifies global state", "It replaces __init__"], 0, "Static methods are ordinary functions stored on the class."), q("When is a static method a reasonable choice?", ["For a pure helper tightly related to the class concept", "For any method that needs self.weight_kg", "For replacing modules entirely", "For mandatory file writing"], 0, "Static methods fit pure, class-related helpers.")],
+    },
+    {
+      id: "python-day-17-classmethod",
+      title: same("Alternative constructors with @classmethod"),
+      durationMinutes: 33,
+      explanation: same("<b>A class method receives the class itself as the first argument, conventionally named cls.</b> This is ideal for alternative constructors and factories that need to create instances without hard-coding the class name.\n\n<b>Beginner:</b> Decorate with `@classmethod`. Define `def from_label(cls, label):` and return `cls(...)`. Call it as `Package.from_label(\"PKG-1042:packed:2.4\")`. Using cls instead of writing Package directly keeps the method friendly to subclasses.\n\n<b>Why class methods matter:</b> Sometimes there is more than one natural way to build an object: from separate fields, from a label string, from a dictionary payload, or from a default template. Class methods give those constructors readable names.\n\n<b>Real-world beginner example:</b> `Package.from_parts(\"PKG-1042\", \"packed\", 2.4)` is just another way to construct a package with a clear name.\n\n<b>Real-world intermediate example:</b> `Package.from_label(\"PKG-1042:packed:2.4\")` parses a compact string used by scanners, then creates the object.\n\n<b>Real-world advanced example:</b> Subclasses inherit classmethod factories. Because the factory returns `cls(...)`, a FragilePackage.from_label(...) call can create a FragilePackage instead of always forcing the base Package type.\n\n<b>Production habits:</b> Use class methods for alternative constructors and class-wide factories. Use static methods for pure helpers that do not construct objects. Use instance methods for behavior that needs one object's state. Keep factory names clear: from_label, from_dict, empty, default."),
+      diagram: "Package.from_label(\"PKG-1042:packed:2.4\")\n        │\n        ▼\n@classmethod\nfrom_label(cls, label)\n        │\n        ▼\nreturn cls(id, status, weight)\n\ncls means \"this class\" and supports subclasses.",
+      codeExample: { title: same("Readable factories that return class instances"), code: "class Package:\n    def __init__(self, package_id, status, weight_kg):\n        self.id = package_id\n        self.status = status\n        self.weight_kg = weight_kg\n\n    def describe(self):\n        return f\"{self.id} is {self.status} ({self.weight_kg} kg)\"\n\n    @classmethod\n    def from_label(cls, label):\n        package_id, status, weight_text = label.split(\":\")\n        return cls(package_id, status, float(weight_text))\n\n    @classmethod\n    def packed(cls, package_id, weight_kg):\n        return cls(package_id, \"packed\", weight_kg)\n\npkg1 = Package.from_label(\"PKG-1042:packed:2.4\")\npkg2 = Package.packed(\"PKG-2048\", 1.1)\nprint(pkg1.describe())\nprint(pkg2.describe())\n\nclass FragilePackage(Package):\n    def describe(self):\n        return super().describe() + \" [FRAGILE]\"\n\nfragile = FragilePackage.from_label(\"PKG-3001:packed:0.8\")\nprint(fragile.describe())\nprint(type(fragile))", details: same("@classmethod receives cls, the class on which the method was called. Factories should return cls(...) so subclasses can reuse them and produce the correct type.") },
+      keyTakeaways: [same("@classmethod receives the class as cls."), same("Class methods are excellent alternative constructors."), same("Return cls(...) so subclasses stay compatible."), same("Name factories clearly: from_label, from_dict, packed, etc."), same("Choose class methods when creation logic belongs with the type.")],
+      commonMistakes: [same("<b>Hard-coding Package(...) inside a factory instead of cls(...).</b> Subclasses then cannot reuse the factory correctly."), same("<b>Using a class method when no class or construction behavior is needed.</b> A static method or module function may fit better."), same("<b>Mixing validation, networking, and construction into one oversized factory.</b> Keep factories readable and focused.")],
+      quiz: [q("What does a class method receive as its first argument?", ["The class itself, conventionally named cls", "Always a finished instance only", "A random module path", "The global namespace only"], 0, "Class methods receive the class object."), q("Why return cls(...) from a factory instead of Package(...)?", ["So subclasses create the correct specialized type", "Because cls is required by the file system", "Because factories cannot return objects", "Because __init__ is ignored otherwise"], 0, "cls preserves subclass-friendly construction.")],
     },
   ],
   finalQuiz: [
-    q("Which decorator is used to create a getter method for an attribute?", ["`@property`", "`@setter`", "`@getter`", "`@classmethod`"], 0, "The `@property` decorator creates a getter method."),
-    q("What does a static method belong to?", ["The class", "An instance", "Both the class and an instance", "Neither"], 0, "Static methods belong to the class and do not have access to instance or class attributes."),
-    q("Which method would you use to validate a package ID before setting it?", ["`__package_id`", "`package_id`", "`set_package_id`", "`@package_id.setter`"], 0, "The `@package_id.setter` decorator allows you to validate input before setting an attribute."),
-    q("Why might you use a class method?", ["To perform operations on class-level data", "To modify instance attributes directly", "To create instances in a specific way", "To create utility functions that depend on instance attributes"], 0, "Class methods are used for creating instances or manipulating class-level data."),
-    q("What is the main benefit of using properties in Python?", ["To enhance code readability", "To control access to attributes", "To improve performance", "To simplify method calls"], 0, "Properties provide a way to control access to attributes and can include validation and side effects."),
-    q("Which statement correctly describes encapsulation?", ["Encapsulation hides implementation details from external access", "Encapsulation exposes all internal attributes directly", "Encapsulation allows direct modification of private attributes", "Encapsulation makes all methods public"], 0, "Encapsulation is about hiding internal representation and exposing only necessary details through public interfaces."),
+    q("What does a leading underscore mean in _status by convention?", ["The attribute is internal", "The attribute is required public API", "The attribute cannot be read in methods", "The attribute is a module import"], 0, "A single leading underscore signals an implementation detail."),
+    q("What is encapsulation aiming to protect?", ["Internal details behind a clear public surface", "The operating system kernel", "All string formatting forever", "The virtual environment file lock"], 0, "Encapsulation separates public contract from internal details."),
+    q("What is a setter useful for?", ["Validating or normalizing values before storage", "Deleting classes automatically", "Skipping indentation rules", "Creating packages without names"], 0, "Setters control how state changes."),
+    q("What does @property provide?", ["Attribute-style access with getter or setter logic", "Automatic multiple inheritance", "A required database migration", "A new import path"], 0, "Properties preserve clean access while allowing control."),
+    q("How do you add a setter for a property named weight_kg?", ["Use @weight_kg.setter", "Use @staticmethod only", "Use __mro__", "Use a star import"], 0, "The setter decorator matches the property name."),
+    q("What is true about @staticmethod?", ["It does not receive self or cls automatically", "It must always create an instance", "It replaces __str__", "It is required for every class"], 0, "Static methods are namespace-grouped plain functions."),
+    q("What is a good use of @classmethod?", ["Alternative constructors and factories", "Replacing all instance methods", "Deleting attributes on access", "Turning objects into modules"], 0, "Class methods are ideal for named constructors."),
+    q("Why use cls(...) inside a classmethod factory?", ["To stay subclass-friendly", "To force the base class only", "To disable inheritance", "To avoid returning an object"], 0, "cls refers to the class that was actually called."),
+    q("When should a property stay read-only?", ["When callers should read a derived value but not assign it directly", "When the value must change every microsecond", "When the class has no methods", "When imports are circular"], 0, "A getter without a setter creates read-only attribute-style access."),
+    q("What is a healthy production habit for encapsulation?", ["Expose a small public surface and protect invariants inside the class", "Make every internal field public and mutable by everyone", "Avoid methods and use only globals", "Hide all useful data with no public access at all"], 0, "Clear public contracts and protected invariants scale better."),
   ],
   project: {
-    name: same("Robust Delivery Tracker"),
-    goal: same("Create a delivery tracker application with encapsulation, properties, and static/class methods."),
-    brief: same("Build a more complex delivery tracker application that uses encapsulation to hide internal details, properties to control attribute access, and static/class methods for utility functions and factory patterns."),
-    steps: [same("Define a `DeliveryTracker` class with encapsulated attributes and properties."), same("Implement static methods for utility functions like ID validation."), same("Use class methods to create instances based on status."), same("Ensure the class has methods to print status and handle errors."), same("Test the application thoroughly to ensure all features work as expected.")],
-    acceptance: [same("The application uses encapsulation to hide internal details."), same("Properties control access to attributes with validation."), same("Static methods validate IDs and other utilities."), same("Class methods create instances based on given parameters."), same("The application handles errors gracefully and prints status correctly.")],
-    stretch: [same("Add a method to log events to a file or database."), same("Implement a GUI interface for the delivery tracker application."), same("Integrate with a real API to fetch delivery statuses.")]
+    name: same("Delivery Tracker Protected Package State"),
+    goal: same("Upgrade Package so important fields are protected with naming conventions and properties, and add at least one staticmethod and one classmethod factory."),
+    brief: same("Day 16 introduced classes, attributes, methods, self, and __init__. Day 17 improves encapsulation. You will mark internal attributes, control status and weight updates with properties, validate values, and provide clear construction helpers."),
+    steps: [same("Open the delivery-tracker project and the Package class."), same("Store status and weight behind internal names such as _status and _weight_kg."), same("Expose status and weight_kg with @property getters."), same("Add setters that reject empty status values and negative weights."), same("Add a read-only property such as label that builds a display string."), same("Add a @staticmethod helper such as is_valid_id."), same("Add a @classmethod factory such as from_label or packed."), same("In the main flow, create packages through the factory, update fields through properties, and print readable results."), same("Show that invalid assignments raise clear errors.")],
+    acceptance: [same("Important mutable fields are protected by properties or controlled methods."), same("Invalid status or weight values are rejected."), same("At least one @staticmethod helper exists."), same("At least one @classmethod factory creates Package instances."), same("Public usage still reads naturally with attribute-style access where intended."), same("The script runs cleanly inside the project virtual environment.")],
+    stretch: [same("Make id read-only after creation."), same("Normalize status to lowercase inside the setter."), same("Add Package.from_dict(data) as another classmethod factory."), same("Write a four-line teammate note explaining when to choose @staticmethod versus @classmethod.")],
   },
 };
