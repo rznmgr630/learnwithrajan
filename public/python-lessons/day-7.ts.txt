@@ -1,0 +1,610 @@
+/**
+ * DAY 07: Phase 1 · Core Python — Tuples, Sets & Frozensets
+ * 
+ * Total Duration: 75 minutes
+ * Difficulty: Beginner
+ * Lessons: 3
+ */
+
+export const phase1TuplesSetsFrozensets = {
+  day: 6,
+  topic: "Phase 1 · Core Python — Tuples, Sets & Frozensets",
+  totalMinutes: 75,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Tuples Protect Fixed Records",
+      durationMinutes: 18,
+      explanation: `
+<b>Fixed-Length, Immutable Data Structures</b><br/>
+While lists are designed for dynamic, changing collections where items are constantly appended, deleted, or reordered, software often deals with data that <i>must never change after creation</i>. For example, GPS coordinates (latitude and longitude), database primary key pairs, RGB color values, or fixed delivery address records. Python provides the <b>tuple</b> to store immutable, ordered sequences.<br/><br/>
+
+<b>1. What is a Tuple?</b><br/>
+A tuple is an <b>ordered</b>, <b>immutable</b> sequence of values written with parentheses <code>(...)</code> separated by commas.
+<ul>
+  <li><b>Ordered:</b> Elements maintain exact zero-based index positions (`tuple[0]`).</li>
+  <li><b>Immutable:</b> Once created, a tuple's size and element references <i>cannot be modified, appended, or deleted</i>. Attempting to assign `my_tuple[0] = "NEW"` raises an immediate `TypeError`.</li>
+  <li><b>Single-Element Tuple Syntax Warning:</b> To define a single-element tuple, you MUST include a trailing comma: <code>single_item = ("CHICAGO",)</code>. Writing <code>("CHICAGO")</code> without a comma creates a standard string!</li>
+</ul>
+
+<b>2. Why use a Tuple instead of a List?</b>
+<ol>
+  <li><b>Data Integrity & Safety:</b> Tuples act as a strict contract. Passing a tuple into external functions guarantees that the function cannot accidentally mutate or corrupt your fixed record.</li>
+  <li><b>Memory & Performance Optimization:</b> Tuples are more memory-efficient and faster to allocate than lists because Python doesn't need to reserve extra memory buffer space for potential growth.</li>
+  <li><b>Dictionary Keys & Set Elements:</b> Because tuples are immutable (and hashable), they can be used as keys inside dictionaries or items inside sets (e.g., `location_map[(41.8781, -87.6298)] = "Chicago Hub"`). Lists can NEVER be used as dictionary keys!</li>
+</ol>
+
+<b>Real-World Logistics Analogy: Sealed Shipping Manifest Containers</b><br/>
+Think of a list as an open warehouse cart where workers freely add or remove boxes. A tuple is a <b>sealed container ship crate</b> with a stamped serial number. Once sealed at the origin hub, nobody can add or remove items without breaking the seal.
+      `,
+      diagram: `
+TUPLE IMMUTABILITY vs LIST MUTABILITY:
+
+  List (Mutable):
+  cart_list = ["ITEM_A", "ITEM_B"]
+  cart_list.append("ITEM_C")   ---> VALID! List grows to 3 items.
+
+  Tuple (Immutable):
+  coord_tuple = (41.8781, -87.6298)
+  coord_tuple[0] = 0.0000      ---> CRASH! Raises TypeError: 'tuple' object does not support item assignment.
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Tuples for Immutable Records and Integrity
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Tuple Syntax, Indexing, and Immutability Checks
+# ------------------------------------------------------------------------------
+
+# Defining fixed GPS coordinate pair for Chicago Dispatch Center (Lat, Lon)
+chicago_coords = (41.8781, -87.6298)
+
+# Single-element tuple syntax (requires trailing comma)
+single_hub_tuple = ("HUB_SOUTH",) # Correct tuple
+not_a_tuple = ("HUB_SOUTH")       # Incorrect: Evaluates as standard 'str'
+
+print("--- BEGINNER: Tuple Syntax & Types ---")
+print("Chicago Coordinates:", chicago_coords)
+print("Latitude (index 0):", chicago_coords[0])
+print("Longitude (index 1):", chicago_coords[1])
+print("Type of single_hub_tuple:", type(single_hub_tuple).__name__) # tuple
+print("Type of not_a_tuple:", type(not_a_tuple).__name__)           # str
+
+# Immutability Demonstration
+print("\nDemonstrating Tuple Mutation Guard:")
+try:
+    # Attempting to reassign tuple item in-place
+    chicago_coords[0] = 42.0000
+except TypeError as err:
+    print("Caught expected Immutability Error:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Tuples as Dictionary Keys (Hashability)
+# ------------------------------------------------------------------------------
+
+# Mapping geographic GPS coordinate tuples directly to Hub Names
+hub_location_registry = {
+    (41.8781, -87.6298): "Chicago Central Hub",
+    (30.2672, -97.7431): "Austin Regional Depot",
+    (47.6062, -122.3321): "Seattle Port Center"
+}
+
+target_gps = (30.2672, -97.7431)
+located_hub = hub_location_registry.get(target_gps, "Unknown Location")
+
+print("\n--- INTERMEDIATE: Tuple Key Lookup ---")
+print(f"GPS Pair {target_gps} mapped to Hub: '{located_hub}'")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Immutable Package Waybill Validator
+# ------------------------------------------------------------------------------
+
+def create_immutable_waybill_record(
+    tracking_id: str, 
+    origin_hub: str, 
+    dest_hub: str, 
+    weight_lbs: float
+) -> tuple:
+    \"\"\"
+    Generates a sealed, immutable waybill record tuple (TrackingID, RouteTuple, Weight).
+    Returns an unalterable contract for delivery drivers.
+    \"\"\"
+    print(f"\n--- ADVANCED: Generating Sealed Waybill ---")
+    
+    # Nested route tuple
+    route_pair = (origin_hub.upper(), dest_hub.upper())
+    
+    # Sealed waybill tuple
+    waybill_record = (
+        tracking_id.strip().upper(),
+        route_pair,
+        float(weight_lbs)
+    )
+    
+    return waybill_record
+
+# Generate immutable record
+waybill = create_immutable_waybill_record("TRK-9004", "Chicago_CHI", "Austin_AUS", 28.5)
+print("Generated Waybill Record:", waybill)
+print("Extracted Route Origin:", waybill[1][0]) # Reading nested tuple
+      `,
+      keyTakeaways: [
+        "Tuples are immutable, ordered collections defined using parentheses `(...)`.",
+        "Single-element tuples MUST include a trailing comma `('item',)`.",
+        "Tuples protect fixed data records from unintended mutations across application components.",
+        "Tuples are hashable (if their contents are hashable) and can be used as keys inside Python dictionaries."
+      ],
+      commonMistakes: [
+        "<b>Forgetting the trailing comma in single-element tuples:</b> Writing `('CHI')` creates a string, not a tuple.",
+        "<b>Attempting in-place mutation:</b> Trying `tuple[0] = val` causes an unhandled `TypeError`.",
+        "<b>Confusing when to use tuples vs lists:</b> Using a list for fixed coordinate pairs, opening the data to accidental corruption."
+      ],
+      quizzes: [
+        {
+          question: "What is the data type of `x` after executing `x = ('CHICAGO')`?",
+          options: [
+            "tuple",
+            "str",
+            "list",
+            "set"
+          ],
+          correctIndex: 1,
+          explanation: "Without a trailing comma, parentheses surrounding a single string evaluate as a standard string. `x = ('CHICAGO',)` with a trailing comma is required for a tuple."
+        },
+        {
+          question: "Why can a tuple be used as a key in a Python dictionary, whereas a list CANNOT?",
+          options: [
+            "Tuples are faster at math than lists.",
+            "Tuples are immutable (hashable), guaranteeing that key values cannot change and corrupt dictionary index hashes.",
+            "Lists can only store numbers.",
+            "Tuples automatically delete duplicate keys."
+          ],
+          correctIndex: 1,
+          explanation: "Dictionary keys require hashable, immutable objects. Because tuples cannot change after creation, their hash values remain constant."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Sets Model Unique Membership",
+      durationMinutes: 22,
+      explanation: `
+<b>Unordered Collections of Unique Elements</b><br/>
+In many software domain problems, order does not matter, but **uniqueness** and **fast membership lookups** matter immensely. For example, checking if a package barcode is in a list of 100,000 revoked IDs, filtering out duplicate customer email addresses, or finding overlapping delivery coverage zones.<br/><br/>
+
+<b>1. What is a Set?</b><br/>
+A set in Python is an <b>unordered</b>, <b>mutable</b> collection of <b>unique</b>, hashable items written with curly braces <code>{...}</code>.
+<ul>
+  <li><b>Unordered:</b> Elements have NO fixed index position. You cannot access set items using indexing (<code>set[0]</code> raises a <code>TypeError</code>).</li>
+  <li><b>Unique:</b> Duplicate values are automatically discarded upon insertion! Adding `"CHICAGO"` to a set 100 times results in a set containing exactly one `"CHICAGO"`.</li>
+  <li><b>Fast $O(1)$ Lookups:</b> Searching if an item exists inside a set (`x in my_set`) executes in constant time $O(1)$, compared to $O(N)$ linear scans in lists.</li>
+  <li><b>Empty Set Syntax Warning:</b> To create an empty set, you MUST use the constructor `empty_set = set()`. Writing `empty_dict = {}` creates an empty **dictionary**!</li>
+</ul>
+
+<b>2. Set Mathematical Operations:</b><br/>
+Sets support powerful mathematical set-theory operations:
+<ul>
+  <li><b>Union (<code>a | b</code> or <code>a.union(b)</code>):</b> Combines all unique items from both sets.</li>
+  <li><b>Intersection (<code>a &amp; b</code> or <code>a.intersection(b)</code>):</b> Returns items present in <b>both</b> sets.</li>
+  <li><b>Difference (<code>a - b</code> or <code>a.difference(b)</code>):</b> Returns items in set `a` that are <b>not</b> in set `b`.</li>
+  <li><b>Symmetric Difference (<code>a ^ b</code>):</b> Returns items in either set, but <b>not in both</b>.</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Regional Coverage Map Overlaps</b><br/>
+Imagine Driver A covers regional zip codes `{60601, 60602, 60603}` and Driver B covers `{60603, 60604, 60605}`.
+- <b>Intersection (`&`):</b> Shared backup coverage zip code `{60603}`.
+- <b>Union (`|`):</b> Total combined territory covered `{60601, 60602, 60603, 60604, 60605}`.
+      `,
+      diagram: `
+SET MATHEMATICAL OPERATIONS:
+
+   Set A: {60601, 60602, 60603}       Set B: {60603, 60604, 60605}
+
+       Union (|)         ---> {60601, 60602, 60603, 60604, 60605}
+       Intersection (&)  ---> {60603}
+       Difference (A - B) ---> {60601, 60602}
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Sets for Uniqueness and Mathematical Operations
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Deduplication and Fast Membership
+# ------------------------------------------------------------------------------
+
+# Raw list containing duplicate tracking IDs from log files
+raw_log_list = ["TRK-101", "TRK-102", "TRK-101", "TRK-103", "TRK-102"]
+
+# Automatic deduplication by casting list to set
+unique_tracking_ids = set(raw_log_list)
+
+print("--- BEGINNER: Deduplication ---")
+print("Original List (with duplicates):", raw_log_list)
+print("Deduplicated Set:", unique_tracking_ids)
+
+# $O(1)$ Instant Membership Check
+is_flagged = "TRK-102" in unique_tracking_ids
+print("Is TRK-102 in set?", is_flagged)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Set Algebra (Union, Intersection, Difference)
+# ------------------------------------------------------------------------------
+
+north_hub_zones = {"ZONE-A", "ZONE-B", "ZONE-C"}
+south_hub_zones = {"ZONE-C", "ZONE-D", "ZONE-E"}
+
+# Operations
+combined_coverage = north_hub_zones | south_hub_zones       # Union
+overlapping_zones = north_hub_zones & south_hub_zones       # Intersection
+exclusive_north = north_hub_zones - south_hub_zones         # Difference
+
+print("\n--- INTERMEDIATE: Set Operations ---")
+print("Combined Coverage (Union |):", combined_coverage)
+print("Overlapping Zones (Intersection &):", overlapping_zones)
+print("Exclusive North Zones (Difference -):", exclusive_north)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Delivery Route Overlap Analyzer
+# ------------------------------------------------------------------------------
+
+def analyze_route_efficiency(
+    assigned_route_zips: list[str], 
+    restricted_embargo_zips: set[str], 
+    completed_zips: set[str]
+) -> dict:
+    \"\"\"
+    Analyzes route coverage using set operations to identify violations,
+    remaining workloads, and coverage statistics.
+    \"\"\"
+    print("\n--- ADVANCED: Route Coverage Set Analysis ---")
+    
+    # Cast incoming list to set for set algebra
+    route_set = set(assigned_route_zips)
+    
+    # 1. Detect Embargo Violations (Intersection with restricted set)
+    embargo_violations = route_set & restricted_embargo_zips
+    
+    # 2. Compute Remaining Uncompleted Workload (Difference)
+    remaining_workload = route_set - completed_zips
+    
+    # 3. Compute Progress Percentage
+    completed_on_route = route_set & completed_zips
+    completion_ratio = len(completed_on_route) / len(route_set) if route_set else 0.0
+    
+    return {
+        "total_unique_zips": len(route_set),
+        "has_violations": len(embargo_violations) > 0,
+        "violations": embargo_violations,
+        "remaining_zips": remaining_workload,
+        "completion_percentage": round(completion_ratio * 100, 1)
+    }
+
+# Test execution
+assigned = ["60601", "60602", "60603", "60604", "60601"] # Notice duplicate "60601"
+embargo = {"60604", "60699"}
+completed = {"60601", "60602"}
+
+print(analyze_route_efficiency(assigned, embargo, completed))
+      `,
+      keyTakeaways: [
+        "Sets store unordered, unique elements using curly braces `{...}`.",
+        "Sets automatically discard duplicate values upon creation or insertion.",
+        "Searching for membership (`x in my_set`) runs in constant time $O(1)$.",
+        "Set operators (`|` union, `&` intersection, `-` difference) enable concise mathematical comparisons."
+      ],
+      commonMistakes: [
+        "<b>Creating an empty set with `{}`:</b> Writing `x = {}` creates an empty dictionary; use `x = set()` for an empty set.",
+        "<b>Attempting to index or slice a set:</b> Writing `my_set[0]` raises a `TypeError` because sets are unordered.",
+        "<b>Storing mutable objects (like lists or dictionaries) inside a set:</b> Set elements must be hashable and immutable."
+      ],
+      quizzes: [
+        {
+          question: "How do you correctly instantiate an EMPTY Set in Python?",
+          options: [
+            "`s = {}`",
+            "`s = set()`",
+            "`s = []`",
+            "`s = set({})`"
+          ],
+          correctIndex: 1,
+          explanation: "`s = set()` creates an empty set. `s = {}` creates an empty dictionary."
+        },
+        {
+          question: "Given `set_a = {'A', 'B'}` and `set_b = {'B', 'C'}`, what does `set_a & set_b` evaluate to?",
+          options: [
+            "`{'A', 'B', 'C'}`",
+            "`{'B'}`",
+            "`{'A', 'C'}`",
+            "`{'A'}`"
+          ],
+          correctIndex: 1,
+          explanation: "The `&` operator computes set intersection, returning elements present in BOTH sets (`{'B'}`)."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Frozensets and Choosing the Right Collection",
+      durationMinutes: 18,
+      explanation: `
+<b>Immutable Sets (`frozenset`) and Collection Decision Frameworks</b><br/>
+Standard sets (`set`) are mutable: you can call `.add()` or `.remove()`. However, because standard sets are mutable, they are **unhashable** — meaning you *cannot* place a standard set inside another set, nor can you use a set as a key in a dictionary!<br/><br/>
+
+<b>1. What is a `frozenset`?</b><br/>
+A <b>`frozenset`</b> is an <b>immutable</b> version of a set. Once constructed, elements cannot be added or removed.
+<ul>
+  <li><b>Hashable:</b> Because it is immutable, a `frozenset` can be used as a dictionary key or stored inside other sets.</li>
+  <li><b>Syntax:</b> Created using the constructor <code>frozenset(["A", "B", "C"])</code>.</li>
+</ul>
+
+<b>Real-World Logistics Use Case for `frozenset`:</b><br/>
+Imagine dynamic shipping pricing rules based on *combinations of regional zones*. A pricing table mapping a zone combination to a flat delivery rate requires a set of zones as the dictionary key:<br/>
+<code>shipping_rates = {</code><br/>
+<code>    frozenset({"ZONE_MIDWEST", "ZONE_EAST"}): 25.00,</code><br/>
+<code>    frozenset({"ZONE_MIDWEST", "ZONE_WEST"}): 35.00</code><br/>
+<code>}</code><br/><br/>
+
+<b>2. The Master Collection Selection Decision Tree:</b><br/>
+Choosing the right data structure is a core engineering skill. Ask these questions in order:
+<ol>
+  <li><b>Do you need Key-Value mapping?</b> -&gt; Use <b>`dict`</b>.</li>
+  <li><b>Must items be strictly Unique?</b>
+    <ul>
+      <li>If Yes &amp; Mutable -&gt; Use <b>`set`</b>.</li>
+      <li>If Yes &amp; Immutable (or needed as dict key) -&gt; Use <b>`frozenset`</b>.</li>
+    </ul>
+  </li>
+  <li><b>Does Positional Order matter?</b>
+    <ul>
+      <li>If Order matters &amp; Mutable -&gt; Use <b>`list`</b>.</li>
+      <li>If Order matters &amp; Immutable (fixed record) -&gt; Use <b>`tuple`</b>.</li>
+    </ul>
+  </li>
+</ol>
+      `,
+      diagram: `
+COLLECTION SELECTION DECISION MATRIX:
+
+  Ordered? | Mutable? | Unique Only? | Collection Type | Example Use Case
+  ---------+----------+--------------+-----------------+------------------------------
+   Yes     |  Yes     |  No          | list            | Queue of parcels to deliver
+   Yes     |  No      |  No          | tuple           | GPS coordinate (Lat, Lon)
+   No      |  Yes     |  Yes         | set             | Filtered unique city codes
+   No      |  No      |  Yes         | frozenset       | Dict key of zone pairs
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Frozensets and Collection Selection Decision Tree
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Frozenset Creation and Immutability
+# ------------------------------------------------------------------------------
+
+# Creating immutable frozensets for fixed permission tiers
+admin_permissions = frozenset(["READ", "WRITE", "DELETE", "DISPATCH"])
+driver_permissions = frozenset(["READ", "DISPATCH"])
+
+print("--- BEGINNER: Frozenset Creation ---")
+print("Admin Permissions:", admin_permissions)
+print("Is 'DELETE' in driver permissions?", "DELETE" in driver_permissions) # False
+
+try:
+    # Attempting to mutate frozenset raises AttributeError
+    admin_permissions.add("SUPERUSER")
+except AttributeError as err:
+    print("Caught expected Frozenset Mutation Error:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Frozensets as Dictionary Keys
+# ------------------------------------------------------------------------------
+
+# Matrix mapping unordered zone pairs to inter-hub shipping rates
+inter_hub_rates = {
+    frozenset({"HUB_CHICAGO", "HUB_AUSTIN"}): 120.50,
+    frozenset({"HUB_CHICAGO", "HUB_SEATTLE"}): 210.00
+}
+
+# Lookup works regardless of order because frozenset is unordered!
+query_pair = frozenset({"HUB_AUSTIN", "HUB_CHICAGO"})
+rate = inter_hub_rates.get(query_pair, 0.0)
+
+print("\n--- INTERMEDIATE: Frozenset Key Lookup ---")
+print(f"Shipping rate for {set(query_pair)}: ${rate:.2f}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Tier Access Control Evaluator
+# ------------------------------------------------------------------------------
+
+class SecurityAccessManager:
+    \"\"\"
+    Manages security permissions using immutable frozensets to evaluate 
+    role access levels securely without mutation risks.
+    \"\"\"
+    ROLE_PERMISSIONS = {
+        "DISPATCHER": frozenset({"READ_MANIFEST", "ASSIGN_DRIVER", "UPDATE_STATUS"}),
+        "AUDITOR": frozenset({"READ_MANIFEST", "EXPORT_REPORTS"}),
+        "SUPERVISOR": frozenset({"READ_MANIFEST", "ASSIGN_DRIVER", "UPDATE_STATUS", "EXPORT_REPORTS", "OVERRIDE_SECURITY"})
+    }
+
+    @classmethod
+    def verify_action_access(cls, user_role: str, required_actions: set[str]) -> dict:
+        print(f"\n--- ADVANCED: Security Access Audit for [{user_role}] ---")
+        
+        granted_role_permissions = cls.ROLE_PERMISSIONS.get(user_role.upper(), frozenset())
+        
+        # Set comparison using frozenset
+        has_full_access = required_actions.issubset(granted_role_permissions)
+        missing_permissions = required_actions - granted_role_permissions
+        
+        return {
+            "user_role": user_role,
+            "access_granted": has_full_access,
+            "missing_permissions": missing_permissions
+        }
+
+# Test access manager
+required_ops = {"READ_MANIFEST", "OVERRIDE_SECURITY"}
+print(SecurityAccessManager.verify_action_access("DISPATCHER", required_ops))
+print(SecurityAccessManager.verify_action_access("SUPERVISOR", required_ops))
+      `,
+      keyTakeaways: [
+        "`frozenset` is an immutable, hashable version of a `set`.",
+        "Because `frozenset` is hashable, it can be used as a dictionary key or stored inside other sets.",
+        "Choose `list` for ordered mutable data, `tuple` for ordered immutable records, `set` for unique mutable collections, and `frozenset` for unique immutable collections."
+      ],
+      commonMistakes: [
+        "<b>Trying to use a standard `set` as a dictionary key:</b> Raises a `TypeError: unhashable type: 'set'`. Use `frozenset` instead.",
+        "<b>Using lists when unique membership is required:</b> Searching linear lists ($O(N)$) instead of sets ($O(1)$) degrades performance significantly as datasets grow.",
+        "<b>Calling `.add()` on a `frozenset`:</b> Raises an `AttributeError` because frozensets have no mutation methods."
+      ],
+      quizzes: [
+        {
+          question: "Which collection type should you use as a dictionary key if you need to represent an UNORDERED combination of unique strings?",
+          options: [
+            "list",
+            "set",
+            "frozenset",
+            "dict"
+          ],
+          correctIndex: 2,
+          explanation: "Standard sets are unhashable and cannot be dictionary keys. `frozenset` is immutable and hashable, making it the ideal set type for dictionary keys."
+        },
+        {
+          question: "Which collection is best suited for storing a read-only fixed record of geographic coordinates `(latitude, longitude)`?",
+          options: [
+            "tuple",
+            "list",
+            "set",
+            "frozenset"
+          ],
+          correctIndex: 0,
+          explanation: "Tuples represent fixed, ordered, immutable records, making `(latitude, longitude)` coordinate pairs a textbook use case."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the primary difference between a List and a Tuple in Python?",
+      options: [
+        "Lists store strings; tuples store numbers.",
+        "Lists are mutable (can change in-place); tuples are immutable (cannot change).",
+        "Tuples do not support indexing.",
+        "Lists use curly braces `{}`; tuples use brackets `[]`."
+      ],
+      correctIndex: 1,
+      explanation: "Lists are ordered and mutable, while tuples are ordered and immutable."
+    },
+    {
+      question: "Which of the following creates a valid single-element Tuple containing the string `'HUB_1'`?",
+      options: [
+        "`t = ('HUB_1')`",
+        "`t = ('HUB_1',)`",
+        "`t = tuple('HUB_1')`",
+        "`t = ['HUB_1']`"
+      ],
+      correctIndex: 1,
+      explanation: "A trailing comma is mandatory when defining a single-element tuple (`('HUB_1',)`)."
+    },
+    {
+      question: "What happens when you add a duplicate element `'TRK-100'` to a Python `set`?",
+      options: [
+        "Python raises a `DuplicateError`.",
+        "The set automatically ignores the duplicate, maintaining unique items.",
+        "The set overwrites all previous items.",
+        "The duplicate item is stored at the end of the set."
+      ],
+      correctIndex: 1,
+      explanation: "Sets enforce uniqueness automatically; adding an existing item has no effect."
+    },
+    {
+      question: "What is the Big-O time complexity of testing membership (`x in my_collection`) in a Set versus a List?",
+      options: [
+        "Set is $O(N)$, List is $O(1)$",
+        "Set is $O(1)$, List is $O(N)$",
+        "Both are $O(1)$",
+        "Both are $O(N)$"
+      ],
+      correctIndex: 1,
+      explanation: "Sets use hash tables offering constant $O(1)$ lookups, whereas lists require linear $O(N)$ scans."
+    },
+    {
+      question: "Which set operator calculates the INTERSECTION of two sets (elements present in BOTH sets)?",
+      options: [
+        "|",
+        "&",
+        "-",
+        "^"
+      ],
+      correctIndex: 1,
+      explanation: "The `&` operator computes set intersection."
+    },
+    {
+      question: "Why can a `frozenset` be used as a dictionary key, while a standard `set` CANNOT?",
+      options: [
+        "Frozensets only hold numbers.",
+        "Frozensets are immutable and hashable; standard sets are mutable and unhashable.",
+        "Standard sets run out of memory.",
+        "Frozensets are ordered."
+      ],
+      correctIndex: 1,
+      explanation: "Dictionary keys must be hashable objects. Because frozensets are immutable, their hash values never change."
+    },
+    {
+      question: "What syntax instantiates an empty Set?",
+      options: [
+        "`s = {}`",
+        "`s = set()`",
+        "`s = ()`",
+        "`s = set([])`"
+      ],
+      correctIndex: 1,
+      explanation: "`set()` creates an empty set. `{}` creates an empty dictionary."
+    },
+    {
+      question: "Which collection should you select to store a dynamic queue of packages where arrival order matters and items will be added and removed constantly?",
+      options: [
+        "tuple",
+        "set",
+        "frozenset",
+        "list"
+      ],
+      correctIndex: 3,
+      explanation: "Lists are ordered and mutable, making them the correct choice for dynamic queues."
+    }
+  ],
+  project: {
+    name: "Regional Route & Security Zone Policy Auditor (Phase 1 Project)",
+    goal: "Build a security policy auditor module that uses tuples for immutable waybill records, sets for fast deduplication and regional zone intersections, and frozensets for secure role permission mappings.",
+    brief: "Your logistics enterprise requires a policy verification engine (`policy_auditor.py`). The engine must validate immutable waybill tuples, deduplicate incoming regional route codes, compare driver coverage sets against embargoed zone sets using set algebra, and evaluate access permissions mapped via frozenset dictionary keys.",
+    steps: [
+      "Create a script file named `policy_auditor.py` in your workspace.",
+      "Define sealed waybill records as immutable tuples `(tracking_id, (origin, destination), weight_lbs)`.",
+      "Write a function `deduplicate_route_logs(raw_log_list: list) -> set` that converts raw log collections into clean unique sets.",
+      "Write a route safety checker `evaluate_route_safety(route_zips: set, embargoed_zips: set) -> dict` using set intersection (`&`) and difference (`-`) operators.",
+      "Define security role permissions using `frozenset` objects stored inside a dictionary mapping roles to permission sets.",
+      "Implement a permission auditing function `verify_user_clearance(role: str, requested_action: str) -> bool` that performs lookup and membership checks.",
+      "Run `python3 policy_auditor.py` in your integrated terminal and output a clean audit report."
+    ],
+    acceptance: [
+      "Waybill tuples protect fixed route data from accidental in-place modification.",
+      "Set operations correctly identify overlapping embargo zones and remaining unserviced areas.",
+      "Frozensets securely map unalterable permission sets as dictionary values.",
+      "Executing `python3 policy_auditor.py` prints a clean, fully formatted security report without errors."
+    ],
+    stretch: [
+      "Benchmark membership lookups (`in`) comparing a 100,000-item list against a 100,000-item set using Python's `time` module.",
+      "Annotate all functions with strict type hints (`tuple[str, tuple[str, str], float]`, `frozenset[str]`) and verify with static type tools."
+    ]
+  }
+};
