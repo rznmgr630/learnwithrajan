@@ -1,0 +1,643 @@
+/**
+ * DAY 06: Phase 1 · Core Python — Lists
+ * 
+ * Total Duration: 80 minutes
+ * Difficulty: Beginner
+ * Lessons: 3
+ */
+
+export const phase1Lists = {
+  day: 5,
+  topic: "Phase 1 · Core Python — Lists",
+  totalMinutes: 80,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Create, Read, and Update Ordered Data",
+      durationMinutes: 18,
+      explanation: `
+<b>Ordered, Mutable Sequences in Memory</b><br/>
+In real-world applications, you rarely deal with single standalone variables. An e-commerce platform manages thousands of items in a shopping cart; a logistics fleet tracks hundreds of delivery vans; a warehouse monitors queues of incoming packages. Python's <b>list</b> is the most versatile data structure for holding an ordered collection of items.<br/><br/>
+
+<b>1. What is a List?</b><br/>
+A list in Python is an <b>ordered</b>, <b>mutable</b> sequence of objects written as square brackets <code>[...]</code> containing comma-separated values.
+<ul>
+  <li><b>Ordered:</b> Items maintain a fixed sequence position. If you insert a package at index <code>0</code>, it stays at index <code>0</code> until explicitly reordered or removed.</li>
+  <li><b>Mutable:</b> You can modify, replace, add, or delete items inside the list in-place <i>without changing the list's memory address (`id`)</i>.</li>
+  <li><b>Heterogeneous:</b> Lists can hold any combination of data types simultaneously (integers, floats, strings, dictionaries, or even other lists).</li>
+</ul>
+
+<b>2. Indexing and Mutating Items In-Place:</b><br/>
+Just like strings, lists use zero-based indexing (<code>list[0]</code> reads the first item) and negative indexing (<code>list[-1]</code> reads the last item). However, unlike immutable strings, <b>list items can be reassigned in-place</b>:<br/>
+<code>packages = ["PKG-101", "PKG-102", "PKG-103"]</code><br/>
+<code>packages[1] = "PKG-999_REPLACED"</code> # Replaces "PKG-102" directly in memory!<br/><br/>
+
+<b>Real-World Logistics Analogy: The Warehouse Conveyor Belt</b><br/>
+Think of a list as a warehouse conveyor belt containing physical cargo boxes. Each position on the belt is numbered starting from `0`. Because the belt is mutable, a warehouse worker can pick up the box at slot `1` and place a new box in that exact slot without rebuilding the entire physical conveyor belt.
+      `,
+      diagram: `
+MUTABLE LIST IN-PLACE REASSIGNMENT:
+
+  packages = ["PKG-101", "PKG-102", "PKG-103"]
+  
+  Memory Layout:
+  Index:           0           1           2
+  List Object:  [ "PKG-101" | "PKG-102" | "PKG-103" ]
+                                ^
+                                | (Reassign: packages[1] = "PKG-999")
+                                v
+  Updated List: [ "PKG-101" | "PKG-999" | "PKG-103" ]
+  (Memory ID of 'packages' remains completely unchanged!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: List Creation, Indexing, and In-Place Updates
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Creating and Reassigning Elements In-Place
+# ------------------------------------------------------------------------------
+
+# Creating an ordered list of manifest package IDs
+manifest = ["PKG-A101", "PKG-B202", "PKG-C303", "PKG-D404"]
+
+print("--- BEGINNER: Reading & Modifying Lists ---")
+print("Original Manifest:", manifest)
+print("First item (index 0):", manifest[0])
+print("Last item (index -1):", manifest[-1])
+
+# In-place item reassignment
+initial_id = id(manifest)
+manifest[1] = "PKG-B202_UPDATED"
+new_id = id(manifest)
+
+print("\nUpdated Manifest:", manifest)
+print("Are memory addresses identical?", initial_id == new_id) # True (Mutable in-place!)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Updating Ranges via Slice Reassignment
+# ------------------------------------------------------------------------------
+
+delivery_route = ["Hub Chicago", "Stop A", "Stop B", "Stop C", "Hub StLouis"]
+
+print("\n--- INTERMEDIATE: Slice Reassignment ---")
+print("Original Route:", delivery_route)
+
+# Replace middle stops ['Stop A', 'Stop B', 'Stop C'] with a new detour
+delivery_route[1:4] = ["Detour Naperville", "Detour Peoria"]
+
+print("Updated Detour Route:", delivery_route)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dispatch Priority Queue Updater
+# ------------------------------------------------------------------------------
+
+def update_manifest_priority_slot(
+    manifest_queue: list[str], 
+    slot_index: int, 
+    new_package_id: str
+) -> dict:
+    \"\"\"
+    Safely updates a cargo position in a dispatch queue while validating bounds.
+    \"\"\"
+    print(f"\n--- ADVANCED: Dispatch Slot Update ---")
+    
+    # Boundary Guard Check
+    if slot_index < -len(manifest_queue) or slot_index >= len(manifest_queue):
+        return {
+            "success": False, 
+            "error": f"IndexError: Slot {slot_index} is out of bounds for queue size {len(manifest_queue)}."
+        }
+        
+    old_package = manifest_queue[slot_index]
+    
+    # Perform safe in-place reassignment
+    manifest_queue[slot_index] = new_package_id
+    
+    return {
+        "success": True,
+        "slot_index": slot_index,
+        "replaced_package": old_package,
+        "new_package": new_package_id,
+        "updated_queue": manifest_queue
+    }
+
+# Test valid slot update
+queue = ["TRACK-10", "TRACK-20", "TRACK-30"]
+print("Valid Slot Update Output:", update_manifest_priority_slot(queue, 1, "TRACK-20-EXPRESS"))
+
+# Test out-of-bounds guard check
+print("Out of Bounds Guard Output:", update_manifest_priority_slot(queue, 10, "TRACK-FAIL"))
+      `,
+      keyTakeaways: [
+        "Lists are ordered, mutable sequences defined using square brackets `[...]`.",
+        "Lists use zero-based indexing (`list[0]`) and negative indexing (`list[-1]`).",
+        "Items inside a list can be reassigned in-place (`list[0] = new_val`) without changing the list's memory address.",
+        "Attempting to read or assign an index that does not exist raises an `IndexError`."
+      ],
+      commonMistakes: [
+        "<b>Confusing list assignment with copying:</b> Writing `b = a` creates two labels pointing to the same list; modifying `b[0]` alters `a[0]` as well.",
+        "<b>IndexError from reading out of bounds:</b> Trying to access `list[len(list)]` instead of `list[len(list) - 1]`.",
+        "<b>Expecting string-like immutability:</b> Rebuilding a whole list when a direct in-place update (`list[i] = val`) is more efficient."
+      ],
+      quizzes: [
+        {
+          question: "Given `items = ['A', 'B', 'C']`, what is the result of executing `items[1] = 'X'`?",
+          options: [
+            "`['A', 'X', 'C']`",
+            "`['X', 'B', 'C']`",
+            "`['A', 'B', 'C', 'X']`",
+            "A `TypeError` occurs because lists are immutable."
+          ],
+          correctIndex: 0,
+          explanation: "Lists are mutable. Assigning `items[1] = 'X'` replaces the element at index 1 ('B') with 'X' in-place, resulting in `['A', 'X', 'C']`."
+        },
+        {
+          question: "What happens if you attempt to assign `items[10] = 'D'` on a list `items` containing 3 elements?",
+          options: [
+            "Python automatically grows the list to 11 elements and fills empty slots with `None`.",
+            "An `IndexError` is raised because index 10 is out of range.",
+            "Python adds 'D' to the end of the list.",
+            "A `KeyError` is raised."
+          ],
+          correctIndex: 1,
+          explanation: "You cannot reassign an index position that does not yet exist in the list. Doing so raises an `IndexError`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Grow, Remove, Sort, and Search Lists",
+      durationMinutes: 20,
+      explanation: `
+<b>Manipulating List Contents with Methods</b><br/>
+In dynamic logistics systems, cargo inventories constantly fluctuate: packages are loaded, delivered, sorted, or searched. Python provides built-in list methods to manage these operations efficiently.<br/><br/>
+
+<b>1. Growing Lists (Adding Data):</b>
+<ul>
+  <li><code>append(item)</code>: Adds a single item to the very <b>end</b> of the list in-place.</li>
+  <li><code>insert(index, item)</code>: Inserts an item at a specific index position, shifting existing items to the right.</li>
+  <li><code>extend(iterable)</code>: Appends all items from another list or iterable to the end of the current list.</li>
+</ul>
+
+<b>2. Removing Items (Deleting Data):</b>
+<ul>
+  <li><code>pop(index)</code>: Removes and <b>returns</b> the item at the specified index (defaults to last item `-1`).</li>
+  <li><code>remove(item)</code>: Searches for and removes the <b>first occurrence</b> of a specific value. Raises a `ValueError` if the value is not found!</li>
+  <li><code>clear()</code>: Removes all items, leaving an empty list `[]`.</li>
+</ul>
+
+<b>3. Searching and Sorting Lists:</b>
+<ul>
+  <li><code>in</code> operator: Evaluates whether an item exists in the list (`"PKG-101" in package_list`).</li>
+  <li><code>index(item)</code>: Returns the zero-based index of the first matching item.</li>
+  <li><code>sort(key=..., reverse=...)</code>: Sorts the list <b>in-place</b> (modifies the existing list object and returns `None`).</li>
+  <li><code>sorted(iterable)</code>: Built-in function that leaves the original list untouched and returns a <b>new sorted list copy</b>.</li>
+</ul>
+
+<b>The "Sort Return None" Trap:</b><br/>
+A classic beginner mistake is writing <code>my_list = my_list.sort()</code>. Because `sort()` mutates the list in-place and returns `None`, this line overwrites your list with `None`! Use `my_list.sort()` alone, or use `new_list = sorted(my_list)`.
+      `,
+      diagram: `
+THE IN-PLACE SORT TRAP:
+
+  my_list = [3, 1, 2]
+  
+  WRONG:  my_list = my_list.sort()  ---> my_list becomes NONE!
+  
+  CORRECT IN-PLACE:   my_list.sort()        ---> my_list becomes [1, 2, 3]
+  
+  CORRECT NEW COPY:   new_list = sorted(my_list) ---> new_list is [1, 2, 3], original intact
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: List Mutation Methods, Searching, and Sorting
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Appending, Inserting, and Popping Elements
+# ------------------------------------------------------------------------------
+
+inventory = ["PARCEL-A"]
+
+# Appending to the end
+inventory.append("PARCEL-B")
+inventory.append("PARCEL-C")
+
+# Inserting at index 1 (Shifts PARCEL-B to index 2)
+inventory.insert(1, "URGENT-PARCEL-EXPRESS")
+
+print("--- BEGINNER: List Growth ---")
+print("Inventory after insertions:", inventory)
+
+# Popping the last element
+popped_item = inventory.pop()
+print(f"Popped item: {popped_item} | Remaining inventory: {inventory}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: In-Place Sort vs Built-in Sorted
+# ------------------------------------------------------------------------------
+
+weights = [42.5, 12.0, 88.1, 5.4, 23.0]
+
+# 1. Using sorted() to preserve original list
+sorted_weights_copy = sorted(weights)
+
+print("\n--- INTERMEDIATE: Sorting Behavior ---")
+print("Original weights list:", weights)
+print("Sorted copy returned by sorted():", sorted_weights_copy)
+
+# 2. In-place sorting with .sort()
+weights.sort(reverse=True) # Descending sort
+print("Original weights after .sort(reverse=True):", weights)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Package Removal and Priority Re-Sorter
+# ------------------------------------------------------------------------------
+
+def process_and_prioritize_manifest(
+    incoming_manifest: list[dict], 
+    cancelled_tracking_id: str
+) -> dict:
+    \"\"\"
+    Safely removes cancelled orders, searches for priority items, 
+    and sorts packages by weight using custom key functions.
+    \"\"\"
+    print(f"\n--- ADVANCED: Manifest Re-Sorting Pipeline ---")
+    print(f"Original incoming package count: {len(incoming_manifest)}")
+    
+    # Safe Value Removal Search
+    found_cancelled = False
+    for pkg in list(incoming_manifest): # Iterate over copy to safely remove during loop
+        if pkg.get("tracking_id") == cancelled_tracking_id:
+            incoming_manifest.remove(pkg)
+            found_cancelled = True
+            print(f"Cancelled package '{cancelled_tracking_id}' located and removed.")
+            break
+            
+    if not found_cancelled:
+        print(f"Notice: Cancelled package '{cancelled_tracking_id}' not found in manifest.")
+        
+    # Custom Key Sorting: Sort packages by 'weight_lbs' in descending order
+    # Using lambda function as sort key
+    incoming_manifest.sort(key=lambda item: item.get("weight_lbs", 0.0), reverse=True)
+    
+    return {
+        "final_package_count": len(incoming_manifest),
+        "cancelled_removed": found_cancelled,
+        "heaviest_package": incoming_manifest[0] if incoming_manifest else None,
+        "sorted_manifest": incoming_manifest
+    }
+
+# Test dataset
+manifest_data = [
+    {"tracking_id": "TRK-10", "weight_lbs": 15.2},
+    {"tracking_id": "TRK-20", "weight_lbs": 85.0},
+    {"tracking_id": "TRK-30", "weight_lbs": 42.1}
+]
+
+print("Sorted Manifest Output:", process_and_prioritize_manifest(manifest_data, "TRK-20"))
+      `,
+      keyTakeaways: [
+        "Use `append()` to add one item to the end, `insert()` to insert at an index, and `extend()` to merge lists.",
+        "Use `pop()` to remove and return an item by index; use `remove()` to delete the first occurrence of a value.",
+        "`list.sort()` mutates the list in-place and returns `None`. Never write `my_list = my_list.sort()`!",
+        "`sorted(my_list)` returns a brand-new sorted list copy while preserving the original list."
+      ],
+      commonMistakes: [
+        "<b>Assigning the result of `list.sort()` to a variable:</b> Replaces your list with `None` because `.sort()` returns `None`.",
+        "<b>Calling `list.remove(val)` when `val` is not in the list:</b> Raises an unhandled `ValueError`; always check `if val in my_list:` first.",
+        "<b>Modifying a list while iterating over it directly:</b> Causes skipped items or unexpected behavior; iterate over a copy `for item in list(my_list):` instead."
+      ],
+      quizzes: [
+        {
+          question: "What is the value of `result` after executing `numbers = [3, 1, 2]; result = numbers.sort()`?",
+          options: [
+            "`[1, 2, 3]`",
+            "`[3, 1, 2]`",
+            "`None`",
+            "A `TypeError` occurs."
+          ],
+          correctIndex: 2,
+          explanation: "`list.sort()` sorts the list in-place and returns `None`. Therefore, `result` holds `None`."
+        },
+        {
+          question: "What exception is raised if you execute `my_list.remove('XYZ')` when `'XYZ'` is NOT inside `my_list`?",
+          options: [
+            "IndexError",
+            "ValueError",
+            "KeyError",
+            "AttributeError"
+          ],
+          correctIndex: 1,
+          explanation: "Calling `remove()` with a value that does not exist in the list raises a `ValueError`."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Nested Lists, Copies, and Unpacking",
+      durationMinutes: 22,
+      explanation: `
+<b>Multidimensional Structures, Reference Safety, and Unpacking</b><br/>
+As applications grow, single flat lists are insufficient. You will need to represent multidimensional data (like warehouse storage grids, geographic coordinate matrices, or grouped order batches) using <b>nested lists</b> (lists inside lists).<br/><br/>
+
+<b>1. Nested Lists (Multidimensional Grids):</b><br/>
+A nested list is a list whose elements are themselves lists.<br/>
+<code>warehouse_grid = [</code><br/>
+<code>    ["Bay A1", "Bay A2"],  # Row 0</code><br/>
+<code>    ["Bay B1", "Bay B2"]   # Row 1</code><br/>
+<code>]</code><br/>
+Accessing nested items requires chaining index brackets: <code>warehouse_grid[1][0]</code> accesses Row 1 ("Bay B1"), Slot 0.<br/><br/>
+
+<b>2. Shallow Copying vs. Deep Copying:</b><br/>
+When copying lists containing nested mutable structures, standard copies can cause severe bugs:
+<ul>
+  <li><b>Shallow Copy (<code>list.copy()</code> or <code>list[:]</code>):</b> Creates a new outer list object, but <i>inner nested list references are still shared with the original list!</i></li>
+  <li><b>Deep Copy (<code>copy.deepcopy()</code>):</b> Recursively copies all outer AND inner nested structures, ensuring total object isolation.</li>
+</ul>
+
+<b>3. Sequence Unpacking:</b><br/>
+Python allows extracting list elements directly into distinct variables in a single clean line:
+<ul>
+  <li><b>Basic Unpacking:</b> <code>x, y = [10.5, -42.1]</code></li>
+  <li><b>Extended Unpacking with Star (<code>*</code>):</b> <code>first, *middle, last = ["A", "B", "C", "D", "E"]</code> extracts `"A"` into `first`, `["B", "C", "D"]` into `middle`, and `"E"` into `last`.</li>
+</ul>
+      `,
+      diagram: `
+SHALLOW COPY vs DEEP COPY:
+
+  original = [ ["A", "B"] ]
+  
+  SHALLOW COPY (copy_1 = original.copy()):
+    original -------> [ Memory Outer 1 ] ---> Inner List ["A", "B"] (Address 0x999)
+                           ^
+    copy_1 ---------  [ Memory Outer 2 ] ---/
+    (Modifying inner list in copy_1 ALSO mutates original!)
+
+  DEEP COPY (copy_2 = copy.deepcopy(original)):
+    copy_2 ---------  [ Memory Outer 3 ] ---> Inner List ["A", "B"] (Address 0x888)
+    (Completely isolated object tree!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Nested Lists, Deep Copying, and Extended Unpacking
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Sequence Unpacking with Star Operator (*)
+# ------------------------------------------------------------------------------
+
+route_stops = ["Origin Chicago", "Stop 1 Naperville", "Stop 2 Peoria", "Destination StLouis"]
+
+# Basic unpacking (exact variable match)
+origin, stop1, stop2, destination = route_stops
+
+print("--- BEGINNER: Sequence Unpacking ---")
+print("Origin:", origin)
+print("Destination:", destination)
+
+# Extended star (*) unpacking
+hub_start, *intermediate_stops, hub_end = ["CHI", "DET", "CLE", "PIT", "NYC"]
+
+print("\nExtended Star Unpacking:")
+print("Start:", hub_start)                     # 'CHI'
+print("Intermediate Stops:", intermediate_stops) # ['DET', 'CLE', 'PIT']
+print("End:", hub_end)                         # 'NYC'
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Nested Grids & The Shallow Copy Pitfall
+# ------------------------------------------------------------------------------
+
+import copy
+
+# 2D Warehouse Grid (3 Rows x 2 Columns)
+grid_original = [
+    ["Shelf 0-0", "Shelf 0-1"],
+    ["Shelf 1-0", "Shelf 1-1"]
+]
+
+# Shallow copy test
+grid_shallow = grid_original.copy()
+
+# Deep copy test
+grid_deep = copy.deepcopy(grid_original)
+
+# Mutate nested element in shallow copy
+grid_shallow[0][0] = "CORRUPTED_SHELF"
+
+print("\n--- INTERMEDIATE: Copy Isolation Verification ---")
+print("Original Grid (Corrupted by shallow copy mutation!):", grid_original[0][0])
+print("Deep Copy Grid (Protected & Uncorrupted):", grid_deep[0][0])
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Warehouse Matrix Dispatch Allocator
+# ------------------------------------------------------------------------------
+
+def allocate_warehouse_zone_cargo(
+    warehouse_matrix: list[list[dict]], 
+    row: int, 
+    col: int, 
+    cargo_payload: dict
+) -> dict:
+    \"\"\"
+    Safely updates nested 2D warehouse matrix grid entries using deep copy protection.
+    \"\"\"
+    print(f"\n--- ADVANCED: 2D Warehouse Matrix Allocator ---")
+    
+    # Deep copy matrix to ensure operational isolation before staging modifications
+    working_matrix = copy.deepcopy(warehouse_matrix)
+    
+    try:
+        target_slot = working_matrix[row][col]
+        
+        if target_slot.get("occupied"):
+            return {
+                "success": False, 
+                "error": f"Slot [{row}][{col}] is already occupied by '{target_slot.get('item_id')}'."
+            }
+            
+        # Allocate cargo in working matrix
+        working_matrix[row][col] = {
+            "occupied": True,
+            "item_id": cargo_payload.get("id"),
+            "weight": cargo_payload.get("weight")
+        }
+        
+        return {
+            "success": True,
+            "allocated_slot": f"Row {row}, Col {col}",
+            "updated_matrix_state": working_matrix
+        }
+    except IndexError:
+        return {"success": False, "error": f"Matrix coordinates [{row}][{col}] out of bounds."}
+
+# Test matrix setup
+warehouse_layout = [
+    [{"occupied": False}, {"occupied": True, "item_id": "EXISTING-99"}],
+    [{"occupied": False}, {"occupied": False}]
+]
+
+new_cargo = {"id": "NEW-PKG-808", "weight": 14.5}
+print("Allocation Output:", allocate_warehouse_zone_cargo(warehouse_layout, 0, 0, new_cargo))
+      `,
+      keyTakeaways: [
+        "Nested lists represent multidimensional data structures (like 2D grids or matrices).",
+        "Access nested elements using chained indices (`grid[row][col]`).",
+        "Shallow copies (`list.copy()`) leave nested inner lists shared; use `copy.deepcopy()` to clone multidimensional structures fully.",
+        "Use sequence unpacking (`a, b = list`) and extended star unpacking (`head, *tail = list`) for readable variable extractions."
+      ],
+      commonMistakes: [
+        "<b>Using shallow copy on nested lists:</b> Expecting `list.copy()` to isolate nested lists, leading to corrupted shared state.",
+        "<b>Unpacking variable count mismatch:</b> Trying `a, b = [1, 2, 3]` without the star operator raises a `ValueError`.",
+        "<b>Creating nested lists with multiplication syntax (`[[0]*3]*3`):</b> This creates 3 inner list references pointing to the SAME physical inner list object!"
+      ],
+      quizzes: [
+        {
+          question: "Given `grid = [['A', 'B'], ['C', 'D']]`, how do you access the element `'C'`?",
+          options: [
+            "`grid[1, 0]`",
+            "`grid[1][0]`",
+            "`grid[0][1]`",
+            "`grid[2][1]`"
+          ],
+          correctIndex: 1,
+          explanation: "'C' is located in the second inner list (row index 1) at the first position (column index 0). In Python, this is accessed as `grid[1][0]`."
+        },
+        {
+          question: "Why should you use `copy.deepcopy()` instead of `list.copy()` when duplicating nested list structures?",
+          options: [
+            "Because `list.copy()` causes a `SyntaxError` on nested lists.",
+            "Because `list.copy()` creates a shallow copy, leaving inner nested lists pointing to shared memory references.",
+            "Because `copy.deepcopy()` makes the list immutable.",
+            "Because `list.copy()` only works for numbers."
+          ],
+          correctIndex: 1,
+          explanation: "Shallow copies only clone the outer list container. Inner nested lists remain shared references between the original and the copy unless cloned via `deepcopy()`."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which of the following statements correctly describes a Python List?",
+      options: [
+        "An unordered, immutable sequence of numbers.",
+        "An ordered, mutable sequence of arbitrary objects.",
+        "An unindexed fixed-size binary array.",
+        "A string representation of dictionary key values."
+      ],
+      correctIndex: 1,
+      explanation: "Python lists are ordered, mutable collections capable of storing heterogeneous objects."
+    },
+    {
+      question: "What is the return value of executing `my_list.sort()`?",
+      options: [
+        "A new sorted list object.",
+        "The original list reversed.",
+        "`None` (because `.sort()` mutates the list in-place).",
+        "An integer count of sorted elements."
+      ],
+      correctIndex: 2,
+      explanation: "The `list.sort()` method mutates the target list directly in-place and returns `None`."
+    },
+    {
+      question: "How do you append every element from `list_b` into `list_a` in-place?",
+      options: [
+        "list_a.append(list_b)",
+        "list_a.extend(list_b)",
+        "list_a.push(list_b)",
+        "list_a.add(list_b)"
+      ],
+      correctIndex: 1,
+      explanation: "`list_a.extend(list_b)` appends each element from `list_b` into `list_a`. Using `.append(list_b)` would add `list_b` as a single nested inner list item."
+    },
+    {
+      question: "What exception is raised if you call `my_list.remove('ITEM_X')` when `'ITEM_X'` is missing from `my_list`?",
+      options: [
+        "IndexError",
+        "KeyError",
+        "ValueError",
+        "TypeError"
+      ],
+      correctIndex: 2,
+      explanation: "Calling `remove()` on a value that does not exist in the list raises a `ValueError`."
+    },
+    {
+      question: "What does the star operator (`*`) do in extended unpacking: `first, *middle, last = [1, 2, 3, 4, 5]`?",
+      options: [
+        "Multiplies all numbers in the middle of the list.",
+        "Captures all remaining intermediate elements into a list `middle = [2, 3, 4]`.",
+        "Raises a `SyntaxError`.",
+        "Deletes the middle items."
+      ],
+      correctIndex: 1,
+      explanation: "Extended unpacking with `*middle` gathers remaining intermediate elements into a list."
+    },
+    {
+      question: "What occurs if you create a 2D grid using `grid = [[0] * 2] * 2` and then execute `grid[0][0] = 99`?",
+      options: [
+        "Only `grid[0][0]` changes to 99.",
+        "Both `grid[0][0]` AND `grid[1][0]` change to 99 because the inner list references were duplicated!",
+        "A `MemoryError` occurs.",
+        "`grid` remains `[[0, 0], [0, 0]]`."
+      ],
+      correctIndex: 1,
+      explanation: "Using `[inner_list] * n` duplicates the *reference* to `inner_list`, causing mutating one row to corrupt all rows."
+    },
+    {
+      question: "Which function returns a brand-new sorted copy of a list without altering the original list?",
+      options: [
+        "list.sort()",
+        "sorted(list)",
+        "list.copy_sort()",
+        "order(list)"
+      ],
+      correctIndex: 1,
+      explanation: "The built-in function `sorted(iterable)` leaves the original list unchanged and returns a new sorted list."
+    },
+    {
+      question: "Given `data = ['A', 'B', 'C', 'D']`, what does `data.pop(1)` return?",
+      options: [
+        "'A'",
+        "'B'",
+        "['A', 'C', 'D']",
+        "`None`"
+      ],
+      correctIndex: 1,
+      explanation: "`pop(1)` removes and returns the element at index 1, which is `'B'`."
+    }
+  ],
+  project: {
+    name: "Warehouse Inventory & Batch Sorting Manager (Phase 1 Project)",
+    goal: "Build a modular warehouse inventory management module that parses incoming delivery batches, manipulates parcel list order, handles cancellations safely, isolates multidimensional storage grids using deep copying, and generates sorted manifest reports.",
+    brief: "Your logistics fulfillment center requires an inventory batch manager (`inventory_manager.py`). The tool must manage ordered queues of parcels, insert priority packages into specific queue indices, remove cancelled orders safely without raising `ValueError` exceptions, unpack shipment tuples, and organize 2D warehouse storage bays without corrupting shared list references.",
+    steps: [
+      "Create a script file named `inventory_manager.py` in your project workspace.",
+      "Define initial warehouse inventory queues containing lists of parcel dictionaries.",
+      "Write a function `enqueue_priority_parcel(queue: list, parcel: dict, slot_index: int)` using `list.insert()` to place express parcels at requested queue positions.",
+      "Write a function `cancel_parcel_by_id(queue: list, tracking_id: str) -> bool` that searches for and removes a parcel safely using value checking before `list.remove()` or `list.pop()`.",
+      "Implement a function `sort_inventory_by_weight(queue: list, descending: bool = True) -> list` that uses `sorted()` with a key function to produce ordered manifest copies.",
+      "Create a 2D warehouse grid matrix and implement deep copy cloning using `copy.deepcopy()` to stage changes before committing updates to the primary grid.",
+      "Use sequence unpacking (`first, *middle, last`) to extract queue lead, intermediate, and tail packages for terminal reporting.",
+      "Run `python3 inventory_manager.py` in your integrated terminal and print a complete warehouse inventory status report."
+    ],
+    acceptance: [
+      "Inventory queues maintain proper sequence ordering after insertions and pops.",
+      "Missing cancellation IDs are handled safely without unhandled `ValueError` crashes.",
+      "Deep copying isolates staged warehouse grid updates, leaving original layout matrices uncorrupted.",
+      "Extracted queue summaries print cleanly using sequence unpacking."
+    ],
+    stretch: [
+      "Integrate list comprehension filters to extract parcels exceeding 50 lbs into a heavy-freight secondary list.",
+      "Annotate all functions with explicit type hints (`list[dict]`, `tuple`) and run static type verification."
+    ]
+  }
+};
