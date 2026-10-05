@@ -298,6 +298,8 @@ function normalizePastedMarkup(value: string): string {
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<hr\s*\/?>/gi, "\n---\n")
     .replace(/<h([1-6])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>/gi, "\n### $2\n")
+    .replace(/\\?<pre(?:\s[^>]*)?>`?/gi, "<pre>")
+    .replace(/`?\\?<`?\/pre`?>/gi, "</pre>")
     .replace(/<(?:pre|code)(?:\s[^>]*)?>/gi, (tag) => tag.startsWith("<pre") ? "<pre>" : "<code>")
     .replace(/<\/(?:pre|code)>/gi, (tag) => tag.toLowerCase() === "</pre>" ? "</pre>" : "</code>")
     .replace(/\\?<\/?ul(?:\s[^>]*)?>/gi, "\n")
@@ -395,10 +397,16 @@ export function RichParagraph({ text, className }: RichTextProps) {
   for (let j = 0; j < lines.length; j++) {
     const line = lines[j];
 
-    if (/^\s*<pre>(?:<code(?:\s[^>]*)?>)?\s*$/.test(line)) {
-      const code: string[] = [];
+    const preStart = line.match(/^\s*<pre>(?:<code>)?(.*)$/);
+    if (preStart) {
+      const code = preStart[1] ? [preStart[1]] : [];
       j++;
-      while (j < lines.length && !/^\s*(?:<\/code>)?<\/pre>\s*$/.test(lines[j])) {
+      while (j < lines.length) {
+        const closing = lines[j].match(/^(.*?)(?:<\/code>)?<\/pre>\s*$/);
+        if (closing) {
+          if (closing[1]) code.push(closing[1]);
+          break;
+        }
         code.push(lines[j]);
         j++;
       }
