@@ -5,6 +5,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import { RawPythonLessonDay } from "@/components/learn/RawPythonLessonDay";
 import { pickLocalized } from "@/lib/i18n/pick";
+import type { LessonDay } from "@/lib/learn/lesson-types";
 import { PYTHON_DAY_1_LESSONS } from "@/lib/python-learning/python-day-1-lessons";
 import { PYTHON_DAY_2_LESSONS } from "@/lib/python-learning/python-day-2-lessons";
 import { PYTHON_DAY_3_LESSONS } from "@/lib/python-learning/python-day-3-lessons";
@@ -31,6 +32,34 @@ const LESSON_DAYS = {
   9: PYTHON_DAY_9_LESSONS,
   10: PYTHON_DAY_10_LESSONS,
 };
+
+const COMING_SOON = { en: "Content coming soon", np: "Content coming soon", jp: "Content coming soon" };
+
+function pendingPythonDay(day: number): LessonDay {
+  const roadmapDay = PYTHON_ROADMAP_WEEKS.flatMap((phase) => phase.days).find((item) => item.day === day);
+
+  return {
+    day,
+    title: roadmapDay?.title ?? COMING_SOON,
+    totalMinutes: 0,
+    difficulty: COMING_SOON,
+    lessons: [
+      {
+        id: `python-day-${day}-coming-soon`,
+        title: COMING_SOON,
+        durationMinutes: 0,
+        explanation: COMING_SOON,
+        diagram: "Content coming soon",
+        codeExample: { title: COMING_SOON, code: "Content coming soon" },
+        keyTakeaways: [COMING_SOON],
+        commonMistakes: [COMING_SOON],
+        quiz: [],
+        rawMiniQuiz: COMING_SOON,
+      },
+    ],
+    finalQuiz: [],
+  };
+}
 
 export function PythonRoadmap() {
   const { locale, t } = useLocale();
@@ -78,7 +107,7 @@ export function PythonRoadmap() {
                       <button type="button" onClick={() => setLessonDay(day.day)} className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]">
                         <span className={`text-sm font-semibold leading-snug ${checked ? "text-[var(--muted)]" : "text-[var(--text)] group-hover:text-[var(--accent)]"}`}>{pickLocalized(day.title, locale)}</span>
                         <div className="mt-auto flex flex-wrap gap-1.5 pt-4">{day.tags.map((tag) => <span key={tag.slug} className={TAG_PILL}>{pickLocalized(tag.label, locale)}</span>)}</div>
-                        <span className="mt-3 text-[11px] font-medium text-[var(--accent)]">View lesson →</span>
+                        <span className="mt-3 text-[11px] font-medium text-[var(--accent)]">{day.day <= 15 ? "View lesson →" : "View sections →"}</span>
                       </button>
                     </div>
                   </li>
@@ -89,7 +118,8 @@ export function PythonRoadmap() {
         ))}
       </div>
 
-      {lessonDay !== null && lessonDay <= 10 ? <RawPythonLessonDay day={lessonDay as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay <= 15 ? <RawPythonLessonDay day={lessonDay} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 15 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
     </div>
   );
 }

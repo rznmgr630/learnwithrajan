@@ -1,0 +1,164 @@
+/** DAY 11: Phase 2 · Functions & Python Thinking */
+export const phase2Functions = {
+  day: 10,
+  topic: "Phase 2 · Functions & Python Thinking — Functions",
+  totalMinutes: 100,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Define a Function Around One Job",
+      durationMinutes: 30,
+      explanation: `
+<b>Functions give a useful job a name.</b><br/>
+When delivery code repeats the same calculation in three places, the repetition is a warning: the rule should live in one function. A function accepts input, performs one focused job, and can give a result back to its caller.<br/><br/>
+<b>The definition and the call are different moments.</b><br/>
+<code>def</code> creates the function and stores its name. The indented body does not run until a call such as <code>shipping_fee(12.5)</code> happens. Parameters are the names in the definition. Arguments are the real values supplied by the caller.<br/><br/>
+<b>Think of a function as a labelled station in a warehouse.</b> The station has an input tray, a clear procedure, and an output tray. If one station starts calculating fees, sending emails, and editing database records, its job is too large to test or understand easily.
+      `,
+      diagram: `
+Caller
+  │ shipping_fee(12.5, priority=True)
+  ▼
+Function parameters receive values
+  │ weight_lbs=12.5, priority=True
+  ▼
+Focused calculation
+  ▼
+return 18.75
+      `,
+      codeExample: `
+def shipping_fee(weight_lbs: float, priority: bool) -> float:
+    """Return the fee for one package without printing or changing data."""
+    base_fee = 5.00 + weight_lbs * 0.50
+    return base_fee + 10.00 if priority else base_fee
+
+standard_fee = shipping_fee(12.5, False)
+priority_fee = shipping_fee(weight_lbs=12.5, priority=True)
+
+print(standard_fee)
+print(priority_fee)
+      `,
+      keyTakeaways: [
+        "Use <code>def</code>, a descriptive name, parentheses, and a colon to define a function.",
+        "Parameters are local names in the definition. Arguments are values passed at the call site.",
+        "Keep a function focused on one understandable responsibility."
+      ],
+      commonMistakes: [
+        "<b>Forgetting indentation.</b> Python uses the indented block as the function body.",
+        "<b>Calling before defining in a running script.</b> Python must execute the definition before the name exists.",
+        "<b>Mixing printing with calculation.</b> Return a value when the caller may need to reuse it."
+      ],
+      quizzes: [
+        { question: "What is the difference between a parameter and an argument?", options: ["They are the same word for a loop", "A parameter is named in a definition and an argument is supplied in a call", "Parameters only accept strings", "Arguments only exist in docstrings"], correctIndex: 1, explanation: "Parameters describe a function's inputs; arguments provide actual values." },
+        { question: "When does a function body run?", options: ["When Python reads def", "Only when the function is called", "When a docstring is written", "Only at program exit"], correctIndex: 1, explanation: "The definition creates the function object. Calling it executes its body." }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Return Values, Defaults, and Clear Calls",
+      durationMinutes: 35,
+      explanation: `
+<b>A return value is the answer a function hands back.</b><br/>
+<code>print()</code> shows information to a person, but it does not make that information available for later calculation. Use <code>return</code> to send a result to the caller. A function without an explicit return value returns <code>None</code>.<br/><br/>
+<b>Default arguments make an input optional.</b><br/>
+For example, a delivery function can default to a normal service level. Defaults are evaluated once when <code>def</code> runs, so do not use a mutable list or dictionary as a default. Use <code>None</code> and create the container inside instead.<br/><br/>
+<b>Positional arguments follow order. Keyword arguments name the destination.</b> Keywords improve calls that have several values of the same type and make later code review safer.
+      `,
+      diagram: `
+calculate_eta(distance, service="standard")
+        │
+        ├─ positional: calculate_eta(300)
+        └─ keyword:    calculate_eta(distance=300, service="express")
+      `,
+      codeExample: `
+def calculate_eta(distance_miles: float, service: str = "standard") -> int:
+    """Return estimated delivery days for a supported service level."""
+    days = 1 if distance_miles <= 100 else 2 if distance_miles <= 500 else 4
+    return max(1, days - 1) if service == "express" else days
+
+print(calculate_eta(320))
+print(calculate_eta(distance_miles=320, service="express"))
+
+def add_note(note: str, labels: list[str] | None = None) -> list[str]:
+    labels = [] if labels is None else labels
+    labels.append(note)
+    return labels
+      `,
+      keyTakeaways: [
+        "Use <code>return</code> for a result another part of the program needs.",
+        "Use keywords when a call is easier to read with names.",
+        "Use <code>None</code>, not <code>[]</code> or <code>{}</code>, for a mutable default sentinel."
+      ],
+      commonMistakes: [
+        "<b>Expecting print to return the displayed value.</b> It returns <code>None</code>.",
+        "<b>Putting a positional argument after a keyword argument.</b> Positional values must come first.",
+        "<b>Sharing a mutable default.</b> One list default would be reused by every call."
+      ],
+      quizzes: [
+        { question: "What does a function with no return statement return?", options: ["0", "An empty string", "None", "Its last printed value"], correctIndex: 2, explanation: "Python returns None when execution reaches the end without return." },
+        { question: "Why use None for a list default?", options: ["Lists cannot be parameters", "It creates a fresh list inside each call", "None is faster than every list", "It removes annotations"], correctIndex: 1, explanation: "A fresh list prevents calls from sharing accidental state." }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Use Scope and Docstrings Deliberately",
+      durationMinutes: 25,
+      explanation: `
+<b>Names created inside a function are local.</b><br/>
+They exist while that call runs and do not automatically leak into the rest of the program. Reading a global value is possible, but changing global program state from a small helper makes behavior difficult to follow. Prefer explicit parameters and return values.<br/><br/>
+<b>A docstring explains the contract.</b><br/>
+The first string in a function body becomes its docstring. Tools, editors, and <code>help()</code> can display it. A good docstring says what the function returns, important units, and meaningful assumptions, not a line-by-line narration of obvious code.
+      `,
+      diagram: `
+module scope: tax_rate
+      │
+      ▼
+function call: subtotal, total   ← local names
+      │
+      ▼
+return total to caller
+      `,
+      codeExample: `
+TAX_RATE = 0.10
+
+def invoice_total(subtotal: float) -> float:
+    """Return subtotal plus the configured sales tax."""
+    tax_amount = subtotal * TAX_RATE
+    return subtotal + tax_amount
+
+total = invoice_total(80.00)
+print(total)
+print(help(invoice_total))
+      `,
+      keyTakeaways: [
+        "Local variables keep a function's temporary work isolated.",
+        "Pass data in and return data out instead of casually mutating globals.",
+        "Put the docstring first in the function body."
+      ],
+      commonMistakes: [
+        "<b>Using a local variable after the call ends.</b> It is out of scope.",
+        "<b>Using global for convenience.</b> Hidden shared state makes tests and reuse harder.",
+        "<b>Writing a misleading docstring.</b> The contract must match actual behavior."
+      ],
+      quizzes: [
+        { question: "Where must a function docstring appear?", options: ["After return", "As the first statement in the function body", "In a comment above every call", "Only in a separate file"], correctIndex: 1, explanation: "The first string literal is recognized as the docstring." }
+      ]
+    }
+  ],
+  finalQuiz: [
+    { question: "Which statement sends a reusable result to a caller?", options: ["print", "return", "def", "pass"], correctIndex: 1, explanation: "return hands a value back to the calling expression." },
+    { question: "Which call uses keywords?", options: ["eta(200, \"express\")", "eta(distance=200, service=\"express\")", "def eta(distance)", "return eta"], correctIndex: 1, explanation: "Keyword calls name the parameters receiving each value." },
+    { question: "What is the safe mutable-default pattern?", options: ["items=[]", "items={}", "items=None then create a list", "items=0"], correctIndex: 2, explanation: "None avoids state shared across calls." },
+    { question: "What scope does a parameter have?", options: ["The function call", "Every file", "Only a class", "The interpreter forever"], correctIndex: 0, explanation: "Parameters are local to each call." },
+    { question: "Why add a docstring?", options: ["To make code run faster", "To document a callable contract", "To replace tests", "To import packages"], correctIndex: 1, explanation: "Docstrings describe how a function should be used." }
+  ],
+  project: {
+    name: "Delivery Quote Service",
+    goal: "Build small, composable functions that validate a package and calculate a delivery quote.",
+    brief: "Create a command-line quote helper. Each function should own one rule so another developer can test the rules independently.",
+    steps: ["Write validation, fee, ETA, and formatter functions.", "Use defaults for the normal service level and keyword calls for optional settings.", "Add docstrings and type hints to each public function.", "Print a quote only in the top-level script section."],
+    acceptance: ["Functions return values instead of relying on global mutable state.", "A caller can request standard or express delivery.", "Each public function has a useful docstring."],
+    stretch: ["Add unit tests for invalid weights and express delivery."]
+  }
+};
