@@ -1,0 +1,851 @@
+/**
+ * DAY 25: Phase 4 · Errors, Files & Real-World Python — Regular Expressions & Text Processing
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1RegularExpressions = {
+  day: 25,
+  topic: "Phase 4 · Errors, Files & Real-World Python — Regular Expressions & Text Processing",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Regex Fundamentals and Character Classes",
+      durationMinutes: 18,
+      explanation: `
+<b>Pattern Matching and Structural Search in Python</b><br/>
+Text processing goes far beyond simple string methods like <code>.find()</code> or <code>.replace()</code>. When you need to parse structured strings from unstructured text—such as validating tracking IDs, extracting postal codes, or isolating phone numbers—exact string matching fails. <b>Regular Expressions (Regex)</b> provide a powerful pattern-matching language built directly into Python's standard library via the <code>re</code> module.<br/><br/>
+
+<b>1. What is a Regular Expression?</b><br/>
+A Regular Expression is a sequence of characters that forms a search pattern. Instead of searching for exact literal characters (like `"TRK-1001"`), regex allows searching for structural definitions (like *"3 uppercase letters, followed by a hyphen, followed by 4 digits"*).<br/><br/>
+
+<b>2. Character Classes & Predefined Shorthands:</b>
+<ul>
+  <li><code>[abc]</code>: Custom character class matching <b>either 'a', 'b', or 'c'</b>.</li>
+  <li><code>[A-Z]</code> / <code>[0-9]</code>: Character ranges matching any uppercase letter or numeric digit.</li>
+  <li><code>\\d</code>: Shorthand for <b>any digit</b> (equivalent to <code>[0-9]</code>).</li>
+  <li><code>\\D</code>: Shorthand for <b>any non-digit</b>.</li>
+  <li><code>\\w</code>: Shorthand for <b>any word character</b> (alphanumeric characters + underscore <code>_</code>).</li>
+  <li><code>\\s</code>: Shorthand for <b>any whitespace character</b> (spaces, tabs <code>\\t</code>, newlines <code>\\n</code>).</li>
+  <li><code>.</code> (Dot): Wildcard matching <b>any single character</b> except a newline.</li>
+</ul>
+
+<b>3. Always Use Raw Strings (<code>r"..."</code>) for Regex Patterns!</b><br/>
+Python uses backslashes for string escape sequences (like <code>\\n</code> for newline). Regex also uses backslashes heavily for shorthands (like <code>\\d</code>). To prevent Python from interpreting backslashes before regex sees them, <b>always prefix regex pattern strings with <code>r</code></b> (e.g., <code>r"\\d{3}-\\d{4}"</code>).
+      `,
+      diagram: `
+REGEX PATTERN MATCHING ARCHITECTURE:
+
+  Raw Input Text : "Package TRK-9001 arrived at Hub #4"
+                        |
+                        v
+  Regex Pattern  : r"[A-Z]{3}-\\d{4}"
+                     |       |
+                     |       +---> \\d{4} = Exactly 4 numeric digits
+                     +-----------> [A-Z]{3} = Exactly 3 uppercase letters
+                        |
+                        v
+  Matched Object : <re.Match object; span=(8, 16), match='TRK-9001'>
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Regex Fundamentals and Predefined Character Classes
+# ==============================================================================
+
+import re
+
+# ------------------------------------------------------------------------------
+# Beginner: Searching Literal Patterns and Character Classes
+# ------------------------------------------------------------------------------
+
+sample_log_text = "Shipment TRK-9082 checked into Chicago Depot at 14:30."
+
+# Pattern: 3 uppercase letters + hyphen + 4 digits
+tracking_pattern = r"[A-Z]{3}-\d{4}"
+
+# re.search() finds the FIRST occurrence of the pattern in the string
+match_result = re.search(tracking_pattern, sample_log_text)
+
+print("--- BEGINNER: Character Class Search ---")
+if match_result:
+    print("Match Found!    :", match_result.group()) # 'TRK-9082'
+    print("Span Coordinates:", match_result.span())  # Start and End character indices
+else:
+    print("No pattern match located.")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Extracting Multiple Matches with re.findall()
+# ------------------------------------------------------------------------------
+
+batch_manifest_text = "Items: PKG-1001, PKG-2002, and bad_code PKG-3003."
+
+# Extract ALL matching package IDs from string using re.findall()
+all_package_ids = re.findall(r"PKG-\d{4}", batch_manifest_text)
+
+print("\n--- INTERMEDIATE: Finding All Matches ---")
+print("Extracted Package List:", all_package_ids) # ['PKG-1001', 'PKG-2002', 'PKG-3003']
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Field Record Inspector
+# ------------------------------------------------------------------------------
+
+def validate_shipping_label_structure(raw_label_text: str) -> dict:
+    \"\"\"
+    Uses regex character classes to inspect raw barcode labels for structural validity.
+    \"\"\"
+    print(f"\n--- ADVANCED: Inspecting Barcode Label [{raw_label_text}] ---")
+
+    # Pattern requirements:
+    # 2 letters (Zone) + 3 digits (Hub) + hyphen + 5 digits (Serial)
+    label_pattern = r"^[A-Z]{2}\d{3}-\d{5}$"
+
+    is_valid = bool(re.match(label_pattern, raw_label_text))
+
+    return {
+        "raw_label": raw_label_text,
+        "is_valid_format": is_valid,
+        "audit_note": "Valid Format" if is_valid else "Structural Format Violation"
+    }
+
+# Test execution
+print(validate_shipping_label_structure("IL606-99012"))  # Valid
+print(validate_shipping_label_structure("IL60699012"))   # Invalid (Missing hyphen)
+      `,
+      keyTakeaways: [
+        "Use raw string literals (`r\"...\"`) for all regular expression patterns to avoid Python backslash escaping conflicts.",
+        "Character shorthand classes: `\\d` (digits), `\\w` (word chars), `\\s` (whitespace).",
+        "Use `re.search()` to find the first match, and `re.findall()` to extract all matching substrings into a list.",
+        "Character ranges `[A-Z]` and custom sets `[abc]` match specific character constraints."
+      ],
+      commonMistakes: [
+        "<b>Forgetting the raw string prefix (`r`):</b> Writing `\"\\d\"` instead of `r\"\\d\"`, which can cause Python string escaping bugs.",
+        "<b>Confusing `re.match()` with `re.search()`:</b> `re.match()` checks ONLY the start of the string, while `re.search()` scans the ENTIRE string.",
+        "<b>Using the dot (`.`) wildcard without realizing it matches spaces/punctuation:</b> Expecting `.` to match only letters when it matches everything except newlines."
+      ],
+      quizzes: [
+        {
+          question: "Which shorthand character class in Python regular expressions matches any single numeric digit (equivalent to `[0-9]`)?",
+          options: [
+            "`\\w`",
+            "`\\s`",
+            "`\\d`",
+            "`\\D`"
+          ],
+          correctIndex: 2,
+          explanation: "`\\d` matches any decimal digit (0 through 9)."
+        },
+        {
+          question: "What is the primary operational difference between `re.match()` and `re.search()` in Python's `re` module?",
+          options: [
+            "`re.match()` checks for matches strictly at the beginning of the string, while `re.search()` scans the entire string for a match.",
+            "`re.match()` returns a list; `re.search()` returns a boolean.",
+            "`re.search()` only works on numbers.",
+            "They are completely interchangeable identical aliases."
+          ],
+          correctIndex: 0,
+          explanation: "`re.match()` anchors search at the start of the string (`index 0`), whereas `re.search()` scans through the whole string."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Quantifiers, Anchors, and Boundaries",
+      durationMinutes: 18,
+      explanation: `
+<b>Repetition Rules and Positional Anchoring</b><br/>
+Searching for static patterns is helpful, but real data varies in length. A tracking number might have between 8 and 12 digits; a street address might contain multiple words; a postal code might be optional. **Quantifiers** define repetition, while **Anchors** restrict match locations.<br/><br/>
+
+<b>1. Quantifiers (Defining Repetition Counts):</b>
+<ul>
+  <li><code>*</code> (Asterisk): Matches <b>0 or more</b> occurrences (Optional and repeatable).</li>
+  <li><code>+</code> (Plus): Matches <b>1 or more</b> occurrences (At least one required).</li>
+  <li><code>?</code> (Question Mark): Matches <b>0 or 1</b> occurrence (Makes the preceding element optional).</li>
+  <li><code>{n}</code>: Matches <b>exactly $n$</b> repetitions.</li>
+  <li><code>{n,m}</code>: Matches <b>between $n$ and $m$</b> repetitions inclusive.</li>
+</ul>
+
+<b>2. Greedy vs. Lazy (Non-Greedy) Matching:</b><br/>
+By default, quantifiers in regex are **Greedy** — they match as much text as possible. Adding a question mark <code>?</code> after a quantifier (e.g., <code>+?</code> or <code>*?</code>) makes it **Lazy**, matching as little text as necessary.<br/>
+<i>Example:</i> In text <code>"&lt;tag1&gt; content &lt;tag2&gt;"</code>:
+<ul>
+  <li>Greedy <code>r"&lt;.*&gt;"</code> matches <code>"&lt;tag1&gt; content &lt;tag2&gt;"</code> (First <code>&lt;</code> to last <code>&gt;</code>).</li>
+  <li>Lazy <code>r"&lt;.*?&gt;"</code> matches only <code>"&lt;tag1&gt;"</code> (First <code>&lt;</code> to first <code>&gt;</code>).</li>
+</ul>
+
+<b>3. Anchors and Word Boundaries:</b>
+<ul>
+  <li><code>^</code> (Caret): Anchors match to the <b>Start of the String</b>.</li>
+  <li><code>$</code> (Dollar): Anchors match to the <b>End of the String</b>.</li>
+  <li><code>\\b</code>: Word Boundary anchor matching the transition between word characters and spaces/punctuation.</li>
+</ul>
+      `,
+      diagram: `
+GREEDY vs LAZY QUANTIFIER COMPARISON:
+
+  Target Text: "[PACKAGE_1] item [PACKAGE_2]"
+
+  Greedy Pattern  : r"\\[.*\\]"
+  Matched Text    : "[PACKAGE_1] item [PACKAGE_2]"  (Spans start to LAST bracket)
+
+  Lazy Pattern    : r"\\[.*?\\]"
+  Matched Text    : "[PACKAGE_1]"                    (Stops at FIRST bracket)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Quantifiers, Greedy vs Lazy, and Positional Anchors
+# ==============================================================================
+
+import re
+
+# ------------------------------------------------------------------------------
+# Beginner: Anchors and Quantifiers
+# ------------------------------------------------------------------------------
+
+# Validating strict full-string ZIP code format (5 digits OR 5 digits + 4 extension)
+zip_pattern = r"^\d{5}(-\d{4})?$"
+
+print("--- BEGINNER: Anchors and Optional Quantifiers ---")
+print("Valid 5-digit ZIP '60611'        :", bool(re.match(zip_pattern, "60611")))     # True
+print("Valid 9-digit ZIP '60611-4002'   :", bool(re.match(zip_pattern, "60611-4002"))) # True
+print("Invalid ZIP '60611-40'          :", bool(re.match(zip_pattern, "60611-40")))   # False
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Greedy vs Lazy Matching
+# ------------------------------------------------------------------------------
+
+log_line = "Hub logs: [LOG-101] processed item [LOG-102] dispatched."
+
+greedy_pattern = r"\[.*\]"
+lazy_pattern = r"\[.*?\]"
+
+print("\n--- INTERMEDIATE: Greedy vs Lazy Quantification ---")
+print("Greedy Match :", re.search(greedy_pattern, log_line).group()) # Matches first '[' to LAST ']'
+print("Lazy Match   :", re.search(lazy_pattern, log_line).group())   # Matches first '[' to FIRST ']'
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Strict Word-Boundary Address Parser
+# ------------------------------------------------------------------------------
+
+def extract_standalone_tracking_numbers(raw_text_body: str) -> list[str]:
+    \"\"\"
+    Extracts standalone tracking numbers (e.g. TRK-9001) using word boundaries \\b
+    to prevent matching embedded substring noise like 'SUPERTRK-900199'.
+    \"\"\"
+    print("\n--- ADVANCED: Word Boundary Search ---")
+
+    # \\b ensures 'TRK' is preceded by a non-word boundary
+    # \\b at end ensures the 4 digits are followed by a non-word boundary
+    strict_boundary_pattern = r"\bTRK-\d{4}\b"
+
+    matches = re.findall(strict_boundary_pattern, raw_text_body)
+    return matches
+
+sample_body = "Valid codes: TRK-1001 and TRK-2002. Invalid: SUBTRK-1001 and TRK-300399."
+extracted = extract_standalone_tracking_numbers(sample_body)
+
+print("Raw Body Text:", sample_body)
+print("Extracted Standalone Codes:", extracted) # ['TRK-1001', 'TRK-2002']
+      `,
+      keyTakeaways: [
+        "Use quantifiers (`+`, `*`, `?`, `{n,m}`) to define mandatory or optional element repetitions.",
+        "Anchors `^` (start) and `$` (end) enforce full-string structure validation.",
+        "Quantifiers are greedy by default; append `?` (e.g., `*?`) to make them lazy (non-greedy).",
+        "Use word boundaries `\\b` to match whole standalone words and prevent partial substring matches."
+      ],
+      commonMistakes: [
+        "<b>Allowing greedy matching to over-consume text:</b> Using `.*` when `.*?` is required, causing matches to swallow delimiters across multiple target tokens.",
+        "<b>Forgetting start (`^`) and end (`$`) anchors during validation:</b> Writing `r\"\\d{5}\"` checks if 5 digits exist anywhere in the string, rather than enforcing that the *entire string* consists of exactly 5 digits (`r\"^\\d{5}$\"`).",
+        "<b>Misunderstanding `?` dual roles:</b> `?` acts as a quantifier (0 or 1) when following a character (e.g., `-\d?`), but acts as a lazy modifier when following another quantifier (e.g., `+?`)."
+      ],
+      quizzes: [
+        {
+          question: "How do you make a greedy quantifier like `*` or `+` lazy (non-greedy) in Python regular expressions?",
+          options: [
+            "Prefix it with a backslash `\\`",
+            "Append a question mark `?` directly after the quantifier (e.g., `+?`)",
+            "Wrap the pattern in parentheses `()`",
+            "Pass `flags=re.LAZY` to `re.search()`"
+          ],
+          correctIndex: 1,
+          explanation: "Appending a `?` after a quantifier (e.g., `*?` or `+?`) converts it from greedy to lazy matching."
+        },
+        {
+          question: "Which anchor pattern guarantees that an input string consists strictly of 4 digits from start to finish?",
+          options: [
+            "`r\"\\d{4}\"`",
+            "`r\"^\\d{4}$\"`",
+            "`r\"\\b\\d{4}\\b\"`",
+            "`r\"\\d{4}$\"`"
+          ],
+          correctIndex: 1,
+          explanation: "`^` anchors to string start, and `$` anchors to string end. `r\"^\\d{4}$\"` requires the entire string to be exactly 4 digits."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Capturing Groups and Structural Extraction",
+      durationMinutes: 20,
+      explanation: `
+<b>Isolating and Extracting Sub-Patterns</b><br/>
+Matching a full string is only half the battle. In text processing, you frequently need to extract specific sub-components from a matched pattern. For example, given a tracking string <code>"CHI-HUB-8801"</code>, you want to extract the region <code>"CHI"</code>, the facility <code>"HUB"</code>, and the serial number <code>"8801"</code> independently.<br/><br/>
+
+<b>1. Capturing Groups (Parentheses <code>(...)</code>):</b><br/>
+Wrapping part of a regex pattern in parentheses creates a <b>Capturing Group</b>. Python extracts each grouped sub-pattern separately.<br/>
+<code>pattern = r"([A-Z]{3})-(HUB)-(\\d{4})"</code>
+<ul>
+  <li><code>match.group(0)</code>: Returns the entire matched string (e.g., <code>"CHI-HUB-8801"</code>).</li>
+  <li><code>match.group(1)</code>: Returns the contents of the 1st capturing group (e.g., <code>"CHI"</code>).</li>
+  <li><code>match.group(2)</code>: Returns the contents of the 2nd capturing group (e.g., <code>"HUB"</code>).</li>
+  <li><code>match.groups()</code>: Returns a tuple containing all captured group values (e.g., <code>("CHI", "HUB", "8801")</code>).</li>
+</ul>
+
+<b>2. Named Capturing Groups (<code>(?P&lt;name&gt;...)</code>):</b><br/>
+Relying on numeric group indices (1, 2, 3) makes code fragile when patterns change. Modern Python regex supports **Named Groups** using the syntax <code>(?P&lt;group_name&gt;pattern)</code>.<br/>
+Captured named groups can be accessed directly as a dictionary using <code>match.groupdict()</code>!
+
+<b>3. Non-Capturing Groups (<code>(?:...)</code>):</b><br/>
+When you need to group characters for quantification or logical OR checks without creating an extraction group, use a non-capturing group <code>(?:...)</code>.
+      `,
+      diagram: `
+NAMED CAPTURING GROUP EXTRACTION:
+
+  Pattern: r"(?P<zone>[A-Z]{3})-(?P<serial>\\d{4})"
+                   |                      |
+                   v                      v
+             Named Group 'zone'     Named Group 'serial'
+
+  Text: "ORD-9902"
+
+  match.groupdict() ---> {"zone": "ORD", "serial": "9902"}
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Position Groups vs Named Capturing Groups
+# ==============================================================================
+
+import re
+
+# ------------------------------------------------------------------------------
+# Beginner: Positional Capturing Groups
+# ------------------------------------------------------------------------------
+
+sample_barcode = "CHI-LOGISTICS-8801"
+
+# Group 1: Origin (3 letters), Group 2: Unit (Text), Group 3: Serial (4 digits)
+positional_pattern = r"([A-Z]{3})-([A-Z]+)-(\d{4})"
+
+match = re.search(positional_pattern, sample_barcode)
+
+print("--- BEGINNER: Positional Capturing Groups ---")
+if match:
+    print("Full Match (group 0) :", match.group(0)) # 'CHI-LOGISTICS-8801'
+    print("Origin     (group 1) :", match.group(1)) # 'CHI'
+    print("Unit       (group 2) :", match.group(2)) # 'LOGISTICS'
+    print("Serial     (group 3) :", match.group(3)) # '8801'
+    print("All Groups Tuple     :", match.groups())   # ('CHI', 'LOGISTICS', '8801')
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Named Capturing Groups & groupdict()
+# ------------------------------------------------------------------------------
+
+# Using (?P<name>pattern) for self-documenting group extraction
+named_pattern = r"(?P<origin>[A-Z]{3})-(?P<department>[A-Z]+)-(?P<serial>\d{4})"
+
+named_match = re.search(named_pattern, sample_barcode)
+
+print("\n--- INTERMEDIATE: Named Groups ---")
+if named_match:
+    # Extract directly into a clean Python dictionary!
+    data_dict = named_match.groupdict()
+    print("Captured Dictionary:", data_dict)
+    print(f"Origin Code: {data_dict['origin']} | Serial: {data_dict['serial']}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Log Line Telemetry Parser
+# ------------------------------------------------------------------------------
+
+def parse_server_log_telemetry(log_line: str) -> dict:
+    \"\"\"
+    Parses unstructured server log lines into structured dictionaries
+    using named capturing groups and fallback error handling.
+    \"\"\"
+    print(f"\n--- ADVANCED: Parsing Log Line ---")
+
+    # Pattern: [TIMESTAMP] [LEVEL] [TRACKING_ID] Message
+    log_pattern = (
+        r"^\[(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+"
+        r"\[(?P<level>INFO|WARN|ERROR)\]\s+"
+        r"\[(?P<tracking_id>TRK-\d{4})\]\s+"
+        r"(?P<message>.*)$"
+    )
+
+    match = re.search(log_pattern, log_line)
+
+    if not match:
+        return {"success": False, "error": "Unrecognized log line format."}
+
+    extracted_data = match.groupdict()
+    extracted_data["success"] = True
+    return extracted_data
+
+# Test production log parser
+sample_log = "[2026-10-05 14:30:15] [WARN] [TRK-9082] Temperature sensor threshold exceeded."
+parsed_result = parse_server_log_telemetry(sample_log)
+
+print("Parsed Log Result:")
+for key, val in parsed_result.items():
+    print(f"  {key:<15}: {val}")
+      `,
+      keyTakeaways: [
+        "Wrap sub-patterns in parentheses `(...)` to define capturing groups.",
+        "`match.group(1)` accesses the first group; `match.groups()` returns all captured groups as a tuple.",
+        "Use Named Capturing Groups `(?P<name>pattern)` for maintainable, self-documenting code.",
+        "Access named captured groups cleanly as a dictionary using `match.groupdict()`."
+      ],
+      commonMistakes: [
+        "<b>Index off-by-one errors with group numbers:</b> Forgetting that `group(0)` is the *entire matched string*, while `group(1)` is the first parenthesized capturing group.",
+        "<b>Relying heavily on positional group indices:</b> Numeric indices break if you modify the pattern and insert a new parenthesized group earlier in the regex; use Named Groups instead.",
+        "<b>Capturing when non-capturing was intended:</b> Using `(...)` instead of `(?:...)` when grouping logical OR conditions, which clutters `match.groups()` output."
+      ],
+      quizzes: [
+        {
+          question: "What does `match.group(0)` return after a successful `re.search()` call?",
+          options: [
+            "The first parenthesized capturing group.",
+            "The entire string substring that matched the overall pattern.",
+            "An empty string.",
+            "The named group dictionary."
+          ],
+          correctIndex: 1,
+          explanation: "`group(0)` always returns the complete text matched by the entire regular expression pattern."
+        },
+        {
+          question: "What is the correct syntax for defining a Named Capturing Group called `'region'` in Python regex?",
+          options: [
+            "`(?region:pattern)`",
+            "`(?P<region>pattern)`",
+            "`(<region>pattern)`",
+            "`(?name=region:pattern)`"
+          ],
+          correctIndex: 1,
+          explanation: "Named groups use the syntax `(?P<group_name>pattern)` and can be accessed via `match.groupdict()`."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Lookahead, Lookbehind, and Zero-Width Assertions",
+      durationMinutes: 12,
+      explanation: `
+<b>Conditional Matching Without Consuming Text</b><br/>
+Standard regex patterns consume text as they match. However, you often need to match a token **only if it is followed or preceded by specific text**, without including that adjacent text in the match output. These are called **Lookaround Assertions** (zero-width assertions).<br/><br/>
+
+<b>1. Lookahead Assertions (Inspecting Ahead):</b>
+<ul>
+  <li><b>Positive Lookahead <code>(?=...)</code>:</b> Matches text ONLY if followed immediately by the lookahead pattern.
+    <br/><i>Example:</i> <code>r"\d+(?=\s*USD)"</code> matches digits ONLY if followed by `"USD"`, but does NOT include `"USD"` in the match!</li>
+  <li><b>Negative Lookahead <code>(?!...)</code>:</b> Matches text ONLY if NOT followed by the lookahead pattern.
+    <br/><i>Example:</i> <code>r"\d+(?!\s*USD)"</code> matches digits NOT followed by `"USD"`.</li>
+</ul>
+
+<b>2. Lookbehind Assertions (Inspecting Behind):</b>
+<ul>
+  <li><b>Positive Lookbehind <code>(?&lt;=...)</code>:</b> Matches text ONLY if preceded immediately by the lookbehind pattern.
+    <br/><i>Example:</i> <code>r"(?&lt;=\$)\d+"</code> matches digits ONLY if preceded by a dollar sign <code>$</code>.</li>
+  <li><b>Negative Lookbehind <code>(?&lt;!...)</code>:</b> Matches text ONLY if NOT preceded by the lookbehind pattern.</li>
+</ul>
+
+<b>Python Fixed-Width Lookbehind Rule:</b><br/>
+In Python's built-in <code>re</code> module, lookbehind patterns must have a **fixed width** (e.g., <code>(?&lt;=\$|\#)</code> is valid, but variable-width <code>(?&lt;=a+)</code> raises an error).
+      `,
+      diagram: `
+LOOKAROUND ASSERTION MATCHING:
+
+  Target Text: "Fee is $150 USD total"
+
+  Positive Lookbehind r"(?<=\\$)\\d+"  ---> Matches "150" (Checks for '$' before)
+  Positive Lookahead  r"\\d+(?=\\s*USD)"---> Matches "150" (Checks for 'USD' after)
+
+  Neither assertion CONSUMES the '$' or 'USD' text into the match object!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Zero-Width Lookahead and Lookbehind Assertions
+# ==============================================================================
+
+import re
+
+# ------------------------------------------------------------------------------
+# Beginner: Positive Lookbehind (?<=...)
+# ------------------------------------------------------------------------------
+
+financial_text = "Standard shipping fee $45, express surcharge $120, baseline 50."
+
+# Match numbers ONLY if preceded by a dollar sign '$'
+# Notice: The '$' symbol is NOT included in the returned match string!
+dollar_amount_pattern = r"(?<=\$)\d+"
+
+dollar_matches = re.findall(dollar_amount_pattern, financial_text)
+
+print("--- BEGINNER: Positive Lookbehind ---")
+print("Financial Text       :", financial_text)
+print("Extracted Dollar Amounts:", dollar_matches) # ['45', '120'] (Excludes baseline 50!)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Positive Lookahead (?=...) & Negative Lookahead (?!...)
+# ------------------------------------------------------------------------------
+
+sample_codes = "Order TRK-1001-EXPRESS, Order TRK-2002-GROUND, Order TRK-3003-EXPRESS"
+
+# Match tracking numbers ONLY if followed by '-EXPRESS'
+express_only_pattern = r"TRK-\d{4}(?=-EXPRESS)"
+
+# Match tracking numbers ONLY if NOT followed by '-EXPRESS'
+non_express_pattern = r"TRK-\d{4}(?!-EXPRESS)"
+
+print("\n--- INTERMEDIATE: Lookahead Assertions ---")
+print("Express Only Codes:", re.findall(express_only_pattern, sample_codes)) # ['TRK-1001', 'TRK-3003']
+print("Non-Express Codes :", re.findall(non_express_pattern, sample_codes))  # ['TRK-2002']
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Password Strength / Security Validator
+# ------------------------------------------------------------------------------
+
+def validate_secure_api_key_format(api_key: str) -> dict:
+    \"\"\"
+    Uses multiple lookahead assertions to validate complex password/key rules
+    in a single regex pattern pass without consuming text.
+
+    Rules required:
+    - Must contain at least one digit (?=.*\\d)
+    - Must contain at least one uppercase letter (?=.*[A-Z])
+    - Must be at least 8 characters long .{8,}
+    \"\"\"
+    print(f"\n--- ADVANCED: Lookahead Security Key Validation [{api_key}] ---")
+
+    key_rules_pattern = r"^(?=.*\d)(?=.*[A-Z]).{8,}$"
+
+    is_valid = bool(re.match(key_rules_pattern, api_key))
+
+    return {
+        "api_key": api_key,
+        "is_secure": is_valid,
+        "audit": "Passes Security Complexity Rules" if is_valid else "Fails Digit/Uppercase/Length Requirements"
+    }
+
+print(validate_secure_api_key_format("secureKey123")) # Valid (Digit + Uppercase + 8+ chars)
+print(validate_secure_api_key_format("lowercaseonly"))# Invalid (Missing digit/uppercase)
+      `,
+      keyTakeaways: [
+        "Lookaround assertions match conditions without consuming text into the match result.",
+        "Positive Lookahead `(?=...)` checks if a pattern follows; Negative Lookahead `(?!...)` checks if it does NOT follow.",
+        "Positive Lookbehind `(?<=...)` checks if a pattern precedes; Negative Lookbehind `(?<!...)` checks if it does NOT precede.",
+        "Python's `re` module requires lookbehind assertions to have a fixed-width character length."
+      ],
+      commonMistakes: [
+        "<b>Attempting variable-width lookbehinds:</b> Writing `(?<=a+)` raises `re.error: look-behind requires fixed-width pattern` in Python's standard `re` module.",
+        "<b>Confusing lookaheads with capturing groups:</b> Forgetting that lookarounds are zero-width and do not extract the assert text into the matched output string.",
+        "<b>Overusing lookarounds when simple group extraction is cleaner:</b> Writing complex lookarounds when a simple parenthesized capturing group `group(1)` achieves the same result."
+      ],
+      quizzes: [
+        {
+          question: "Which zero-width lookaround syntax matches a token ONLY if it is preceded immediately by the pattern `\"@\"`?",
+          options: [
+            "`(?=@)`",
+            "`(?<=@)`",
+            "`(?!@)`",
+            "`(?<!@)`"
+          ],
+          correctIndex: 1,
+          explanation: "`(?<=@)` is a Positive Lookbehind assertion, matching text preceded by `@`."
+        },
+        {
+          question: "Does text evaluated inside a Lookahead or Lookbehind assertion get included in the returned `match.group()` output?",
+          options: [
+            "Yes, lookarounds always append their text to the match result.",
+            "No, lookarounds are zero-width assertions that check conditions without consuming text into the match object.",
+            "Only on Linux operating systems.",
+            "Only if named groups are used."
+          ],
+          correctIndex: 1,
+          explanation: "Lookarounds are zero-width assertions; they verify structural context without including the asserted text in the matched string."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Practical Text Processing, Substitution, and re Module Tools",
+      durationMinutes: 12,
+      explanation: `
+<b>Text Replacement, Splitting, and Performance Compilation</b><br/>
+Regular expressions are not just for searching; they are essential for text sanitization, redacting sensitive data, splitting strings on complex delimiters, and building high-performance text pipelines.<br/><br/>
+
+<b>1. Substitution and Redaction with <code>re.sub()</code>:</b><br/>
+The <code>re.sub(pattern, replacement, string)</code> function searches a string and replaces matching patterns with a new string.
+<ul>
+  <li><b>Redacting Sensitive Information:</b> <code>re.sub(r"\d{3}-\d{2}-\d{4}", "[REDACTED_SSN]", text)</code></li>
+  <li><b>Using Group References in Replacements:</b> You can reference captured groups inside replacement strings using <code>\\1</code>, <code>\\2</code>, or <code>\\g&lt;name&gt;</code>!
+    <br/><i>Example:</i> <code>re.sub(r"(\d{3})-(\d{4})", r"CODE-\1-\2", text)</code></li>
+</ul>
+
+<b>2. Splitting on Complex Delimiters with <code>re.split()</code>:</b><br/>
+Standard <code>string.split(",")</code> only splits on single literal strings. <code>re.split(r"[,\s;]+", text)</code> splits strings on complex dynamic delimiters (e.g., splitting on any combination of commas, spaces, or semicolons simultaneously).<br/><br/>
+
+<b>3. Performance Optimization with <code>re.compile()</code>:</b><br/>
+If a regex pattern is used repeatedly in a loop (e.g., processing 100,000 log lines), compiling the pattern once into a **Regex Pattern Object** avoids re-parsing the regex syntax on every iteration step!<br/>
+<code>compiled_pattern = re.compile(r"TRK-\d{4}")</code><br/>
+<code>results = [compiled_pattern.search(line) for line in huge_log_list]</code>
+      `,
+      diagram: `
+RE.SUB WITH GROUP BACKREFERENCES:
+
+  Pattern     : r"(?P<month>\\d{2})/(?P<day>\\d{2})/(?P<year>\\d{4})"
+  Text        : "Date: 10/05/2026"
+  Replacement : r"\g<year>-\g<month>-\g<day>"
+
+  Output Text : "Date: 2026-10-05" (Re-ordered to ISO format!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Substitution, Dynamic Splitting, and re.compile()
+# ==============================================================================
+
+import re
+
+# ------------------------------------------------------------------------------
+# Beginner: Data Redaction with re.sub()
+# ------------------------------------------------------------------------------
+
+raw_customer_note = "Contact driver at 555-881-9920 or email john@shipping.com."
+
+# Redact phone numbers (3 digits - 3 digits - 4 digits)
+phone_pattern = r"\b\d{3}-\d{3}-\d{4}\b"
+redacted_note = re.sub(phone_pattern, "[PHONE_REDACTED]", raw_customer_note)
+
+print("--- BEGINNER: Text Redaction ---")
+print("Original Note:", raw_customer_note)
+print("Redacted Note:", redacted_note)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Backreferences in Replacements and re.split()
+# ------------------------------------------------------------------------------
+
+# 1. Backreferences: Reordering Date Formats (MM/DD/YYYY -> YYYY-MM-DD)
+us_date_text = "Shipment dates: 10/05/2026 and 11/12/2026."
+iso_date_text = re.sub(r"(\d{2})/(\d{2})/(\d{4})", r"\3-\1-\2", us_date_text)
+
+print("\n--- INTERMEDIATE: Backreferences & Dynamic Split ---")
+print("Reordered Date Text:", iso_date_text)
+
+# 2. Dynamic Delimiter Splitting with re.split()
+dirty_csv_line = "CHI-HUB ; AUSTIN-HUB , SEATTLE-HUB   DETROIT-HUB"
+clean_hubs = re.split(r"[\s,;]+", dirty_csv_line)
+print("Splitting on Multiple Delimiters:", clean_hubs)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Compiled Regex Pipeline Engine
+# ------------------------------------------------------------------------------
+
+class LogisticsTelemetrySanitizer:
+    \"\"\"
+    High-performance text sanitizer utilizing re.compile() for pre-compiled
+    pattern matching across high-volume log streams.
+    \"\"\"
+    def __init__(self):
+        # Pre-compile regex patterns once during initialization for high performance
+        self.PAT_PHONE = re.compile(r"\b\d{3}-\d{3}-\d{4}\b")
+        self.PAT_EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+        self.PAT_MULTISPACE = re.compile(r"\s+")
+
+    def sanitize_log_stream(self, log_lines: list[str]) -> list[str]:
+        print(f"\n--- ADVANCED: Batch Sanitizing {len(log_lines)} Log Lines ---")
+
+        sanitized_stream = []
+        for line in log_lines:
+            # Apply compiled replacements sequentially
+            line = self.PAT_PHONE.sub("[REDACTED_PHONE]", line)
+            line = self.PAT_EMAIL.sub("[REDACTED_EMAIL]", line)
+            line = self.PAT_MULTISPACE.sub(" ", line) # Normalize multiple spaces
+            sanitized_stream.append(line.strip())
+
+        return sanitized_stream
+
+# Test compiled pipeline
+sanitizer = LogisticsTelemetrySanitizer()
+raw_logs = [
+    "Driver Marcus   phone: 312-555-0199 scanned   item.",
+    "Support contact:   admin@express.com for   query."
+]
+
+sanitized_output = sanitizer.sanitize_log_stream(raw_logs)
+print("Sanitized Output Stream:")
+for line in sanitized_output:
+    print(" ", line)
+      `,
+      keyTakeaways: [
+        "Use `re.sub(pattern, replacement, string)` to search and replace text matching a regex pattern.",
+        "Use captured group backreferences (`\\1`, `\\2`, `\\g<name>`) inside replacement strings to reorder matched text.",
+        "Use `re.split(pattern, string)` to split text on complex dynamic delimiters (spaces, commas, semicolons).",
+        "Pre-compile patterns using `re.compile()` when executing regex searches inside high-frequency loops."
+      ],
+      commonMistakes: [
+        "<b>Re-compiling regex inside loops:</b> Calling `re.search()` repeatedly on thousands of items instead of using a pre-compiled `re.compile()` object.",
+        "<b>Misunderstanding backreference escape slashes:</b> Writing `\"\\1\"` instead of raw strings `r\"\\1\"` in `re.sub()` replacement parameters.",
+        "<b>Overusing regex for simple literal replacement:</b> Using `re.sub()` for fixed literal replacements where standard `str.replace()` is faster and simpler."
+      ],
+      quizzes: [
+        {
+          question: "Which function in Python's `re` module replaces text matching a regular expression pattern with a new replacement string?",
+          options: [
+            "`re.replace()`",
+            "`re.sub()`",
+            "`re.swap()`",
+            "`re.modify()`"
+          ],
+          correctIndex: 1,
+          explanation: "`re.sub()` performs pattern substitution in strings."
+        },
+        {
+          question: "Why should you use `re.compile()` when processing regular expressions inside large loops?",
+          options: [
+            "It automatically encrypts search outputs.",
+            "It pre-parses and compiles the regex pattern once into a reusable object, eliminating pattern parsing overhead on every iteration step.",
+            "It prevents `IndexError` exceptions.",
+            "It converts text into UTF-8 automatically."
+          ],
+          correctIndex: 1,
+          explanation: "`re.compile()` pre-compiles regex patterns into reusable pattern objects, optimizing execution speed in loops."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which character class shorthand matches any single decimal digit (0 through 9)?",
+      options: [
+        "`\\w`",
+        "`\\s`",
+        "`\\d`",
+        "`\\b`"
+      ],
+      correctIndex: 2,
+      explanation: "`\\d` matches any decimal digit."
+    },
+    {
+      question: "What does the `+` quantifier specify in a regular expression pattern?",
+      options: [
+        "0 or 1 occurrence",
+        "0 or more occurrences",
+        "1 or more occurrences (at least one required)",
+        "Exactly 2 occurrences"
+      ],
+      correctIndex: 2,
+      explanation: "`+` specifies 1 or more occurrences of the preceding element."
+    },
+    {
+      question: "How do you define a Named Capturing Group called `'tracking'` in Python regular expressions?",
+      options: [
+        "`(?P<tracking>pattern)`",
+        "`(?tracking:pattern)`",
+        "`(<tracking>pattern)`",
+        "`(?name=tracking:pattern)`"
+      ],
+      correctIndex: 0,
+      explanation: "Named capturing groups use the syntax `(?P<group_name>pattern)`."
+    },
+    {
+      question: "Which anchor restricts regex pattern matching strictly to the END of the string?",
+      options: [
+        "`^`",
+        "`$`",
+        "`\\b`",
+        "`\\z`"
+      ],
+      correctIndex: 1,
+      explanation: "`$` anchors matching to the end of the string."
+    },
+    {
+      question: "What assertion matches text ONLY if it is preceded immediately by specific text without consuming that preceding text into the match object?",
+      options: [
+        "Positive Lookahead `(?=...)`",
+        "Positive Lookbehind `(?<=...)`",
+        "Negative Lookahead `(?!...)`",
+        "Non-capturing group `(?:...)`"
+      ],
+      correctIndex: 1,
+      explanation: "`(?<=...)` is a Positive Lookbehind assertion."
+    },
+    {
+      question: "Which `re` module function splits a string into a list using dynamic regex delimiters?",
+      options: [
+        "`re.tokenize()`",
+        "`re.split()`",
+        "`re.divide()`",
+        "`re.cut()`"
+      ],
+      correctIndex: 1,
+      explanation: "`re.split()` splits strings based on regular expression patterns."
+    },
+    {
+      question: "Why should regex pattern strings in Python always be prefixed as raw strings (e.g., `r\"\\d+\"`)?",
+      options: [
+        "To speed up execution time.",
+        "To prevent Python string escape processing from altering backslashes before regex evaluates them.",
+        "To force uppercase matching.",
+        "To disable lookarounds."
+      ],
+      correctIndex: 1,
+      explanation: "Raw strings (`r\"...\"`) treat backslashes literally, avoiding conflicts between Python string escaping and regex escape characters."
+    },
+    {
+      question: "What dictionary method on a Match object retrieves all Named Capturing Groups as a dictionary?",
+      options: [
+        "`match.dict()`",
+        "`match.groupdict()`",
+        "`match.named_groups()`",
+        "`match.get_dictionary()`"
+      ],
+      correctIndex: 1,
+      explanation: "`match.groupdict()` extracts all named captured groups into a dictionary."
+    }
+  ],
+  project: {
+    name: "Enterprise Log Parser & PII Data Redaction Engine (Phase 1 Project)",
+    goal: "Build an enterprise text processing and data sanitizer pipeline that uses pre-compiled regex patterns to parse unstructured server logs, extract named telemetry fields, validate barcode formats with anchors, and redact sensitive personally identifiable information (PII).",
+    brief: "Your logistics firm needs a security and telemetry parser script (`log_sanitizer.py`). The script must ingest unstructured server log lines, compile high-performance regex patterns with `re.compile()`, extract timestamp and tracking fields into clean dictionaries using named groups `(?P<name>...)`, redact customer phone numbers and email addresses using `re.sub()`, and split messy multi-delimiter manifest records using `re.split()`.",
+    steps: [
+      "Create a script file named `log_sanitizer.py` in your workspace.",
+      "Pre-compile regex patterns using `re.compile()` for: phone numbers (`\\b\\d{3}-\\d{3}-\\d{4}\\b`), email addresses, and log lines with named groups `(?P<timestamp>...)`, `(?P<level>...)`, and `(?P<tracking_id>...)`.",
+      "Write a function `redact_pii_data(text: str) -> str` using `re.sub()` to replace detected phone numbers and emails with `[REDACTED_PHONE]` and `[REDACTED_EMAIL]`.",
+      "Write a function `parse_log_entry(line: str) -> dict` that uses `match.groupdict()` to extract structured metadata.",
+      "Write a function `split_multi_delimiter_manifest(raw_csv_line: str) -> list[str]` using `re.split(r\"[\\s,;]+\", raw_csv_line)`.",
+      "Incorporate word boundary anchors `\\b` and end-of-string anchors `$` to prevent false positive matches.",
+      "Run `python3 log_sanitizer.py` in your integrated terminal and print a clean, sanitized security audit report."
+    ],
+    acceptance: [
+      "Phone numbers and email addresses are cleanly redacted without corrupting surrounding text.",
+      "Log line parsing extracts structured metadata into clean dictionaries via `match.groupdict()`.",
+      "Patterns are pre-compiled using `re.compile()` for pipeline efficiency.",
+      "Executing `python3 log_sanitizer.py` outputs a clean, fully redacted audit log report without syntax or regex errors."
+    ],
+    stretch: [
+      "Incorporate a lookbehind assertion to redact credit card numbers preceded by `\"CARD:\"` without removing the `\"CARD:\"` prefix.",
+      "Annotate all functions with strict type hints (`dict[str, str]`, `Pattern[str]`) and pass static type verification."
+    ]
+  }
+};
