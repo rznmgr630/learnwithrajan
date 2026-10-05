@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 10;
+export const PYTHON_TOTAL_DAYS = 30;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -68,6 +68,54 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 8, title: { en: "Dictionaries", np: "Dictionaries", jp: "辞書" }, tags: [{ slug: "dictionaries", label: { en: "dictionaries", np: "dictionaries", jp: "辞書" } }, { slug: "data-modeling", label: { en: "data modeling", np: "data modeling", jp: "データモデリング" } }] },
       { day: 9, title: { en: "Loops", np: "Loops", jp: "ループ" }, tags: [{ slug: "loops", label: { en: "loops", np: "loops", jp: "ループ" } }, { slug: "iteration", label: { en: "iteration", np: "iteration", jp: "反復" } }] },
       { day: 10, title: { en: "Comprehensions", np: "Comprehensions", jp: "内包表記" }, tags: [{ slug: "comprehensions", label: { en: "comprehensions", np: "comprehensions", jp: "内包表記" } }, { slug: "collections", label: { en: "collections", np: "collections", jp: "コレクション" } }] },
+    ],
+  },
+  {
+    id: "python-phase-2",
+    title: { en: "Phase 2 · Functions & Python Thinking", np: "Phase 2 · Functions र Python Thinking", jp: "Phase 2・関数とPython的な考え方" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_55%,#a78bfa)]",
+    days: [
+      { day: 11, title: { en: "Functions", np: "Functions", jp: "関数" }, tags: [{ slug: "functions", label: { en: "functions", np: "functions", jp: "関数" } }, { slug: "scope", label: { en: "scope", np: "scope", jp: "スコープ" } }] },
+      { day: 12, title: { en: "Advanced Function Arguments", np: "Advanced Function Arguments", jp: "高度な関数引数" }, tags: [{ slug: "args", label: { en: "args", np: "args", jp: "args" } }, { slug: "kwargs", label: { en: "kwargs", np: "kwargs", jp: "kwargs" } }] },
+      { day: 13, title: { en: "Scope & Closures", np: "Scope र Closures", jp: "スコープとクロージャ" }, tags: [{ slug: "scope", label: { en: "scope", np: "scope", jp: "スコープ" } }, { slug: "closures", label: { en: "closures", np: "closures", jp: "クロージャ" } }] },
+      { day: 14, title: { en: "Lambda, map, filter & reduce", np: "Lambda, map, filter र reduce", jp: "lambda・map・filter・reduce" }, tags: [{ slug: "lambda", label: { en: "lambda", np: "lambda", jp: "lambda" } }, { slug: "functional", label: { en: "functional", np: "functional", jp: "関数型" } }] },
+      { day: 15, title: { en: "Modules & Packages", np: "Modules र Packages", jp: "モジュールとパッケージ" }, tags: [{ slug: "modules", label: { en: "modules", np: "modules", jp: "モジュール" } }, { slug: "packages", label: { en: "packages", np: "packages", jp: "パッケージ" } }] },
+    ],
+  },
+  {
+    id: "python-phase-3",
+    title: { en: "Phase 3 · Object-Oriented Python", np: "Phase 3 · Object-Oriented Python", jp: "Phase 3・オブジェクト指向Python" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_42%,#f59e0b)]",
+    days: [
+      { day: 16, title: { en: "Classes & Objects", np: "Classes र Objects", jp: "クラスとオブジェクト" }, tags: [{ slug: "classes", label: { en: "classes", np: "classes", jp: "クラス" } }, { slug: "objects", label: { en: "objects", np: "objects", jp: "オブジェクト" } }] },
+      { day: 17, title: { en: "Encapsulation & Properties", np: "Encapsulation र Properties", jp: "カプセル化とプロパティ" }, tags: [{ slug: "properties", label: { en: "properties", np: "properties", jp: "プロパティ" } }] },
+      { day: 18, title: { en: "Inheritance & Polymorphism", np: "Inheritance र Polymorphism", jp: "継承とポリモーフィズム" }, tags: [{ slug: "inheritance", label: { en: "inheritance", np: "inheritance", jp: "継承" } }] },
+      { day: 19, title: { en: "Dataclasses & Special Methods", np: "Dataclasses र Special Methods", jp: "dataclassと特殊メソッド" }, tags: [{ slug: "dataclasses", label: { en: "dataclasses", np: "dataclasses", jp: "dataclass" } }] },
+      { day: 20, title: { en: "OOP Design", np: "OOP Design", jp: "OOP設計" }, tags: [{ slug: "design", label: { en: "design", np: "design", jp: "設計" } }] },
+    ],
+  },
+  {
+    id: "python-phase-4",
+    title: { en: "Phase 4 · Errors, Files & Real-World Python", np: "Phase 4 · Errors, Files र Real-World Python", jp: "Phase 4・エラー・ファイル・実践Python" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_32%,#f97316)]",
+    days: [
+      { day: 21, title: { en: "Exception Handling", np: "Exception Handling", jp: "例外処理" }, tags: [] },
+      { day: 22, title: { en: "Files & Directories", np: "Files र Directories", jp: "ファイルとディレクトリ" }, tags: [] },
+      { day: 23, title: { en: "JSON, CSV & Serialization", np: "JSON, CSV र Serialization", jp: "JSON・CSV・シリアライズ" }, tags: [] },
+      { day: 24, title: { en: "Dates & Times", np: "Dates र Times", jp: "日付と時刻" }, tags: [] },
+      { day: 25, title: { en: "Regular Expressions & Text Processing", np: "Regular Expressions र Text Processing", jp: "正規表現とテキスト処理" }, tags: [] },
+    ],
+  },
+  {
+    id: "python-phase-5",
+    title: { en: "Phase 5 · Python Standard Library", np: "Phase 5 · Python Standard Library", jp: "Phase 5・Python標準ライブラリ" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_24%,#06b6d4)]",
+    days: [
+      { day: 26, title: { en: "Collections & Itertools", np: "Collections र Itertools", jp: "collectionsとitertools" }, tags: [] },
+      { day: 27, title: { en: "Functional & Utility Modules", np: "Functional र Utility Modules", jp: "関数型・ユーティリティモジュール" }, tags: [] },
+      { day: 28, title: { en: "OS, System & Environment", np: "OS, System र Environment", jp: "OS・システム・環境" }, tags: [] },
+      { day: 29, title: { en: "Logging", np: "Logging", jp: "ロギング" }, tags: [] },
+      { day: 30, title: { en: "CLI Applications", np: "CLI Applications", jp: "CLIアプリケーション" }, tags: [] },
     ],
   },
 ];
