@@ -36,6 +36,7 @@ export const PINNABLE_TRACKS: PinnableTrackMeta[] = [
   { id: "discipline", href: "/learn/discipline", title: "Unbreakable Discipline", groupKey: "hub.sectionPersonalDev" },
   { id: "focus-music", href: "/learn/focus-music", title: "Focus & Learn Music", groupKey: "hub.sectionPersonalDev" },
   { id: "exercise", href: "/learn/exercise", title: "Exercise", groupKey: "hub.sectionPersonalDev" },
+  { id: "motivation", href: "/learn/motivation", title: "Motivation", groupKey: "hub.sectionPersonalDev" },
   { id: "devotion", href: "/learn/devotion", title: "Devotion", groupKey: "hub.sectionPersonalDev" },
 ];
 
