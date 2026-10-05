@@ -1,0 +1,916 @@
+/**
+ * DAY 32: Phase 6 · Advanced Python — Decorators & Higher-Order Functions
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1Decorators = {
+  day: 32,
+  topic: "Phase 6 · Advanced Python — Decorators & Higher-Order Functions",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Functions as First-Class Objects and Higher-Order Functions",
+      durationMinutes: 16,
+      explanation: `
+<b>First-Class Citizens and Functional Metaprogramming</b><br/>
+Before understanding decorators, you must master a fundamental concept in Python: <b>Functions are First-Class Objects</b>.<br/><br/>
+
+<b>1. What does "First-Class Object" mean?</b><br/>
+In Python, functions are not merely syntax constructs; they are full objects in memory (instances of <code>&lt;class 'function'&gt;</code>), just like integers, strings, lists, or dictionaries. This means you can:
+<ul>
+  <li>Assign a function to a variable (e.g., <code>my_func = calculate_shipping</code>).</li>
+  <li>Pass a function as an argument into another function.</li>
+  <li>Return a function as a value from another function.</li>
+  <li>Store functions inside data structures (like lists or dictionary lookup tables).</li>
+</ul>
+
+<b>2. Higher-Order Functions:</b><br/>
+A <b>Higher-Order Function</b> is any function that either:
+<ol>
+  <li>Accepts one or more functions as input parameters, or</li>
+  <li>Returns a function as its output result.</li>
+</ol>
+
+<b>Real-World Analogy: Conveyor Belt Attachment Modules</b><br/>
+Think of a higher-order function as an automated factory conveyor belt framework. The conveyor belt does not care what specific processing machine you attach to it—you can pass in a "weighing scale" function, a "barcode printing" function, or a "quality inspection" function. The conveyor belt higher-order function accepts your function as an argument and executes it at the right moment.
+      `,
+      diagram: `
+FUNCTIONS AS FIRST-CLASS OBJECTS:
+
+  Function Definition:
+  def calculate_fee(weight): return weight * 1.50
+
+  1. Variable Binding  : my_func = calculate_fee  ---> Both point to same function object in RAM!
+  2. Dict Key Lookup   : actions = {"fee": calculate_fee}
+  3. Pass as Parameter : run_pipeline(calculate_fee)
+  4. Return from Func  : return calculate_fee
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Functions as First-Class Objects & Higher-Order Functions
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Assigning Functions to Variables & Dictionary Mappings
+# ------------------------------------------------------------------------------
+
+def express_shipping_rate(weight_lbs: float) -> float:
+    return weight_lbs * 2.50
+
+def ground_shipping_rate(weight_lbs: float) -> float:
+    return weight_lbs * 1.00
+
+# 1. Assigning functions to variables directly (No parentheses!)
+rate_calculator = express_shipping_rate
+print("--- BEGINNER: Functions as Objects ---")
+print("Rate Calculator Type:", type(rate_calculator).__name__) # 'function'
+print("Calculated Express Rate ($):", rate_calculator(10.0))
+
+# 2. Mapping functions inside dictionaries (First-Class Object Strategy)
+RATE_STRATEGIES = {
+    "EXPRESS": express_shipping_rate,
+    "GROUND": ground_shipping_rate
+}
+
+selected_tier = "EXPRESS"
+# Retrieve function object from dictionary and call it!
+computed_fee = RATE_STRATEGIES[selected_tier](10.0)
+print(f"Computed Fee for [{selected_tier}]: ${computed_fee:.2f}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Higher-Order Functions (Passing Functions as Arguments)
+# ------------------------------------------------------------------------------
+
+def process_package_batch(
+    package_weights: list[float],
+    rate_function_strategy
+) -> list[float]:
+    """Higher-order function accepting a rate calculation function as an argument."""
+    return [rate_function_strategy(w) for w in package_weights]
+
+print("\n--- INTERMEDIATE: Higher-Order Function Execution ---")
+weights = [10.0, 20.0, 50.0]
+
+# Pass 'ground_shipping_rate' function as an argument
+ground_fees = process_package_batch(weights, ground_shipping_rate)
+print("Ground Batch Fees ($):", ground_fees)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Closure Returning Inner Functions
+# ------------------------------------------------------------------------------
+
+def create_tiered_pricing_calculator(base_fee: float, tax_rate: float):
+    \"\"\"
+    Higher-order function returning a customized inner function (Closure).
+    \"\"\"
+    # Inner function captures 'base_fee' and 'tax_rate' from outer scope
+    def calculate_invoice(weight_lbs: float) -> float:
+        subtotal = base_fee + (weight_lbs * 0.75)
+        return round(subtotal * (1.0 + tax_rate), 2)
+
+    return calculate_invoice # Return inner function object!
+
+print("\n--- ADVANCED: Function Factory (Closure) ---")
+# Instantiate specialized calculator function for Chicago hub
+chicago_calculator = create_tiered_pricing_calculator(base_fee=15.00, tax_rate=0.1025)
+
+print("Chicago Invoice 1 ($):", chicago_calculator(10.0))
+print("Chicago Invoice 2 ($):", chicago_calculator(25.0))
+      `,
+      keyTakeaways: [
+        "In Python, functions are first-class objects that can be assigned to variables, stored in dictionaries, and passed as arguments.",
+        "Higher-order functions accept functions as parameters or return functions as output values.",
+        "Do not include parentheses `()` when passing a function reference (e.g., `pass_func(calculate_fee)` vs calling `calculate_fee()`).",
+        "A Closure occurs when an inner function retains access to variables from its outer enclosing scope even after the outer function finishes executing."
+      ],
+      commonMistakes: [
+        "<b>Accidentally calling a function when passing it as an argument:</b> Writing `run_pipeline(calculate_fee())` executes the function immediately and passes its *return value*, whereas `run_pipeline(calculate_fee)` passes the *function reference* itself.",
+        "<b>Confusing function reference with return value:</b> Forgetting that assigning `x = my_func` points `x` to the function object in RAM.",
+        "<b>Overusing lambda syntax when named higher-order functions are cleaner:</b> Writing unreadable single-line lambdas instead of passing clean, named function objects."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary characteristic of a Higher-Order Function in Python?",
+          options: [
+            "It runs on multiple server CPU cores simultaneously.",
+            "It accepts another function as an argument or returns a function object as its output value.",
+            "It automatically converts floats to string JSON outputs.",
+            "It must be defined inside a class."
+          ],
+          correctIndex: 1,
+          explanation: "Higher-order functions take functions as inputs or return functions as outputs."
+        },
+        {
+          question: "What is the result of executing `action = log_event` (without trailing parentheses) when `log_event` is a defined function?",
+          options: [
+            "Python executes `log_event()` immediately.",
+            "The variable `action` is bound to the `log_event` function object in memory.",
+            "Python raises a `SyntaxError`.",
+            "`action` holds `None`."
+          ],
+          correctIndex: 1,
+          explanation: "Omitting parentheses binds the variable to the function object itself, allowing `action()` to be invoked later."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Understanding Decorators and the @ Syntax",
+      durationMinutes: 20,
+      explanation: `
+<b>Extending Function Behavior without Modifying Source Code</b><br/>
+When building enterprise software, you frequently need to apply cross-cutting concerns—such as execution timing, authentication checks, audit logging, or input validation—across dozens of different functions. Modifying every single function's internal source code introduces massive code duplication and breaks the Single Responsibility Principle.<br/><br/>
+
+A <b>Decorator</b> is a higher-order function that takes a target function as input, wraps it with additional pre-processing or post-processing behavior, and returns the enhanced wrapped function.<br/><br/>
+
+<b>1. What is a Decorator?</b><br/>
+A decorator is simply a wrapper function:<br/>
+<pre><code>def my_decorator(func):
+    def wrapper():
+        print("Before function call...")
+        func() # Execute original target function
+        print("After function call...")
+    return wrapper</code></pre><br/>
+
+<b>2. The Syntactic Sugar <code>@</code> Operator:</b><br/>
+Python provides the <code>@decorator_name</code> syntax as a clean, elegant shortcut.<br/>
+Writing:<br/>
+<pre><code>@my_decorator
+def process_data():
+    print("Processing...")</code></pre><br/>
+is 100% equivalent to writing:<br/>
+<pre><code>def process_data():
+    print("Processing...")
+
+process_data = my_decorator(process_data) # Rebinds process_data to the wrapper!</code></pre>
+
+<b>3. Handling Flexible Function Arguments (<code>*args</code>, <code>**kwargs</code>):</b><br/>
+A production decorator must wrap *any* target function regardless of how many parameters it accepts. Therefore, inner wrapper functions **must always accept `*args, **kwargs`** and pass them through to the original target function: <code>result = func(*args, **kwargs)</code>!
+      `,
+      diagram: `
+DECORATOR EXECUTION WRAPPER PATTERN (@decorator):
+
+  User Calls: process_shipment("TRK-1001", weight=15.0)
+                        |
+                        v
+  +-------------------------------------------------------------+
+  |                   Outer Decorator Wrapper                   |
+  |  1. Pre-Processing  : Check permissions / Start Timer       |
+  |                                                             |
+  |  2. Target Execution: result = func(*args, **kwargs)        |
+  |                       (Executes original function!)         |
+  |                                                             |
+  |  3. Post-Processing : Audit log output / Stop Timer         |
+  +-------------------------------------------------------------+
+                        |
+                        v
+  Caller Receives: Returned result from original target function!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Decorator Structure and the @ Syntax
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Decorator Definition and Manual vs @ Application
+# ------------------------------------------------------------------------------
+
+def simple_audit_decorator(target_function):
+    """Basic decorator wrapping target function with audit logging."""
+    def wrapper(*args, **kwargs):
+        print("[AUDIT PRE] Executing logistics operation...")
+        # Execute original target function with dynamic args
+        result = target_function(*args, **kwargs)
+        print("[AUDIT POST] Operation completed successfully.")
+        return result
+    return wrapper # Return the enhanced wrapper function
+
+
+# Applying decorator using the @ syntactic sugar
+@simple_audit_decorator
+def dispatch_parcel(tracking_id: str):
+    print(f"  --> [CORE LOGIC] Parcel {tracking_id} marked as DISPATCHED.")
+    return f"STATUS_OK_{tracking_id}"
+
+print("--- BEGINNER: Decorator Execution ---")
+# Invoking dispatch_parcel automatically triggers wrapper!
+result_status = dispatch_parcel("TRK-9001")
+print("Caller Received Return Value:", result_status)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Generic Decorator with Flexible *args and **kwargs
+# ------------------------------------------------------------------------------
+
+def execution_logger(func):
+    """Generic decorator that logs positional args and keyword args."""
+    def wrapper(*args, **kwargs):
+        print(f"\n[LOG] Invoking '{func.__name__}'")
+        print(f"      Positional args : {args}")
+        print(f"      Keyword args    : {kwargs}")
+
+        output = func(*args, **kwargs)
+        print(f"[LOG] '{func.__name__}' returned: {output}")
+        return output
+    return wrapper
+
+@execution_logger
+def calculate_express_fee(base_rate: float, weight_lbs: float, is_vip: bool = False) -> float:
+    fee = base_rate + (weight_lbs * 1.25)
+    return fee * 0.80 if is_vip else fee
+
+print("\n--- INTERMEDIATE: Generic *args & **kwargs Decorator ---")
+calculate_express_fee(10.00, 20.0, is_vip=True)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Production Performance Timer Decorator
+# ------------------------------------------------------------------------------
+
+import time
+
+def benchmark_timer(func):
+    \"\"\"
+    Production decorator measuring execution time in seconds.
+    \"\"\"
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+
+        # Execute original function
+        result = func(*args, **kwargs)
+
+        elapsed_time = time.perf_counter() - start_time
+        print(f"[BENCHMARK] Function '{func.__name__}' executed in {elapsed_time:.6f} seconds.")
+        return result
+    return wrapper
+
+@benchmark_timer
+def simulate_heavy_database_query(record_count: int) -> list[str]:
+    """Simulates an expensive database query for benchmark logging."""
+    time.sleep(0.05) # Simulate latency
+    return [f"RECORD_{i}" for i in range(record_count)]
+
+print("\n--- ADVANCED: Benchmark Timer Execution ---")
+query_results = simulate_heavy_database_query(100)
+print(f"Retrieved {len(query_results)} records from query.")
+      `,
+      keyTakeaways: [
+        "A decorator is a higher-order function that accepts a target function, wraps it, and returns an enhanced function.",
+        "The `@decorator` syntax is syntactic sugar for `target_func = decorator(target_func)`.",
+        "Inner wrapper functions MUST accept `*args, **kwargs` to wrap functions with arbitrary parameters.",
+        "The inner wrapper function MUST return the output of the original target function (`return func(*args, **kwargs)`)."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `*args, **kwargs` in the wrapper function:</b> Defining `def wrapper():` causes the decorator to crash with a `TypeError` when applied to functions accepting parameters.",
+        "<b>Forgetting to return the target function's output:</b> Executing `func(*args, **kwargs)` inside the wrapper without `return` causes the decorated function to return `None` to callers!",
+        "<b>Forgetting to return the inner wrapper function from the decorator:</b> Returning `None` instead of `return wrapper` at the end of the outer decorator function."
+      ],
+      quizzes: [
+        {
+          question: "What is the equivalent manual code for the decorator syntax `@my_decorator\\ndef process(): pass`?",
+          options: [
+            "`process = my_decorator.process()`",
+            "`process = my_decorator(process)`",
+            "`my_decorator.wrap(process)`",
+            "`process = process(my_decorator)`"
+          ],
+          correctIndex: 1,
+          explanation: "`@my_decorator` rebinds the target function name to the output of `my_decorator(process)`."
+        },
+        {
+          question: "Why must an inner decorator wrapper function accept `*args, **kwargs`?",
+          options: [
+            "To allow the decorator to wrap functions with any number of positional or keyword arguments.",
+            "To convert function return values into lists.",
+            "To prevent `KeyError` exceptions inside decorators.",
+            "It is required by the Python compiler."
+          ],
+          correctIndex: 0,
+          explanation: "`*args, **kwargs` allows a decorator to wrap target functions regardless of their specific parameter signatures."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Preserving Metadata with functools.wraps",
+      durationMinutes: 14,
+      explanation: `
+<b>Decorators Without Metadata Identity Loss</b><br/>
+When you decorate a function, Python rebinds the target function name to the inner `wrapper` function object. While this gives you powerful wrapping behavior, it introduces a subtle, serious bug: **Function Metadata Identity Loss**.<br/><br/>
+
+<b>1. The Metadata Loss Problem:</b><br/>
+Without metadata preservation, inspecting a decorated function reveals that its original name (<code>__name__</code>) and docstring (<code>__doc__</code>) have been overwritten by the wrapper function!<br/>
+<code>@my_decorator</code><br/>
+<code>def dispatch_parcel():</code><br/>
+<code>    """Dispatches a parcel."""</code><br/>
+<code>    pass</code><br/><br/>
+<code>print(dispatch_parcel.__name__) # Outputs 'wrapper', NOT 'dispatch_parcel'!</code><br/>
+<code>print(dispatch_parcel.__doc__)  # Outputs None, losing original documentation!</code><br/><br/>
+
+<b>Why is this a problem?</b>
+<ul>
+  <li>Breaks introspection tools, auto-generated documentation generators (like Sphinx/FastAPI), and step-through debuggers.</li>
+  <li>Breaks unit test suites relying on function names.</li>
+</ul>
+
+<b>2. The Solution: <code>@functools.wraps(func)</code>:</b><br/>
+Python's standard library provides <b><code>functools.wraps</code></b>. Decorate your inner wrapper function with <code>@wraps(func)</code>, and Python automatically copies the original function's name, docstring, annotations, and module identity onto the wrapper!
+      `,
+      diagram: `
+METADATA IDENTITY LOSS vs PRESERVATION (@wraps):
+
+  WITHOUT @wraps:
+    decorated_func.__name__  ---> "wrapper"      (METADATA LOST!)
+    decorated_func.__doc__   ---> None         (DOCSTRING LOST!)
+
+  WITH @functools.wraps(func):
+    decorated_func.__name__  ---> "dispatch_parcel" (PRESERVED!)
+    decorated_func.__doc__   ---> "Dispatches..."   (PRESERVED!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Preserving Function Identity with functools.wraps
+# ==============================================================================
+
+from functools import wraps
+
+# ------------------------------------------------------------------------------
+# Beginner: Demonstrating Metadata Loss (Bad Decorator)
+# ------------------------------------------------------------------------------
+
+def bad_unwrapped_decorator(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@bad_unwrapped_decorator
+def calculate_tax(amount: float) -> float:
+    """Calculates standard state tax for a shipment."""
+    return amount * 0.10
+
+print("--- BEGINNER: Unwrapped Decorator Metadata Loss ---")
+print("Function Name (Broken):", calculate_tax.__name__) # Outputs 'wrapper'!
+print("Docstring     (Broken):", calculate_tax.__doc__)  # Outputs None!
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Fixing Metadata Loss with @functools.wraps
+# ------------------------------------------------------------------------------
+
+def professional_decorator(func):
+    # Copy original function attributes (name, doc, annotations) to wrapper
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        """Inner wrapper docstring."""
+        print(f"[PRE] Calling '{func.__name__}'")
+        return func(*args, **kwargs)
+    return wrapper
+
+@professional_decorator
+def calculate_tax_fixed(amount: float) -> float:
+    """Calculates standard state tax for a shipment."""
+    return amount * 0.10
+
+print("\n--- INTERMEDIATE: Preserved Metadata with @wraps ---")
+print("Function Name (Fixed) :", calculate_tax_fixed.__name__) # 'calculate_tax_fixed'
+print("Docstring     (Fixed) :", calculate_tax_fixed.__doc__)  # 'Calculates standard state tax...'
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Audit Trail Decorator for Production APIs
+# ------------------------------------------------------------------------------
+
+def production_audit_trail(func):
+    \"\"\"
+    Production decorator providing security logging while preserving
+    full introspection metadata via @wraps.
+    \"\"\"
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"\n[SECURITY AUDIT] Executing API Endpoint -> {func.__module__}.{func.__name__}")
+        print(f"  Documentation : {func.__doc__.strip() if func.__doc__ else 'N/A'}")
+
+        result = func(*args, **kwargs)
+        return result
+    return wrapper
+
+@production_audit_trail
+def update_delivery_address(tracking_id: str, new_address: str) -> bool:
+    """Updates recipient address for active parcel in transit."""
+    print(f"  [DB UPDATE] Parcel {tracking_id} address set to: '{new_address}'")
+    return True
+
+# Execute and verify metadata preservation
+update_delivery_address("TRK-9004", "100 South Wacker Dr, Chicago, IL")
+
+print("\nReflect Introspection Test:")
+print("Name Check :", update_delivery_address.__name__ == "update_delivery_address") # True
+      `,
+      keyTakeaways: [
+        "Without `@wraps`, decorated functions lose their original `__name__` and `__doc__` attributes.",
+        "Always decorate inner wrapper functions with `@functools.wraps(func)`.",
+        "`@wraps` copies names, docstrings, module identity, and type annotations onto the wrapper function.",
+        "Preserving metadata ensures compatibility with auto-documentation tools, debuggers, and unit test suites."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `@wraps(func)` when writing custom decorators:</b> Breaking function introspection and documentation tools in large codebases.",
+        "<b>Decorating wrapper functions with `@wraps` without passing `func`:</b> Writing `@wraps` without parentheses `(func)`, which causes a `TypeError`."
+      ],
+      quizzes: [
+        {
+          question: "What happens to a function's `__name__` attribute if it is wrapped by a custom decorator WITHOUT using `@functools.wraps`?",
+          options: [
+            "It retains its original function name.",
+            "It is overwritten by the name of the inner decorator wrapper function (usually `'wrapper'`).",
+            "It becomes `None`.",
+            "Python raises a `NameError`."
+          ],
+          correctIndex: 1,
+          explanation: "Without `@wraps`, Python's function binding sets `__name__` to the inner wrapper's name ('wrapper')."
+        },
+        {
+          question: "Where must the `@functools.wraps(func)` decorator be placed inside a custom decorator definition?",
+          options: [
+            "Above the outer decorator function definition.",
+            "Directly above the inner `wrapper` function definition.",
+            "Inside the `return` statement.",
+            "Directly above the `func(*args)` call."
+          ],
+          correctIndex: 1,
+          explanation: "`@wraps(func)` decorates the inner `wrapper` function definition."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Decorator Factories (Decorators Taking Arguments)",
+      durationMinutes: 16,
+      explanation: `
+<b>Configurable Decorators with Parameter Customization</b><br/>
+Sometimes a decorator needs to accept its own configuration parameters. For example, setting custom retry limits (<code>@retry(max_attempts=3)</code>), defining permission roles (<code>@require_role("ADMIN")</code>), or setting rate limits (<code>@rate_limit(calls_per_sec=10)</code>).<br/><br/>
+
+<b>1. How Decorator Factories Work (Three-Level Nested Functions):</b><br/>
+To make a decorator accept arguments, you create a **Decorator Factory**—a function that accepts arguments and returns a standard decorator!<br/>
+This requires **three levels of nested functions**:
+<ol>
+  <li><b>Outer Function (Decorator Factory):</b> Accepts decorator configuration arguments (e.g., <code>role="ADMIN"</code>).</li>
+  <li><b>Middle Function (Actual Decorator):</b> Accepts the target function (e.g., <code>func</code>).</li>
+  <li><b>Inner Function (Wrapper):</b> Accepts function arguments (<code>*args, **kwargs</code>) and executes the wrapper logic.</li>
+</ol>
+
+<b>2. Syntax Mechanics:</b><br/>
+Writing:<br/>
+<code>@require_role("ADMIN")</code><br/>
+<code>def delete_record(): pass</code><br/><br/>
+is equivalent to Python executing:<br/>
+<code>decorator = require_role("ADMIN") # Call factory to get decorator</code><br/>
+<code>delete_record = decorator(delete_record) # Decorate function</code>
+      `,
+      diagram: `
+DECORATOR FACTORY THREE-LEVEL NESTING:
+
+  Level 1: Factory Function  ---> def require_role(allowed_role):    (Accepts "ADMIN")
+              |
+              v Returns Decorator
+  Level 2: Actual Decorator  ---> def decorator(func):               (Accepts target function)
+              |
+              v Returns Wrapper
+  Level 3: Inner Wrapper     ---> @wraps(func)
+                                  def wrapper(*args, **kwargs):       (Accepts runtime args)
+                                      if user.role == allowed_role:
+                                          return func(*args, **kwargs)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Decorator Factories (Configurable Decorators)
+# ==============================================================================
+
+from functools import wraps
+import time
+
+# ------------------------------------------------------------------------------
+# Beginner: 3-Level Decorator Factory for Configurable Retries
+# ------------------------------------------------------------------------------
+
+# Level 1: Outer Factory accepts configuration parameters
+def retry_on_failure(max_retries: int = 3, delay_sec: float = 0.1):
+    """Decorator Factory creating configurable retry wrappers."""
+    # Level 2: Middle function accepts target function
+    def decorator(func):
+        # Level 3: Inner wrapper accepts function runtime arguments
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            while attempts < max_retries:
+                try:
+                    attempts += 1
+                    return func(*args, **kwargs)
+                except Exception as err:
+                    print(f"  [RETRY] Attempt {attempts}/{max_retries} failed for '{func.__name__}': {err}")
+                    if attempts >= max_retries:
+                        raise # Re-raise exception when retries exhausted
+                    time.sleep(delay_sec)
+        return wrapper
+    return decorator
+
+
+# Apply configurable decorator factory with arguments
+@retry_on_failure(max_retries=2, delay_sec=0.01)
+def unstable_network_ping(host: str) -> str:
+    """Simulates an unstable network call."""
+    if not hasattr(unstable_network_ping, "calls"):
+        unstable_network_ping.calls = 0
+    unstable_network_ping.calls += 1
+
+    if unstable_network_ping.calls < 2:
+        raise ConnectionError("Network Socket Timeout")
+    return f"PONG from {host}"
+
+print("--- BEGINNER: Decorator Factory Execution ---")
+ping_result = unstable_network_ping("10.0.0.1")
+print("Result Received:", ping_result)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Security Role Authorization Factory
+# ------------------------------------------------------------------------------
+
+def require_permission(required_role: str):
+    \"\"\"
+    Security Decorator Factory enforcing role-based access control (RBAC).
+    \"\"\"
+    def decorator(func):
+        @wraps(func)
+        def wrapper(user_context: dict, *args, **kwargs):
+            user_role = user_context.get("role", "GUEST")
+            user_name = user_context.get("name", "Unknown")
+
+            if user_role.upper() != required_role.upper():
+                print(f"[SECURITY DENIED] User '{user_name}' ({user_role}) lacks required role '{required_role}'.")
+                raise PermissionError(f"Access Denied: Requires role '{required_role}'.")
+
+            print(f"[SECURITY GRANTED] User '{user_name}' authorized for '{func.__name__}'.")
+            return func(user_context, *args, **kwargs)
+        return wrapper
+    return decorator
+
+@require_permission(required_role="DISPATCHER")
+def cancel_active_shipment(user_context: dict, tracking_id: str) -> bool:
+    """Cancels an active shipment in the logistics database."""
+    print(f"  [DB ACTION] Shipment {tracking_id} successfully CANCELLED.")
+    return True
+
+print("\n--- ADVANCED: RBAC Security Factory ---")
+dispatcher_user = {"name": "Marcus", "role": "DISPATCHER"}
+guest_user = {"name": "Bob", "role": "GUEST"}
+
+# Test authorized invocation
+cancel_active_shipment(dispatcher_user, "TRK-9001")
+
+# Test unauthorized invocation
+try:
+    cancel_active_shipment(guest_user, "TRK-9002")
+except PermissionError as perm_err:
+    print("Caught Security Violation Exception:", perm_err)
+      `,
+      keyTakeaways: [
+        "A Decorator Factory is a function that accepts configuration arguments and returns a decorator.",
+        "Decorator Factories require three nested function levels: Factory -> Decorator -> Wrapper.",
+        "Syntax `@factory(arg=val)` calls the factory first, then decorates the target function with the returned decorator.",
+        "Always use `@wraps(func)` on the innermost wrapper function to preserve metadata."
+      ],
+      commonMistakes: [
+        "<b>Missing a nesting level:</b> Trying to accept configuration parameters and `func` in the same outer function level.",
+        "<b>Forgetting to call the factory when decorating:</b> Writing `@require_permission` without parentheses instead of `@require_permission(\"ADMIN\")`.",
+        "<b>Confusing factory configuration arguments with runtime function arguments:</b> Expecting runtime args inside Level 1 instead of Level 3."
+      ],
+      quizzes: [
+        {
+          question: "How many nested function levels are required to build a Decorator Factory that accepts configuration parameters?",
+          options: [
+            "1 level",
+            "2 levels",
+            "3 levels (Factory -> Decorator -> Wrapper)",
+            "4 levels"
+          ],
+          correctIndex: 2,
+          explanation: "Decorator Factories require 3 levels: Outer Factory (accepts config) -> Middle Decorator (accepts func) -> Inner Wrapper (accepts *args)."
+        },
+        {
+          question: "What happens when Python encounters `@retry(max_attempts=3)` above a function definition?",
+          options: [
+            "It runs the function 3 times immediately during import.",
+            "It executes `retry(max_attempts=3)` to return a decorator function, then decorates the target function with that returned decorator.",
+            "It raises a `SyntaxError`.",
+            "It converts arguments into a list."
+          ],
+          correctIndex: 1,
+          explanation: "Python invokes `retry(max_attempts=3)` first to generate the decorator, which then wraps the target function."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Practical Production Decorators: Authentication, Logging, and Rate Limiting",
+      durationMinutes: 14,
+      explanation: `
+<b>Real-World Decorator Engineering Patterns</b><br/>
+Now that you master decorator mechanics, let's look at real-world software architecture patterns where decorators are essential.<br/><br/>
+
+<b>1. Cross-Cutting Production Decorator Use Cases:</b>
+<ul>
+  <li><b>Audit & Telemetry Logging:</b> Automatically records input arguments, user IDs, timestamps, and return values to log files without touching business code.</li>
+  <li><b>Authentication & Security Authorization:</b> Enforces session token validation or role checks before allowing execution of sensitive API endpoints.</li>
+  <li><b>Caching & Performance Optimization:</b> Caches expensive database lookups in memory.</li>
+  <li><b>Rate Limiting & Throttling:</b> Prevents clients from abusing API endpoints by tracking execution call frequencies per second.</li>
+</ul>
+
+<b>2. Stacking Multiple Decorators:</b><br/>
+You can stack multiple decorators on a single function!<br/>
+<pre><code>@audit_log
+@require_auth
+@benchmark_timer
+def process_payment():
+    pass</code></pre><br/>
+
+<b>Order of Execution:</b><br/>
+Decorators execute from **Bottom to Top (Inside-Out)**! In the example above, `process_payment` is wrapped by `benchmark_timer` first, then `require_auth`, and finally `audit_log` on the outside.
+      `,
+      diagram: `
+DECORATOR STACKING ORDER (Bottom-to-Top / Inside-Out):
+
+  @decorator_A  <--- Wrapped LAST (Executes 1st on call, 3rd on return)
+  @decorator_B  <--- Wrapped 2nd  (Executes 2nd on call, 2nd on return)
+  @decorator_C  <--- Wrapped 1st  (Executes 3rd on call, 1st on return)
+  def target_function():
+      pass
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Practical Production Decorators & Stacking
+# ==============================================================================
+
+from functools import wraps
+import time
+
+# ------------------------------------------------------------------------------
+# Production Decorator 1: Telemetry Logger
+# ------------------------------------------------------------------------------
+
+def telemetry_logger(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"[TELEMETRY LOG] Step 1: Logging invocation of '{func.__name__}'")
+        res = func(*args, **kwargs)
+        print(f"[TELEMETRY LOG] Step 5: Completed logging for '{func.__name__}'")
+        return res
+    return wrapper
+
+
+# ------------------------------------------------------------------------------
+# Production Decorator 2: Security Authenticator
+# ------------------------------------------------------------------------------
+
+def authenticate_session(func):
+    @wraps(func)
+    def wrapper(session_token: str, *args, **kwargs):
+        print(f"[AUTH GUARD] Step 2: Validating session token '{session_token}'...")
+        if not session_token or not session_token.startswith("VALID_TOKEN"):
+            print("  [AUTH GUARD] Authentication failed!")
+            raise PermissionError("HTTP 401 Unauthorized: Invalid session token.")
+        print("  [AUTH GUARD] Session authenticated successfully.")
+        res = func(session_token, *args, **kwargs)
+        print("[AUTH GUARD] Step 4: Auth wrapper cleanup.")
+        return res
+    return wrapper
+
+
+# ------------------------------------------------------------------------------
+# Stacked Application Demonstration
+# ------------------------------------------------------------------------------
+
+# Stacked Decorators: Executed Bottom-to-Top (authenticate_session wraps first, telemetry_logger wraps second)
+@telemetry_logger
+@authenticate_session
+def dispatch_high_value_cargo(session_token: str, tracking_id: str, cargo_value_usd: float) -> dict:
+    """Core domain business logic for high-value cargo dispatch."""
+    print(f"  --> [CORE BUSINESS LOGIC] Step 3: Dispatching Cargo [{tracking_id}] (Val: ${cargo_value_usd:,.2f})")
+    return {"tracking_id": tracking_id, "status": "DISPATCHED", "value": cargo_value_usd}
+
+
+print("--- PRODUCTION DECORATOR STACKING ---")
+
+# Test authenticated execution
+print("Executing with valid token:")
+response = dispatch_high_value_cargo("VALID_TOKEN_SECRET_99", "TRK-9001", 150000.00)
+print("\nFinal Output Received:", response)
+
+print("\n" + "="*50 + "\n")
+
+# Test unauthenticated execution
+print("Executing with invalid token:")
+try:
+    dispatch_high_value_cargo("INVALID_TOKEN", "TRK-9002", 50000.00)
+except PermissionError as auth_err:
+    print("\nIntercepted Security Exception:", auth_err)
+      `,
+      keyTakeaways: [
+        "Decorators separate cross-cutting concerns (logging, auth, timing) from core business logic.",
+        "Multiple decorators can be stacked on a single function.",
+        "Stacked decorators wrap and execute from **Bottom to Top (Inside-Out)**.",
+        "Always use `@wraps(func)` on every decorator in a stack to preserve metadata through the chain."
+      ],
+      commonMistakes: [
+        "<b>Misunderstanding decorator stacking execution order:</b> Expecting top decorators to wrap before bottom decorators; top decorators run on the outside.",
+        "<b>Modifying target function arguments without updating `*args`:</b> Changing arguments in an outer decorator without passing the updated parameters to inner decorators.",
+        "<b>Hardcoding session tokens or user parameters:</b> Writing non-generic decorators that break when applied to functions with different parameter signatures."
+      ],
+      quizzes: [
+        {
+          question: "In what order are stacked decorators evaluated and applied when executing:\n```python\n@decorator_one\n@decorator_two\ndef my_func(): pass\n```?",
+          options: [
+            "Top to bottom: `decorator_one` wraps first, then `decorator_two`.",
+            "Bottom to top: `decorator_two` wraps first, then `decorator_one` wraps on the outside.",
+            "Alphabetically by decorator name.",
+            "Simultaneously in parallel."
+          ],
+          correctIndex: 1,
+          explanation: "Stacked decorators apply from the bottom up (inside-out). `decorator_two` wraps `my_func` first, and `decorator_one` wraps the resulting function on the outside."
+        },
+        {
+          question: "Which production design pattern uses decorators to verify user security permissions before executing an API function?",
+          options: [
+            "Aspect-Oriented / Role-Based Access Control (RBAC)",
+            "Singleton Database Pattern",
+            "Factory Pattern",
+            "Model-View-Controller (MVC)"
+          ],
+          correctIndex: 0,
+          explanation: "Decorators provide clean Aspect-Oriented Programming (AOP) for cross-cutting concerns like Role-Based Access Control."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What does it mean that functions are 'First-Class Objects' in Python?",
+      options: [
+        "Functions execute faster than standard loops.",
+        "Functions can be assigned to variables, passed as arguments, returned from other functions, and stored in collections.",
+        "Functions can only be created inside classes.",
+        "Functions cannot be modified after definition."
+      ],
+      correctIndex: 1,
+      explanation: "First-class objects can be treated like any other variable or data value in memory."
+    },
+    {
+      question: "What is the `@decorator` syntax equivalent to?",
+      options: [
+        "`target_func = decorator(target_func)`",
+        "`decorator = target_func(decorator)`",
+        "`target_func.attach(decorator)`",
+        "`decorator.run(target_func)`"
+      ],
+      correctIndex: 0,
+      explanation: "`@decorator` rebinds `target_func` to the output of calling `decorator(target_func)`."
+    },
+    {
+      question: "Why should an inner decorator wrapper function accept `*args, **kwargs`?",
+      options: [
+        "To allow the decorator to wrap functions with any parameter signature.",
+        "To force arguments to become dictionaries.",
+        "To prevent syntax errors in `argparse`.",
+        "To convert float numbers into decimals."
+      ],
+      correctIndex: 0,
+      explanation: "`*args, **kwargs` ensures the wrapper function can accept and pass through any target function parameters."
+    },
+    {
+      question: "Which decorator from the standard library `functools` module prevents decorated functions from losing their `__name__` and `__doc__` metadata?",
+      options: [
+        "`@functools.lru_cache`",
+        "`@functools.wraps`",
+        "`@functools.partial`",
+        "`@functools.preserve`"
+      ],
+      correctIndex: 1,
+      explanation: "`@functools.wraps(func)` copies the original function's name and documentation onto the wrapper function."
+    },
+    {
+      question: "How many nested function levels are required to construct a Decorator Factory that accepts configuration arguments?",
+      options: [
+        "1 level",
+        "2 levels",
+        "3 levels (Factory -> Decorator -> Wrapper)",
+        "4 levels"
+      ],
+      correctIndex: 2,
+      explanation: "Decorator Factories require 3 levels: Outer Factory (config) -> Middle Decorator (func) -> Inner Wrapper (*args)."
+    },
+    {
+      question: "In what order do stacked decorators wrap a target function: `@dec_A` over `@dec_B` over `def func():`?",
+      options: [
+        "`dec_A` wraps first, then `dec_B`.",
+        "`dec_B` wraps first, then `dec_A` wraps on the outside.",
+        "They wrap in alphabetical order.",
+        "Order does not matter."
+      ],
+      correctIndex: 1,
+      explanation: "Decorators stack from bottom to top (inside-out). `@dec_B` wraps `func` first, and `@dec_A` wraps the resulting function."
+    },
+    {
+      question: "What happens if a decorator wrapper executes `func(*args, **kwargs)` but forgets to include `return` before the function call?",
+      options: [
+        "Python raises a `SyntaxError`.",
+        "The decorated function executes successfully, but returns `None` to the caller instead of the target function's return value.",
+        "The decorator enters an infinite loop.",
+        "The target function is deleted from memory."
+      ],
+      correctIndex: 1,
+      explanation: "If the wrapper does not return the output of `func()`, the caller receives `None` by default."
+    },
+    {
+      question: "Which real-world production task is a textbook use case for Python decorators?",
+      options: [
+        "Creating a virtual environment.",
+        "Cross-cutting concerns like execution timing, audit logging, and security authentication.",
+        "Converting JSON files to CSV files.",
+        "Defining class constructors."
+      ],
+      correctIndex: 1,
+      explanation: "Decorators excel at applying cross-cutting concerns across multiple functions cleanly."
+    }
+  ],
+  project: {
+    name: "Enterprise API Gatekeeper & Telemetry Decorator Suite (Phase 1 Project)",
+    goal: "Build a modular decorator suite that implements execution timing benchmarks, security role authorization with decorator factories, telemetry audit logging, and metadata preservation using functools.wraps.",
+    brief: "Your enterprise logistics platform requires an API security and telemetry decorator suite (`decorator_suite.py`). The suite must provide an execution timer decorator (`@benchmark_timer`), an audit logging decorator (`@audit_log`), and a role-based access control factory (`@require_role(\"DISPATCHER\")`). All decorators must preserve function metadata with `@functools.wraps` and handle arbitrary function arguments with `*args, **kwargs`.",
+    steps: [
+      "Create a script file named `decorator_suite.py` in your workspace.",
+      "Import `wraps` from `functools` and `time` module.",
+      "Build a timing decorator `@benchmark_timer` that measures and prints execution duration in seconds while returning original function output.",
+      "Build a security Decorator Factory `@require_role(allowed_role: str)` that inspects incoming user context dictionaries and raises `PermissionError` if authorization fails.",
+      "Build a telemetry decorator `@audit_log` that logs function name, arguments, and return status to standard error (`sys.stderr`).",
+      "Apply all three decorators stacked onto a target domain function `dispatch_shipment(user_context, tracking_id, destination)`.",
+      "Verify that calling `dispatch_shipment.__name__` returns `'dispatch_shipment'` and `dispatch_shipment.__doc__` is preserved.",
+      "Run `python3 decorator_suite.py` in your integrated terminal and output a complete security and telemetry audit log."
+    ],
+    acceptance: [
+      "All custom decorators use `@functools.wraps(func)` to preserve function metadata.",
+      "Decorator factory `@require_role` uses 3-level nesting and enforces security authorization.",
+      "Stacked decorators execute cleanly in bottom-to-top order.",
+      "Executing `python3 decorator_suite.py` prints a clean audit log and returns exit code 0."
+    ],
+    stretch: [
+      "Add a rate-limiting decorator factory `@rate_limit(calls_per_second=5)` that delays or blocks rapid consecutive calls.",
+      "Annotate all decorator functions with strict type hints (`Callable[..., Any]`) and pass static type checks."
+    ]
+  }
+};
