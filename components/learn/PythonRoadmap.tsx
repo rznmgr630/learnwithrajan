@@ -25,6 +25,7 @@ import { PYTHON_DAY_16_LESSONS } from "@/lib/python-learning/python-day-16-lesso
 import { PYTHON_DAY_17_LESSONS } from "@/lib/python-learning/python-day-17-lessons";
 import { PYTHON_DAY_18_LESSONS } from "@/lib/python-learning/python-day-18-lessons";
 import { PYTHON_DAY_19_LESSONS } from "@/lib/python-learning/python-day-19-lessons";
+import { PYTHON_DAY_20_LESSONS } from "@/lib/python-learning/python-day-20-lessons";
 import { PYTHON_ROADMAP_WEEKS, PYTHON_TOTAL_DAYS } from "@/lib/python-learning/python-challenge-data";
 import { usePythonProgress } from "@/hooks/use-python-progress";
 
@@ -49,6 +50,7 @@ const LESSON_DAYS = {
   17: PYTHON_DAY_17_LESSONS,
   18: PYTHON_DAY_18_LESSONS,
   19: PYTHON_DAY_19_LESSONS,
+  20: PYTHON_DAY_20_LESSONS,
 };
 
 const COMING_SOON = { en: "Content coming soon", np: "Content coming soon", jp: "Content coming soon" };
@@ -146,7 +148,8 @@ export function PythonRoadmap() {
       {lessonDay === 17 ? <LessonDayDetail open day={PYTHON_DAY_17_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 18 ? <LessonDayDetail open day={PYTHON_DAY_18_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 19 ? <LessonDayDetail open day={PYTHON_DAY_19_LESSONS} onClose={() => setLessonDay(null)} /> : null}
-      {lessonDay !== null && lessonDay > 19 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay === 20 ? <LessonDayDetail open day={PYTHON_DAY_20_LESSONS} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 20 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
     </div>
   );
 }
