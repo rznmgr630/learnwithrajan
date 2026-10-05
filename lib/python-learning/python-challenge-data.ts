@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 30;
+export const PYTHON_TOTAL_DAYS = 31;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -116,6 +116,14 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 28, title: { en: "OS, System & Environment", np: "OS, System र Environment", jp: "OS・システム・環境" }, tags: [] },
       { day: 29, title: { en: "Logging", np: "Logging", jp: "ロギング" }, tags: [] },
       { day: 30, title: { en: "CLI Applications", np: "CLI Applications", jp: "CLIアプリケーション" }, tags: [] },
+    ],
+  },
+  {
+    id: "python-phase-6",
+    title: { en: "Phase 6 · Advanced Python", np: "Phase 6 · Advanced Python", jp: "Phase 6・高度なPython" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_18%,#ec4899)]",
+    days: [
+      { day: 31, title: { en: "Iterators & Generators", np: "Iterators र Generators", jp: "イテレータとジェネレータ" }, tags: [] },
     ],
   },
 ];

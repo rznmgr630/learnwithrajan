@@ -1,0 +1,894 @@
+/**
+ * DAY 31: Phase 6 · Advanced Python — Iterators & Generators
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1IteratorsAndGenerators = {
+  day: 31,
+  topic: "Phase 6 · Advanced Python — Iterators & Generators",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Iterables vs. Iterators: iter() and next()",
+      durationMinutes: 16,
+      explanation: `
+<b>Under the Hood of Python's Iteration Protocol</b><br/>
+Every Python developer uses <code>for</code> loops daily, but few understand the underlying low-level mechanisms powering them. How does Python step through a 100,000-item list, a dictionary, or a file object without crashing? The answer lies in the formal distinction between <b>Iterables</b> and <b>Iterators</b>.<br/><br/>
+
+<b>1. What is an Iterable?</b><br/>
+An <b>Iterable</b> is any Python object capable of returning its members one at a time. Lists, tuples, sets, dictionaries, and strings are all Iterables.
+<ul>
+  <li><b>Key Characteristic:</b> An Iterable implements the <code>__iter__()</code> dunder method. Passing an Iterable to <code>iter(obj)</code> returns a brand-new **Iterator** object.</li>
+  <li><b>Analogy:</b> An Iterable is like a physical <b>book</b> resting on a shelf. The book contains pages, but it does not track which page you are currently reading.</li>
+</ul>
+
+<b>2. What is an Iterator?</b><br/>
+An <b>Iterator</b> is a stateful stream object that remembers its current position during traversal.
+<ul>
+  <li><b>Key Characteristic:</b> An Iterator implements the <code>__next__()</code> dunder method. Calling <code>next(iterator)</code> fetches the next sequential item from the stream and advances the internal pointer.</li>
+  <li><b>StopIteration Exception:</b> When no more items remain in the stream, calling <code>next(iterator)</code> raises a <code>StopIteration</code> exception. This exception signals to loops that traversal is complete!</li>
+  <li><b>Analogy:</b> An Iterator is like a <b>bookmark</b> placed inside that book. It tracks exactly which page comes next and advances page-by-page as you read.</li>
+</ul>
+
+<b>3. How a <code>for</code> Loop Works Internally:</b><br/>
+When you write <code>for item in my_list:</code>, Python executes this exact low-level process under the hood:
+<ol>
+  <li>Calls <code>it = iter(my_list)</code> to obtain an Iterator from the Iterable.</li>
+  <li>Enters an infinite loop calling <code>item = next(it)</code> on every step.</li>
+  <li>Catches the <code>StopIteration</code> exception silently and exits the loop cleanly!</li>
+</ol>
+      `,
+      diagram: `
+THE ITERATION PROTOCOL (iter / next / StopIteration):
+
+  Iterable (e.g. [10, 20])
+         |
+         v  iter(iterable)  ---> Calls __iter__()
+  Iterator Object (Stateful Pointer)
+         |
+         +---> next(iterator) ---> Returns 10  (Pointer advances)
+         +---> next(iterator) ---> Returns 20  (Pointer advances)
+         +---> next(iterator) ---> RAISES StopIteration Exception!
+                                       |
+                                       v
+                           Caught by 'for' loop to exit cleanly!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Iterables, Iterators, iter(), and next()
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Manual Iteration with iter() and next()
+# ------------------------------------------------------------------------------
+
+package_manifest = ["TRK-101", "TRK-202", "TRK-303"] # Iterable (List)
+
+# 1. Obtain an Iterator object from the Iterable
+manifest_iterator = iter(package_manifest)
+
+print("--- BEGINNER: Manual Iterator Traversal ---")
+print("Iterable Object Type:", type(package_manifest).__name__) # list
+print("Iterator Object Type:", type(manifest_iterator).__name__) # list_iterator
+
+# 2. Step through the Iterator manually using next()
+print("\nFirst call  next():", next(manifest_iterator)) # 'TRK-101'
+print("Second call next():", next(manifest_iterator)) # 'TRK-202'
+print("Third call  next():", next(manifest_iterator)) # 'TRK-303'
+
+# 3. Fourth call triggers StopIteration exception because stream is exhausted
+print("\nAttempting 4th next() call on exhausted iterator:")
+try:
+    next(manifest_iterator)
+except StopIteration:
+    print("Caught StopIteration Exception: End of stream reached cleanly!")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Simulating a 'for' Loop with a 'while' Loop
+# ------------------------------------------------------------------------------
+
+def simulate_for_loop(iterable_collection) -> None:
+    """Recreates Python's internal 'for' loop mechanics using low-level iter/next."""
+    print("\n--- INTERMEDIATE: Recreating 'for' Loop Mechanics ---")
+
+    # Step 1: Obtain iterator
+    iterator = iter(iterable_collection)
+
+    # Step 2: Infinite traversal loop
+    while True:
+        try:
+            # Step 3: Fetch next element
+            item = next(iterator)
+            print(f"  Processed Item: {item}")
+        except StopIteration:
+            # Step 4: Catch exhaustion signal and break
+            print("  Loop terminated naturally via StopIteration.")
+            break
+
+simulate_for_loop(["HUB_A", "HUB_B", "HUB_C"])
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Custom Infinite Circular Route Iterator
+# ------------------------------------------------------------------------------
+
+class CircularHubRouteIterator:
+    \"\"\"
+    Custom Iterator class implementing __iter__ and __next__
+    to loop through delivery hubs infinitely.
+    \"\"\"
+    def __init__(self, hubs: list[str]):
+        self.hubs = hubs
+        self.index = 0
+
+    def __iter__(self):
+        return self # An Iterator returns itself as an Iterable
+
+    def __next__(self) -> str:
+        if not self.hubs:
+            raise StopIteration("Hub list is empty.")
+
+        current_hub = self.hubs[self.index]
+        # Modulo arithmetic cycles index infinitely (0 -> 1 -> 2 -> 0 -> 1...)
+        self.index = (self.index + 1) % len(self.hubs)
+        return current_hub
+
+print("\n--- ADVANCED: Custom Circular Iterator ---")
+circular_route = CircularHubRouteIterator(["CHICAGO", "AUSTIN", "SEATTLE"])
+
+# Pull 5 stops from the infinite circular iterator
+for stop_number in range(1, 6):
+    print(f"Stop #{stop_number}: {next(circular_route)}")
+      `,
+      keyTakeaways: [
+        "An **Iterable** (`__iter__`) can produce an Iterator; an **Iterator** (`__next__`) tracks stream state and yields items.",
+        "`iter(obj)` converts an Iterable into an Iterator.",
+        "`next(iterator)` returns the next sequential element and advances the internal pointer.",
+        "When an Iterator is exhausted, calling `next()` raises a `StopIteration` exception, which `for` loops catch automatically."
+      ],
+      commonMistakes: [
+        "<b>Confusing Iterables and Iterators:</b> Trying to call `next(my_list)` directly on a list without calling `iter(my_list)` first, which raises a `TypeError: 'list' object is not an iterator`.",
+        "<b>Expecting an Iterator to reset automatically:</b> Once an Iterator reaches `StopIteration`, it remains exhausted. You must call `iter(iterable)` again to start over from the beginning.",
+        "<b>Modifying the underlying collection during iterator traversal:</b> Appending or removing items from a list while actively stepping through its iterator causes skipped elements or crashes."
+      ],
+      quizzes: [
+        {
+          question: "What exception is raised when `next(iterator)` is called on a fully exhausted Iterator?",
+          options: [
+            "IndexError",
+            "StopIteration",
+            "KeyError",
+            "GeneratorExit"
+          ],
+          correctIndex: 1,
+          explanation: "When an Iterator reaches the end of its sequence, subsequent `next()` calls raise a `StopIteration` exception."
+        },
+        {
+          question: "What happens if you attempt to execute `next([1, 2, 3])` directly on a Python list without calling `iter()` first?",
+          options: [
+            "It returns the first element `1`.",
+            "It raises a `TypeError` because a list is an Iterable, not an Iterator.",
+            "It raises an `IndexError`.",
+            "It automatically converts the list into a generator."
+          ],
+          correctIndex: 1,
+          explanation: "Lists are Iterables. To call `next()`, you must first convert the list into an Iterator using `iter(my_list)`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Generator Functions and the yield Keyword",
+      durationMinutes: 20,
+      explanation: `
+<b>Stateful Streaming Functions without Memory Bloat</b><br/>
+When processing data streams—such as reading a 5,000,000-line server log file or generating prime numbers—building and returning a full list in memory consumes gigabytes of RAM and crashes host systems. **Generator Functions** allow you to stream data one item at a time lazily using the **<code>yield</code>** keyword.<br/><br/>
+
+<b>1. What is a Generator Function?</b><br/>
+A Generator Function looks like a standard Python function, but instead of using <code>return</code> to send back a single final value and terminate, it uses the <code>yield</code> keyword.<br/>
+<code>def package_stream():</code><br/>
+<code>    yield "TRK-101" # Pauses execution and returns "TRK-101"</code><br/>
+<code>    yield "TRK-202" # Resumes execution, yields "TRK-202", and pauses again!</code><br/><br/>
+
+<b>2. How <code>yield</code> Works (The Execution Pause & Resume Mechanism):</b>
+<ul>
+  <li>When a generator function is called, <b>none of its code runs immediately</b>. Instead, it returns a special **Generator Object** (which is a specialized Iterator).</li>
+  <li>When <code>next(generator)</code> or a <code>for</code> loop requests a value, execution runs until it hits a <code>yield</code> statement.</li>
+  <li>The <code>yield</code> statement **freezes the function's entire execution state** (local variables, line pointer, execution flags) and yields the value to the caller.</li>
+  <li>On the next <code>next()</code> call, execution resumes immediately at the line *after* the <code>yield</code> statement, preserving all local variable states!</li>
+</ul>
+
+<b>Real-World Logistics Analogy: On-Demand Printing Machine</b><br/>
+Think of a standard function returning a list as printing a 50,000-page shipping manifest all at once, stacking a huge pile of paper on your desk. A Generator Function is an **on-demand printer** that prints a single page only when a worker pushes a button. The printer sits idle (using no extra paper or desk space) until the next page is requested.
+      `,
+      diagram: `
+GENERATOR EXECUTION & PAUSE/RESUME FLOW:
+
+  def count_stream():
+      print("Start")
+      yield 1    <--- PAUSES EXECUTION & SAVES LOCAL STATE!
+      print("Resume")
+      yield 2    <--- PAUSES EXECUTION & SAVES LOCAL STATE!
+
+  Execution:
+  gen = count_stream()    ---> Creates Generator Object (No code executes yet)
+  next(gen)               ---> Prints "Start", Yields 1, Pauses at Line 3
+  next(gen)               ---> Prints "Resume", Yields 2, Pauses at Line 5
+  next(gen)               ---> Raises StopIteration Exception!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Generator Functions and the yield Keyword
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Generator Function and Pause/Resume Mechanics
+# ------------------------------------------------------------------------------
+
+def simple_hub_generator():
+    """Demonstrates function pausing and local state preservation using yield."""
+    print("  [Gen Engine] Starting generator... Navigating to Hub 1")
+    yield "CHICAGO_HUB"
+
+    print("  [Gen Engine] Resuming... Navigating to Hub 2")
+    yield "AUSTIN_HUB"
+
+    print("  [Gen Engine] Resuming... Navigating to Hub 3")
+    yield "SEATTLE_HUB"
+    print("  [Gen Engine] Generator execution completed.")
+
+print("--- BEGINNER: Generator Object Creation & Manual Steps ---")
+
+# Step 1: Calling the generator function returns a Generator Object instantly
+hub_stream = simple_hub_generator()
+print("Returned Object Type:", type(hub_stream).__name__) # 'generator'
+
+# Step 2: Step through generator using next()
+print("\nFetching Value 1:")
+v1 = next(hub_stream)
+print("  Caller Received:", v1)
+
+print("\nFetching Value 2:")
+v2 = next(hub_stream)
+print("  Caller Received:", v2)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Stateful Streaming Loop Generator
+# ------------------------------------------------------------------------------
+
+def generate_package_tracking_series(prefix: str, start_id: int, count: int):
+    """Generates a series of tracking numbers dynamically on-demand."""
+    current_id = start_id
+    generated_so_far = 0
+
+    while generated_so_far < count:
+        formatted_code = f"{prefix}-{current_id:04d}"
+        yield formatted_code # Yields formatted string and pauses loop state
+
+        # State variables persist across yield pauses!
+        current_id += 10
+        generated_so_far += 1
+
+print("\n--- INTERMEDIATE: Stateful Loop Streaming ---")
+for tracking_code in generate_package_tracking_series("TRK", 100, 4):
+    print("Streamed Code:", tracking_code)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: High-Throughput Log File Streaming Parser
+# ------------------------------------------------------------------------------
+
+def stream_filtered_log_events(log_lines: list[str], target_level: str):
+    \"\"\"
+    Generator pipeline filtering high-throughput server log streams line-by-line,
+    consuming zero temporary list memory.
+    \"\"\"
+    print(f"\n--- ADVANCED: Streaming Log Filter (Target: {target_level}) ---")
+
+    for line_number, raw_line in enumerate(log_lines, start=1):
+        clean_line = raw_line.strip()
+        if f"[{target_level}]" in clean_line:
+            # Yield structured dict without storing full dataset in RAM
+            yield {
+                "line_number": line_number,
+                "level": target_level,
+                "message": clean_line
+            }
+
+# Mock 1,000,000-line server log stream
+mock_logs = [
+    "2026-10-05 [INFO] System startup initialized",
+    "2026-10-05 [WARN] Weight sensor temperature drift detected",
+    "2026-10-05 [ERROR] Package TRK-9082 missing from conveyer bay",
+    "2026-10-05 [INFO] Dispatch queue synchronized",
+    "2026-10-05 [ERROR] Database write socket timeout"
+]
+
+# Consume error stream lazily
+error_stream = stream_filtered_log_events(mock_logs, target_level="ERROR")
+
+for error_event in error_stream:
+    print(f"  Alert on Line {error_event['line_number']}: {error_event['message']}")
+      `,
+      keyTakeaways: [
+        "Generator functions use `yield` instead of `return` to stream values lazily on-demand.",
+        "Calling a generator function returns a **Generator Object**; no code inside the function executes until `next()` is invoked.",
+        "The `yield` keyword pauses execution and saves the function's entire local variable state.",
+        "Generators implement the Iterator protocol, throwing `StopIteration` automatically upon completion."
+      ],
+      commonMistakes: [
+        "<b>Expecting a generator function to return a list:</b> Writing `result = my_generator_func()` and expecting a populated list instead of a Generator Object.",
+        "<b>Using `return` instead of `yield`:</b> Using `return` terminates the function immediately and prevents yielding subsequent items.",
+        "<b>Attempting to re-use an exhausted generator:</b> Once a generator finishes yielding all items, it cannot be restarted. You must call the generator function again to instantiate a fresh generator object."
+      ],
+      quizzes: [
+        {
+          question: "What happens when Python encounters a `yield` keyword inside a generator function?",
+          options: [
+            "It terminates the function permanently and clears all local variables.",
+            "It yields the value to the caller, freezes the function's local execution state, and pauses execution until the next value is requested.",
+            "It converts the function into a dictionary.",
+            "It restarts the function from line 1."
+          ],
+          correctIndex: 1,
+          explanation: "`yield` returns the current value and pauses function execution while preserving local variable states until `next()` is called again."
+        },
+        {
+          question: "What is returned when you call a generator function directly (e.g., `gen = my_generator_function()`)?",
+          options: [
+            "The first value yielded by the function.",
+            "A populated list of all values.",
+            "A lazy Generator Object (Iterator).",
+            "`None`."
+          ],
+          correctIndex: 2,
+          explanation: "Calling a generator function returns a lazy Generator Object without executing any code until `next()` or a loop consumes it."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Generator Expressions vs. List Comprehensions",
+      durationMinutes: 18,
+      explanation: `
+<b>Memory-Efficient Inline Streaming Syntax</b><br/>
+In Day 10, we learned List Comprehensions: <code>[x * 2 for x in data]</code>. List Comprehensions build and store the entire resulting list in memory at once. When you only need to process items one by one in a loop, storing the full list in RAM is wasteful.<br/><br/>
+
+A <b>Generator Expression</b> provides the exact same concise syntax as a List Comprehension, but uses **parentheses <code>(...)</code>** instead of square brackets <code>[...]</code>!<br/><br/>
+
+<b>1. Structural Comparison:</b>
+<ul>
+  <li><b>List Comprehension (Eager Evaluation):</b><br/>
+  <code>nums_list = [x * 2 for x in range(1_000_000)]</code><br/>
+  <i>Memory:</i> Eagerly allocates ~8 MB of RAM instantly to store 1,000,000 integers in memory.</li>
+  <li><b>Generator Expression (Lazy Evaluation):</b><br/>
+  <code>nums_gen = (x * 2 for x in range(1_000_000))</code><br/>
+  <i>Memory:</i> Lazily allocates ~120 Bytes of RAM! Generates values one-by-one as requested.</li>
+</ul>
+
+<b>2. Syntax Rule for Function Arguments:</b><br/>
+When passing a Generator Expression directly as the single argument to a function (like <code>sum()</code>, <code>max()</code>, or <code>min()</code>), you can omit the extra outer parentheses:<br/>
+<code>total_weight = sum(pkg["weight"] for pkg in package_list) # Clean & Memory Efficient!</code>
+      `,
+      diagram: `
+LIST COMPREHENSION vs GENERATOR EXPRESSION:
+
+  List Comprehension:      [ x * 2 for x in range(1_000_000) ]
+                           |
+                           v
+               [ EAGER EVALUATION: Allocates 8 MB RAM ]
+
+  Generator Expression:   ( x * 2 for x in range(1_000_000) )
+                           |
+                           v
+               [ LAZY EVALUATION: Allocates ~120 Bytes RAM ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Generator Expressions vs List Comprehensions
+# ==============================================================================
+
+import sys
+
+# ------------------------------------------------------------------------------
+# Beginner: Syntax and Memory Footprint Comparison
+# ------------------------------------------------------------------------------
+
+data_range = range(100_000)
+
+# 1. List Comprehension (Eager - Square Brackets [...])
+eager_list = [x * 2 for x in data_range]
+
+# 2. Generator Expression (Lazy - Parentheses (...))
+lazy_gen = (x * 2 for x in data_range)
+
+print("--- BEGINNER: Memory Footprint Comparison ---")
+print("Eager List Size (bytes) :", sys.getsizeof(eager_list)) # ~800,000+ bytes!
+print("Lazy Gen Size (bytes)   :", sys.getsizeof(lazy_gen))   # ~120 bytes!
+
+print("\nConsuming First 2 Values from Generator Expression:")
+print("  First  Value:", next(lazy_gen)) # 0
+print("  Second Value:", next(lazy_gen)) # 2
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Inline Aggregations with sum(), max(), min()
+# ------------------------------------------------------------------------------
+
+package_records = [
+    {"id": "TRK-101", "weight_lbs": 14.5},
+    {"id": "TRK-102", "weight_lbs": 88.0},
+    {"id": "TRK-103", "weight_lbs": 22.1}
+]
+
+print("\n--- INTERMEDIATE: Inline Function Aggregations ---")
+
+# Passing generator expression directly into sum() without extra outer parentheses
+total_weight = sum(pkg["weight_lbs"] for pkg in package_records)
+
+# Passing generator expression into max()
+heaviest_weight = max(pkg["weight_lbs"] for pkg in package_records)
+
+print(f"Total Fleet Weight  : {total_weight} lbs")
+print(f"Heaviest Parcel     : {heaviest_weight} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Pipeline Chaining with Generator Expressions
+# ------------------------------------------------------------------------------
+
+def process_large_telemetry_dataset():
+    \"\"\"
+    Chains multiple generator expressions together to build a multi-stage
+    data processing pipeline with near-zero memory footprint.
+    \"\"\"
+    print("\n--- ADVANCED: Chained Generator Pipeline ---")
+
+    raw_sensor_readings = ["  12.5_lbs  ", "  88.2_lbs  ", "  CORRUPTED  ", "  5.0_lbs  "]
+
+    # Stage 1 Generator: Strip whitespace
+    stage1_cleaned = (s.strip() for s in raw_sensor_readings)
+
+    # Stage 2 Generator: Filter non-corrupted numeric items
+    stage2_filtered = (s for s in stage1_cleaned if "lbs" in s)
+
+    # Stage 3 Generator: Parse float weight numbers
+    stage3_parsed = (float(s.replace("_lbs", "")) for s in stage2_filtered)
+
+    # Final Stage: Consume pipeline using sum()
+    total_parsed_weight = sum(stage3_parsed)
+
+    print("Final Total Weight Processed via Chained Pipeline:", total_parsed_weight, "lbs")
+
+process_large_telemetry_dataset()
+      `,
+      keyTakeaways: [
+        "Generator Expressions use parentheses `(...)` and evaluate lazily on-demand.",
+        "List Comprehensions `[...]` evaluate eagerly, allocating memory for the entire list immediately.",
+        "Generator Expressions use negligible memory (~120 bytes) regardless of dataset size.",
+        "Pass generator expressions directly into aggregation functions like `sum(x for x in data)` without extra parentheses."
+      ],
+      commonMistakes: [
+        "<b>Using List Comprehensions when a Generator Expression is sufficient:</b> Writing `sum([x for x in data])` allocates a temporary list in memory before summing, whereas `sum(x for x in data)` streams values with zero memory overhead.",
+        "<b>Trying to index a Generator Expression:</b> Writing `gen[0]` raises a `TypeError` because generators are unindexed streams. Use `next(gen)` or a loop.",
+        "<b>Re-using an exhausted Generator Expression:</b> Expecting a generator expression assigned to a variable to yield values a second time after a loop has already consumed it."
+      ],
+      quizzes: [
+        {
+          question: "What type of object is created by evaluating `(x ** 2 for x in range(10))`?",
+          options: [
+            "A Tuple",
+            "A List",
+            "A Generator Expression (Generator Object)",
+            "A Set"
+          ],
+          correctIndex: 2,
+          explanation: "Parentheses surrounding a comprehension syntax construct a lazy Generator Expression."
+        },
+        {
+          question: "Which expression is the most memory-efficient way to compute the maximum value in a 10,000,000-item dataset?",
+          options: [
+            "`max([x.weight for x in dataset])`",
+            "`max(x.weight for x in dataset)`",
+            "`max(list(x.weight for x in dataset))`",
+            "`max(tuple(x.weight for x in dataset))`"
+          ],
+          correctIndex: 1,
+          explanation: "`max(x.weight for x in dataset)` uses a Generator Expression, streaming values one by one without allocating memory for a 10,000,000-item list."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Lazy Evaluation and Memory-Efficient Pipelines",
+      durationMinutes: 14,
+      explanation: `
+<b>Processing Big Data Streams with Minimal Memory Footprint</b><br/>
+The core philosophy behind iterators and generators is **Lazy Evaluation** — postponing computation until the exact moment a value is required by the caller. This is the opposite of **Eager Evaluation**, which computes all values up front.<br/><br/>
+
+<b>1. Why Lazy Evaluation Matters:</b>
+<ul>
+  <li><b>Unlimited Data Streams:</b> You can model infinite sequences (e.g., streaming real-time IoT sensor telemetry or generating infinite Fibonacci numbers) without running out of RAM or crashing!</li>
+  <li><b>Early Exit Savings:</b> If you search a 10,000,000-item file for a specific error code and find it on line 5, a lazy generator stops reading immediately, saving 9,999,995 unnecessary file read operations!</li>
+  <li><b>Low Memory Footprint:</b> Enables processing 50 GB log files on a laptop with only 8 GB of RAM.</li>
+</ul>
+
+<b>2. Generator Pipeline Architecture:</b><br/>
+By chaining multiple generator functions together (passing the output generator of Stage 1 as the input iterator to Stage 2), you construct modular, composable processing pipelines.<br/><br/>
+
+<b>Real-World Analogy: Assembly Line Conveyor Belts</b><br/>
+Instead of Station 1 building 10,000 car frames and dumping them into a giant warehouse before Station 2 paints them, Station 1 builds <i>one</i> frame, hands it directly to Station 2 to paint, and hands it to Station 3 to install tires. The car moves continuously through the pipeline one unit at a time.
+      `,
+      diagram: `
+LAZY GENERATOR PIPELINE ARCHITECTURE:
+
+  [ Disk Log File ]
+         |
+         v  stream_lines(file)              (Stage 1 Generator)
+  [ Line Stream ]
+         |
+         v  filter_errors(lines)            (Stage 2 Generator)
+  [ Error Line Stream ]
+         |
+         v  parse_json(error_lines)         (Stage 3 Generator)
+  [ Structured Error Dict Stream ]
+         |
+         v  for record in pipeline:         (Consumer - Pulls 1 item at a time!)
+  [ Terminal Output / DB Write ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Lazy Evaluation and Pipeline Architecture
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Infinite Generator Stream
+# ------------------------------------------------------------------------------
+
+def infinite_sensor_ticker():
+    """Generates an infinite sequence of simulated sensor reading IDs."""
+    tick_id = 1
+    while True:
+        yield f"SENSOR_TICK_{tick_id:06d}"
+        tick_id += 1
+
+print("--- BEGINNER: Infinite Lazy Stream ---")
+ticker = infinite_sensor_ticker()
+
+# Pulling 3 values from an infinite stream safely!
+print("Pull 1:", next(ticker))
+print("Pull 2:", next(ticker))
+print("Pull 3:", next(ticker))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Stage Enterprise Data Pipeline
+# ------------------------------------------------------------------------------
+
+# Stage 1: Producer Generator (Streams raw lines)
+def stage1_read_lines(raw_data_lines: list[str]):
+    print("  [Stage 1] Reading line from source...")
+    for line in raw_data_lines:
+        yield line
+
+# Stage 2: Transformer Generator (Strips whitespace & normalizes)
+def stage2_sanitize_lines(line_stream):
+    for line in line_stream:
+        clean = line.strip()
+        if clean:
+            print("  [Stage 2] Sanitized line.")
+            yield clean
+
+# Stage 3: Filter Generator (Filters warning events)
+def stage3_filter_warnings(sanitized_stream):
+    for line in sanitized_stream:
+        if "[WARN]" in line:
+            print("  [Stage 3] Located WARN event!")
+            yield line
+
+print("\n--- ADVANCED: Multi-Stage Pipeline Execution ---")
+raw_logs = [
+    "  2026-10-05 [INFO] System startup  \n",
+    "  2026-10-05 [WARN] Low fuel alert on VAN-01  \n",
+    "  \n", # Empty line
+    "  2026-10-05 [WARN] Speed limit exceeded  \n"
+]
+
+# Construct pipeline by chaining generators
+pipeline = stage3_filter_warnings(
+    stage2_sanitize_lines(
+        stage1_read_lines(raw_logs)
+    )
+)
+
+print("\nPipeline Constructed. Consuming First Warning Item Lazily:")
+# Item 1 flows through Stage 1 -> Stage 2 -> Stage 3 on demand!
+first_warn = next(pipeline)
+print("Consumer Received:", first_warn)
+      `,
+      keyTakeaways: [
+        "Lazy evaluation postpones computation until the moment a value is requested by the consumer.",
+        "Generators enable infinite data streams because values are computed one-by-one without pre-allocating memory.",
+        "Chain generators together (`gen3(gen2(gen1(data)))`) to build modular, memory-efficient data pipelines.",
+        "Early exits in loops stop generator execution immediately, saving computational work."
+      ],
+      commonMistakes: [
+        "<b>Converting lazy generators into lists unnecessarily:</b> Writing `list(pipeline)` forces the entire generator to evaluate eagerly, destroying all memory savings.",
+        "<b>Forgetting that generators are single-pass:</b> Trying to iterate over a pipeline generator twice without re-instantiating the pipeline stage generators.",
+        "<b>Creating infinite loops with eager conversions:</b> Calling `list(infinite_generator())` hangs the Python interpreter permanently until memory is exhausted."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary operational advantage of Lazy Evaluation in Python data processing pipelines?",
+          options: [
+            "It automatically formats dictionary outputs into JSON.",
+            "It computes items one by one on-demand, allowing processing of massive or infinite datasets with negligible memory usage.",
+            "It prevents syntax errors.",
+            "It forces all functions to run on background threads."
+          ],
+          correctIndex: 1,
+          explanation: "Lazy evaluation computes elements strictly when needed, keeping memory usage constant regardless of dataset size."
+        },
+        {
+          question: "What happens if you execute `list(infinite_generator())` on a generator that never terminates?",
+          options: [
+            "Python returns the first 10 items automatically.",
+            "The program enters an infinite loop trying to build an infinite list until RAM is exhausted.",
+            "Python raises a `StopIteration` immediately.",
+            "The function converts to a dictionary."
+          ],
+          correctIndex: 1,
+          explanation: "`list()` evaluates eager conversion, attempting to consume the entire infinite stream into RAM until the process freezes or crashes."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "The yield from Statement and Subgenerators",
+      durationMinutes: 10,
+      explanation: `
+<b>Delegating Generator Iteration to Subgenerators</b><br/>
+When building complex generators, a generator function often needs to yield all values from an inner nested collection or another generator. Writing manual loops to re-yield elements adds clutter:<br/>
+<code># Manual Re-yielding Boilerplate:</code><br/>
+<code>for item in sub_generator():</code><br/>
+<code>    yield item</code><br/><br/>
+
+Python 3.3 introduced the <b><code>yield from</code></b> statement to delegate iteration directly to a subgenerator or iterable.<br/>
+<code># Clean Subgenerator Delegation:</code><br/>
+<code>yield from sub_generator()</code><br/><br/>
+
+<b>Why use <code>yield from</code>?</b>
+1. **Conciseness:** Replaces verbose 2-line `for` loops with a single self-documenting statement.
+2. **Transparent Bidirectional Channel:** `yield from` opens a direct bidirectional communication channel between the outer caller and the inner subgenerator, passing `send()`, `throw()`, and return values through transparently.
+      `,
+      diagram: `
+YIELD FROM SUBGENERATOR DELEGATION:
+
+  Outer Generator:                       Subgenerator:
+  def main_gen():                        def sub_gen():
+      yield from sub_gen()  ---------->      yield "A"
+                                             yield "B"
+
+  Caller receives "A" and "B" directly from sub_gen through main_gen!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Delegating Iteration with yield from
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Comparing Manual Loops vs yield from
+# ------------------------------------------------------------------------------
+
+def chicago_hubs():
+    yield "CHICAGO_NORTH"
+    yield "CHICAGO_SOUTH"
+
+def austin_hubs():
+    yield "AUSTIN_EAST"
+    yield "AUSTIN_WEST"
+
+# Manual re-yielding loop (Verbose)
+def combined_hubs_manual():
+    for hub in chicago_hubs():
+        yield hub
+    for hub in austin_hubs():
+        yield hub
+
+# Clean delegation with yield from (Pythonic)
+def combined_hubs_clean():
+    yield from chicago_hubs()
+    yield from austin_hubs()
+
+print("--- BEGINNER: yield from Delegation ---")
+print("Combined Hub Stream Output:")
+for hub in combined_hubs_clean():
+    print("  Hub:", hub)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Region Warehouse Inventory Generator
+# ------------------------------------------------------------------------------
+
+def stream_regional_warehouse_inventory(warehouse_tree: dict[str, list[str]]):
+    \"\"\"
+    Flattens a multi-region dictionary tree lazily using yield from.
+    \"\"\"
+    print("\n--- ADVANCED: Flattening Warehouse Hierarchy with yield from ---")
+
+    for region_name, package_list in warehouse_tree.items():
+        print(f"  [Delegator] Entering Region: {region_name}")
+        # Delegate yielding directly to the package list iterable!
+        yield from package_list
+
+# Test nested data structure
+regional_inventory = {
+    "MIDWEST_REGION": ["PKG-101", "PKG-102"],
+    "TEXAS_REGION": ["PKG-201", "PKG-202", "PKG-203"]
+}
+
+# Stream all packages lazily
+package_stream = stream_regional_warehouse_inventory(regional_inventory)
+
+for pkg in package_stream:
+    print("    Streamed Package:", pkg)
+      `,
+      keyTakeaways: [
+        "`yield from iterable` delegates iteration directly to a subgenerator or nested iterable.",
+        "It replaces manual `for item in subgen: yield item` loop boilerplate.",
+        "`yield from` establishes a transparent bidirectional channel for generator communication.",
+        "Use `yield from` to flatten nested data structures lazily."
+      ],
+      commonMistakes: [
+        "<b>Using `yield` when `yield from` was intended:</b> Writing `yield sub_generator()` yields the *subgenerator object itself* as a single item, rather than yielding its individual elements! Always use `yield from` to delegate iteration.",
+        "<b>Overcomplicating simple iterables:</b> Forgetting that `yield from` works on standard lists and tuples (`yield from [1, 2, 3]`), not just custom generator functions."
+      ],
+      quizzes: [
+        {
+          question: "What happens if you write `yield [1, 2, 3]` instead of `yield from [1, 2, 3]` inside a generator function?",
+          options: [
+            "It yields the numbers 1, 2, and 3 sequentially.",
+            "It yields the entire list object `[1, 2, 3]` as a single item.",
+            "It raises a `SyntaxError`.",
+            "It flattens the list automatically."
+          ],
+          correctIndex: 1,
+          explanation: "`yield [1, 2, 3]` yields the single list object. `yield from [1, 2, 3]` delegates iteration, yielding 1, 2, and 3 sequentially."
+        },
+        {
+          question: "Which statement best describes the primary purpose of the `yield from` keyword in Python?",
+          options: [
+            "To convert a generator into a string.",
+            "To delegate generator iteration directly to a subgenerator or nested iterable, eliminating manual loop boilerplate.",
+            "To catch exceptions inside generators.",
+            "To speed up integer addition."
+          ],
+          correctIndex: 1,
+          explanation: "`yield from` delegates iteration directly to an inner subgenerator or iterable."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which dunder method must an object implement to be classified as an Iterator in Python?",
+      options: [
+        "`__getitem__()`",
+        "`__next__()`",
+        "`__iter_next__()`",
+        "`__stream__()`"
+      ],
+      correctIndex: 1,
+      explanation: "An Iterator must implement `__next__()` (to return next items and advance state) and `__iter__()`."
+    },
+    {
+      question: "What exception signals to a `for` loop that an Iterator has completed yielding all items?",
+      options: [
+        "IndexError",
+        "StopIteration",
+        "GeneratorExit",
+        "KeyError"
+      ],
+      correctIndex: 1,
+      explanation: "Iterators raise a `StopIteration` exception when exhausted, which `for` loops catch to exit cleanly."
+    },
+    {
+      question: "What happens to the local variables of a generator function when a `yield` statement is executed?",
+      options: [
+        "All local variables are deleted from memory.",
+        "The function's local execution state and variables are frozen and saved in memory until the next `next()` call.",
+        "All variables are converted to strings.",
+        "The function restarts from line 1."
+      ],
+      correctIndex: 1,
+      explanation: "`yield` pauses function execution and saves all local variable states until `next()` is called again."
+    },
+    {
+      question: "Which syntax creates a lazy-evaluating Generator Expression?",
+      options: [
+        "`[x * 2 for x in data]`",
+        "`(x * 2 for x in data)`",
+        "`{x * 2 for x in data}`",
+        "`<x * 2 for x in data>`"
+      ],
+      correctIndex: 1,
+      explanation: "Parentheses `(...)` surrounding comprehension syntax construct a lazy Generator Expression."
+    },
+    {
+      question: "How much memory does a Generator Expression `(x for x in range(10_000_000))` allocate in Python?",
+      options: [
+        "Over 80 Megabytes of RAM",
+        "Negligible fixed memory (~120 Bytes) regardless of sequence size",
+        "1 Gigabyte of RAM",
+        "It depends on the CPU speed"
+      ],
+      correctIndex: 1,
+      explanation: "Generators evaluate lazily on-demand, allocating a tiny fixed memory footprint (~120 bytes) regardless of sequence size."
+    },
+    {
+      question: "What is the result of calling `sum(x for x in [1, 2, 3])`?",
+      options: [
+        "`6`",
+        "`[1, 2, 3]`",
+        "A Generator Object",
+        "`None`"
+      ],
+      correctIndex: 0,
+      explanation: "`sum()` consumes the Generator Expression stream lazily and returns the total sum `6`."
+    },
+    {
+      question: "Which keyword delegates iteration directly to a subgenerator or nested iterable in Python?",
+      options: [
+        "yield delegate",
+        "yield from",
+        "yield sub",
+        "pass from"
+      ],
+      correctIndex: 1,
+      explanation: "`yield from` delegates iteration directly to a subgenerator or nested iterable."
+    },
+    {
+      question: "What is 'Lazy Evaluation' in software data processing?",
+      options: [
+        "Evaluating code only when a user types an error.",
+        "Postponing item computation until the exact moment a value is requested by the consumer, conserving memory.",
+        "Pre-computing all values up front in memory.",
+        "Converting code to C binaries."
+      ],
+      correctIndex: 1,
+      explanation: "Lazy evaluation computes elements on-demand strictly when requested, conserving RAM."
+    }
+  ],
+  project: {
+    name: "High-Throughput Telemetry Stream Processor (Phase 1 Project)",
+    goal: "Build an enterprise-grade telemetry processing engine that uses custom iterators, generator functions, generator expressions, lazy pipeline chaining, and yield from delegation to stream 100,000+ logistics logs with zero memory overhead.",
+    brief: "Your global logistics platform requires an ultra-low-memory telemetry log pipeline (`telemetry_streamer.py`). The pipeline must stream raw log data lazily using generator functions, filter high-priority alerts with generator expressions, delegate regional hub subgenerator streams using `yield from`, and calculate real-time SLA metrics without allocating large lists in RAM.",
+    steps: [
+      "Create a script file named `telemetry_streamer.py` in your workspace.",
+      "Implement a custom Iterator class `CircularHubDispatcher` that implements `__iter__` and `__next__` to rotate through delivery hubs.",
+      "Write a generator function `stream_raw_telemetry_logs(records_count: int)` using `yield` to simulate a 100,000-line server log stream.",
+      "Write a generator function `filter_error_events(log_stream)` that filters for `[ERROR]` logs lazily.",
+      "Use `yield from` inside a multi-region aggregator function `stream_all_regional_logs(region_dict)` to delegate subgenerator iteration cleanly.",
+      "Build a chained pipeline combining your generators with a Generator Expression `(parse_json(log) for log in filtered_stream)`.",
+      "Measure and print memory usage using `sys.getsizeof()` to prove near-zero memory footprint during 100,000-item execution.",
+      "Run `python3 telemetry_streamer.py` in your integrated terminal and output a stream summary report."
+    ],
+    acceptance: [
+      "Log processing uses `yield` and generator expressions to achieve lazy evaluation.",
+      "Nested subgenerator iteration uses `yield from` delegation cleanly.",
+      "Memory usage remains constant (~120–200 bytes) regardless of whether processing 10 items or 100,000 items.",
+      "Executing `python3 telemetry_streamer.py` outputs a structured telemetry stream audit report without memory crashes or errors."
+    ],
+    stretch: [
+      "Integrate an infinite ticker generator for real-time live terminal dashboard streaming.",
+      "Annotate all generator functions with strict type hints (`Iterator[dict]`, `Generator[str, None, None]`) and pass static type verification."
+    ]
+  }
+};
