@@ -1,7 +1,7 @@
 import { CodeCompiler } from "@/components/learn/CodeCompiler";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 
-export const metadata = { title: "JavaScript & TypeScript Compiler" };
+export const metadata = { title: "JavaScript, TypeScript, Python & PHP Compiler" };
 
 export default function CompilerPage() {
   return (
