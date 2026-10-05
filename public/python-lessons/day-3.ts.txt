@@ -1,0 +1,870 @@
+```typescript
+/**
+ * DAY 03: Phase 0 · Python Foundations — Strings
+ * 
+ * Total Duration: 110 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase0Strings = {
+  day: 2,
+  topic: "Phase 0 · Python Foundations — Strings",
+  totalMinutes: 110,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Create Strings and Read Characters",
+      durationMinutes: 22,
+      explanation: `
+<b>Textual Data and Indexing Fundamentals</b><br/>
+In Python, text is represented using the string (<code>str</code>) data type. A string is an immutable sequence of Unicode characters. Every character in a string occupies a specific, ordered position called an <b>index</b>.<br/><br/>
+
+<b>1. Zero-Based Indexing:</b><br/>
+Python uses zero-based indexing. The first character of a string is located at index <code>0</code>, the second at index <code>1</code>, and the last character of a string of length $N$ is located at index $N - 1$.<br/><br/>
+
+<b>2. Negative Indexing (Reading Backwards):</b><br/>
+Python provides native support for negative indexing to read characters from the end of a string without needing to calculate string length:
+<ul>
+  <li><code>-1</code> points to the last character.</li>
+  <li><code>-2</code> points to the second to last character.</li>
+  <li><code>-N</code> points to the very first character.</li>
+</ul>
+
+<b>3. String Immutability and Index Errors:</b>
+<ul>
+  <li><b>IndexError:</b> Accessing an index outside the valid bounds (e.g., <code>tracking_id[50]</code> when length is 8) raises an immediate <code>IndexError: string index out of range</code>.</li>
+  <li><b>Immutability:</b> You cannot change a character in-place using indexing assignment (e.g., <code>tracking_id[0] = "X"</code> raises a <code>TypeError</code>). To modify text, you must build a new string object.</li>
+</ul>
+      `,
+      diagram: `
+POSITIVE INDEXING:
+  Text:       T   R   K   -   1   0   4   2
+  Index:      0   1   2   3   4   5   6   7
+
+NEGATIVE INDEXING:
+  Text:       T   R   K   -   1   0   4   2
+  Index:     -8  -7  -6  -5  -4  -3  -2  -1
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: String Creation and Character Indexing
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Reading Characters with Positive and Negative Indexing
+# ------------------------------------------------------------------------------
+
+tracking_id = "TRK-1042"
+
+print("--- BEGINNER: Character Access ---")
+print("Full Tracking ID:", tracking_id)
+print("First character (index 0):", tracking_id[0])        # 'T'
+print("Fourth character (index 3):", tracking_id[3])       # '-'
+print("Last character (index -1):", tracking_id[-1])        # '2'
+print("Second to last (index -2):", tracking_id[-2])        # '4'
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Safe Character Access Utility
+# ------------------------------------------------------------------------------
+
+def get_status_code_prefix(status_text: str) -> str:
+    \"\"\"
+    Extracts the initial prefix character from a status text.
+    Safely handles empty strings to prevent IndexError.
+    \"\"\"
+    if not status_text:
+        return "?"
+    return status_text[0]
+
+print("\n--- INTERMEDIATE: Safe Character Extraction ---")
+print("Prefix for 'DELIVERED':", get_status_code_prefix("DELIVERED"))
+print("Prefix for empty string:", get_status_code_prefix(""))
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Tracking Identifier Inspector
+# ------------------------------------------------------------------------------
+
+def inspect_package_id_structure(package_code: str) -> dict:
+    \"\"\"
+    Validates identifier conventions by reading structural index positions.
+    \"\"\"
+    print(f"\n--- ADVANCED: Inspecting Package Code [{package_code}] ---")
+    
+    if len(package_code) < 8:
+        return {"valid": False, "reason": "Code length must be at least 8 characters."}
+        
+    try:
+        prefix = package_code[0] + package_code[1] + package_code[2]
+        delimiter = package_code[3]
+        region_digit = package_code[4]
+        checksum_digit = package_code[-1]
+        
+        is_valid_format = (delimiter == "-") and region_digit.isdigit()
+        
+        return {
+            "valid": is_valid_format,
+            "prefix": prefix,
+            "delimiter": delimiter,
+            "region": region_digit,
+            "checksum": checksum_digit
+        }
+    except IndexError as err:
+        return {"valid": False, "reason": f"Index Error: {str(err)}"}
+
+# Test valid and invalid package codes
+print("Valid Code Inspection:", inspect_package_id_structure("PKG-40918"))
+print("Invalid Short Code Inspection:", inspect_package_id_structure("PK-1"))
+      `,
+      keyTakeaways: [
+        "Strings in Python are zero-indexed immutable character sequences.",
+        "Use positive indices (`0` to `len - 1`) to read from the start, and negative indices (`-1`, `-2`) to read from the end.",
+        "Accessing an index beyond the length of a string raises an `IndexError`.",
+        "Attempting to mutate a character via indexing (`text[0] = 'A'`) raises a `TypeError`."
+      ],
+      commonMistakes: [
+        "<b>Off-by-one errors:</b> Attempting to read index `len(text)` directly, which triggers an `IndexError` because indices range from `0` to `len - 1`.",
+        "<b>Attempting character mutation in-place:</b> Expecting `text[0] = 'B'` to modify the string.",
+        "<b>Failing to guard against empty strings:</b> Calling `text[0]` on an empty string `""` crashes with an `IndexError`."
+      ],
+      quizzes: [
+        {
+          question: "What character is returned by `code[-1]` when `code = 'SHIP-990'`?",
+          options: [
+            "'S'",
+            "'-'",
+            "'0'",
+            "'9'"
+          ],
+          correctIndex: 2,
+          explanation: "Negative index `-1` retrieves the very last character of a non-empty string, which is `'0'`."
+        },
+        {
+          question: "What exception is raised if you attempt to assign `text[0] = 'X'` on a string `text = 'hello'`?",
+          options: [
+            "IndexError",
+            "TypeError",
+            "ValueError",
+            "KeyError"
+          ],
+          correctIndex: 1,
+          explanation: "Because Python strings are immutable, attempting to modify individual characters in-place via assignment raises a `TypeError`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Extract Text with Slicing",
+      durationMinutes: 22,
+      explanation: `
+<b>Substrings and Extended Slicing Syntax</b><br/>
+Slicing allows you to extract a section (substring) from a string without raising errors when indices exceed length boundaries.<br/><br/>
+
+<b>Slicing Syntax: <code>string[start:stop:step]</code></b>
+<ul>
+  <li><code>start</code>: The starting index (inclusive). Defaults to <code>0</code> if omitted.</li>
+  <li><code>stop</code>: The stopping index (<b>exclusive</b> - character at this index is NOT included). Defaults to string length if omitted.</li>
+  <li><code>step</code>: The stride or increment between indices. Defaults to <code>1</code> if omitted.</li>
+</ul>
+
+<b>1. Basic Substring Extraction:</b><br/>
+<code>"LOGISTICS"[0:3]</code> evaluates to <code>"LOG"</code> (indices 0, 1, 2).<br/>
+<code>"LOGISTICS"[3:]</code> evaluates to <code>"ISTICS"</code> (from index 3 to the end).<br/><br/>
+
+<b>2. Extended Step and Reversing Strings:</b><br/>
+<code>"123456789"[::2]</code> evaluates to <code>"13579"</code> (every second character).<br/>
+<code>"TRACKER"[::-1]</code> evaluates to <code>"RECKART"</code> (reverses the string using a negative step).<br/><br/>
+
+<b>3. Slice Bounds Protection:</b><br/>
+Unlike direct character access with <code>text[50]</code> (which crashes with an <code>IndexError</code>), slicing handles out-of-bounds indices gracefully by returning an empty string or clipping to the actual bounds (e.g., <code>"ABC"[0:100]</code> evaluates to <code>"ABC"</code>).
+      `,
+      diagram: `
+SLICING BOUNDARIES (Exclusive Stop):
+  Text:      P   A   C   K   A   G   E
+  Index:     0   1   2   3   4   5   6   7
+
+  Slice [0:4] ---> "PACK" (Includes 0, 1, 2, 3 | Excludes 4)
+  Slice [4:]  ---> "AGE"  (Includes 4, 5, 6)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: String Slicing and Pattern Extraction
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Substrings and Step Modifiers
+# ------------------------------------------------------------------------------
+
+raw_code = "ORD-2026-CHICAGO-992"
+
+prefix = raw_code[0:3]          # Extract 'ORD'
+year = raw_code[4:8]            # Extract '2026'
+location = raw_code[9:16]       # Extract 'CHICAGO'
+suffix = raw_code[17:]          # Extract '992'
+
+print("--- BEGINNER: Structural Slicing ---")
+print("Prefix:", prefix)
+print("Year:", year)
+print("Location:", location)
+print("Suffix:", suffix)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: String Reversal and Omitted Defaults
+# ------------------------------------------------------------------------------
+
+tracking_str = "DELIVERY"
+
+# Omit start/stop to slice entire string with step -1 (Reversal)
+reversed_str = tracking_str[::-1]
+
+print("\n--- INTERMEDIATE: Reversal & Step Slicing ---")
+print("Original:", tracking_str)
+print("Reversed:", reversed_str)
+print("Every 2nd char:", tracking_str[::2])
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Tracking Number Segment Parser
+# ------------------------------------------------------------------------------
+
+def parse_shipping_label_barcode(barcode: str) -> dict:
+    \"\"\"
+    Parses a fixed-format logistics barcode into system fields using safe slicing.
+    
+    Format Standard (18 chars):
+    [0:3] Vendor Code | [3:7] Hub ID | [7:15] Serial Number | [15:18] Country
+    \"\"\"
+    print(f"\n--- ADVANCED: Parsing Barcode [{barcode}] ---")
+    
+    # Slicing handles variable length safely without throwing IndexError
+    vendor_code = barcode[0:3]
+    hub_id = barcode[3:7]
+    serial_number = barcode[7:15]
+    country_code = barcode[15:18]
+    
+    is_complete_barcode = len(barcode) == 18
+    
+    return {
+        "raw_barcode": barcode,
+        "is_complete": is_complete_barcode,
+        "vendor": vendor_code if vendor_code else "UNKNOWN",
+        "hub": hub_id if hub_id else "UNASSIGNED",
+        "serial": serial_number,
+        "country": country_code if country_code else "USA"
+    }
+
+# Execute barcode extraction
+print(parse_shipping_label_barcode("FEDHUB881920391USA"))
+print(parse_shipping_label_barcode("FEDHUB")) # Truncated barcode testing
+      `,
+      keyTakeaways: [
+        "Slicing syntax uses `[start:stop:step]`, where `start` is inclusive and `stop` is exclusive.",
+        "Omitted slicing terms default to `start=0`, `stop=len(string)`, and `step=1`.",
+        "Use a negative step `[::-1]` to reverse a string.",
+        "Slicing out-of-bounds indices never raises an `IndexError`; it clips gracefully to valid boundaries."
+      ],
+      commonMistakes: [
+        "<b>Assuming the `stop` index is included in the output:</b> Slices stop immediately *before* the `stop` index.",
+        "<b>Confusing slice steps with indices:</b> Writing `text[2]` (reads one character) when `text[2:]` (extracts from index 2 to end) was intended.",
+        "<b>Overcomplicating string reversal:</b> Writing custom loops to reverse text instead of using `text[::-1]`."
+      ],
+      quizzes: [
+        {
+          question: "What is the output of `'LOGISTICS'[0:4]` in Python?",
+          options: [
+            "'LOGI'",
+            "'LOGIS'",
+            "'LOG'",
+            "'OGIS'"
+          ],
+          correctIndex: 0,
+          explanation: "Slicing `0:4` includes characters at indices 0, 1, 2, and 3 (stopping before index 4), yielding `'LOGI'`."
+        },
+        {
+          question: "What happens if you execute `'ABC'[0:100]`?",
+          options: [
+            "An `IndexError` is raised because index 100 is out of bounds.",
+            "It returns `'ABC'` by gracefully clipping the slice to the available length.",
+            "It returns `'ABC'` padded with 97 trailing space characters.",
+            "It returns `None`."
+          ],
+          correctIndex: 1,
+          explanation: "Unlike single character index lookup, string slicing automatically clips out-of-bounds end indices to string length without raising errors."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Normalize and Search Text with Methods",
+      durationMinutes: 22,
+      explanation: `
+<b>Cleaning and Querying Text Data</b><br/>
+Data captured from external APIs or manual user entry often contains inconsistent casing, unwanted trailing spaces, or invalid formatting. Python provides built-in string methods to inspect, normalize, and search strings.<br/><br/>
+
+<b>1. Normalization & Sanitization Methods:</b>
+<ul>
+  <li><code>strip()</code>, <code>lstrip()</code>, <code>rstrip()</code>: Removes leading/trailing whitespace (spaces, tabs, newlines).</li>
+  <li><code>upper()</code>, <code>lower()</code>, <code>title()</code>: Normalizes letter casing.</li>
+  <li><code>replace(old, new)</code>: Returns a new string with all occurrences of <code>old</code> replaced by <code>new</code>.</li>
+</ul>
+
+<b>2. Searching & Membership Methods:</b>
+<ul>
+  <li><code>in</code> operator: Returns <code>True</code> if a substring exists inside a string (e.g., <code>"EXPRESS" in status_str</code>).</li>
+  <li><code>find(sub)</code>: Returns the starting index of the first occurrence of <code>sub</code>, or <code>-1</code> if not found.</li>
+  <li><code>startswith(prefix)</code> / <code>endswith(suffix)</code>: Checks structural start/end boundaries returning boolean flags.</li>
+</ul>
+
+<b>3. Splitting & Joining Text:</b>
+<ul>
+  <li><code>split(separator)</code>: Breaks a string into a list of substrings separated by the delimiter.</li>
+  <li><code>join(iterable)</code>: Joins elements of a list into a single string separated by the target string.</li>
+</ul>
+      `,
+      diagram: `
+INPUT TEXT SANITIZATION PIPELINE:
+  Raw Input:       "   trk-9082-chicago\\n "
+                       |
+                       v  .strip()
+  Clean Spaces:    "trk-9082-chicago"
+                       |
+                       v  .upper()
+  Normalized Case: "TRK-9082-CHICAGO"
+                       |
+                       v  .split("-")
+  List Output:     ["TRK", "9082", "CHICAGO"]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: String Normalization and Search
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Strip and Case Normalization
+# ------------------------------------------------------------------------------
+
+dirty_status_input = "  in_transit_ground  \\n"
+clean_status = dirty_status_input.strip().upper()
+
+print("--- BEGINNER: Cleaning Text ---")
+print(f"Original Raw: '{dirty_status_input}'")
+print(f"Cleaned Normal: '{clean_status}'")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Substring Searching and Replacement
+# ------------------------------------------------------------------------------
+
+tracking_note = "Package held at Hub #4. Reason: Address incomplete."
+
+# Checking existence
+has_address_issue = "Address" in tracking_note
+hub_index = tracking_note.find("Hub #")
+
+# String replacement
+updated_note = tracking_note.replace("Hub #4", "Central Facility Chicago")
+
+print("\n--- INTERMEDIATE: Searching and Replacing ---")
+print("Contains address issue?", has_address_issue)
+print("Hub index position:", hub_index)
+print("Updated Note:", updated_note)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Address Line Sanitizer Engine
+# ------------------------------------------------------------------------------
+
+def normalize_delivery_address(raw_address: str) -> dict:
+    \"\"\"
+    Sanitizes, validates, and splits multi-line delivery street addresses 
+    into standardized logistics record components.
+    \"\"\"
+    print(f"\n--- ADVANCED: Address Normalization ---")
+    print(f"Raw Input Address:\\n{raw_address}")
+    
+    # Step 1: Strip outer whitespace
+    sanitized = raw_address.strip()
+    
+    # Step 2: Split address components by comma delimiter
+    parts = [part.strip().title() for part in sanitized.split(",") if part.strip()]
+    
+    if len(parts) < 3:
+        return {"success": False, "error": "Address must contain street, city, and state."}
+        
+    street = parts[0]
+    city = parts[1]
+    state_zip = parts[2].upper()
+    
+    # Step 3: Reassemble into a canonical single-line shipping address
+    canonical_address = ", ".join([street, city, state_zip])
+    
+    return {
+        "success": True,
+        "canonical_address": canonical_address,
+        "street": street,
+        "city": city,
+        "state_zip": state_zip,
+        "is_po_box": "Po Box" in street or "P.O. Box" in street
+    }
+
+# Test multi-line address input
+dirty_addr = "  1042 North River Road,   suite 400,  chicago, il 60611 \\n"
+print("\nNormalized Address Result:", normalize_delivery_address(dirty_addr))
+      `,
+      keyTakeaways: [
+        "String methods always return new string objects; they do not mutate strings in-place.",
+        "Use `strip()` to remove leading and trailing whitespace.",
+        "Use `split()` to divide text into a list, and `join()` to concatenate lists back into strings.",
+        "Use `in`, `startswith()`, and `endswith()` for conditional string inspection."
+      ],
+      commonMistakes: [
+        "<b>Assuming string methods mutate strings in-place:</b> Calling `text.strip()` without reassigning `text = text.strip()` leaves `text` unchanged.",
+        "<b>Using `find()` for boolean checks instead of `in`:</b> Writing `if text.find('a') != -1:` instead of `if 'a' in text:`.",
+        "<b>Passing non-string elements to `join()`:</b> Calling `','.join([1, 2, 3])` causes a `TypeError`. Elements must be converted to strings first."
+      ],
+      quizzes: [
+        {
+          question: "What happens to the variable `s` when executing `s = '  hello  '; s.strip()`?",
+          options: [
+            "`s` becomes `'hello'`.",
+            "`s` remains `'  hello  '` because string methods return a new string and do not mutate in-place.",
+            "`s` becomes `None`.",
+            "A `TypeError` is raised."
+          ],
+          correctIndex: 1,
+          explanation: "Strings are immutable. Calling `s.strip()` returns a new stripped string, but unless reassigned (`s = s.strip()`), `s` remains unchanged."
+        },
+        {
+          question: "Which expression cleanly converts a list of strings `['CHI', 'NY', 'LA']` into a single string `'CHI | NY | LA'`?",
+          options: [
+            "['CHI', 'NY', 'LA'].join(' | ')",
+            "' | '.join(['CHI', 'NY', 'LA'])",
+            "join(' | ', ['CHI', 'NY', 'LA'])",
+            "concat(['CHI', 'NY', 'LA'], ' | ')"
+          ],
+          correctIndex: 1,
+          explanation: "In Python, `join()` is a method called on the separator string: `' | '.join(list_of_strings)`."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Format Messages with F-Strings",
+      durationMinutes: 22,
+      explanation: `
+<b>Modern String Interpolation (f-strings)</b><br/>
+Formatting text dynamically by concatenating strings with the <code>+</code> operator leads to messy, error-prone code. Python 3.6 introduced <b>Formatted String Literals (f-strings)</b>, which are now the industry standard.<br/><br/>
+
+<b>1. Basic f-string Syntax:</b><br/>
+Prefix the string literal with an <code>f</code> or <code>F</code>, and place Python expressions directly inside curly braces <code>{}</code>:<br/>
+<code>f"Package {package_id} status: {status}"</code><br/><br/>
+
+<b>2. Expressions and Function Calls Inside Braces:</b><br/>
+f-strings can evaluate expressions and run functions directly inside the placeholders:<br/>
+<code>f"Total Weight: {weight_kg * 2.20462:.2f} lbs"</code><br/>
+<code>f"Customer: {customer_name.upper()}"</code><br/><br/>
+
+<b>3. Format Specifiers:</b><br/>
+Format specifiers appear after a colon <code>:</code> inside the curly braces to control alignment, padding, and numerical precision:
+<ul>
+  <li><code>:.2f</code>: Rounds floating point number to 2 decimal places.</li>
+  <li><code>:>10</code>: Right-aligns text within a field width of 10 characters.</li>
+  <li><code>:<10</code>: Left-aligns text within a field width of 10 characters.</li>
+  <li><code>:05d</code>: Pads integer with leading zeros to fill 5 digits (e.g., <code>00042</code>).</li>
+</ul>
+      `,
+      diagram: `
+F-STRING STRUCTURE:
+  f"Package {pkg_id:>8} | Fee: ${fee:.2f}"
+   |        |     |           |   |
+   f-prefix |     |           |   +---> Format Specifier (2 decimal float)
+            |     +-----------> Format Specifier (Right-align width 8)
+            +-----------------> Python Variable Expression
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: String Formatting with F-Strings
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Basic Interpolation vs Formatting Specifiers
+# ------------------------------------------------------------------------------
+
+tracking_number = "TRK-9904"
+weight_lbs = 14.8291
+shipping_cost = 24.5
+
+# Basic interpolation
+basic_msg = f"Package {tracking_number} is scheduled for dispatch."
+
+# Format specifiers: precision and padding
+formatted_msg = f"Package {tracking_number} | Weight: {weight_lbs:.1f} lbs | Fee: ${shipping_cost:.2f}"
+
+print("--- BEGINNER: f-string Interpolation ---")
+print("Basic:", basic_msg)
+print("Formatted:", formatted_msg)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Alignment, Width, and Zero Padding
+# ------------------------------------------------------------------------------
+
+package_sequence_id = 42
+dest_city = "Chicago"
+
+# Padding sequence ID to 6 digits (000042) and aligning city column
+table_row = f"ID: {package_sequence_id:06d} | Destination: {dest_city:>12} | Status: OK"
+
+print("\n--- INTERMEDIATE: Alignment & Padding ---")
+print(table_row)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Customer Notification Dispatcher
+# ------------------------------------------------------------------------------
+
+from datetime import datetime
+
+def generate_dispatch_receipt(
+    customer_name: str, 
+    package_id: str, 
+    base_fee: float, 
+    tax_rate: float,
+    is_express: bool
+) -> str:
+    \"\"\"
+    Generates a production receipt using advanced f-string specifiers, 
+    expressions, and layout formatting.
+    \"\"\"
+    total_tax = base_fee * tax_rate
+    final_total = base_fee + total_tax
+    service_tier = "EXPRESS AIR" if is_express else "STANDARD GROUND"
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
+    # Multiline f-string with structured padding layout
+    receipt_template = (
+        f"{'='*40}\n"
+        f"{'LOGISTICS DISPATCH RECEIPT':^40}\n"
+        f"{'='*40}\n"
+        f"Date/Time : {timestamp}\n"
+        f"Customer  : {customer_name.title()}\n"
+        f"Package ID: {package_id}\n"
+        f"Tier      : {service_tier}\n"
+        f"{'-'*40}\n"
+        f"Base Fee  : ${base_fee:>8.2f}\n"
+        f"Tax       : ${total_tax:>8.2f}\n"
+        f"TOTAL DUE : ${final_total:>8.2f}\n"
+        f"{'='*40}"
+    )
+    
+    return receipt_template
+
+print("\n--- ADVANCED: Generated Dispatch Receipt ---")
+print(generate_dispatch_receipt("acme logistics corp", "PKG-88201", 149.99, 0.08, True))
+      `,
+      keyTakeaways: [
+        "f-strings (`f\"...\"`) provide concise, readable, and fast string formatting in modern Python.",
+        "Expressions, variable names, and function calls can be embedded directly inside `{}` placeholders.",
+        "Format specifiers control formatting: `:.2f` (float rounding), `:05d` (zero-padding), and `:>10` / `:<10` (text alignment).",
+        "Prefer f-strings over `%` formatting or `str.format()`."
+      ],
+      commonMistakes: [
+        "<b>Forgetting the leading `f` character:</b> Writing `"Package {tracking_id}"` outputs the literal text `"{tracking_id}"` without evaluating the variable.",
+        "<b>Misusing quote marks inside f-string expressions:</b> Reusing the exact same outer quote style inside expressions (e.g., `f"{data['key']}"` works, but `f"{data["key"]}"` can cause syntax errors in older Python versions).",
+        "<b>Overcomplicating basic string concatenation:</b> Writing `"Total: " + str(total) + " USD"` instead of `f"Total: {total} USD"`."
+      ],
+      quizzes: [
+        {
+          question: "What is the output of `f'{weight:.2f}'` when `weight = 12.3456`?",
+          options: [
+            "'12.3456'",
+            "'12.35'",
+            "'12.34'",
+            "'12'"
+          ],
+          correctIndex: 1,
+          explanation: "The format specifier `:.2f` rounds floating-point numbers to two decimal places, producing `'12.35'`."
+        },
+        {
+          question: "How do you zero-pad an integer variable `code = 7` to format it as `'00007'` using an f-string?",
+          options: [
+            "f'{code:05d}'",
+            "f'{code:pad5}'",
+            "f'{code:zeros(5)}'",
+            "f'{code:50}'"
+          ],
+          correctIndex: 0,
+          explanation: "The specifier `:05d` formats an integer (`d`) to have a total field width of 5, filling leading spaces with zeros (`0`)."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Use Escapes, Raw Strings, Unicode, and Multiline Text",
+      durationMinutes: 22,
+      explanation: `
+<b>Special Characters, Escaping, and Text Literals</b><br/>
+Handling real-world text requires working with special characters, file paths, Unicode symbols, and multi-line strings.<br/><br/>
+
+<b>1. Escape Sequences:</b><br/>
+Escape sequences start with a backslash <code>\\</code> to insert characters that are difficult or impossible to type directly:
+<ul>
+  <li><code>\\n</code>: Line feed / Newline.</li>
+  <li><code>\\t</code>: Horizontal tab.</li>
+  <li><code>\\\\</code>: Backslash literal.</li>
+  <li><code>\\'</code> / <code>\\"</code>: Quotes inside matching string boundaries.</li>
+</ul>
+
+<b>2. Raw Strings (<code>r"..."</code>):</b><br/>
+Prefixing a string literal with <code>r</code> disables escape character processing. Backslashes are treated as literal characters.<br/>
+<b>Primary Use Case:</b> Windows file paths (<code>r"C:\\Users\\Dispatch\\data"</code>) and regular expressions, where backslashes shouldn't be interpreted as escape sequences like <code>\\U</code> or <code>\\d</code>.<br/><br/>
+
+<b>3. Unicode and Internationalization:</b><br/>
+Python 3 strings support full Unicode out of the box. You can include foreign language characters, accents, and emojis directly in text or via Unicode hex escape codes (e.g., <code>"\\u2705"</code> evaluates to ✅).<br/><br/>
+
+<b>4. Triple-Quoted Multiline Strings (<code>\"\"\"...\"\"\"</code>):</b><br/>
+Triple quotes allow strings to span multiple lines, preserving line breaks and formatting. They are used for long textual content, templates, and docstrings.
+      `,
+      diagram: `
+ESCAPE PROCESSING vs RAW STRINGS:
+  Normal String:  "C:\\\\new_folder\\\\tracker" ---> Evaluates \\n as NEWLINE character!
+  
+  Raw String:     r"C:\\new_folder\\tracker"  ---> Preserves literal \\n backslash sequence.
+
+UNICODE SUPPORT:
+  Unicode Code:   "\\u2705 Delivery Complete" ---> Evaluates to "✅ Delivery Complete"
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Escape Sequences, Raw Strings, and Multiline Text
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Escapes vs Raw Strings
+# ------------------------------------------------------------------------------
+
+# Standard string with newline and tab escape sequences
+escaped_log = "Status: IN_TRANSIT\n\tHub: Chicago South\n\tNotes: \"On Schedule\""
+
+# Raw string for Windows file system paths
+windows_path = r"C:\new_shipments\tracker_logs\today.csv"
+
+print("--- BEGINNER: Escapes and Raw Strings ---")
+print("Escaped Output:\n", escaped_log)
+print("\nRaw Windows Path:", windows_path)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Unicode and Symbols in Status Formatting
+# ------------------------------------------------------------------------------
+
+# Using Unicode characters directly and via escape sequences
+status_ok = "Status: Delivered \u2705"            # Checkmark symbol
+status_alert = "Status: Delay Warning \u26A0\uFE0F" # Warning sign symbol
+
+print("\n--- INTERMEDIATE: Unicode Formatting ---")
+print(status_ok)
+print(status_alert)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multiline Email & System Log Generator
+# ------------------------------------------------------------------------------
+
+def generate_multiline_dispatch_manifest(
+    driver_name: str, 
+    routes: list[dict]
+) -> str:
+    \"\"\"
+    Generates a multiline manifest string formatted with Unicode status markers 
+    and escape controls for terminal output.
+    \"\"\"
+    print(f"\n--- ADVANCED: Generating Manifest for [{driver_name}] ---")
+    
+    # Triple-quoted multiline template
+    header = f\"\"\"
+    ==================================================
+    LOGISTICS DISPATCH MANIFEST - DRIVER: {driver_name.upper()}
+    GENERATED AT: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    ==================================================
+    \"\"\"
+    
+    body_lines = []
+    for route in routes:
+        symbol = "\u2705" if route["completed"] else "\u23F3" # Checkmark vs Hourglass
+        line = f" [{symbol}] Package #{route['id']} -> Destination: {route['dest']}\n     Path: r\"{route['path']}\""
+        body_lines.append(line)
+        
+    manifest_body = "\n".join(body_lines)
+    footer = "\n\nEnd of Manifest. Safe travels!"
+    
+    return header.strip() + "\n" + manifest_body + footer
+
+# Test data setup
+from datetime import datetime
+
+test_routes = [
+    {"id": "PKG-101", "dest": "Chicago, IL", "path": "C:\\routes\\chi.dat", "completed": True},
+    {"id": "PKG-102", "dest": "Naperville, IL", "path": "C:\\routes\\nap.dat", "completed": False}
+]
+
+print(generate_multiline_dispatch_manifest("Marcus Vance", test_routes))
+      `,
+      keyTakeaways: [
+        "Escape sequences (`\\n`, `\\t`, `\\\\`) allow inserting special formatting characters into strings.",
+        "Raw strings (`r\"...\"`) treat backslashes as literal characters; essential for Windows paths and Regular Expressions.",
+        "Python 3 strings natively support full Unicode characters and emojis directly or via `\\u` escape codes.",
+        "Triple quotes (`\"\"\"...\"\"\"` or `'''...'''`) create multiline strings that preserve line breaks."
+      ],
+      commonMistakes: [
+        "<b>Using standard strings for Windows file paths containing `\\n` or `\\t`:</b> Writing `"C:\\new_folder\\test"` translates `\\n` to a newline and `\\t` to a tab.",
+        "<b>Ending a raw string with a single trailing backslash:</b> Writing `r"C:\\folder\\"` causes a syntax error because the trailing backslash escapes the closing quote.",
+        "<b>Overusing escape sequences when triple quotes are cleaner:</b> Joining multi-line text with manual `\\n` escapes instead of using `\"\"\"` multiline blocks."
+      ],
+      quizzes: [
+        {
+          question: "Why should you use a raw string (`r'C:\\notes\\data'`) when defining Windows file system paths in Python?",
+          options: [
+            "Raw strings make file read operations run twice as fast.",
+            "Raw strings disable backslash escape processing, preventing sequences like `\\n` or `\\t` from corrupting the path string.",
+            "Raw strings automatically create the file directory if it does not exist.",
+            "Raw strings encrypt path strings for security."
+          ],
+          correctIndex: 1,
+          explanation: "In standard strings, `\\n` represents a newline and `\\t` represents a tab. Raw strings treat backslashes literally, preserving the exact path."
+        },
+        {
+          question: "Which syntax is used to define a multiline string that preserves line breaks without requiring manual `\\n` escape characters?",
+          options: [
+            "\"\"\" Line 1\nLine 2 \"\"\"",
+            "[ Line 1\nLine 2 ]",
+            "f' Line 1 \\n Line 2 '",
+            "raw(Line 1\nLine 2)"
+          ],
+          correctIndex: 0,
+          explanation: "Triple quotes (`\"\"\"` or `'''`) define multiline strings that naturally preserve line breaks across multiple lines."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "In Python, what is the character index of the last element in a non-empty string `s` of length 10?",
+      options: [
+        "10",
+        "9 (or -1)",
+        "0",
+        "-10"
+      ],
+      correctIndex: 1,
+      explanation: "Zero-based indexing means a string of length 10 has positive indices from 0 to 9. Negative index -1 also points to the last character."
+    },
+    {
+      question: "What is the output of `'DISPATCH'[2:5]`?",
+      options: [
+        "'SPA'",
+        "'SPA T'",
+        "'PAT'",
+        "'DIS'"
+      ],
+      correctIndex: 0,
+      explanation: "Slice `2:5` extracts characters at index 2 ('S'), index 3 ('P'), and index 4 ('A'), stopping before index 5."
+    },
+    {
+      question: "Which string method removes both leading and trailing whitespace from a string?",
+      options: [
+        "clean()",
+        "trim()",
+        "strip()",
+        "slice()"
+      ],
+      correctIndex: 2,
+      explanation: "The `strip()` method removes leading and trailing whitespace from strings."
+    },
+    {
+      question: "What specifier inside an f-string formats a float variable `price = 19.9` to output exactly `'19.90'`?",
+      options: [
+        "f'{price:.2f}'",
+        "f'{price:2}'",
+        "f'{price:float2}'",
+        "f'{price:$2}'"
+      ],
+      correctIndex: 0,
+      explanation: "The specifier `:.2f` formats floating-point numbers to fixed 2-decimal precision."
+    },
+    {
+      question: "What happens if you execute `text = 'python'; text[0] = 'P'`?",
+      options: [
+        "`text` becomes `'Python'`.",
+        "Python raises a `TypeError` because strings are immutable.",
+        "`text` becomes `None`.",
+        "Python raises an `IndexError`."
+      ],
+      correctIndex: 1,
+      explanation: "Strings are immutable. Attempting to modify a character in-place via assignment raises a `TypeError`."
+    },
+    {
+      question: "What will `len('Line1\\nLine2')` return?",
+      options: [
+        "11",
+        "12",
+        "10",
+        "2"
+      ],
+      correctIndex: 0,
+      explanation: "The escape sequence `\\n` represents a single newline character. The string contains 'Line1' (5) + '\\n' (1) + 'Line2' (5) = 11 characters total."
+    },
+    {
+      question: "How do you check if the string `'EXPRESS'` is present inside a variable `status_code`?",
+      options: [
+        "if status_code.contains('EXPRESS'):",
+        "if 'EXPRESS' in status_code:",
+        "if status_code.has('EXPRESS'):",
+        "if 'EXPRESS' == status_code:"
+      ],
+      correctIndex: 1,
+      explanation: "The `in` operator evaluates whether a substring exists within a target string."
+    },
+    {
+      question: "Which of the following creates a raw string literal?",
+      options: [
+        "raw('text')",
+        "r'text'",
+        "f'text'",
+        "str.raw('text')"
+      ],
+      correctIndex: 1,
+      explanation: "Prefixing a string with `r` or `R` creates a raw string literal where backslashes are treated as literal characters."
+    }
+  ],
+  project: {
+    name: "Logistics Label Formatter & Barcode Sanitizer (Phase 0 Project)",
+    goal: "Build a production-style string processing module for the delivery tracker that cleans messy external manifest strings, extracts structural barcode data, formats dispatch messages, and generates formatted manifest summaries.",
+    brief: "Your logistics application receives package records from various shipping hubs. The incoming text data contains extra spaces, mixed case text, messy address structures, and unformatted tracking IDs. You need to build a comprehensive string utility module (`string_formatter.py`) that normalizes barcode strings, extracts country/hub segments with slicing, formats financial summaries with f-strings, and prints clean dispatch labels.",
+    steps: [
+      "Create a script file named `string_formatter.py` in your workspace.",
+      "Define a raw dirty payload string containing mixed whitespace, legacy tags, and unformatted barcodes (e.g., `'  pkg-9901-chi_USA_express\\n '`).",
+      "Write a function `sanitize_identifier(raw_id: str) -> str` that strips whitespace, converts text to uppercase, and replaces underscores with hyphens using string methods.",
+      "Write a function `parse_barcode_segments(barcode: str) -> dict` that uses string slicing to extract structural fields: Vendor ID (indices `0:3`), Hub ID (`3:6`), and Serial Code (`6:`).",
+      "Implement a function `format_dispatch_label(tracking_id: str, destination: str, weight: float, cost: float) -> str` using f-strings with precision specifiers (`:.2f`), alignment padding, and Unicode status indicators.",
+      "Create a function `build_multiline_manifest(packages: list[dict]) -> str` that iterates over package records, builds formatted lines, and joins them into a single multiline string using `\"\"\"` templates and `\\n` joins.",
+      "Run the script in the integrated terminal using `python3 string_formatter.py` and print the output."
+    ],
+    acceptance: [
+      "The script cleans messy string inputs without throwing `IndexError` or `TypeError` exceptions.",
+      "Slicing logic correctly extracts barcode segments.",
+      "f-string outputs align text columns properly and round currency/weight fields to two decimal places.",
+      "The final dispatch manifest prints a structured multiline summary to the terminal."
+    ],
+    stretch: [
+      "Add validation logic using `.startswith()` and `.isalnum()` to reject malformed tracking numbers.",
+      "Implement raw string paths for saving generated manifests to a log directory path (`r'logs\\manifests\\today.txt'`)."
+    ]
+  }
+};
+
+```
