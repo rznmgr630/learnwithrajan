@@ -1,0 +1,872 @@
+/**
+ * DAY 27: Phase 5 · Python Standard Library — Functional & Utility Modules
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1FunctionalAndUtilityModules = {
+  day: 27,
+  topic: "Phase 5 · Python Standard Library — Functional & Utility Modules",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Functional Tools and Higher-Order Patterns with functools",
+      durationMinutes: 18,
+      explanation: `
+<b>Empowering Functions as First-Class Citizens</b><br/>
+In Python, functions are first-class objects—they can be passed into other functions, returned as values, and wrapped with enhanced behaviors. Python's built-in <code>functools</code> module provides a suite of higher-order tools designed to adapt, cache, and optimize functional workflows without adding clutter to business logic.<br/><br/>
+
+<b>1. Partial Function Application (<code>functools.partial</code>):</b><br/>
+<code>partial</code> allows you to freeze or "pre-bind" a subset of a function's arguments, creating a new, simpler callable object with a reduced parameter list.<br/>
+<i>Example:</i> If you have a general fee calculator <code>calculate_fee(base_rate, weight, tax_rate)</code>, you can create a dedicated Chicago fee calculator with fixed tax rates:<br/>
+<code>chicago_fee_calc = partial(calculate_fee, tax_rate=0.1025)</code><br/>
+Now, calling <code>chicago_fee_calc(base_rate=10.0, weight=5.0)</code> automatically applies the pre-bound Chicago tax rate!<br/><br/>
+
+<b>2. Memoization and Caching (<code>functools.lru_cache</code>):</b><br/>
+The Least Recently Used (LRU) cache decorator <code>@lru_cache(maxsize=128)</code> wraps expensive deterministic functions. When called with arguments it has seen before, <code>@lru_cache</code> bypasses function execution and returns the cached result in $O(1)$ time.<br/>
+<i>Use Case:</i> Caching geographical route distance lookups or tax rate tables across millions of package calculations.<br/><br/>
+
+<b>3. Preserving Function Metadata (<code>functools.wraps</code>):</b><br/>
+When writing custom decorators, wrapping an inner function causes its original name (<code>__name__</code>) and docstring (<code>__doc__</code>) to be overwritten by the decorator. Decorating inner wrapper functions with <code>@wraps(func)</code> preserves the original metadata for debugging and introspection.
+      `,
+      diagram: `
+LRU CACHE (functools.lru_cache) EXECUTION FLOW:
+
+  [ Function Call: compute_distance("CHI", "AUSTIN") ]
+                            |
+            +---------------+---------------+
+            |                               |
+     (In LRU Cache?)                 (Not in Cache)
+            |                               |
+            v                               v
+  [ CACHE HIT: Return ]           [ CACHE MISS: Compute ]
+  (Bypasses execution, $O(1)$)    (Executes & stores result)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: functools (partial, lru_cache, wraps)
+# ==============================================================================
+
+from functools import partial, lru_cache, wraps
+import time
+
+# ------------------------------------------------------------------------------
+# Beginner: Pre-Binding Arguments with functools.partial
+# ------------------------------------------------------------------------------
+
+def calculate_shipping_cost(base_fee: float, distance_miles: float, tax_rate: float) -> float:
+    """Calculates total shipping cost with base fee, distance, and tax."""
+    subtotal = base_fee + (distance_miles * 0.15)
+    return round(subtotal * (1.0 + tax_rate), 2)
+
+# Pre-bind the 'tax_rate' argument specifically for Illinois deliveries (10.25% tax)
+calculate_illinois_cost = partial(calculate_shipping_cost, tax_rate=0.1025)
+
+print("--- BEGINNER: functools.partial ---")
+# Call simplified function without specifying tax_rate repeatedly
+cost_1 = calculate_illinois_cost(base_fee=10.00, distance_miles=150.0)
+cost_2 = calculate_illinois_cost(base_fee=25.00, distance_miles=400.0)
+
+print("Illinois Route 1 Cost: $", cost_1)
+print("Illinois Route 2 Cost: $", cost_2)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Memoization with @lru_cache
+# ------------------------------------------------------------------------------
+
+@lru_cache(maxsize=64)
+def fetch_route_distance_miles(origin_hub: str, destination_hub: str) -> float:
+    """Simulates an expensive database route lookup with caching."""
+    # Simulate heavy computation/network delay
+    time.sleep(0.05)
+    distances = {
+        ("CHI", "AUS"): 980.5,
+        ("CHI", "SEA"): 1730.2,
+        ("AUS", "SEA"): 2120.8
+    }
+    return distances.get((origin_hub, destination_hub), 500.0)
+
+print("\n--- INTERMEDIATE: functools.lru_cache ---")
+
+start_time = time.time()
+# First call (Cache Miss - executes computation)
+dist_1 = fetch_route_distance_miles("CHI", "AUS")
+time_miss = time.time() - start_time
+
+start_time = time.time()
+# Second call with identical arguments (Cache Hit - $O(1)$ Instant Return!)
+dist_2 = fetch_route_distance_miles("CHI", "AUS")
+time_hit = time.time() - start_time
+
+print(f"First Call (Cache Miss) Time: {time_miss:.5f} sec | Distance: {dist_1} miles")
+print(f"Second Call (Cache Hit) Time: {time_hit:.5f} sec | Distance: {dist_2} miles")
+print("Cache Stats:", fetch_route_distance_miles.cache_info())
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Metadata-Preserving Audit Decorator
+# ------------------------------------------------------------------------------
+
+def audit_logistics_execution(func):
+    """Custom decorator preserving function metadata using @wraps."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"[AUDIT] Executing '{func.__name__}' with args: {args}, kwargs: {kwargs}")
+        result = func(*args, **kwargs)
+        print(f"[AUDIT] '{func.__name__}' completed successfully.")
+        return result
+    return wrapper
+
+@audit_logistics_execution
+def process_manifest_entry(tracking_id: str, status: str = "IN_TRANSIT") -> dict:
+    """Updates package manifest state."""
+    return {"tracking_id": tracking_id, "status": status}
+
+print("\n--- ADVANCED: functools.wraps Metadata Integrity ---")
+entry_output = process_manifest_entry("TRK-9001", status="DELIVERED")
+
+# Verification: __name__ and __doc__ remain intact despite decorator wrapping!
+print("Function Name Preserved:", process_manifest_entry.__name__) # 'process_manifest_entry'
+print("Docstring Preserved    :", process_manifest_entry.__doc__.strip())
+      `,
+      keyTakeaways: [
+        "Use `functools.partial` to create simplified callable functions with pre-bound arguments.",
+        "Decorate deterministic, high-frequency functions with `@lru_cache` to cache results in memory.",
+        "Always use `@wraps(func)` inside custom decorators to preserve original function names and docstrings.",
+        "Caching and partial binding reduce repetitive boilerplate code and optimize CPU performance."
+      ],
+      commonMistakes: [
+        "<b>Applying `@lru_cache` to non-deterministic functions:</b> Caching functions that depend on current system time or random values leads to stale, incorrect data.",
+        "<b>Caching functions with unhashable arguments:</b> Passing mutable objects like `list` or `dict` into `@lru_cache` decorated functions raises a `TypeError: unhashable type`.",
+        "<b>Omitting `@wraps` in custom decorators:</b> Overwriting inner function metadata (`__name__`), making debugging and introspection tools fail."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary benefit of using `functools.partial` in Python?",
+          options: [
+            "It runs functions asynchronously across multiple CPU cores.",
+            "It creates a new callable function with one or more arguments pre-bound to fixed values, simplifying function call signatures.",
+            "It converts function return values into JSON strings automatically.",
+            "It prevents exceptions from being raised inside function bodies."
+          ],
+          correctIndex: 1,
+          explanation: "`functools.partial` freezes a subset of function arguments, creating a simpler callable object."
+        },
+        {
+          question: "Why should custom function decorators decorate their inner wrapper functions with `@functools.wraps(func)`?",
+          options: [
+            "To prevent memory leaks.",
+            "To preserve the original function's name (`__name__`), docstring (`__doc__`), and signature metadata.",
+            "To force input arguments to become immutable tuples.",
+            "To enable automatic parameter type checking."
+          ],
+          correctIndex: 1,
+          explanation: "`@wraps` copies original function attributes (`__name__`, `__doc__`, etc.) onto the wrapper function."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Efficient Function-Based Operations with operator",
+      durationMinutes: 16,
+      explanation: `
+<b>Replacing Lambda Syntax with C-Optimized Operator Callables</b><br/>
+Python developers frequently write inline <code>lambda</code> functions when sorting, filtering, or aggregating data. For example, sorting a list of package dictionaries by weight:<br/>
+<code>sorted(packages, key=lambda p: p["weight"])</code><br/><br/>
+
+While lambda functions work well, writing dozens of tiny lambdas introduces function call overhead and clutter. Python's built-in <code>operator</code> module provides C-optimized callable equivalents for all standard operators, sequence lookups, and attribute extractions.<br/><br/>
+
+<b>1. Key Extraction Helpers:</b>
+<ul>
+  <li><code>operator.itemgetter(key)</code>: Creates a callable that fetches a specific item index or dictionary key from an object. Replaces <code>lambda x: x[key]</code>!
+    <br/>Supports multi-key sorting: <code>itemgetter("hub", "weight")</code> sorts by hub first, then by weight.</li>
+  <li><code>operator.attrgetter(attr)</code>: Creates a callable that fetches an attribute from an object instance. Replaces <code>lambda x: x.attribute</code>!</li>
+</ul>
+
+<b>2. Arithmetic and Comparison Functions:</b>
+<ul>
+  <li><code>operator.add(a, b)</code> (equivalent to <code>a + b</code>)</li>
+  <li><code>operator.mul(a, b)</code> (equivalent to <code>a * b</code>)</li>
+  <li><code>operator.eq(a, b)</code> (equivalent to <code>a == b</code>)</li>
+</ul>
+
+<b>Why use <code>operator</code> functions over <code>lambda</code>?</b>
+<ol>
+  <li><b>Performance:</b> `operator` functions are implemented in native C, executing noticeably faster than Python-level lambda functions in large dataset loops or sorts.</li>
+  <li><b>Readability:</b> `itemgetter("weight")` is clear, explicit, and self-documenting.</li>
+</ol>
+      `,
+      diagram: `
+OPERATOR ITEMGETTER vs LAMBDA FUNCTION:
+
+  Lambda Syntax (Python Bytecode Interpretation):
+  key = lambda pkg: pkg["weight_lbs"]   ---> High Function Call Overhead
+
+  Operator Module (Native C Execution):
+  key = operator.itemgetter("weight_lbs") ---> Optimized C-Level Key Extraction
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: operator (itemgetter, attrgetter, arithmetic)
+# ==============================================================================
+
+import operator
+from functools import reduce
+
+# ------------------------------------------------------------------------------
+# Beginner: Sorting Dictionaries with operator.itemgetter
+# ------------------------------------------------------------------------------
+
+manifest_data = [
+    {"id": "TRK-101", "hub": "CHICAGO", "weight_lbs": 42.5},
+    {"id": "TRK-102", "hub": "AUSTIN", "weight_lbs": 12.0},
+    {"id": "TRK-103", "hub": "CHICAGO", "weight_lbs": 8.5},
+    {"id": "TRK-104", "hub": "AUSTIN", "weight_lbs": 85.0}
+]
+
+print("--- BEGINNER: Sorting with itemgetter ---")
+
+# Replace lambda p: p["weight_lbs"] with C-optimized itemgetter
+sorted_by_weight = sorted(manifest_data, key=operator.itemgetter("weight_lbs"))
+
+print("Sorted by Weight (Ascending):")
+for item in sorted_by_weight:
+    print(f"  {item['id']} | Weight: {item['weight_lbs']:>5} lbs | Hub: {item['hub']}")
+
+# Multi-key sorting: Sort by Hub name first, then by Weight
+sorted_multi_key = sorted(manifest_data, key=operator.itemgetter("hub", "weight_lbs"))
+
+print("\nSorted Multi-Key (Hub then Weight):")
+for item in sorted_multi_key:
+    print(f"  Hub: {item['hub']:<8} | ID: {item['id']} | Weight: {item['weight_lbs']} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Extracting Object Attributes with operator.attrgetter
+# ------------------------------------------------------------------------------
+
+class DeliveryVehicle:
+    def __init__(self, vehicle_id: str, capacity_lbs: float):
+        self.vehicle_id = vehicle_id
+        self.capacity_lbs = capacity_lbs
+
+fleet = [
+    DeliveryVehicle("VAN-01", 3000.0),
+    DeliveryVehicle("TRUCK-99", 15000.0),
+    DeliveryVehicle("VAN-02", 2500.0)
+]
+
+# Sorting object instances by attribute 'capacity_lbs'
+fleet_sorted = sorted(fleet, key=operator.attrgetter("capacity_lbs"), reverse=True)
+
+print("\n--- INTERMEDIATE: attrgetter Object Sorting ---")
+print("Fleet Sorted by Capacity (Descending):")
+for v in fleet_sorted:
+    print(f"  Vehicle: {v.vehicle_id:<10} | Capacity: {v.capacity_lbs} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Functional Aggregations with operator.add
+# ------------------------------------------------------------------------------
+
+weights_list = [14.5, 22.0, 8.5, 45.0, 12.2]
+
+# Using reduce and operator.add for functional total calculation
+total_weight = reduce(operator.add, weights_list, 0.0)
+
+print("\n--- ADVANCED: Functional Math with operator.add ---")
+print("Calculated Total Cargo Weight:", round(total_weight, 2), "lbs")
+      `,
+      keyTakeaways: [
+        "Use `operator.itemgetter(\"key\")` to replace `lambda x: x[\"key\"]` when sorting dictionaries or tuples.",
+        "Use `operator.attrgetter(\"attr\")` to replace `lambda x: x.attr` when sorting class object instances.",
+        "`itemgetter` supports multi-field sorting: `itemgetter(\"field1\", \"field2\")`.",
+        "`operator` functions are implemented in native C, offering faster performance than Python lambdas."
+      ],
+      commonMistakes: [
+        "<b>Passing key names as separate arguments instead of single strings in itemgetter:</b> Calling `itemgetter(\"a\", \"b\")` creates a multi-key tuple extractor, whereas `itemgetter(\"a\")` extracts a single value.",
+        "<b>Using `attrgetter` on dictionaries or `itemgetter` on objects:</b> `itemgetter` uses bracket lookup `[]`; `attrgetter` uses dot attribute access `.`.",
+        "<b>Overcomplicating simple list operations:</b> Writing `reduce(operator.add, numbers)` when built-in `sum(numbers)` is cleaner and more readable."
+      ],
+      quizzes: [
+        {
+          question: "Which function from Python's `operator` module replaces `lambda x: x[\"status\"]` when sorting dictionary records?",
+          options: [
+            "`operator.attrgetter(\"status\")`",
+            "`operator.itemgetter(\"status\")`",
+            "`operator.keygetter(\"status\")`",
+            "`operator.dictgetter(\"status\")`"
+          ],
+          correctIndex: 1,
+          explanation: "`operator.itemgetter(\"status\")` extracts dictionary item values via bracket lookup `[\"status\"]`."
+        },
+        {
+          question: "How do you sort a list of custom class objects `packages` by their attribute `weight` using the `operator` module?",
+          options: [
+            "`sorted(packages, key=operator.itemgetter(\"weight\"))`",
+            "`sorted(packages, key=operator.attrgetter(\"weight\"))`",
+            "`sorted(packages, key=operator.get_attribute(\"weight\"))`",
+            "`sorted(packages, key=operator.property(\"weight\"))`"
+          ],
+          correctIndex: 1,
+          explanation: "`operator.attrgetter(\"weight\")` fetches object instance attributes via dot notation (`obj.weight`)."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Data Summarization and Metrics with statistics",
+      durationMinutes: 18,
+      explanation: `
+<b>Statistical Analysis of Quantitative Datasets</b><br/>
+Logistics systems, telemetry collectors, and monitoring pipelines collect large volumes of numeric metrics: package weights, driver transit speeds, delivery times, and fuel consumption rates. Rather than manually writing mathematical equations or importing heavy external dependencies like NumPy, Python's built-in <code>statistics</code> module provides fast, robust statistical functions.<br/><br/>
+
+<b>1. Measures of Central Tendency:</b>
+<ul>
+  <li><code>statistics.mean(data)</code>: Calculates the arithmetic average (sum divided by count).</li>
+  <li><code>statistics.median(data)</code>: Calculates the middle value in a sorted dataset. Resistant to extreme outliers!</li>
+  <li><code>statistics.mode(data)</code>: Finds the most frequently occurring value in a dataset.</li>
+</ul>
+
+<b>2. Measures of Dispersion (Variability):</b>
+<ul>
+  <li><code>statistics.stdev(data)</code>: Calculates the sample standard deviation, measuring how spread out numbers are from the mean.
+    <br/><i>Use Case:</i> Detecting anomalous delivery transit times or unstable sensor telemetry.</li>
+  <li><code>statistics.variance(data)</code>: Calculates the sample variance (square of standard deviation).</li>
+</ul>
+
+<b>3. Advanced Summarization Tools (Python 3.8+):</b>
+<ul>
+  <li><code>statistics.quantiles(data, n=4)</code>: Cuts dataset into $n$ continuous intervals with equal probability (e.g., $n=4$ computes quartiles for $P_{25}, P_{50}, P_{75}$).</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Transit Time Anomaly Detection</b><br/>
+If 9 delivery vans complete a route in 20 minutes and 1 van gets stuck in traffic for 300 minutes, the arithmetic <b>mean</b> jumps to 48 minutes (skewed by the outlier). The <b>median</b> remains at 20 minutes, accurately reflecting typical driver performance.
+      `,
+      diagram: `
+STATISTICAL DISTRIBUTION SUMMARY:
+
+  Dataset Transit Times (Mins): [18, 19, 20, 20, 21, 22, 300]
+                                                     ^
+                                            (Extreme Outlier!)
+
+  Mean   (Average)  : 60.0 mins  <-- Skewed by single 300 min outlier!
+  Median (Middle)   : 20.0 mins  <-- Robust true central metric!
+  Mode   (Frequent) : 20.0 mins
+  StDev  (Spread)   : 105.8 mins <-- High standard deviation signals anomaly!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: The statistics Module
+# ==============================================================================
+
+import statistics
+
+# ------------------------------------------------------------------------------
+# Beginner: Mean, Median, and Mode
+# ------------------------------------------------------------------------------
+
+# Package weights delivered today in Chicago (lbs)
+weight_samples = [12.5, 14.0, 15.2, 14.0, 18.5, 110.0, 14.0] # 110.0 is an outlier
+
+mean_weight = statistics.mean(weight_samples)
+median_weight = statistics.median(weight_samples)
+mode_weight = statistics.mode(weight_samples)
+
+print("--- BEGINNER: Central Tendency Metrics ---")
+print(f"Sample Dataset   : {weight_samples}")
+print(f"Arithmetic Mean  : {mean_weight:.2f} lbs (Skewed by 110 lb outlier)")
+print(f"Sample Median    : {median_weight:.2f} lbs (Robust true middle)")
+print(f"Sample Mode      : {mode_weight:.2f} lbs (Most frequent value)")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Dispersion Metrics (stdev) & Quantiles
+# ------------------------------------------------------------------------------
+
+# Route transit times in minutes
+transit_times_mins = [24, 25, 22, 23, 26, 25, 24, 25, 23, 24]
+
+stdev_transit = statistics.stdev(transit_times_mins)
+quartiles = statistics.quantiles(transit_times_mins, n=4) # Q1 (25%), Q2 (50%), Q3 (75%)
+
+print("\n--- INTERMEDIATE: Dispersion & Quantiles ---")
+print(f"Transit Times (Mins) : {transit_times_mins}")
+print(f"Standard Deviation   : {stdev_transit:.2f} mins (Low variance = Consistent SLAs)")
+print(f"Quartiles (25%,50%,75%): {[round(q, 2) for q in quartiles]}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Telemetry Outlier Detector
+# ------------------------------------------------------------------------------
+
+def analyze_driver_telemetry_anomalies(speed_telemetry_mph: list[float]) -> dict:
+    \"\"\"
+    Analyzes IoT speed telemetry data, flagging speeds exceeding 2 standard
+    deviations from the mean as potential driving anomalies.
+    \"\"\"
+    print(f"\n--- ADVANCED: Driver Telemetry Anomaly Audit ---")
+
+    if len(speed_telemetry_mph) < 2:
+        return {"error": "At least 2 data points required for statistical analysis."}
+
+    avg_speed = statistics.mean(speed_telemetry_mph)
+    std_dev = statistics.stdev(speed_telemetry_mph)
+
+    # Anomaly threshold: Speed > Mean + (2 * StDev)
+    anomaly_threshold = avg_speed + (2.0 * std_dev)
+
+    anomalies = [spd for spd in speed_telemetry_mph if spd > anomaly_threshold]
+
+    return {
+        "telemetry_count": len(speed_telemetry_mph),
+        "mean_speed_mph": round(avg_speed, 1),
+        "stdev_speed": round(std_dev, 2),
+        "anomaly_threshold_mph": round(anomaly_threshold, 1),
+        "anomalies_detected": anomalies,
+        "is_flagged_for_review": len(anomalies) > 0
+    }
+
+# Test telemetry stream
+telemetry_data = [52.0, 55.0, 54.0, 53.0, 56.0, 51.0, 88.0, 54.0] # 88.0 mph anomaly
+audit_result = analyze_driver_telemetry_anomalies(telemetry_data)
+
+print("Telemetry Audit Summary:", audit_result)
+      `,
+      keyTakeaways: [
+        "Use `statistics.mean()` for averages and `statistics.median()` for datasets containing extreme outliers.",
+        "Use `statistics.stdev()` to measure numerical dispersion and detect data anomalies.",
+        "Use `statistics.quantiles(data, n=4)` to divide numerical data into percentile buckets.",
+        "The built-in `statistics` module avoids needing heavy external libraries for standard mathematical operations."
+      ],
+      commonMistakes: [
+        "<b>Relying solely on `mean()` for skewed datasets:</b> Failing to check `median()`, allowing single massive outliers to distort operational metrics.",
+        "<b>Calling `stdev()` on empty or single-element lists:</b> `statistics.stdev()` requires at least two data points; calling it on fewer elements raises a `StatisticsError`.",
+        "<b>Confusing sample standard deviation (`stdev`) with population standard deviation (`pstdev`):</b> Use `stdev` for data samples and `pstdev` when analyzing an entire closed population."
+      ],
+      quizzes: [
+        {
+          question: "Which metric from Python's `statistics` module is best suited for measuring the central tendency of a dataset containing extreme outlier values?",
+          options: [
+            "`statistics.mean()`",
+            "`statistics.median()`",
+            "`statistics.stdev()`",
+            "`statistics.variance()`"
+          ],
+          correctIndex: 1,
+          explanation: "`statistics.median()` finds the middle value of a sorted dataset and is resistant to distortion from extreme outliers."
+        },
+        {
+          question: "What exception is raised if `statistics.stdev()` is called on a list containing only one numeric value?",
+          options: [
+            "ValueError",
+            "StatisticsError",
+            "ZeroDivisionError",
+            "TypeError"
+          ],
+          correctIndex: 1,
+          explanation: "Calculating sample standard deviation requires at least two data points ($N-1$ degrees of freedom). Calling it on fewer elements raises a `statistics.StatisticsError`."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Precision Arithmetic with math, decimal, and fractions",
+      durationMinutes: 18,
+      explanation: `
+<b>Advanced Math, Trigonometry, and Exact Numeric Precision</b><br/>
+Python provides three primary modules for handling numerical calculations beyond basic operators: <code>math</code>, <code>decimal</code>, and <code>fractions</code>. Selecting the wrong numerical representation can introduce catastrophic rounding errors in financial billing or geographic calculations.<br/><br/>
+
+<b>1. Mathematical Operations (<code>math</code> Module):</b>
+<ul>
+  <li><code>math.ceil(x)</code>: Rounds $x$ **up** to the nearest integer (e.g., <code>math.ceil(4.1) == 5</code>).
+    <br/><i>Use Case:</i> Calculating required delivery van counts.</li>
+  <li><code>math.floor(x)</code>: Rounds $x$ **down** to the nearest integer.</li>
+  <li><code>math.sqrt(x)</code>: Calculates square root.</li>
+  <li><code>math.radians(deg)</code> / <code>math.sin()</code> / <code>math.cos()</code>: Trigonometric operations required for distance calculations on spherical surfaces (Haversine formula).</li>
+</ul>
+
+<b>2. Exact Fixed-Point Currency Math (<code>decimal</code> Module):</b><br/>
+Standard floating-point numbers (`float`) use base-2 binary representation, introducing rounding inaccuracies (e.g., <code>0.1 + 0.2 == 0.30000000000000004</code>). <i>Never use standard floats for monetary billing!</i><br/>
+The <code>decimal.Decimal</code> class implements exact base-10 arithmetic:<br/>
+<code>from decimal import Decimal</code><br/>
+<code>price = Decimal("0.10") + Decimal("0.20") # Exactly Decimal('0.30')!</code><br/><br/>
+
+<b>3. Rational Number Math (<code>fractions</code> Module):</b><br/>
+The <code>fractions.Fraction</code> class represents exact rational numbers as numerators and denominators (e.g., <code>Fraction(1, 3)</code> representing $\frac{1}{3}$), avoiding decimal truncation entirely.
+      `,
+      diagram: `
+NUMERICAL PRECISION COMPARISON:
+
+  Floating-Point (float):
+  0.1 + 0.2  --->  0.30000000000000004  (Binary Representation Error!)
+
+  Fixed-Point Decimal (decimal.Decimal):
+  Decimal("0.10") + Decimal("0.20")  --->  Decimal("0.30")  (Exact Base-10 Math!)
+
+  Rational Fraction (fractions.Fraction):
+  Fraction(1, 3) + Fraction(1, 6)   --->  Fraction(1, 2)   (Exact Fractional Math!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Precision Arithmetic (math, decimal, fractions)
+# ==============================================================================
+
+import math
+from decimal import Decimal, ROUND_HALF_UP
+from fractions import Fraction
+
+# ------------------------------------------------------------------------------
+# Beginner: Ceiling, Floor, and Trigonometric Distance with math
+# ------------------------------------------------------------------------------
+
+packages_count = 42
+van_capacity = 10
+
+# Calculate required vans using ceiling (42 / 10 = 4.2 -> 5 vans)
+vans_required = math.ceil(packages_count / van_capacity)
+
+print("--- BEGINNER: math Module ---")
+print("Packages:", packages_count, "| Van Capacity:", van_capacity)
+print("Vans Required (math.ceil):", vans_required) # 5 vans
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Financial Billing Calculations with decimal.Decimal
+# ------------------------------------------------------------------------------
+
+# Flawed float calculation vs Exact Decimal calculation
+float_subtotal = 0.10 + 0.20
+decimal_subtotal = Decimal("0.10") + Decimal("0.20")
+
+print("\n--- INTERMEDIATE: Currency Math with Decimal ---")
+print("Float Subtotal (Inexact)  :", float_subtotal)   # 0.30000000000000004
+print("Decimal Subtotal (Exact)  :", decimal_subtotal) # 0.30
+
+# Financial rounding to 2 decimal places using Decimal
+item_price = Decimal("19.99")
+tax_rate = Decimal("0.0825") # 8.25% tax
+raw_tax = item_price * tax_rate
+
+# Explicit monetary rounding (ROUND_HALF_UP)
+rounded_tax = raw_tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+total_invoice = item_price + rounded_tax
+
+print(f"Item Price: ${item_price} | Tax: ${rounded_tax} | Total: ${total_invoice}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Haversine Great-Circle Distance Calculator
+# ------------------------------------------------------------------------------
+
+def calculate_haversine_distance_miles(
+    lat1: float, lon1: float,
+    lat2: float, lon2: float
+) -> float:
+    \"\"\"
+    Calculates great-circle distance between two GPS coordinates on Earth
+    using the math module trigonometric functions.
+    \"\"\"
+    print(f"\n--- ADVANCED: Haversine GPS Distance Calculation ---")
+    earth_radius_miles = 3958.8
+
+    # Convert degrees to radians
+    d_lat = math.radians(lat2 - lat1)
+    d_lon = math.radians(lon2 - lon1)
+
+    a = (math.sin(d_lat / 2.0) ** 2) + \
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * (math.sin(d_lon / 2.0) ** 2)
+
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    distance = earth_radius_miles * c
+
+    return round(distance, 2)
+
+# Distance between Chicago Hub (41.8781, -87.6298) and Austin Hub (30.2672, -97.7431)
+distance_miles = calculate_haversine_distance_miles(41.8781, -87.6298, 30.2672, -97.7431)
+print(f"Chicago -> Austin Distance: {distance_miles} miles")
+
+# Rational Fraction Demonstration
+share_1 = Fraction(1, 3)
+share_2 = Fraction(1, 6)
+combined_share = share_1 + share_2
+print(f"\nExact Fraction Math: 1/3 + 1/6 = {combined_share}") # 1/2
+      `,
+      keyTakeaways: [
+        "Use `math.ceil()` to round up to whole integers, and `math` trigonometric functions for GPS calculations.",
+        "Always use `decimal.Decimal` for financial billing and currency calculations to prevent binary floating-point rounding bugs.",
+        "Construct `Decimal` objects using string literals (e.g., `Decimal(\"19.99\")`), not raw floats!",
+        "Use `fractions.Fraction` for exact rational number representation."
+      ],
+      commonMistakes: [
+        "<b>Constructing `Decimal` from raw `float` objects:</b> Writing `Decimal(0.1)` inherits the binary float inaccuracy! Always pass string literals: `Decimal(\"0.1\")`.",
+        "<b>Using standard `float` for currency calculations:</b> Introducing fraction-of-a-cent rounding errors during billing aggregation.",
+        "<b>Passing degrees directly to `math.sin()` or `math.cos()`:</b> Trigonometric functions in the `math` module expect input values in **radians**; convert using `math.radians(degrees)` first!"
+      ],
+      quizzes: [
+        {
+          question: "Why should you construct `Decimal` objects using string literals (e.g., `Decimal(\"0.10\")`) rather than raw floats (e.g., `Decimal(0.10)`)?",
+          options: [
+            "String construction executes 10x faster.",
+            "Passing a raw float inherits the binary floating-point representation inaccuracy before `Decimal` is constructed.",
+            "Raw floats throw an immediate `TypeError` inside `Decimal`.",
+            "String construction converts numbers to UTC time."
+          ],
+          correctIndex: 1,
+          explanation: "`Decimal(0.10)` receives an already inaccurate binary float. Using string literals `Decimal(\"0.10\")` guarantees exact base-10 representation."
+        },
+        {
+          question: "Which function in Python's `math` module rounds a floating-point number UP to the nearest whole integer (e.g., converting `4.1` to `5`)?",
+          options: [
+            "`math.floor()`",
+            "`math.ceil()`",
+            "`math.trunc()`",
+            "`math.round()`"
+          ],
+          correctIndex: 1,
+          explanation: "`math.ceil(x)` (ceiling) rounds numbers up to the nearest integer."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Choosing the Right Standard-Library Tool",
+      durationMinutes: 10,
+      explanation: `
+<b>Architectural Decision Framework for Python Utility Modules</b><br/>
+Python's philosophy of "Batteries Included" means you rarely need to write mathematical, statistical, or functional algorithms from scratch. Selecting the appropriate standard library module depends on your specific domain requirements.<br/><br/>
+
+<b>Master Module Selection Matrix:</b>
+<ul>
+  <li><b>`functools`</b>:
+    <br/><i>When to use:</i> You need to pre-bind function arguments (`partial`), memoize/cache deterministic functions (`lru_cache`), or preserve function metadata in decorators (`wraps`).</li>
+  <li><b>`operator`</b>:
+    <br/><i>When to use:</i> You need C-optimized key extraction functions (`itemgetter`, `attrgetter`) for sorting lists or objects without writing verbose `lambda` functions.</li>
+  <li><b>`statistics`</b>:
+    <br/><i>When to use:</i> You need to compute central tendency (`mean`, `median`), dispersion (`stdev`), or quantiles on quantitative datasets without importing heavy external libraries like NumPy.</li>
+  <li><b>`math`</b>:
+    <br/><i>When to use:</i> You need advanced mathematical, logarithmic, or trigonometric operations (`ceil`, `sqrt`, `sin`, `radians`).</li>
+  <li><b>`decimal`</b>:
+    <br/><i>When to use:</i> You are processing financial transactions, invoices, taxes, or currency balances requiring exact base-10 precision.</li>
+  <li><b>`fractions`</b>:
+    <br/><i>When to use:</i> You need exact rational arithmetic ($\frac{a}{b}$) without decimal conversion truncation.</li>
+</ul>
+      `,
+      diagram: `
+STANDARD LIBRARY UTILITY SELECTION TREE:
+
+                           [ Problem Requirements ]
+                                      |
+         +----------------------------+----------------------------+
+         |                                                         |
+  [ Numeric & Math ]                                    [ Functional & Data ]
+         |                                                         |
+  +------+------+---------------+                   +--------------+--------------+
+  |             |               |                   |                             |
+(Currency?) (Statistics?) (Trigonometry?)    (Caching/Partials?)          (Sorting Keys?)
+  |             |               |                   |                             |
+  v             v               v                   v                             v
+decimal     statistics        math              functools                     operator
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Standard-Library Utility Decision Matrix
+# ==============================================================================
+
+from functools import lru_cache, partial
+import operator
+import statistics
+import math
+from decimal import Decimal, ROUND_HALF_UP
+
+# ------------------------------------------------------------------------------
+# Production Scenario: Enterprise Logistics Billing & Telemetry Pipeline
+# Combining functools, operator, statistics, math, and decimal cleanly.
+# ------------------------------------------------------------------------------
+
+# Step 1: Cached GPS Distance Lookup using math & functools.lru_cache
+@lru_cache(maxsize=128)
+def get_hub_distance_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = (math.sin(dlat/2)**2) + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * (math.sin(dlon/2)**2)
+    return round(3958.8 * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)), 2)
+
+# Step 2: Sorting Shipments using operator.itemgetter
+shipments = [
+    {"id": "TRK-01", "weight": 14.5, "fee": "120.50"},
+    {"id": "TRK-02", "weight": 85.0, "fee": "350.00"},
+    {"id": "TRK-03", "weight": 22.0, "fee": "180.25"}
+]
+
+sorted_shipments = sorted(shipments, key=operator.itemgetter("weight"))
+
+# Step 3: Statistical Telemetry Analysis using statistics
+weights = [s["weight"] for s in sorted_shipments]
+avg_weight = statistics.mean(weights)
+median_weight = statistics.median(weights)
+
+# Step 4: Exact Financial Totaling using decimal.Decimal
+total_invoice = sum((Decimal(s["fee"]) for s in sorted_shipments), Decimal("0.00"))
+
+print("--- PRODUCTION PIPELINE SUMMARY ---")
+print(f"Sorted Heavy Package Lead : {sorted_shipments[-1]['id']} ({sorted_shipments[-1]['weight']} lbs)")
+print(f"Weight Metrics            : Mean={avg_weight:.1f} lbs | Median={median_weight:.1f} lbs")
+print(f"Exact Total Invoice       : ${total_invoice.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}")
+      `,
+      keyTakeaways: [
+        "Select `decimal.Decimal` for currency and financial calculations.",
+        "Select `functools.lru_cache` for memoizing expensive function calls.",
+        "Select `operator.itemgetter` and `attrgetter` for C-optimized sorting keys.",
+        "Select `statistics` for basic data summarization without heavy external dependencies."
+      ],
+      commonMistakes: [
+        "<b>Re-inventing algorithms from scratch:</b> Writing custom standard deviation or sorting key functions instead of using standard library modules.",
+        "<b>Importing large third-party libraries for basic math:</b> Adding heavy external dependencies (like NumPy or Pandas) when standard `statistics` or `math` is sufficient.",
+        "<b>Using `float` for currency:</b> Allowing float rounding errors in financial transactions."
+      ],
+      quizzes: [
+        {
+          question: "Which Python standard library module should be selected to perform exact base-10 monetary invoice calculations?",
+          options: [
+            "`math`",
+            "`statistics`",
+            "`decimal`",
+            "`fractions`"
+          ],
+          correctIndex: 2,
+          explanation: "The `decimal` module implements exact base-10 arithmetic, making it mandatory for currency calculations."
+        },
+        {
+          question: "Which standard library module provides C-optimized key extraction functions like `itemgetter` and `attrgetter` for sorting?",
+          options: [
+            "`functools`",
+            "`operator`",
+            "`itertools`",
+            "`collections`"
+          ],
+          correctIndex: 1,
+          explanation: "The `operator` module provides `itemgetter` and `attrgetter` for efficient sorting key extraction."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which decorator from the `functools` module memoizes deterministic function calls by storing recent argument-result pairs in memory?",
+      options: [
+        "`@functools.partial`",
+        "`@functools.lru_cache`",
+        "`@functools.wraps`",
+        "`@functools.cache_data`"
+      ],
+      correctIndex: 1,
+      explanation: "`@functools.lru_cache` provides a Least Recently Used cache for memoizing function calls."
+    },
+    {
+      question: "What function from the `operator` module replaces `lambda x: x[\"weight\"]` when sorting dictionary lists?",
+      options: [
+        "`operator.attrgetter(\"weight\")`",
+        "`operator.itemgetter(\"weight\")`",
+        "`operator.keygetter(\"weight\")`",
+        "`operator.get(\"weight\")`"
+      ],
+      correctIndex: 1,
+      explanation: "`operator.itemgetter(\"weight\")` extracts dictionary item values via bracket lookup."
+    },
+    {
+      question: "Which function in the `statistics` module measures the central tendency of a dataset while resisting distortion from extreme outliers?",
+      options: [
+        "`statistics.mean()`",
+        "`statistics.median()`",
+        "`statistics.stdev()`",
+        "`statistics.variance()`"
+      ],
+      correctIndex: 1,
+      explanation: "`statistics.median()` calculates the middle value of a sorted dataset, resisting distortion from outliers."
+    },
+    {
+      question: "Why should `decimal.Decimal` objects be instantiated using string literals (e.g., `Decimal(\"19.99\")`) instead of raw floats?",
+      options: [
+        "String construction runs faster.",
+        "Passing a raw float inherits binary floating-point representation inaccuracies before `Decimal` is created.",
+        "Raw floats raise a `SyntaxError`.",
+        "String literals force values to become integers."
+      ],
+      correctIndex: 1,
+      explanation: "Passing a raw float to `Decimal` passes an already inaccurate binary float. Using string literals guarantees exact representation."
+    },
+    {
+      question: "Which function in the `math` module rounds a number UP to the nearest integer?",
+      options: [
+        "`math.floor()`",
+        "`math.ceil()`",
+        "`math.trunc()`",
+        "`math.round_up()`"
+      ],
+      correctIndex: 1,
+      explanation: "`math.ceil(x)` rounds numbers up to the nearest integer."
+    },
+    {
+      question: "What is the primary function of `functools.wraps` inside a custom decorator?",
+      options: [
+        "To speed up execution time.",
+        "To copy and preserve the original function's name (`__name__`), docstring (`__doc__`), and signature metadata.",
+        "To catch uncaught exceptions.",
+        "To convert function arguments to tuples."
+      ],
+      correctIndex: 1,
+      explanation: "`@wraps` preserves original function metadata on decorated wrapper functions."
+    },
+    {
+      question: "Which module provides exact rational fraction arithmetic ($\frac{a}{b}$) without decimal conversion truncation?",
+      options: [
+        "`math`",
+        "`decimal`",
+        "`fractions`",
+        "`statistics`"
+      ],
+      correctIndex: 2,
+      explanation: "`fractions.Fraction` implements exact rational arithmetic."
+    },
+    {
+      question: "What argument must be passed to trigonometric functions in the `math` module (such as `math.sin()` or `math.cos()`)?",
+      options: [
+        "Angles in degrees",
+        "Angles in radians",
+        "Angles as string percentages",
+        "Angles in grads"
+      ],
+      correctIndex: 1,
+      explanation: "Trigonometric functions in Python's `math` module expect angle values in **radians**."
+    }
+  ],
+  project: {
+    name: "Enterprise Logistics Analytics & Billing Engine (Phase 1 Project)",
+    goal: "Build an analytics and billing engine that uses functools.lru_cache for cached distance calculations, operator.itemgetter for multi-key sorting, statistics for driver SLA analytics, math for GPS trigonometry, and decimal.Decimal for exact monetary invoicing.",
+    brief: "Your global logistics corporation requires a core billing and analytics pipeline (`analytics_billing.py`). The pipeline must calculate exact customer invoices using `decimal.Decimal`, compute great-circle GPS route distances using `math` and memoize lookups using `@lru_cache`, sort cargo manifests using `operator.itemgetter`, and analyze driver speed telemetry anomalies using `statistics`.",
+    steps: [
+      "Create a script file named `analytics_billing.py` in your workspace.",
+      "Implement a memoized GPS distance calculator `calculate_route_distance(lat1, lon1, lat2, lon2)` using `@lru_cache` and `math` trigonometric functions.",
+      "Write a manifest sorting function that orders package record dictionaries by hub and weight using `operator.itemgetter(\"hub\", \"weight\")`.",
+      "Implement a telemetry analyzer function using `statistics.mean()` and `statistics.stdev()` to flag driver speeds exceeding 2 standard deviations from the average.",
+      "Implement a currency invoicing function using `decimal.Decimal` with explicit monetary rounding (`ROUND_HALF_UP`).",
+      "Combine all utilities into a production pipeline function decorated with an `@audit_log` decorator using `@functools.wraps`.",
+      "Run `python3 analytics_billing.py` in your integrated terminal and print a complete logistics audit report."
+    ],
+    acceptance: [
+      "Monetary calculations use `decimal.Decimal` string initialization without binary float rounding bugs.",
+      "GPS distance calculations use `math` trigonometric functions and memoize results with `@lru_cache`.",
+      "Manifest sorting uses `operator.itemgetter` for multi-key sorting.",
+      "Executing `python3 analytics_billing.py` prints a clean, formatted billing and analytics report without runtime errors."
+    ],
+    stretch: [
+      "Benchmark the performance difference between sorting 100,000 package dictionaries using a `lambda` vs `operator.itemgetter`.",
+      "Annotate all pipeline functions with strict type hints (`Decimal`, `tuple[float, ...]`) and pass static type checks."
+    ]
+  }
+};
