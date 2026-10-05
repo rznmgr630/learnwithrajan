@@ -1,0 +1,961 @@
+/**
+ * DAY 34: Phase 6 · Advanced Python — Descriptors & Attribute Access
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1DescriptorsAndAttributeAccess = {
+  day: 34,
+  topic: "Phase 6 · Advanced Python — Descriptors & Attribute Access",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Under the Hood of Attribute Lookup and __getattribute__",
+      durationMinutes: 16,
+      explanation: `
+<b>Python's Internal Attribute Lookup Hierarchy</b><br/>
+In Python, whenever you type <code>obj.attribute_name</code>, Python executes a specific, deterministic lookup algorithm behind the scenes. Understanding this lookup sequence is essential for mastering metaprogramming, ORMs, and framework design.<br/><br/>
+
+<b>1. The Attribute Lookup Order:</b><br/>
+When accessing <code>obj.attr</code>, Python evaluates locations in this exact sequence:
+<ol>
+  <li><b>Data Descriptors (Class-level):</b> Checks if a Data Descriptor (a descriptor with a <code>__set__</code> or <code>__delete__</code> method) exists on the object's class. Data descriptors override instance dictionaries!</li>
+  <li><b>Instance Dictionary (<code>obj.__dict__</code>):</b> Checks if <code>"attr"</code> exists directly in the object's instance dictionary.</li>
+  <li><b>Non-Data Descriptors (Class-level):</b> Checks if a Non-Data Descriptor (a descriptor with only a <code>__get__</code> method, like standard methods or <code>@classmethod</code>) exists on the class.</li>
+  <li><b>Class / Inheritance Tree (<code>Class.__dict__</code> & MRO):</b> Checks if <code>"attr"</code> exists on the class or any parent class in the Method Resolution Order (MRO).</li>
+  <li><b>Fallback Method (<code>__getattr__</code>):</b> If all preceding lookups fail and raise an internal <code>AttributeError</code>, Python invokes <code>obj.__getattr__("attr")</code> as a last-ditch fallback!</li>
+</ol>
+
+<b>2. The Low-Level Gatekeeper: <code>__getattribute__</code>:</b><br/>
+The <code>__getattribute__()</code> dunder method is the low-level entry point called for **every single attribute access**, whether the attribute exists or not!
+<ul>
+  <li><b>Warning (Infinite Recursion Hazard):</b> Overriding <code>__getattribute__</code> and accessing <code>self.attr</code> inside it triggers infinite recursion! You must delegate to <code>super().__getattribute__(item)</code>.</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Multi-Tier Warehouse Item Search</b><br/>
+Imagine a warehouse worker searching for Cargo Crate #9001:
+1. First, check the **Priority Vault** (Data Descriptor).
+2. Second, check the **Worker's Clipboard** (Instance `__dict__`).
+3. Third, check the **General Warehouse Shelves** (Class `__dict__` & MRO).
+4. Finally, if nowhere to be found, call the **Lost & Found Office** (`__getattr__`).
+      `,
+      diagram: `
+PYTHON ATTRIBUTE LOOKUP ORDER (obj.attr):
+
+           [ Access Attempt: obj.attr ]
+                        |
+                        v
+     [ 1. Data Descriptor on Class? ] ----(Yes)----> [ Run __get__() ]
+                        |
+                       (No)
+                        v
+     [ 2. Key in obj.__dict__? ] ----------(Yes)----> [ Return Value ]
+                        |
+                       (No)
+                        v
+     [ 3. Non-Data Descriptor / Class ] --(Yes)----> [ Run / Return ]
+                        |
+                       (No)
+                        v
+     [ 4. Call obj.__getattr__() ] -------> [ Last-Ditch Fallback ]
+                        |
+                   (Not Found)
+                        v
+              [ Raise AttributeError ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Attribute Lookup Sequence & __getattribute__
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Inspecting Instance __dict__ vs Class Attributes
+# ------------------------------------------------------------------------------
+
+class DeliveryParcel:
+    category = "STANDARD_PARCEL" # Class attribute
+
+    def __init__(self, tracking_id: str):
+        self.tracking_id = tracking_id # Instance attribute in __dict__
+
+parcel_1 = DeliveryParcel("TRK-1001")
+
+print("--- BEGINNER: Instance __dict__ Inspection ---")
+print("Instance __dict__ Contents:", parcel_1.__dict__) # {'tracking_id': 'TRK-1001'}
+print("Lookup Instance Attr    :", parcel_1.tracking_id)
+print("Lookup Class Attr       :", parcel_1.category)
+
+# Overriding class attribute on instance dictionary
+parcel_1.category = "EXPRESS_OVERRIDE"
+print("\nAfter Instance Assignment:")
+print("Updated Instance __dict__:", parcel_1.__dict__) # Category added to instance dict!
+print("Lookup Value             :", parcel_1.category) # Resolves from instance dict first!
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Low-Level __getattribute__ Interception
+# ------------------------------------------------------------------------------
+
+class AuditInterceptedPackage:
+    """Demonstrates intercepting ALL attribute lookups via __getattribute__."""
+    def __init__(self, tracking_id: str, weight: float):
+        self.tracking_id = tracking_id
+        self.weight = weight
+
+    def __getattribute__(self, item: str):
+        print(f"  [INTERCEPT] Accessing attribute '{item}'...")
+        # CRITICAL: Must delegate to super() to avoid infinite recursion!
+        return super().__getattribute__(item)
+
+print("\n--- INTERMEDIATE: __getattribute__ Interception ---")
+pkg = AuditInterceptedPackage("TRK-8800", 25.0)
+# Every attribute lookup triggers the interceptor
+print("Read tracking_id:", pkg.tracking_id)
+print("Read weight     :", pkg.weight)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dynamic Attribute Telemetry Monitor
+# ------------------------------------------------------------------------------
+
+class TelemetryMonitoredShipment:
+    \"\"\"
+    Uses __getattribute__ to record field read metrics for security compliance.
+    \"\"\"
+    def __init__(self, tracking_id: str, is_hazmat: bool):
+        self.tracking_id = tracking_id
+        self.is_hazmat = is_hazmat
+        self._access_log = []
+
+    def __getattribute__(self, item: str):
+        # Allow internal '_access_log' reads without logging to avoid recursion
+        if not item.startswith("_"):
+            # Avoid recursion by accessing private log via super()
+            log = super().__getattribute__("_access_log")
+            log.append(item)
+            print(f"[SECURITY AUDIT] Read sensitive field '{item}'")
+        return super().__getattribute__(item)
+
+shipment = TelemetryMonitoredShipment("TRK-HAZMAT-99", is_hazmat=True)
+_ = shipment.tracking_id
+_ = shipment.is_hazmat
+
+print("\nTelemetry Read Trail:", shipment._access_log)
+      `,
+      keyTakeaways: [
+        "Attribute lookup follows a strict order: Data Descriptors -> Instance `__dict__` -> Non-Data Descriptors / Class -> `__getattr__`.",
+        "`__getattribute__()` is invoked for *every* attribute lookup; delegates to `super().__getattribute__()` to avoid infinite recursion.",
+        "Data descriptors override instance dictionary entries.",
+        "Understanding instance `__dict__` explains how Python resolves variables dynamically."
+      ],
+      commonMistakes: [
+        "<b>Trimming infinite recursion in `__getattribute__`:</b> Writing `self.attr` inside `__getattribute__` calls `__getattribute__` again recursively until Python crashes.",
+        "<b>Confusing `__getattribute__` and `__getattr__`:</b> `__getattribute__` runs on *every* access; `__getattr__` runs *only* when the attribute is missing.",
+        "<b>Expecting class attributes to override instance dictionary entries:</b> Instance `__dict__` shadows normal class attributes unless a Data Descriptor is present."
+      ],
+      quizzes: [
+        {
+          question: "When is the `__getattr__()` fallback dunder method invoked during attribute lookup?",
+          options: [
+            "For every single attribute access, whether the attribute exists or not.",
+            "Only when the requested attribute is missing from the Data Descriptors, Instance `__dict__`, and Class hierarchy.",
+            "Only when an attribute is deleted.",
+            "Only when defining classes in virtual environments."
+          ],
+          correctIndex: 1,
+          explanation: "`__getattr__()` acts as a last-ditch fallback, executing strictly when the standard lookup sequence fails to find the attribute."
+        },
+        {
+          question: "How do you safely access an attribute inside a custom `__getattribute__()` override without causing infinite recursion?",
+          options: [
+            "By reading `self.__dict__[item]` directly.",
+            "By calling `super().__getattribute__(item)`.",
+            "By using a `while` loop.",
+            "By returning `None`."
+          ],
+          correctIndex: 1,
+          explanation: "Accessing `self.attr` or `self.__dict__` inside `__getattribute__` triggers `__getattribute__` again recursively. Calling `super().__getattribute__(item)` avoids recursion."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Fallback Resolution with __getattr__ and Dynamic Properties",
+      durationMinutes: 18,
+      explanation: `
+<b>Dynamic Attribute Synthesis and On-Demand Fallbacks</b><br/>
+While <code>__getattribute__</code> intercepts every access attempt, <b><code>__getattr__()</code></b> is called **only when Python cannot find an attribute** through standard lookup paths. This makes <code>__getattr__()</code> the ideal tool for dynamic attribute generation, virtual properties, and API proxy wrappers.<br/><br/>
+
+<b>1. What is <code>__getattr__()</code>?</b><br/>
+<code>def __getattr__(self, name: str):</code><br/>
+<code>    # Executed ONLY when 'name' is missing from instance and class dicts!</code><br/>
+<code>    if name.startswith("dynamic_"):</code><br/>
+<code>        return "SYNTHESIZED_VALUE"</code><br/>
+<code>    raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")</code><br/><br/>
+
+<b>2. Paired Dynamic Mutation with <code>__setattr__()</code>:</b><br/>
+While `__getattr__` intercepts missing reads, **`__setattr__()`** intercepts all attribute assignments (`obj.attr = val`).
+<ul>
+  <li><b>Warning (Infinite Recursion Hazard):</b> Inside `__setattr__`, writing `self.attr = val` calls `__setattr__` again! Assign attributes via `self.__dict__[name] = val` or `super().__setattr__(name, val)`.</li>
+</ul>
+
+<b>3. Property Deletion with <code>__delattr__()</code>:</b><br/>
+Intercepts attribute deletion attempts (`del obj.attr`).
+      `,
+      diagram: `
+DYNAMIC ATTRIBUTE FALLBACK (__getattr__ vs __setattr__):
+
+  Assignment (obj.attr = val):
+  [ Executes __setattr__() ] ---> Writes to self.__dict__[attr] = val
+
+  Read Attempt (obj.missing_attr):
+  1. Check Instance __dict__  ---> Missing!
+  2. Check Class Hierarchy   ---> Missing!
+  3. Invoke __getattr__()   ---> Synthesizes dynamic attribute on-the-fly!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Fallback Resolution with __getattr__ and __setattr__
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Missing Attribute Fallback with __getattr__
+# ------------------------------------------------------------------------------
+
+class DynamicPackageRecord:
+    def __init__(self, tracking_id: str):
+        self.tracking_id = tracking_id # Explicit attribute
+
+    def __getattr__(self, name: str):
+        """Called ONLY when 'name' is not found in instance or class dicts."""
+        print(f"  [FALLBACK] Attribute '{name}' not found natively. Synthesizing...")
+        if name.startswith("metadata_"):
+            return f"DEFAULT_METADATA_FOR_{name.upper()}"
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+pkg = DynamicPackageRecord("TRK-9001")
+
+print("--- BEGINNER: __getattr__ Fallback Execution ---")
+# 1. Native attribute read (does NOT trigger __getattr__)
+print("Native Attribute :", pkg.tracking_id)
+
+# 2. Missing dynamic attribute read (Triggers __getattr__)
+print("Dynamic Attribute:", pkg.metadata_category)
+
+# 3. Missing non-matching attribute read (Raises AttributeError)
+try:
+    print(pkg.invalid_field)
+except AttributeError as err:
+    print("Caught Expected AttributeError:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Safe Mutator Interception with __setattr__
+# ------------------------------------------------------------------------------
+
+class ValidatedShipmentRecord:
+    """Uses __setattr__ to enforce attribute assignment rules dynamically."""
+
+    def __setattr__(self, name: str, value):
+        print(f"  [SETATTR] Setting '{name}' = {value}")
+
+        # Validation rule
+        if name == "weight_lbs" and (not isinstance(value, (int, float)) or value <= 0):
+            raise ValueError("Weight must be a positive numeric value.")
+
+        # CRITICAL: Use super().__setattr__ to prevent infinite recursion!
+        super().__setattr__(name, value)
+
+print("\n--- INTERMEDIATE: __setattr__ Validation ---")
+shipment = ValidatedShipmentRecord()
+shipment.tracking_id = "TRK-2002"
+shipment.weight_lbs = 45.0
+
+try:
+    shipment.weight_lbs = -10.0 # Invalid weight
+except ValueError as val_err:
+    print("Intercepted Invalid Assignment:", val_err)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Dynamic API Proxy Wrapper
+# ------------------------------------------------------------------------------
+
+class ExternalLogisticsAPIProxy:
+    \"\"\"
+    Uses __getattr__ to forward arbitrary method calls dynamically to a remote API.
+    \"\"\"
+    def __init__(self, api_endpoint: str):
+        self.api_endpoint = api_endpoint
+
+    def __getattr__(self, method_name: str):
+        # Returns a dynamic RPC function wrapper on-the-fly
+        def remote_rpc_caller(*args, **kwargs):
+            print(f"\n--- ADVANCED: RPC Proxy Invocation ---")
+            print(f"Forwarding call '{method_name}' to endpoint [{self.api_endpoint}]")
+            print(f"  Arguments: args={args}, kwargs={kwargs}")
+            return {"status": "SUCCESS", "method": method_name, "args": args}
+
+        return remote_rpc_caller
+
+# Instantiate API proxy
+api_client = ExternalLogisticsAPIProxy("https://api.logistics.com/v2")
+
+# Dynamically invoke non-existent methods!
+api_client.dispatch_parcel("TRK-1001", priority="HIGH")
+api_client.cancel_shipment("TRK-2002", reason="Customer Request")
+      `,
+      keyTakeaways: [
+        "`__getattr__()` is called ONLY when an attribute is missing from standard lookup paths.",
+        "`__setattr__()` intercepts ALL attribute assignments (`obj.attr = val`).",
+        "Inside `__setattr__()`, use `super().__setattr__(name, val)` to avoid infinite recursion.",
+        "`__getattr__()` enables powerful dynamic patterns like API proxies, ORM models, and virtual properties."
+      ],
+      commonMistakes: [
+        "<b>Writing `self.attr = val` inside `__setattr__`:</b> Causes infinite recursion; always use `super().__setattr__(name, val)`.",
+        "<b>Forgetting to raise `AttributeError` in `__getattr__`:</b> Returning `None` for unrecognized attributes masks typos and breaks `hasattr()` checks.",
+        "<b>Using `__getattribute__` when `__getattr__` was intended:</b> Intercepting *all* lookups instead of handling missing fallbacks."
+      ],
+      quizzes: [
+        {
+          question: "How does `__getattr__()` differ fundamentally from `__getattribute__()`?",
+          options: [
+            "`__getattr__()` runs for every access; `__getattribute__()` runs only when the attribute is missing.",
+            "`__getattr__()` runs ONLY when the attribute is missing; `__getattribute__()` runs for every single attribute access.",
+            "`__getattr__()` is used for numbers; `__getattribute__()` is used for strings.",
+            "They are identical aliases."
+          ],
+          correctIndex: 1,
+          explanation: "`__getattr__()` acts as a last-ditch fallback for missing attributes, whereas `__getattribute__()` intercepts every lookup."
+        },
+        {
+          question: "How do you assign an attribute inside a custom `__setattr__()` override without triggering infinite recursion?",
+          options: [
+            "Writing `self.name = value`.",
+            "Calling `super().__setattr__(name, value)` or updating `self.__dict__[name] = value`.",
+            "Using `__getattr__()`.",
+            "Using `delattr()`."
+          ],
+          correctIndex: 1,
+          explanation: "Writing `self.name = value` inside `__setattr__` calls `__setattr__` recursively. Using `super().__setattr__()` avoids infinite recursion."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "The Descriptor Protocol: __get__, __set__, and __delete__",
+      durationMinutes: 22,
+      explanation: `
+<b>Reusable Attribute Access Control and the Descriptor Protocol</b><br/>
+In Python, **Descriptors** are the secret weapon behind properties, bound methods, <code>@classmethod</code>, <code>@staticmethod</code>, and ORM fields (like Django or SQLAlchemy models). A Descriptor is a Python object that customizes how attribute access is handled across instances by implementing the **Descriptor Protocol**.<br/><br/>
+
+<b>1. The Descriptor Protocol Dunder Methods:</b><br/>
+An object becomes a Descriptor when its class implements one or more of these methods:
+<ul>
+  <li><code>__get__(self, instance, owner=None)</code>: Called when the attribute is **read**.
+    <br/>- <code>instance</code>: The object instance on which the attribute was accessed (e.g., <code>pkg</code>).
+    <br/>- <code>owner</code>: The class owning the descriptor (e.g., <code>ParcelPackage</code>).</li>
+  <li><code>__set__(self, instance, value)</code>: Called when the attribute is **assigned** (e.g., <code>pkg.weight = 25.0</code>).</li>
+  <li><code>__delete__(self, instance)</code>: Called when the attribute is **deleted** (e.g., <code>del pkg.weight</code>).</li>
+</ul>
+
+<b>2. Data Descriptors vs. Non-Data Descriptors:</b>
+<ul>
+  <li><b>Data Descriptor:</b> Implements <code>__set__</code> and/or <code>__delete__</code> (and usually <code>__get__</code>). **Data Descriptors ALWAYS override instance dictionary entries in lookup order!**</li>
+  <li><b>Non-Data Descriptor:</b> Implements ONLY <code>__get__</code>. (Instance dictionary entries shadow non-data descriptors).</li>
+</ul>
+
+<b>3. Descriptors MUST be Instantiated at the Class Level:</b><br/>
+A descriptor object **must be assigned as a class attribute**, never an instance attribute! When you access an attribute on an instance, Python looks up the descriptor on the *class*, passing the target *instance* as an argument.<br/><br/>
+
+<b>Real-World Analogy: Custom Security Validator Checkpoint</b><br/>
+Think of a descriptor as an automated security checkpoint stationed at a warehouse gate. Whenever someone tries to place items into Cargo Slot B (`pkg.weight = -50`), the descriptor gatekeeper intercepts the value, checks if it is positive, and rejects invalid cargo before it enters the warehouse.
+      `,
+      diagram: `
+DESCRIPTOR PROTOCOL BINDING:
+
+  class ParcelPackage:
+      weight = PositiveFloatDescriptor()  <--- Class-level Descriptor!
+
+  pkg = ParcelPackage()
+
+  Read Access   : pkg.weight     ---> Calls PositiveFloatDescriptor.__get__(pkg, ParcelPackage)
+  Write Access  : pkg.weight = 5 ---> Calls PositiveFloatDescriptor.__set__(pkg, 5)
+  Delete Access : del pkg.weight ---> Calls PositiveFloatDescriptor.__delete__(pkg)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: The Descriptor Protocol (__get__, __set__, __delete__)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Building a Positive Number Validation Descriptor
+# ------------------------------------------------------------------------------
+
+class PositiveFloatDescriptor:
+    """Data Descriptor enforcing that assigned values are positive floats."""
+
+    def __init__(self, attribute_name: str):
+        self.attribute_name = attribute_name
+        self.private_name = "_" + attribute_name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self # Accessed from class level (e.g. ParcelPackage.weight)
+        print(f"  [DESCRIPTOR GET] Reading '{self.attribute_name}' from instance...")
+        return getattr(instance, self.private_name, 0.0)
+
+    def __set__(self, instance, value):
+        print(f"  [DESCRIPTOR SET] Validating '{self.attribute_name}' = {value}")
+        if not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError(f"Attribute '{self.attribute_name}' must be a positive number.")
+        setattr(instance, self.private_name, float(value))
+
+    def __delete__(self, instance):
+        print(f"  [DESCRIPTOR DELETE] Deleting '{self.attribute_name}'...")
+        if hasattr(instance, self.private_name):
+            delattr(instance, self.private_name)
+
+
+class ParcelPackage:
+    # Descriptors MUST be declared at the CLASS level!
+    weight_lbs = PositiveFloatDescriptor("weight_lbs")
+    volume_cuft = PositiveFloatDescriptor("volume_cuft")
+
+    def __init__(self, weight: float, volume: float):
+        self.weight_lbs = weight   # Triggers Descriptor __set__
+        self.volume_cuft = volume # Triggers Descriptor __set__
+
+print("--- BEGINNER: Descriptor Protocol Execution ---")
+pkg = ParcelPackage(weight=15.5, volume=2.5)
+
+# Reading descriptor attribute
+print("Read Weight:", pkg.weight_lbs)
+
+# Mutating descriptor attribute with invalid value
+try:
+    pkg.weight_lbs = -99.0
+except ValueError as err:
+    print("Caught Descriptor Validation Error:", err)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Using __set_name__ (Python 3.6+ Auto-Naming)
+# ------------------------------------------------------------------------------
+
+class ValidatedStringDescriptor:
+    """Descriptor utilizing __set_name__ to capture attribute names automatically."""
+
+    def __set_name__(self, owner, name):
+        # Automatically called when class is created!
+        self.public_name = name
+        self.private_name = "_" + name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        return getattr(instance, self.private_name, "")
+
+    def __set__(self, instance, value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"'{self.public_name}' must be a non-empty string.")
+        setattr(instance, self.private_name, value.strip().upper())
+
+
+class LogisticsHub:
+    # __set_name__ automatically sets public_name='hub_code' and 'city'
+    hub_code = ValidatedStringDescriptor()
+    city = ValidatedStringDescriptor()
+
+print("\n--- INTERMEDIATE: __set_name__ Auto-Naming ---")
+hub = LogisticsHub()
+hub.hub_code = " chi-central "
+hub.city = " chicago "
+
+print(f"Hub Code: '{hub.hub_code}' | City: '{hub.city}'")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Type-Enforced Field ORM Descriptor
+# ------------------------------------------------------------------------------
+
+class TypedFieldDescriptor:
+    """Production-grade reusable descriptor enforcing variable types."""
+    def __init__(self, expected_type):
+        self.expected_type = expected_type
+
+    def __set_name__(self, owner, name):
+        self.name = "_" + name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        return getattr(instance, self.name, None)
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.expected_type):
+            raise TypeError(f"Expected {self.expected_type.__name__}, got {type(value).__name__}")
+        setattr(instance, self.name, value)
+
+class ORMOrderModel:
+    tracking_id = TypedFieldDescriptor(str)
+    cost = TypedFieldDescriptor(float)
+    is_paid = TypedFieldDescriptor(bool)
+
+order = ORMOrderModel()
+order.tracking_id = "TRK-9004"
+order.cost = 149.99
+order.is_paid = True
+
+print("\n--- ADVANCED: ORM Type Descriptor Verification ---")
+print(f"Order: {order.tracking_id} | Cost: ${order.cost} | Paid: {order.is_paid}")
+      `,
+      keyTakeaways: [
+        "A Descriptor is an object implementing `__get__`, `__set__`, or `__delete__`.",
+        "Descriptors MUST be defined as Class Attributes, never instance attributes.",
+        "Data Descriptors (implementing `__set__`/`__delete__`) override instance dictionary lookups.",
+        "`__set_name__(self, owner, name)` automatically captures attribute names upon class creation."
+      ],
+      commonMistakes: [
+        "<b>Instantiating descriptors inside `__init__()`:</b> Writing `self.weight = PositiveFloatDescriptor()` inside `__init__` breaks the descriptor protocol! Descriptors must be class-level variables.",
+        "<b>Storing instance state on the Descriptor instance itself:</b> Storing `self.value` inside the descriptor causes all class instances to share the same variable value! State must be stored on `instance.__dict__` or instance private attributes.",
+        "<b>Confusing Data vs Non-Data Descriptors:</b> Forgetting that Data Descriptors (`__set__`) take priority over instance dictionary lookups."
+      ],
+      quizzes: [
+        {
+          question: "Where MUST Descriptor instances be defined in Python class definitions?",
+          options: [
+            "Inside the `__init__()` method assigned to `self`.",
+            "As Class-level attributes directly on the Class definition.",
+            "Inside `__getattribute__()`.",
+            "In global module scope."
+          ],
+          correctIndex: 1,
+          explanation: "Descriptors must be assigned as class attributes. Python looks up descriptors on the class object during attribute access."
+        },
+        {
+          question: "What happens if a Descriptor stores instance attribute values on `self.value` (the Descriptor instance itself)?",
+          options: [
+            "It runs 10x faster.",
+            "All instances of the owning class will overwrite and share the exact same value in memory.",
+            "Python raises a `TypeError`.",
+            "The descriptor becomes read-only."
+          ],
+          correctIndex: 1,
+          explanation: "Descriptors are shared class-level singletons. Storing state on `self` causes all class instances to overwrite each other's data."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "How Python Uses Descriptors: Properties, Methods, and Classmethods",
+      durationMinutes: 14,
+      explanation: `
+<b>Under the Hood of Python's Core Language Features</b><br/>
+Descriptors are not an obscure edge-case feature; they are the fundamental mechanism powering core Python features you use every day: **Properties (`@property`)**, **Bound Methods**, **`@classmethod`**, and **`@staticmethod`**.<br/><br/>
+
+<b>1. How `@property` Works as a Descriptor:</b><br/>
+Python's built-in `@property` decorator is simply a pre-packaged Data Descriptor class! When you write:<br/>
+<code>@property</code><br/>
+<code>def weight(self): return self._weight</code><br/><br/>
+Python creates a Property descriptor object on the class that defines `__get__`, `__set__`, and `__delete__`.<br/><br/>
+
+<b>2. How Functions Become Bound Methods via Descriptors:</b><br/>
+In Python, standard functions are **Non-Data Descriptors**!
+<ul>
+  <li>When you access a method on the Class (`ParcelPackage.dispatch`), `function.__get__` returns the raw, un-bound function.</li>
+  <li>When you access a method on an Instance (`pkg.dispatch`), `function.__get__` automatically returns a **Bound Method** object that pre-binds `self = pkg` as the first argument!</li>
+</ul>
+
+<b>3. How `@classmethod` and `@staticmethod` Work:</b>
+<ul>
+  <li><code>@classmethod</code>: Non-data descriptor whose <code>__get__</code> automatically binds the **Class (`cls`)** as the first argument.</li>
+  <li><code>@staticmethod</code>: Non-data descriptor whose <code>__get__</code> returns the raw underlying function without binding `self` or `cls`.</li>
+</ul>
+      `,
+      diagram: `
+HOW FUNCTIONS ACT AS DESCRIPTORS (__get__):
+
+  Class-Level Read (ParcelPackage.dispatch):
+  function.__get__(None, ParcelPackage) ---> Returns Unbound Function
+
+  Instance-Level Read (pkg.dispatch):
+  function.__get__(pkg, ParcelPackage)  ---> Returns Bound Method (Pre-binds self=pkg!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Properties, Methods, and Classmethods as Descriptors
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Re-creating @property Mechanics with Custom Descriptors
+# ------------------------------------------------------------------------------
+
+class CustomPropertyDescriptor:
+    """Simplified implementation showing how @property works internally."""
+    def __init__(self, fget=None, fset=None):
+        self.fget = fget
+        self.fset = fset
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        if self.fget is None:
+            raise AttributeError("Unreadable attribute")
+        return self.fget(instance)
+
+    def __set__(self, instance, value):
+        if self.fset is None:
+            raise AttributeError("Can't set attribute")
+        self.fset(instance, value)
+
+
+class DeliveryManifest:
+    def __init__(self, base_fee: float):
+        self._base_fee = base_fee
+
+    # Using custom property descriptor
+    def _get_fee(self):
+        return self._base_fee * 1.10 # Include 10% surcharge
+
+    def _set_fee(self, value):
+        if value <= 0:
+            raise ValueError("Fee must be positive")
+        self._base_fee = value
+
+    fee = CustomPropertyDescriptor(fget=_get_fee, fset=_set_fee)
+
+manifest = DeliveryManifest(100.0)
+
+print("--- BEGINNER: Custom Property Descriptor ---")
+print("Calculated Fee ($):", manifest.fee) # 110.0
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Functions as Non-Data Descriptors (Bound Methods)
+# ------------------------------------------------------------------------------
+
+class ParcelTracker:
+    def __init__(self, tracking_id: str):
+        self.tracking_id = tracking_id
+
+    def track(self):
+        return f"Parcel {self.tracking_id} is IN_TRANSIT"
+
+tracker = ParcelTracker("TRK-7007")
+
+print("\n--- INTERMEDIATE: Method Binding via Descriptors ---")
+
+# Accessing function from Class returns unbound function
+unbound_func = ParcelTracker.track
+print("Unbound Class Function :", unbound_func) # <function ParcelTracker.track>
+
+# Accessing function from Instance invokes function.__get__ to bind 'self'!
+bound_method = tracker.track
+print("Bound Instance Method  :", bound_method) # <bound method ParcelTracker.track of ...>
+
+# Executing bound method (No need to pass 'tracker' manually!)
+print("Invoking Bound Method  :", bound_method())
+      `,
+      keyTakeaways: [
+        "Python `@property` is a built-in Data Descriptor that wraps getter/setter methods.",
+        "Functions in Python are Non-Data Descriptors; accessing a function on an instance invokes `__get__` to bind `self`.",
+        "`@classmethod` descriptors bind `cls` as the first argument; `@staticmethod` descriptors return un-bound functions.",
+        "Understanding descriptors demystifies Python's object-oriented mechanics."
+      ],
+      commonMistakes: [
+        "<b>Assuming methods are special syntax constructs:</b> Missing that methods are simply function objects whose `__get__` descriptor binds instance references.",
+        "<b>Confusing `@property` with custom descriptors:</b> Using `@property` for repetitive field validation across 20 fields instead of writing a reusable custom Descriptor class."
+      ],
+      quizzes: [
+        {
+          question: "What does a standard Python function's `__get__()` descriptor method return when accessed via an instance (`obj.method`)?",
+          options: [
+            "The raw un-bound function.",
+            "A Bound Method object that pre-binds `self = obj` as the first argument.",
+            "The function's docstring.",
+            "`None`."
+          ],
+          correctIndex: 1,
+          explanation: "Accessing a function on an instance calls `function.__get__(instance, owner)`, returning a Bound Method object with `self` pre-bound."
+        },
+        {
+          question: "What type of descriptor is Python's built-in `@property` decorator?",
+          options: [
+            "Non-Data Descriptor",
+            "Data Descriptor (implements `__get__`, `__set__`, and `__delete__`)",
+            "Class Descriptor",
+            "Module Descriptor"
+          ],
+          correctIndex: 1,
+          explanation: "`@property` is a Data Descriptor implementing `__get__`, `__set__`, and `__delete__`."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Why Frameworks Use Descriptors: ORMs, Validation, and Framework Architecture",
+      durationMinutes: 10,
+      explanation: `
+<b>Enterprise Framework Architecture and Metaprogramming</b><br/>
+If you have ever built applications using enterprise Python frameworks—such as **Django**, **SQLAlchemy**, **Pydantic**, or **FastAPI**—you have interacted with descriptors continuously.<br/><br/>
+
+<b>1. Object-Relational Mappers (ORMs):</b><br/>
+In Django or SQLAlchemy, database models are defined using class-level descriptors:<br/>
+<code>class OrderModel(db.Model):</code><br/>
+<code>    id = db.Column(db.Integer, primary_key=True)</code><br/>
+<code>    tracking_code = db.CharField(max_length=50)</code><br/><br/>
+
+<b>How ORMs use Descriptors:</b>
+<ul>
+  <li>When you assign <code>order.tracking_code = "TRK-1001"</code>, the descriptor's <code>__set__</code> intercepts the assignment, marks the field as "dirty", validates length constraints, and prepares SQL UPDATE queries.</li>
+  <li>When you read <code>order.tracking_code</code>, the descriptor's <code>__get__</code> handles lazy-loading data from the database on-demand.</li>
+</ul>
+
+<b>2. Validation Libraries (Pydantic / Marshmallow):</b><br/>
+Descriptors validate types, enforce bounds, and convert inputs (e.g., parsing ISO strings into `datetime` objects) automatically upon attribute assignment.<br/><br/>
+
+<b>Architectural Summary:</b><br/>
+Descriptors allow framework authors to write complex data management, validation, and database synchronization logic **once** inside a descriptor class, allowing end-user developers to use clean standard attribute assignment syntax (<code>obj.field = value</code>)!
+      `,
+      diagram: `
+ORM FRAMEWORK DESCRIPTOR ARCHITECTURE:
+
+  User Code Syntax:
+  order.status = "DISPATCHED"
+          |
+          v
+  ORM Column Descriptor (__set__):
+  1. Intercepts value "DISPATCHED"
+  2. Validates string length & choices
+  3. Marks record as DIRTY in transaction session
+  4. Prepares SQL: UPDATE orders SET status = 'DISPATCHED' WHERE id = 1
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Framework-Style Mini ORM Field Descriptor
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Production Scenario: Mini ORM Model Framework
+# Demonstrates how frameworks like Django/SQLAlchemy leverage Descriptors.
+# ------------------------------------------------------------------------------
+
+class ModelFieldDescriptor:
+    """Base descriptor for Mini-ORM Model fields."""
+    def __init__(self, data_type, primary_key: bool = False):
+        self.data_type = data_type
+        self.primary_key = primary_key
+
+    def __set_name__(self, owner, name):
+        self.column_name = name
+        self.private_name = "_" + name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        return getattr(instance, self.private_name, None)
+
+    def __set__(self, instance, value):
+        if value is not None and not isinstance(value, self.data_type):
+            raise TypeError(f"Field '{self.column_name}' expects {self.data_type.__name__}, got {type(value).__name__}")
+
+        # ORM Dirty State Tracking
+        old_val = getattr(instance, self.private_name, None)
+        if old_val != value:
+            print(f"  [ORM DIRTY TRACKER] Field '{self.column_name}' modified: '{old_val}' -> '{value}'")
+            instance._is_dirty = True
+
+        setattr(instance, self.private_name, value)
+
+
+class MiniORMModel:
+    """Base ORM model class."""
+    def __init__(self, **kwargs):
+        self._is_dirty = False
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self._is_dirty = False # Reset dirty flag after initial load
+
+    def save(self):
+        if self._is_dirty:
+            print(f"[ORM SQL EXECUTE] Syncing dirty model changes to PostgreSQL database...")
+            self._is_dirty = False
+        else:
+            print("[ORM SQL NOTICE] No changes detected. Database write skipped.")
+
+
+# User Domain Model Definition (Clean Framework Interface!)
+class PackageOrderModel(MiniORMModel):
+    id = ModelFieldDescriptor(int, primary_key=True)
+    tracking_code = ModelFieldDescriptor(str)
+    weight_lbs = ModelFieldDescriptor(float)
+
+
+print("--- PRODUCTION MINI-ORM SIMULATION ---")
+# 1. Load record
+order = PackageOrderModel(id=101, tracking_code="TRK-9001", weight_lbs=25.0)
+
+# 2. Modify field via clean attribute syntax (Triggers Descriptor __set__)
+print("\nUpdating Package Weight:")
+order.weight_lbs = 32.5
+
+# 3. Save model changes
+print("\nSaving Model:")
+order.save()
+      `,
+      keyTakeaways: [
+        "Descriptors allow frameworks (Django, SQLAlchemy, Pydantic) to provide clean syntax while hiding complex logic.",
+        "ORM column descriptors handle dirty-state tracking, lazy-loading, and SQL query generation upon attribute access.",
+        "Descriptors abstract repetitive validation and transformation logic out of user domain models.",
+        "Understanding descriptors allows you to read and debug framework source code effectively."
+      ],
+      commonMistakes: [
+        "<b>Writing manual validation logic inside every class model:</b> Duplicating validation methods across 50 models instead of writing a single reusable Descriptor class.",
+        "<b>Modifying framework descriptor fields directly without understanding `__set__`:</b> Bypassing descriptor setters and corrupting ORM dirty-state tracking."
+      ],
+      quizzes: [
+        {
+          question: "Why do Object-Relational Mapping (ORM) frameworks like Django or SQLAlchemy use Descriptors for model fields?",
+          options: [
+            "Because descriptors prevent Python from creating global variables.",
+            "To intercept attribute access (`obj.field = val`), allowing the framework to perform validation, dirty-state tracking, and SQL query generation behind clean standard syntax.",
+            "Because descriptors make database connections 100x faster.",
+            "Because python classes cannot hold numbers without descriptors."
+          ],
+          correctIndex: 1,
+          explanation: "Descriptors intercept attribute reads and writes, allowing ORMs to track dirty fields, lazy-load data, and enforce column constraints transparently."
+        },
+        {
+          question: "What is the primary architectural benefit of using Descriptors over writing individual `@property` methods on every model field?",
+          options: [
+            "Descriptors run inside background threads.",
+            "Descriptors encapsulate attribute logic into reusable class objects that can be shared across dozens of models without code duplication.",
+            "Descriptors delete unused memory automatically.",
+            "Properties are deprecated in modern Python."
+          ],
+          correctIndex: 1,
+          explanation: "A single descriptor class (like `ValidatedStringDescriptor`) can be reused across hundreds of fields and models without duplicating `@property` getter/setter code."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the first location Python inspects when resolving an attribute access `obj.attr`?",
+      options: [
+        "Instance dictionary `obj.__dict__`",
+        "Data Descriptors on the object's class",
+        "Non-Data Descriptors",
+        "`__getattr__()` fallback"
+      ],
+      correctIndex: 1,
+      explanation: "Data Descriptors (implementing `__set__` or `__delete__`) on the class take highest priority in the lookup order."
+    },
+    {
+      question: "When is the `__getattr__()` dunder method invoked during attribute lookup?",
+      options: [
+        "For every single attribute access attempt.",
+        "Only when the attribute is missing from Data Descriptors, Instance `__dict__`, and the Class MRO.",
+        "Only when deleting attributes.",
+        "When calling class constructors."
+      ],
+      correctIndex: 1,
+      explanation: "`__getattr__()` acts as a last-ditch fallback when standard attribute lookup fails."
+    },
+    {
+      question: "Which method is invoked for EVERY attribute lookup attempt, whether the attribute exists or not?",
+      options: [
+        "`__getattr__()`",
+        "`__getattribute__()`",
+        "`__get__()`",
+        "`__findattr__()`"
+      ],
+      correctIndex: 1,
+      explanation: "`__getattribute__()` intercepts all attribute access attempts."
+    },
+    {
+      question: "Where MUST Descriptor instances be declared in Python class structures?",
+      options: [
+        "Inside `__init__()` assigned to `self`",
+        "As Class-level attributes directly on the class definition",
+        "Inside `__getattribute__()`",
+        "In module global scope"
+      ],
+      correctIndex: 1,
+      explanation: "Descriptors must be assigned as class attributes so Python can locate them during lookup."
+    },
+    {
+      question: "What distinguishes a Data Descriptor from a Non-Data Descriptor?",
+      options: [
+        "Data Descriptors hold numbers; Non-Data Descriptors hold strings.",
+        "Data Descriptors implement `__set__` and/or `__delete__`; Non-Data Descriptors implement only `__get__`.",
+        "Data Descriptors run inside virtual environments.",
+        "Non-Data Descriptors cannot be class attributes."
+      ],
+      correctIndex: 1,
+      explanation: "Data Descriptors implement `__set__` or `__delete__` and take precedence over instance dictionaries."
+    },
+    {
+      question: "What dunder method automatically captures the attribute name assigned to a descriptor upon class creation (Python 3.6+)?",
+      options: [
+        "`__init__()`",
+        "`__set_name__()`",
+        "`__bind_name__()`",
+        "`__name__()`"
+      ],
+      correctIndex: 1,
+      explanation: "`__set_name__(self, owner, name)` captures the attribute name upon class creation."
+    },
+    {
+      question: "How do Python functions turn into Bound Methods when accessed on an instance (`obj.method`)?",
+      options: [
+        "Functions are Non-Data Descriptors whose `__get__` method pre-binds `self = obj` as the first argument.",
+        "Python converts functions to strings.",
+        "By calling `__setattr__()`.",
+        "Using global variables."
+      ],
+      correctIndex: 0,
+      explanation: "Functions implement `__get__`, returning a Bound Method with `self` pre-bound when accessed on an instance."
+    },
+    {
+      question: "How do you avoid infinite recursion inside a custom `__setattr__(self, name, value)` override?",
+      options: [
+        "Write `self.name = value`.",
+        "Call `super().__setattr__(name, value)` or update `self.__dict__[name] = value`.",
+        "Call `__getattr__()`.",
+        "Return `True`."
+      ],
+      correctIndex: 1,
+      explanation: "Calling `super().__setattr__()` or updating `self.__dict__` avoids re-triggering `__setattr__` recursively."
+    }
+  ],
+  project: {
+    name: "Mini-ORM Field Validation & Telemetry Framework (Phase 1 Project)",
+    goal: "Build a lightweight ORM field validation framework that uses descriptors for data type enforcement and bounds checking, __getattr__ for dynamic query fallbacks, and __getattribute__ for security access auditing.",
+    brief: "Your backend engineering team requires a declarative data model framework (`mini_orm.py`). The framework must provide reusable descriptors for type-enforced model fields (`StringField`, `PositiveFloatField`), implement dynamic property fallbacks using `__getattr__`, audit field access telemetry using `__getattribute__`, and track dirty model state for database synchronization.",
+    steps: [
+      "Create a script file named `mini_orm.py` in your workspace.",
+      "Implement a base Descriptor class `ValidatedField` using `__set_name__`, `__get__`, and `__set__` to enforce type and non-empty rules.",
+      "Implement specialized descriptors `StringField` and `PositiveFloatField` inheriting from `ValidatedField`.",
+      "Build a base model class `ORMModel` that uses `__getattr__` to synthesize dynamic `get_by_<field>()` query methods on the fly.",
+      "Add security audit logging inside `__getattribute__` to log attribute accesses while carefully avoiding infinite recursion using `super().__getattribute__()`.",
+      "Instantiate a domain model `ShipmentModel` with validated fields (`tracking_id`, `weight_lbs`, `cost_usd`) and test validation failures.",
+      "Run `python3 mini_orm.py` in your integrated terminal and print a complete ORM validation report."
+    ],
+    acceptance: [
+      "Descriptors enforce types and positive value bounds upon attribute assignment.",
+      "`__getattr__` handles missing attribute fallbacks and dynamic query methods.",
+      "`__getattribute__` intercepts lookups safely using `super()` without infinite recursion.",
+      "Executing `python3 mini_orm.py` prints a clean model validation report without runtime errors."
+    ],
+    stretch: [
+      "Implement a `BoundedNumberField(min_val, max_val)` descriptor that validates range constraints.",
+      "Annotate all ORM descriptor methods with strict type hints (`Any`, `Type[Any]`) and pass static type checks."
+    ]
+  }
+};
