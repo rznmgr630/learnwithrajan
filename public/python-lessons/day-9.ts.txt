@@ -1,0 +1,626 @@
+/**
+ * DAY 09: Phase 1 · Core Python — Loops
+ * 
+ * Total Duration: 80 minutes
+ * Difficulty: Beginner
+ * Lessons: 3
+ */
+
+export const phase1Loops = {
+  day: 8,
+  topic: "Phase 1 · Core Python — Loops",
+  totalMinutes: 80,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Repeat Over Values with For and Range",
+      durationMinutes: 20,
+      explanation: `
+<b>Iterating Sequences and Generating Numeric Ranges</b><br/>
+Computers excel at performing repetitive operations with zero fatigue. When a logistics platform needs to print shipping labels for 500 packages, compute fuel totals for 50 delivery vans, or evaluate delivery deadlines across a batch of orders, writing duplicate code for each item is impossible. Python's <b><code>for</code> loop</b> allows you to iterate over any sequence (lists, tuples, strings, dictionaries, or ranges) cleanly and predictably.<br/><br/>
+
+<b>1. How the <code>for</code> Loop Works:</b><br/>
+In Python, a <code>for</code> loop is a "for-each" loop. It automatically picks items from a collection one by one, assigns the current item to a temporary loop variable, and executes the indented block of code.<br/>
+<code>for package in package_list:</code><br/>
+<code>    print("Processing package:", package)</code><br/><br/>
+
+<b>2. The Built-In <code>range()</code> Function:</b><br/>
+When you need to repeat an action a specific number of times (e.g., "retry a network request 3 times" or "process cargo bays 1 through 10"), Python provides the immutable sequence generator <code>range()</code>.<br/>
+Syntax variants:
+<ul>
+  <li><code>range(stop)</code>: Generates numbers from <code>0</code> up to (but excluding) <code>stop</code>. Example: <code>range(5)</code> yields <code>0, 1, 2, 3, 4</code>.</li>
+  <li><code>range(start, stop)</code>: Generates numbers from <code>start</code> up to (but excluding) <code>stop</code>. Example: <code>range(1, 6)</code> yields <code>1, 2, 3, 4, 5</code>.</li>
+  <li><code>range(start, stop, step)</code>: Generates numbers with a specific increment or decrement stride. Example: <code>range(0, 10, 2)</code> yields <code>0, 2, 4, 6, 8</code>.</li>
+</ul>
+
+<b>3. Index-Tracking Iteration with <code>enumerate()</code>:</b><br/>
+A common beginner anti-pattern is using <code>range(len(sequence))</code> just to track list indices. Modern Python provides <code>enumerate(sequence)</code>, which yields <code>(index, item)</code> tuple pairs directly during iteration!<br/><br/>
+
+<b>Real-World Logistics Analogy: Automated Package Conveyor Scanner</b><br/>
+Imagine an automated conveyor belt moving parcels past an optical barcode scanner. The <code>for</code> loop acts like the conveyor belt motor, automatically bringing the next package in line directly under the scanner without needing a operator to push each package individually.
+      `,
+      diagram: `
+FOR LOOP & ENUMERATE ITERATION:
+
+  packages = ["PKG-101", "PKG-202", "PKG-303"]
+
+  for index, tracking_id in enumerate(packages, start=1):
+      print(f"Slot {index}: {tracking_id}")
+
+  Iteration Step 1: index = 1, tracking_id = "PKG-101"
+  Iteration Step 2: index = 2, tracking_id = "PKG-202"
+  Iteration Step 3: index = 3, tracking_id = "PKG-303"
+  Loop Terminated (End of collection reached automatically)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: For Loops, Range Generators, and Enumerate
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Standard For Loop and range()
+# ------------------------------------------------------------------------------
+
+package_queue = ["TRK-901", "TRK-902", "TRK-903"]
+
+print("--- BEGINNER: Iterating List Items ---")
+# Direct sequence iteration
+for tracking_id in package_queue:
+    print(f"Dispatching package: {tracking_id}")
+
+print("\nRepeating actions using range(start, stop, step):")
+# Counting retry attempts (1 to 3)
+for attempt in range(1, 4):
+    print(f"  Attempt {attempt}/3: Connecting to GPS Satellite...")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Index Tracking with enumerate()
+# ------------------------------------------------------------------------------
+
+cargo_manifest = ["MEDICINE_CRATE", "ELECTRONICS_PALLET", "PERISHABLE_FOOD"]
+
+print("\n--- INTERMEDIATE: Enumerate Index Tracking ---")
+# Using enumerate with custom 1-based index display
+for slot_number, item in enumerate(cargo_manifest, start=1):
+    print(f"Warehouse Bay #{slot_number:<2} contains cargo: {item}")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Batch Manifest Processor
+# ------------------------------------------------------------------------------
+
+def process_batch_manifest_manifests(
+    manifest_batch: list[dict], 
+    tax_rate: float = 0.05
+) -> dict:
+    \"\"\"
+    Processes a list of package dictionaries using for loops and enumerate, 
+    computing cumulative totals and generating indexed audit trails.
+    \"\"\"
+    print(f"\n--- ADVANCED: Processing Batch Manifest ({len(manifest_batch)} items) ---")
+    
+    processed_records = []
+    total_batch_weight = 0.0
+    total_revenue_usd = 0.0
+    
+    # Clean enumeration over structured dictionary records
+    for item_idx, record in enumerate(manifest_batch, start=1):
+        tracking_id = record.get("id", f"UNKNOWN_{item_idx}")
+        weight = float(record.get("weight_lbs", 0.0))
+        base_fee = float(record.get("base_fee", 10.00))
+        
+        # Accumulate metrics
+        calculated_fee = round(base_fee * (1.0 + tax_rate), 2)
+        total_batch_weight += weight
+        total_revenue_usd += calculated_fee
+        
+        processed_records.append({
+            "line_number": item_idx,
+            "tracking_id": tracking_id,
+            "weight_lbs": weight,
+            "final_fee_usd": calculated_fee
+        })
+        
+    return {
+        "total_items_processed": len(processed_records),
+        "total_weight_lbs": round(total_batch_weight, 2),
+        "total_revenue_usd": round(total_revenue_usd, 2),
+        "audit_trail": processed_records
+    }
+
+# Test execution with batch list
+batch_data = [
+    {"id": "PKG-A10", "weight_lbs": 14.5, "base_fee": 25.00},
+    {"id": "PKG-B20", "weight_lbs": 8.2, "base_fee": 15.00},
+    {"id": "PKG-C30", "weight_lbs": 52.0, "base_fee": 80.00}
+]
+
+summary = process_batch_manifest_manifests(batch_data)
+print("Batch Summary Revenue: $", summary["total_revenue_usd"])
+print("First Audit Line:", summary["audit_trail"][0])
+      `,
+      keyTakeaways: [
+        "`for` loops iterate automatically through sequence collections or `range()` generators.",
+        "`range(start, stop, step)` generates numeric sequences, stopping strictly before the `stop` boundary.",
+        "Use `enumerate(sequence, start=1)` to track index positions alongside items cleanly.",
+        "Prefer `for item in collection:` over `for i in range(len(collection)):` unless index manipulation is strictly required."
+      ],
+      commonMistakes: [
+        "<b>Off-by-one errors with `range()`:</b> Expecting `range(1, 5)` to include `5`. Remember that the `stop` boundary is exclusive!",
+        "<b>Un-pythonic `range(len())` index looping:</b> Writing `for i in range(len(items)): print(items[i])` instead of the clean `for item in items:` or `for i, item in enumerate(items):`.",
+        "<b>Modifying the iterated collection inside a `for` loop body:</b> Appending or removing items from a list while iterating directly over it causes skipped items or infinite loops."
+      ],
+      quizzes: [
+        {
+          question: "What exact numbers are generated by `list(range(2, 8, 2))`?",
+          options: [
+            "`[2, 4, 6, 8]`",
+            "`[2, 4, 6]`",
+            "`[2, 3, 4, 5, 6, 7]`",
+            "`[4, 6, 8]`"
+          ],
+          correctIndex: 1,
+          explanation: "`range(2, 8, 2)` starts at 2, increments by 2, and stops before reaching boundary 8, yielding `[2, 4, 6]`."
+        },
+        {
+          question: "What is the primary advantage of using `enumerate(items)` in a `for` loop?",
+          options: [
+            "It automatically sorts the list before iterating.",
+            "It yields `(index, item)` tuple pairs, giving access to the current index position without manual counter management.",
+            "It converts all items in the list to strings.",
+            "It runs the loop inside a background thread."
+          ],
+          correctIndex: 1,
+          explanation: "`enumerate()` provides both index positions and sequence values cleanly during iteration."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Use While, Break, Continue, and Pass Intentionally",
+      durationMinutes: 20,
+      explanation: `
+<b>Indefinite Loops, Loop Controls, and Placeholders</b><br/>
+Not all repetitive tasks know their exact iteration count beforehand. A delivery driver app continues scanning package barcodes until the truck is full; a satellite connection retries every 5 seconds until a server ping succeeds. For tasks dependent on dynamic conditions, Python provides the <b><code>while</code> loop</b> alongside explicit loop control statements: <code>break</code>, <code>continue</code>, and <code>pass</code>.<br/><br/>
+
+<b>1. The <code>while</code> Loop (Condition-Driven Iteration):</b><br/>
+A <code>while</code> loop repeatedly executes its code block as long as a boolean condition remains <code>True</code>.
+<ul>
+  <li><b>The Infinite Loop Hazard:</b> If the tested condition never becomes <code>False</code> (or if no internal <code>break</code> statement triggers), the loop runs forever, freezing your program! Always ensure loop state variables are updated within the loop body.</li>
+</ul>
+
+<b>2. Loop Control Statements:</b>
+<ul>
+  <li><b><code>break</code> (Immediate Termination):</b> Instantly aborts the entire loop, skipping all remaining iterations and jumping directly to the first line after the loop.</li>
+  <li><b><code>continue</code> (Skip to Next Iteration):</b> Instantly skips the remaining lines inside the current loop body and jumps directly to the top for the next iteration step.</li>
+  <li><b><code>pass</code> (Syntactic Placeholder):</b> A no-op statement that does nothing. It acts as a mandatory placeholder where Python syntax requires a code block (e.g., unwritten function stubs or empty exception blocks).</li>
+</ul>
+
+<b>3. The Optional <code>else</code> Clause on Loops:</b><br/>
+Python loops support a unique <code>else</code> block attached to the end of a <code>for</code> or <code>while</code> loop!
+The loop <code>else</code> block executes <b>only if the loop completes all iterations naturally</b> (i.e., without encountering a <code>break</code> statement). If a loop is aborted by <code>break</code>, the <code>else</code> block is completely skipped.
+      `,
+      diagram: `
+WHILE LOOP WITH BREAK AND CONTINUE CONTROL:
+
+         [ Evaluate Condition ] 
+             |              |
+          (True)         (False) ---> [ Loop Terminates / Jump to End ]
+             |
+             v
+   [ Inside Loop Body ]
+             |
+             +---> [ Hit 'continue'? ] ---> Jump immediately back to top condition!
+             |
+             +---> [ Hit 'break'? ]    ---> ABORT loop instantly! Skip else block!
+             |
+             v
+   [ End of iteration body ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: While Loops, Break, Continue, Pass, and Loop Else
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: While Loop with Break and Continue
+# ------------------------------------------------------------------------------
+
+package_weights_lbs = [12.0, 45.0, 0.0, 150.0, 22.0] # Notice 0.0 (corrupted) & 150.0 (overweight)
+total_truck_weight = 0.0
+max_truck_capacity = 100.0
+
+print("--- BEGINNER: Loop Control Execution ---")
+
+for weight in package_weights_lbs:
+    # 1. Skip corrupted non-positive weights using 'continue'
+    if weight <= 0.0:
+        print("  Notice: Skipping corrupted weight entry (0.0 lbs)...")
+        continue
+        
+    # 2. Check if adding package exceeds safety capacity; abort with 'break'
+    if total_truck_weight + weight > max_truck_capacity:
+        print(f"  SAFETY STOP: Weight {weight} lbs exceeds truck limit! Aborting load.")
+        break
+        
+    # Main loading logic
+    total_truck_weight += weight
+    print(f"  Loaded package: {weight} lbs | Truck Total: {total_truck_weight} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: While Loop with Search Guard and Loop 'else'
+# ------------------------------------------------------------------------------
+
+search_queue = ["TRK-100", "TRK-200", "TARGET-PKG-88", "TRK-300"]
+target_id = "TARGET-PKG-88"
+
+print("\n--- INTERMEDIATE: Loop 'else' Search Pattern ---")
+
+while search_queue:
+    current_pkg = search_queue.pop(0)
+    print(f"Inspecting package: {current_pkg}")
+    
+    if current_pkg == target_id:
+        print(f"SUCCESS: Target package {target_id} located!")
+        break # Aborts loop, skipping 'else' block below
+else:
+    # Executes ONLY if while loop completes naturally (queue empties without hitting break)
+    print("SEARCH FAILED: Target package not present in queue.")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Network Retry Engine with Backoff
+# ------------------------------------------------------------------------------
+
+import time
+
+def poll_gps_satellite_telemetry(max_retries: int = 3) -> dict:
+    \"\"\"
+    Simulates polling an external GPS satellite API using a while loop 
+    with retry limits, pass stubs, and exception guards.
+    \"\"\"
+    print(f"\n--- ADVANCED: GPS Polling Retry Engine (Max Retries: {max_retries}) ---")
+    
+    attempt = 0
+    connection_successful = False
+    telemetry_data = None
+    
+    while attempt < max_retries:
+        attempt += 1
+        print(f"Attempt #{attempt}: Connecting to satellite endpoint...")
+        
+        # Simulating conditional connection failure
+        if attempt < 3:
+            print("  Signal weak (HTTP 503). Skipping to retry...")
+            # 'pass' used as explicit stub placeholder for future telemetry logging hooks
+            pass
+            continue
+            
+        # Connection succeeds on attempt 3
+        print("  Signal locked! Telemetry payload received.")
+        connection_successful = True
+        telemetry_data = {"lat": 41.8781, "lon": -87.6298, "status": "LOCKED"}
+        break # Exit retry loop on success
+    else:
+        # Executes only if retry count exhausted without successful 'break'
+        print("CRITICAL ALERT: All GPS connection retry attempts failed!")
+        
+    return {
+        "success": connection_successful,
+        "attempts_made": attempt,
+        "data": telemetry_data
+    }
+
+# Execute satellite polling
+print("Polling Engine Result:", poll_gps_satellite_telemetry(max_retries=3))
+      `,
+      keyTakeaways: [
+        "`while` loops execute as long as their condition remains `True`; ensure state variables update to prevent infinite loops.",
+        "`break` terminates the loop immediately; `continue` skips the rest of the current iteration and jumps to the next.",
+        "`pass` is a syntactic placeholder that does nothing.",
+        "A loop `else` block executes strictly when the loop completes all iterations naturally without hitting a `break` statement."
+      ],
+      commonMistakes: [
+        "<b>Creating infinite `while` loops:</b> Forgetting to increment counter variables or update exit flags inside the loop body.",
+        "<b>Confusing `break` and `continue`:</b> Using `break` (which terminates the entire loop) when `continue` (skipping one item) was intended.",
+        "<b>Expecting loop `else` to run after a `break`:</b> Forgetting that hitting `break` explicitly skips the loop's attached `else` block."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary difference between `break` and `continue` inside a loop?",
+          options: [
+            "`break` skips the current item; `continue` aborts the entire loop.",
+            "`break` aborts the entire loop immediately; `continue` skips the remainder of the current iteration and moves to the next.",
+            "`break` restarts the loop from index 0; `continue` deletes the item.",
+            "They are completely interchangeable."
+          ],
+          correctIndex: 1,
+          explanation: "`break` terminates the loop execution entirely, whereas `continue` skips only the rest of the current iteration step."
+        },
+        {
+          question: "When does the `else` block attached to a `for` or `while` loop execute in Python?",
+          options: [
+            "Whenever the loop condition is False on the first check.",
+            "Only if the loop was terminated by a `break` statement.",
+            "Only if the loop completed all iterations naturally without encountering a `break` statement.",
+            "It executes before every iteration step."
+          ],
+          correctIndex: 2,
+          explanation: "In Python, a loop's `else` block executes strictly when the loop finishes its iterations naturally without hitting a `break`."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Pair and Nest Iterations Carefully",
+      durationMinutes: 18,
+      explanation: `
+<b>Nested Loops, Matrix Iteration, and $O(N^2)$ Complexity</b><br/>
+A **Nested Loop** occurs when you place a loop inside the body of another loop. Nested loops are frequently required when working with multi-dimensional structures, such as iterating over rows and columns of a warehouse storage grid, matching delivery drivers to package batches, or processing multi-hub transportation matrices.<br/><br/>
+
+<b>1. How Nested Loops Work:</b><br/>
+For <i>every single iteration</i> of the outer loop, the inner loop executes its entire iteration cycle from start to finish!<br/>
+If the outer loop runs $M$ times and the inner loop runs $N$ times, the innermost code block executes $M \times N$ total times.<br/><br/>
+
+<b>2. The Performance Trap: $O(N^2)$ Time Complexity:</b><br/>
+A major source of performance degradation in real-world software is uncontrolled nested iteration.
+<ul>
+  <li>Scanning 100 packages against 100 delivery zones requires $100 \times 100 = 10,000$ operations (instant).</li>
+  <li>Scanning 100,000 packages against 100,000 delivery zones in a nested loop requires $100,000 \times 100,000 = 10,000,000,000$ (10 billion) operations, causing your application to freeze!</li>
+</ul>
+
+<b>3. Cleaner Alternatives to Nested Loops:</b>
+<ul>
+  <li><b>`zip(seq1, seq2)`:</b> Iterates over multiple equal-length sequences in parallel simultaneously! Yields `(item1, item2)` tuple pairs in a single clean $O(N)$ loop.</li>
+  <li><b>Set Lookups inside Loops:</b> Convert the inner collection to a `set` before the loop. Lookups inside sets run in $O(1)$ time, reducing an $O(N^2)$ nested search to an $O(N)$ linear loop!</li>
+</ul>
+
+<b>Real-World Analogy: Checking Warehouse Aisles and Shelves</b><br/>
+Think of nested loops as a security guard inspecting a warehouse. The outer loop walks down each **Aisle** (Row 1, Row 2, Row 3). For each aisle, the inner loop inspects every **Shelf** on that aisle (Shelf A, Shelf B, Shelf C) before moving to the next aisle.
+      `,
+      diagram: `
+NESTED LOOP ITERATION EXECUTION:
+
+  for row in range(2):         # Outer Loop (M = 2)
+      for col in range(3):     # Inner Loop (N = 3)
+          print(row, col)
+
+  Outer Row 0 ---> Inner Col 0
+               ---> Inner Col 1
+               ---> Inner Col 2
+  Outer Row 1 ---> Inner Col 0
+               ---> Inner Col 1
+               ---> Inner Col 2
+  Total Operations: 2 * 3 = 6 Inner Executions
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Nested Iteration, Parallel Iteration with zip(), and Optimization
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: 2D Grid Iteration (Warehouse Aisles)
+# ------------------------------------------------------------------------------
+
+warehouse_aisles = ["Aisle 1", "Aisle 2"]
+shelves_per_aisle = ["Shelf A", "Shelf B"]
+
+print("--- BEGINNER: Nested 2D Grid Iteration ---")
+# Outer loop: Aisles
+for aisle in warehouse_aisles:
+    print(f"Entering {aisle}:")
+    # Inner loop: Shelves
+    for shelf in shelves_per_aisle:
+        print(f"  Inspecting {aisle} -> {shelf}")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Parallel Iteration with zip() (Avoiding Nested Loops)
+# ------------------------------------------------------------------------------
+
+tracking_ids = ["TRK-101", "TRK-102", "TRK-103"]
+destinations = ["Chicago", "Austin", "Seattle"]
+weights_lbs = [12.5, 45.0, 8.2]
+
+print("\n--- INTERMEDIATE: Parallel Iteration with zip() ---")
+# zip() pairs elements across lists simultaneously in 1 linear pass
+for tracking_id, city, weight in zip(tracking_ids, destinations, weights_lbs):
+    print(f"Package {tracking_id} -> Destination: {city:<10} | Weight: {weight} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Optimizing O(N^2) Nested Loop to O(N) Set Lookup
+# ------------------------------------------------------------------------------
+
+def find_flagged_packages_unoptimized(all_packages: list[str], flagged_ids: list[str]) -> list[str]:
+    \"\"\"
+    O(N * M) Quadratic Time Complexity - Nested Loops Anti-Pattern.
+    \"\"\"
+    matches = []
+    # Nested loop search
+    for pkg in all_packages:           # N iterations
+        for flagged in flagged_ids:    # M iterations
+            if pkg == flagged:
+                matches.append(pkg)
+    return matches
+
+
+def find_flagged_packages_optimized(all_packages: list[str], flagged_ids: list[str]) -> list[str]:
+    \"\"\"
+    O(N + M) Linear Time Complexity - Convert inner list to set for O(1) lookups!
+    \"\"\"
+    print("\n--- ADVANCED: O(N) Optimized Search Engine ---")
+    
+    # Step 1: Convert inner list to hash set in O(M) time
+    flagged_set = set(flagged_ids)
+    matches = []
+    
+    # Step 2: Single flat loop with O(1) set membership check
+    for pkg in all_packages:           # N iterations
+        if pkg in flagged_set:         # O(1) constant lookup!
+            matches.append(pkg)
+            
+    return matches
+
+# Test dataset
+packages_batch = [f"TRK-{i}" for i in range(1000, 1005)]
+flagged_batch = ["TRK-1002", "TRK-1004", "TRK-9999"]
+
+matches_found = find_flagged_packages_optimized(packages_batch, flagged_batch)
+print("Flagged Matches Located:", matches_found)
+      `,
+      keyTakeaways: [
+        "Nested loops place an inner loop inside an outer loop body, executing $M \times N$ total inner iterations.",
+        "Uncontrolled nested loops lead to $O(N^2)$ quadratic performance slowdowns as datasets grow.",
+        "Use `zip(list1, list2)` to iterate through multiple parallel lists in a single linear pass.",
+        "Optimize $O(N^2)$ nested search loops to $O(N)$ by converting inner search collections to `set` hash tables."
+      ],
+      commonMistakes: [
+        "<b>Using nested loops to iterate over parallel lists:</b> Writing nested loops when `zip(list1, list2)` is cleaner and much faster.",
+        "<b>Accidentally nesting loops deeply (3+ levels):</b> Creating severe performance bottlenecks that freeze applications on large datasets.",
+        "<b>Re-creating inner sets or computations inside the outer loop body:</b> Placing `set(inner_list)` inside the outer loop body recreates the set on every single iteration step instead of once before the loop."
+      ],
+      quizzes: [
+        {
+          question: "If an outer loop runs 10 times and an inner nested loop runs 20 times, how many total times will the inner loop body execute?",
+          options: [
+            "30 times",
+            "200 times",
+            "20 times",
+            "10 times"
+          ],
+          correctIndex: 1,
+          explanation: "Nested loops execute $M \times N$ times. $10 \times 20 = 200$ total inner executions."
+        },
+        {
+          question: "Which built-in Python function allows you to iterate through multiple equal-length lists in parallel in a single loop?",
+          options: [
+            "`enumerate()`",
+            "`zip()`",
+            "`range()`",
+            "`concat()`"
+          ],
+          correctIndex: 1,
+          explanation: "`zip(list1, list2)` combines corresponding elements from multiple lists into tuple pairs during iteration."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which loop construct is best suited for iterating through a known collection of package records?",
+      options: [
+        "`while` loop",
+        "`for` loop",
+        "`do-while` loop",
+        "`repeat-until` loop"
+      ],
+      correctIndex: 1,
+      explanation: "`for` loops in Python are designed for iterating over finite collections and sequences."
+    },
+    {
+      question: "What numbers are generated by `range(1, 5)`?",
+      options: [
+        "`1, 2, 3, 4, 5`",
+        "`1, 2, 3, 4`",
+        "`0, 1, 2, 3, 4`",
+        "`2, 3, 4, 5`"
+      ],
+      correctIndex: 1,
+      explanation: "`range(start, stop)` starts at `start` (1) and stops strictly before `stop` (5), yielding `1, 2, 3, 4`."
+    },
+    {
+      question: "What does the `break` statement do when executed inside a loop body?",
+      options: [
+        "Skips the rest of the current iteration step and moves to the next item.",
+        "Terminates the loop immediately and jumps to code following the loop.",
+        "Pauses execution for 5 seconds.",
+        "Restarts the loop from the beginning."
+      ],
+      correctIndex: 1,
+      explanation: "`break` aborts loop execution immediately."
+    },
+    {
+      question: "What does the `continue` statement do inside a loop body?",
+      options: [
+        "Aborts the entire loop.",
+        "Skips remaining statements in the current iteration step and moves directly to the next iteration.",
+        "Terminates the Python program.",
+        "Does nothing."
+      ],
+      correctIndex: 1,
+      explanation: "`continue` skips the remainder of the current iteration body and jumps to the top for the next step."
+    },
+    {
+      question: "When does the `else` block attached to a `for` loop execute?",
+      options: [
+        "Only if the loop was terminated by a `break` statement.",
+        "Only if the loop completed all iterations naturally without encountering a `break` statement.",
+        "Before every single iteration step.",
+        "Only if an exception occurred."
+      ],
+      correctIndex: 1,
+      explanation: "A loop's `else` block executes strictly when the loop finishes all iterations naturally without hitting a `break`."
+    },
+    {
+      question: "Which Python function pairs items from multiple lists simultaneously for parallel iteration?",
+      options: [
+        "`enumerate()`",
+        "`zip()`",
+        "`range()`",
+        "`pair()`"
+      ],
+      correctIndex: 1,
+      explanation: "`zip()` pairs elements from multiple sequences into tuple pairs for parallel iteration."
+    },
+    {
+      question: "How can you optimize an $O(N^2)$ nested search loop checking if items in `list_a` exist in `list_b`?",
+      options: [
+        "Replace the `for` loop with a `while` loop.",
+        "Convert `list_b` into a `set` before the loop, enabling $O(1)$ membership checks inside a single flat loop.",
+        "Use `pass` inside the inner loop.",
+        "Sort `list_a` in reverse order."
+      ],
+      correctIndex: 1,
+      explanation: "Converting the inner collection to a `set` changes inner searches from $O(N)$ linear scans to $O(1)$ constant time lookups."
+    },
+    {
+      question: "What statement acts as a syntactic placeholder that performs no action when code block syntax is required?",
+      options: [
+        "`stop`",
+        "`continue`",
+        "`pass`",
+        "`void`"
+      ],
+      correctIndex: 2,
+      explanation: "`pass` is a no-op placeholder statement in Python."
+    }
+  ],
+  project: {
+    name: "Automated Package Loading & Route Simulation Engine (Phase 1 Project)",
+    goal: "Build a route loading simulation engine that processes incoming delivery batches using for loops, handles capacity threshold guards with while loops and break statements, pairs drivers to routes using zip(), and optimizes grid searches.",
+    brief: "Your courier logistics company requires a simulation engine (`route_simulator.py`). The engine must process queues of packages using `for` loops and `enumerate()`, simulate truck capacity limits using `while` loops and early `break` terminations, pair drivers with vehicle routes using `zip()`, and audit restricted zip codes efficiently without nested loop performance bottlenecks.",
+    steps: [
+      "Create a script file named `route_simulator.py` in your workspace.",
+      "Define test queues of package dictionaries containing tracking codes, weights, and destination zip codes.",
+      "Write a truck loading function `simulate_truck_loading(package_queue: list, max_capacity_lbs: float)` using a `while` loop and `break` statement to stop loading when weight thresholds are reached.",
+      "Implement a driver assignment function `assign_drivers_to_routes(drivers: list, routes: list)` using `zip()` to pair drivers and routes in parallel.",
+      "Write a restricted delivery detector `detect_restricted_packages(packages: list, embargo_zips: list)` that converts `embargo_zips` to a `set` to perform $O(N)$ lookups instead of nested loops.",
+      "Format an indexed manifest report using `for index, pkg in enumerate(loaded_packages, start=1):`.",
+      "Run `python3 route_simulator.py` in your integrated terminal and output a simulation report."
+    ],
+    acceptance: [
+      "Truck loading stops immediately when capacity is exceeded without throwing unhandled exceptions.",
+      "Driver assignment uses `zip()` cleanly for parallel pairing.",
+      "Restricted zip code checks use $O(1)$ set lookups instead of nested $O(N^2)$ loops.",
+      "Executing `python3 route_simulator.py` prints a fully formatted simulation audit report."
+    ],
+    stretch: [
+      "Integrate a loop `else` block that flags batches that completely fit within truck capacity without triggering a `break`.",
+      "Annotate all functions with strict type hints (`list[dict]`, `tuple[str, str]`) and pass static type verification."
+    ]
+  }
+};
