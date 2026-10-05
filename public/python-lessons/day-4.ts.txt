@@ -1,0 +1,990 @@
+/**
+ * DAY 04: Phase 0 · Python Foundations — Operators & Expressions
+ * 
+ * Total Duration: 80 minutes
+ * Difficulty: Beginner
+ * Lessons: 5
+ */
+
+export const phase0OperatorsAndExpressions = {
+  day: 3,
+  topic: "Phase 0 · Python Foundations — Operators & Expressions",
+  totalMinutes: 80,
+  difficulty: "Beginner",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Arithmetic and Assignment",
+      durationMinutes: 17,
+      explanation: `
+<b>Computing Numerical Values and Managing State</b><br/>
+At the core of any logistics software (like Amazon, FedEx, or DoorDash) are continuous calculations: summing package weights, splitting cargo volumes across delivery vans, computing estimated fuel usage, and updating account balances. Python provides a rich set of arithmetic operators and shorthand assignment operators to perform these calculations safely and efficiently.<br/><br/>
+
+<b>1. The Standard Arithmetic Operators:</b>
+<ul>
+  <li><b>Addition (<code>+</code>):</b> Adds two values together (e.g., <code>10 + 5 == 15</code>).</li>
+  <li><b>Subtraction (<code>-</code>):</b> Subtracts the right operand from the left (e.g., <code>10 - 5 == 5</code>).</li>
+  <li><b>Multiplication (<code>*</code>):</b> Multiplies two values (e.g., <code>10 * 5 == 50</code>).</li>
+  <li><b>Division (<code>/</code>):</b> Standard floating-point division. <b>Crucial rule:</b> Standard division in Python <i>always</i> returns a <code>float</code> object, even if the numbers divide evenly without a remainder! (e.g., <code>10 / 2 == 5.0</code>).</li>
+  <li><b>Floor Division (<code>//</code>):</b> Integer division that divides two numbers and automatically rounds <i>down</i> (floors) to the nearest whole integer, discarding any decimal fractional part (e.g., <code>10 // 3 == 3</code>).</li>
+  <li><b>Modulo / Remainder (<code>%</code>):</b> Divides the left operand by the right operand and returns the integer <i>remainder</i> (e.g., <code>10 % 3 == 1</code>).</li>
+  <li><b>Exponentiation (<code>**</code>):</b> Raises the left base operand to the power of the right exponent operand (e.g., <code>2 ** 3 == 8</code>).</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Cargo Pallet Allocation</b><br/>
+Imagine you have a shipment of 105 individual parcel packages arriving at a Chicago airport logistics facility. Each standard delivery van can hold exactly 20 packages.<br/>
+- How many vans can you fully load? Use <b>Floor Division</b>: <code>105 // 20 == 5</code> fully loaded vans.<br/>
+- How many leftover packages need to be routed to a smaller backup courier vehicle? Use <b>Modulo</b>: <code>105 % 20 == 5</code> leftover packages.<br/>
+- What is the precise floating-point ratio of vans needed? Use <b>Standard Division</b>: <code>105 / 20 == 5.25</code> vans.<br/><br/>
+
+<b>2. Compound Assignment Operators (In-Place Modifications):</b><br/>
+In application programming, you frequently update a variable based on its previous value. Instead of writing <code>total_weight = total_weight + 5.5</code>, Python provides compound assignment shortcuts:
+<ul>
+  <li><code>total_weight += 5.5</code> (Addition Assignment)</li>
+  <li><code>total_weight -= 2.0</code> (Subtraction Assignment)</li>
+  <li><code>total_weight *= 1.1</code> (Multiplication Assignment / e.g., applying a 10% inflation tax)</li>
+  <li><code>total_weight /= 2.0</code> (Division Assignment)</li>
+  <li><code>total_weight //= 2</code> (Floor Division Assignment)</li>
+  <li><code>total_weight %= 10</code> (Modulo Assignment)</li>
+</ul>
+
+<b>What can go wrong? ZeroDivisionError</b><br/>
+Attempting to divide or calculate modulo by zero (e.g., <code>total_packages / 0</code> or <code>100 % 0</code>) triggers an immediate, unhandled <code>ZeroDivisionError</code> crash. In production systems, you must always validate that the divisor is non-zero before executing division!
+      `,
+      diagram: `
+FLOOR DIVISION (//) vs MODULO (%) vs STANDARD DIVISION (/):
+
+  105 Total Packages  /  20 Van Capacity
+  
+       Standard Division (/)   ---> 5.25 (Exact float ratio)
+       
+       Floor Division (//)    ---> 5    (Full Vans Loaded)
+                                   |
+                                   v  (5 vans * 20 = 100 loaded)
+       
+       Modulo (%)             ---> 5    (Leftover Packages Remaining)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Arithmetic Operators and Compound Assignment
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Core Operations & Floor vs Standard Division
+# ------------------------------------------------------------------------------
+
+total_packages = 105
+van_capacity = 20
+
+# Standard division always produces a float:
+exact_vans_needed = total_packages / van_capacity
+
+# Floor division produces an integer (whole vans):
+full_vans_loaded = total_packages // van_capacity
+
+# Modulo produces the remainder (leftover packages):
+leftover_packages = total_packages % van_capacity
+
+print("--- BEGINNER: Van Allocation Arithmetic ---")
+print("Exact float ratio (105 / 20):", exact_vans_needed)   # 5.25
+print("Full vans loaded (105 // 20):", full_vans_loaded)    # 5
+print("Leftover packages (105 % 20):", leftover_packages)   # 5
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Compound State Accumulation
+# ------------------------------------------------------------------------------
+
+fuel_capacity_gallons = 50.0
+fuel_consumed_route_1 = 12.4
+fuel_consumed_route_2 = 18.2
+
+print("\n--- INTERMEDIATE: Fuel Tracking State ---")
+print("Initial fuel:", fuel_capacity_gallons, "gallons")
+
+# Subtracting fuel using compound subtraction assignment
+fuel_capacity_gallons -= fuel_consumed_route_1
+fuel_capacity_gallons -= fuel_consumed_route_2
+
+print("Remaining fuel after 2 routes:", fuel_capacity_gallons, "gallons")
+
+# Applying emergency reserve fuel buffer (+10%) using compound multiplication
+fuel_capacity_gallons *= 1.10
+print("Fuel after reserve transfer (+10%):", round(fuel_capacity_gallons, 2), "gallons")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Safe Fleet Dispatch Calculator
+# ------------------------------------------------------------------------------
+
+def calculate_fleet_dispatch_manifest(
+    total_cargo_weight_lbs: float, 
+    vehicle_max_payload_lbs: float
+) -> dict:
+    \"\"\"
+    Calculates truck fleet requirements, weight distributions, and remaining 
+    unassigned cargo while defending against ZeroDivisionError.
+    \"\"\"
+    print(f"\n--- ADVANCED: Fleet Manifest Calculation ---")
+    print(f"Total Cargo Weight : {total_cargo_weight_lbs} lbs")
+    print(f"Max Vehicle Payload: {vehicle_max_payload_lbs} lbs")
+    
+    # Defensive Guard against zero division
+    if vehicle_max_payload_lbs <= 0:
+        return {
+            "success": False,
+            "error": "Vehicle payload capacity must be strictly greater than zero."
+        }
+        
+    full_trucks_required = int(total_cargo_weight_lbs // vehicle_max_payload_lbs)
+    remaining_weight_lbs = total_cargo_weight_lbs % vehicle_max_payload_lbs
+    exact_ratio = round(total_cargo_weight_lbs / vehicle_max_payload_lbs, 2)
+    
+    # Accumulate running total costs
+    base_cost_per_truck = 250.00
+    total_cost = full_trucks_required * base_cost_per_truck
+    
+    # Surcharge for partial overflow vehicle if remaining weight exists
+    if remaining_weight_lbs > 0:
+        total_cost += 125.00 # Partial vehicle flat dispatch fee
+        
+    return {
+        "success": True,
+        "full_trucks_required": full_trucks_required,
+        "remaining_weight_lbs": round(remaining_weight_lbs, 2),
+        "fleet_utilization_ratio": exact_ratio,
+        "total_dispatch_cost_usd": round(total_cost, 2)
+    }
+
+# Execute fleet calculation with valid parameters
+print("Dispatch Plan Output:", calculate_fleet_dispatch_manifest(total_cargo_weight_lbs=14850.5, vehicle_max_payload_lbs=3000.0))
+
+# Execute fleet calculation with zero division guard check
+print("Zero Payload Guard Check Output:", calculate_fleet_dispatch_manifest(total_cargo_weight_lbs=5000.0, vehicle_max_payload_lbs=0.0))
+      `,
+      keyTakeaways: [
+        "Standard division (`/`) ALWAYS returns a float in Python, even when dividing whole numbers evenly.",
+        "Floor division (`//`) rounds down to the nearest whole integer, while Modulo (`%`) calculates the integer remainder.",
+        "Compound assignment operators (`+=`, `-=`, `*=`, `/=`) modify variable values in-place cleanly.",
+        "Dividing or calculating modulo by zero raises an unhandled `ZeroDivisionError`; always guard against zero divisors."
+      ],
+      commonMistakes: [
+        "<b>Expecting `/` to return an integer:</b> Assuming `4 / 2` evaluates to integer `2` instead of float `2.0`, which causes subtle bugs when expecting clean integer types.",
+        "<b>Confusing `//` and `%`:</b> Using floor division when you need the remainder, or modulo when you need the quotient count.",
+        "<b>Forgetting defensive guards against zero division:</b> Allowing user-supplied input or uninitialized variables to act as divisors without checking `if divisor != 0:`."
+      ],
+      quizzes: [
+        {
+          question: "What is the exact result and data type returned by `14 / 4` in Python?",
+          options: [
+            "3 (int)",
+            "3.5 (float)",
+            "3.0 (float)",
+            "3 (float)"
+          ],
+          correctIndex: 1,
+          explanation: "In Python 3, standard division `/` always returns a `float`. `14 / 4` evaluates to `3.5`."
+        },
+        {
+          question: "If you have 23 packages and each shelf holds 5 packages, which expression tells you how many leftover packages will NOT fit on full shelves?",
+          options: [
+            "23 // 5",
+            "23 / 5",
+            "23 % 5",
+            "23 ** 5"
+          ],
+          correctIndex: 2,
+          explanation: "The modulo operator `%` calculates the integer remainder after division. `23 % 5` evaluates to `3` leftover packages."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Compare Values and Chain Ranges",
+      durationMinutes: 16,
+      explanation: `
+<b>Relational Operators and Chained Comparisons</b><br/>
+Applications make decisions based on rules and boundaries: Is a package over the weight limit? Is a temperature sensor within safe bounds? Is a delivery driver's speed exceeding the speed limit? Relational (comparison) operators evaluate two values and return a strict <code>bool</code> result: either <code>True</code> or <code>False</code>.<br/><br/>
+
+<b>1. The Comparison Operators:</b>
+<ul>
+  <li><code>==</code> (Equal to): Returns <code>True</code> if values are equivalent. <b>Warning:</b> Do not confuse assignment (<code>x = 5</code>) with equality testing (<code>x == 5</code>)!</li>
+  <li><code>!=</code> (Not equal to): Returns <code>True</code> if values are not equivalent.</li>
+  <li><code>&gt;</code> (Greater than) / <code>&lt;</code> (Less than): Standard numerical threshold checks.</li>
+  <li><code>&gt;=</code> (Greater than or equal to) / <code>&lt;=</code> (Less than or equal to): Inclusive threshold boundary checks.</li>
+</ul>
+
+<b>2. Python's Unique Chained Comparisons:</b><br/>
+In standard languages like C++, Java, or JavaScript, checking if a value lies within a range requires joining two separate binary comparisons with a logical AND operator:<br/>
+<code>// JavaScript / Java / C++ Syntax:</code><br/>
+<code>if (weight &gt;= 10.0 &amp;&amp; weight &lt;= 50.0)</code><br/><br/>
+
+In Python, you can chain comparison operators directly, exactly as you write mathematical compound inequalities in algebra!<br/>
+<code># Python Chained Comparison Syntax:</code><br/>
+<code>if 10.0 &lt;= weight &lt;= 50.0:</code><br/><br/>
+
+<b>Why use chained comparisons?</b><br/>
+Chained comparisons like <code>min_temp &lt;= current_temp &lt;= max_temp</code> are more readable, concise, and evaluate intermediate sub-expressions only once, preventing subtle evaluation side-effects.
+      `,
+      diagram: `
+CHAINED RANGE EVALUATION:
+
+  Algebraic Rule:      10.0 <= weight <= 50.0
+                               |
+                               v
+  Python Engine:   (10.0 <= weight) AND (weight <= 50.0)
+                               |
+                               +---> Returns True if BOTH boundaries hold true!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Comparison Operators and Chained Range Checking
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Relational Equality vs Threshold Checks
+# ------------------------------------------------------------------------------
+
+package_weight_lbs = 24.5
+max_allowed_weight = 50.0
+target_destination = "CHICAGO"
+
+# Basic equality and inequality evaluations
+is_weight_valid = package_weight_lbs <= max_allowed_weight
+is_local_delivery = target_destination == "CHICAGO"
+is_overweight = package_weight_lbs > max_allowed_weight
+
+print("--- BEGINNER: Comparison Results ---")
+print("Is weight within allowed limits?", is_weight_valid)     # True
+print("Is destination local?", is_local_delivery)               # True
+print("Is package overweight?", is_overweight)                  # False
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Traditional vs Chained Range Comparisons
+# ------------------------------------------------------------------------------
+
+cargo_temperature_celsius = 4.2
+min_safe_temp = 2.0
+max_safe_temp = 8.0
+
+# Traditional unchained comparison (using logical 'and')
+traditional_check = (cargo_temperature_celsius >= min_safe_temp) and (cargo_temperature_celsius <= max_safe_temp)
+
+# Pythonic CHAINED comparison (algebraic syntax):
+chained_check = min_safe_temp <= cargo_temperature_celsius <= max_safe_temp
+
+print("\n--- INTERMEDIATE: Chained Range Evaluation ---")
+print("Cargo Temp:", cargo_temperature_celsius, "°C")
+print("Traditional check result:", traditional_check)
+print("Chained check result    :", chained_check)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Cold-Chain Logistics Safety Inspector
+# ------------------------------------------------------------------------------
+
+def validate_cold_chain_telemetry(
+    sensor_temp: float, 
+    sensor_humidity: float, 
+    speed_mph: float
+) -> dict:
+    \"\"\"
+    Evaluates real-time IoT refrigerated delivery truck telemetry 
+    against safety specifications using chained range checks.
+    
+    Safe Specifications:
+    - Temperature: Between 1.5°C and 5.0°C (inclusive)
+    - Relative Humidity: Between 30.0% and 65.0% (inclusive)
+    - Transit Speed: Between 0.0 mph and 70.0 mph (inclusive)
+    \"\"\"
+    print("\n--- ADVANCED: Cold-Chain Telemetry Audit ---")
+    
+    # Chained range checks
+    is_temp_safe = 1.5 <= sensor_temp <= 5.0
+    is_humidity_safe = 30.0 <= sensor_humidity <= 65.0
+    is_speed_safe = 0.0 <= speed_mph <= 70.0
+    
+    # Overall compliance flag
+    is_fully_compliant = is_temp_safe and is_humidity_safe and is_speed_safe
+    
+    violations = []
+    if not is_temp_safe:
+        violations.append(f"Temperature Out-Of-Bounds: {sensor_temp}°C (Safe: 1.5°C to 5.0°C)")
+    if not is_humidity_safe:
+        violations.append(f"Humidity Out-Of-Bounds: {sensor_humidity}% (Safe: 30% to 65%)")
+    if not is_speed_safe:
+        violations.append(f"Vehicle Speed Violation: {speed_mph} mph (Max: 70 mph)")
+
+    return {
+        "status": "APPROVED" if is_fully_compliant else "REJECTED_ALERT",
+        "compliant": is_fully_compliant,
+        "violations_detected": violations
+    }
+
+# Test compliant telemetry payload
+good_telemetry = validate_cold_chain_telemetry(sensor_temp=3.2, sensor_humidity=45.0, speed_mph=58.5)
+print("Compliant Sensor Audit:", good_telemetry)
+
+# Test violating telemetry payload
+bad_telemetry = validate_cold_chain_telemetry(sensor_temp=7.8, sensor_humidity=22.0, speed_mph=82.0)
+print("\nViolating Sensor Audit:", bad_telemetry)
+      `,
+      keyTakeaways: [
+        "Relational operators (`==`, `!=`, `>`, `<`, `>=`, `<=`) evaluate values and return a boolean (`True` or `False`).",
+        "Do not confuse assignment (`x = 5`) with comparison (`x == 5`).",
+        "Python supports chained comparisons (`min <= x <= max`) for cleaner, readable range checking.",
+        "Chained comparisons evaluate intermediate variables only once, improving code efficiency and readability."
+      ],
+      commonMistakes: [
+        "<b>Using single equals `=` for comparison checks:</b> Writing `if status = 'DELIVERED':` triggers a `SyntaxError` in Python.",
+        "<b>Writing un-pythonic disjointed range checks:</b> Writing `min <= x and x <= max` when `min <= x <= max` is more concise and idiomatic.",
+        "<b>Comparing incompatible types:</b> Attempting `5 < '10'` causes a `TypeError` because Python does not perform implicit type coercion."
+      ],
+      quizzes: [
+        {
+          question: "Which Python expression cleanly evaluates whether a variable `speed` is between 40 and 65 inclusive?",
+          options: [
+            "40 <= speed and <= 65",
+            "40 <= speed <= 65",
+            "speed (40..65)",
+            "40 =< speed =< 65"
+          ],
+          correctIndex: 1,
+          explanation: "Python supports chained comparisons directly using algebraic syntax: `40 <= speed <= 65`."
+        },
+        {
+          question: "What is the result of evaluating `10 != 10` in Python?",
+          options: [
+            "True",
+            "False",
+            "None",
+            "TypeError"
+          ],
+          correctIndex: 1,
+          explanation: "The `!=` operator means 'not equal to'. Since 10 is equal to 10, the statement `10 != 10` is `False`."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Combine Rules with Logical Operators",
+      durationMinutes: 18,
+      explanation: `
+<b>Boolean Logic and Short-Circuit Evaluation</b><br/>
+Real-world systems rarely make decisions based on a single condition. A package is cleared for express delivery only if it is paid for, weighs under 30 lbs, AND destination airspace is open. Python provides three logical operators to combine boolean evaluations: <code>and</code>, <code>or</code>, and <code>not</code>.<br/><br/>
+
+<b>1. Logical Operators Behavior:</b>
+<ul>
+  <li><b><code>and</code>:</b> Returns <code>True</code> ONLY if <b>both</b> operands evaluate to <code>True</code>. If either side is <code>False</code>, the entire expression evaluates to <code>False</code>.</li>
+  <li><b><code>or</code>:</b> Returns <code>True</code> if <b>at least one</b> operand evaluates to <code>True</code>. It only evaluates to <code>False</code> if both operands are <code>False</code>.</li>
+  <li><b><code>not</code>:</b> Reverses (inverts) the boolean state. <code>not True</code> evaluates to <code>False</code>; <code>not False</code> evaluates to <code>True</code>.</li>
+</ul>
+
+<b>2. Short-Circuit Evaluation (Crucial Performance & Safety Mechanism):</b><br/>
+Python's logical operators evaluate expressions lazily from left to right. As soon as the outcome is guaranteed, Python stops evaluating remaining expressions:
+<ul>
+  <li><b>In an <code>and</code> expression:</b> If the left-hand operand is <code>False</code>, Python skips evaluating the right-hand operand entirely because `False and Anything` is guaranteed to be `False`.</li>
+  <li><b>In an <code>or</code> expression:</b> If the left-hand operand is <code>True</code>, Python skips evaluating the right-hand operand entirely because `True or Anything` is guaranteed to be `True`.</li>
+</ul>
+
+<b>Why does short-circuit evaluation matter?</b><br/>
+Short-circuiting allows developers to place <b>safety guards</b> on the left side of a logical operator to prevent dangerous crashes on the right side! For example:<br/>
+<code>if driver is not None and driver.is_active():</code><br/>
+If <code>driver</code> is <code>None</code>, the left side evaluates to <code>False</code>, and Python <i>never touches</i> <code>driver.is_active()</code>, avoiding an <code>AttributeError</code> crash!
+      `,
+      diagram: `
+SHORT-CIRCUIT AND EVALUATION:
+  Expression: (driver is not None) and (driver.is_active())
+                       |
+                       +---> If Left is FALSE:
+                             STOP immediately! Right side is NEVER evaluated.
+                             Prevents AttributeError crash!
+
+SHORT-CIRCUIT OR EVALUATION:
+  Expression: (is_vip_customer) or (calculate_expensive_discount())
+                       |
+                       +---> If Left is TRUE:
+                             STOP immediately! Right side calculation is skipped.
+                             Saves execution CPU time!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Boolean Logic and Short-Circuit Guards
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Core Logical Truth Tables
+# ------------------------------------------------------------------------------
+
+has_valid_license = True
+has_passed_drug_test = True
+has_traffic_violations = False
+
+# Driver eligibility requires both positive checks AND no violations
+is_driver_eligible = has_valid_license and has_passed_drug_test and (not has_traffic_violations)
+
+print("--- BEGINNER: Logical Rule Evaluation ---")
+print("Is driver cleared for duty?", is_driver_eligible)     # True
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Short-Circuit Protection Against Crashes
+# ------------------------------------------------------------------------------
+
+active_driver_record = None
+
+print("\n--- INTERMEDIATE: Short-Circuit Execution Safety ---")
+
+# Without short-circuiting, accessing active_driver_record["name"] on None would crash.
+# Because the left operand evaluates to False, Python stops and skips the right side entirely!
+if (active_driver_record is not None) and (active_driver_record["status"] == "ACTIVE"):
+    print("Driver status confirmed.")
+else:
+    print("Safely skipped driver inspection without crashing!")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Package Dispatch Gatekeeper
+# ------------------------------------------------------------------------------
+
+def evaluate_dispatch_clearance(
+    package_record: dict | None, 
+    override_code: str | None = None
+) -> dict:
+    \"\"\"
+    Evaluates complex multi-variable dispatch rules using short-circuit logic 
+    and inverted negation operators.
+    \"\"\"
+    print("\n--- ADVANCED: Dispatch Gatekeeper Inspection ---")
+    
+    # Rule 1: Emergency System Override Check (Short-circuits if override is valid)
+    is_overridden = (override_code is not None) and (override_code.strip() == "EMERGENCY_DISPATCH_88")
+    if is_overridden:
+        return {"cleared": True, "reason": "Emergency override code validated."}
+        
+    # Rule 2: Guard Clause - Ensure package record exists (Short-circuit protection)
+    if (package_record is None) or (not isinstance(package_record, dict)):
+        return {"cleared": False, "reason": "Invalid or missing package payload record."}
+        
+    # Rule 3: Business Logic Combinations
+    is_paid = package_record.get("is_paid", False)
+    is_hazardous = package_record.get("is_hazardous", False)
+    weight_lbs = package_record.get("weight_lbs", 0.0)
+    has_hazmat_permit = package_record.get("has_hazmat_permit", False)
+    
+    # Complex evaluation rule:
+    # Package can be cleared IF:
+    # It is paid AND it is NOT hazardous
+    # OR
+    # It is paid AND it IS hazardous AND the driver has a hazmat permit AND weight <= 50 lbs
+    
+    standard_clearance = is_paid and (not is_hazardous)
+    hazmat_clearance = is_paid and is_hazardous and has_hazmat_permit and (weight_lbs <= 50.0)
+    
+    is_cleared = standard_clearance or hazmat_clearance
+    
+    return {
+        "cleared": is_cleared,
+        "reason": "Standard clearance passed." if standard_clearance else ("Hazmat clearance passed." if hazmat_clearance else "Failed dispatch criteria.")
+    }
+
+# Test standard non-hazardous package
+pkg_1 = {"is_paid": True, "is_hazardous": False, "weight_lbs": 20.0}
+print("Standard Package Result:", evaluate_dispatch_clearance(pkg_1))
+
+# Test dangerous hazmat package without permit
+pkg_2 = {"is_paid": True, "is_hazardous": True, "weight_lbs": 30.0, "has_hazmat_permit": False}
+print("Unpermitted Hazmat Result:", evaluate_dispatch_clearance(pkg_2))
+
+# Test None record payload safety
+print("None Payload Guard Result:", evaluate_dispatch_clearance(None))
+      `,
+      keyTakeaways: [
+        "`and` requires all conditions to be True; `or` requires at least one condition to be True; `not` inverts boolean state.",
+        "Short-circuit evaluation skips evaluating right-hand expressions if the result is determined by the left-hand expression.",
+        "Use short-circuit evaluation to build safety guards (e.g., `if obj is not None and obj.is_valid():`).",
+        "Parentheses `()` should be used to explicitly group complex logical expressions for readability."
+      ],
+      commonMistakes: [
+        "<b>Confusing Python operators with other languages:</b> Typing `&&`, `||`, or `!` instead of Python's English keywords `and`, `or`, and `not`.",
+        "<b>Relying on unsafe evaluation order without guards:</b> Attempting to check attributes on an object before checking if the object is `None`.",
+        "<b>Writing redundant boolean comparisons:</b> Writing `if is_active == True:` instead of the clean idiomatic `if is_active:`."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary benefit of Python's short-circuit evaluation in the expression `if x is not None and x.value > 0:`?",
+          options: [
+            "It automatically converts `x` to a string.",
+            "If `x` is `None`, Python stops immediately and never executes `x.value > 0`, avoiding an `AttributeError` crash.",
+            "It speeds up arithmetic operations by 10x.",
+            "It forces `x.value` to evaluate to `True`."
+          ],
+          correctIndex: 1,
+          explanation: "Because `x is not None` evaluates to `False` when `x` is `None`, the `and` operator short-circuits and skips `x.value > 0`, preventing a fatal crash."
+        },
+        {
+          question: "What does `not (True or False)` evaluate to?",
+          options: [
+            "True",
+            "False",
+            "None",
+            "SyntaxError"
+          ],
+          correctIndex: 1,
+          explanation: "`True or False` evaluates to `True`. Applying `not` inverts `True` to `False`."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Membership and Identity Are Different Questions",
+      durationMinutes: 14,
+      explanation: `
+<b>Membership (`in`) vs. Identity (`is`) vs. Equality (`==`)</b><br/>
+Two of the most frequently confused topics for beginner Python developers are the distinct roles played by **Membership Operators** (<code>in</code> / <code>not in</code>) and **Identity Operators** (<code>is</code> / <code>is not</code>). They answer completely different questions about your data.<br/><br/>
+
+<b>1. Membership Operators (<code>in</code> / <code>not in</code>):</b><br/>
+<b>Question Asked:</b> <i>"Does this value exist INSIDE this collection or text sequence?"</i>
+<ul>
+  <li>In strings: Checks substring inclusion (e.g., <code>"CHICAGO" in "HUB_CHICAGO_SOUTH"</code> evaluates to <code>True</code>).</li>
+  <li>In lists/tuples: Checks if an element exists inside the sequence (e.g., <code>"PKG-101" in ["PKG-101", "PKG-102"]</code> evaluates to <code>True</code>).</li>
+  <li>In dictionaries: Checks if a key exists in the dictionary (e.g., <code>"status" in shipment_dict</code>).</li>
+</ul>
+
+<b>2. Identity Operators (<code>is</code> / <code>is not</code>):</b><br/>
+<b>Question Asked:</b> <i>"Do these two variable labels point to the EXACT SAME physical memory address?"</i>
+<ul>
+  <li>Checks memory address equality (i.e., <code>id(a) == id(b)</code>).</li>
+  <li><b>Primary Production Use Case:</b> PEP 8 requires using `is` strictly when checking against singletons like `None` (e.g., `if status is None:`).</li>
+</ul>
+
+<b>3. Equality Operator (<code>==</code>):</b><br/>
+<b>Question Asked:</b> <i>"Do these two objects contain EQUAL structural values or data contents?"</i><br/><br/>
+
+<b>Real-World Analogy:</b><br/>
+Suppose two delivery drivers, Driver A and Driver B, both hold physical paper manifest printouts listing package IDs <code>["PKG-1", "PKG-2"]</code>.
+- <code>manifest_a == manifest_b</code> is <b>TRUE</b> because the printed text content is identical.
+- <code>manifest_a is manifest_b</code> is <b>FALSE</b> because they are holding two physically separate pieces of paper in their hands.
+- <code>"PKG-1" in manifest_a</code> is <b>TRUE</b> because the package code is printed on the sheet.
+      `,
+      diagram: `
+MEMBERSHIP vs IDENTITY vs EQUALITY:
+
+  manifest_a = ["PKG-1", "PKG-2"]  ---> Memory Address 0x100
+  manifest_b = ["PKG-1", "PKG-2"]  ---> Memory Address 0x200
+
+  EQUALITY CHECK (manifest_a == manifest_b):
+    ---> TRUE (The list items inside match)
+
+  IDENTITY CHECK (manifest_a is manifest_b):
+    ---> FALSE (Different memory addresses: 0x100 != 0x200)
+
+  MEMBERSHIP CHECK ("PKG-1" in manifest_a):
+    ---> TRUE ("PKG-1" exists inside the list)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Membership, Identity, and Structural Equality
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Membership (in) Testing
+# ------------------------------------------------------------------------------
+
+active_hubs = ["CHICAGO_CENTRAL", "AUSTIN_NORTH", "SEATTLE_WEST"]
+current_hub = "AUSTIN_NORTH"
+tracking_string = "SHIPMENT_LOG_TRK99201_EXPRESS"
+
+print("--- BEGINNER: Membership Checking ---")
+print("Is hub active?", current_hub in active_hubs)                    # True
+print("Is 'MIAMI' in hubs?", "MIAMI" in active_hubs)                      # False
+print("Is 'TRK99201' in log string?", "TRK99201" in tracking_string)      # True
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Identity (is) vs Equality (==)
+# ------------------------------------------------------------------------------
+
+# Creating two distinct list objects with identical contents
+list_a = ["DELIV-1", "DELIV-2"]
+list_b = ["DELIV-1", "DELIV-2"]
+list_shared = list_a
+
+print("\n--- INTERMEDIATE: Identity vs Equality ---")
+print("list_a == list_b (Equal contents?):", list_a == list_b)            # True
+print("list_a is list_b (Same memory object?):", list_a is list_b)        # False
+print("list_a is list_shared (Same memory object?):", list_a is list_shared) # True
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Package Ingestion Route Filter
+# ------------------------------------------------------------------------------
+
+def route_package_to_regional_hub(
+    package_data: dict, 
+    restricted_zones: set[str]
+) -> dict:
+    \"\"\"
+    Filters and routes packages by evaluating membership, key presence, 
+    and singleton identity checks.
+    \"\"\"
+    print("\n--- ADVANCED: Route Filtering ---")
+    
+    # Identity Check: Ensure package record isn't None
+    if package_data is None:
+        return {"status": "REJECTED", "reason": "Null payload received."}
+        
+    # Membership Check 1: Key presence in dictionary
+    if "destination_zone" not in package_data:
+        return {"status": "REJECTED", "reason": "Missing required 'destination_zone' key."}
+        
+    dest_zone = package_data["destination_zone"]
+    
+    # Membership Check 2: Zone restriction set lookup
+    if dest_zone in restricted_zones:
+        return {"status": "HOLD_SECURITY", "reason": f"Destination zone '{dest_zone}' is restricted."}
+        
+    # Identity Check 3: Check optional assigned driver against None
+    assigned_driver = package_data.get("driver")
+    if assigned_driver is None:
+        dispatch_status = "QUEUED_UNASSIGNED"
+    else:
+        dispatch_status = f"DISPATCHED_TO_{assigned_driver}"
+        
+    return {
+        "status": "APPROVED",
+        "destination": dest_zone,
+        "dispatch_status": dispatch_status
+    }
+
+# Execute routing tests
+restricted_set = {"ZONE_EMBARGO_9", "ZONE_RESTRICTED_3"}
+
+valid_pkg = {"destination_zone": "ZONE_MIDWEST_1", "driver": "DRIVER_42"}
+print("Valid Package Route:", route_package_to_regional_hub(valid_pkg, restricted_set))
+
+restricted_pkg = {"destination_zone": "ZONE_RESTRICTED_3"}
+print("Restricted Package Route:", route_package_to_regional_hub(restricted_pkg, restricted_set))
+      `,
+      keyTakeaways: [
+        "Membership operators (`in` / `not in`) test if an element exists inside a collection, string, or dictionary key set.",
+        "Identity operators (`is` / `is not`) test if two variables point to the exact same memory address (`id`).",
+        "Equality (`==`) tests if two variables contain equal structural values.",
+        "Always use `is` / `is not` when checking if a variable points to `None` (`if val is None:`)."
+      ],
+      commonMistakes: [
+        "<b>Using `is` to compare string or number equality:</b> Writing `if name is 'Chicago':` instead of `if name == 'Chicago':`. `is` checks memory address, which can cause subtle failures.",
+        "<b>Using `in` on dictionary values when expecting key searches:</b> Writing `'value' in my_dict` searches keys, not values! Use `'value' in my_dict.values()` to search values.",
+        "<b>Confusing `not in` syntax:</b> Writing `not item in collection` works, but `item not in collection` is preferred and more readable."
+      ],
+      quizzes: [
+        {
+          question: "Which operator should you use to check if a specific key `'tracking_id'` exists inside a dictionary `package_dict`?",
+          options: [
+            "'tracking_id' is package_dict",
+            "'tracking_id' in package_dict",
+            "package_dict == 'tracking_id'",
+            "'tracking_id'.exists(package_dict)"
+          ],
+          correctIndex: 1,
+          explanation: "The membership operator `in` checks if a key exists within a Python dictionary (`'tracking_id' in package_dict`)."
+        },
+        {
+          question: "If `x = [1, 2, 3]` and `y = [1, 2, 3]`, what do `x == y` and `x is y` evaluate to?",
+          options: [
+            "`x == y` is True, `x is y` is True",
+            "`x == y` is True, `x is y` is False",
+            "`x == y` is False, `x is y` is True",
+            "`x == y` is False, `x is y` is False"
+          ],
+          correctIndex: 1,
+          explanation: "`x == y` is True because the list contents are equal. `x is y` is False because `x` and `y` are two separate list objects in memory."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Make Expression Order Obvious",
+      durationMinutes: 15,
+      explanation: `
+<b>Operator Precedence, Grouping, and Explicit Intent</b><br/>
+When a mathematical or logical expression contains multiple operators, Python follows strict <b>Operator Precedence</b> rules (similar to PEMDAS in arithmetic) to determine which parts of the expression evaluate first.<br/><br/>
+
+<b>Python Operator Precedence Order (From Highest to Lowest):</b>
+<ol>
+  <li><b>Parentheses <code>()</code>:</b> Highest priority! Anything inside parentheses is evaluated first.</li>
+  <li><b>Exponentiation <code>**</code>:</b> Power calculations.</li>
+  <li><b>Unary Operators <code>+x</code>, <code>-x</code>, <code>not x</code>:</b> Negation and logical NOT.</li>
+  <li><b>Multiplication, Division, Floor Division, Modulo <code>*</code>, <code>/</code>, <code>//</code>, <code>%</code>:</b> Evaluated left-to-right.</li>
+  <li><b>Addition and Subtraction <code>+</code>, <code>-</code>:</b> Evaluated left-to-right.</li>
+  <li><b>Relational / Comparison / Membership / Identity <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>in</code>, <code>is</code>:</b> Threshold and state checks.</li>
+  <li><b>Logical AND <code>and</code>:</b> High-priority logical conjunction.</li>
+  <li><b>Logical OR <code>or</code>:</b> Lowest priority logical operator!</li>
+</ol>
+
+<b>The Danger of Silent Logic Bugs:</b><br/>
+Because <code>and</code> has higher precedence than <code>or</code>, the expression:<br/>
+<code>if is_vip or is_employee and has_discount_coupon:</code><br/>
+is implicitly evaluated by Python as:<br/>
+<code>if is_vip or (is_employee and has_discount_coupon):</code><br/><br/>
+
+If your intended business logic was "User must be EITHER a VIP OR an Employee AND possess a discount coupon", the missing parentheses cause a massive silent pricing bug! VIPs would receive discounts without holding a coupon!<br/><br/>
+
+<b>Golden Rule of Production Code:</b><br/>
+Never force your team members (or yourself 6 months later) to memorize complex operator precedence tables. <b>Always use explicit parentheses <code>()</code></b> to make grouping and business logic intent 100% obvious!
+      `,
+      diagram: `
+SILENT PRECEDENCE BUG:
+  Code:        is_vip or is_employee and has_coupon
+  
+  Implicit:    is_vip or (is_employee and has_coupon)
+               ^
+               +---> VIP gets discount WITHOUT needing a coupon! (BUG)
+
+FIX WITH EXPLICIT PARENTHESES:
+  Code:        (is_vip or is_employee) and has_coupon
+               ^                      ^
+               +--- Grouped First ----+---> MUST have coupon regardless of status! (CORRECT)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Operator Precedence and Grouping Intent
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Arithmetic Precedence (PEMDAS)
+# ------------------------------------------------------------------------------
+
+# Ambiguous calculation without parentheses:
+# Multiplication occurs BEFORE addition! (5 * 2 = 10, then 10 + 10 = 20)
+result_unparenthesized = 10 + 5 * 2
+
+# Explicit grouping with parentheses:
+# Addition occurs FIRST! (10 + 5 = 15, then 15 * 2 = 30)
+result_parenthesized = (10 + 5) * 2
+
+print("--- BEGINNER: Arithmetic Grouping ---")
+print("10 + 5 * 2  (Implicit) = ", result_unparenthesized) # 20
+print("(10 + 5) * 2 (Explicit) = ", result_parenthesized)   # 30
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Logical Precedence Bugs ('and' vs 'or')
+# ------------------------------------------------------------------------------
+
+is_vip_customer = True
+is_employee = False
+has_coupon = False
+
+# Intended Rule: Customer must be (VIP OR Employee) AND hold a valid coupon.
+# Buggy line (missing parentheses):
+buggy_qualification = is_vip_customer or is_employee and has_coupon
+
+# Correct line (explicit parentheses):
+correct_qualification = (is_vip_customer or is_employee) and has_coupon
+
+print("\n--- INTERMEDIATE: Logical Precedence Check ---")
+print("Buggy evaluation (VIP gets discount without coupon):", buggy_qualification) # True (BUG)
+print("Correct evaluation (Requires coupon for all):", correct_qualification)      # False (CORRECT)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Automated Shipping Fee Calculator
+# ------------------------------------------------------------------------------
+
+def calculate_complex_shipping_fee(
+    weight_lbs: float, 
+    distance_miles: float, 
+    is_express: bool, 
+    is_member: bool
+) -> float:
+    \"\"\"
+    Calculates final shipping cost using explicit grouped expression formulas 
+    to prevent precedence ambiguity in pricing engines.
+    \"\"\"
+    print("\n--- ADVANCED: Shipping Fee Calculation ---")
+    
+    # Base fee structure
+    base_rate = 10.00
+    
+    # Grouped Weight Surcharge: $1.50 per lb over 10 lbs
+    weight_surcharge = (max(0.0, weight_lbs - 10.0)) * 1.50
+    
+    # Grouped Distance Surcharge: $0.05 per mile over 100 miles
+    distance_surcharge = (max(0.0, distance_miles - 100.0)) * 0.05
+    
+    # Grouped Priority Multiplier: 1.5x for Express, 1.0x for Standard
+    priority_multiplier = 1.5 if is_express else 1.0
+    
+    # Grouped Member Discount: 20% discount applied to entire subtotal if member
+    discount_multiplier = 0.80 if is_member else 1.00
+    
+    # Formula combining all factors with explicit precedence parentheses
+    final_fee = ((base_rate + weight_surcharge + distance_surcharge) * priority_multiplier) * discount_multiplier
+    
+    return round(final_fee, 2)
+
+# Test pricing engine with heavy express member delivery
+calculated_fee = calculate_complex_shipping_fee(
+    weight_lbs=25.0,        # 15 lbs over -> +$22.50
+    distance_miles=300.0,   # 200 miles over -> +$10.00
+    is_express=True,        # 1.5x multiplier
+    is_member=True          # 0.8x member discount
+)
+
+print(f"Final Calculated Shipping Fee: ${calculated_fee:.2f}")
+      `,
+      keyTakeaways: [
+        "Python evaluates arithmetic and logical operators according to strict precedence rules.",
+        "Logical `and` has higher precedence than logical `or`.",
+        "Parentheses `()` override standard precedence and force expressions to evaluate first.",
+        "Always use parentheses in production code to make intended business logic clear and prevent silent bugs."
+      ],
+      commonMistakes: [
+        "<b>Relying on implicit precedence between `and` and `or`:</b> Causing pricing, security, or permissions bugs when `and` evaluates before `or` implicitly.",
+        "<b>Writing long unparenthesized mathematical formulas:</b> Creating financial or scientific calculation bugs due to unexpected multiplication/division ordering.",
+        "<b>Assuming operators evaluate right-to-left:</b> Most binary operators evaluate left-to-right (except exponentiation `**`, which evaluates right-to-left!)."
+      ],
+      quizzes: [
+        {
+          question: "What is the result of `10 + 2 * 5` in Python?",
+          options: [
+            "60",
+            "20",
+            "100",
+            "25"
+          ],
+          correctIndex: 1,
+          explanation: "Multiplication `*` has higher precedence than addition `+`. `2 * 5` evaluates first to `10`, then `10 + 10` evaluates to `20`."
+        },
+        {
+          question: "Which logical operator has higher implicit precedence in Python: `and` or `or`?",
+          options: [
+            "`or` has higher precedence.",
+            "`and` has higher precedence.",
+            "They have identical precedence and evaluate strictly right-to-left.",
+            "Precedence depends on variable types."
+          ],
+          correctIndex: 1,
+          explanation: "In Python's precedence hierarchy, `and` is evaluated before `or` unless explicit parentheses `()` override the order."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What data type is ALWAYS returned by Python's standard division operator `/`?",
+      options: [
+        "int",
+        "float",
+        "Decimal",
+        "It depends on whether the numbers divide evenly."
+      ],
+      correctIndex: 1,
+      explanation: "In Python 3, standard division `/` always returns a `float` regardless of the operands."
+    },
+    {
+      question: "If `total_items = 47` and `box_capacity = 10`, what do `total_items // box_capacity` and `total_items % box_capacity` return?",
+      options: [
+        "4.7 and 4",
+        "4 and 7",
+        "7 and 4",
+        "4.0 and 7.0"
+      ],
+      correctIndex: 1,
+      explanation: "`47 // 10` returns floor division integer `4` (full boxes). `47 % 10` returns modulo remainder `7` (leftover items)."
+    },
+    {
+      question: "What is the result of evaluating `20 <= speed <= 60` when `speed = 45`?",
+      options: [
+        "True",
+        "False",
+        "SyntaxError",
+        "None"
+      ],
+      correctIndex: 0,
+      explanation: "Chained comparisons evaluate whether `45` lies within the range [20, 60] inclusive, returning `True`."
+    },
+    {
+      question: "What occurs during short-circuit evaluation of `False and expensive_function()`?",
+      options: [
+        "`expensive_function()` is executed immediately.",
+        "Python skips executing `expensive_function()` entirely because the left operand is False.",
+        "Python throws a `LogicError`.",
+        "The expression evaluates to `True`."
+      ],
+      correctIndex: 1,
+      explanation: "Because the left operand of `and` is `False`, the result is guaranteed to be `False`, so Python short-circuits and skips the right side entirely."
+    },
+    {
+      question: "Which operator checks if two variable names point to the EXACT SAME physical memory address?",
+      options: [
+        "==",
+        "in",
+        "is",
+        "equals()"
+      ],
+      correctIndex: 2,
+      explanation: "The identity operator `is` tests whether two variables point to the same object in memory (`id`)."
+    },
+    {
+      question: "Which operator checks if a key `'status'` exists inside a dictionary `shipment_record`?",
+      options: [
+        "'status' is shipment_record",
+        "'status' in shipment_record",
+        "shipment_record.has('status')",
+        "'status' == shipment_record"
+      ],
+      correctIndex: 1,
+      explanation: "The membership operator `in` evaluates whether a key exists within a Python dictionary."
+    },
+    {
+      question: "How does Python evaluate `True or False and False` without explicit parentheses?",
+      options: [
+        "It evaluates `(True or False)` first, yielding `False`.",
+        "It evaluates `(False and False)` first due to `and` precedence, yielding `True or False`, which evaluates to `True`.",
+        "It throws a `SyntaxError` due to mixed operators.",
+        "It evaluates from right to left."
+      ],
+      correctIndex: 1,
+      explanation: "`and` has higher precedence than `or`. Python evaluates `False and False` (False) first, then `True or False`, yielding `True`."
+    },
+    {
+      question: "What exception is raised if an arithmetic expression attempts to calculate `55 // 0`?",
+      options: [
+        "ValueError",
+        "TypeError",
+        "ZeroDivisionError",
+        "ArithmeticOverflowError"
+      ],
+      correctIndex: 2,
+      explanation: "Dividing or calculating modulo/floor-division by zero raises a `ZeroDivisionError`."
+    }
+  ],
+  project: {
+    name: "Automated Dispatch Rule Engine & Fee Evaluator (Phase 0 Project)",
+    goal: "Build a comprehensive delivery dispatch and fee calculation engine that uses arithmetic, comparisons, logical guards, membership checks, and explicit expression grouping to process package orders safely.",
+    brief: "Your logistics firm needs a standalone core evaluation engine (`dispatch_engine.py`) to process incoming parcel records. The engine must calculate fleet vehicle requirements, check cold-chain safety boundaries, verify route restriction rules, calculate tiered delivery fees with surge pricing, and defend against bad inputs (like zero payloads or null references) using short-circuit logic.",
+    steps: [
+      "Create a script file named `dispatch_engine.py` in your project workspace.",
+      "Define a test suite of package order dictionaries containing weights, distances, temperature logs, destination zones, and driver assignments.",
+      "Write a vehicle allocation function using floor division (`//`) and modulo (`%`) to compute required van counts and leftover cargo volume.",
+      "Implement a cold-chain telemetry validation function using chained range comparisons (`min <= temp <= max`) to check temperature and humidity compliance.",
+      "Implement a security gatekeeper function using membership operators (`in` / `not in`) to check if destination zones are in a set of restricted locations.",
+      "Write a fee calculation function using explicit parenthesized arithmetic expressions `((base + weight_fee) * surge_multiplier) - discount` to ensure accurate billing.",
+      "Integrate short-circuit guards (`if package is not None and 'weight' in package:`) across all functions to prevent crashes on null payloads or missing keys.",
+      "Run `python3 dispatch_engine.py` in your integrated terminal and output a comprehensive dispatch report."
+    ],
+    acceptance: [
+      "All vehicle allocation math correctly separates full vehicle loads from leftover items.",
+      "Chained range checks accurately validate cold-chain telemetry bounds.",
+      "Logical expressions use explicit parentheses to prevent subtle `and`/`or` precedence bugs.",
+      "Short-circuit guards prevent script crashes when encountering `None` or incomplete payloads."
+    ],
+    stretch: [
+      "Add bitwise flag checking for package handling labels (e.g., `FRAGILE`, `THIS_SIDE_UP`, `HAZMAT`).",
+      "Include type hints across all engine functions and run `mypy dispatch_engine.py` to confirm zero static type errors."
+    ]
+  }
+};
