@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 31;
+export const PYTHON_TOTAL_DAYS = 32;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -124,6 +124,7 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_18%,#ec4899)]",
     days: [
       { day: 31, title: { en: "Iterators & Generators", np: "Iterators र Generators", jp: "イテレータとジェネレータ" }, tags: [] },
+      { day: 32, title: { en: "Decorators & Higher-Order Functions", np: "Decorators र Higher-Order Functions", jp: "デコレータと高階関数" }, tags: [] },
     ],
   },
 ];
