@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 34;
+export const PYTHON_TOTAL_DAYS = 35;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -127,6 +127,7 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 32, title: { en: "Decorators & Higher-Order Functions", np: "Decorators र Higher-Order Functions", jp: "デコレータと高階関数" }, tags: [] },
       { day: 33, title: { en: "Context Managers & Resource Safety", np: "Context Managers र Resource Safety", jp: "コンテキストマネージャとリソース安全性" }, tags: [] },
       { day: 34, title: { en: "Descriptors & Attribute Access", np: "Descriptors र Attribute Access", jp: "ディスクリプタと属性アクセス" }, tags: [] },
+      { day: 35, title: { en: "Metaprogramming & Introspection", np: "Metaprogramming र Introspection", jp: "メタプログラミングとイントロスペクション" }, tags: [] },
     ],
   },
 ];
