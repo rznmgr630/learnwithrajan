@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 40;
+export const PYTHON_TOTAL_DAYS = 45;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -140,6 +140,18 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 38, title: { en: "Static Analysis & Code Quality Automation", np: "Static Analysis र Code Quality Automation", jp: "静的解析とコード品質自動化" }, tags: [] },
       { day: 39, title: { en: "Testing Fundamentals with pytest", np: "pytestによるテスト基礎", jp: "pytestによるテスト基礎" }, tags: [] },
       { day: 40, title: { en: "Advanced Testing & Test Doubles", np: "Advanced Testing र Test Doubles", jp: "高度なテストとテストダブル" }, tags: [] },
+    ],
+  },
+  {
+    id: "python-phase-8",
+    title: { en: "Phase 8 · Databases & Backend Development", np: "Phase 8 · Databases र Backend Development", jp: "Phase 8・データベースとバックエンド開発" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_10%,#10b981)]",
+    days: [
+      { day: 41, title: { en: "SQL Database Integration & Security", np: "SQL Database Integration र Security", jp: "SQLデータベース統合とセキュリティ" }, tags: [] },
+      { day: 42, title: { en: "Enterprise ORM with SQLAlchemy 2.0", np: "SQLAlchemy 2.0 सहित Enterprise ORM", jp: "SQLAlchemy 2.0によるエンタープライズORM" }, tags: [] },
+      { day: 43, title: { en: "Database Migrations & Schema Evolution with Alembic", np: "Alembic सहित Database Migrations", jp: "Alembicによるデータベースマイグレーション" }, tags: [] },
+      { day: 44, title: { en: "HTTP & REST APIs", np: "HTTP र REST APIs", jp: "HTTPとREST API" }, tags: [] },
+      { day: 45, title: { en: "FastAPI Fundamentals", np: "FastAPI Fundamentals", jp: "FastAPI基礎" }, tags: [] },
     ],
   },
 ];
