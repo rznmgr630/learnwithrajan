@@ -60,13 +60,14 @@ function ChallengeCard({ number, active, completed, onSelect }: {
 
 type CodeReviewChallengesProps = {
   challenges?: CodeReviewChallenge[];
-  language?: "JavaScript" | "TypeScript";
+  language?: "JavaScript" | "TypeScript" | "Laravel";
 };
 
 export function CodeReviewChallenges({
   challenges = CODE_REVIEW_CHALLENGES,
   language = "JavaScript",
 }: CodeReviewChallengesProps) {
+  const isRunnable = language !== "Laravel";
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
@@ -307,14 +308,16 @@ export function CodeReviewChallenges({
                 <span className="text-sm font-medium text-[var(--text)]">Review this code</span>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setCode(challenge.code)} className="rounded-lg px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--elevated)]">Reset</button>
-                  <button
-                    type="button"
-                    onClick={runCode}
-                    disabled={isRunning}
-                    className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-60"
-                  >
-                    {isRunning ? "Running..." : "Run code"}
-                  </button>
+                  {isRunnable && (
+                    <button
+                      type="button"
+                      onClick={runCode}
+                      disabled={isRunning}
+                      className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-sm font-semibold text-[var(--accent-fg)] disabled:opacity-60"
+                    >
+                      {isRunning ? "Running..." : "Run code"}
+                    </button>
+                  )}
                 </div>
               </div>
               <textarea
@@ -331,9 +334,13 @@ export function CodeReviewChallenges({
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit xl:self-start">
               <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
-                <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text)]">Console output</div>
+                <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text)]">
+                  {isRunnable ? "Console output" : "Laravel review"}
+                </div>
                 <div className="min-h-40 bg-[#0b0e14] p-4 font-mono text-sm leading-6">
-                  {output.length === 0 ? (
+                  {!isRunnable ? (
+                    <p className="text-slate-500">Review the request, model, policy, and query flow before revealing the expected review.</p>
+                  ) : output.length === 0 ? (
                     <p className="text-slate-500">Run the code to inspect its behaviour.</p>
                   ) : output.map((line, index) => (
                     <pre key={`${line.text}-${index}`} className={line.type === "error" ? "whitespace-pre-wrap text-rose-400" : "whitespace-pre-wrap text-slate-100"}>{line.text}</pre>
