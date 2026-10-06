@@ -1,0 +1,794 @@
+/**
+ * DAY 42: Phase 8 · Databases & Backend Development — Enterprise ORM with SQLAlchemy 2.0
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1SqlAlchemy = {
+  day: 42,
+  topic: "Phase 8 · Databases & Backend Development — Enterprise ORM with SQLAlchemy 2.0",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "SQLAlchemy 2.0 Architecture, Engine, and Declarative Base",
+      durationMinutes: 16,
+      explanation: `
+<b>Object-Relational Mapping with Modern SQLAlchemy 2.0</b><br/>
+While raw SQL drivers (like <code>psycopg3</code>) execute SQL strings directly, managing SQL strings across hundreds of application tables becomes brittle and error-prone. **SQLAlchemy** is Python's industry-standard Object-Relational Mapper (ORM), bridging the gap between Python's object-oriented classes and relational database tables.<br/><br/>
+
+<b>1. SQLAlchemy 2.0 Dual-Layer Architecture:</b>
+<ul>
+  <li><b>Core Layer (Low-Level DB Abstraction):</b> Manages connection pools, raw SQL execution, and database engines. (Operates using <code>Engine</code> and <code>select()</code> statements).</li>
+  <li><b>ORM Layer (High-Level Domain Mapping):</b> Maps Python class models to database tables, managing unit-of-work object sessions and relationship graphs.</li>
+</ul>
+
+<b>2. The Engine (Connection & Pool Hub):</b><br/>
+The <code>Engine</code> is the central home for database connections, pooling, and dialect translation:<br/>
+<code>from sqlalchemy import create_engine</code><br/>
+<code>engine = create_engine("sqlite:///:memory:", echo=True)</code><br/><br/>
+
+<b>3. Declarative Base and Mapped Columns (SQLAlchemy 2.0 Style):</b><br/>
+SQLAlchemy 2.0 uses type-annotated <code>Mapped[...]</code> and <code>mapped_column()</code> syntax for defining models:<br/>
+<pre><code>from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    pass # Base class for all ORM models
+
+class ParcelModel(Base):
+    __tablename__ = "parcels"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(unique=True, index=True)
+    weight_lbs: Mapped[float] = mapped_column(nullable=False)</code></pre>
+      `,
+      diagram: `
+SQLALCHEMY 2.0 ARCHITECTURE:
+
+  +----------------------------------------------------------------+
+  |              SQLAlchemy ORM Layer (Mapped Models)              |
+  |  class ParcelModel(Base): tracking_id, weight_lbs              |
+  +----------------------------------------------------------------+
+                                  |
+                                  v
+  +----------------------------------------------------------------+
+  |             SQLAlchemy Core Layer (Engine & Session)           |
+  |  Session(engine) ---> Generates SQL ---> Connection Pool       |
+  +----------------------------------------------------------------+
+                                  |
+                                  v
+  PostgreSQL / SQLite Database Engine Server
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: SQLAlchemy 2.0 Engine and Declarative Base
+# ==============================================================================
+
+from sqlalchemy import create_engine, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+# ------------------------------------------------------------------------------
+# Beginner: Engine Setup & Declarative Model Mapping
+# ------------------------------------------------------------------------------
+
+# 1. Create SQLite in-memory engine (echo=False keeps terminal output clean)
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+
+# 2. Declarative Base Class
+class Base(DeclarativeBase):
+    pass
+
+
+# 3. Model Definition using 2.0 Mapped & mapped_column Syntax
+class ParcelRecord(Base):
+    __tablename__ = "manifest_parcels"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    weight_lbs: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="QUEUED")
+
+
+# 4. Issue DDL to create all mapped tables in the database
+Base.metadata.create_all(engine)
+
+print("--- BEGINNER: Model & Table Creation ---")
+print("Tables Created in DB:", list(Base.metadata.tables.keys()))
+print("ParcelRecord Table Name:", ParcelRecord.__tablename__)
+      `,
+      keyTakeaways: [
+        "SQLAlchemy 2.0 uses a dual-layer architecture: Core (connection pool & engine) and ORM (mapped models).",
+        "The `Engine` manages database connection pools and SQL dialect translation.",
+        "Models inherit from `DeclarativeBase` and use `Mapped[type]` annotations with `mapped_column()`.",
+        "`Base.metadata.create_all(engine)` generates physical DDL SQL tables in the database."
+      ],
+      commonMistakes: [
+        "<b>Using legacy 1.x `Column(Integer, PrimaryKey=True)` syntax:</b> Using outdated 1.x syntax instead of modern 2.0 `Mapped[type]` type-annotated columns.",
+        "<b>Creating multiple `Engine` instances:</b> Creating an engine inside every request function instead of initializing a single global engine singleton."
+      ],
+      quizzes: [
+        {
+          question: "Which component in SQLAlchemy is responsible for managing database connection pooling and SQL dialect translation?",
+          options: [
+            "`Session`",
+            "`Engine`",
+            "`DeclarativeBase`",
+            "`mapped_column`"
+          ],
+          correctIndex: 1,
+          explanation: "The `Engine` is the core factory hub managing connection pooling and SQL dialect translation."
+        },
+        {
+          question: "What is the recommended modern SQLAlchemy 2.0 syntax for declaring a model column with type annotations?",
+          options: [
+            "`field = Column(String)`",
+            "`field: Mapped[str] = mapped_column(String(50))`",
+            "`field = Field(str)`",
+            "`field: Column = String()`"
+          ],
+          correctIndex: 1,
+          explanation: "SQLAlchemy 2.0 standardized `Mapped[type] = mapped_column(...)` for clean static type support."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Unit of Work: Sessions and Entity Lifecycle",
+      durationMinutes: 18,
+      explanation: `
+<b>Managing In-Memory Object State Changes</b><br/>
+In SQLAlchemy ORM, database operations do not execute immediately when you modify a Python object property. Instead, object instances are tracked inside a **Session** using the **Unit of Work** design pattern.<br/><br/>
+
+<b>1. The Session (Unit of Work Manager):</b><br/>
+The <code>Session</code> tracks changes made to mapped Python objects (new insertions, property updates, deletions) in memory. It holds these staged changes until you explicitly commit the session.<br/><br/>
+
+<b>2. The Entity Lifecycle States:</b>
+<ul>
+  <li><b>Transient:</b> Object instantiated in Python (`pkg = ParcelRecord(...)`), but not yet attached to a Session or saved in the DB.</li>
+  <li><b>Pending:</b> Object added to a Session (`session.add(pkg)`), but not yet flushed to the database.</li>
+  <li><b>Persistent:</b> Object flushed and saved in the database; tracked actively by the Session.</li>
+  <li><b>Detached:</b> Object exists in RAM with database keys, but its Session was closed.</li>
+</ul>
+
+<b>3. Automatic Flush on Commit:</b><br/>
+When you execute <code>session.commit()</code>:
+<ol>
+  <li>The Session automatically **flushes** all staged changes, generating and executing `INSERT`, `UPDATE`, and `DELETE` SQL statements in an atomic transaction.</li>
+  <li>If successful, it commits the database transaction.</li>
+</ol>
+      `,
+      diagram: `
+ENTITY LIFECYCLE STATES IN SESSION:
+
+  [ Instantiate: pkg = Parcel() ]  ---> TRANSIENT  (RAM only, no DB ID)
+                 |
+                 v  session.add(pkg)
+  [ Added to Session ]            ---> PENDING    (Tracked by Session, un-flushed)
+                 |
+                 v  session.commit()
+  [ Flushed & Committed ]         ---> PERSISTENT (Saved in DB, ID assigned)
+                 |
+                 v  session.close()
+  [ Session Closed ]              ---> DETACHED   (In RAM, no longer tracked)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Session Unit of Work and Object Lifecycle
+# ==============================================================================
+
+from sqlalchemy import create_engine, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class ParcelRecord(Base):
+    __tablename__ = "parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50), unique=True)
+    weight_lbs: Mapped[float] = mapped_column(Float)
+
+Base.metadata.create_all(engine)
+
+# ------------------------------------------------------------------------------
+# Beginner: Demonstrating Session Unit of Work & Lifecycles
+# ------------------------------------------------------------------------------
+
+# 1. TRANSIENT STATE (Instantiated in Python)
+new_parcel = ParcelRecord(tracking_id="TRK-1001", weight_lbs=14.5)
+print("--- BEGINNER: Entity Lifecycle ---")
+print("1. Transient State ID:", new_parcel.id) # None (Not in DB yet)
+
+# Using Session context manager
+with Session(engine) as session:
+    # 2. PENDING STATE (Added to Session tracking)
+    session.add(new_parcel)
+    print("2. Pending State - Is in session dirty/new?", new_parcel in session.new) # True
+
+    # 3. PERSISTENT STATE (Committed to DB)
+    session.commit()
+    print("3. Persistent State ID after commit:", new_parcel.id) # 1 (Assigned by DB!)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Modifying Persistent Objects (Dirty Tracking)
+# ------------------------------------------------------------------------------
+
+with Session(engine) as session:
+    # Query object
+    parcel = session.query(ParcelRecord).filter_by(tracking_id="TRK-1001").first()
+
+    # Modify attribute -> Unit of Work marks object as "dirty"
+    parcel.weight_lbs = 18.0
+    print("\n--- INTERMEDIATE: Dirty State Tracking ---")
+    print("Is parcel in session.dirty?", parcel in session.dirty) # True
+
+    # Commit auto-generates SQL: UPDATE parcels SET weight_lbs = 18.0 WHERE id = 1
+    session.commit()
+    print("Commit executed. Dirty state cleared.")
+      `,
+      keyTakeaways: [
+        "The `Session` implements the Unit of Work pattern, tracking in-memory object changes.",
+        "Entity states: Transient -> Pending -> Persistent -> Detached.",
+        "`session.add(obj)` moves an object from Transient to Pending.",
+        "`session.commit()` flushes staged SQL updates and commits the database transaction."
+      ],
+      commonMistakes: [
+        "<b>Accessing unloaded attributes on Detached objects:</b> Closing a session and then attempting to access lazy-loaded attributes on a detached object, raising an `DetachedInstanceError`.",
+        "<b>Forgetting `session.commit()`:</b> Modifying object attributes in memory but failing to call `session.commit()`, causing changes to be discarded when the session closes."
+      ],
+      quizzes: [
+        {
+          question: "What entity lifecycle state is a mapped SQLAlchemy model object in immediately after being instantiated with `pkg = ParcelRecord(...)` before being added to a Session?",
+          options: [
+            "Pending",
+            "Persistent",
+            "Transient",
+            "Detached"
+          ],
+          correctIndex: 2,
+          explanation: "Newly instantiated Python objects exist only in RAM and are in the Transient state until added to a Session."
+        },
+        {
+          question: "What design pattern does the SQLAlchemy `Session` implement to track object modifications in memory before executing database writes?",
+          options: [
+            "Factory Pattern",
+            "Unit of Work",
+            "Singleton Pattern",
+            "Observer Pattern"
+          ],
+          correctIndex: 1,
+          explanation: "The Session implements the Unit of Work pattern, tracking staged changes and flushing them atomically on commit."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Querying in SQLAlchemy 2.0: select(), filter(), and joins",
+      durationMinutes: 20,
+      explanation: `
+<b>Constructing Type-Safe Programmatic SQL Queries</b><br/>
+SQLAlchemy 2.0 deprecated the legacy 1.x `session.query()` syntax in favor of executable **`select()` constructs**. The new `select()` syntax mirrors standard SQL clauses programmatically while maintaining static type safety.<br/><br/>
+
+<b>1. Constructing 2.0 `select()` Queries:</b><br/>
+<code>from sqlalchemy import select</code><br/>
+<code>stmt = select(ParcelRecord).where(ParcelRecord.status == "QUEUED")</code><br/><br/>
+
+<b>2. Executing Queries with `session.scalars()` vs `session.execute()`:</b>
+<ul>
+  <li><code>session.scalars(stmt)</code>: Returns a scalar result sequence of mapped model objects directly (e.g., <code>[ParcelRecord, ParcelRecord]</code>). <i>Best practice for model queries!</i></li>
+  <li><code>session.execute(stmt)</code>: Returns row tuple result objects (e.g., <code>[(ParcelRecord,), (ParcelRecord,)]</code>).</li>
+</ul>
+
+<b>3. Common Query Methods:</b>
+<ul>
+  <li><code>.where(Model.field == val)</code>: Generates SQL `WHERE` filtering clauses.</li>
+  <li><code>.order_by(Model.field.desc())</code>: Generates SQL `ORDER BY` sorting clauses.</li>
+  <li><code>.join(TargetModel)</code>: Generates SQL `JOIN` clauses across related tables.</li>
+  <li><code>scalars().first()</code>: Fetches the first matching model object or `None`.</li>
+  <li><code>scalars().all()</code>: Fetches all matching model objects as a Python list.</li>
+</ul>
+      `,
+      diagram: `
+2.0 SELECT QUERY EXECUTION PIPELINE:
+
+  1. Construct Statement:
+     stmt = select(ParcelRecord).where(ParcelRecord.weight_lbs > 20.0)
+                                 |
+                                 v
+  2. Execute via Session:
+     results = session.scalars(stmt).all()
+                                 |
+                                 v
+  3. Generated SQL Executed:
+     SELECT * FROM parcels WHERE weight_lbs > 20.0;
+                                 |
+                                 v
+  4. Output: List of mapped ParcelRecord instances!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: SQLAlchemy 2.0 Querying with select() and scalars()
+# ==============================================================================
+
+from sqlalchemy import create_engine, select, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class ParcelRecord(Base):
+    __tablename__ = "parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50))
+    hub_code: Mapped[str] = mapped_column(String(30))
+    weight_lbs: Mapped[float] = mapped_column(Float)
+
+Base.metadata.create_all(engine)
+
+# Seed test data
+with Session(engine) as session:
+    session.add_all([
+        ParcelRecord(tracking_id="TRK-101", hub_code="CHICAGO", weight_lbs=12.0),
+        ParcelRecord(tracking_id="TRK-102", hub_code="AUSTIN", weight_lbs=45.0),
+        ParcelRecord(tracking_id="TRK-103", hub_code="CHICAGO", weight_lbs=85.0)
+    ])
+    session.commit()
+
+
+# ------------------------------------------------------------------------------
+# Beginner: Selecting Models with select() and scalars()
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: SQLAlchemy 2.0 select() Queries ---")
+
+with Session(engine) as session:
+    # Construct 2.0 select statement filtering by hub_code
+    stmt = select(ParcelRecord).where(ParcelRecord.hub_code == "CHICAGO").order_by(ParcelRecord.weight_lbs.desc())
+
+    # session.scalars() returns mapped model instances directly!
+    chicago_parcels = session.scalars(stmt).all()
+
+    print(f"Chicago Parcels Found ({len(chicago_parcels)}):")
+    for p in chicago_parcels:
+        print(f"  ID: {p.tracking_id} | Weight: {p.weight_lbs} lbs")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Single-Row Lookups & Complex Conditions
+# ------------------------------------------------------------------------------
+
+print("\n--- INTERMEDIATE: Single Lookups & AND/OR Filters ---")
+
+with Session(engine) as session:
+    # Fetch single parcel by tracking_id
+    single_stmt = select(ParcelRecord).where(ParcelRecord.tracking_id == "TRK-102")
+    parcel = session.scalars(single_stmt).first()
+
+    if parcel is not None:
+        print(f"Located Parcel: {parcel.tracking_id} -> {parcel.weight_lbs} lbs at {parcel.hub_code}")
+      `,
+      keyTakeaways: [
+        "SQLAlchemy 2.0 uses `select(Model)` constructs rather than legacy 1.x `session.query()`.",
+        "Use `session.scalars(stmt)` to execute queries and receive mapped model objects directly.",
+        "Use `.where()` for SQL filtering and `.order_by()` for sorting.",
+        "Call `.first()` for optional single-record lookups and `.all()` for list sequences."
+      ],
+      commonMistakes: [
+        "<b>Using legacy 1.x `session.query(Model)` syntax:</b> Using deprecated 1.x query methods instead of modern 2.0 `select()` statements.",
+        "<b>Forgetting `.scalars()` when querying models:</b> Calling `session.execute(select(Model)).all()` returns row tuples `[(Model,), (Model,)]` instead of model instances directly."
+      ],
+      quizzes: [
+        {
+          question: "Which method on `Session` should be used in SQLAlchemy 2.0 to execute a `select(Model)` query and receive mapped model objects directly (rather than row tuples)?",
+          options: [
+            "`session.execute()`",
+            "`session.scalars()`",
+            "`session.fetch_models()`",
+            "`session.get_all()`"
+          ],
+          correctIndex: 1,
+          explanation: "`session.scalars(stmt)` extracts the primary scalar entity from each row, returning mapped model instances directly."
+        },
+        {
+          question: "What does `session.scalars(stmt).first()` return if no database rows match the query criteria?",
+          options: [
+            "`[]` (empty list)",
+            "`None`",
+            "`False`",
+            "`Raises NoResultFound`"
+          ],
+          correctIndex: 1,
+          explanation: "Calling `.first()` returns `None` when no records match the query statement."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Model Relationships: Foreign Keys and relationship()",
+      durationMinutes: 18,
+      explanation: `
+<b>Modeling Relational Associations and Graph Navigation</b><br/>
+Relational databases link tables together using **Foreign Keys**. SQLAlchemy ORM maps these relational foreign keys to intuitive Python object attributes using the <code>relationship()</code> directive.<br/><br/>
+
+<b>1. Defining Foreign Keys & Relationships:</b>
+<ul>
+  <li><code>ForeignKey("parent_table.id")</code>: Defines the physical database column constraint linking tables.</li>
+  <li><code>relationship("TargetClass", back_populates="reverse_attr")</code>: Declares a Python object property that automatically loads and navigates related model instances.</li>
+</ul>
+
+<b>2. Example One-to-Many Relationship (Hub -> Parcels):</b>
+<pre><code>class HubModel(Base):
+    __tablename__ = "hubs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(30))
+
+    # One-to-Many: One Hub has many Parcels
+    parcels: Mapped[list["ParcelModel"]] = relationship(back_populates="hub")
+
+class ParcelModel(Base):
+    __tablename__ = "parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hub_id: Mapped[int] = mapped_column(ForeignKey("hubs.id"))
+
+    # Many-to-One: Many Parcels belong to one Hub
+    hub: Mapped["HubModel"] = relationship(back_populates="parcels")</code></pre>
+      `,
+      diagram: `
+ONE-TO-MANY RELATIONSHIP MAPPING:
+
+  HubModel (Table: "hubs")
+  id: 1, code: "CHICAGO"
+    |
+    |  parcels = relationship(...)  (One-to-Many)
+    v
+  ParcelModel (Table: "parcels")
+  [ id: 101, hub_id: 1, tracking_id: "TRK-1" ]
+  [ id: 102, hub_id: 1, tracking_id: "TRK-2" ]
+    |
+    +---> hub = relationship(...)  (Many-to-One: Navigates back to HubModel!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Foreign Keys and relationship()
+# ==============================================================================
+
+from sqlalchemy import create_engine, select, String, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
+
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class HubFacility(Base):
+    __tablename__ = "hubs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(30), unique=True)
+
+    # Relationship: Hub has many parcels
+    parcels: Mapped[list["ParcelItem"]] = relationship(back_populates="hub_facility")
+
+
+class ParcelItem(Base):
+    __tablename__ = "parcels"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50))
+
+    # Foreign Key Column
+    hub_id: Mapped[int] = mapped_column(ForeignKey("hubs.id"))
+
+    # Relationship: Parcel belongs to one hub
+    hub_facility: Mapped["HubFacility"] = relationship(back_populates="parcels")
+
+Base.metadata.create_all(engine)
+
+# ------------------------------------------------------------------------------
+# Beginner: Creating and Navigating Object Graphs
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: Relationship Navigation ---")
+
+with Session(engine) as session:
+    # Create parent hub
+    chicago_hub = HubFacility(code="CHICAGO_CENTRAL")
+
+    # Create child parcels linked directly via Python objects!
+    p1 = ParcelItem(tracking_id="TRK-9001", hub_facility=chicago_hub)
+    p2 = ParcelItem(tracking_id="TRK-9002", hub_facility=chicago_hub)
+
+    session.add(chicago_hub)
+    session.commit()
+
+# Query and navigate relationship graph
+with Session(engine) as session:
+    hub = session.scalars(select(HubFacility).where(HubFacility.code == "CHICAGO_CENTRAL")).first()
+
+    if hub is not None:
+        print(f"Hub '{hub.code}' contains {len(hub.parcels)} parcels:")
+        for parcel in hub.parcels:
+            print(f"  -> Parcel {parcel.tracking_id} (Back-link Hub: {parcel.hub_facility.code})")
+      `,
+      keyTakeaways: [
+        "Use `ForeignKey(\"table.id\")` to define relational database column constraints.",
+        "Use `relationship()` to declare navigable Python object properties linking models.",
+        "Use `back_populates=\"attr\"` on both sides of a relationship to ensure bidirectional synchronization.",
+        "Relationships allow appending objects to Python lists (`hub.parcels.append(parcel)`), managing foreign keys automatically."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `ForeignKey` when defining `relationship`:</b> Declaring `relationship()` without a corresponding `ForeignKey` column, causing a `NoForeignKeysError`.",
+        "<b>Mismatched `back_populates` attribute names:</b> Typoing string attribute names in `back_populates`, causing relationship binding errors during startup."
+      ],
+      quizzes: [
+        {
+          question: "Which SQLAlchemy directive links database Foreign Keys to navigable Python object properties across mapped models?",
+          options: [
+            "`ForeignKey()`",
+            "`relationship()`",
+            "`mapped_column()`",
+            "`join()`"
+          ],
+          correctIndex: 1,
+          explanation: "`relationship()` defines navigable Python object properties between related ORM models."
+        },
+        {
+          question: "What parameter should be specified on both sides of a `relationship()` declaration to maintain bidirectional synchronization?",
+          options: [
+            "`sync=True`",
+            "`back_populates=\"attribute_name\"`",
+            "`link_to=\"model_name\"`",
+            "`bidirectional=True`"
+          ],
+          correctIndex: 1,
+          explanation: "`back_populates` establishes bidirectional synchronization between parent and child model properties."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "ORM vs. Raw SQL: Architectural Trade-Off Matrix",
+      durationMinutes: 8,
+      explanation: `
+<b>Selecting the Right Abstraction Layer for Enterprise Engineering</b><br/>
+Senior developers must understand when to use SQLAlchemy ORM versus when to fall back to Raw SQL execution.<br/><br/>
+
+<b>Architectural Trade-off Matrix:</b>
+<ul>
+  <li><b>Use SQLAlchemy ORM when:</b>
+    <br/>1. Building standard CRUD domain APIs (Create, Read, Update, Delete).
+    <br/>2. Complex business logic requires state tracking, relationships, and validation.
+    <br/>3. Cross-database portability (switching between PostgreSQL, SQLite, MySQL) is required.</li>
+  <li><b>Use Raw SQL (or SQLAlchemy Core) when:</b>
+    <br/>1. Executing massive bulk data processing (e.g., updating 10,000,000 rows in a single `UPDATE` query).
+    <br/>2. Running complex analytical reporting queries with multiple aggregations, window functions, and CTEs.
+    <br/>3. Maximum query execution performance and zero ORM mapping overhead are required.</li>
+</ul>
+      `,
+      diagram: `
+ABSTRACTION SELECTION MATRIX:
+
+                          [ Database Task ]
+                                  |
+            +---------------------+---------------------+
+            |                                           |
+  (CRUD API / Business Logic)                (Bulk Updates / Analytics)
+            |                                           |
+            v                                           v
+  [ SQLAlchemy 2.0 ORM ]                     [ Raw SQL / Core Query ]
+  - Object tracking                          - Zero ORM overhead
+  - Relationship navigation                  - Maximum bulk execution speed
+  - Type-safe Python models                  - Direct window functions & CTEs
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Combining ORM with Raw SQL Execution
+# ==============================================================================
+
+from sqlalchemy import create_engine, text, select, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class ParcelRecord(Base):
+    __tablename__ = "parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(30))
+    weight_lbs: Mapped[float] = mapped_column(Float)
+
+Base.metadata.create_all(engine)
+
+# Seed test data
+with Session(engine) as session:
+    session.add_all([
+        ParcelRecord(tracking_id="TRK-1", status="QUEUED", weight_lbs=10.0),
+        ParcelRecord(tracking_id="TRK-2", status="QUEUED", weight_lbs=20.0)
+    ])
+    session.commit()
+
+# ------------------------------------------------------------------------------
+# Executing High-Performance Bulk Raw SQL via SQLAlchemy Engine/Session
+# ------------------------------------------------------------------------------
+
+print("--- LESSON 5: Executing Raw SQL via text() ---")
+
+with Session(engine) as session:
+    # Use text() construct for raw SQL execution when bulk performance is needed
+    raw_sql = text("UPDATE parcels SET status = :new_status WHERE weight_lbs > :min_weight;")
+
+    result = session.execute(raw_sql, {"new_status": "HEAVY_DISPATCH", "min_weight": 15.0})
+    session.commit()
+
+    print(f"Bulk Raw SQL Updated {result.rowcount} rows instantly.")
+
+# Verify update via ORM
+with Session(engine) as session:
+    updated_parcel = session.scalars(select(ParcelRecord).where(ParcelRecord.tracking_id == "TRK-2")).first()
+    if updated_parcel:
+        print(f"ORM Verification: {updated_parcel.tracking_id} status is now '{updated_parcel.status}'")
+      `,
+      keyTakeaways: [
+        "Use SQLAlchemy ORM for CRUD APIs, domain logic, and object relationship navigation.",
+        "Use Raw SQL / Core for bulk data updates and complex analytical reporting queries.",
+        "Execute raw SQL safely using `session.execute(text(\"SQL...\"), params_dict)`.",
+        "SQLAlchemy allows combining ORM models and Raw SQL execution within the same application."
+      ],
+      commonMistakes: [
+        "<b>Using ORM loops for bulk operations:</b> Fetching 500,000 objects into RAM and updating them one-by-one in Python instead of issuing a single SQL `UPDATE` statement.",
+        "<b>Concatenating strings in raw SQL `text()`:</b> Using f-strings inside `text(\"SELECT ... \" + val)` instead of bound parameters `text(\"SELECT ... WHERE id = :id\")`."
+      ],
+      quizzes: [
+        {
+          question: "When is executing Raw SQL or SQLAlchemy Core preferable over using ORM model instances?",
+          options: [
+            "When building simple CRUD web API endpoints.",
+            "When executing high-performance bulk updates across millions of rows or running complex analytical reporting queries.",
+            "When creating database tables.",
+            "Raw SQL should never be used."
+          ],
+          correctIndex: 1,
+          explanation: "Raw SQL or Core bypasses ORM object instantiation overhead, making it ideal for bulk updates and complex analytical reporting."
+        },
+        {
+          question: "Which SQLAlchemy construct safely wraps raw SQL query strings with bound parameters?",
+          options: [
+            "`raw()`",
+            "`text()`",
+            "`sql()`",
+            "`statement()`"
+          ],
+          correctIndex: 1,
+          explanation: "The `text()` construct safely wraps raw SQL strings, supporting parameter binding to prevent SQL injection."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which component in SQLAlchemy manages database connection pools and SQL dialect translation?",
+      options: [
+        "`Session`",
+        "`Engine`",
+        "`DeclarativeBase`",
+        "`relationship`"
+      ],
+      correctIndex: 1,
+      explanation: "The `Engine` manages connection pooling and dialect translation."
+    },
+    {
+      question: "What is the recommended modern SQLAlchemy 2.0 column declaration syntax?",
+      options: [
+        "`col = Column(Integer)`",
+        "`col: Mapped[int] = mapped_column(primary_key=True)`",
+        "`col = Field(int)`",
+        "`col: Integer = Column()`"
+      ],
+      correctIndex: 1,
+      explanation: "SQLAlchemy 2.0 uses `Mapped[type] = mapped_column(...)` for clean type support."
+    },
+    {
+      question: "What entity lifecycle state is a mapped object in immediately after being created with `pkg = ParcelRecord(...)` before being added to a Session?",
+      options: [
+        "Persistent",
+        "Pending",
+        "Transient",
+        "Detached"
+      ],
+      correctIndex: 2,
+      explanation: "Newly instantiated Python objects exist only in RAM and are in the Transient state until added to a Session."
+    },
+    {
+      question: "Which `Session` method executes a `select(Model)` statement and returns mapped model instances directly?",
+      options: [
+        "`session.execute()`",
+        "`session.scalars()`",
+        "`session.query_all()`",
+        "`session.get_models()`"
+      ],
+      correctIndex: 1,
+      explanation: "`session.scalars(stmt)` returns mapped model instances directly."
+    },
+    {
+      question: "Which SQLAlchemy directive maps relational database Foreign Keys to navigable Python object properties?",
+      options: [
+        "`ForeignKey()`",
+        "`relationship()`",
+        "`mapped_column()`",
+        "`join()`"
+      ],
+      correctIndex: 1,
+      explanation: "`relationship()` maps foreign keys to navigable Python object properties."
+    },
+    {
+      question: "What parameter ensures bidirectional synchronization between parent and child `relationship()` properties?",
+      options: [
+        "`sync=True`",
+        "`back_populates=\"attr_name\"`",
+        "`link=True`",
+        "`bidirectional=True`"
+      ],
+      correctIndex: 1,
+      explanation: "`back_populates` binds parent and child relationship attributes bidirectionally."
+    },
+    {
+      question: "Which method generates physical SQL tables in the database from all mapped `DeclarativeBase` models?",
+      options: [
+        "`Engine.create_tables()`",
+        "`Base.metadata.create_all(engine)`",
+        "`Session.create_db()`",
+        "`SQLAlchemy.init()`"
+      ],
+      correctIndex: 1,
+      explanation: "`Base.metadata.create_all(engine)` issues DDL commands to create mapped tables."
+    },
+    {
+      question: "Which construct safely wraps raw SQL strings for execution in SQLAlchemy?",
+      options: [
+        "`raw()`",
+        "`text()`",
+        "`sql()`",
+        "`literal()`"
+      ],
+      correctIndex: 1,
+      explanation: "`text()` wraps raw SQL strings safely with parameter binding."
+    }
+  ],
+  project: {
+    name: "Enterprise SQLAlchemy 2.0 Logistics ORM Suite (Phase 1 Final Project)",
+    goal: "Build a complete enterprise logistics domain ORM suite using SQLAlchemy 2.0 featuring DeclarativeBase models, One-to-Many relationships, type-annotated Mapped columns, Unit of Work session transactions, and select() scalars queries.",
+    brief: "Your engineering organization requires a modern SQLAlchemy 2.0 domain model and repository suite (`logistics_orm_suite.py`). The suite must define relational models (`HubFacilityModel` and `ParcelItemModel`) linked via One-to-Many `relationship(back_populates=...)`, issue DDL table creation commands, manage Unit of Work sessions, query models using `select()` and `scalars()`, and execute bulk updates via `text()`.",
+    steps: [
+      "Create a workspace script file named `logistics_orm_suite.py`.",
+      "Initialize an in-memory SQLite engine (`sqlite:///:memory:`).",
+      "Define a `DeclarativeBase` base class.",
+      "Define `HubFacilityModel` and `ParcelItemModel` using `Mapped[type]`, `mapped_column()`, `ForeignKey()`, and `relationship(back_populates=...)`.",
+      "Issue `Base.metadata.create_all(engine)` to create tables.",
+      "Open a `Session(engine)`, instantiate a parent Hub with child Parcels, and commit the transaction.",
+      "Execute a `select(HubFacilityModel)` query using `session.scalars()` and iterate through the relationship graph.",
+      "Run `python3 logistics_orm_suite.py` in your integrated terminal and print a complete ORM execution summary report."
+    ],
+    acceptance: [
+      "Models use SQLAlchemy 2.0 `Mapped[type]` and `mapped_column()` syntax.",
+      "Relationships link parent Hub and child Parcels bidirectionally using `back_populates`.",
+      "Queries use modern `select()` and `session.scalars()`.",
+      "Executing `python3 logistics_orm_suite.py` outputs a clean ORM report and exits with status code 0."
+    ],
+    stretch: [
+      "Add a cascade delete option (`cascade=\"all, delete-orphan\"`) to automatically remove child parcels when a parent hub is deleted.",
+      "Annotate all repository functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
