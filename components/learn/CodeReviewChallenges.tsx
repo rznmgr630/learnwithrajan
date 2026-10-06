@@ -67,6 +67,7 @@ export function CodeReviewChallenges() {
   const [showReview, setShowReview] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [pages, setPages] = useState<Record<ChallengeLevel, number>>({ Basic: 0, Intermediate: 0, Advanced: 0 });
+  const [mobileLevel, setMobileLevel] = useState<ChallengeLevel>("Basic");
   const { completed, completedCount, toggleCompleted } = useCodeReviewProgress();
 
   const challenge = useMemo(
@@ -106,6 +107,7 @@ export function CodeReviewChallenges() {
   const selectChallenge = (next: CodeReviewChallenge) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setSelectedId(next.id);
+    setMobileLevel(next.level);
     setCode(next.code);
     setOutput([]);
     setShowReview(false);
@@ -131,6 +133,57 @@ export function CodeReviewChallenges() {
     setPages((current) => ({ ...current, [level]: page }));
   };
 
+  const renderLevelSection = (level: ChallengeLevel) => {
+    const levelChallenges = CODE_REVIEW_CHALLENGES.filter((item) => item.level === level);
+    const pageCount = Math.max(1, Math.ceil(levelChallenges.length / PROBLEMS_PER_PAGE));
+    const page = Math.min(pages[level], pageCount - 1);
+    const visibleChallenges = levelChallenges.slice(page * PROBLEMS_PER_PAGE, (page + 1) * PROBLEMS_PER_PAGE);
+
+    return (
+      <section key={level}>
+        <div className="mb-2 flex items-center gap-2">
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${LEVEL_STYLE[level]}`}>
+            {level}
+          </span>
+          <span className="text-xs text-[var(--faint)]">
+            {level === "Basic" ? "2 to 5 lines" : level === "Intermediate" ? "8 to 15 lines" : "20+ lines"}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {visibleChallenges.map((item, index) => (
+            <ChallengeCard
+              key={item.id}
+              number={page * PROBLEMS_PER_PAGE + index + 1}
+              active={item.id === challenge.id}
+              completed={completed.has(item.id)}
+              onSelect={() => selectChallenge(item)}
+            />
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-[var(--muted)]">
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage(level, page - 1)}
+            className="rounded-md px-2 py-1 hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Previous
+          </button>
+          <span>{page + 1} / {pageCount}</span>
+          <button
+            type="button"
+            disabled={page === pageCount - 1}
+            onClick={() => setPage(level, page + 1)}
+            className="rounded-md px-2 py-1 hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </div>
+        <p className="mt-2 text-[10px] text-[var(--faint)]">Target: {CODE_REVIEW_PROBLEMS_PER_LEVEL} problems</p>
+      </section>
+    );
+  };
+
   return (
     <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6">
       <LearnBackNav href="/learn/programming" labelKey="learn.backProgramming" />
@@ -149,57 +202,23 @@ export function CodeReviewChallenges() {
       </div>
 
       <div className="mt-8 grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="space-y-6 lg:sticky lg:top-4 lg:self-start">
-          {CODE_REVIEW_LEVELS.map((level) => {
-            const levelChallenges = CODE_REVIEW_CHALLENGES.filter((item) => item.level === level);
-            const pageCount = Math.max(1, Math.ceil(levelChallenges.length / PROBLEMS_PER_PAGE));
-            const page = Math.min(pages[level], pageCount - 1);
-            const visibleChallenges = levelChallenges.slice(page * PROBLEMS_PER_PAGE, (page + 1) * PROBLEMS_PER_PAGE);
-
-            return (
-            <section key={level}>
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${LEVEL_STYLE[level]}`}>
-                  {level}
-                </span>
-                <span className="text-xs text-[var(--faint)]">
-                  {level === "Basic" ? "2 to 5 lines" : level === "Intermediate" ? "8 to 15 lines" : "20+ lines"}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {visibleChallenges.map((item, index) => (
-                  <ChallengeCard
-                    key={item.id}
-                    number={page * PROBLEMS_PER_PAGE + index + 1}
-                    active={item.id === challenge.id}
-                    completed={completed.has(item.id)}
-                    onSelect={() => selectChallenge(item)}
-                  />
-                ))}
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2 text-xs text-[var(--muted)]">
-                <button
-                  type="button"
-                  disabled={page === 0}
-                  onClick={() => setPage(level, page - 1)}
-                  className="rounded-md px-2 py-1 hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  ← Previous
-                </button>
-                <span>{page + 1} / {pageCount}</span>
-                <button
-                  type="button"
-                  disabled={page === pageCount - 1}
-                  onClick={() => setPage(level, page + 1)}
-                  className="rounded-md px-2 py-1 hover:bg-[var(--elevated)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next →
-                </button>
-              </div>
-              <p className="mt-2 text-[10px] text-[var(--faint)]">Target: {CODE_REVIEW_PROBLEMS_PER_LEVEL} problems</p>
-            </section>
-            );
-          })}
+        <aside className="lg:sticky lg:top-4 lg:self-start">
+          <div className="mb-5 flex rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 lg:hidden">
+            {CODE_REVIEW_LEVELS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setMobileLevel(level)}
+                className={`flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition ${mobileLevel === level ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "text-[var(--muted)]"}`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+          <div className="lg:hidden">{renderLevelSection(mobileLevel)}</div>
+          <div className="hidden space-y-6 lg:block">
+            {CODE_REVIEW_LEVELS.map(renderLevelSection)}
+          </div>
         </aside>
 
         <section className="min-w-0">
