@@ -809,6 +809,16 @@ export const UI_STRINGS = {
     np: "वास्तविक type bug पत्ता लगाउनुहोस्, कोड रिभ्यू गर्नुहोस्, अनि सुरक्षित नतिजा चलाउनुहोस्।",
     jp: "実務の型バグを見つけ、コードをレビューし、安全な結果を実行します。",
   },
+  "hub.laravelCodeReview.title": {
+    en: "Laravel Code Review Series",
+    np: "Laravel कोड रिभ्यू शृङ्खला",
+    jp: "Laravel コードレビュー・シリーズ",
+  },
+  "hub.laravelCodeReview.subtitle": {
+    en: "Spot real Laravel bugs in requests, Eloquent, policies, queues, and database code.",
+    np: "request, Eloquent, policy, queue, र database code का वास्तविक Laravel bug पत्ता लगाउनुहोस्।",
+    jp: "リクエスト、Eloquent、ポリシー、キュー、データベースの実務 Laravel バグを見つけます。",
+  },
   "hub.codeReview.cta": {
     en: "Start reviewing →",
     np: "रिभ्यू सुरु गर्नुहोस् →",
