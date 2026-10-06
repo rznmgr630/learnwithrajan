@@ -1,0 +1,751 @@
+/**
+ * DAY 55: Phase 1 · Core Python — Configuration Management, Environments, and Secrets
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1ConfigurationAndSecrets = {
+  day: 55,
+  topic: "Phase 1 · Core Python — Configuration Management, Environments, and Secrets",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Environment Variables, The Twelve-Factor App, and .env Files",
+      durationMinutes: 18,
+      explanation: `
+<b>Decoupling Application Code from Environment-Specific Settings</b><br/>
+Hardcoding database URLs, API endpoints, or secret keys inside Python source code makes applications rigid, unsafe, and impossible to deploy securely across multiple environments (Development, Staging, Production).<br/><br/>
+
+<b>1. The Twelve-Factor App Methodology (Factor III: Config):</b><br/>
+The <b>Twelve-Factor App</b> guidelines state that an application's configuration should be stored strictly in <b>Environment Variables</b>.<br/>
+<i>Core Principle:</i> Code does NOT change between environments; ONLY the environment variables passed to the execution process change!<br/><br/>
+
+<b>2. Local Development Isolation with <code>.env</code> Files:</b>
+<ul>
+  <li><b>System Environment Variables:</b> Key-value pairs set at the OS level (<code>export DATABASE_URL=...</code>).</li>
+  <li><b><code>.env</code> Files:</b> Text files containing key-value pairs used for local development overrides (e.g., <code>LOG_LEVEL=DEBUG</code>).</li>
+  <li><b>CRITICAL SECURITY RULE:</b> Always add <code>.env</code> to your <code>.gitignore</code> file! Commit only a <code>.env.example</code> file containing dummy placeholder values to show required keys to team members.</li>
+</ul>
+      `,
+      diagram: `
+TWELVE-FACTOR CONFIGURATION ISOLATION:
+
+  Same Application Code Base (main.py)
+                   |
+     +-------------+-------------+
+     |                           |
+     v                           v
+  [ Development Process ]     [ Production Process ]
+  Reads: .env (Local)        Reads: Environment Variables (Cloud)
+  DB: localhost:5432          DB: prod-db.aws.com:5432
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Reading Environment Variables and Parsing .env Files
+# ==============================================================================
+
+import os
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# 1. Standard Library os.environ Reading
+# ------------------------------------------------------------------------------
+
+# Reading system env vars safely with default fallbacks
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+db_host = os.environ.get("DATABASE_HOST", "localhost")
+
+print("--- LESSON 1: System Environment Variables ---")
+print(f"Active Log Level : {log_level}")
+print(f"Database Host    : {db_host}")
+
+# ------------------------------------------------------------------------------
+# 2. Parsing Local .env Files Manually (Understanding python-dotenv)
+# ------------------------------------------------------------------------------
+
+def parse_env_file_contents(env_file_path: Path) -> dict[str, str]:
+    """Simple parser demonstrating how .env text lines map to key-value dicts."""
+    parsed_config = {}
+    if not env_file_path.exists():
+        return parsed_config
+
+    with open(env_file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            # Ignore empty lines and comments
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, val = line.split("=", 1)
+                parsed_config[key.strip()] = val.strip().strip("\"'")
+
+    return parsed_config
+
+# Example dummy .env.example content structure
+dummy_env_file = Path(".env.example")
+print(f"\nRemember to commit '.env.example' (NOT '.env') to Git repositories!")
+      `,
+      keyTakeaways: [
+        "Store configuration in environment variables according to Twelve-Factor App principles.",
+        "Code remains unchanged across deployments; environment variables alter application behavior.",
+        "Use `.env` files for local development, but NEVER commit `.env` files containing real secrets to Git.",
+        "Commit a `.env.example` file containing dummy key templates to document required variables."
+      ],
+      commonMistakes: [
+        "<b>Hardcoding configuration constants directly in Python files:</b> Writing `DB_HOST = \"192.168.1.10\"` in Python code, requiring code edits and re-deployments for every environment change.",
+        "<b>Committing `.env` files to Git:</b> Accidental leakage of local database passwords or developer API keys."
+      ],
+      quizzes: [
+        {
+          question: "According to the Twelve-Factor App methodology (Factor III), where should application configurations be stored?",
+          options: [
+            "Inside Python source code constants.",
+            "In Environment Variables.",
+            "In JSON files committed to Git.",
+            "In global variables."
+          ],
+          correctIndex: 1,
+          explanation: "The Twelve-Factor App guidelines mandate storing configuration strictly in environment variables."
+        },
+        {
+          question: "What is the primary purpose of committing a `.env.example` file to a version control repository?",
+          options: [
+            "To store production passwords.",
+            "To document required environment variable keys with safe dummy placeholder values for team members.",
+            "To compile Python code into C.",
+            "To run tests."
+          ],
+          correctIndex: 1,
+          explanation: "A `.env.example` file serves as a safe configuration template showing which environment keys need to be defined."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Type-Safe Configuration Classes with pydantic-settings",
+      durationMinutes: 20,
+      explanation: `
+<b>Type Hints, Automatic Casting, and Validation for Configuration</b><br/>
+Reading environment variables with raw <code>os.environ</code> returns raw strings for everything (e.g. <code>"8000"</code> or <code>"True"</code>). Manually casting integers, booleans, and list formats in Python code leads to verbose, error-prone boilerplate.<br/><br/>
+
+<b><code>pydantic-settings</code> (BaseSettings)</b> provides type-safe configuration management.<br/><br/>
+
+<b>Key Features of <code>BaseSettings</code>:</b>
+<ul>
+  <li><b>Automatic Type Casting:</b> Automatically casts string environment variables (e.g. <code>"8000"</code>) into declared Python types (<code>int</code>, <code>bool</code>, <code>list</code>, <code>HttpUrl</code>).</li>
+  <li><b>Default Fallbacks:</b> Assign default values to attributes if environment variables are omitted.</li>
+  <li><b>Field Validation:</b> Enforce strict bounds (e.g. <code>port: int = Field(ge=1024, le=65535)</code>).</li>
+  <li><b>Missing Variable Interception:</b> If a required field (no default value) is missing from the environment, Pydantic halts application startup instantly with a detailed error report!</li>
+</ul>
+      `,
+      diagram: `
+PYDANTIC-SETTINGS VALIDATION LIFECYCLE:
+
+  1. Read System Env & .env File ("PORT=8000", "DEBUG=true")
+                            |
+                            v
+  [ Pydantic BaseSettings Class ]
+  - Casts "8000" -> 8000 (int)
+  - Casts "true" -> True (bool)
+  - Validates constraints (ge=1024, le=65535)
+                            |
+                            v
+  [ Validated App Settings Singleton ] (Guaranteed Type-Safe Configuration!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Type-Safe Configuration with pydantic-settings
+# ==============================================================================
+
+import os
+from pydantic import Field, HttpUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# ------------------------------------------------------------------------------
+# Type-Safe Application Settings Model
+# ------------------------------------------------------------------------------
+
+class Settings(BaseSettings):
+    """Production application settings parsing environment variables safely."""
+
+    # 1. String setting with default
+    app_title: str = "Enterprise Logistics Platform"
+
+    # 2. Automatically cast string "true"/"false" to boolean
+    debug_mode: bool = False
+
+    # 3. Numeric bounds validation (Port must be between 1024 and 65535)
+    server_port: int = Field(default=8000, ge=1024, le=65535)
+
+    # 4. Required setting (No default value - must exist in env!)
+    database_url: str
+
+    # Configure pydantic-settings to read from .env file
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
+
+# Simulate environment variables
+os.environ["DEBUG_MODE"] = "true"  # Automatically cast to True!
+os.environ["SERVER_PORT"] = "8080" # Automatically cast to 8080 (int)!
+os.environ["DATABASE_URL"] = "postgresql://user:pass@localhost:5432/logistics_db"
+
+print("--- LESSON 2: Pydantic-Settings Validation ---")
+app_config = Settings()
+
+print("App Title    :", app_config.app_title)
+print("Debug Mode   :", app_config.debug_mode, type(app_config.debug_mode))
+print("Server Port  :", app_config.server_port, type(app_config.server_port))
+print("Database DSN :", app_config.database_url)
+      `,
+      keyTakeaways: [
+        "`pydantic-settings` (`BaseSettings`) provides type-safe environment variable parsing.",
+        "Environment variable strings are automatically cast to target Python types (`bool`, `int`, `list`).",
+        "Required variables without default values halt application startup if omitted from the environment.",
+        "Attach validation bounds using `pydantic.Field` (`ge`, `le`, `pattern`)."
+      ],
+      commonMistakes: [
+        "<b>Using raw `os.environ` and writing custom casting functions:</b> Writing custom string-to-bool or string-to-int conversion boilerplate instead of using `BaseSettings`.",
+        "<b>Ignoring startup validation errors:</b> Allowing invalid configuration values (like port 999999) to pass through to runtime code."
+      ],
+      quizzes: [
+        {
+          question: "What happens when a `pydantic-settings` `BaseSettings` class declares a field without a default value (e.g. `database_url: str`) and that key is missing from environment variables?",
+          options: [
+            "It defaults to `None`.",
+            "It raises a `ValidationError` and halts application startup immediately.",
+            "It sets the field to an empty string.",
+            "It creates a random password."
+          ],
+          correctIndex: 1,
+          explanation: "Required fields without default values trigger a `ValidationError` on startup if missing from the environment."
+        },
+        {
+          question: "How does `pydantic-settings` handle boolean environment variables like `DEBUG_MODE=\"true\"`?",
+          options: [
+            "It throws a `TypeError` because `\"true\"` is a string.",
+            "It automatically parses and casts the string `\"true\"` into the Python boolean `True`.",
+            "It converts it to the integer 1.",
+            "It deletes the variable."
+          ],
+          correctIndex: 1,
+          explanation: "`BaseSettings` automatically converts string variants (`\"true\"`, `\"1\"`, `\"yes\"`) to Python booleans."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Secrets Management, Redaction, and Cloud Vault Integration",
+      durationMinutes: 18,
+      explanation: `
+<b>Protecting Cryptographic Keys, Passwords, and Credentials</b><br/>
+Configuration settings dictate how an application operates (e.g. log levels, port numbers), whereas **Secrets** grant sensitive access (e.g. database passwords, JWT signing keys, Stripe API keys). Exposing secrets leads to immediate system compromise.<br/><br/>
+
+<b>1. Secrets Hygiene Rules:</b>
+<ul>
+  <li><b>Never Log Secrets:</b> Mask or redact secret keys before printing configuration logs or stack traces.</li>
+  <li><b>Never Store Secrets in Code Repositories:</b> Exclude configuration files with credentials from Git.</li>
+  <li><b>Use Secret Management Vaults in Production:</b> In cloud environments (AWS, GCP, Azure), pull secrets dynamically at runtime from dedicated secret management vaults:
+    <ul>
+      <li>AWS Secrets Manager / SSM Parameter Store</li>
+      <li>HashiCorp Vault</li>
+      <li>Azure Key Vault / GCP Secret Manager</li>
+    </ul>
+  </li>
+</ul>
+
+<b>2. Secret Masking with Pydantic `SecretStr`:</b><br/>
+Pydantic provides `SecretStr` to prevent secret strings from leaking into plain text logs or string representations:
+<pre><code>from pydantic import SecretStr
+
+class AppSecrets(BaseSettings):
+    jwt_secret_key: SecretStr
+
+# Printing config prints "**********" instead of the plain-text secret!
+print(config.jwt_secret_key)  # Output: SecretStr('**********')
+# Access plain text value explicitly when needed:
+raw_key = config.jwt_secret_key.get_secret_value()</code></pre>
+      `,
+      diagram: `
+SECRET MASKING WITH PYDANTIC SECRETSTR:
+
+  Environment Variable: JWT_SECRET_KEY="CRITICAL_SECRET_123"
+                               |
+                               v
+  [ Pydantic SecretStr Field: jwt_secret_key ]
+                               |
+            +------------------+------------------+
+            |                                     |
+     (Standard print / log)             (Explicit Retrieval)
+            |                                     |
+            v                                     v
+  Outputs: SecretStr('**********')      get_secret_value() -> "CRITICAL_SECRET_123"
+  (Prevents accidental log leaks!)       (Passed to signing functions)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Secrets Masking with Pydantic SecretStr
+# ==============================================================================
+
+import os
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+
+class SecurityConfig(BaseSettings):
+    """Configuration class demonstrating secret masking via SecretStr."""
+
+    app_environment: str = "production"
+
+    # SecretStr automatically masks string output in repr and str calls!
+    jwt_secret_key: SecretStr
+    database_password: SecretStr
+
+
+# Set dummy environment variables
+os.environ["JWT_SECRET_KEY"] = "SUPER_CRITICAL_JWT_SIGNING_KEY_9900"
+os.environ["DATABASE_PASSWORD"] = "UltraSecureDbPass2026!"
+
+print("--- LESSON 3: SecretStr Masking Demonstration ---")
+sec_config = SecurityConfig()
+
+# 1. Standard repr / print masks secrets!
+print("Config Representation :", sec_config)
+print("JWT Secret Attribute  :", sec_config.jwt_secret_key) # Masked!
+
+# 2. Retrieving actual secret value explicitly for cryptographic operations
+raw_jwt_key = sec_config.jwt_secret_key.get_secret_value()
+print("\nExplicit Secret Unmasking for Internal Crypto Engine:")
+print("Unmasked Key Length   :", len(raw_jwt_key))
+print("Unmasked Key Prefix   :", raw_jwt_key[:10] + "...")
+      `,
+      keyTakeaways: [
+        "Secrets (passwords, API keys, private keys) must be strictly isolated from application code.",
+        "Use Pydantic's `SecretStr` to prevent secrets from leaking in plain text log files or string representations.",
+        "Retrieve raw secret values explicitly using `.get_secret_value()` when passing credentials to drivers.",
+        "In production cloud environments, integrate runtime Secret Vaults (AWS Secrets Manager, HashiCorp Vault)."
+      ],
+      commonMistakes: [
+        "<b>Logging raw configuration objects containing plain-text passwords:</b> Writing `logger.info(config.dict())`, dumping raw database passwords into centralized log files.",
+        "<b>Hardcoding fallback secrets in code:</b> Writing `jwt_secret: str = \"default_secret_key\"`, allowing insecure defaults to run in production."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary operational benefit of declaring a sensitive configuration field as Pydantic `SecretStr` instead of a standard `str`?",
+          options: [
+            "It encrypts the database.",
+            "It automatically masks the secret value when the configuration object is printed, logged, or converted to a string, preventing accidental credential leaks.",
+            "It speeds up execution.",
+            "It converts strings to integers."
+          ],
+          correctIndex: 1,
+          explanation: "`SecretStr` masks values in string representations and logs, requiring explicit `.get_secret_value()` calls to access plain text."
+        },
+        {
+          question: "How do you retrieve the plain-text string value from a Pydantic `SecretStr` instance when passing a key to a database driver?",
+          options: [
+            "`secret_field.reveal()`",
+            "`secret_field.get_secret_value()`",
+            "`str(secret_field)`",
+            "`secret_field.unmask()`"
+          ],
+          correctIndex: 1,
+          explanation: "The `.get_secret_value()` method explicitly returns the unmasked plain-text secret string."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Multi-Environment Configuration Strategies (Dev, Staging, Production)",
+      durationMinutes: 18,
+      explanation: `
+<b>Managing Tiered Configurations and Dynamic Inheritance</b><br/>
+Real-world enterprise applications run across multiple environment tiers:<br/>
+* **Development (Dev):** Verbose logging (`DEBUG`), local SQLite/PostgreSQL, relaxed rate limits.<br/>
+* **Staging:** Production-like configuration for integration testing, connected to staging database clusters.<br/>
+* **Production (Prod):** Minimal logging (`INFO`/`WARNING`), high-performance connection pools, strict security headers, and cloud secret vaults.<br/><br/>
+
+<b>Multi-Environment Inheritance Architecture:</b><br/>
+Define a base configuration class containing common parameters, then extend environment-specific configuration subclasses using Object-Oriented Inheritance.<br/><br/>
+
+<b>Dynamic Environment Factory Pattern:</b>
+<pre><code>class BaseConfig(BaseSettings):
+    app_title: str = "Logistics API"
+    environment: str = "dev"
+
+class DevConfig(BaseConfig):
+    log_level: str = "DEBUG"
+    db_url: str = "sqlite:///./dev.db"
+
+class ProdConfig(BaseConfig):
+    log_level: str = "INFO"
+    db_url: str # Required from env!
+
+@lru_cache
+def get_config() -> BaseConfig:
+    env = os.environ.get("APP_ENV", "dev").lower()
+    if env == "prod":
+        return ProdConfig()
+    return DevConfig()</code></pre>
+      `,
+      diagram: `
+MULTI-ENVIRONMENT CONFIGURATION INHERITANCE:
+
+                    [ BaseConfig (Common Settings) ]
+                                   |
+            +----------------------+----------------------+
+            |                                             |
+     [ DevConfig ]                                 [ ProdConfig ]
+  - LOG_LEVEL = "DEBUG"                         - LOG_LEVEL = "INFO"
+  - DB = "sqlite:///./dev.db"                   - DB = (Required from Env)
+  - RELAXED_SECURITY                           - STRICT_SECURITY
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Multi-Environment Factory Pattern
+# ==============================================================================
+
+from functools import lru_cache
+import os
+from pydantic_settings import BaseSettings
+
+# ------------------------------------------------------------------------------
+# 1. Base Configuration (Common Defaults)
+# ------------------------------------------------------------------------------
+
+class BaseAppConfig(BaseSettings):
+    app_name: str = "Enterprise Logistics Platform"
+    environment: str = "development"
+    debug: bool = False
+    log_level: str = "INFO"
+
+
+# 2. Development Configuration
+class DevelopmentConfig(BaseAppConfig):
+    environment: str = "development"
+    debug: bool = True
+    log_level: str = "DEBUG"
+    database_url: str = "sqlite:///./dev_logistics.db"
+
+
+# 3. Production Configuration
+class ProductionConfig(BaseAppConfig):
+    environment: str = "production"
+    debug: bool = False
+    log_level: str = "WARNING"
+    database_url: str # Required from environment in production!
+
+
+# ------------------------------------------------------------------------------
+# 4. Cached Factory Function Selecting Environment
+# ------------------------------------------------------------------------------
+
+@lru_cache
+def get_environment_configuration() -> BaseAppConfig:
+    """Factory selecting appropriate configuration model based on APP_ENV."""
+    active_env = os.environ.get("APP_ENV", "development").lower()
+
+    if active_env == "production":
+        return ProductionConfig()
+    return DevelopmentConfig()
+
+
+print("--- LESSON 4: Multi-Environment Factory Test ---")
+
+# Test 1: Development Environment
+os.environ["APP_ENV"] = "development"
+get_environment_configuration.cache_clear()
+dev_cfg = get_environment_configuration()
+print(f"Dev Config  -> Env: {dev_cfg.environment:<12} | Log: {dev_cfg.log_level:<7} | Debug: {dev_cfg.debug}")
+
+# Test 2: Production Environment
+os.environ["APP_ENV"] = "production"
+os.environ["DATABASE_URL"] = "postgresql://prod_user:secret@prod-db:5432/prod_db"
+get_environment_configuration.cache_clear()
+prod_cfg = get_environment_configuration()
+print(f"Prod Config -> Env: {prod_cfg.environment:<12} | Log: {prod_cfg.log_level:<7} | Debug: {prod_cfg.debug}")
+      `,
+      keyTakeaways: [
+        "Use class inheritance (`DevConfig`, `ProdConfig`) to manage tiered configurations cleanly.",
+        "Use an environment selector variable (`APP_ENV`) to toggle configuration modes.",
+        "Memoize environment selection functions using `@functools.lru_cache`.",
+        "Ensure development configurations use safe local fallbacks, while production configurations require explicit credentials."
+      ],
+      commonMistakes: [
+        "<b>Using `if/else` checks scattered across 50 source code files:</b> Checking `if env == \"prod\":` repeatedly throughout route handlers instead of encapsulating differences in configuration classes.",
+        "<b>Enabling debug mode in production:</b> Allowing verbose error pages and interactive debuggers to run in production environments."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary benefit of using an Environment Factory function with `@lru_cache` to select configuration classes?",
+          options: [
+            "It encrypts database backups.",
+            "It encapsulates environment-specific configuration logic in one place and caches the resulting configuration singleton for high performance.",
+            "It converts Python to C++.",
+            "It runs tests in parallel."
+          ],
+          correctIndex: 1,
+          explanation: "Environment factories centralize configuration logic and `@lru_cache` ensures configuration files are parsed only once."
+        },
+        {
+          question: "Why should `debug: bool = True` NEVER be enabled in production configurations?",
+          options: [
+            "It slows down integer math.",
+            "Debug mode exposes verbose error pages, stack traces, and internal variables to potential attackers.",
+            "Python forbids debug mode on Linux.",
+            "It deletes database tables."
+          ],
+          correctIndex: 1,
+          explanation: "Debug mode leaks internal stack traces and application architecture details to public clients."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Startup Validation and Configuration Integration in FastAPI",
+      durationMinutes: 16,
+      explanation: `
+<b>Enforcing Configuration Validation during Application Lifespans</b><br/>
+In modern FastAPI applications, configuration validation should occur during application startup using **Lifespan Context Managers** or Dependency Injection.<br/><br/>
+
+<b>1. FastAPI Lifespan Context Manager:</b><br/>
+FastAPI's `lifespan` context manager handles startup and shutdown logic. Validating configuration inside the lifespan startup phase guarantees that if any required setting is missing or corrupt, the application fails to start immediately (**Fail-Fast Principle**).<br/><br/>
+
+<pre><code>from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup Phase: Validate configuration
+    config = get_environment_configuration()
+    logger.info(f"Starting {config.app_name} in [{config.environment}] mode")
+    yield
+    # Shutdown Phase: Clean up resources
+    logger.info("Application shutting down cleanly")
+
+app = FastAPI(lifespan=lifespan)</code></pre><br/>
+
+<b>2. Dependency Injection Integration:</b><br/>
+Inject configuration settings into route handlers using `Depends(get_environment_configuration)`:<br/>
+<pre><code>@app.get("/api/v1/info")
+async def get_info(config: BaseAppConfig = Depends(get_environment_configuration)):
+    return {"app": config.app_name, "env": config.environment}</code></pre>
+      `,
+      diagram: `
+FASTAPI LIFESPAN CONFIGURATION VALIDATION:
+
+  Uvicorn Server Starts -> Triggers FastAPI Lifespan Context
+                                   |
+                                   v
+  [ get_environment_configuration() Execution ]
+                                   |
+            +----------------------+----------------------+
+            |                                             |
+  (Configuration Valid)                        (Validation Failed)
+            |                                             |
+            v                                             v
+  [ Application Startup Completes ]             [ FAILS FAST! ]
+  (Ready to serve user traffic)                 (Server halts with detailed error!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Complete FastAPI Configuration Integration
+# ==============================================================================
+
+from contextlib import asynccontextmanager
+from functools import lru_cache
+import os
+from fastapi import FastAPI, Depends
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+
+# Configuration Model
+class AppConfig(BaseSettings):
+    app_name: str = "Enterprise Logistics Engine"
+    environment: str = "development"
+    jwt_secret: SecretStr = SecretStr("DEV_SECRET_KEY_CHANGE_IN_PROD")
+
+@lru_cache
+def get_config() -> AppConfig:
+    return AppConfig()
+
+# Lifespan Context Manager
+@asynccontextmanager
+async def app_lifespan(app: FastAPI):
+    # Startup Phase: Validate config
+    cfg = get_config()
+    print(f"  [LIFESPAN STARTUP] App '{cfg.app_name}' initialized in '{cfg.environment}' mode.")
+    yield
+    # Shutdown Phase
+    print("  [LIFESPAN SHUTDOWN] Application resources released cleanly.")
+
+# App Assembly
+app = FastAPI(title="Configured API", lifespan=app_lifespan)
+
+@app.get("/api/v1/system-info", tags=["System"])
+async def read_system_info(config: AppConfig = Depends(get_config)):
+    return {
+        "app_name": config.app_name,
+        "environment": config.environment,
+        "secret_length": len(config.jwt_secret.get_secret_value())
+    }
+
+print("--- LESSON 5: Integrated FastAPI Application Configured ---")
+      `,
+      keyTakeaways: [
+        "Validate configuration on application startup using FastAPI's `lifespan` context manager.",
+        "Follow the **Fail-Fast Principle**: Halt startup immediately if required settings are missing or invalid.",
+        "Inject settings into route handlers using `Depends(get_config)`.",
+        "Use `@lru_cache` on settings factory functions to prevent redundant `.env` file parsing."
+      ],
+      commonMistakes: [
+        "<b>Deferring configuration validation until a route is executed:</b> Discovering that a missing database URL causes crashes only when a user visits a specific endpoint 3 days after deployment.",
+        "<b>Parsing `.env` files repeatedly on every HTTP request:</b> Omitting `@lru_cache` on configuration factory functions, creating file I/O bottlenecks."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural benefit of the 'Fail-Fast Principle' in application configuration management?",
+          options: [
+            "It speeds up database queries.",
+            "It validates all required configuration settings on application startup, halting execution immediately if settings are invalid before taking live user traffic.",
+            "It deletes corrupt files.",
+            "It formats JSON responses."
+          ],
+          correctIndex: 1,
+          explanation: "Fail-Fast ensures missing or corrupt configuration settings are caught on startup before the server accepts live traffic."
+        },
+        {
+          question: "Which FastAPI feature executes code during application startup and shutdown phases to validate configuration and manage resources?",
+          options: [
+            "`APIRouter`",
+            "`lifespan` Context Manager",
+            "`BackgroundTasks`",
+            "`CORSMiddleware`"
+          ],
+          correctIndex: 1,
+          explanation: "FastAPI's `lifespan` context manager executes startup and shutdown logic."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "According to the Twelve-Factor App methodology, where should application configuration be stored?",
+      options: [
+        "Inside Python source code constants.",
+        "In Environment Variables.",
+        "In JSON files committed to Git.",
+        "In global variables."
+      ],
+      correctIndex: 1,
+      explanation: "Twelve-Factor App guidelines mandate storing configuration in environment variables."
+    },
+    {
+      question: "Which Pydantic type automatically masks secret values when printed or logged?",
+      options: [
+        "`str`",
+        "`SecretStr`",
+        "`MaskedStr`",
+        "`SecureString`"
+      ],
+      correctIndex: 1,
+      explanation: "`SecretStr` masks secret values in string representations and logs."
+    },
+    {
+      question: "How do you retrieve the plain-text string from a Pydantic `SecretStr` instance?",
+      options: [
+        "`.reveal()`",
+        "`.get_secret_value()`",
+        "`str(field)`",
+        "`.unmask()`"
+      ],
+      correctIndex: 1,
+      explanation: "Calling `.get_secret_value()` returns the unmasked plain-text secret string."
+    },
+    {
+      question: "Which file should ALWAYS be added to `.gitignore` to prevent leaking local environment credentials?",
+      options: [
+        "`pyproject.toml`",
+        "`.env`",
+        "`main.py`",
+        "`requirements.txt`"
+      ],
+      correctIndex: 1,
+      explanation: "The `.env` file contains environment variables and must never be committed to Git."
+    },
+    {
+      question: "What decorator from `functools` should be used on configuration factory functions to cache settings singletons?",
+      options: [
+        "`@classmethod`",
+        "`@lru_cache`",
+        "`@dataclass`",
+        "`@property`"
+      ],
+      correctIndex: 1,
+      explanation: "`@lru_cache` caches the settings singleton, preventing redundant `.env` file parsing."
+    },
+    {
+      question: "What happens if a required field without a default value is missing from environment variables in `pydantic-settings`?",
+      options: [
+        "It defaults to `None`.",
+        "It raises a `ValidationError` and halts application startup immediately.",
+        "It sets the value to an empty string.",
+        "It generates a random string."
+      ],
+      correctIndex: 1,
+      explanation: "Missing required fields trigger a `ValidationError` on startup."
+    },
+    {
+      question: "Why should `debug: bool = True` NEVER be enabled in production configurations?",
+      options: [
+        "It slows down math.",
+        "Debug mode exposes verbose error pages and internal stack traces to potential attackers.",
+        "Linux forbids debug mode.",
+        "It deletes database tables."
+      ],
+      correctIndex: 1,
+      explanation: "Debug mode leaks internal stack traces and application architecture details to public clients."
+    },
+    {
+      question: "Which FastAPI feature executes startup validation before the application accepts live user traffic?",
+      options: [
+        "`APIRouter`",
+        "`lifespan` Context Manager",
+        "`BackgroundTasks`",
+        "`CORSMiddleware`"
+      ],
+      correctIndex: 1,
+      explanation: "The `lifespan` context manager handles startup validation and shutdown resource cleanup."
+    }
+  ],
+  project: {
+    name: "Enterprise Multi-Environment Configuration & Secrets Suite (Phase 1 Project)",
+    goal: "Build a production-grade multi-environment configuration suite featuring pydantic-settings, SecretStr credential masking, multi-tier configuration inheritance (Dev/Prod), lru_cache memoization, and FastAPI lifespan integration.",
+    brief: "Your enterprise platform requires a robust configuration management utility (`config_secrets_suite.py`). The application must load environment variables via `pydantic-settings`, mask secrets using `SecretStr`, select Dev vs Prod configuration classes dynamically based on `APP_ENV`, validate settings during FastAPI startup using a `lifespan` context manager, and expose system info via a FastAPI endpoint.",
+    steps: [
+      "Create a workspace script file named `config_secrets_suite.py`.",
+      "Define a `BaseAppConfig` class using `pydantic-settings` with `SecretStr` fields.",
+      "Create subclassed `DevelopmentConfig` and `ProductionConfig` models.",
+      "Implement a `@lru_cache` factory function `get_config()` selecting configuration based on `APP_ENV`.",
+      "Build a FastAPI application with a `lifespan` context manager validating configuration on startup.",
+      "Expose a `/api/v1/config-info` endpoint consuming `Depends(get_config)`.",
+      "Run `python3 config_secrets_suite.py` in your terminal and print a complete configuration audit report."
+    ],
+    acceptance: [
+      "Configuration is managed using `pydantic-settings` `BaseSettings` models.",
+      "Secrets are masked using `SecretStr`.",
+      "Environment factory selects `DevelopmentConfig` or `ProductionConfig` dynamically.",
+      "FastAPI `lifespan` context manager validates configuration on startup.",
+      "Executing `python3 config_secrets_suite.py` outputs a clean execution report and returns exit code 0."
+    ],
+    stretch: [
+      "Add custom Pydantic validators checking that production database URLs start with `postgresql+asyncpg://`.",
+      "Annotate all configuration classes with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
