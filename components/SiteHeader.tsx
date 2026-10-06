@@ -44,12 +44,13 @@ function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   const { t } = useLocale();
 
   useEffect(() => {
     setIsMounted(true);
     function closeMenu(event: MouseEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
+      if (!menuRef.current?.contains(event.target as Node) && !drawerRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
@@ -67,6 +68,16 @@ function SettingsMenu() {
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   return (
     <div ref={menuRef} className="relative shrink-0">
@@ -116,7 +127,7 @@ function SettingsMenu() {
           {isMounted && createPortal(
             <div className="fixed inset-0 z-50 sm:hidden">
               <button type="button" aria-label="Close menu" onClick={() => setIsOpen(false)} className="absolute inset-0 bg-black/40" />
-              <aside className="absolute inset-y-0 right-0 flex w-80 max-w-[86vw] flex-col overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
+              <aside ref={drawerRef} className="absolute inset-y-0 right-0 flex w-80 max-w-[86vw] flex-col overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
                 <div className="mb-6 flex items-center justify-between"><span className="text-lg font-semibold text-[var(--text)]">Menu</span><button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" className="grid h-9 w-9 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18" /></svg></button></div>
                 <nav className="space-y-1 border-b border-[var(--border)] pb-4">
                   <Link href="/focus" onClick={() => setIsOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
