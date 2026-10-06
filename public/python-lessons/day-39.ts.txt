@@ -1,0 +1,766 @@
+/**
+ * DAY 39: Phase 7 · Type Safety & Code Quality — Testing Fundamentals with pytest
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1TestingFundamentals = {
+  day: 39,
+  topic: "Phase 7 · Type Safety & Code Quality — Testing Fundamentals with pytest",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Unit Testing Concepts, pytest Assertions, and Test Discovery",
+      durationMinutes: 18,
+      explanation: `
+<b>Automated Quality Safeguards and Test Driven Verification</b><br/>
+As applications expand in complexity, verifying that new features don't break existing functionality becomes impossible through manual testing alone. **Unit Testing** automates this verification process by writing small, fast test functions that isolate and exercise individual code units (functions, methods, classes) against expected outputs.<br/><br/>
+
+<b>1. Why Use pytest Over Built-in unittest?</b><br/>
+Python includes a built-in <code>unittest</code> module, but it requires verbose class boilerplate and specialized assertion methods (<code>self.assertEqual(a, b)</code>, <code>self.assertTrue(x)</code>). **pytest** is the industry-standard testing framework for Python because:
+<ul>
+  <li>It relies on standard Python <code>assert</code> statements (<code>assert a == b</code>).</li>
+  <li>It provides detailed introspection diffs on assertion failures automatically.</li>
+  <li>It eliminates class boilerplate—test cases are simple, clean Python functions!</li>
+</ul>
+
+<b>2. Automatic Test Discovery Conventions:</b><br/>
+When you run <code>$ pytest</code> in your terminal, pytest automatically scans your project directory tree for tests using strict naming conventions:
+<ul>
+  <li><b>Test Files:</b> Files named <code>test_*.py</code> or <code>*_test.py</code>.</li>
+  <li><b>Test Functions:</b> Functions prefixed with <code>test_*()</code> inside test files.</li>
+  <li><b>Test Classes:</b> Classes prefixed with <code>Test*</code> (containing no <code>__init__</code> method).</li>
+</ul>
+
+<b>3. The AAA Test Structure (Arrange-Act-Assert):</b><br/>
+Every clean test function follows the 3-step AAA pattern:
+<ol>
+  <li><b>Arrange:</b> Prepare input data, objects, and preconditions.</li>
+  <li><b>Act:</b> Execute the target function/unit being tested.</li>
+  <li><b>Assert:</b> Verify that the actual output matches expected results using standard `assert` statements.</li>
+</ol>
+      `,
+      diagram: `
+PYTEST AUTOMATIC TEST DISCOVERY & AAA PATTERN:
+
+  Project Directory Search ($ pytest):
+  project_root/
+  │── src/
+  │   └── dispatch.py
+  └── tests/
+      └── test_dispatch.py   <-- Discovered! (Matches test_*.py)
+          └── test_fee_calc() <-- Discovered! (Matches test_*())
+
+  AAA Test Structure inside test_fee_calc():
+  1. ARRANGE : weight = 10.0, rate = 1.50
+  2. ACT     : fee = calculate_fee(weight, rate)
+  3. ASSERT  : assert fee == 15.00
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Unit Testing Fundamentals and pytest Assertions
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Source Unit Under Test (dispatch_engine.py)
+# ------------------------------------------------------------------------------
+
+def calculate_shipping_fee(weight_lbs: float, is_express: bool = False) -> float:
+    """Calculates shipping fee based on weight and service tier."""
+    if weight_lbs <= 0:
+        raise ValueError("Cargo weight must be strictly positive.")
+
+    base_fee = 10.00
+    weight_surcharge = weight_lbs * 0.50
+    multiplier = 1.5 if is_express else 1.0
+
+    return round((base_fee + weight_surcharge) * multiplier, 2)
+
+
+# ------------------------------------------------------------------------------
+# Test File: test_dispatch_engine.py (Executed via pytest)
+# ------------------------------------------------------------------------------
+
+def test_calculate_shipping_fee_standard_ground():
+    """Test standard ground shipping fee calculation (AAA Pattern)."""
+    # 1. ARRANGE
+    weight = 10.0
+    is_express = False
+    expected_fee = 15.00 # 10.00 base + (10.0 * 0.50) = 15.00
+
+    # 2. ACT
+    actual_fee = calculate_shipping_fee(weight, is_express)
+
+    # 3. ASSERT (Standard Python assert statement)
+    assert actual_fee == expected_fee
+
+
+def test_calculate_shipping_fee_express_tier():
+    """Test priority express multiplier calculation."""
+    # Arrange & Act
+    actual_fee = calculate_shipping_fee(weight_lbs=20.0, is_express=True)
+
+    # Assert: (10.00 + 10.00) * 1.5 = 30.00
+    assert actual_fee == 30.00
+    assert isinstance(actual_fee, float)
+
+print("--- BEGINNER: Executing Unit Test Functions Directly ---")
+test_calculate_shipping_fee_standard_ground()
+test_calculate_shipping_fee_express_tier()
+print("All basic unit assertions passed successfully!")
+      `,
+      keyTakeaways: [
+        "pytest is the industry-standard testing framework that uses standard Python `assert` statements.",
+        "Automatic test discovery finds files matching `test_*.py` and functions matching `test_*()`.",
+        "Structure tests using the Arrange-Act-Assert (AAA) pattern for maximum clarity.",
+        "pytest provides rich introspection diffs when assertions fail."
+      ],
+      commonMistakes: [
+        "<b>Naming test files or functions without the `test_` prefix:</b> Naming a file `dispatch_tests.py` instead of `test_dispatch.py`, causing pytest to skip discovery silently.",
+        "<b>Testing multiple unrelated units inside a single giant test function:</b> Cramming 20 assertions across 5 functions into one test, making it difficult to pinpoint specific failures.",
+        "<b>Using legacy unittest methods inside pytest:</b> Writing `self.assertEqual(a, b)` instead of clean standard Python `assert a == b`."
+      ],
+      quizzes: [
+        {
+          question: "Which naming convention allows pytest to automatically discover a test file inside a project directory?",
+          options: [
+            "`check_dispatch.py`",
+            "`test_dispatch.py` (or `dispatch_test.py`)",
+            "`dispatch_spec.py`",
+            "`tests.py`"
+          ],
+          correctIndex: 1,
+          explanation: "pytest automatically discovers test files matching `test_*.py` or `*_test.py`."
+        },
+        {
+          question: "What are the three sequential steps of the AAA unit test pattern?",
+          options: [
+            "Analyze, Apply, Approve",
+            "Arrange, Act, Assert",
+            "Allocate, Assess, Audit",
+            "Acquire, Alter, Announce"
+          ],
+          correctIndex: 1,
+          explanation: "AAA stands for Arrange (setup inputs), Act (call target unit), and Assert (verify outputs)."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Testing Exceptions with pytest.raises",
+      durationMinutes: 18,
+      explanation: `
+<b>Verifying Error Boundaries and Fault Tolerance</b><br/>
+Unit testing isn't just about verifying happy-path scenarios where inputs are valid. Production code must handle invalid inputs gracefully by raising appropriate exceptions. Verifying that a function **correctly raises an exception** under error conditions is a core part of comprehensive test suites.<br/><br/>
+
+<b>1. Testing Exceptions with <code>pytest.raises()</code>:</b><br/>
+pytest provides the <code>pytest.raises()</code> context manager to assert that a block of code raises a specific exception type.<br/>
+<code>import pytest</code><br/>
+<pre><code>def test_zero_weight_raises_error():
+    with pytest.raises(ValueError):
+        calculate_shipping_fee(weight_lbs=0.0)</code></pre><br/>
+
+<b>How it Works:</b>
+<ul>
+  <li>If the code inside the <code>with pytest.raises(...)</code> block raises the expected exception, the test **passes**.</li>
+  <li>If the code completes *without* raising the exception, or raises a *different* exception type, the test **fails**!</li>
+</ul>
+
+<b>2. Inspecting Exception Messages (<code>match=</code> parameter):</b><br/>
+To verify that the exception message contains specific text, pass a regex pattern to the <code>match</code> parameter:<br/>
+<code>with pytest.raises(ValueError, match=r"strictly positive"):</code><br/>
+<code>    calculate_shipping_fee(weight_lbs=-10.0)</code>
+      `,
+      diagram: `
+PYTEST.RAISES EXCEPTION TESTING LIFECYCLE:
+
+  with pytest.raises(ValueError) as exc_info:
+      calculate_shipping_fee(-5.0)  <--- Target Call Raises ValueError!
+            |
+            v
+  [ Exception Intercepted by pytest ]
+  - Test Passes!
+  - exc_info.value contains Exception Instance for assertion inspection!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Exception Verification with pytest.raises
+# ==============================================================================
+
+import pytest
+
+# ------------------------------------------------------------------------------
+# Source Unit Under Test
+# ------------------------------------------------------------------------------
+
+def process_package_refund(order_status: str, refund_amount: float) -> bool:
+    """Processes refund, enforcing business logic constraints."""
+    if refund_amount <= 0:
+        raise ValueError(f"Refund amount ${refund_amount:.2f} must be greater than zero.")
+    if order_status != "CANCELLED":
+        raise PermissionError(f"Cannot refund order with status '{order_status}'. Status must be CANCELLED.")
+    return True
+
+
+# ------------------------------------------------------------------------------
+# Test Cases Using pytest.raises
+# ------------------------------------------------------------------------------
+
+def test_refund_negative_amount_raises_value_error():
+    """Verify negative refund amount raises ValueError with specific message."""
+    with pytest.raises(ValueError, match=r"must be greater than zero"):
+        process_package_refund(order_status="CANCELLED", refund_amount=-50.0)
+
+
+def test_refund_uncancelled_order_raises_permission_error():
+    """Verify non-cancelled order raises PermissionError."""
+    with pytest.raises(PermissionError) as exc_info:
+        process_package_refund(order_status="DELIVERED", refund_amount=25.0)
+
+    # Inspecting exception object details directly via exc_info
+    assert "DELIVERED" in str(exc_info.value)
+    assert exc_info.type is PermissionError
+
+print("--- BEGINNER: Executing Exception Test Cases ---")
+test_refund_negative_amount_raises_value_error()
+test_refund_uncancelled_order_raises_permission_error()
+print("All exception verification tests passed successfully!")
+      `,
+      keyTakeaways: [
+        "Use `with pytest.raises(ExpectedException):` to test that code raises expected errors.",
+        "Pass a regex string to `match=` to verify that exception error messages contain specific text.",
+        "Capture exception instances using `as exc_info` to inspect `exc_info.value` and `exc_info.type`.",
+        "Testing exception handling ensures functions fail fast and protect application invariants."
+      ],
+      commonMistakes: [
+        "<b>Placing code outside the `pytest.raises` block that triggers the exception earlier:</b> Causing the test to crash before reaching the `pytest.raises` context manager.",
+        "<b>Testing for overly broad exception types like `Exception`:</b> Catching any random error instead of testing for the specific domain exception (e.g., `ValueError`).",
+        "<b>Expecting `pytest.raises` to catch errors on code that succeeds silently:</b> The test fails if no exception is raised inside the block."
+      ],
+      quizzes: [
+        {
+          question: "What happens to a pytest test case if code inside a `with pytest.raises(ValueError):` block completes successfully WITHOUT raising an exception?",
+          options: [
+            "The test passes.",
+            "The test fails because the expected `ValueError` exception was not raised.",
+            "pytest prompts the user for manual input.",
+            "The test is skipped automatically."
+          ],
+          correctIndex: 1,
+          explanation: "`pytest.raises()` expects an exception to occur. If no exception is raised, the test fails."
+        },
+        {
+          question: "How do you verify that an exception raised inside `pytest.raises()` contains a specific error message string?",
+          options: [
+            "Pass the `message=` keyword to `assert`",
+            "Pass a regex pattern to the `match=` parameter in `pytest.raises(Error, match=r\"pattern\")`",
+            "Use `pytest.expect_message()`",
+            "Exception messages cannot be verified in pytest."
+          ],
+          correctIndex: 1,
+          explanation: "The `match=` parameter accepts a regex pattern that pytest checks against the raised exception's string message."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Reusable Test State with pytest Fixtures",
+      durationMinutes: 20,
+      explanation: `
+<b>Setup, Teardown, and Dependency Injection</b><br/>
+Real-world unit tests often require setting up complex test objects, mock database connections, or temporary test directories before running assertions. Duplicating setup code across 50 test functions leads to fragile, unmaintainable test suites. **pytest Fixtures** provide a clean dependency injection mechanism to manage test setup and teardown.<br/><br/>
+
+<b>1. What is a pytest Fixture?</b><br/>
+A fixture is a function decorated with <code>@pytest.fixture</code> that creates and returns a test resource.<br/>
+<pre><code>@pytest.fixture
+def sample_package():
+    return {"id": "TRK-1001", "weight": 15.0, "status": "QUEUED"}</code></pre><br/>
+
+<b>2. Injecting Fixtures into Test Functions:</b><br/>
+To use a fixture in a test function, simply **pass the fixture function's name as a parameter** in the test function's definition! pytest automatically detects the parameter name, executes the fixture first, and passes its return value into your test.<br/>
+<pre><code>def test_package_status(sample_package): # Receives sample_package fixture!
+    assert sample_package["status"] == "QUEUED"</code></pre><br/>
+
+<b>3. Fixture Teardown with <code>yield</code>:</b><br/>
+If a fixture needs to clean up resources after a test finishes (e.g., deleting temporary files or closing database connections), use <code>yield</code> instead of <code>return</code>!
+<ul>
+  <li>Code **before** <code>yield</code> executes before the test runs (Setup).</li>
+  <li>The value yielded is handed to the test function.</li>
+  <li>Code **after** <code>yield</code> executes after the test finishes (Teardown/Cleanup).</li>
+</ul>
+      `,
+      diagram: `
+PYTEST FIXTURE LIFECYCLE (Setup -> Test -> Teardown):
+
+  @pytest.fixture
+  def db_session():
+      # 1. SETUP: Connect to Test DB
+      db = connect_test_db()
+      yield db # Hand resource to test
+      # 2. TEARDOWN: Clean Test DB
+      db.purge_and_close()
+
+  test_query(db_session):
+  --> Runs SETUP -> Runs Test Assertions -> Runs TEARDOWN
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Reusable Setup & Teardown with pytest Fixtures
+# ==============================================================================
+
+import pytest
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# Fixture Definitions
+# ------------------------------------------------------------------------------
+
+@pytest.fixture
+def sample_parcel_payload() -> dict:
+    """Fixture providing a standardized parcel dictionary payload for tests."""
+    return {
+        "tracking_id": "TRK-9001",
+        "destination_city": "CHICAGO",
+        "weight_lbs": 24.5,
+        "is_priority": True
+    }
+
+
+@pytest.fixture
+def temp_manifest_file(tmp_path: Path):
+    """Fixture demonstrating yield teardown with pytest's built-in tmp_path fixture."""
+    # 1. SETUP
+    test_file = tmp_path / "test_manifest.csv"
+    test_file.write_text("tracking_id,status\nTRK-101,QUEUED\n", encoding="utf-8")
+
+    yield test_file # Hand file path to test case
+
+    # 2. TEARDOWN (Runs after test completes)
+    if test_file.exists():
+        test_file.unlink()
+
+
+# ------------------------------------------------------------------------------
+# Test Cases Consuming Fixtures
+# ------------------------------------------------------------------------------
+
+def test_parcel_payload_structure(sample_parcel_payload):
+    """Test consuming sample_parcel_payload fixture via parameter injection."""
+    assert sample_parcel_payload["tracking_id"] == "TRK-9001"
+    assert sample_parcel_payload["weight_lbs"] > 0
+    assert sample_parcel_payload["is_priority"] is True
+
+
+def test_manifest_file_reading(temp_manifest_file):
+    """Test consuming temporary file fixture."""
+    content = temp_manifest_file.read_text(encoding="utf-8")
+    assert "TRK-101" in content
+    assert temp_manifest_file.exists()
+
+print("--- BEGINNER: Executing Fixture-Based Test Cases ---")
+
+# Simulating pytest fixture injection manually for demonstration
+mock_payload = sample_parcel_payload()
+test_parcel_payload_structure(mock_payload)
+print("Fixture injection assertions passed successfully!")
+      `,
+      keyTakeaways: [
+        "Decorate setup functions with `@pytest.fixture` to create reusable test dependencies.",
+        "Inject fixtures into test functions by naming the fixture as a test function parameter.",
+        "Use `yield` inside a fixture to separate pre-test Setup code from post-test Teardown code.",
+        "pytest includes built-in fixtures like `tmp_path` for temporary file management."
+      ],
+      commonMistakes: [
+        "<b>Calling fixture functions manually inside tests (`sample_fixture()`):</b> Passing the fixture name as a parameter lets pytest handle instantiation and lifecycle management.",
+        "<b>Sharing mutable fixture state across tests unintentionally:</b> Modifying a shared fixture dictionary in one test can pollute other tests if fixture scope isn't managed properly.",
+        "<b>Forgetting that code after `yield` executes even if the test fails:</b> Teardown code following `yield` is guaranteed to run after test completion."
+      ],
+      quizzes: [
+        {
+          question: "How do you inject a pytest fixture named `sample_data` into a test function `test_process()`?",
+          options: [
+            "Call `sample_data()` on the first line inside `test_process()`.",
+            "Pass `sample_data` as a parameter name in `def test_process(sample_data):`.",
+            "Decorate `test_process` with `@pytest.use_fixture(\"sample_data\")`.",
+            "Import `sample_data` from `sys.modules`."
+          ],
+          correctIndex: 1,
+          explanation: "pytest uses parameter name matching for dependency injection: declaring `sample_data` as a parameter passes the fixture's return value."
+        },
+        {
+          question: "In a pytest fixture using `yield`, when does the code AFTER the `yield` statement execute?",
+          options: [
+            "Before the test function runs.",
+            "After the test function finishes executing (Teardown phase).",
+            "Only if the test function fails.",
+            "It never executes."
+          ],
+          correctIndex: 1,
+          explanation: "Code before `yield` is Setup (pre-test); code after `yield` is Teardown (post-test cleanup)."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Eliminating Duplicate Tests with Parametrization",
+      durationMinutes: 14,
+      explanation: `
+<b>Data-Driven Testing with @pytest.mark.parametrize</b><br/>
+Testing a function against multiple input combinations often leads to repetitive test code. For example, testing a shipping cost calculator against weights of 1 lb, 10 lbs, 50 lbs, and 100 lbs by writing four separate test functions creates clutter.<br/><br/>
+
+**Test Parametrization** allows running a single test function multiple times against a matrix of different input arguments and expected outputs!<br/><br/>
+
+<b>1. The <code>@pytest.mark.parametrize</code> Decorator:</b><br/>
+<code>@pytest.mark.parametrize("input_var, expected_var", [(val1, exp1), (val2, exp2)])</code>
+<ul>
+  <li><b>Parameter 1 (String):</b> Comma-separated string of argument names matching the test function parameters.</li>
+  <li><b>Parameter 2 (List of Tuples):</b> A list of tuple pairs, where each tuple represents one test execution run!</li>
+</ul>
+
+<b>2. Benefits of Parametrization:</b>
+1. **DRY Principle (Don't Repeat Yourself):** Eliminates repetitive test functions.
+2. **Isolated Test Reporting:** pytest treats each parameter pair as an independent test case. If input #3 fails, inputs #1, #2, and #4 still pass and report individually!
+      `,
+      diagram: `
+PARAMETRIZATION EXECUTION MATRIX (@pytest.mark.parametrize):
+
+  @pytest.mark.parametrize("weight, expected_fee", [
+      (1.0, 10.50),   ---> Run 1: test_calc(1.0, 10.50)   [PASS]
+      (10.0, 15.00),  ---> Run 2: test_calc(10.0, 15.00)  [PASS]
+      (50.0, 35.00)   ---> Run 3: test_calc(50.0, 35.00)  [PASS]
+  ])
+  def test_calc(weight, expected_fee): ...
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Data-Driven Testing with @pytest.mark.parametrize
+# ==============================================================================
+
+import pytest
+
+# ------------------------------------------------------------------------------
+# Source Function Under Test
+# ------------------------------------------------------------------------------
+
+def classify_shipping_tier(weight_lbs: float) -> str:
+    """Classifies weight into shipping tiers."""
+    if weight_lbs <= 0:
+        return "INVALID"
+    elif weight_lbs <= 5.0:
+        return "LIGHT_ENVELOPE"
+    elif weight_lbs <= 50.0:
+        return "STANDARD_PARCEL"
+    else:
+        return "HEAVY_FREIGHT"
+
+
+# ------------------------------------------------------------------------------
+# Parametrized Test Case
+# ------------------------------------------------------------------------------
+
+# Decorator defines parameter names and a matrix of (input, expected) test tuples
+@pytest.mark.parametrize(
+    "weight_input, expected_tier",
+    [
+        (2.0, "LIGHT_ENVELOPE"),    # Test boundary 1: Light
+        (5.0, "LIGHT_ENVELOPE"),    # Test boundary 2: Light edge
+        (12.5, "STANDARD_PARCEL"),  # Test boundary 3: Standard
+        (50.0, "STANDARD_PARCEL"),  # Test boundary 4: Standard edge
+        (75.0, "HEAVY_FREIGHT"),    # Test boundary 5: Heavy
+        (-5.0, "INVALID")           # Test boundary 6: Invalid
+    ]
+)
+def test_classify_shipping_tier(weight_input: float, expected_tier: str):
+    """Single test function executed 6 times with different inputs."""
+    actual_tier = classify_shipping_tier(weight_input)
+    assert actual_tier == expected_tier
+
+
+print("--- BEGINNER: Parametrized Test Matrix Simulation ---")
+
+# Simulating pytest parametrization loop manually
+test_matrix = [
+    (2.0, "LIGHT_ENVELOPE"),
+    (12.5, "STANDARD_PARCEL"),
+    (75.0, "HEAVY_FREIGHT")
+]
+
+for weight, expected in test_matrix:
+    test_classify_shipping_tier(weight, expected)
+    print(f"  Passed test for weight {weight} lbs -> expected '{expected}'")
+      `,
+      keyTakeaways: [
+        "Use `@pytest.mark.parametrize` to run a single test case against multiple data inputs.",
+        "Pass argument names as a comma-separated string, followed by a list of input/output tuples.",
+        "pytest treats each parameter set as an independent test case in reporting.",
+        "Parametrization is ideal for testing boundary conditions and edge cases."
+      ],
+      commonMistakes: [
+        "<b>Mismatched parameter names:</b> Mismatching string names in `@pytest.mark.parametrize(\"a, b\", ...)` with parameter names in `def test_func(x, y):`.",
+        "<b>Mismatched tuple lengths:</b> Passing a tuple with 3 values when only 2 parameter names were declared.",
+        "<b>Testing multiple assertions in a loop inside a test instead of parametrizing:</b> Writing a `for` loop inside a test function means the first failure aborts the rest of the loop, hiding subsequent test results."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary operational advantage of using `@pytest.mark.parametrize` over a manual `for` loop inside a test function?",
+          options: [
+            "It runs 100x faster.",
+            "pytest executes each parameter set as an independent test case, so if one case fails, remaining cases still execute and report individually.",
+            "It automatically fixes bugs in source code.",
+            "It prevents exceptions from being raised."
+          ],
+          correctIndex: 1,
+          explanation: "Parametrization runs each test case independently. A failure in one set does not stop pytest from running and reporting on the remaining parameter sets."
+        },
+        {
+          question: "In `@pytest.mark.parametrize(\"x, y\", [(1, 2), (3, 4)])`, what must the parameters of the test function `def test_func(...)` be named?",
+          options: [
+            "`def test_func(input, output):`",
+            "`def test_func(x, y):`",
+            "`def test_func(args):`",
+            "`def test_func(*params):`"
+          ],
+          correctIndex: 1,
+          explanation: The test function parameter names (`x, y`) must match the comma-separated string names declared in the parametrize decorator.
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Real-World Test Suite Architecture and CLI Execution",
+      durationMinutes: 10,
+      explanation: `
+<b>Structuring Production Test Suites and Running pytest CLI</b><br/>
+In professional Python projects, test files are organized into dedicated test directory structures mirroring application source code.<br/><br/>
+
+<b>1. Standard Project Directory Layout:</b><br/>
+<pre><code>logistics_project/
+│── pyproject.toml
+│── src/
+│   └── logistics/
+│       ├── __init__.py
+│       ├── dispatch.py
+│       └── models.py
+└── tests/
+    ├── __init__.py
+    ├── conftest.py          &lt;-- Shared global fixtures!
+    ├── test_dispatch.py
+    └── test_models.py</code></pre><br/>
+
+<b>2. The Magic `conftest.py` File:</b><br/>
+`conftest.py` is a special pytest configuration file placed in the `tests/` directory. Fixtures defined inside `conftest.py` are **automatically available to all test files** in that directory without needing to import them!
+
+<b>3. Essential pytest CLI Options:</b>
+<ul>
+  <li><code>$ pytest</code>: Discovers and runs all test cases in the project.</li>
+  <li><code>$ pytest -v</code> (Verbose): Displays detailed test names and status per test case.</li>
+  <li><code>$ pytest -k "express"</code>: Runs only test cases matching the keyword expression `"express"`.</li>
+  <li><code>$ pytest -x</code> (Exit Fast): Aborts the test run immediately upon encountering the first failure.</li>
+  <li><code>$ pytest --maxfail=2</code>: Aborts after 2 failures.</li>
+  <li><code>$ pytest tests/test_dispatch.py</code>: Runs tests inside a specific target file.</li>
+</ul>
+      `,
+      diagram: `
+ENTERPRISE TEST SUITE ARCHITECTURE:
+
+  tests/
+  ├── conftest.py          <--- Global Fixtures (e.g. mock_db, sample_payload)
+  ├── unit/
+  │   ├── test_dispatch.py <-- Unit Tests (Fast, mocked)
+  │   └── test_models.py
+  └── integration/
+      └── test_api.py      <-- Integration Tests (Slow, system-level)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Complete Production Test Suite Simulation
+# ==============================================================================
+
+# Simulation of conftest.py + test_dispatch.py execution pipeline
+import pytest
+
+# Simulated conftest.py Shared Fixture
+def global_sample_parcel() -> dict:
+    return {"id": "GLOBAL-TRK-100", "weight_lbs": 15.0, "status": "QUEUED"}
+
+# Simulated test_dispatch.py Test Module
+class TestDispatchEngine:
+    """Test suite class grouping related dispatch test cases."""
+
+    def test_initial_status_is_queued(self):
+        parcel = global_sample_parcel()
+        assert parcel["status"] == "QUEUED"
+
+    def test_weight_is_positive(self):
+        parcel = global_sample_parcel()
+        assert parcel["weight_lbs"] > 0
+
+print("--- PRODUCTION TEST SUITE RUNNER SIMULATION ---")
+suite = TestDispatchEngine()
+
+print("Running Test 1: test_initial_status_is_queued...")
+suite.test_initial_status_is_queued()
+print("  PASSED [100%]")
+
+print("Running Test 2: test_weight_is_positive...")
+suite.test_weight_is_positive()
+print("  PASSED [100%]")
+
+print("\nPytest Summary: 2 passed in 0.01s")
+      `,
+      keyTakeaways: [
+        "Organize tests into a dedicated `tests/` directory mirroring `src/` modules.",
+        "Fixtures defined in `conftest.py` are globally shared across all test files without explicit imports.",
+        "Group related tests inside `TestClass` classes (without `__init__`).",
+        "Use CLI flags: `pytest -v` (verbose), `pytest -k \"keyword\"` (filter), and `pytest -x` (exit fast on first failure)."
+      ],
+      commonMistakes: [
+        "<b>Defining `__init__()` inside a TestClass:</b> pytest test classes must not have `__init__` methods, as pytest manages instantiation.",
+        "<b>Explicitly importing `conftest.py`:</b> Fixtures in `conftest.py` are discovered automatically by pytest; explicitly importing `conftest` causes configuration errors.",
+        "<b>Mixing unit tests with slow integration tests without markers:</b> Slowing down developer feedback loops by running heavy database/network tests on every local unit test run."
+      ],
+      quizzes: [
+        {
+          question: "What is the purpose of the special `conftest.py` file in a pytest test suite?",
+          options: [
+            "It compiles Python code into C binaries.",
+            "Fixtures defined in `conftest.py` are automatically shared across all test files in that directory without needing explicit imports.",
+            "It configures database passwords.",
+            "It replaces `pyproject.toml`."
+          ],
+          correctIndex: 1,
+          explanation: "`conftest.py` serves as a global fixture repository, making fixtures accessible to all test files in the directory automatically."
+        },
+        {
+          question: "Which pytest CLI flag causes the test runner to abort immediately upon encountering the FIRST test failure?",
+          options: [
+            "`-v`",
+            "`-x`",
+            "`-k`",
+            "`--stop`"
+          ],
+          correctIndex: 1,
+          explanation: "The `-x` flag (exit fast) instructs pytest to stop running tests immediately on the first failure."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which standard Python statement does pytest use for assertions inside test functions?",
+      options: [
+        "`self.assertEqual(a, b)`",
+        "`assert a == b`",
+        "`pytest.assert_that(a == b)`",
+        "`check(a == b)`"
+      ],
+      correctIndex: 1,
+      explanation: "pytest uses standard Python `assert` statements, eliminating verbose `unittest` assertion methods."
+    },
+    {
+      question: "Which file and function naming conventions allow pytest to automatically discover unit tests?",
+      options: [
+        "Files `test_*.py` and functions `test_*()`",
+        "Files `check_*.py` and functions `check_*()`",
+        "Files `spec_*.py` and functions `spec_*()`",
+        "Files `unit_*.py` and functions `run_*()`"
+      ],
+      correctIndex: 0,
+      explanation: "pytest discovers test files matching `test_*.py` (or `*_test.py`) and functions matching `test_*()`."
+    },
+    {
+      question: "How do you test that a function raises a `ValueError` when passed invalid arguments in pytest?",
+      options: [
+        "`with pytest.raises(ValueError):`",
+        "`pytest.expect_error(ValueError)`",
+        "`assert throws(ValueError)`",
+        "`try: ... catch ValueError:`"
+      ],
+      correctIndex: 0,
+      explanation: "`with pytest.raises(ValueError):` asserts that the enclosed code block raises a `ValueError`."
+    },
+    {
+      question: "How is a pytest fixture injected into a test function?",
+      options: [
+        "By calling the fixture function on line 1 of the test.",
+        "By declaring the fixture's name as a parameter in the test function's definition.",
+        "By importing the fixture inside the test.",
+        "By using global variables."
+      ],
+      correctIndex: 1,
+      explanation: "pytest uses parameter name matching to inject fixtures into test functions."
+    },
+    {
+      question: "How do you execute cleanup code in a pytest fixture after a test case finishes?",
+      options: [
+        "Use `return` and call `cleanup()`.",
+        "Use `yield` to hand the resource to the test, and place cleanup code AFTER the `yield` statement.",
+        "Write a separate `@pytest.teardown` function.",
+        "Cleanup is handled by the OS automatically."
+      ],
+      correctIndex: 1,
+      explanation: "Code before `yield` is Setup; code after `yield` is Teardown cleanup."
+    },
+    {
+      question: "Which decorator runs a single test function multiple times against a matrix of input/output data sets?",
+      options: [
+        "`@pytest.fixture`",
+        "`@pytest.mark.parametrize`",
+        "`@pytest.mark.matrix`",
+        "`@pytest.repeat`"
+      ],
+      correctIndex: 1,
+      explanation: "`@pytest.mark.parametrize` enables data-driven testing with multiple parameter sets."
+    },
+    {
+      question: "Where should shared global fixtures be placed so they are available to all test files without explicit imports?",
+      options: [
+        "`pyproject.toml`",
+        "`conftest.py`",
+        "`__init__.py`",
+        "`global_fixtures.py`"
+      ],
+      correctIndex: 1,
+      explanation: "Fixtures in `conftest.py` are automatically discovered and shared across all test files in that directory."
+    },
+    {
+      question: "Which pytest CLI command filters and runs only test cases matching the keyword string `\"express\"`?",
+      options: [
+        "`pytest -v express`",
+        "`pytest -k \"express\"`",
+        "`pytest -x express`",
+        "`pytest --filter express`"
+      ],
+      correctIndex: 1,
+      explanation: "The `-k \"keyword\"` flag filters test execution by matching test function names against a keyword expression."
+    }
+  ],
+  project: {
+    name: "Enterprise Logistics Test Suite & SLA Verifier (Phase 1 Project)",
+    goal: "Build a comprehensive pytest test suite (`test_logistics_engine.py`) featuring unit assertions, exception testing with pytest.raises, reusable setup fixtures in conftest.py, and parametrized SLA boundary tests.",
+    brief: "Your logistics platform requires a robust automated unit test suite (`test_logistics_engine.py`). You will write unit tests using the AAA pattern, test custom exception boundaries with `pytest.raises`, create reusable parcel fixtures in `conftest.py`, and parametrize shipping tier calculations using `@pytest.mark.parametrize`.",
+    steps: [
+      "Create a source module file `logistics_engine.py` with shipping fee calculation, classification, and exception raising logic.",
+      "Create a `conftest.py` file containing a shared fixture `sample_parcel_data()` that yields a test parcel dictionary payload.",
+      "Create a test file `test_logistics_engine.py` and write happy-path unit tests using standard `assert` statements.",
+      "Write exception test cases using `with pytest.raises(ValueError, match=...)` to verify error boundary enforcement on negative cargo weights.",
+      "Write a parametrized test case `@pytest.mark.parametrize(\"weight, expected_tier\", [...])` testing shipping classification across boundary thresholds (0.0, 5.0, 50.0, 100.0 lbs).",
+      "Run your test suite using `pytest -v` in your terminal and verify 100% test pass rate."
+    ],
+    acceptance: [
+      "Test file follows discovery naming conventions (`test_*.py`).",
+      "`pytest.raises` verifies exception boundaries and message string matches.",
+      "`conftest.py` provides shared fixtures consumed by test parameters.",
+      "`@pytest.mark.parametrize` runs multiple test cases against boundary thresholds.",
+      "Running `pytest -v` in the terminal discovers and passes all test cases."
+    ],
+    stretch: [
+      "Install `pytest-cov` (`pip install pytest-cov`) and generate a code coverage report (`pytest --cov=logistics_engine`).",
+      "Annotate all test functions with type hints and pass static `mypy` verification."
+    ]
+  }
+};
