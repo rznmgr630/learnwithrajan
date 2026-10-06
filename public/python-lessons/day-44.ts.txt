@@ -1,0 +1,839 @@
+/**
+ * DAY 44: Phase 8 · Databases & Backend Development — HTTP & REST APIs
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1HttpAndRestApis = {
+  day: 44,
+  topic: "Phase 8 · Databases & Backend Development — HTTP & REST APIs",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "HTTP Fundamentals: Requests, Responses, Headers, and Status Codes",
+      durationMinutes: 18,
+      explanation: `
+<b>The Protocol of the Modern Web</b><br/>
+Hypertext Transfer Protocol (HTTP) is the foundational stateless request-response protocol powering modern web applications and microservice architectures. Client applications (mobile apps, backend services, web browsers) send an **HTTP Request** to a server, and the server processes the payload and returns an **HTTP Response**.<br/><br/>
+
+<b>1. Anatomy of an HTTP Request:</b>
+<ul>
+  <li><b>HTTP Method (Verb):</b> Indicates the desired action to perform.
+    <ul>
+      <li><code>GET</code>: Retrieves data without modifying server state (Safe & Idempotent).</li>
+      <li><code>POST</code>: Submits a new payload to create a resource (Non-Idempotent).</li>
+      <li><code>PUT</code>: Replaces an existing resource completely (Idempotent).</li>
+      <li><code>PATCH</code>: Partially updates specific fields on an existing resource (Non-Idempotent).</li>
+      <li><code>DELETE</code>: Removes a target resource (Idempotent).</li>
+    </ul>
+  </li>
+  <li><b>Request URI / Endpoint:</b> The target path (e.g., <code>/api/v1/parcels/TRK-9001</code>).</li>
+  <li><b>Headers:</b> Key-value metadata (e.g., <code>Content-Type: application/json</code>, <code>Authorization: Bearer &lt;token&gt;</code>).</li>
+  <li><b>Body (Payload):</b> The optional data content sent with `POST`, `PUT`, or `PATCH` requests.</li>
+</ul>
+
+<b>2. HTTP Status Code Categories:</b>
+<ul>
+  <li><b>1xx (Informational):</b> Request received, continuing process.</li>
+  <li><b>2xx (Success):</b> Action successfully received, understood, and accepted.
+    <br/>(<code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code>)</li>
+  <li><b>3xx (Redirection):</b> Further action required to complete request.
+    <br/>(<code>301 Moved Permanently</code>, <code>304 Not Modified</code>)</li>
+  <li><b>4xx (Client Errors):</b> Request contains bad syntax or unauthorized access.
+    <br/>(<code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>422 Unprocessable Entity</code>)</li>
+  <li><b>5xx (Server Errors):</b> Server failed to fulfill an apparently valid request.
+    <br/>(<code>500 Internal Server Error</code>, <code>502 Bad Gateway</code>, <code>503 Service Unavailable</code>)</li>
+</ul>
+      `,
+      diagram: `
+HTTP REQUEST / RESPONSE LIFECYCLE:
+
+  Client Application (requests / httpx)
+        |
+        v  POST /api/v1/parcels (Headers: Content-Type: application/json)
+  +-------------------------------------------------------------+
+  |                     HTTP Request Message                    |
+  |  Body: {"tracking_id": "TRK-9001", "weight_lbs": 14.5}       |
+  +-------------------------------------------------------------+
+        |
+        v
+  Web Application Server
+        |
+        v  Processing & Database Operations
+  +-------------------------------------------------------------+
+  |                     HTTP Response Message                   |
+  |  Status: 201 Created                                        |
+  |  Body: {"id": "TRK-9001", "status": "QUEUED"}              |
+  +-------------------------------------------------------------+
+        |
+        v
+  Client Application Receives 201 Created Response
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: HTTP Requests & Response Handling in Python
+# ==============================================================================
+
+# Standard library HTTP client (urllib.request) vs requests pattern simulation
+import json
+
+# ------------------------------------------------------------------------------
+# Beginner: Simulating HTTP Request Construction and Status Code Evaluation
+# ------------------------------------------------------------------------------
+
+def evaluate_http_status_code(status_code: int) -> str:
+    """Classifies HTTP status codes according to RFC 9110 standards."""
+    if 200 <= status_code < 300:
+        return f"SUCCESS ({status_code})"
+    elif 400 <= status_code < 500:
+        return f"CLIENT_ERROR ({status_code})"
+    elif 500 <= status_code < 600:
+        return f"SERVER_ERROR ({status_code})"
+    else:
+        return f"OTHER ({status_code})"
+
+print("--- BEGINNER: HTTP Status Code Inspection ---")
+print("Status 200:", evaluate_http_status_code(200)) # SUCCESS
+print("Status 201:", evaluate_http_status_code(201)) # SUCCESS
+print("Status 404:", evaluate_http_status_code(404)) # CLIENT_ERROR
+print("Status 500:", evaluate_http_status_code(500)) # SERVER_ERROR
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Mock HTTP Client Response Processor
+# ------------------------------------------------------------------------------
+
+class MockHTTPResponse:
+    def __init__(self, status_code: int, headers: dict[str, str], body_text: str):
+        self.status_code = status_code
+        self.headers = headers
+        self.text = body_text
+
+    def json((self) -> dict:
+        return json.loads(self.text)
+
+    @property
+    def is_success(self) -> bool:
+        return 200 <= self.status_code < 300
+
+
+def process_external_api_response(response: MockHTTPResponse) -> dict:
+    \"\"\"
+    Processes HTTP response payloads defensively, checking status codes
+    and Content-Type headers before parsing.
+    \"\"\"
+    print(f"\n--- ADVANCED: Processing Response [{response.status_code}] ---")
+
+    if not response.is_success:
+        raise RuntimeError(f"HTTP Request Failed: {response.status_code} - {response.text}")
+
+    content_type = response.headers.get("Content-Type", "")
+    if "application/json" not in content_type:
+        raise ValueError(f"Expected JSON response, got '{content_type}'")
+
+    return response.json()
+
+# Simulate successful 201 Created API response
+mock_success = MockHTTPResponse(
+    status_code=201,
+    headers={"Content-Type": "application/json"},
+    body_text='{"tracking_id": "TRK-9001", "status": "QUEUED"}'
+)
+
+parsed_payload = process_external_api_response(mock_success)
+print("Parsed Response Payload:", parsed_payload)
+      `,
+      keyTakeaways: [
+        "HTTP is a stateless request-response protocol built on methods (verbs), URIs, headers, and payloads.",
+        "HTTP Methods: `GET` (read), `POST` (create), `PUT` (replace), `PATCH` (partial update), `DELETE` (remove).",
+        "Status Codes: 2xx (Success), 3xx (Redirect), 4xx (Client Error), 5xx (Server Error).",
+        "Always inspect `Content-Type` headers and status codes before parsing response bodies."
+      ],
+      commonMistakes: [
+        "<b>Using `GET` requests to modify server state:</b> Using `GET` for state-changing operations violates idempotency rules and exposes state updates to browser pre-fetching and caching.",
+        "<b>Ignoring HTTP 4xx/5xx status codes:</b> Assuming `requests.get()` throws exceptions on 404/500 automatically; `requests` requires checking `response.status_code` or calling `response.raise_for_status()`.",
+        "<b>Confusing 401 Unauthorized and 403 Forbidden:</b> `401` means authentication is missing/invalid; `403` means identity is known but lacks required permission scopes."
+      ],
+      quizzes: [
+        {
+          question: "Which HTTP Method verb is specified by REST standards for partially updating specific fields on an existing server resource?",
+          options: [
+            "`PUT`",
+            "`POST`",
+            "`PATCH`",
+            "`UPDATE`"
+          ],
+          correctIndex: 2,
+          explanation: "`PATCH` performs partial updates on a resource; `PUT` replaces the entire target resource completely."
+        },
+        {
+          question: "What does an HTTP `401 Unauthorized` status code signify?",
+          options: [
+            "The requested resource was not found on the server.",
+            "Authentication credentials are missing or invalid.",
+            "The user is authenticated but lacks required permission authorization (which is HTTP 403).",
+            "The database server crashed."
+          ],
+          correctIndex: 1,
+          explanation: "HTTP 401 indicates missing or invalid authentication credentials."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "REST Architecture, Resource Design, and JSON APIs",
+      durationMinutes: 20,
+      explanation: `
+<b>Architectural Constraints for Scalable Web Services</b><br/>
+**Representational State Transfer (REST)** is an architectural style for designing networked web APIs. Rather than thinking about executing remote procedure calls (RPC), REST models system data as **Nouns (Resources)** exposed at predictable URL endpoints.<br/><br/>
+
+<b>1. Core REST Design Principles:</b>
+<ul>
+  <li><b>Resource-Based URLs (Nouns over Verbs):</b> Endpoints identify domain entities using plural nouns rather than action verbs.
+    <br/><i>GOOD (RESTful):</i> <code>GET /api/v1/parcels</code>, <code>POST /api/v1/parcels</code>
+    <br/><i>BAD (RPC Anti-Pattern):</i> <code>GET /api/v1/get_all_parcels</code>, <code>POST /api/v1/create_new_parcel</code></li>
+  <li><b>Standard HTTP Verbs for Actions:</b>
+    <ul>
+      <li><code>GET /api/v1/parcels</code> (List all parcels)</li>
+      <li><code>POST /api/v1/parcels</code> (Create a parcel)</li>
+      <li><code>GET /api/v1/parcels/{id}</code> (Retrieve parcel by ID)</li>
+      <li><code>PATCH /api/v1/parcels/{id}</code> (Update parcel fields)</li>
+      <li><code>DELETE /api/v1/parcels/{id}</code> (Delete parcel)</li>
+    </ul>
+  </li>
+  <li><b>Statelessness:</b> Every HTTP request must contain all context and authentication credentials needed to process it. The server stores zero client session state in memory between requests.</li>
+  <li><b>JSON Standard Representation:</b> RESTful APIs exchange structured payloads using <code>Content-Type: application/json</code>.</li>
+</ul>
+      `,
+      diagram: `
+RESTFUL RESOURCE ENDPOINT STRUCTURE:
+
+  Collection Resource  : /api/v1/parcels
+                         ├── GET    ---> List all parcels
+                         └── POST   ---> Create new parcel
+
+  Instance Resource    : /api/v1/parcels/TRK-9001
+                         ├── GET    ---> Fetch parcel TRK-9001
+                         ├── PATCH  ---> Update parcel fields
+                         └── DELETE ---> Remove parcel
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: RESTful Resource Routing and JSON Payload Processing
+# ==============================================================================
+
+import json
+
+# ------------------------------------------------------------------------------
+# Production Scenario: RESTful API Endpoint Dispatcher Simulation
+# ------------------------------------------------------------------------------
+
+class ParcelRepository:
+    def __init__(self):
+        self._db = {
+            "TRK-1001": {"tracking_id": "TRK-1001", "destination": "CHICAGO", "weight_lbs": 14.5}
+        }
+
+    def list_all((self) -> list[dict]:
+        return list(self._db.values())
+
+    def get_by_id(self, tracking_id: str) -> dict | None:
+        return self._db.get(tracking_id)
+
+    def create(self, tracking_id: str, destination: str, weight: float) -> dict:
+        record = {"tracking_id": tracking_id, "destination": destination, "weight_lbs": weight}
+        self._db[tracking_id] = record
+        return record
+
+
+class RESTAPIDispatcher:
+    """Simulates a RESTful API router mapping HTTP (method, path) to resource actions."""
+    def __init__(self):
+        self.repo = ParcelRepository()
+
+    def handle_request(self, method: str, path: str, body_json: str | None = None) -> tuple[int, str]:
+        print(f"\n--- REST API REQUEST: {method} {path} ---")
+
+        # Route: Collection Endpoint /api/v1/parcels
+        if path == "/api/v1/parcels":
+            if method == "GET":
+                data = self.repo.list_all()
+                return 200, json.dumps(data)
+            elif method == "POST":
+                if not body_json:
+                    return 400, json.dumps({"error": "Missing JSON request body"})
+                payload = json.loads(body_json)
+                created = self.repo.create(payload["tracking_id"], payload["destination"], payload["weight_lbs"])
+                return 201, json.dumps(created)
+
+        # Route: Instance Endpoint /api/v1/parcels/{id}
+        elif path.startswith("/api/v1/parcels/"):
+            tracking_id = path.split("/")[-1]
+            if method == "GET":
+                item = self.repo.get_by_id(tracking_id)
+                if not item:
+                    return 404, json.dumps({"error": f"Parcel '{tracking_id}' not found"})
+                return 200, json.dumps(item)
+
+        return 405, json.dumps({"error": "Method Not Allowed"})
+
+# Execute RESTful calls
+api = RESTAPIDispatcher()
+
+# 1. GET Collection (200 OK)
+status, resp = api.handle_request("GET", "/api/v1/parcels")
+print(f"Response ({status}): {resp}")
+
+# 2. POST Collection (201 Created)
+new_payload = json.dumps({"tracking_id": "TRK-2002", "destination": "AUSTIN", "weight_lbs": 42.0})
+status, resp = api.handle_request("POST", "/api/v1/parcels", body_json=new_payload)
+print(f"Response ({status}): {resp}")
+
+# 3. GET Instance Missing (404 Not Found)
+status, resp = api.handle_request("GET", "/api/v1/parcels/TRK-MISSING")
+print(f"Response ({status}): {resp}")
+      `,
+      keyTakeaways: [
+        "RESTful APIs organize endpoints around resources (plural nouns, e.g., `/parcels`), not action verbs.",
+        "Combine resource URIs with HTTP verbs: `GET` (list/read), `POST` (create), `PATCH` (update), `DELETE` (remove).",
+        "RESTful services are stateless: every request carries complete context and authentication tokens.",
+        "JSON (`Content-Type: application/json`) is the standard payload format for modern REST APIs."
+      ],
+      commonMistakes: [
+        "<b>Including action verbs in URLs (RPC Anti-Pattern):</b> Creating endpoints like `/api/create_parcel` instead of using `POST /api/parcels`.",
+        "<b>Returning HTTP 200 OK for error responses:</b> Returning `{ \"status\": \"error\", \"code\": 404 }` with HTTP status 200 OK instead of proper HTTP 404 status codes.",
+        "<b>Storing client session state in server RAM:</b> Violating REST statelessness rules by relying on server-side session cookies."
+      ],
+      quizzes: [
+        {
+          question: "Which endpoint design follows RESTful resource naming conventions for creating a new parcel?",
+          options: [
+            "`POST /api/v1/create_parcel`",
+            "`POST /api/v1/parcels`",
+            "`GET /api/v1/parcels/add`",
+            "`PUT /api/v1/new_parcel_record`"
+          ],
+          correctIndex: 1,
+          explanation: "RESTful URLs identify resources using plural nouns (`/parcels`) and rely on the HTTP verb (`POST`) to specify the creation action."
+        },
+        {
+          question: "What does 'Statelessness' mean in REST API architecture?",
+          options: [
+            "The database server cannot store records permanently.",
+            "Each HTTP request must carry all context and credentials required for processing; the server stores zero client session memory between requests.",
+            "All API endpoints must return empty responses.",
+            "Users must authenticate using IP addresses."
+          ],
+          correctIndex: 1,
+          explanation: "Statelessness requires every HTTP request to carry complete authentication and context data independently."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "API Authentication: Bearer Tokens and API Keys",
+      durationMinutes: 18,
+      explanation: `
+<b>Securing API Endpoints and Managing Identity Credentials</b><br/>
+Public web APIs cannot allow anonymous users to read or mutate sensitive business data. Authentication verifies **who** is making the request, while Authorization determines **what** resources they are permitted to access.<br/><br/>
+
+<b>1. Primary API Authentication Strategies:</b>
+<ul>
+  <li><b>API Keys (Service-to-Service):</b> A static secret string passed in request headers (e.g., <code>X-API-Key: secret_key_123</code>).
+    <br/><i>Use Case:</i> B2B integration webhooks and server-to-server background tasks.</li>
+  <li><b>Bearer Tokens / JWT (User & Service Auth):</b> A digitally signed token (JSON Web Token) passed in the <code>Authorization</code> header:
+    <br/><code>Authorization: Bearer &lt;signed_jwt_token_string&gt;</code>
+    <br/><i>Use Case:</i> User web applications, mobile apps, and OAuth2 security flows.</li>
+</ul>
+
+<b>2. The Authorization Header Standard (RFC 6750):</b><br/>
+`Authorization: Bearer eyJhbGciOiJIUzI1Ni...`<br/>
+The server parses the `Authorization` header, extracts the token, verifies its cryptographic signature or database validity, and attaches the authenticated user/service identity to the request context.
+      `,
+      diagram: `
+BEARER TOKEN AUTHENTICATION FLOW:
+
+  Client                                      API Server
+    |                                              |
+    |  1. POST /api/v1/login (credentials)         |
+    |--------------------------------------------->|
+    |                                              |  Generates Signed JWT
+    |  2. Returns Token: {"token": "eyJhbG..."}    |
+    |<---------------------------------------------|
+    |                                              |
+    |  3. GET /api/v1/parcels                      |
+    |     Header: Authorization: Bearer eyJhbG...  |
+    |--------------------------------------------->|
+    |                                              |  Verifies Token Signature
+    |  4. Returns 200 OK + Resource Data           |
+    |<---------------------------------------------|
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: API Key & Bearer Token Authorization Parsing
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Production Scenario: Authentication Header Extractor
+# ------------------------------------------------------------------------------
+
+def authenticate_api_request(headers: dict[str, str]) -> dict:
+    \"\"\"
+    Parses and validates Authorization or X-API-Key headers.
+    Returns user identity dict or raises PermissionError/ValueError.
+    \"\"\"
+    print("--- LESSON 3: Authenticating API Request Headers ---")
+
+    # Check Strategy 1: X-API-Key Header
+    api_key = headers.get("X-API-Key")
+    if api_key:
+        if api_key == "SECRET_B2B_KEY_999":
+            return {"user_id": "SERVICE_PARTNER_01", "role": "PARTNER_SERVICE"}
+        raise PermissionError("HTTP 401: Invalid X-API-Key credential.")
+
+    # Check Strategy 2: Authorization Bearer Token Header
+    auth_header = headers.get("Authorization")
+    if auth_header:
+        if not auth_header.startswith("Bearer "):
+            raise ValueError("HTTP 400: Malformed Authorization header. Expected 'Bearer <token>'.")
+
+        token = auth_header.split(" ")[1]
+        if token == "VALID_JWT_TOKEN_ABC123":
+            return {"user_id": "USER_MARCUS_101", "role": "LOGISTICS_DISPATCHER"}
+        raise PermissionError("HTTP 401: Invalid or expired Bearer token.")
+
+    raise PermissionError("HTTP 401: Missing authentication credentials (Authorization or X-API-Key header required).")
+
+
+# Test 1: Valid Bearer Token
+headers_valid = {"Authorization": "Bearer VALID_JWT_TOKEN_ABC123"}
+identity = authenticate_api_request(headers_valid)
+print("Auth Success - Identity:", identity)
+
+# Test 2: Missing Credentials
+try:
+    authenticate_api_request({})
+except PermissionError as err:
+    print("Auth Failure (Expected):", err)
+      `,
+      keyTakeaways: [
+        "API authentication identifies the caller; authorization checks permission rights.",
+        "Bearer tokens are passed via the standard header: `Authorization: Bearer <token>`.",
+        "API keys are typically passed in `X-API-Key` headers for service-to-service calls.",
+        "Return `401 Unauthorized` for missing/invalid credentials and `403 Forbidden` for insufficient role rights."
+      ],
+      commonMistakes: [
+        "<b>Passing secrets in URL query parameters:</b> Writing `GET /api/parcels?api_key=secret_123`, which leaks API keys into web server access logs and browser histories.",
+        "<b>Using HTTP instead of HTTPS in production:</b> Transmitting Bearer tokens over unencrypted HTTP exposes credentials to network packet sniffing.",
+        "<b>Returning HTTP 500 for auth failures:</b> Throwing unhandled exceptions on invalid tokens instead of returning proper HTTP 401 or 403 status codes."
+      ],
+      quizzes: [
+        {
+          question: "Which HTTP header is the RFC 6750 standard header for passing JWT Bearer tokens?",
+          options: [
+            "`X-Bearer-Token`",
+            "`Authorization: Bearer <token>`",
+            "`Authentication: Token <token>`",
+            "`X-API-Key: Bearer <token>`"
+          ],
+          correctIndex: 1,
+          explanation: "RFC 6750 mandates passing Bearer tokens via the `Authorization: Bearer <token>` header."
+        },
+        {
+          question: "Why should API secret keys NEVER be passed in URL query parameters (e.g. `/api/data?key=secret`)?",
+          options: [
+            "Query parameters are limited to 10 characters.",
+            "URL query strings are logged in plain text across proxy servers, browser histories, and web access logs, leaking credentials.",
+            "Query parameters only work with GET requests.",
+            "Python urllib cannot parse query parameters."
+          ],
+          correctIndex: 1,
+          explanation: "URLs are logged in plain text in access logs and browser histories. Secrets must be passed securely in HTTP headers over HTTPS."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Query Parameters: Pagination, Filtering, and Sorting",
+      durationMinutes: 18,
+      explanation: `
+<b>Managing Large Collection Datasets in REST APIs</b><br/>
+Endpoints returning collection resources (like `GET /api/v1/parcels`) can potentially match millions of database rows. Returning millions of records in a single JSON HTTP response crashes server memory and freezes client applications. Collection endpoints must support **Pagination**, **Filtering**, and **Sorting** via URL Query Parameters.<br/><br/>
+
+<b>1. Query Parameter Syntax:</b><br/>
+Query parameters follow the <code>?</code> symbol in a URL, separated by <code>&</code>:<br/>
+<code>GET /api/v1/parcels?limit=20&page=2&status=IN_TRANSIT&sort_by=-created_at</code><br/><br/>
+
+<b>2. Pagination Strategies:</b>
+<ul>
+  <li><b>Offset-Based Pagination (Page & Limit):</b><br/>
+    <code>limit=20&offset=40</code> (or <code>limit=20&page=3</code>)
+    <br/><i>Pros:</i> Easy to implement with SQL `LIMIT` and `OFFSET`.
+    <br/><i>Cons:</i> Slow performance on large offsets (`OFFSET 1000000`), and subject to "page drift" when items are inserted/deleted during pagination.</li>
+  <li><b>Cursor-Based Pagination (Keyset Pagination):</b><br/>
+    <code>limit=20&starting_after=TRK-1020</code>
+    <br/><i>Pros:</i> Extremely fast $O(1)$ SQL index lookups and immune to page drift! Ideal for mobile feeds and high-throughput real-time APIs.</li>
+</ul>
+
+<b>3. Filtering and Sorting Standards:</b>
+<ul>
+  <li><b>Filtering:</b> Pass exact field values (`status=IN_TRANSIT&hub=CHICAGO`).</li>
+  <li><b>Sorting:</b> Pass field names, using a leading minus <code>-</code> to signify descending order (`sort=-weight_lbs`).</li>
+</ul>
+      `,
+      diagram: `
+OFFSET VS CURSOR PAGINATION:
+
+  Offset-Based Pagination:
+  GET /api/v1/parcels?limit=10&offset=20
+  SQL Generated: SELECT * FROM parcels LIMIT 10 OFFSET 20; (Scans first 20 rows & discards them)
+
+  Cursor-Based Pagination:
+  GET /api/v1/parcels?limit=10&starting_after=TRK-1020
+  SQL Generated: SELECT * FROM parcels WHERE id > 'TRK-1020' ORDER BY id LIMIT 10; ($O(1)$ Index Lookup!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Query Parameter Parsing for Pagination & Filtering
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Production Scenario: Collection Query Parameter Parser
+# ------------------------------------------------------------------------------
+
+def parse_collection_query_parameters(query_params: dict[str, str]) -> dict:
+    \"\"\"
+    Parses and sanitizes URL query parameters for limit, page, status filtering, and sorting.
+    \"\"\"
+    print("--- LESSON 4: Parsing URL Query Parameters ---")
+
+    # 1. Parse & Sanitize Limit (Default 20, Max 100 to prevent DOS)
+    try:
+        limit = int(query_params.get("limit", "20"))
+        limit = max(1, min(100, limit)) # Bound between 1 and 100
+    except ValueError:
+        limit = 20
+
+    # 2. Parse & Sanitize Page / Offset
+    try:
+        page = int(query_params.get("page", "1"))
+        page = max(1, page)
+    except ValueError:
+        page = 1
+
+    offset = (page - 1) * limit
+
+    # 3. Parse Optional Filters
+    status_filter = query_params.get("status")
+    hub_filter = query_params.get("hub")
+
+    # 4. Parse Sort Parameter (e.g. 'weight_lbs' or '-weight_lbs' for desc)
+    sort_param = query_params.get("sort", "-created_at")
+    is_descending = sort_param.startswith("-")
+    sort_field = sort_param.lstrip("-")
+
+    return {
+        "limit": limit,
+        "page": page,
+        "offset": offset,
+        "filters": {
+            "status": status_filter,
+            "hub": hub_filter
+        },
+        "sort": {
+            "field": sort_field,
+            "is_descending": is_descending
+        }
+    }
+
+# Test parsing
+raw_params = {"limit": "50", "page": "3", "status": "IN_TRANSIT", "sort": "-weight_lbs"}
+parsed_query = parse_collection_query_parameters(raw_params)
+
+print("Parsed Query Specification:")
+print(f"  Limit : {parsed_query['limit']} | Page: {parsed_query['page']} | Offset: {parsed_query['offset']}")
+print(f"  Filter: {parsed_query['filters']}")
+print(f"  Sort  : Field='{parsed_query['sort']['field']}', Descending={parsed_query['sort']['is_descending']}")
+      `,
+      keyTakeaways: [
+        "Collection endpoints must implement pagination, filtering, and sorting via URL query parameters.",
+        "Always enforce a maximum `limit` boundary (e.g., max 100 records) to prevent memory exhaustion attacks.",
+        "Offset-based pagination (`limit`/`offset`) is simple; Cursor-based pagination (`starting_after`) is fast and immune to page drift.",
+        "Prefix sort parameters with a minus `-` (e.g., `sort=-created_at`) to indicate descending order."
+      ],
+      commonMistakes: [
+        "<b>Allowing unbounded `limit` parameters:</b> Allowing users to request `limit=1000000`, causing out-of-memory server crashes.",
+        "<b>Using offset pagination for ultra-large real-time datasets:</b> Causing query slowdowns (`OFFSET 1000000`) and missing/duplicated items when new rows are inserted during user pagination."
+      ],
+      quizzes: [
+        {
+          question: "Why is Cursor-Based (Keyset) Pagination preferred over Offset-Based Pagination for high-throughput, large-scale APIs?",
+          options: [
+            "Cursor pagination formats JSON automatically.",
+            "Cursor pagination uses $O(1)$ SQL index lookups (`WHERE id > cursor`) and is immune to item drift when new rows are inserted during pagination.",
+            "Offset pagination only works on Windows.",
+            "Cursor pagination disables API security."
+          ],
+          correctIndex: 1,
+          explanation: "Cursor pagination relies on indexed comparison queries (`WHERE id > cursor`), offering constant $O(1)$ performance and immunity to item drift."
+        },
+        {
+          question: "What is the primary security reason for enforcing a hard maximum boundary on limit query parameters (e.g., `limit = min(requested_limit, 100)`)?",
+          options: [
+            "To speed up CSS styling.",
+            "To prevent Denial of Service (DOS) attacks where malicious clients request millions of rows in a single query, exhausting server RAM.",
+            "PostgreSQL forbids limits higher than 100.",
+            "To enforce HTTPS encryption."
+          ],
+          correctIndex: 1,
+          explanation: "Bounding the `limit` parameter prevents resource exhaustion attacks."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "RFC 7807 Problem Details and Standardized Error Responses",
+      durationMinutes: 8,
+      explanation: `
+<b>Consistent, Self-Documenting Error Communication</b><br/>
+When an API request fails, returning inconsistent error formats (e.g., returning string `"Error"` in one endpoint, `{ "message": "Failed" }` in another, and raw HTML stack traces in a third) creates integration nightmares for client developers.<br/><br/>
+
+<b>1. The RFC 7807 Standard (Problem Details for HTTP APIs):</b><br/>
+IETF **RFC 7807** defines a standardized, machine-readable JSON schema for conveying API error details using <code>Content-Type: application/problem+json</code>.<br/><br/>
+
+<b>2. RFC 7807 JSON Error Schema Fields:</b>
+<ul>
+  <li><code>type</code> (URI): A URI reference identifying the specific error type (e.g., <code>"https://api.logistics.com/errors/insufficient-capacity"</code>).</li>
+  <li><code>title</code> (str): A short, human-readable summary of the error type.</li>
+  <li><code>status</code> (int): The HTTP status code (e.g., <code>400</code>, <code>404</code>, <code>422</code>).</li>
+  <li><code>detail</code> (str): A human-readable explanation specific to this occurrence of the error.</li>
+  <li><code>instance</code> (URI): A URI reference identifying the specific occurrence of the error (e.g., request log ID).</li>
+  <li><code>invalid_params</code> (list - optional): Field-level validation error details.</li>
+</ul>
+      `,
+      diagram: `
+RFC 7807 PROBLEM DETAILS SCHEMA:
+
+  {
+    "type": "https://api.logistics.com/errors/invalid-payload",
+    "title": "Unprocessable Entity",
+    "status": 422,
+    "detail": "The payload contained 2 validation field errors.",
+    "instance": "/api/v1/parcels/req_88102",
+    "invalid_params": [
+      {"name": "weight_lbs", "reason": "Must be greater than 0.0"}
+    ]
+  }
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Standardized RFC 7807 Error Response Generator
+# ==============================================================================
+
+import json
+
+# ------------------------------------------------------------------------------
+# Production Scenario: RFC 7807 Problem Details Generator
+# ------------------------------------------------------------------------------
+
+def create_problem_details_response(
+    status_code: int,
+    title: str,
+    detail: str,
+    error_type_slug: str = "generic-error",
+    instance_id: str | None = None,
+    invalid_params: list[dict] | None = None
+) -> tuple[int, dict[str, str], str]:
+    \"\"\"
+    Generates an RFC 7807 compliant problem details response tuple:
+    (status_code, headers_dict, json_body_str)
+    \"\"\"
+    print("--- LESSON 5: Generating RFC 7807 Error Payload ---")
+
+    payload = {
+        "type": f"https://api.logistics.com/errors/{error_type_slug}",
+        "title": title,
+        "status": status_code,
+        "detail": detail,
+        "instance": instance_id or "/api/v1/requests/unassigned"
+    }
+
+    if invalid_params:
+        payload["invalid_params"] = invalid_params
+
+    headers = {
+        "Content-Type": "application/problem+json"
+    }
+
+    return status_code, headers, json.dumps(payload, indent=2)
+
+# Generate 422 Unprocessable Entity RFC 7807 Error
+code, hdrs, body = create_problem_details_response(
+    status_code=422,
+    title="Unprocessable Entity",
+    detail="The parcel payload failed validation constraints.",
+    error_type_slug="validation-error",
+    instance_id="/api/v1/parcels/req_99012",
+    invalid_params=[{"name": "weight_lbs", "reason": "Weight must be > 0.0"}]
+)
+
+print(f"HTTP Status: {code}")
+print(f"Headers    : {hdrs}")
+print(f"JSON Body  :\n{body}")
+      `,
+      keyTakeaways: [
+        "RFC 7807 defines the standard machine-readable JSON schema (`application/problem+json`) for HTTP API errors.",
+        "RFC 7807 schemas include `type`, `title`, `status`, `detail`, and `instance` fields.",
+        "Standardized error responses improve client debugging and integration consistency.",
+        "Never leak raw internal database stack traces in production error payloads."
+      ],
+      commonMistakes: [
+        "<b>Leaking raw Python exception stack traces in production error responses:</b> Exposing database table structures or internal file paths to client applications.",
+        "<b>Using non-standard error schemas across different API endpoints:</b> Inconsistent error keys (`error` vs `message` vs `msg`) across endpoints."
+      ],
+      quizzes: [
+        {
+          question: "Which IETF standard specifies a standardized, machine-readable JSON format (`application/problem+json`) for HTTP API error responses?",
+          options: [
+            "RFC 2616",
+            "RFC 7807 (Problem Details)",
+            "RFC 6750",
+            "RFC 9110"
+          ],
+          correctIndex: 1,
+          explanation: "RFC 7807 defines the Problem Details specification for standard HTTP API error responses."
+        },
+        {
+          question: "What is the purpose of the `detail` field in an RFC 7807 Problem Details error payload?",
+          options: [
+            "It holds the user's password.",
+            "It provides a human-readable explanation specific to this particular occurrence of the error.",
+            "It stores the database connection string.",
+            "It is a boolean flag."
+          ],
+          correctIndex: 1,
+          explanation: "The `detail` field provides human-readable context specific to that exact error instance."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which HTTP Method is specified for creating a new server resource in REST APIs?",
+      options: [
+        "`GET`",
+        "`POST`",
+        "`PUT`",
+        "`PATCH`"
+      ],
+      correctIndex: 1,
+      explanation: "`POST` is used to submit new payloads and create resources."
+    },
+    {
+      question: "Which HTTP Status Code category indicates that a request contained bad client syntax or unauthorized credentials?",
+      options: [
+        "2xx",
+        "3xx",
+        "4xx",
+        "5xx"
+      ],
+      correctIndex: 2,
+      explanation: "4xx status codes indicate client-side errors (400, 401, 403, 404, 422)."
+    },
+    {
+      question: "What URI naming convention aligns with RESTful architecture for listing or creating parcels?",
+      options: [
+        "`/api/v1/get_parcels`",
+        "`/api/v1/parcels`",
+        "`/api/v1/create_new_parcel`",
+        "`/api/v1/parcel_action`"
+      ],
+      correctIndex: 1,
+      explanation: "RESTful URLs use plural nouns (`/parcels`) and rely on HTTP verbs (`GET`, `POST`) for actions."
+    },
+    {
+      question: "Where should JWT Bearer authentication tokens be passed in HTTP requests according to RFC 6750?",
+      options: [
+        "In the URL query string (`?token=xyz`)",
+        "In the `Authorization: Bearer <token>` header",
+        "In a cookie named `auth`",
+        "In the HTTP request body"
+      ],
+      correctIndex: 1,
+      explanation: "RFC 6750 specifies passing Bearer tokens via the `Authorization: Bearer <token>` header."
+    },
+    {
+      question: "Why should sensitive API keys or Bearer tokens NEVER be passed in URL query parameters?",
+      options: [
+        "Query parameters are limited to 10 characters.",
+        "URL query strings are logged in plain text in browser histories, proxy servers, and access logs, exposing secrets.",
+        "HTTP servers forbid query parameters.",
+        "It breaks JSON parsing."
+      ],
+      correctIndex: 1,
+      explanation: "URLs are logged in plain text in access logs and browser histories, leaking credentials."
+    },
+    {
+      question: "Which pagination strategy uses indexed comparison queries (`WHERE id > cursor`) to achieve $O(1)$ performance and immunity to item drift?",
+      options: [
+        "Offset-Based Pagination",
+        "Cursor-Based (Keyset) Pagination",
+        "Page-Based Pagination",
+        "Random Sampling"
+      ],
+      correctIndex: 1,
+      explanation: "Cursor-based pagination offers $O(1)$ indexed lookup performance and immunity to item drift."
+    },
+    {
+      question: "Which standard Content-Type header is defined by RFC 7807 for Problem Details error responses?",
+      options: [
+        "`text/html`",
+        "`application/problem+json`",
+        "`application/json`",
+        "`text/plain`"
+      ],
+      correctIndex: 1,
+      explanation: "RFC 7807 specifies `application/problem+json` as the Content-Type header for problem details."
+    },
+    {
+      question: "What HTTP status code should be returned when an API request fails schema validation (e.g. missing required JSON payload fields)?",
+      options: [
+        "`200 OK`",
+        "`422 Unprocessable Entity` (or `400 Bad Request`)",
+        "`500 Internal Server Error`",
+        "`301 Moved Permanently`"
+      ],
+      correctIndex: 1,
+      explanation: "HTTP 422 or 400 indicates client payload validation failures."
+    }
+  ],
+  project: {
+    name: "Enterprise RESTful Logistics API Router & RFC 7807 Suite (Phase 1 Project)",
+    goal: "Build a production-style RESTful API request dispatcher supporting HTTP verbs (GET, POST, PATCH), Bearer token authentication parsing, query parameter pagination/filtering, and RFC 7807 compliant error responses.",
+    brief: "Your web engineering team requires a RESTful API request dispatcher utility (`rest_api_suite.py`). The module must parse HTTP request methods and URIs, validate `Authorization: Bearer <token>` headers, handle query parameters (`limit`, `page`, `status`, `sort`), format collection responses, and return RFC 7807 compliant `application/problem+json` error responses for invalid requests.",
+    steps: [
+      "Create a script file named `rest_api_suite.py` in your workspace.",
+      "Write an authentication function `parse_bearer_token(headers: dict)` that validates `Authorization: Bearer <token>` headers and returns user identity.",
+      "Write a query parameter parser `parse_query_params(params: dict)` that bounds `limit` between 1 and 100, parses `page` offsets, and extracts filters.",
+      "Write an RFC 7807 error generator `build_rfc7807_error(status, title, detail)` returning formatted problem details JSON.",
+      "Build a RESTful router dispatcher `handle_request(method, path, headers, query_params, body)` mapping routes (`/api/v1/parcels`).",
+      "Simulate GET collection, POST creation, 401 Unauthorized, and 422 Validation Error requests.",
+      "Run `python3 rest_api_suite.py` in your integrated terminal and print a complete REST API execution report."
+    ],
+    acceptance: [
+      "RESTful routing maps HTTP verbs (`GET`, `POST`) to plural resource endpoints (`/api/v1/parcels`).",
+      "Bearer token authentication is parsed from the `Authorization` header.",
+      "Query parameter parsing bounds `limit` parameters to prevent memory exhaustion.",
+      "API errors format responses using RFC 7807 `application/problem+json` schemas.",
+      "Executing `python3 rest_api_suite.py` outputs a clean API execution log and exits with status code 0."
+    ],
+    stretch: [
+      "Add support for `PATCH /api/v1/parcels/{id}` for partial field updates.",
+      "Annotate all API functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
