@@ -1,0 +1,736 @@
+/**
+ * DAY 38: Phase 7 · Type Safety & Code Quality — Static Analysis & Code Quality Automation
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1StaticAnalysis = {
+  day: 38,
+  topic: "Phase 7 · Type Safety & Code Quality — Static Analysis & Code Quality Automation",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Static Analysis Fundamentals: Linters, Type Checkers, and Formatters",
+      durationMinutes: 16,
+      explanation: `
+<b>Automated Code Auditing and Quality Assurance</b><br/>
+In enterprise software development, maintaining consistent code quality across team members is critical. Without automated tooling, pull requests descend into tedious debates over whitespace, unused imports, naming conventions, and subtle runtime type bugs. **Static Analysis Tools** examine Python source code automatically *without executing it*, catching errors, style violations, and type mismatches before code ever reaches production.<br/><br/>
+
+<b>1. The Three Pillars of Code Quality Automation:</b>
+<ul>
+  <li><b>Linters (e.g., Ruff, Flake8, Pylint):</b> Analyze source code syntax trees to detect logical bugs, dead code, unused imports, undefined variables, and anti-patterns.
+    <br/><i>Analogy:</i> A spell-checker and grammar proofreader flagging bad writing.</li>
+  <li><b>Formatters (e.g., Ruff Format, Black, Yapf):</b> Reformat source code files deterministically according to strict style guidelines (PEP 8) automatically.
+    <br/><i>Analogy:</i> An automated layout editor enforcing uniform font sizes, margins, and line wraps across every page.</li>
+  <li><b>Type Checkers (e.g., mypy, Pyright):</b> Audit type annotations to verify that argument types match parameters and return types across all function boundaries.
+    <br/><i>Analogy:</i> A structural engineer verifying load-bearing math before building a bridge.</li>
+</ul>
+
+<b>2. The Mypy vs. Pyright Paradigm:</b>
+<ul>
+  <li><b>mypy:</b> The official standard static type checker for Python maintained by the Python core team. Highly configurable and widely integrated into CI/CD pipelines.</li>
+  <li><b>Pyright / Pylance:</b> Microsoft's high-performance static type checker written in TypeScript. Exceptionally fast on massive codebases and deeply integrated into Visual Studio Code.</li>
+</ul>
+      `,
+      diagram: `
+THE CODE QUALITY AUTOMATION PIPELINE:
+
+  [ Developer Writes Code ]
+            |
+            v
+  +-------------------+      +-------------------+      +-------------------+
+  |  Formatter (Ruff) | ---> |   Linter (Ruff)   | ---> |Type Checker (mypy)|
+  | Auto-formats text |      | Flags logic bugs  |      | Audits type hints |
+  +-------------------+      +-------------------+      +-------------------+
+                                                                  |
+                                                      (All Quality Audits Pass)
+                                                                  v
+                                                    [ Ready for CI/CD Deployment ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Static Analysis Concepts
+# Demonstrating code flaws caught by linters, formatters, and type checkers.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Source Code Containing Quality Flaws (Linter & Type Checker Targets)
+# ------------------------------------------------------------------------------
+
+import sys  # Flaw 1 (Linter): Unused import 'sys'
+import os   # Flaw 2 (Linter): Unused import 'os'
+
+def calculate_shipping_cost(weight_lbs: float, is_express: bool) -> float:
+    # Flaw 3 (Formatter): Inconsistent indentation and messy spacing
+    base_fee=10.0
+    if is_express:
+         surcharge = 15.0
+    else:
+        surcharge = 5.0
+
+    unused_var = 100 # Flaw 4 (Linter): Local variable 'unused_var' assigned but never used
+
+    return base_fee + (weight_lbs * 0.50) + surcharge
+
+
+# Flaw 5 (Type Checker): Calling function with incompatible argument type ('str' instead of 'float')
+# mypy error: Argument 1 to "calculate_shipping_cost" has incompatible type "str"; expected "float"
+# result = calculate_shipping_cost("TWENTY_LBS", True)
+
+# Correct usage passing static analysis
+valid_cost = calculate_shipping_cost(20.0, is_express=True)
+
+print("--- BEGINNER: Static Analysis Target Code ---")
+print("Valid Calculated Cost ($):", valid_cost)
+      `,
+      keyTakeaways: [
+        "Linters detect logical bugs, dead code, unused imports, and anti-patterns automatically.",
+        "Formatters reformat source code deterministically to enforce PEP 8 style standards.",
+        "Type checkers (`mypy` / `Pyright`) audit type annotations without executing Python code.",
+        "Automating quality checks eliminates subjective style debates during peer code reviews."
+      ],
+      commonMistakes: [
+        "<b>Confusing formatting with linting:</b> Expecting a formatter (like Black/Ruff) to catch undefined variables or expecting a linter to fix indentation whitespace automatically.",
+        "<b>Relying solely on unit tests:</b> Unit tests only execute covered code paths; static analysis checks 100% of your codebase instantly without running test suites.",
+        "<b>Manual code formatting:</b> Wasting hours formatting indentation manually instead of configuring auto-format on save in your editor."
+      ],
+      quizzes: [
+        {
+          question: "Which tool category in the Python ecosystem is responsible for reformatting source code deterministically according to PEP 8 standards?",
+          options: [
+            "Linter",
+            "Formatter",
+            "Type Checker",
+            "Compiler"
+          ],
+          correctIndex: 1,
+          explanation: "Formatters (like Ruff Format or Black) enforce deterministic code formatting and PEP 8 whitespace rules."
+        },
+        {
+          question: "How does Pyright differ from mypy in the Python typing ecosystem?",
+          options: [
+            "Pyright executes Python code at runtime; mypy does not.",
+            "Pyright is written in TypeScript by Microsoft, offering high-performance type checking and deep VS Code / Pylance integration.",
+            "Pyright only works on Windows.",
+            "mypy does not support type hints."
+          ],
+          correctIndex: 1,
+          explanation: "Pyright is Microsoft's high-speed static type checker written in TypeScript, powering VS Code's Pylance extension."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Fast, Unified Tooling with Ruff",
+      durationMinutes: 20,
+      explanation: `
+<b>Replacing a Dozen Legacy Tools with a Single Rust-Powered Binary</b><br/>
+Historically, maintaining Python code quality required chaining together multiple separate Python tools: Flake8 (linting), Black (formatting), isort (import sorting), pyupgrade (syntax modernization), and pydocstyle (docstring checking). Running these legacy Python-based tools on large codebases took tens of seconds or minutes.<br/><br/>
+
+<b>1. What is Ruff?</b><br/>
+<b>Ruff</b> is an extremely fast, unified Python linter and code formatter written in **Rust**. It is designed as a drop-in replacement for Flake8, Black, isort, pydocstyle, and dozens of Flake8 plugins, executing **100x to 1000x faster** than legacy tools!<br/><br/>
+
+<b>2. Key Capabilities of Ruff:</b>
+<ul>
+  <li><b>Lightning Speed:</b> Written in Rust; lints and formats 100,000+ lines of Python in milliseconds!</li>
+  <li><b>Unified Engine:</b> Replaces Flake8, Black, isort, pyupgrade, and bandit in a single executable tool.</li>
+  <li><b>Automatic Fixing (<code>--fix</code>):</b> Automatically fixes over 800+ common code errors and unused imports safely.</li>
+  <li><b>Built-In Formatter:</b> Includes a Black-compatible code formatter (<code>ruff format</code>).</li>
+</ul>
+
+<b>3. Common Ruff Commands:</b>
+<ul>
+  <li><code>$ ruff check .</code> (Lints all Python files in the current directory)</li>
+  <li><code>$ ruff check --fix .</code> (Lints and automatically fixes fixable errors)</li>
+  <li><code>$ ruff format .</code> (Formats all Python files deterministically)</li>
+</ul>
+      `,
+      diagram: `
+THE RUFF TOOLING CONSOLIDATION:
+
+  Legacy Toolchain (Slow Python Scripts):
+  [ Flake8 ] + [ Black ] + [ isort ] + [ pyupgrade ] + [ bandit ]  (Takes 30+ seconds)
+
+  Modern Unified Toolchain (Single Rust Binary):
+  [                     RUFF LINTER & FORMATTER                   ]  (Takes 0.05 seconds!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Ruff Configuration and Auto-Fixing Demonstration
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Demonstration Code: Issues Ruff Identifies and Auto-Fixes
+# ------------------------------------------------------------------------------
+
+# 1. Unsorted & Unused Imports (Ruff rule: F401 / I001)
+import sys
+import json
+import os  # Unused import
+
+# 2. Legacy Type Syntax (Ruff rule: UP006 / UP035 - pyupgrade)
+from typing import List, Dict  # Legacy: Ruff auto-fixes to native list / dict!
+
+def process_manifest_records(records: List[Dict[str, str]]) -> int:
+    """Processes incoming records and returns total count."""
+
+    # 3. Unused Variable (Ruff rule: F841)
+    unused_debug_tag = "DEBUG_V1"
+
+    # 4. Inefficient String Concatenation (Ruff rule: UP032)
+    # Ruff suggests or fixes formatted f-strings over % formatting!
+    message = "Processing %d records" % len(records)
+    print(message)
+
+    return len(records)
+
+print("--- BEGINNER: Ruff Code Quality Target ---")
+result_count = process_manifest_records([{"id": "TRK-101"}, {"id": "TRK-102"}])
+print("Processed Count:", result_count)
+      `,
+      keyTakeaways: [
+        "Ruff is a unified, Rust-powered linter and formatter that executes 100x–1000x faster than legacy Python tools.",
+        "Ruff replaces Flake8, Black, isort, pyupgrade, and pydocstyle with a single tool.",
+        "Use `ruff check --fix .` to automatically fix hundreds of common lint errors and import sorting issues.",
+        "Use `ruff format .` for deterministic, PEP 8 code formatting."
+      ],
+      commonMistakes: [
+        "<b>Chaining legacy tools unnecessarily:</b> Continuing to run Flake8, Black, and isort separately when `ruff check` and `ruff format` cover all three instantly.",
+        "<b>Ignoring `--fix` capabilities:</b> Manually editing unused imports or unsorted headers instead of running `ruff check --fix .`.",
+        "<b>Forgetting to configure rules in `pyproject.toml`:</b> Running Ruff without defining explicit rule selections for your project team."
+      ],
+      quizzes: [
+        {
+          question: "Why is Ruff capable of linting and formatting Python codebases up to 1000x faster than legacy tools like Flake8 or Black?",
+          options: [
+            "Because Ruff runs on cloud GPU servers.",
+            "Because Ruff is compiled natively in Rust rather than executing as an interpreted Python script.",
+            "Because Ruff skips syntax checking.",
+            "Because Ruff only works on 10-line files."
+          ],
+          correctIndex: 1,
+          explanation: "Ruff is written in compiled Rust, allowing it to parse Python abstract syntax trees at native machine speeds."
+        },
+        {
+          question: "Which Ruff command automatically repairs fixable lint errors and sorts import statements in your project?",
+          options: [
+            "`ruff repair .`",
+            "`ruff check --fix .`",
+            "`ruff clean .`",
+            "`ruff format --auto .`"
+          ],
+          correctIndex: 1,
+          explanation: "`ruff check --fix .` scans the codebase and automatically repairs fixable lint errors and import sorting."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Configuring Quality Tools in pyproject.toml",
+      durationMinutes: 18,
+      explanation: `
+<b>Centralized Project Configuration with PEP 518 Standard</b><br/>
+In modern Python projects, configuring separate configuration files for every tool (`.flake8`, `.black`, `mypy.ini`, `pytest.ini`) creates root folder clutter. Modern Python uses **`pyproject.toml`** (PEP 518 / PEP 621) as the single centralized configuration file for all project tools.<br/><br/>
+
+<b>1. Structuring `pyproject.toml` for Quality Tools:</b><br/>
+In `pyproject.toml`, each tool defines its settings under its own dedicated table header:
+<ul>
+  <li><code>[tool.ruff]</code>: Global Ruff linter settings (target Python version, line length, excluded directories).</li>
+  <li><code>[tool.ruff.lint]</code>: Specific rule selections (e.g., selecting Flake8 rules <code>"E"</code>, <code>"F"</code>, and pyupgrade rules <code>"UP"</code>).</li>
+  <li><code>[tool.ruff.format]</code>: Formatter rules (quote style, indentation preference).</li>
+  <li><code>[tool.mypy]</code>: Static type checker rules (enforcing strict null checks, disallowing untyped functions).</li>
+</ul>
+
+<b>2. Understanding Ruff Rule Codes:</b>
+<ul>
+  <li><code>"E"</code> / <code>"W"</code>: Pycodestyle errors and warnings (PEP 8 compliance).</li>
+  <li><code>"F"</code>: Pyflakes rules (undefined variables, unused imports, duplicate keys).</li>
+  <li><code>"I"</code>: Isort rules (import statement sorting).</li>
+  <li><code>"UP"</code>: Pyupgrade rules (syntax modernization, e.g., converting `List[str]` to `list[str]`).</li>
+  <li><code>"B"</code>: Bugbear rules (catching subtle Python design pitfalls).</li>
+</ul>
+      `,
+      diagram: `
+CENTRALIZED pyproject.toml CONFIGURATION:
+
+  pyproject.toml
+  ├── [project]                 <-- Metadata (Name, Version, Dependencies)
+  ├── [tool.ruff]               <-- Ruff Global Settings (line-length = 88)
+  │   ├── [tool.ruff.lint]      <-- Rules ("E", "F", "I", "UP", "B")
+  │   └── [tool.ruff.format]    <-- Formatting (quote-style = "double")
+  └── [tool.mypy]               <-- Mypy Settings (strict = true)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: pyproject.toml Configuration Example
+# ==============================================================================
+
+# Sample pyproject.toml content represented as a multi-line string
+PYPROJECT_TOML_CONTENT = """
+[project]
+name = "logistics-engine"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.ruff]
+# Target Python version for syntax upgrades
+target-version = "py310"
+# Maximum allowed line length (PEP 8 standard default: 88)
+line-length = 88
+# Directories to exclude from linting/formatting
+extend-exclude = [".venv", "build", "dist"]
+
+[tool.ruff.lint]
+# Select active linter rule categories:
+# E/W = Pycodestyle, F = Pyflakes, I = Isort, UP = Pyupgrade, B = Bugbear
+select = ["E", "W", "F", "I", "UP", "B"]
+# Explicitly ignore non-critical rules if desired
+ignore = ["E501"] # Line too long (handled by formatter)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+"""
+
+print("--- BEGINNER: pyproject.toml Configuration Architecture ---")
+print("Configuration file structure validated.")
+print("Active Ruff Rules Configured: E, W, F, I, UP, B")
+      `,
+      keyTakeaways: [
+        "`pyproject.toml` is the PEP 518 standard unified configuration file for Python projects.",
+        "Configure Ruff linter rules under `[tool.ruff.lint]` and format settings under `[tool.ruff.format]`.",
+        "Configure static type checker settings under `[tool.mypy]`.",
+        "Centralizing configuration in `pyproject.toml` ensures every developer and CI/CD runner uses identical quality rules."
+      ],
+      commonMistakes: [
+        "<b>Scatter-shot tool configuration files:</b> Creating separate `.flake8` and `mypy.ini` files when `pyproject.toml` centralizes everything.",
+        "<b>Setting conflicting line lengths:</b> Setting `line-length = 88` in Ruff format but `120` in linter rules, causing tools to fight each other.",
+        "<b>Forgetting `requires-python`:</b> Omitting Python version targets, causing syntax upgrade rules (`UP`) to apply incompatible python syntax."
+      ],
+      quizzes: [
+        {
+          question: "Which PEP standard established `pyproject.toml` as the official centralized configuration file format for Python build tools and linters?",
+          options: [
+            "PEP 8",
+            "PEP 518",
+            "PEP 484",
+            "PEP 604"
+          ],
+          correctIndex: 1,
+          explanation: "PEP 518 introduced `pyproject.toml` as the standard configuration file format for Python tooling."
+        },
+        {
+          question: "Which Ruff rule category code corresponds to automatic import statement sorting (replacing `isort`)?",
+          options: [
+            "`\"E\"`",
+            "`\"F\"`",
+            "`\"I\"`",
+            "`\"UP\"`"
+          ],
+          correctIndex: 2,
+          explanation: "Rule category `\"I\"` enables Isort-compatible import sorting rules in Ruff."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Automating Checks with Pre-Commit Hooks",
+      durationMinutes: 18,
+      explanation: `
+<b>Blocking Bad Code at the Git Commit Gate</b><br/>
+Even when team members agree on code quality standards, developers occasionally forget to run `ruff check` or `mypy` before committing code. Bad commits make it into Git history, breaking CI/CD builds on remote servers.<br/><br/>
+
+<b>Pre-Commit Hooks (pre-commit framework)</b> solve this by executing automated quality checks locally **before Git allows a commit to be created**.<br/><br/>
+
+<b>1. How Pre-Commit Hooks Work:</b>
+<ol>
+  <li>Git maintains internal hook scripts inside <code>.git/hooks/pre-commit</code>.</li>
+  <li>When a developer runs <code>$ git commit -m "feat: add feature"</code>, Git intercepts the command and executes the pre-commit script.</li>
+  <li>If any check fails (e.g., Ruff finds an unformatted file or mypy detects a type error), **Git aborts the commit immediately**!</li>
+  <li>The developer fixes the reported error and re-runs `git commit`.</li>
+</ol>
+
+<b>2. The `.pre-commit-config.yaml` Configuration File:</b><br/>
+The `pre-commit` framework uses a YAML configuration file at the root of your Git repository to manage hook dependencies automatically.<br/><br/>
+
+<b>3. Typical Pre-Commit Workflow:</b>
+<ul>
+  <li><code>$ pip install pre-commit</code></li>
+  <li><code>$ pre-commit install</code> (Installs the Git hook script into `.git/hooks/`)</li>
+  <li><code>$ pre-commit run --all-files</code> (Runs all hooks manually on the entire codebase)</li>
+</ul>
+      `,
+      diagram: `
+PRE-COMMIT GIT HOOK WORKFLOW:
+
+  Developer Runs: $ git commit -m "Update dispatch logic"
+                         |
+                         v
+       [ Git Intercepts via .git/hooks/pre-commit ]
+                         |
+           +-------------+-------------+
+           |                           |
+    (Checks Pass)              (Check Fails!)
+           |                           |
+           v                           v
+  [ Commit Created ]          [ ABORT COMMIT! ]
+  (Saved to Git History)      (Ruff auto-fixes or mypy displays errors;
+                               developer must fix before committing!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Pre-Commit Configuration Example
+# ==============================================================================
+
+# Sample .pre-commit-config.yaml file representation
+PRE_COMMIT_CONFIG_YAML = """
+# See https://pre-commit.com for instructions
+repos:
+  # 1. Standard pre-commit hooks for basic file sanity
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace       # Trims trailing spaces
+      - id: end-of-file-fixer          # Ensures files end with a newline
+      - id: check-yaml                 # Validates YAML syntax
+      - id: check-added-large-files    # Prevents committing giant binary files (>500KB)
+
+  # 2. Fast Ruff Linter and Formatter Hooks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff                       # Runs ruff check --fix
+        args: [--fix]
+      - id: ruff-format                # Runs ruff format
+
+  # 3. Static Type Checking with Mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+"""
+
+print("--- BEGINNER: Pre-Commit Hook Configuration ---")
+print(".pre-commit-config.yaml validated.")
+print("Configured Hooks: trailing-whitespace, end-of-file-fixer, ruff, ruff-format, mypy")
+      `,
+      keyTakeaways: [
+        "Pre-commit hooks execute automated checks locally before Git allows a commit to be created.",
+        "If a pre-commit hook fails or modifies a file, Git aborts the commit automatically.",
+        "Configure pre-commit hooks using `.pre-commit-config.yaml` at the root of your Git repository.",
+        "Pre-commit hooks prevent broken or unformatted code from ever entering Git history or remote CI/CD pipelines."
+      ],
+      commonMistakes: [
+        "<b>Creating `.pre-commit-config.yaml` without running `pre-commit install`:</b> Forgetting to run `pre-commit install` leaves Git hooks unlinked, so checks do not execute locally.",
+        "<b>Bypassing pre-commit hooks carelessly:</b> Overusing `git commit --no-verify` to bypass checks instead of fixing underlying lint/type errors.",
+        "<b>Not running `pre-commit run --all-files` on initial setup:</b> Installing pre-commit on a legacy codebase without running an initial sweep on existing files."
+      ],
+      quizzes: [
+        {
+          question: "When do Git pre-commit hooks execute during the software development lifecycle?",
+          options: [
+            "After code is pushed to GitHub.",
+            "Locally on the developer's machine immediately when `git commit` is executed, before the commit is created.",
+            "During server deployment.",
+            "When installing Python packages via pip."
+          ],
+          correctIndex: 1,
+          explanation: "Pre-commit hooks intercept the `git commit` command locally before the commit object is written to Git history."
+        },
+        {
+          question: "Which command activates pre-commit hooks for a local Git repository after creating `.pre-commit-config.yaml`?",
+          options: [
+            "`pre-commit enable`",
+            "`pre-commit install`",
+            "`pre-commit start`",
+            "`git hook enable`"
+          ],
+          correctIndex: 1,
+          explanation: "`pre-commit install` hooks the pre-commit script into `.git/hooks/pre-commit`."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Building an Automated Code Quality Pipeline",
+      durationMinutes: 10,
+      explanation: `
+<b>End-to-End Enterprise Code Quality Architecture</b><br/>
+In enterprise software engineering, code quality automation operates across **two complementary defensive perimeters**:<br/><br/>
+
+<b>1. Perimeter 1: Local Developer Environment (Fast Feedback):</b>
+<ul>
+  <li><b>IDE Auto-Format on Save:</b> VS Code / PyCharm format files using `ruff format` on every save.</li>
+  <li><b>Pre-Commit Hooks:</b> Executes `ruff check --fix` and `mypy` before Git commits are created.</li>
+</ul>
+
+<b>2. Perimeter 2: Remote CI/CD Pipeline (Enforcement Gateway):</b>
+<ul>
+  <li>When a pull request is opened on GitHub/GitLab, an automated CI/CD runner executes:
+    <br/>1. <code>$ ruff check --no-fix .</code>
+    <br/>2. <code>$ ruff format --check .</code>
+    <br/>3. <code>$ mypy src/</code>
+    <br/>4. <code>$ pytest</code></li>
+  <li>If any step fails, the Pull Request is automatically blocked from merging into `main`!</li>
+</ul>
+
+<b>Master Quality Pipeline Summary Matrix:</b>
+<ul>
+  <li><b>Formatting:</b> `ruff format .` (Enforces PEP 8 style)</li>
+  <li><b>Linting:</b> `ruff check --fix .` (Catches logic bugs & dead code)</li>
+  <li><b>Type Auditing:</b> `mypy src/` (Verifies type safety)</li>
+  <li><b>Gatekeeping:</b> `.pre-commit-config.yaml` + GitHub Actions CI (Automates enforcement)</li>
+</ul>
+      `,
+      diagram: `
+TWO-PERIMETER QUALITY ARCHITECTURE:
+
+  PERIMETER 1 (Local Workstation):
+  [ Developer Save ] ---> IDE Auto-Format (ruff format)
+  [ Git Commit ]     ---> Pre-Commit Hook (ruff + mypy)
+
+  PERIMETER 2 (Remote GitHub CI/CD):
+  [ Pull Request Opened ]
+         |
+         v
+  [ GitHub Actions Runner Executing: ]
+  ├── 1. ruff check --no-fix .
+  ├── 2. ruff format --check .
+  └── 3. mypy src/
+         |
+         +---> (Pass) ---> [ Merge Allowed ]
+         +---> (Fail) ---> [ Merge Blocked! ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Complete Quality Pipeline Verification Script
+# ==============================================================================
+
+import subprocess
+import sys
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# Production Scenario: Quality Pipeline Runner Script
+# Simulates running the full quality suite locally or in CI/CD.
+# ------------------------------------------------------------------------------
+
+def run_quality_pipeline_step(command_args: list[str], step_name: str) -> bool:
+    """Executes a quality tool subprocess command, returning success boolean."""
+    print(f"\n==================================================")
+    print(f"  RUNNING QUALITY STEP: {step_name}")
+    print(f"  Command: {' '.join(command_args)}")
+    print(f"==================================================")
+
+    try:
+        # Run subprocess tool safely
+        res = subprocess.run(command_args, capture_output=True, text=True)
+        if res.returncode == 0:
+            print(f"SUCCESS: {step_name} passed cleanly.")
+            if res.stdout.strip():
+                print(f"Tool Output:\n{res.stdout.strip()}")
+            return True
+        else:
+            print(f"FAILURE: {step_name} reported issues (Exit Code {res.returncode}).")
+            if res.stdout.strip():
+                print(f"Tool Output:\n{res.stdout.strip()}")
+            if res.stderr.strip():
+                print(f"Tool Error Output:\n{res.stderr.strip()}")
+            return False
+    except FileNotFoundError:
+        print(f"SKIPPED: Tool binary '{command_args[0]}' not installed in active environment.")
+        return True
+
+def execute_full_project_quality_audit() -> int:
+    \"\"\"
+    Executes the complete 3-step quality suite: Ruff Format, Ruff Check, Mypy.
+    \"\"\"
+    print("--- STARTING ENTERPRISE CODE QUALITY AUDIT ---")
+
+    # Define test targets
+    target_dir = "."
+
+    # 1. Format check
+    step1_ok = run_quality_pipeline_step(["ruff", "format", "--check", target_dir], "Ruff Formatter Check")
+
+    # 2. Lint check
+    step2_ok = run_quality_pipeline_step(["ruff", "check", target_dir], "Ruff Linter Check")
+
+    # 3. Type check
+    step3_ok = run_quality_pipeline_step([sys.executable, "-m", "mypy", target_dir], "Mypy Type Audit")
+
+    all_passed = step1_ok and step2_ok and step3_ok
+
+    print("\n==================================================")
+    print("FINAL QUALITY AUDIT SUMMARY:")
+    print(f"  Overall Status : {'PASSED (GREEN)' if all_passed else 'FAILED (RED)'}")
+    print("==================================================")
+
+    return 0 if all_passed else 1
+
+# Execute audit runner
+audit_exit_code = execute_full_project_quality_audit()
+print("Audit Runner Exit Code:", audit_exit_code)
+      `,
+      keyTakeaways: [
+        "Quality automation operates across local developer workstations and remote CI/CD gateways.",
+        "Use `ruff format --check .` in CI/CD pipelines to verify code formatting without modifying files on disk.",
+        "Use `ruff check --no-fix .` in CI/CD pipelines to fail builds if un-fixed lint errors exist.",
+        "Combining local pre-commit hooks with remote CI/CD enforcement guarantees pristine codebase quality."
+      ],
+      commonMistakes: [
+        "<b>Running `ruff check --fix` in remote CI/CD pipelines:</b> Running `--fix` on remote CI runners modifies files in temporary build containers without committing fixes to the pull request! Remote CI should run `--check` mode only.",
+        "<b>Relying on pre-commit hooks without remote CI enforcement:</b> Assuming developers won't bypass pre-commit hooks using `git commit --no-verify`."
+      ],
+      quizzes: [
+        {
+          question: "Which flag should be passed to `ruff format` in a remote CI/CD pipeline to verify that files are correctly formatted without modifying them on disk?",
+          options: [
+            "`--fix`",
+            "`--check`",
+            "`--verify-only`",
+            "`--strict`"
+          ],
+          correctIndex: 1,
+          explanation: "`ruff format --check .` verifies formatting and exits with a non-zero code if unformatted files are found, without altering files."
+        },
+        {
+          question: "Why should software engineering teams enforce quality checks on remote CI/CD runners even when pre-commit hooks are configured locally?",
+          options: [
+            "Because pre-commit hooks only work on Windows.",
+            "Because developers can bypass local pre-commit hooks using `git commit --no-verify`, so remote CI/CD acts as the mandatory enforcement gateway.",
+            "Because remote CI/CD runs 100x faster.",
+            "Because mypy requires Linux."
+          ],
+          correctIndex: 1,
+          explanation: "Local hooks can be bypassed using `--no-verify`. Remote CI/CD serves as the final mandatory enforcement gatekeeper for pull requests."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which category of static analysis tool is responsible for detecting unused imports, undefined variables, and dead code?",
+      options: [
+        "Formatter",
+        "Linter",
+        "Profiler",
+        "Compiler"
+      ],
+      correctIndex: 1,
+      explanation: "Linters (like Ruff check or Flake8) analyze code syntax trees to detect logical errors, dead code, and unused imports."
+    },
+    {
+      question: "What primary language is the Ruff linter and formatter written in to achieve 100x–1000x speedups over legacy Python tools?",
+      options: [
+        "C++",
+        "Rust",
+        "Go",
+        "TypeScript"
+      ],
+      correctIndex: 1,
+      explanation: "Ruff is written in compiled Rust, allowing it to lint and format Python codebases at native machine speeds."
+    },
+    {
+      question: "Which file format (PEP 518) serves as the modern centralized configuration file for Python build tools, linters, and type checkers?",
+      options: [
+        "setup.py",
+        "pyproject.toml",
+        "requirements.txt",
+        "tox.ini"
+      ],
+      correctIndex: 1,
+      explanation: "`pyproject.toml` is the PEP 518 standard unified configuration file for Python tools."
+    },
+    {
+      question: "Which command automatically repairs fixable lint errors and sorts import statements across your Python codebase using Ruff?",
+      options: [
+        "`ruff format .`",
+        "`ruff check --fix .`",
+        "`ruff clean .`",
+        "`ruff repair .`"
+      ],
+      correctIndex: 1,
+      explanation: "`ruff check --fix .` repairs fixable lint errors and sorts imports automatically."
+    },
+    {
+      question: "Where are local pre-commit hook scripts installed inside a Git repository directory?",
+      options: [
+        "`.git/hooks/pre-commit`",
+        "`src/hooks/`",
+        "`.vscode/settings.json`",
+        "`pyproject.toml`"
+      ],
+      correctIndex: 0,
+      explanation: "Git stores executable hook scripts in the `.git/hooks/` directory."
+    },
+    {
+      question: "What command links pre-commit hooks into your local Git repository after creating `.pre-commit-config.yaml`?",
+      options: [
+        "`pre-commit enable`",
+        "`pre-commit install`",
+        "`git hook enable`",
+        "`pre-commit start`"
+      ],
+      correctIndex: 1,
+      explanation: "`pre-commit install` links pre-commit hook scripts into `.git/hooks/pre-commit`."
+    },
+    {
+      question: "What flag allows developers to bypass local Git pre-commit hooks when committing code (e.g., during emergency hotfixes)?",
+      options: [
+        "`git commit --force`",
+        "`git commit --no-verify`",
+        "`git commit --skip-hooks`",
+        "`git commit --bypass`"
+      ],
+      correctIndex: 1,
+      explanation: "`git commit --no-verify` (or `-n`) bypasses local Git pre-commit hooks."
+    },
+    {
+      question: "How should `ruff check` be invoked in a remote GitHub Actions CI/CD pipeline to verify code without modifying files on disk?",
+      options: [
+        "`ruff check --fix .`",
+        "`ruff check .` (or `--no-fix`)",
+        "`ruff check --auto .`",
+        "`ruff check --strict .`"
+      ],
+      correctIndex: 1,
+      explanation: "Remote CI/CD runs `ruff check .` without `--fix` to verify code quality and report errors without altering source files in temporary build containers."
+    }
+  ],
+  project: {
+    name: "Enterprise Code Quality Automation Suite (Phase 1 Final Project)",
+    goal: "Build an automated enterprise code quality suite configured via pyproject.toml, featuring Ruff linting/formatting rules, mypy static type checking, pre-commit hook configurations, and an automated audit runner script.",
+    brief: "Your engineering organization requires a standardized code quality configuration (`pyproject.toml`), a pre-commit hook manifest (`.pre-commit-config.yaml`), and an automated quality audit script (`quality_audit.py`). The suite must configure Ruff linter rules (E, W, F, I, UP, B), set mypy strict type checking defaults, configure pre-commit hooks, and provide a master Python script that executes the full quality audit pipeline and returns status exit codes.",
+    steps: [
+      "Create a workspace script file named `quality_audit.py`.",
+      "Create a `pyproject.toml` configuration file containing tool settings for `[tool.ruff]`, `[tool.ruff.lint]`, `[tool.ruff.format]`, and `[tool.mypy]`.",
+      "Create a `.pre-commit-config.yaml` configuration file specifying hooks for trailing-whitespace, end-of-file-fixer, ruff, ruff-format, and mypy.",
+      "Write a Python audit runner function in `quality_audit.py` that executes `ruff format --check .`, `ruff check .`, and `mypy .` using `subprocess.run()`.",
+      "Handle subprocess exit codes cleanly, returning exit code 0 if all steps pass and 1 if any tool flags quality violations.",
+      "Run `python3 quality_audit.py` in your integrated terminal and print a complete code quality audit report."
+    ],
+    acceptance: [
+      "`pyproject.toml` configures Ruff (rules E, W, F, I, UP, B) and mypy strict mode.",
+      "`.pre-commit-config.yaml` specifies standard file sanity and Ruff/mypy hooks.",
+      "Audit runner script executes all three quality tools via `subprocess.run()`.",
+      "Executing `python3 quality_audit.py` outputs a clean quality audit report and returns status exit code 0."
+    ],
+    stretch: [
+      "Install Ruff and mypy in your environment (`pip install ruff mypy pre-commit`) and run `pre-commit run --all-files` locally.",
+      "Add a GitHub Actions workflow YAML file (`.github/workflows/quality.yml`) that executes `quality_audit.py` on pull requests."
+    ]
+  }
+};
