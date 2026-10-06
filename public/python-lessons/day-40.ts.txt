@@ -1,0 +1,786 @@
+/**
+ * DAY 40: Phase 7 · Type Safety & Code Quality — Advanced Testing & Test Doubles
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1AdvancedTesting = {
+  day: 40,
+  topic: "Phase 7 · Type Safety & Code Quality — Advanced Testing & Test Doubles",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Test Doubles Paradigm and unittest.mock Essentials",
+      durationMinutes: 18,
+      explanation: `
+<b>Isolating Unit Tests from External System Dependencies</b><br/>
+Real-world logistics software depends on external systems: credit card payment gateways, cloud database servers, SMS notification APIs, and third-party GPS webhooks. If your unit tests execute actual network requests or write real rows to a live production database, your tests become slow, flaky, dependent on internet connectivity, and dangerous to execute.<br/><br/>
+
+<b>1. The Test Double Taxonomy (Mocks, Stubs, Spies, Fakes, Dummy):</b>
+<ul>
+  <li><b>Dummy:</b> An object passed around but never actually used or called.</li>
+  <li><b>Stub:</b> Provides hardcoded canned responses to function calls during tests (e.g., returning <code>{"status": "OK"}</code> without hitting a server).</li>
+  <li><b>Spy:</b> A stub that records information about how it was called (recording argument histories and call counts).</li>
+  <li><b>Fake:</b> A working lightweight implementation unsuitable for production (e.g., an in-memory SQLite database replacing PostgreSQL).</li>
+  <li><b>Mock:</b> A configurable test double object expecting specific calls, arguments, and invocation counts, failing the test if unexpected calls occur.</li>
+</ul>
+
+<b>2. Python's Built-in <code>unittest.mock.Mock</code> & <code>MagicMock</code>:</b><br/>
+Python provides the <code>unittest.mock</code> module. A <code>Mock</code> object intercepts any method or attribute access dynamically, returning a new Mock automatically.<br/>
+<code>MagicMock</code> inherits from <code>Mock</code> and implements default dunder method implementations (e.g., <code>__len__</code>, <code>__getitem__</code>, <code>__iter__</code>).<br/><br/>
+
+<b>3. Inspecting Mock Calls and Assertions:</b>
+<ul>
+  <li><code>mock_obj.assert_called_once()</code>: Asserts the mock was called exactly 1 time.</li>
+  <li><code>mock_obj.assert_called_with("TRK-1001", priority="HIGH")</code>: Asserts the mock's most recent call matched exact parameters.</li>
+  <li><code>mock_obj.return_value = 150.0</code>: Configures a hardcoded return value.</li>
+  <li><code>mock_obj.side_effect = ConnectionError("Gateway Timeout")</code>: Configures the mock to raise an exception when called!</li>
+</ul>
+      `,
+      diagram: `
+TEST DOUBLE ISOLATION LAYER:
+
+  Without Test Doubles (Slow & Flaky):
+  [ Unit Test ] ---> [ Live Payment API / External DB ] ---> (Slow Network Delay)
+
+  With Mock Object Isolation (Fast & Deterministic):
+  [ Unit Test ] ---> [ Mock Object (return_value=True) ] ---> Instant $O(1)$ Pass!
+  (Intercepts calls, verifies arguments, bypasses network!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Test Doubles and unittest.mock Essentials
+# ==============================================================================
+
+from unittest.mock import Mock, MagicMock
+import pytest
+
+# ------------------------------------------------------------------------------
+# Source Units Under Test
+# ------------------------------------------------------------------------------
+
+class PaymentGatewayClient:
+    def process_charge(self, card_number: str, amount_usd: float) -> dict:
+        # Real implementation makes expensive network call to Stripe/PayPal API
+        raise NotImplementedError("Real network call disabled during unit tests!")
+
+
+def dispatch_order_payment(gateway: PaymentGatewayClient, card_num: str, total: float) -> bool:
+    """Service function delegating billing to an external gateway client."""
+    response = gateway.process_charge(card_num, total)
+    return response.get("status") == "SUCCESS"
+
+
+# ------------------------------------------------------------------------------
+# Test Cases Using Mock Objects
+# ------------------------------------------------------------------------------
+
+def test_dispatch_order_payment_successful_charge():
+    # 1. ARRANGE: Create a Mock instance replacing real Gateway Client
+    mock_gateway = Mock(spec=PaymentGatewayClient)
+    # Configure canned return value (Stubbing)
+    mock_gateway.process_charge.return_value = {"status": "SUCCESS", "tx_id": "TX-9901"}
+
+    # 2. ACT
+    result = dispatch_order_payment(mock_gateway, "4111-2222-3333-4444", 150.00)
+
+    # 3. ASSERT
+    assert result is True
+    # Verify mock inspection assertions!
+    mock_gateway.process_charge.assert_called_once_with("4111-2222-3333-4444", 150.00)
+
+
+def test_dispatch_order_payment_gateway_exception_handling():
+    # Arrange: Configure mock to raise a network exception via side_effect
+    mock_gateway = Mock(spec=PaymentGatewayClient)
+    mock_gateway.process_charge.side_effect = ConnectionError("Stripe API Timeout")
+
+    # Act & Assert
+    with pytest.raises(ConnectionError, match=r"Stripe API Timeout"):
+        dispatch_order_payment(mock_gateway, "4111-2222-3333-4444", 150.00)
+
+
+print("--- BEGINNER: Executing Mock Object Test Cases ---")
+test_dispatch_order_payment_successful_charge()
+test_dispatch_order_payment_gateway_exception_handling()
+print("All Mock assertion tests passed successfully!")
+      `,
+      keyTakeaways: [
+        "Test doubles isolate unit tests from slow, non-deterministic external dependencies (APIs, databases).",
+        "Use `Mock` or `MagicMock` from `unittest.mock` to intercept method calls and record argument histories.",
+        "Set `mock.return_value` for canned responses; set `mock.side_effect` to raise exceptions or return dynamic values.",
+        "Verify calls using `mock.assert_called_once_with(...)`."
+      ],
+      commonMistakes: [
+        "<b>Misspelling mock assertion methods:</b> Writing `mock.assert_called_once_with()` vs inventing invalid methods like `mock.assert_called_once_with_args()`. Standard `Mock` objects dynamically accept invalid method names without error unless `spec=Class` is provided!",
+        "<b>Testing the mock instead of testing the target code:</b> Over-mocking internal helper logic until tests pass without actually testing the target unit.",
+        "<b>Forgetting `spec=Class` on mocks:</b> Allowing mocks to accept calls to non-existent methods silently."
+      ],
+      quizzes: [
+        {
+          question: "How do you configure a `Mock` object in Python to raise a `ConnectionError` exception when called?",
+          options: [
+            "`mock_obj.raise_error = ConnectionError()`",
+            "`mock_obj.side_effect = ConnectionError(\"Network Down\")`",
+            "`mock_obj.return_value = ConnectionError()`",
+            "`mock_obj.throw(ConnectionError)`"
+          ],
+          correctIndex: 1,
+          explanation: "Setting `mock_obj.side_effect = Exception(...)` causes the mock to raise that exception whenever called."
+        },
+        {
+          question: "Why should you pass `spec=RealClass` when instantiating a `Mock(spec=RealClass)` object?",
+          options: [
+            "It speeds up execution by 10x.",
+            "It restricts the mock object so it accepts ONLY attributes and methods that exist on `RealClass`, preventing silent typos in mock assertions.",
+            "It converts mock objects to JSON strings.",
+            "It enables network connections."
+          ],
+          correctIndex: 1,
+          explanation: "Passing `spec=RealClass` ensures the mock mirrors the interface of `RealClass`, throwing an `AttributeError` if code attempts to call non-existent methods."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Patching Objects with @patch and pytest monkeypatch",
+      durationMinutes: 20,
+      explanation: `
+<b>Intercepting Module-Level Imports and System Environment State</b><br/>
+Configuring mock objects as parameter inputs works when dependencies are passed in explicitly (Dependency Injection). However, legacy or production code often imports dependencies directly at the module level:<br/>
+<code>import requests # Inside source file dispatch.py</code><br/>
+<code>def sync_data(): response = requests.get("https://api.com")</code><br/><br/>
+
+To isolate tests when target modules import dependencies directly, you must **patch** the module lookup table temporarily during test execution.<br/><br/>
+
+<b>1. The Golden Rule of Patching: "Patch Where an Object is USED, Not Where it is DEFINED!"</b><br/>
+Suppose module `A.py` defines `class ShippingAPI`, and module `B.py` imports it: `from A import ShippingAPI`.
+<ul>
+  <li><b>WRONG:</b> `@patch("A.ShippingAPI")` — Module `B` has already imported its own reference!</li>
+  <li><b>RIGHT:</b> `@patch("B.ShippingAPI")` — Patches the reference inside module `B` where it is actually used!</li>
+</ul>
+
+<b>2. Patching with <code>unittest.mock.patch</code>:</b>
+<ul>
+  <li><b>As a Decorator:</b> <code>@patch("dispatch.requests.get")</code> passes the generated mock into the test function as an argument.</li>
+  <li><b>As a Context Manager:</b> <code>with patch("dispatch.requests.get") as mock_get:</code> patches for the duration of the block.</li>
+</ul>
+
+<b>3. Light-Weight State Patching with pytest's <code>monkeypatch</code> Fixture:</b><br/>
+pytest provides a built-in <code>monkeypatch</code> fixture ideal for modifying environment variables, system paths, or dictionary configurations temporarily during a test run:<br/>
+<code>monkeypatch.setenv("LOGISTICS_API_KEY", "MOCK_TEST_KEY_99")</code><br/>
+<code>monkeypatch.setattr("dispatch.MAX_RETRIES", 1)</code><br/>
+When the test function exits, `monkeypatch` automatically restores the original environment variables and attributes!
+      `,
+      diagram: `
+PATCH LOCATION RULE ("Patch Where Used"):
+
+  Module A (defines API):            Module B (uses API):
+  class ShippingAPI:                 from A import ShippingAPI  <-- Target Reference!
+      ...                            def dispatch():
+                                         ShippingAPI().send()
+
+  Correct Patch Target: @patch("B.ShippingAPI")  (NOT "A.ShippingAPI")
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Patching Objects (@patch and monkeypatch)
+# ==============================================================================
+
+from unittest.mock import patch, Mock
+import os
+import pytest
+
+# ------------------------------------------------------------------------------
+# Source Module Under Test (simulating app/dispatch_service.py)
+# ------------------------------------------------------------------------------
+
+def fetch_hub_configuration() -> dict:
+    """Reads environment configuration and simulates a remote API lookup."""
+    api_key = os.environ.get("LOGISTICS_API_KEY", "MISSING_KEY")
+    hub_code = os.environ.get("HUB_CODE", "UNASSIGNED")
+
+    if api_key == "MISSING_KEY":
+        raise PermissionError("LOGISTICS_API_KEY environment variable missing!")
+
+    return {"api_key": api_key, "hub_code": hub_code}
+
+
+def execute_remote_status_sync(tracking_id: str) -> str:
+    """Simulates an external HTTP call using a module-level import."""
+    # Imagine this calls requests.get()
+    raise RuntimeError("Real HTTP network call executed!")
+
+
+# ------------------------------------------------------------------------------
+# Test Cases Using @patch and monkeypatch
+# ------------------------------------------------------------------------------
+
+def test_fetch_hub_configuration_with_monkeypatch(monkeypatch):
+    """Test environment variable overriding using pytest's monkeypatch fixture."""
+    # 1. ARRANGE: Set temporary environment variables via monkeypatch
+    monkeypatch.setenv("LOGISTICS_API_KEY", "TEST_SECRET_KEY_123")
+    monkeypatch.setenv("HUB_CODE", "CHICAGO_CENTRAL")
+
+    # 2. ACT
+    config = fetch_hub_configuration()
+
+    # 3. ASSERT
+    assert config["api_key"] == "TEST_SECRET_KEY_123"
+    assert config["hub_code"] == "CHICAGO_CENTRAL"
+    # monkeypatch automatically restores original os.environ after test completes!
+
+
+@patch("execute_remote_status_sync")
+def test_execute_remote_status_sync_with_patch(mock_sync_func):
+    """Test patching module-level functions with @patch."""
+    # Arrange: Configure patched mock function return value
+    mock_sync_func.return_value = "SYNC_SUCCESS_TRK-1001"
+
+    # Act
+    result = mock_sync_func("TRK-1001")
+
+    # Assert
+    assert result == "SYNC_SUCCESS_TRK-1001"
+    mock_sync_func.assert_called_once_with("TRK-1001")
+
+
+print("--- BEGINNER: Executing Patch Test Cases ---")
+# Manually triggering patch test demonstration
+test_execute_remote_status_sync_with_patch()
+print("Patch interception test passed successfully!")
+      `,
+      keyTakeaways: [
+        "Always patch objects where they are **used**, not where they are defined.",
+        "Use `@patch(\"module.object\")` to temporarily replace target functions or classes with Mock objects.",
+        "Use pytest's `monkeypatch` fixture to safely modify environment variables, dictionary keys, or system paths.",
+        "`monkeypatch` and `@patch` automatically tear down and restore original state when tests complete."
+      ],
+      commonMistakes: [
+        "<b>Patching where the object is defined instead of used:</b> Writing `@patch(\"requests.get\")` when the target file wrote `from requests import get`, causing the patch to target the wrong reference.",
+        "<b>Forgetting that `@patch` passes the mock object as a test parameter:</b> Decorating a test with `@patch(\"target\")` but omitting the `mock_obj` parameter in `def test_func(mock_obj):`.",
+        "<b>Manually modifying `os.environ` without cleanup:</b> Mutating global environment variables directly in tests without using `monkeypatch.setenv`, polluting subsequent tests."
+      ],
+      quizzes: [
+        {
+          question: "Given a module `service.py` that executes `import requests; requests.get(...)`, what is the correct target string to patch `get` using `@patch`?",
+          options: [
+            "`@patch(\"requests.get\")`",
+            "`@patch(\"service.requests.get\")`",
+            "`@patch(\"get\")`",
+            "`@patch(\"urllib.get\")`"
+          ],
+          correctIndex: 1,
+          explanation: "Patch where the object is USED. Since `service.py` accesses `requests.get`, the target string is `\"service.requests.get\"`."
+        },
+        {
+          question: "What is the primary advantage of using pytest's built-in `monkeypatch` fixture over mutating `os.environ` directly in tests?",
+          options: [
+            "`monkeypatch` encrypts environment variables.",
+            "`monkeypatch` automatically undoes all environment modifications and restores original state when the test completes.",
+            "`monkeypatch` bypasses mypy type checks.",
+            "It runs tests in parallel."
+          ],
+          correctIndex: 1,
+          explanation: "`monkeypatch` manages teardown automatically, restoring original environment variables, attributes, or dictionary keys after test execution."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Integration Testing: Database and Web API Testing Strategies",
+      durationMinutes: 20,
+      explanation: `
+<b>Verifying Multi-Component System Subsystems</b><br/>
+While unit tests verify isolated functions using mock doubles, **Integration Tests** verify that real system components (database ORMs, web framework endpoints, file systems) work together correctly when wired up.<br/><br/>
+
+<b>1. In-Memory Database Testing Strategies:</b><br/>
+Testing database queries against live production or shared staging database instances is dangerous and slow. For fast, isolated database integration testing:
+<ul>
+  <li>Use an **In-Memory SQLite Database** (`sqlite:///:memory:`) configured as a scoped pytest fixture!</li>
+  <li>Run table creation (`Base.metadata.create_all(engine)`) during fixture setup and drop all tables during teardown.</li>
+  <li>Each test case executes inside a fresh, isolated, in-memory database instance!</li>
+</ul>
+
+<b>2. Testing Web APIs with Framework Test Clients:</b><br/>
+Modern Python web frameworks (FastAPI, Flask, Django) provide built-in HTTP **Test Clients** (e.g., `Starlette TestClient` or `Flask Client`).
+<ul>
+  <li>Test clients simulate actual HTTP requests (`GET`, `POST`, `PUT`, `DELETE`) against API endpoints in memory **without starting a real network socket server**!</li>
+  <li>Verify HTTP status codes (`200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`) and JSON response payloads directly in pytest assertions!</li>
+</ul>
+      `,
+      diagram: `
+INTEGRATION TEST SCOPE (In-Memory Database & TestClient):
+
+  Unit Test Scope:
+  [ Unit Test ] ---> [ Mock Object ] (Isolated Function)
+
+  Integration Test Scope:
+  [ TestClient HTTP Request ] ---> [ API Router ] ---> [ ORM Model ] ---> [ In-Memory SQLite DB ]
+  (Verifies actual end-to-end component integration!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Integration Testing Strategies
+# ==============================================================================
+
+import pytest
+import sqlite3
+from pathlib import Path
+
+# ------------------------------------------------------------------------------
+# Source Component Under Test: SQLite Manifest Repository
+# ------------------------------------------------------------------------------
+
+class SQLiteManifestRepository:
+    def __init__(self, connection: sqlite3.Connection):
+        self.conn = connection
+
+    def initialize_tables(self):
+        with self.conn:
+            self.conn.execute(
+                "CREATE TABLE IF NOT EXISTS manifests (id TEXT PRIMARY KEY, status TEXT, weight REAL)"
+            )
+
+    def save_package(self, tracking_id: str, status: str, weight: float):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO manifests VALUES (?, ?, ?)", (tracking_id, status, weight)
+            )
+
+    def get_package(self, tracking_id: str) -> dict | None:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id, status, weight FROM manifests WHERE id = ?", (tracking_id,))
+        row = cursor.fetchone()
+        return {"id": row[0], "status": row[1], "weight": row[2]} if row else None
+
+
+# ------------------------------------------------------------------------------
+# Integration Test Fixtures and Test Cases
+# ------------------------------------------------------------------------------
+
+@pytest.fixture
+def in_memory_db_session():
+    """Integration fixture providing a fresh, isolated in-memory SQLite database."""
+    # Setup: Create in-memory database connection
+    conn = sqlite3.connect(":memory:")
+    repo = SQLiteManifestRepository(conn)
+    repo.initialize_tables()
+
+    yield repo # Hand repository connected to in-memory DB to test
+
+    # Teardown: Close connection
+    conn.close()
+
+
+def test_sqlite_repository_integration_save_and_get(in_memory_db_session):
+    """Integration test verifying SQL table creation, insert, and select queries."""
+    repo = in_memory_db_session
+
+    # 1. Act: Save record
+    repo.save_package("TRK-9001", "IN_TRANSIT", 42.5)
+
+    # 2. Act: Fetch record
+    record = repo.get_package("TRK-9001")
+
+    # 3. Assert: Verify database persistence
+    assert record is not None
+    assert record["id"] == "TRK-9001"
+    assert record["status"] == "IN_TRANSIT"
+    assert record["weight"] == 42.5
+
+
+def test_sqlite_repository_missing_record_returns_none(in_memory_db_session):
+    """Integration test verifying query behavior on non-existent record."""
+    repo = in_memory_db_session
+    assert repo.get_package("TRK-MISSING") is None
+
+print("--- BEGINNER: Executing Integration Database Tests ---")
+# Manually triggering integration fixture test for demonstration
+mock_conn = sqlite3.connect(":memory:")
+mock_repo = SQLiteManifestRepository(mock_conn)
+mock_repo.initialize_tables()
+
+test_sqlite_repository_integration_save_and_get(mock_repo)
+print("Integration database tests passed successfully!")
+      `,
+      keyTakeaways: [
+        "Integration tests verify that multiple real system components (ORMs, databases, APIs) work together.",
+        "Use in-memory SQLite databases (`sqlite:///:memory:`) for fast, isolated database integration tests.",
+        "Use framework TestClients to simulate HTTP API requests without starting physical network servers.",
+        "Ensure database fixtures drop tables or rollback transactions in teardown to maintain test isolation."
+      ],
+      commonMistakes: [
+        "<b>Running integration tests against production or shared staging databases:</b> Risking data corruption and test flakiness due to concurrent test writes.",
+        "<b>Using live external network APIs in integration tests:</b> Causing test suites to fail when external internet connections drop or third-party APIs rate-limit calls.",
+        "<b>Not resetting database state between test runs:</b> Allowing data created in Test A to leak into Test B, causing intermittent test failures."
+      ],
+      quizzes: [
+        {
+          question: "Why is using an in-memory SQLite database (`:memory:`) a best-practice strategy for database integration tests?",
+          options: [
+            "Because SQLite runs faster than C binaries.",
+            "It provides a fast, fully functional SQL engine that builds and destroys clean isolated database states in RAM without modifying disk files or needing external network servers.",
+            "Because SQLite supports unlimited concurrent writes.",
+            "It automatically writes tests for you."
+          ],
+          correctIndex: 1,
+          explanation: "In-memory SQLite databases build fast, isolated SQL database environments in RAM, ensuring zero side-effects across test runs."
+        },
+        {
+          question: "What is the primary function of an HTTP TestClient in web framework testing (e.g., FastAPI or Flask TestClient)?",
+          options: [
+            "It deploys code to AWS.",
+            "It simulates sending real HTTP requests (GET, POST) directly to API endpoint handlers in memory without spinning up a physical network socket server.",
+            "It converts Python code into JavaScript.",
+            "It mocks all database calls automatically."
+          ],
+          correctIndex: 1,
+          explanation: "HTTP TestClients simulate request/response cycles directly in memory, testing API routing and status codes quickly without physical network sockets."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Measuring Code Coverage with pytest-cov",
+      durationMinutes: 12,
+      explanation: `
+<b>Auditing Test Suite Thoroughness with Statement & Branch Coverage</b><br/>
+Writing 100 test cases doesn't guarantee your code is well-tested if those 100 tests only execute 20% of your codebase. **Code Coverage** measures the exact percentage of your source code executed while running your test suite.<br/><br/>
+
+<b>1. What is pytest-cov?</b><br/>
+<code>pytest-cov</code> is a popular pytest plugin that integrates Python's <code>coverage.py</code> engine directly into pytest CLI execution.<br/><br/>
+
+<b>2. Core Coverage Metrics:</b>
+<ul>
+  <li><b>Statement (Line) Coverage:</b> The percentage of source code lines executed during test runs.</li>
+  <li><b>Branch Coverage:</b> Audits conditional branches (e.g., verifying that BOTH `if` and `else` execution paths were exercised by tests!).</li>
+</ul>
+
+<b>3. Essential pytest-cov Commands:</b>
+<ul>
+  <li><code>$ pytest --cov=src</code>: Measures code coverage for all files in the `src/` directory.</li>
+  <li><code>$ pytest --cov=src --cov-report=term-missing</code>: Displays terminal report listing exact line numbers missed by tests!</li>
+  <li><code>$ pytest --cov=src --cov-report=html</code>: Generates an interactive HTML coverage report (`htmlcov/index.html`) with line-by-line visual highlighting!</li>
+  <li><code>$ pytest --cov=src --cov-fail-under=80</code>: Automatically fails CI/CD builds if total coverage drops below 80%!</li>
+</ul>
+
+<b>The 100% Coverage Fallacy:</b><br/>
+100% code coverage does NOT mean your code is bug-free! It simply means every line of code was executed at least once. Code coverage must be paired with meaningful assertions and edge-case testing.
+      `,
+      diagram: `
+CODE COVERAGE AUDIT FLOW (pytest-cov):
+
+  [ Execute Test Suite: $ pytest --cov=src --cov-report=term-missing ]
+                                    |
+                                    v
+  ---------------------------------------------------------------------
+  Name                  Stmts   Miss  Cover   Missing
+  ---------------------------------------------------------------------
+  src/dispatch.py          20      2    90%   14-15  <-- Missed lines 14-15!
+  src/models.py            15      0   100%
+  ---------------------------------------------------------------------
+  TOTAL                    35      2    94%
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Code Coverage Audit Concepts
+# ==============================================================================
+
+# Source module to audit
+def evaluate_risk_level(weight_lbs: float, is_hazmat: bool) -> str:
+    """Function containing conditional branches to audit for coverage."""
+    if is_hazmat:
+        return "HIGH_RISK_HAZMAT"
+
+    if weight_lbs > 100.0:
+        return "HIGH_RISK_HEAVY"
+    else:
+        return "STANDARD_RISK" # Line missed if no test passes non-hazmat <= 100lbs!
+
+
+# Test suite demonstrating branch coverage
+def test_evaluate_risk_hazmat():
+    assert evaluate_risk_level(10.0, is_hazmat=True) == "HIGH_RISK_HAZMAT"
+
+def test_evaluate_risk_heavy():
+    assert evaluate_risk_level(150.0, is_hazmat=False) == "HIGH_RISK_HEAVY"
+
+# Notice: If test_evaluate_risk_standard() is missing, line 10 ("STANDARD_RISK")
+# is flagged as UNCOVERED (MISSING) in pytest-cov terminal reports!
+
+def test_evaluate_risk_standard():
+    """Adding this test achieves 100% statement and branch coverage!"""
+    assert evaluate_risk_level(10.0, is_hazmat=False) == "STANDARD_RISK"
+
+print("--- BEGINNER: Coverage Target Execution ---")
+test_evaluate_risk_hazmat()
+test_evaluate_risk_heavy()
+test_evaluate_risk_standard()
+print("All branch paths exercised successfully.")
+      `,
+      keyTakeaways: [
+        "`pytest-cov` measures the percentage of source code lines executed during test runs.",
+        "Use `--cov-report=term-missing` to identify exact uncovered line numbers in your terminal.",
+        "Use `--cov-report=html` to generate interactive line-by-line visual coverage reports.",
+        "Use `--cov-fail-under=80` in CI/CD pipelines to enforce minimum test coverage thresholds."
+      ],
+      commonMistakes: [
+        "<b>Confusing high code coverage with test quality:</b> Writing tests with high line coverage but weak or missing `assert` statements.",
+        "<b>Obsessing over 100% coverage on non-critical code:</b> Spending days writing brittle tests for defensive exception blocks or boilerplate string representations.",
+        "<b>Measuring test directory coverage instead of source directory coverage:</b> Running `pytest --cov=tests` instead of `pytest --cov=src`."
+      ],
+      quizzes: [
+        {
+          question: "Which `pytest-cov` CLI flag displays terminal reports listing the EXACT line numbers of source code missed by your test suite?",
+          options: [
+            "`--cov-show-lines`",
+            "`--cov-report=term-missing`",
+            "`--cov-debug`",
+            "`--show-missing`"
+          ],
+          correctIndex: 1,
+          explanation: "`--cov-report=term-missing` displays a terminal table detailing missing uncovered line numbers per module."
+        },
+        {
+          question: "Why does 100% statement code coverage NOT guarantee that a software module is completely bug-free?",
+          options: [
+            "Because coverage tools only work on Windows.",
+            "Because statement coverage measures whether lines were executed, but cannot guarantee that all edge-case inputs, logical combinations, or assertion checks were tested.",
+            "Because mypy disables coverage.",
+            "Because coverage tools ignore functions."
+          ],
+          correctIndex: 1,
+          explanation: "Code coverage tracks line execution, not assertion quality or edge-case input coverage."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Building an Enterprise Multi-Layer Testing Architecture",
+      durationMinutes: 12,
+      explanation: `
+<b>Structuring the Testing Pyramid for CI/CD Pipelines</b><br/>
+In enterprise software engineering, test suites are structured according to the **Testing Pyramid** model to balance execution speed, cost, and system confidence.<br/><br/>
+
+<b>1. The Testing Pyramid Layers:</b>
+<ol>
+  <li><b>Unit Tests (Base Layer - 70-80% of suite):</b>
+    <br/>- Fast ($O(1)$ ms execution), isolated tests utilizing mocks/test doubles.
+    <br/>- Tests core functions, domain models, and business logic in isolation.</li>
+  <li><b>Integration Tests (Middle Layer - 15-20% of suite):</b>
+    <br/>- Tests component interactions (API TestClients, in-memory database persistence, file IO).</li>
+  <li><b>End-to-End / System Tests (Top Layer - 5-10% of suite):</b>
+    <br/>- Slowest and most expensive tests, running against full deployed environments.</li>
+</ol>
+
+<b>2. Organizing pytest Markers (<code>@pytest.mark</code>):</b><br/>
+Separate unit tests from slow integration tests using custom pytest markers:<br/>
+<code>@pytest.mark.unit</code><br/>
+<code>@pytest.mark.integration</code><br/><br/>
+
+<b>CLI Execution Filtering:</b>
+<ul>
+  <li>Run fast unit tests only during rapid local development: <code>$ pytest -m unit</code></li>
+  <li>Run full test suite in remote CI/CD pipelines: <code>$ pytest -m "unit or integration" --cov=src --cov-fail-under=85</code></li>
+</ul>
+      `,
+      diagram: `
+THE ENTERPRISE TESTING PYRAMID:
+
+           /\\
+          /  \\     E2E / System Tests (5-10%)  <-- Slowest / Expensive
+         /----\
+        /      \\    Integration Tests (15-20%) <-- Medium Speed (In-memory DB/APIs)
+       /--------\\
+      /          \\   Unit Tests (70-80%)        <-- FASTEST / $O(1)$ Isolated Mocks
+     --------------
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Pytest Markers and Testing Architecture
+# ==============================================================================
+
+import pytest
+
+# ------------------------------------------------------------------------------
+# Categorizing Tests with pytest Markers
+# ------------------------------------------------------------------------------
+
+# Mark test case as a fast unit test
+@pytest.mark.unit
+def test_unit_fee_calculation():
+    """Fast unit test using mock/pure logic."""
+    assert 10.0 + 5.0 == 15.0
+
+
+# Mark test case as an integration test
+@pytest.mark.integration
+def test_integration_database_persistence():
+    """Integration test checking database component interaction."""
+    # Imagine in-memory SQLite operations
+    db_connected = True
+    assert db_connected is True
+
+
+print("--- PRODUCTION TESTING ARCHITECTURE SUMMARY ---")
+print("Unit Test Marked        : @pytest.mark.unit")
+print("Integration Test Marked : @pytest.mark.integration")
+print("CLI Filter Command      : pytest -m unit")
+      `,
+      keyTakeaways: [
+        "The Testing Pyramid balances fast unit tests (base), integration tests (middle), and E2E tests (top).",
+        "Use `@pytest.mark.unit` and `@pytest.mark.integration` to categorize test speed and scope.",
+        "Filter test execution using `pytest -m unit` for rapid local feedback.",
+        "Enforce coverage thresholds in CI/CD pipelines using `--cov-fail-under=85`."
+      ],
+      commonMistakes: [
+        "<b>Inverting the testing pyramid:</b> Writing 90% slow E2E/integration tests and 10% unit tests, causing test suites to take 45 minutes to execute.",
+        "<b>Unregistered pytest markers:</b> Forgetting to register custom markers in `pyproject.toml` under `[tool.pytest.ini_options]`, causing pytest to issue PytestUnknownMarkWarning warnings."
+      ],
+      quizzes: [
+        {
+          question: "According to the Testing Pyramid model, what proportion of an enterprise test suite should consist of fast, isolated Unit Tests?",
+          options: [
+            "5-10%",
+            "70-80%",
+            "100%",
+            "0%"
+          ],
+          correctIndex: 1,
+          explanation: "Unit tests form the broad base (70-80%) of the testing pyramid due to their execution speed and isolation."
+        },
+        {
+          question: "Which pytest CLI flag filters test execution using custom markers (e.g., running only `@pytest.mark.unit` tests)?",
+          options: [
+            "`pytest -k unit`",
+            "`pytest -m unit`",
+            "`pytest -f unit`",
+            "`pytest --mark=unit`"
+          ],
+          correctIndex: 1,
+          explanation: "The `-m marker_name` flag filters test execution by custom pytest markers."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the primary function of a Mock object in unit testing?",
+      options: [
+        "To compile Python code to C.",
+        "To intercept method calls and isolate unit tests from slow, non-deterministic external dependencies (APIs, databases).",
+        "To run tests in parallel.",
+        "To generate HTML documentation."
+      ],
+      correctIndex: 1,
+      explanation: "Mock objects isolate unit tests by intercepting calls and returning canned responses without hitting live external systems."
+    },
+    {
+      question: "What is the golden rule of target strings when using `@patch` in Python?",
+      options: [
+        "Patch where the object is defined.",
+        "Patch where the object is USED, not where it is defined.",
+        "Patch only global variables.",
+        "Patch where the test file is located."
+      ],
+      correctIndex: 1,
+      explanation: "`@patch` must target the module location where the object is imported and used."
+    },
+    {
+      question: "Which pytest fixture safely modifies environment variables or dictionary attributes temporarily, restoring original state when the test completes?",
+      options: [
+        "`tmp_path`",
+        "`monkeypatch`",
+        "`capsys`",
+        "`mock_env`"
+      ],
+      correctIndex: 1,
+      explanation: "`monkeypatch` safely modifies environment variables and attributes, restoring original state automatically during teardown."
+    },
+    {
+      question: "Why is an in-memory SQLite database (`:memory:`) recommended for database integration tests?",
+      options: [
+        "Because it runs on GPU hardware.",
+        "It provides a fast, fully functional SQL environment in RAM, ensuring clean isolated database states without modifying disk files.",
+        "Because it replaces pytest.",
+        "Because it disables type hints."
+      ],
+      correctIndex: 1,
+      explanation: "In-memory SQLite databases build fast, isolated database environments in RAM, preventing data pollution."
+    },
+    {
+      question: "Which `pytest-cov` flag displays terminal reports listing the EXACT line numbers of source code missed by your test suite?",
+      options: [
+        "`--cov-report=term-missing`",
+        "`--cov-show-lines`",
+        "`--cov-missing-all`",
+        "`--show-lines`"
+      ],
+      correctIndex: 0,
+      explanation: "`--cov-report=term-missing` displays missing uncovered line numbers per module in terminal outputs."
+    },
+    {
+      question: "What is the primary function of an HTTP TestClient in web framework API testing?",
+      options: [
+        "To deploy code to cloud servers.",
+        "To simulate sending HTTP requests (GET, POST) directly to API endpoint handlers in memory without spinning up physical network servers.",
+        "To generate CSS styles.",
+        "To mock database connections automatically."
+      ],
+      correctIndex: 1,
+      explanation: "HTTP TestClients simulate request/response cycles in memory, testing API routing and status codes quickly without physical network sockets."
+    },
+    {
+      question: "Which pytest CLI flag sets a minimum code coverage percentage, failing the build if coverage falls below the threshold?",
+      options: [
+        "`--cov-min=80`",
+        "`--cov-fail-under=80`",
+        "`--cov-strict=80`",
+        "`--cov-limit=80`"
+      ],
+      correctIndex: 1,
+      explanation: "`--cov-fail-under=percentage` enforces minimum code coverage thresholds in CI/CD builds."
+    },
+    {
+      question: "Which pytest flag filters test execution using custom markers (e.g., `@pytest.mark.unit`)?",
+      options: [
+        "`pytest -k unit`",
+        "`pytest -m unit`",
+        "`pytest -f unit`",
+        "`pytest --marker=unit`"
+      ],
+      correctIndex: 1,
+      explanation: "The `-m marker_name` flag filters test execution by custom pytest markers."
+    }
+  ],
+  project: {
+    name: "Enterprise Multi-Layer Test & Mocking Suite (Phase 1 Final Project)",
+    goal: "Build a multi-layer test suite featuring unit test doubles (Mock/patch), monkeypatching for environment variables, in-memory SQLite integration testing, custom pytest markers (@pytest.mark.unit / @pytest.mark.integration), and code coverage audits.",
+    brief: "Your logistics platform requires a multi-layer test architecture (`test_advanced_logistics.py`). You will write unit tests using `unittest.mock.Mock` to isolate payment gateway calls, use `monkeypatch` to set environment variables, write integration tests against an in-memory SQLite database, categorize tests with `@pytest.mark.unit` and `@pytest.mark.integration`, and audit code coverage.",
+    steps: [
+      "Create a source module `logistics_service.py` containing an external API payment caller and SQLite database repository.",
+      "Create a test file `test_advanced_logistics.py` with unit tests using `Mock(spec=...)` to stub payment calls.",
+      "Use `@patch(\"logistics_service.requests.post\")` or `monkeypatch.setenv()` to test configuration fetching and remote call intercepting.",
+      "Write integration tests using an in-memory SQLite database (`:memory:`) verifying SQL table creation, record insertion, and selection.",
+      "Categorize test cases using custom markers `@pytest.mark.unit` and `@pytest.mark.integration`.",
+      "Run your test suite with coverage reporting: `pytest -v -m unit --cov=logistics_service --cov-report=term-missing`.",
+      "Verify that all test cases pass and print a complete test audit summary."
+    ],
+    acceptance: [
+      "Unit tests isolate payment network calls using `unittest.mock.Mock` and `assert_called_once_with()`.",
+      "`monkeypatch` safely sets environment variables and restores state after test execution.",
+      "Integration tests verify SQL operations against a fresh in-memory SQLite database (`:memory:`).",
+      "Tests are categorized with `@pytest.mark.unit` and `@pytest.mark.integration` markers.",
+      "Running `pytest` executes and passes all test cases with terminal coverage reporting."
+    ],
+    stretch: [
+      "Add `--cov-fail-under=90` to enforce a 90% test coverage build gate.",
+      "Annotate all test functions with type hints and pass static `mypy` verification."
+    ]
+  }
+};
