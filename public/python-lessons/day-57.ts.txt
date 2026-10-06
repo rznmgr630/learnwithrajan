@@ -1,0 +1,711 @@
+/**
+ * DAY 57: Phase 1 · Core Python — Enterprise CI/CD Pipelines & Deployment Automation
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1CiCdPipelines = {
+  day: 57,
+  topic: "Phase 1 · Core Python — Enterprise CI/CD Pipelines & Deployment Automation",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "GitHub Actions Architecture, Events, Jobs, and Runners",
+      durationMinutes: 18,
+      explanation: `
+<b>Automating Software Delivery Lifecycles via Declarative Workflows</b><br/>
+Continuous Integration (CI) and Continuous Deployment (CD) pipelines automate quality gates—linting, static type checking, automated testing, container builds, and deployment release verification—on every code commit.<br/><br/>
+
+<b>GitHub Actions</b> uses declarative YAML files stored inside the <code>.github/workflows/</code> directory to execute automated pipelines upon specific repository events.<br/><br/>
+
+<b>1. Core Terminology & Topology:</b>
+<ul>
+  <li><b>Workflow:</b> The root automated process composed of one or more jobs defined in a YAML file (e.g., <code>.github/workflows/cicd.yml</code>).</li>
+  <li><b>Event (Triggers):</b> Repository conditions that trigger a workflow run (e.g., <code>on: push: branches: [main]</code> or <code>pull_request</code>).</li>
+  <li><b>Job:</b> A collection of sequential steps executing on an isolated runner VM environment (e.g., <code>runs-on: ubuntu-latest</code>). Jobs run in <b>parallel</b> by default unless chained with <code>needs</code>!</li>
+  <li><b>Step:</b> An individual task command (<code>run: pytest</code>) or pre-built action (<code>uses: actions/checkout@v4</code>).</li>
+  <li><b>Runner:</b> An isolated virtual machine or container executing workflow jobs.</li>
+</ul>
+      `,
+      diagram: `
+GITHUB ACTIONS WORKFLOW TOPOLOGY:
+
+  Repository Event (push / pull_request to main)
+                        |
+                        v
+  [ Workflow: cicd.yml ]
+                        |
+       +----------------+----------------+
+       |                                 |
+  [ Job 1: Quality Gate ]           [ Job 2: Documentation ]
+  (runs-on: ubuntu-latest)          (runs-on: ubuntu-latest)
+  ├── Step 1: Checkout               ├── Step 1: Checkout
+  ├── Step 2: Setup Python           └── Step 2: Build Docs
+  ├── Step 3: Ruff Linter
+  └── Step 4: Mypy Typecheck
+                        |
+                        v  needs: quality-gate
+  [ Job 3: Pytest Suite ] (Runs ONLY after Job 1 succeeds!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: GitHub Actions Declarative Workflow Specification
+# ==============================================================================
+
+WORKFLOW_YAML_SPEC = """
+name: Continuous Integration & Quality Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-gate:
+    name: Code Quality & Type Safety
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy pytest -r requirements.txt
+
+      - name: Run Ruff Linter & Formatter Check
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Run Static Type Checker (mypy)
+        run: mypy --strict src/
+"""
+
+print("--- LESSON 1: Declarative GitHub Actions Blueprint ---")
+print(WORKFLOW_YAML_SPEC)
+      `,
+      keyTakeaways: [
+        "GitHub Actions workflows are declared in YAML files stored in `.github/workflows/`.",
+        "Events (`push`, `pull_request`) trigger workflow execution automatically.",
+        "Jobs execute in parallel by default; use `needs` to chain dependent sequential jobs.",
+        "Leverage setup actions (`actions/setup-python@v5`) with dependency caching (`cache: 'pip'`) to speed up workflow execution."
+      ],
+      commonMistakes: [
+        "<b>Assuming jobs execute sequentially by default:</b> Forgetting that jobs run concurrently unless explicitly linked using `needs: [job_name]`.",
+        "<b>Omitting dependency caching (`cache: 'pip'`):</b> Re-downloading hundreds of megabytes of Python packages on every single commit, wasting CI build minutes."
+      ],
+      quizzes: [
+        {
+          question: "Where must GitHub Actions declarative YAML workflow files be placed in a repository?",
+          options: [
+            "`/workflows/`",
+            "`.github/workflows/`",
+            "`/ci/`",
+            "`.config/actions/`"
+          ],
+          correctIndex: 1,
+          explanation: "GitHub Actions automatically parses workflow YAML files located in `.github/workflows/`."
+        },
+        {
+          question: "How do you enforce sequential execution between two GitHub Actions jobs (e.g., ensuring `deploy` runs ONLY after `test` succeeds)?",
+          options: [
+            "Use `after: test`.",
+            "Use `needs: test` inside the dependent job definition.",
+            "Jobs always run sequentially automatically.",
+            "Use `depends_on: test`."
+          ],
+          correctIndex: 1,
+          explanation: "Specifying `needs: [job_name]` creates a dependency chain, forcing the job to wait until prerequisite jobs succeed."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Quality Gates: Automated Testing, Linting, Type Checking, and Coverage Controls",
+      durationMinutes: 20,
+      explanation: `
+<b>Enforcing Code Quality Gates with Ephemeral Database Services</b><br/>
+An enterprise CI pipeline enforces strict quality gates before any code merges into primary production branches.<br/><br/>
+
+<b>The 3 Mandatory Quality Gates:</b>
+<ol>
+  <li><b>Fast Linting & Formatting Check (Ruff):</b> Audits syntax errors, unused imports, and formatting compliance in milliseconds.</li>
+  <li><b>Static Type Analysis (mypy):</b> Guarantees static type safety across function signatures, Pydantic schemas, and SQLAlchemy models.</li>
+  <li><b>Automated Test Suite (pytest):</b> Runs unit and integration tests against real ephemeral service containers, enforcing a minimum coverage threshold (e.g., <code>--cov-fail-under=85</code>).</li>
+</ol>
+
+<b>GitHub Actions Service Containers:</b><br/>
+Integration tests often require real database backends. GitHub Actions can launch ephemeral <b>Service Containers</b> (like PostgreSQL or Redis) on the runner network alongside your test suite!
+      `,
+      diagram: `
+CI QUALITY GATE PIPELINE WITH EPHEMERAL POSTGRES SERVICE:
+
+  Job: Automated Test Suite (runs-on: ubuntu-latest)
+  +------------------------------------------------------------------+
+  |  Service Container: postgres:15-alpine (Port 5432)                |
+  |  (Healthcheck: pg_isready -> UP!)                                |
+  +------------------------------------------------------------------+
+                                  |
+                                  v
+  [ Step: pytest --cov=src --cov-fail-under=85 ]
+  ├── Runs Unit Tests
+  ├── Connects to postgres:5432 for Integration Tests
+  └── Verifies Code Coverage >= 85% (Fails build if coverage drops!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Service Containers & Coverage Control Workflow
+# ==============================================================================
+
+TEST_JOB_YAML_SPEC = """
+  test-suite:
+    name: Automated Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: quality-gate  # Runs only after linting & type checking succeed!
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres_test
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: logistics_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt pytest pytest-cov
+
+      - name: Execute Pytest Suite with Coverage Gate
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres_test:test_password@localhost:5432/logistics_test
+        run: |
+          pytest --cov=src --cov-report=xml --cov-fail-under=85
+"""
+
+print("--- LESSON 2: Pytest with Service Container Blueprint ---")
+print(TEST_JOB_YAML_SPEC)
+      `,
+      keyTakeaways: [
+        "Enforce strict quality gates in CI: Ruff linting, mypy strict type checking, and pytest coverage.",
+        "Use `pytest --cov-fail-under=85` to automatically fail CI builds if test coverage drops below thresholds.",
+        "Use GitHub Actions `services` to launch ephemeral PostgreSQL/Redis containers for integration testing.",
+        "Configuring `health-cmd` options ensures service containers pass health checks before tests execute."
+      ],
+      commonMistakes: [
+        "<b>Running integration tests against mock databases in CI while using PostgreSQL in production:</b> Hiding database dialect or SQL incompatibility bugs until production deployment.",
+        "<b>Not enforcing a minimum coverage threshold (`--cov-fail-under`):</b> Allowing developers to merge untested code without failing the pipeline."
+      ],
+      quizzes: [
+        {
+          question: "Which pytest-cov flag instructs the CI pipeline to return a non-zero exit code (failing the CI job) if overall test coverage falls below 85%?",
+          options: [
+            "`--coverage-min=85`",
+            "`--cov-fail-under=85`",
+            "`--strict-coverage=85`",
+            "`--assert-coverage=85`"
+          ],
+          correctIndex: 1,
+          explanation: "`--cov-fail-under=85` automatically fails the test run if total line coverage is below 85%."
+        },
+        {
+          question: "How does GitHub Actions provide real PostgreSQL databases for integration testing during CI workflow runs?",
+          options: [
+            "It connects to the developer's local laptop.",
+            "Via `services` containers, which launch ephemeral PostgreSQL Docker containers on the runner VM network.",
+            "It converts PostgreSQL to SQLite automatically.",
+            "By mock string replacing."
+          ],
+          correctIndex: 1,
+          explanation: "The `services` workflow block launches ephemeral container instances (like PostgreSQL or Redis) on the runner network during the job."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Building and Pushing OCI Artifacts to Container Registries",
+      durationMinutes: 18,
+      explanation: `
+<b>Automating Immutable Container Image Distribution</b><br/>
+Once quality gates and unit tests pass successfully, the CI/CD pipeline builds an immutable Docker container image and publishes it to a Container Registry (e.g., GitHub Container Registry <code>ghcr.io</code> or Docker Hub).<br/><br/>
+
+<b>1. Key Registry Automation Concepts:</b>
+<ul>
+  <li><b>GitHub Container Registry (ghcr.io):</b> A high-speed, secure OCI-compliant container registry integrated directly into GitHub permissions.</li>
+  <li><b>Docker Buildx & Layer Caching:</b> GitHub Actions provides <code>docker/setup-buildx-action</code> with <code>type=gha</code> caching. Reusable image layers are cached inside GitHub Actions storage, cutting Docker build times from minutes to seconds!</li>
+  <li><b>Dynamic Metadata Tagging:</b> Tag images automatically with immutable Git commit SHA hashes (e.g., <code>ghcr.io/org/repo:sha-8f3a9a12</code>) and release tags (<code>v1.2.0</code>).</li>
+</ul>
+      `,
+      diagram: `
+DOCKER BUILD & REGISTRY PUBLISHING PIPELINE:
+
+  Quality Gate & Pytest Jobs Succeeded!
+                    |
+                    v
+  [ Job: build-and-push-docker ]
+  ├── 1. Log in to ghcr.io using GITHUB_TOKEN
+  ├── 2. Extract Metadata Tags (SHA: sha-8f3a9a12, Tag: latest)
+  ├── 3. Build Multi-Stage Dockerfile using Buildx Layer Caching
+  └── 4. Push Immutable OCI Image to ghcr.io Registry!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Building and Pushing Container Images to ghcr.io
+# ==============================================================================
+
+DOCKER_BUILD_JOB_YAML_SPEC = """
+  build-and-push-docker:
+    name: Build & Push Production Docker Image
+    runs-on: ubuntu-latest
+    needs: test-suite
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata Tags & Labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/\${{ github.repository }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: \${{ steps.meta.outputs.tags }}
+          labels: \${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+"""
+
+print("--- LESSON 3: Docker Registry Publish Job Blueprint ---")
+print(DOCKER_BUILD_JOB_YAML_SPEC)
+      `,
+      keyTakeaways: [
+        "Build and publish container images only after quality gates and test suites pass.",
+        "Use GitHub Container Registry (`ghcr.io`) with `secrets.GITHUB_TOKEN` for seamless authentication.",
+        "Tag container images with unique Git commit SHA hashes (`sha-8f3a9a12`) for immutable traceability.",
+        "Use `docker/setup-buildx-action` with `type=gha` layer caching to accelerate build speeds."
+      ],
+      commonMistakes: [
+        "<b>Tagging production deployments with only `latest`:</b> Overwriting the `latest` tag continuously without unique SHA tags, making it impossible to roll back to a specific previous container image.",
+        "<b>Hardcoding registry passwords in YAML files:</b> Exposing plain-text secrets instead of using `secrets.GITHUB_TOKEN` or encrypted environment secrets."
+      ],
+      quizzes: [
+        {
+          question: "Why should every production container image be tagged with a unique Git commit SHA hash (e.g., `:sha-8f3a9a12`) in addition to `:latest`?",
+          options: [
+            "Because Docker forbids using `:latest` alone.",
+            "Unique SHA tags guarantee immutability, allowing exact code traceability and precise version rollbacks if a deployment fails.",
+            "SHA tags compress image sizes.",
+            "SHA tags format Python code."
+          ],
+          correctIndex: 1,
+          explanation: "Unique SHA tags ensure immutable image traceability, making rollbacks to exact code commits reliable."
+        },
+        {
+          question: "Which pre-built GitHub Action automatically authenticates against container registries like Docker Hub or `ghcr.io`?",
+          options: [
+            "`actions/setup-python`",
+            "`docker/login-action`",
+            "`actions/checkout`",
+            "`docker/buildx-action`"
+          ],
+          correctIndex: 1,
+          explanation: "`docker/login-action` securely logs into container registries using specified tokens or credentials."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Deployment Gate Controls, Environments, and Encrypted Secrets",
+      durationMinutes: 18,
+      explanation: `
+<b>Securing Deployments with Protected Environments and Approval Gates</b><br/>
+Building containers is only half the battle. Deploying code to production environments requires governance controls, manual approval gates, and encrypted secrets management.<br/><br/>
+
+<b>1. Deployment Gate Controls with GitHub Environments:</b><br/>
+GitHub Actions allows defining designated target <b>Environments</b> (e.g., <code>staging</code>, <code>production</code>).
+<ul>
+  <li><b>Required Reviewers:</b> Require manual review and approval from designated tech leads before a production deployment job can execute!</li>
+  <li><b>Wait Timers:</b> Force a delay timer (e.g., 15 minutes) after staging deployment before triggering production.</li>
+  <li><b>Deployment Protection Rules:</b> Block deployments if open incident alerts exist.</li>
+</ul>
+
+<b>2. Encrypted Secrets Isolation:</b><br/>
+Sensitive deployment credentials (<code>AWS_ACCESS_KEY_ID</code>, <code>KUBECONFIG</code>, <code>SSH_PRIVATE_KEY</code>) are stored in <b>GitHub Encrypted Secrets</b> (Environment or Repository scope).
+<ul>
+  <li>Secrets are encrypted at rest and automatically masked in runner terminal logs (<code>***</code>).</li>
+  <li>Inject secrets at runtime using expression syntax: <code>\${{ secrets.KUBE_CONFIG_PRODUCTION }}</code>.</li>
+</ul>
+      `,
+      diagram: `
+PRODUCTION DEPLOYMENT GATE & APPROVAL CONTROL FLOW:
+
+  Docker Image Pushed to ghcr.io
+                 |
+                 v
+  [ Job: deploy-production ] (environment: production)
+                 |
+                 v
+  ==============================================================
+  ||  MANUAL APPROVAL GATE (GitHub Protection Rule)           ||
+  ||  Status: AWAITING APPROVAL FROM TECH LEAD                ||
+  ||  [ Approve and Deploy ]  /  [ Reject ]                   ||
+  ==============================================================
+                 |
+                 v  (Approved by Lead)
+  [ Execute Deployment Steps ] ---> Deploys to Kubernetes / AWS Cluster
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Production Deployment Job with Approval Environment
+# ==============================================================================
+
+DEPLOY_JOB_YAML_SPEC = """
+  deploy-production:
+    name: Deploy to Production Kubernetes Cluster
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker
+
+    # Target Environment protected by Manual Approval Gate in GitHub Settings!
+    environment:
+      name: production
+      url: https://api.logistics.company.com
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl CLI
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure Kubernetes Credentials
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: \${{ secrets.KUBE_CONFIG_PRODUCTION }}
+
+      - name: Deploy Image to Kubernetes Cluster
+        run: |
+          kubectl set image deployment/logistics-api \\
+            logistics-api=ghcr.io/\${{ github.repository }}:\${{ github.sha }} \\
+            --namespace=production
+
+          kubectl rollout status deployment/logistics-api --namespace=production --timeout=120s
+"""
+
+print("--- LESSON 4: Protected Deployment Job Blueprint ---")
+print(DEPLOY_JOB_YAML_SPEC)
+      `,
+      keyTakeaways: [
+        "Use GitHub Environments (`environment: production`) to enforce manual approval review gates before production deployments.",
+        "Store sensitive deployment keys in GitHub Encrypted Secrets (`secrets.MY_SECRET`).",
+        "Secrets are automatically masked (`***`) in CI log outputs.",
+        "Use `kubectl rollout status` to verify that deployment rollouts complete successfully within timeout bounds."
+      ],
+      commonMistakes: [
+        "<b>Deploying directly to production on every commit without approval gates:</b> Pushing breaking changes directly to live users without manual sanity verification.",
+        "<b>Printing secrets in CLI commands:</b> Echoing raw secret values in `run:` statements, which risks exposing unmasked keys if secret masking fails."
+      ],
+      quizzes: [
+        {
+          question: "How do you configure a GitHub Actions deployment job to require manual reviewer approval before executing commands against production infrastructure?",
+          options: [
+            "Use `manual_approval: true` in the job script.",
+            "Link the job to a protected GitHub `environment:` (e.g., `environment: production`) that has Required Reviewers enabled in repository settings.",
+            "Write a `time.sleep()` loop.",
+            "GitHub Actions cannot require manual approvals."
+          ],
+          correctIndex: 1,
+          explanation: "Binding a job to a protected GitHub Environment enforces the environment's configured protection rules, such as required manual reviewer approvals."
+        },
+        {
+          question: "What safety behavior does GitHub Actions automatically apply when a workflow step outputs a string matching a value stored in `secrets`?",
+          options: [
+            "It halts the runner.",
+            "It automatically masks the secret text value, replacing it with `***` in execution logs.",
+            "It sends an email.",
+            "It deletes the repository."
+          ],
+          correctIndex: 1,
+          explanation: "GitHub Actions automatically redacts and masks all registered secrets with `***` in terminal outputs."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "End-to-End CI/CD Pipeline Verification and Release Automation",
+      durationMinutes: 6,
+      explanation: `
+<b>Verifying Full Lifecycle Pipeline Orchestration</b><br/>
+A complete enterprise CI/CD pipeline connects every stage into a unified, resilient delivery system.<br/><br/>
+
+<b>Full Lifecycle Order of Operations:</b>
+<ol>
+  <li><b>Trigger:</b> Developer opens a Pull Request or pushes to <code>main</code>.</li>
+  <li><b>Stage 1 (Quality Gate):</b> Runs Ruff formatting check and Mypy strict type checking in parallel.</li>
+  <li><b>Stage 2 (Test Suite):</b> Launches ephemeral PostgreSQL service container, runs Pytest, and audits coverage (<code>>=85%</code>).</li>
+  <li><b>Stage 3 (Containerization):</b> Builds multi-stage Dockerfile with Buildx layer caching and pushes tagged image to <code>ghcr.io</code>.</li>
+  <li><b>Stage 4 (Production Deployment Gate):</b> Awaits manual reviewer approval, applies image update to Kubernetes via <code>kubectl</code>, and verifies rollout status.</li>
+</ol>
+      `,
+      diagram: `
+COMPLETE END-TO-END CI/CD PIPELINE LIFECYCLE:
+
+  [ Git Commit Push ]
+           |
+           v
+  [ Quality Gate Job ] -----> (Ruff Linter & Mypy Typecheck)
+           |
+           v  (Success)
+  [ Test Suite Job ]   -----> (Pytest + PostgreSQL Service + Coverage >=85%)
+           |
+           v  (Success)
+  [ Docker Build Job ] -----> (Buildx Multi-Stage -> ghcr.io Push)
+           |
+           v  (Success)
+  [ Production Gate ]  -----> (Manual Approval -> kubectl Deployment Rollout)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Complete Pipeline Configuration Audit Helper
+# ==============================================================================
+
+def audit_cicd_pipeline_compliance(workflow_yaml_text: str) -> dict[str, bool]:
+    """Audits a GitHub Actions workflow YAML for enterprise compliance."""
+    return {
+        "has_quality_gate": "ruff" in workflow_yaml_text and "mypy" in workflow_yaml_text,
+        "has_test_coverage_gate": "pytest" in workflow_yaml_text and "--cov" in workflow_yaml_text,
+        "uses_dependency_caching": "cache:" in workflow_yaml_text,
+        "uses_container_registry": "ghcr.io" in workflow_yaml_text,
+        "uses_protected_environment": "environment:" in workflow_yaml_text,
+        "uses_encrypted_secrets": "secrets." in workflow_yaml_text
+    }
+
+sample_pipeline = """
+name: CI/CD
+on: [push]
+jobs:
+  quality:
+    steps:
+      - uses: actions/setup-python@v5
+        with: { cache: 'pip' }
+      - run: ruff check . && mypy src/
+  test:
+    steps:
+      - run: pytest --cov=src --cov-fail-under=85
+  deploy:
+    environment: production
+    steps:
+      - run: docker push ghcr.io/org/repo:\${{ github.sha }}
+        env:
+          KEY: \${{ secrets.PROD_KEY }}
+"""
+
+audit_results = audit_cicd_pipeline_compliance(sample_pipeline)
+
+print("--- LESSON 5: CI/CD Pipeline Compliance Audit ---")
+for check_name, passed in audit_results.items():
+    status_str = "PASSED" if passed else "FAILED"
+    print(f"  {check_name:<28} : {status_str}")
+      `,
+      keyTakeaways: [
+        "An enterprise pipeline chains Quality Gate -> Test Suite -> Docker Build -> Production Deployment.",
+        "Quality gates block bad code from entering tests; test gates block bad code from container builds.",
+        "Deployment gates block unverified containers from reaching live production users.",
+        "End-to-end automation accelerates delivery speed while enforcing strict security and quality."
+      ],
+      commonMistakes: [
+        "<b>Skipping pipeline stages to 'save time':</b> Deploying containers without running test suites, allowing critical regressions to reach production."
+      ],
+      quizzes: [
+        {
+          question: "In what sequence should CI/CD pipeline stages be ordered to maximize resource efficiency and fail fast?",
+          options: [
+            "Deploy -> Build Docker -> Test -> Lint",
+            "Lint & Type Check -> Test Suite -> Build & Push Docker -> Production Deployment",
+            "Build Docker -> Deploy -> Test -> Lint",
+            "Order does not matter."
+          ],
+          correctIndex: 1,
+          explanation: "Executing fast static checks (linting/type checking) first ensures invalid code fails immediately before running expensive test suites or container builds."
+        },
+        {
+          question: "What is the primary operational risk of bypassing CI quality gates and deploying directly from developer laptops?",
+          options: [
+            "It uses too much electricity.",
+            "It introduces environment drift, un-tested code, security vulnerabilities, and un-tracked changes into live production systems.",
+            "GitHub disables the account.",
+            "It formats Python files."
+          ],
+          correctIndex: 1,
+          explanation: "Bypassing CI/CD introduces environment drift, unverified bugs, and un-audited security vulnerabilities into production."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Where are declarative GitHub Actions workflow YAML files stored in a git repository?",
+      options: [
+        "`.github/workflows/`",
+        "`/workflows/`",
+        "`.actions/`",
+        "`/ci/`"
+      ],
+      correctIndex: 0,
+      explanation: "GitHub Actions parses workflow YAML files located inside `.github/workflows/`."
+    },
+    {
+      question: "How do you force a GitHub Actions job to run ONLY after a prerequisite job completes successfully?",
+      options: [
+        "Use `needs: [prerequisite_job_name]`",
+        "Use `after: prerequisite_job_name`",
+        "Jobs always run sequentially.",
+        "Use `depends: prerequisite_job_name`"
+      ],
+      correctIndex: 0,
+      explanation: "The `needs:` keyword establishes sequential dependencies between workflow jobs."
+    },
+    {
+      question: "Which pytest-cov flag instructs CI to fail the build if test coverage drops below 85%?",
+      options: [
+        "`--cov-fail-under=85`",
+        "`--min-cov=85`",
+        "`--strict-coverage=85`",
+        "`--assert-coverage=85`"
+      ],
+      correctIndex: 0,
+      explanation: "`--cov-fail-under=85` fails the test run if coverage is below 85%."
+    },
+    {
+      question: "How does GitHub Actions provide ephemeral database instances for integration testing during CI jobs?",
+      options: [
+        "By connecting to developer laptops.",
+        "Via `services` containers, which launch ephemeral Docker database instances on the runner VM network.",
+        "By converting SQL to JSON.",
+        "By mock string replacing."
+      ],
+      correctIndex: 1,
+      explanation: "The `services:` block launches ephemeral containers (like PostgreSQL or Redis) on the runner network during the job."
+    },
+    {
+      question: "Why should every production container image be tagged with a unique Git commit SHA hash (e.g., `:sha-8f3a9a12`)?",
+      options: [
+        "To shrink image size.",
+        "Unique SHA tags guarantee immutability, allowing exact code traceability and precise version rollbacks if a deployment fails.",
+        "Docker requires SHA tags.",
+        "To format code."
+      ],
+      correctIndex: 1,
+      explanation: "Unique SHA tags ensure immutable image traceability, making rollbacks to exact code commits reliable."
+    },
+    {
+      question: "How do you configure a GitHub Actions deployment job to require manual reviewer approval before executing?",
+      options: [
+        "Use `manual_approval: true`.",
+        "Link the job to a protected GitHub `environment:` (e.g., `environment: production`) that has Required Reviewers enabled in repository settings.",
+        "Write a sleep loop.",
+        "Approvals are impossible."
+      ],
+      correctIndex: 1,
+      explanation: "Binding a job to a protected GitHub Environment enforces protection rules like required reviewer approvals."
+    },
+    {
+      question: "What text replacement does GitHub Actions automatically apply when a workflow step outputs a secret value to logs?",
+      options: [
+        "Replaces it with `***`",
+        "Replaces it with `REDACTED`",
+        "Deletes the log file",
+        "Halts the runner"
+      ],
+      correctIndex: 0,
+      explanation: "GitHub Actions automatically redacts and masks all registered secrets with `***` in terminal outputs."
+    },
+    {
+      question: "In what sequence should CI/CD pipeline stages be ordered to fail fast?",
+      options: [
+        "Lint & Type Check -> Test Suite -> Build & Push Docker -> Production Deployment",
+        "Deploy -> Test -> Build -> Lint",
+        "Build -> Deploy -> Test -> Lint",
+        "Order does not matter."
+      ],
+      correctIndex: 0,
+      explanation: "Running fast static checks first ensures invalid code fails immediately before executing expensive test suites or container builds."
+    }
+  ],
+  project: {
+    name: "Enterprise Complete CI/CD Pipeline & Quality Gate Suite (Phase 1 Project)",
+    goal: "Build a complete enterprise CI/CD workflow specification featuring Ruff linting, mypy strict type checking, pytest execution with PostgreSQL service containers and 85% coverage enforcement, Buildx Docker image publishing to ghcr.io, and protected production deployment gates.",
+    brief: "Your cloud platform team requires a complete CI/CD workflow specification (`cicd_pipeline_suite.py`). You will write a comprehensive GitHub Actions workflow (`.github/workflows/ci.yml`) featuring parallel quality gates, an integration test job with a PostgreSQL service container, a Docker Buildx image publishing step, and a protected production deployment job with encrypted secrets.",
+    steps: [
+      "Create a workspace script file named `cicd_pipeline_suite.py`.",
+      "Write a complete GitHub Actions YAML workflow string containing `quality-gate`, `test-suite`, `build-and-push-docker`, and `deploy-production` jobs.",
+      "Configure the `test-suite` job with a `services:` block launching `postgres:15-alpine`.",
+      "Configure `pytest --cov=src --cov-fail-under=85` in the test step.",
+      "Configure `docker/build-push-action` pushing SHA-tagged images to `ghcr.io`.",
+      "Configure `environment: production` and `secrets.KUBE_CONFIG_PRODUCTION` in the deployment job.",
+      "Write a Python audit script that parses and verifies the workflow YAML against enterprise compliance rules.",
+      "Run `python3 cicd_pipeline_suite.py` in your terminal and print a compliance audit report."
+    ],
+    acceptance: [
+      "Workflow YAML specifies Quality Gate, Test Suite, Docker Build, and Deploy jobs.",
+      "Test job configures an ephemeral PostgreSQL service container.",
+      "Test step enforces `--cov-fail-under=85`.",
+      "Docker job tags and pushes images to `ghcr.io`.",
+      "Deploy job uses `environment: production` and GitHub Secrets.",
+      "Executing `python3 cicd_pipeline_suite.py` outputs a clean audit report and exits with status code 0."
+    ],
+    stretch: [
+      "Add a Slack / Discord webhook notification step on pipeline failures using `secrets.SLACK_WEBHOOK`.",
+      "Annotate all verification functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
