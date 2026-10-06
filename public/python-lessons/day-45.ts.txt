@@ -1,0 +1,782 @@
+/**
+ * DAY 45: Phase 1 · Core Python — FastAPI Fundamentals
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1FastApiFundamentals = {
+  day: 45,
+  topic: "Phase 1 · Core Python — FastAPI Fundamentals",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "FastAPI Architecture, ASGI, and Route Declarations",
+      durationMinutes: 16,
+      explanation: `
+<b>High-Performance Asynchronous Python Web APIs</b><br/>
+FastAPI is a modern, high-performance web framework for building APIs with Python 3.8+ based on standard Python type hints. Built on top of **Starlette** (for web routing and ASGI execution) and **Pydantic** (for data validation and serialization), FastAPI is one of the fastest Python frameworks available.<br/><br/>
+
+<b>1. The ASGI Paradigm (Asynchronous Server Gateway Interface):</b><br/>
+Legacy Python web frameworks (like Django or Flask) rely on WSGI (Web Server Gateway Interface), which processes requests synchronously (one thread per request). FastAPI uses **ASGI** (powered by ASGI servers like <b>Uvicorn</b>), enabling non-blocking asynchronous event loops that handle thousands of concurrent requests on a single thread!<br/><br/>
+
+<b>2. Core FastAPI App and Operation Decorators:</b><br/>
+You instantiate the root application object and declare route operations using path decorators (`@app.get()`, `@app.post()`, `@app.patch()`, `@app.delete()`):<br/>
+<pre><code>from fastapi import FastAPI
+
+app = FastAPI(title="Logistics API", version="1.0.0")
+
+@app.get("/api/v1/health")
+async def get_health_status():
+    return {"status": "ONLINE", "database": "CONNECTED"}</code></pre>
+      `,
+      diagram: `
+FASTAPI ASGI ARCHITECTURE:
+
+  Incoming Client Requests (HTTP / WebSockets)
+                      |
+                      v
+  +--------------------------------------------------------------+
+  |              Uvicorn ASGI High-Speed Web Server              |
+  |               (Async Event Loop - Non-blocking)              |
+  +--------------------------------------------------------------+
+                      |
+                      v
+  +--------------------------------------------------------------+
+  |                     FastAPI Framework                        |
+  |  ├── Starlette (High-speed ASGI Web Routing)                 |
+  |  └── Pydantic  (Type-hint Data Validation & OpenAPI Specs)   |
+  +--------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: FastAPI App Instance and Route Operations
+# ==============================================================================
+
+from fastapi import FastAPI
+import uvicorn
+
+# 1. Instantiate root FastAPI application
+app = FastAPI(
+    title="Enterprise Logistics API",
+    description="High-performance async API for global parcel dispatch",
+    version="1.0.0"
+)
+
+# 2. Route Operation: GET /api/v1/health
+@app.get("/api/v1/health", tags=["System"])
+async def check_api_health() -> dict[str, str]:
+    """Health check endpoint returning system status."""
+    return {"status": "OPERATIONAL", "service": "Logistics Dispatch Engine"}
+
+
+# 3. Route Operation: GET /api/v1/info
+@app.get("/api/v1/info", tags=["System"])
+def get_service_info() -> dict[str, str | int]:
+    """Synchronous route endpoint demonstrating FastAPI support for standard def functions."""
+    return {"service_name": "ParcelRouter", "active_workers": 4}
+
+print("--- BEGINNER: FastAPI Application Instantiated ---")
+print("Routes registered: /api/v1/health, /api/v1/info")
+      `,
+      keyTakeaways: [
+        "FastAPI is built on Starlette (ASGI web routing) and Pydantic (data validation).",
+        "ASGI servers like Uvicorn provide non-blocking asynchronous concurrency.",
+        "Declare route operations using HTTP decorators: `@app.get()`, `@app.post()`, `@app.patch()`, `@app.delete()`.",
+        "FastAPI supports both `async def` and standard `def` route handler functions."
+      ],
+      commonMistakes: [
+        "<b>Blocking the async event loop with synchronous I/O inside `async def`:</b> Performing long-running synchronous database queries or `time.sleep()` inside an `async def` route blocks the entire Uvicorn event loop! Use `def` for synchronous functions or `async` drivers.",
+        "<b>Forgetting that route order matters:</b> Defining a static path route (`/parcels/search`) below a dynamic path parameter route (`/parcels/{id}`) causes the dynamic route to intercept the search path!"
+      ],
+      quizzes: [
+        {
+          question: "Which ASGI web server is commonly used to run FastAPI applications in high-concurrency production environments?",
+          options: [
+            "Gunicorn WSGI",
+            "Uvicorn",
+            "Apache Mod_WSGI",
+            "Nginx Static"
+          ],
+          correctIndex: 1,
+          explanation: "Uvicorn is a lightning-fast ASGI server implementation used to execute asynchronous FastAPI applications."
+        },
+        {
+          question: "What happens if you execute a blocking synchronous I/O call (e.g. `time.sleep(5)`) directly inside an `async def` FastAPI route function?",
+          options: [
+            "FastAPI automatically moves the function to a background process.",
+            "It blocks the single-threaded async event loop, preventing all other concurrent requests from being processed during those 5 seconds.",
+            "FastAPI raises a `SyntaxError`.",
+            "It runs on the GPU."
+          ],
+          correctIndex: 1,
+          explanation: "Blocking operations inside `async def` freeze the async event loop thread. Synchronous I/O should be run in standard `def` route functions or background worker threads."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Path Parameters, Query Parameters, and Validation",
+      durationMinutes: 18,
+      explanation: `
+<b>Declaring and Validating URL Input Parameters</b><br/>
+Web APIs ingest input data from URLs through **Path Parameters** (identifying specific resources) and **Query Parameters** (filtering, sorting, and paginating collections). FastAPI uses Python type annotations to validate and parse URL parameters automatically.<br/><br/>
+
+<b>1. Path Parameters (`/resources/{id}`):</b><br/>
+Path parameters capture variable segments from the URL path. Declare the parameter in the path string and annotate its type in the function arguments:<br/>
+<pre><code>from fastapi import Path
+
+@app.get("/api/v1/parcels/{tracking_id}")
+async def get_parcel(
+    tracking_id: str = Path(..., title="Package Tracking ID", regex=r"^TRK-\\d{4}$")
+):
+    return {"tracking_id": tracking_id}</code></pre><br/>
+
+<b>2. Query Parameters (`?limit=10&page=1`):</b><br/>
+Any function argument that is **not** declared in the URL path is automatically parsed as a Query Parameter!<br/>
+<pre><code>from fastapi import Query
+
+@app.get("/api/v1/parcels")
+async def list_parcels(
+    limit: int = Query(20, ge=1, le=100),
+    status: str | None = Query(None)
+):
+    return {"limit": limit, "status": status}</code></pre><br/>
+
+<b>Automatic Validation Enforcement:</b><br/>
+If a client passes an invalid type (e.g. `?limit=invalid_number`), FastAPI automatically intercepts the error and returns a clean `HTTP 422 Unprocessable Entity` JSON response detailing the exact validation failure!
+      `,
+      diagram: `
+FASTAPI URL PARAMETER PARSING ENGINE:
+
+  Incoming URL: GET /api/v1/parcels/TRK-9001?limit=50&status=IN_TRANSIT
+                                  |                 |
+            +---------------------+-----------------+
+            |                                       |
+            v                                       v
+  Path Parameter:                          Query Parameters:
+  tracking_id = "TRK-9001"                 limit = 50 (validated integer >= 1)
+  (Validated via regex)                    status = "IN_TRANSIT"
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Path Parameters and Query Parameters with Validation
+# ==============================================================================
+
+from fastapi import FastAPI, Path, Query
+
+app = FastAPI()
+
+# ------------------------------------------------------------------------------
+# Route 1: Path Parameter with Validation (Path)
+# ------------------------------------------------------------------------------
+
+@app.get("/api/v1/parcels/{tracking_id}", tags=["Parcels"])
+async def get_parcel_by_id(
+    tracking_id: str = Path(
+        ...,
+        title="Tracking Identifier",
+        description="Must follow standard TRK-XXXX format",
+        pattern=r"^TRK-\d{4}$"
+    )
+) -> dict[str, str]:
+    """Retrieves a single parcel resource by its path parameter ID."""
+    return {"tracking_id": tracking_id, "status": "IN_TRANSIT"}
+
+
+# ------------------------------------------------------------------------------
+# Route 2: Query Parameters with Numeric Constraints (Query)
+# ------------------------------------------------------------------------------
+
+@app.get("/api/v1/parcels", tags=["Parcels"])
+async def list_parcels_collection(
+    limit: int = Query(20, ge=1, le=100, description="Page limit (1-100)"),
+    page: int = Query(1, ge=1, description="Page index"),
+    hub: str | None = Query(None, min_length=3, description="Optional hub filter")
+) -> dict[str, str | int | None]:
+    """Lists parcel collections supporting query parameter pagination and filtering."""
+    return {
+        "limit": limit,
+        "page": page,
+        "hub_filter": hub,
+        "offset": (page - 1) * limit
+    }
+
+print("--- BEGINNER: Path & Query Parameter Routes Defined ---")
+print("FastAPI automatically enforces ge=1, le=100, and pattern regexes!")
+      `,
+      keyTakeaways: [
+        "Path parameters capture URL segments; Query parameters parse key-value pairs following `?`.",
+        "FastAPI validates parameters using type hints (`int`, `float`, `str`).",
+        "Use `Path(...)` for path parameter constraints and `Query(...)` for query parameter constraints.",
+        "Invalid parameter inputs automatically trigger `HTTP 422 Unprocessable Entity` JSON responses."
+      ],
+      commonMistakes: [
+        "<b>Defining route paths in the wrong order:</b> Placing `@app.get(\"/parcels/{id}\")` above `@app.get(\"/parcels/search\")`, causing the string `\"search\"` to be captured as an `{id}`!",
+        "<b>Using `Optional` without `= None` or `Query(None)`:</b> Declaring `status: str | None` without setting a default value causes FastAPI to treat `status` as a mandatory query parameter."
+      ],
+      quizzes: [
+        {
+          question: "How does FastAPI distinguish between a Path Parameter and a Query Parameter in a route function signature?",
+          options: [
+            "Path parameters require `@path` decorators.",
+            "Any function argument declared in the route path template string (`/items/{id}`) is a Path Parameter; all other arguments are automatically Query Parameters.",
+            "Query parameters must always start with an uppercase letter.",
+            "Path parameters can only be integers."
+          ],
+          correctIndex: 1,
+          explanation: "Arguments appearing in the URL path string (`{id}`) are Path Parameters. All other function arguments become Query Parameters."
+        },
+        {
+          question: "What HTTP status code does FastAPI automatically return when a client passes invalid data types for path or query parameters (e.g. passing `limit=abc`)?",
+          options: [
+            "`400 Bad Request`",
+            "`404 Not Found`",
+            "`422 Unprocessable Entity`",
+            "`500 Internal Server Error`"
+          ],
+          correctIndex: 2,
+          explanation: "FastAPI automatically returns `422 Unprocessable Entity` with a detailed JSON response describing data validation failures."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Request Bodies and Response Models with Pydantic",
+      durationMinutes: 20,
+      explanation: `
+<b>Data Contracts and Schema Validation via Pydantic Models</b><br/>
+When clients send JSON payloads via `POST`, `PUT`, or `PATCH` requests, web APIs must parse, validate, and convert the JSON payload into strongly typed objects. FastAPI integrates seamlessly with **Pydantic** to handle request body parsing and response serialization.<br/><br/>
+
+<b>1. Pydantic `BaseModel` for Request Bodies:</b><br/>
+Define a Pydantic model class inheriting from `BaseModel` to specify the JSON schema contract:<br/>
+<pre><code>from pydantic import BaseModel, Field
+
+class CreateParcelSchema(BaseModel):
+    tracking_id: str = Field(..., pattern=r"^TRK-\\d{4}$")
+    weight_lbs: float = Field(..., gt=0.0)
+    destination: str</code></pre><br/>
+
+FastAPI automatically reads the HTTP request body, parses the JSON, validates all fields against the Pydantic schema, and instantiates the model object!<br/><br/>
+
+<b>2. Response Serialization with `response_model`:</b><br/>
+Pass `response_model=OutputSchema` in the route operation decorator to filter and serialize output data automatically:<br/>
+<pre><code>@app.post("/api/v1/parcels", response_model=ParcelResponseSchema, status_code=201)
+async def create_parcel(payload: CreateParcelSchema):
+    # Process payload and return response object
+    return created_parcel</code></pre><br/>
+
+<b>Benefits of `response_model`:</b>
+<ul>
+  <li>Filters out sensitive internal fields (like database passwords or internal hashes) before sending JSON back to clients.</li>
+  <li>Ensures response bodies strictly match documented OpenAPI schemas.</li>
+</ul>
+      `,
+      diagram: `
+PYDANTIC REQUEST/RESPONSE LIFECYCLE:
+
+  HTTP POST JSON Body: {"tracking_id": "TRK-9001", "weight_lbs": 14.5}
+                             |
+                             v
+  [ Pydantic Request Model Validation (CreateParcelSchema) ]
+  - Checks types, regex patterns, gt=0.0 bounds
+                             |
+                             v
+  [ Route Handler Logic: create_parcel(payload) ]
+                             |
+                             v
+  [ Pydantic Response Model Serialization (response_model=ParcelResponseSchema) ]
+  - Filters sensitive internal attributes & formats JSON response!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Request Bodies and Response Models with Pydantic
+# ==============================================================================
+
+from fastapi import FastAPI, status
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+# ------------------------------------------------------------------------------
+# 1. Pydantic Request Model (Input Contract)
+# ------------------------------------------------------------------------------
+
+class CreateParcelRequest(BaseModel):
+    tracking_id: str = Field(
+        ...,
+        pattern=r"^TRK-\d{4}$",
+        examples=["TRK-1001"]
+    )
+    destination_city: str = Field(..., min_length=2)
+    weight_lbs: float = Field(..., gt=0.0, description="Weight in lbs must be > 0.0")
+    internal_notes: str | None = Field(default=None, description="Internal operator notes")
+
+
+# ------------------------------------------------------------------------------
+# 2. Pydantic Response Model (Output Contract - Masks internal_notes)
+# ------------------------------------------------------------------------------
+
+class ParcelResponse(BaseModel):
+    tracking_id: str
+    destination_city: str
+    weight_lbs: float
+    status: str = "QUEUED"
+
+
+# ------------------------------------------------------------------------------
+# 3. Route Operation with Request Payload and response_model Filter
+# ------------------------------------------------------------------------------
+
+@app.post(
+    "/api/v1/parcels",
+    response_model=ParcelResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Parcels"]
+)
+async def create_new_parcel(payload: CreateParcelRequest) -> dict:
+    """
+    Creates a new parcel record.
+    FastAPI parses JSON, validates payload, and filters internal_notes out of response!
+    """
+    # Simulate DB persistence
+    created_record = {
+        "tracking_id": payload.tracking_id,
+        "destination_city": payload.destination_city,
+        "weight_lbs": payload.weight_lbs,
+        "status": "QUEUED",
+        "internal_notes": payload.internal_notes # Filtered out by response_model!
+    }
+    return created_record
+
+print("--- BEGINNER: Pydantic Request/Response Models Configured ---")
+print("Response model 'ParcelResponse' will automatically filter out 'internal_notes'.")
+      `,
+      keyTakeaways: [
+        "Inherit from Pydantic's `BaseModel` to define JSON request body schemas.",
+        "FastAPI parses JSON bodies, validates fields, and converts data into typed Pydantic models automatically.",
+        "Use `response_model=Schema` in path decorators to serialize output JSON and filter sensitive fields.",
+        "Use `Field(...)` to attach validation constraints (`gt`, `ge`, `min_length`, `pattern`) to model attributes."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `response_model` when returning ORM or internal objects:</b> Accidentally leaking internal database fields (like `hashed_password` or internal flags) to public clients.",
+        "<b>Using legacy Pydantic v1 syntax in modern FastAPI:</b> Using `regex=` instead of `pattern=` or `Field(default_factory=...)` syntax in Pydantic v2."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary operational function of specifying `response_model=ParcelResponse` in a FastAPI path operation decorator?",
+          options: [
+            "It runs the function in background threads.",
+            "It filters and serializes the returned data according to the specified Pydantic schema, removing un-declared or sensitive internal fields before returning JSON to the client.",
+            "It encrypts the response body using RSA.",
+            "It converts HTML to PDF."
+          ],
+          correctIndex: 1,
+          explanation: "`response_model` ensures response data is validated and filtered against the output schema, masking un-declared or private fields."
+        },
+        {
+          question: "Which Pydantic function is used to attach validation constraints (e.g. `gt=0.0`, `min_length=3`) to model fields?",
+          options: [
+            "`Validate()`",
+            "`Field()`",
+            "`Column()`",
+            "`Constraint()`"
+          ],
+          correctIndex: 1,
+          explanation: "`pydantic.Field(...)` is used to attach metadata, descriptions, defaults, and validation constraints to model fields."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Dependency Injection System (Depends)",
+      durationMinutes: 18,
+      explanation: `
+<b>Decoupling Cross-Cutting Concerns via `Depends`</b><br/>
+FastAPI features a built-in, extremely powerful **Dependency Injection** system. Dependency Injection allows you to separate cross-cutting infrastructure concerns—such as database session management, authentication token verification, query parameter parsing, and rate limiting—from your core business logic.<br/><br/>
+
+<b>1. What is a Dependency?</b><br/>
+A dependency is simply a function (or callable class) that executes before your route function runs. Its return value is injected directly into your route function parameters!<br/><br/>
+
+<b>2. The `Depends` Function:</b><br/>
+Use `Depends(dependency_function)` in your route parameters:<br/>
+<pre><code>from fastapi import Depends, Header, HTTPException
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != "SECRET_B2B_KEY_99":
+        raise HTTPException(status_code=401, detail="Invalid X-API-Key")
+    return x_api_key
+
+@app.get("/api/v1/secure-data")
+async def get_secure_data(api_key: str = Depends(verify_api_key)):
+    return {"message": "Access Granted", "key_used": api_key}</code></pre><br/>
+
+<b>Why use Dependency Injection?</b>
+<ul>
+  <li><b>Code Reuse:</b> Share authentication or database session logic across 100+ endpoints effortlessly.</li>
+  <li><b>Testability:</b> Easily override dependencies during unit testing (`app.dependency_overrides`) with mock objects!</li>
+  <li><b>Automatic OpenAPI Integration:</b> Dependencies declaring security requirements automatically update Swagger UI documentation!</li>
+</ul>
+      `,
+      diagram: `
+FASTAPI DEPENDENCY INJECTION FLOW:
+
+  Client Request -> GET /secure-data (Header: X-API-Key: SECRET_KEY)
+                            |
+                            v
+  [ Dependency: verify_api_key(x_api_key) ]
+  - Validates Header
+  - Returns authenticated user/key (or raises HTTPException 401)
+                            |
+                            v  Injects return value into parameter!
+  [ Route Function: get_secure_data(api_key="SECRET_KEY") ]
+  - Executes core business logic cleanly!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: FastAPI Dependency Injection System
+# ==============================================================================
+
+from fastapi import FastAPI, Depends, Header, HTTPException, status
+
+app = FastAPI()
+
+# ------------------------------------------------------------------------------
+# 1. Dependency 1: Common Pagination Query Parameters
+# ------------------------------------------------------------------------------
+
+def common_pagination_params(
+    limit: int = 20,
+    page: int = 1
+) -> dict[str, int]:
+    """Reusable dependency for collection pagination."""
+    return {"limit": limit, "page": page, "offset": (page - 1) * limit}
+
+
+# ------------------------------------------------------------------------------
+# 2. Dependency 2: Header Security Authenticator
+# ------------------------------------------------------------------------------
+
+def verify_bearer_token(authorization: str | None = Header(None)) -> str:
+    """Reusable dependency verifying Authorization Bearer tokens."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or malformed Bearer token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    token = authorization.split(" ")[1]
+    if token != "VALID_SECRET_JWT_99":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Bearer token credential"
+        )
+    return "USER_MARCUS_101" # Return authenticated User ID
+
+
+# ------------------------------------------------------------------------------
+# 3. Route Operations Consuming Injected Dependencies
+# ------------------------------------------------------------------------------
+
+@app.get("/api/v1/protected-parcels", tags=["Parcels"])
+async def list_protected_parcels(
+    pagination: dict = Depends(common_pagination_params),
+    current_user_id: str = Depends(verify_bearer_token)
+) -> dict:
+    """
+    Route consuming two independent dependencies: pagination and security authentication.
+    """
+    return {
+        "authenticated_user": current_user_id,
+        "pagination": pagination,
+        "data": ["TRK-1001", "TRK-1002"]
+    }
+
+print("--- BEGINNER: Dependency Injection Configured ---")
+print("Route 'list_protected_parcels' uses Depends(common_pagination_params) and Depends(verify_bearer_token).")
+      `,
+      keyTakeaways: [
+        "Dependency Injection decouples cross-cutting concerns (auth, DB sessions) from business logic.",
+        "Declare dependencies using `Depends(dependency_callable)` in route parameters.",
+        "Dependencies run before the route function, and their return values are injected directly.",
+        "Override dependencies during unit testing using `app.dependency_overrides[dep] = mock_dep`."
+      ],
+      commonMistakes: [
+        "<b>Executing dependency functions manually inside route bodies:</b> Calling `verify_token()` directly inside route code instead of using `Depends(verify_token)`, losing automatic OpenAPI documentation and test override support.",
+        "<b>Catching `HTTPException` inside dependencies:</b> Letting `HTTPException` propagate is correct; FastAPI catches `HTTPException` automatically and converts it to JSON responses."
+      ],
+      quizzes: [
+        {
+          question: "How do you inject the return value of a dependency function `get_db_session` into a FastAPI route parameter?",
+          options: [
+            "`db = get_db_session()`",
+            "`db = Depends(get_db_session)`",
+            "`db = Inject(get_db_session)`",
+            "`@app.use(get_db_session)`"
+          ],
+          correctIndex: 1,
+          explanation: "`Depends(get_db_session)` instructs FastAPI to execute the dependency function and inject its return value into the parameter."
+        },
+        {
+          question: "What is a major architectural advantage of using FastAPI's dependency injection system when writing unit tests?",
+          options: [
+            "It compiles Python code into C binaries.",
+            "It allows replacing production dependencies (like live database connections) with mock dependencies during testing using `app.dependency_overrides`.",
+            "It disables API security automatically.",
+            "It formats JSON outputs."
+          ],
+          correctIndex: 1,
+          explanation: "`app.dependency_overrides` allows swapping out database or authentication dependencies with mock objects effortlessly during testing."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Automatic OpenAPI Documentation and Interactive UI",
+      durationMinutes: 8,
+      explanation: `
+<b>Self-Documenting Standards: Swagger UI and ReDoc</b><br/>
+One of FastAPI's most popular features is its automatic generation of interactive API documentation standard compliance. FastAPI generates an **OpenAPI (formerly Swagger)** schema specification for your entire API automatically based on your Pydantic models, type hints, and route definitions.<br/><br/>
+
+<b>1. Built-in Interactive Documentation Endpoints:</b>
+<ul>
+  <li><b>Swagger UI (<code>/docs</code>):</b> Interactive browser console allowing developers to test API endpoints, inspect request/response schemas, and send live HTTP requests directly from the browser!</li>
+  <li><b>ReDoc (<code>/redoc</code>):</b> Clean, human-readable documentation UI optimized for technical specification reading.</li>
+  <li><b>OpenAPI Schema (<code>/openapi.json</code>):</b> The raw JSON OpenAPI 3.0 specification file.</li>
+</ul>
+
+<b>2. Enhancing API Documentation Metadata:</b><br/>
+Customize auto-generated documentation directly in code:
+<ul>
+  <li>Use docstrings on route functions (appears as endpoint descriptions in `/docs`).</li>
+  <li>Use `tags=["Group"]` in path decorators to organize endpoints into visual sections.</li>
+  <li>Use `summary="Short Summary"` and `description="Detailed explanation"` in route decorators.</li>
+  <li>Use `Field(description="...", examples=[...])` in Pydantic models to populate interactive request body examples!</li>
+</ul>
+      `,
+      diagram: `
+AUTOMATIC OPENAPI DOCUMENTATION GENERATION:
+
+  FastAPI Routes + Type Hints + Pydantic Models
+                        |
+                        v  Auto-generates OpenAPI 3.0 Schema
+                 /openapi.json
+                        |
+            +-----------+-----------+
+            |                       |
+            v                       v
+    Interactive Swagger UI     ReDoc Documentation
+          (/docs)                    (/redoc)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: OpenAPI Interactive Documentation Customization
+# ==============================================================================
+
+from fastapi import FastAPI, Path, status
+from pydantic import BaseModel, Field
+
+# Customize root API metadata displayed at /docs
+app = FastAPI(
+    title="Global Logistics Express API",
+    description="""
+    Enterprise API platform for real-time parcel dispatching and SLA monitoring.
+
+    ## Features
+    * **Parcels**: Create, retrieve, and track global parcels.
+    * **Security**: Bearer token authentication required for dispatch actions.
+    """,
+    version="2.1.0",
+    docs_url="/docs", # Customize Swagger UI path
+    redoc_url="/redoc" # Customize ReDoc path
+)
+
+
+class ParcelDetailResponse(BaseModel):
+    tracking_id: str = Field(..., description="Unique barcode tracking identifier", examples=["TRK-9001"])
+    status: str = Field(..., description="Current shipment status", examples=["IN_TRANSIT"])
+    destination: str = Field(..., description="Target destination city", examples=["CHICAGO"])
+
+
+@app.get(
+    "/api/v1/parcels/{tracking_id}",
+    response_model=ParcelDetailResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["Parcels Operation"],
+    summary="Retrieve Parcel Status",
+    response_description="Detailed parcel status and current location"
+)
+async def get_parcel_details(
+    tracking_id: str = Path(..., description="Target tracking ID", pattern=r"^TRK-\d{4}$")
+):
+    """
+    Detailed docstring for endpoint.
+
+    * **tracking_id**: Must follow TRK-XXXX format.
+    * Returns 200 OK with parcel record or 404 if missing.
+    """
+    return {
+        "tracking_id": tracking_id,
+        "status": "IN_TRANSIT",
+        "destination": "CHICAGO"
+    }
+
+print("--- LESSON 5: OpenAPI Documentation Endpoints Ready ---")
+print("Interactive Swagger UI available at: http://localhost:8000/docs")
+print("ReDoc Specification available at  : http://localhost:8000/redoc")
+      `,
+      keyTakeaways: [
+        "FastAPI automatically generates OpenAPI schemas (`/openapi.json`) from type hints and Pydantic models.",
+        "Interactive Swagger UI is accessible at `/docs`; ReDoc is accessible at `/redoc`.",
+        "Function docstrings become endpoint descriptions in `/docs`.",
+        "Use `tags=[...]`, `summary`, and `Field(examples=[...])` to produce enterprise-grade interactive documentation."
+      ],
+      commonMistakes: [
+        "<b>Exposing `/docs` in secure internal production environments without authorization:</b> Disabling or protecting `/docs` (`docs_url=None`) in public production servers if internal schema exposure is a security policy violation."
+      ],
+      quizzes: [
+        {
+          question: "At which URL path does FastAPI automatically serve the interactive Swagger UI browser documentation console by default?",
+          options: [
+            "`/swagger`",
+            "`/docs`",
+            "`/api/help`",
+            "`/redoc`"
+          ],
+          correctIndex: 1,
+          explanation: "FastAPI serves the interactive Swagger UI documentation console at `/docs` by default."
+        },
+        {
+          question: "How do you group related API endpoints into visual sections in the `/docs` Swagger UI interface?",
+          options: [
+            "Use the `group=\"...\"` parameter.",
+            "Use the `tags=[\"Section Name\"]` parameter in path operation decorators.",
+            "Organize route files in separate folders.",
+            "Use class inheritance."
+          ],
+          correctIndex: 1,
+          explanation: "Passing `tags=[\"Section Name\"]` in path operation decorators groups endpoints visually under that tag section in `/docs`."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which high-speed ASGI web server is standard for executing asynchronous FastAPI web applications?",
+      options: [
+        "Gunicorn WSGI",
+        "Uvicorn",
+        "Apache",
+        "Nginx Static"
+      ],
+      correctIndex: 1,
+      explanation: "Uvicorn is a high-speed ASGI web server for executing asynchronous FastAPI applications."
+    },
+    {
+      question: "How does FastAPI distinguish a Path Parameter from a Query Parameter in a route function signature?",
+      options: [
+        "Path parameters must be integers.",
+        "Parameters declared in the route path string (`/items/{id}`) are Path Parameters; all other function parameters become Query Parameters.",
+        "Query parameters require special class decorators.",
+        "Path parameters must start with uppercase letters."
+      ],
+      correctIndex: 1,
+      explanation: "Arguments in the route path string (`{id}`) are Path Parameters. All other function arguments become Query Parameters."
+    },
+    {
+      question: "What HTTP status code does FastAPI automatically return when payload input data fails Pydantic schema validation?",
+      options: [
+        "`400 Bad Request`",
+        "`404 Not Found`",
+        "`422 Unprocessable Entity`",
+        "`500 Internal Server Error`"
+      ],
+      correctIndex: 2,
+      explanation: "FastAPI returns `422 Unprocessable Entity` on payload data validation failures."
+    },
+    {
+      question: "Which Pydantic class should request body schemas inherit from?",
+      options: [
+        "`DataClass`",
+        "`BaseModel`",
+        "`SchemaModel`",
+        "`APIContract`"
+      ],
+      correctIndex: 1,
+      explanation: "Request and response body schemas inherit from `pydantic.BaseModel`."
+    },
+    {
+      question: "What parameter in a FastAPI path decorator filters output data and removes un-declared internal fields before returning JSON?",
+      options: [
+        "`output_filter`",
+        "`response_model`",
+        "`serialize_as`",
+        "`json_schema`"
+      ],
+      correctIndex: 1,
+      explanation: "`response_model` filters and serializes output JSON according to the specified Pydantic model."
+    },
+    {
+      question: "How do you declare a reusable dependency in a FastAPI route function parameter?",
+      options: [
+        "`param = Inject(dependency_func)`",
+        "`param = Depends(dependency_func)`",
+        "`param = Use(dependency_func)`",
+        "`@app.dependency(dependency_func)`"
+      ],
+      correctIndex: 1,
+      explanation: "`Depends(dependency_func)` injects dependency return values into route parameters."
+    },
+    {
+      question: "Where can developers access the interactive Swagger UI testing console for a running FastAPI application by default?",
+      options: [
+        "`/swagger`",
+        "`/docs`",
+        "`/help`",
+        "`/openapi`"
+      ],
+      correctIndex: 1,
+      explanation: "Swagger UI is served at `/docs` by default."
+    },
+    {
+      question: "How do function docstrings affect auto-generated OpenAPI documentation in FastAPI?",
+      options: [
+        "Docstrings are ignored.",
+        "Docstrings become endpoint descriptions in `/docs` and `/redoc`.",
+        "Docstrings are converted to database tables.",
+        "Docstrings raise syntax errors."
+      ],
+      correctIndex: 1,
+      explanation: "FastAPI parses route function docstrings and renders them as detailed Markdown endpoint descriptions in `/docs`."
+    }
+  ],
+  project: {
+    name: "Enterprise FastAPI Logistics Dispatch Engine (Phase 1 Final Project)",
+    goal: "Build a production-style FastAPI application featuring path and query validation, Pydantic request/response models, bearer token dependency injection, error handling, and auto-generated Swagger UI docs.",
+    brief: "Your web engineering team requires a high-performance FastAPI microservice (`fastapi_dispatch_app.py`). The microservice must define Pydantic models (`CreateParcelRequest`, `ParcelResponse`), enforce path/query parameter constraints, implement a security Bearer token dependency (`Depends(verify_token)`), expose RESTful CRUD operations (`GET`, `POST`, `PATCH`), and serve auto-generated OpenAPI documentation at `/docs`.",
+    steps: [
+      "Create a workspace script file named `fastapi_dispatch_app.py`.",
+      "Instantiate a `FastAPI` application with title, description, and version metadata.",
+      "Define Pydantic `BaseModel` schemas for requests (`CreateParcelRequest`) with `Field` validation constraints (`pattern`, `gt=0.0`).",
+      "Define a response model (`ParcelResponse`) that masks internal notes.",
+      "Write an authentication dependency function `verify_bearer_token(authorization: str = Header(...))` returning user identity.",
+      "Expose endpoints: `GET /api/v1/health`, `GET /api/v1/parcels` (with query pagination `limit`/`page`), `POST /api/v1/parcels` (with `response_model` and `Depends(verify_bearer_token)`).",
+      "Include a `__main__` execution block launching `uvicorn.run(app, host=\"127.0.0.1\", port=8000)`.",
+      "Run `python3 fastapi_dispatch_app.py` in your terminal and verify routes and Swagger UI documentation."
+    ],
+    acceptance: [
+      "FastAPI application launches and serves OpenAPI specs at `/openapi.json` and `/docs`.",
+      "Pydantic schemas enforce field validation constraints.",
+      "Dependency injection (`Depends`) enforces Bearer token authentication.",
+      "Response models (`response_model`) filter private model attributes from JSON outputs."
+    ],
+    stretch: [
+      "Add a `app.dependency_overrides` unit test using `starlette.testclient.TestClient` verifying `HTTP 201 Created` responses.",
+      "Annotate all route functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
