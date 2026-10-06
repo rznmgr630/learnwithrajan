@@ -1,0 +1,271 @@
+/**
+ * DAY 49: Phase 1 · Core Python — Asynchronous Python & asyncio
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1AsyncPython = {
+  day: 49,
+  topic: "Phase 1 · Core Python — Asynchronous Python & asyncio",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Synchronous vs. Asynchronous Execution and the Event Loop",
+      durationMinutes: 18,
+      explanation: `
+<b>High-Concurrency Non-Blocking I/O in Single-Threaded Python</b><br/>
+In traditional **Synchronous Execution**, Python executes statements sequentially. When a synchronous function performs network I/O or a database query (e.g., waiting 500 ms for an HTTP response), the executing thread **blocks** completely. The CPU sits idle during I/O waiting periods, unable to process other tasks.<br/><br/>
+
+**Asynchronous Execution (Concurrency via I/O Multiplexing)** allows a single thread to pause an active task during I/O waiting periods and switch execution context to process other pending tasks in parallel.<br/><br/>
+
+<b>1. The Heart of Async: The Event Loop:</b><br/>
+The **Event Loop** is an infinite loop that manages and distributes execution time across pending asynchronous tasks.
+<ul>
+  <li>When Task A hits an I/O operation (e.g., waiting for database results), it pauses itself and yields control back to the Event Loop.</li>
+  <li>The Event Loop instantly picks up Task B and executes it.</li>
+  <li>When Task A's database I/O completes, the Event Loop resumes Task A right where it paused!</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Short-Order Kitchen Chef vs. Slow Cook:</b><br/>
+Imagine a restaurant kitchen. A **synchronous chef** places a burger on the grill and stands still for 5 minutes staring at it until it cooks, refusing to take new orders. An **asynchronous chef** places the burger on the grill, sets a timer, immediately turns to chop vegetables for a second order, plates a third order, and returns to flip the burger the moment the timer rings!
+      `,
+      diagram: `
+SYNCHRONOUS BLOCKING vs ASYNCHRONOUS EVENT LOOP EXECUTION:
+
+  Synchronous Execution (Thread Blocked):
+  Task 1: [ Compute ] ===( WAIT 500ms FOR DB )===> [ Process Results ]
+  Task 2:                                         [ Compute ] ===( WAIT 500ms FOR DB )===>
+
+  Asynchronous Execution (Event Loop Cooperative Multitasking):
+  [ Event Loop ] ---> Task 1 [ Compute -> YIELDS I/O WAIT ]
+         |
+         +---------> Task 2 [ Compute -> YIELDS I/O WAIT ]
+         |
+         +---------> Task 1 RESUMED [ Process Results ] (0ms CPU Idle Time!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Synchronous vs Asynchronous Execution Mechanics
+# ==============================================================================
+
+import time
+import asyncio
+
+# ------------------------------------------------------------------------------
+# 1. Synchronous Sequential Execution (Blocking)
+# ------------------------------------------------------------------------------
+
+def sync_fetch_parcel(parcel_id: str) -> dict:
+    print(f"  [SYNC START] Fetching {parcel_id}...")
+    time.sleep(0.5) # BLOCKS thread completely for 500ms!
+    print(f"  [SYNC END] Completed {parcel_id}")
+    return {"id": parcel_id, "status": "DELIVERED"}
+
+def run_sync_batch():
+    start = time.perf_counter()
+    sync_fetch_parcel("TRK-101")
+    sync_fetch_parcel("TRK-102")
+    elapsed = time.perf_counter() - start
+    print(f"Sync Total Duration: {elapsed:.2f} seconds (0.5s + 0.5s = ~1.0s)\n")
+
+
+# ------------------------------------------------------------------------------
+# 2. Asynchronous Concurrent Execution (Non-Blocking via Event Loop)
+# ------------------------------------------------------------------------------
+
+async def async_fetch_parcel(parcel_id: str) -> dict:
+    print(f"  [ASYNC START] Fetching {parcel_id}...")
+    await asyncio.sleep(0.5) # YIELDS control back to Event Loop non-blocking!
+    print(f"  [ASYNC END] Completed {parcel_id}")
+    return {"id": parcel_id, "status": "DELIVERED"}
+
+async def run_async_batch():
+    start = time.perf_counter()
+    # Execute both I/O tasks concurrently on the Event Loop
+    results = await asyncio.gather(
+        async_fetch_parcel("TRK-101"),
+        async_fetch_parcel("TRK-102")
+    )
+    elapsed = time.perf_counter() - start
+    print(f"Async Total Duration: {elapsed:.2f} seconds (Concurrent I/O = ~0.5s!)")
+
+print("--- LESSON 1: Execution Benchmark Comparison ---")
+print("Executing Synchronous Batch:")
+run_sync_batch()
+
+print("Executing Asynchronous Concurrent Batch:")
+asyncio.run(run_async_batch())
+      `,
+      keyTakeaways: [
+        "Synchronous code blocks the CPU thread during I/O waiting periods; Asynchronous code yields control to run other tasks.",
+        "The **Event Loop** manages cooperative context switching across pending tasks on a single thread.",
+        "Async concurrency is designed for **I/O-bound tasks** (network calls, database queries, file reading), NOT CPU-bound math calculations.",
+        "`asyncio.gather()` executes multiple asynchronous coroutines concurrently."
+      ],
+      commonMistakes: [
+        "<b>Using synchronous blocking calls inside async code:</b> Calling `time.sleep()` or `requests.get()` inside an `async def` function blocks the Event Loop thread, freezing all concurrent tasks!",
+        "<b>Expecting async to speed up CPU-bound math:</b> Using async for heavy image processing or matrix multiplication. CPU-bound work requires multiprocessing, not asyncio."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary role of the Event Loop in Python's `asyncio` architecture?",
+          options: [
+            "To compile Python code into C binaries.",
+            "To manage, schedule, and distribute execution time across pending asynchronous tasks on a single thread during I/O wait times.",
+            "To encrypt database tables.",
+            "To format JSON strings."
+          ],
+          correctIndex: 1,
+          explanation: "The Event Loop manages context switching across pending tasks, executing other tasks whenever active tasks pause for I/O."
+        },
+        {
+          question: "What happens if you execute `time.sleep(5)` inside an `async def` function running on an active asyncio Event Loop?",
+          options: [
+            "FastAPI automatically moves the function to a background process.",
+            "It blocks the single-threaded Event Loop, preventing all other pending async tasks from executing for 5 seconds.",
+            "Python raises a `SyntaxError`.",
+            "It runs on background threads."
+          ],
+          correctIndex: 1,
+          explanation: "`time.sleep()` is a synchronous blocking call that freezes the entire Event Loop thread. Use `await asyncio.sleep()` instead."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Coroutines and Syntax Mechanics: async and await",
+      durationMinutes: 20,
+      explanation: `
+<b>Defining, Instantiating, and Awaiting Coroutine Objects</b><br/>
+To write asynchronous code in modern Python, you use the keywords <b><code>async</code></b> and <b><code>await</code></b>.<br/><br/>
+
+<b>1. What is a Coroutine?</b><br/>
+Declaring a function with <code>async def</code> turns it into a **Coroutine Function**:<br/>
+<code>async def fetch_status(): return "OK"</code><br/>
+Calling a coroutine function directly (`coro = fetch_status()`) **does NOT run the code immediately!** Instead, it creates and returns a **Coroutine Object**.<br/><br/>
+
+<b>2. The `await` Keyword:</b><br/>
+The <code>await</code> keyword pauses execution of the current coroutine until the awaited task yields a result, allowing the Event Loop to run other tasks in the meantime.<br/>
+<code>result = await async_database_query()</code><br/><br/>
+
+<b>3. Crucial Rule of `await`:</b><br/>
+You can **ONLY** use `await` inside functions declared with `async def`! Attempting to use `await` inside a standard synchronous `def` function raises a `SyntaxError`.
+      `,
+      diagram: `
+COROUTINE LIFECYCLE & AWAIT PAUSE/RESUME:
+
+  1. Define Coroutine Function: async def get_data(): ...
+  2. Call Function            : coro_obj = get_data()  (Creates Coroutine Object, 0 code executes!)
+  3. Await Execution         : result = await coro_obj
+                                         |
+                                         +---> Pauses current function
+                                         +---> Hands thread to Event Loop
+                                         +---> Resumes when result is ready!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Coroutines, async, and await Mechanics
+# ==============================================================================
+
+import asyncio
+
+# ------------------------------------------------------------------------------
+# Beginner: Coroutine Object Instantiation vs Awaiting
+# ------------------------------------------------------------------------------
+
+async def query_warehouse_inventory(hub_code: str) -> dict:
+    """Async coroutine function querying hub stock."""
+    print(f"  [COROUTINE START] Querying hub '{hub_code}'...")
+    await asyncio.sleep(0.1) # Simulate async I/O lookup
+    print(f"  [COROUTINE END] Completed query for '{hub_code}'")
+    return {"hub": hub_code, "available_parcels": 42}
+
+
+async def main_coroutine_runner():
+    print("--- LESSON 2: Coroutine Object vs Await ---")
+
+    # 1. Calling async def function without await returns a Coroutine Object
+    coro_object = query_warehouse_inventory("CHICAGO")
+    print("Direct Call Object Type:", type(coro_object).__name__) # 'coroutine'
+
+    # 2. Awaiting the coroutine object executes it on the Event Loop
+    print("\nNow Awaiting Coroutine Object:")
+    result = await coro_object
+    print("Aclaimed Result Data  :", result)
+
+
+# Launch entry point on Event Loop
+asyncio.run(main_coroutine_runner())
+      `,
+      keyTakeaways: [
+        "Declare asynchronous functions using `async def` to create Coroutine functions.",
+        "Calling an `async def` function returns a Coroutine Object without executing internal code immediately.",
+        "Use `await` to yield execution to the Event Loop until the target coroutine completes.",
+        "`await` can ONLY be used inside functions declared with `async def`."
+      ],
+      commonMistakes: [
+        "<b>Calling an `async def` function without `await`:</b> Writing `result = my_async_func()` and attempting to read `result` as data instead of a Coroutine Object.",
+        "<b>Attempting to use `await` inside standard `def` functions:</b> Causing a `SyntaxError: 'await' outside async function`."
+      ],
+      quizzes: [
+        {
+          question: "What is returned when you invoke an `async def` function directly without using the `await` keyword (e.g. `val = my_async_function()`)?",
+          options: [
+            "The final return value of the function.",
+            "A un-executed Coroutine Object.",
+            "A dictionary.",
+            "`None`"
+          ],
+          correctIndex: 1,
+          explanation: "Calling an `async def` function returns a un-executed Coroutine Object. It must be awaited or scheduled on the Event Loop to run."
+        },
+        {
+          question: "Where in Python code is the `await` keyword permitted to be used?",
+          options: [
+            "Inside any function or global file scope.",
+            "EXCLUSIVELY inside functions declared with `async def`.",
+            "Inside class `__init__()` constructors.",
+            "Inside `lambda` expressions."
+          ],
+          correctIndex: 1,
+          explanation: "The `await` keyword can strictly be used inside `async def` coroutine functions."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Concurrent Task Management with asyncio.gather and Tasks",
+      durationMinutes: 20,
+      explanation: `
+<b>Managing Multi-Task Execution Trees</b><br/>
+Executing coroutines one-by-one with `await coro1()`, `await coro2()` runs them sequentially, negating async concurrency benefits. To achieve real concurrency, you must schedule coroutines on the Event Loop as **Tasks**.<br/><br/>
+
+<b>1. `asyncio.create_task()`:</b><br/>
+Schedules a coroutine to run concurrently on the Event Loop in the background immediately:<br/>
+<code>task1 = asyncio.create_task(async_fetch("TRK-101"))</code><br/>
+<code>task2 = asyncio.create_task(async_fetch("TRK-102"))</code><br/>
+<code>res1 = await task1</code><br/>
+<code>res2 = await task2</code><br/><br/>
+
+<b>2. `asyncio.gather()`:</b><br/>
+Combines multiple coroutines or tasks into a single awaitable group, running them all concurrently and returning their results in exact order:<br/>
+<code>results = await asyncio.gather(coro1(), coro2(), coro3())</code><br/><br/>
+
+<b>3. Handling Exceptions in `gather()`:</b>
+<ul>
+  <li><code>return_exceptions=False</code> (Default): The first exception raised by any task immediately cancels the gather block and raises the exception to the caller.</li>
+  <li><code>return_exceptions=True</code>: Exceptions are caught and returned as objects in the results list alongside valid outputs!</li>
+</ul>
+      `,
+      diagram: `
+ASYNCIO.GATHER CONCURRENT EXECUTION MATRIX:
+
+  results = await asyncio.gather(fetch("A"), fetch("B"), fetch("C"))
+
+  Timeline (Total Duration = Max(A, B, C) = 100ms):
+  fetch("A") : [ ==== 100ms I/O WAIT ==== ] -> Output A
+  fetch("B") :

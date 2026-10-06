@@ -1,0 +1,702 @@
+/**
+ * DAY 50: Phase 1 · Core Python — Capstone Architecture & End-to-End Integration
+ *
+ * Total Duration: 90 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1CapstoneIntegration = {
+  day: 50,
+  topic: "Phase 1 · Core Python — Capstone Architecture & End-to-End Integration",
+  totalMinutes: 90,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "End-to-End System Architecture & Layered Domain Design",
+      durationMinutes: 20,
+      explanation: `
+<b>Synthesizing Phase 1 Core Python into a Production System</b><br/>
+Across the past 49 days, you've mastered the building blocks of backend Python engineering: data validation (Pydantic), asynchronous concurrency (\`asyncio\`), ORM modeling (SQLAlchemy 2.0), schema migrations (Alembic), security/authentication (JWT/OAuth2/Passlib), and defensive API practices (CORS, Rate Limiting, Input Sanitization).<br/><br/>
+
+The **Phase 1 Capstone Architecture** integrates these isolated components into a single, cohesive, production-grade microservice layer.<br/><br/>
+
+<b>System Layer Topology:</b>
+<ol>
+  <li><b>Transport / Presentation Layer (FastAPI Routers):</b> Validates incoming HTTP payloads, extracts JWT headers, and coordinates execution with the Service Layer.</li>
+  <li><b>Domain Schema Layer (Pydantic v2):</b> Enforces strict structural contracts, sanitizes text inputs, and masks sensitive outputs.</li>
+  <li><b>Business Logic Layer (Services):</b> Executes domain rules, computes pricing algorithms, checks SLA thresholds, and operates independently of web frameworks.</li>
+  <li><b>Data Persistence Layer (SQLAlchemy 2.0 Repositories + AsyncSession):</b> Executes async database queries (\`asyncpg\`), manages unit-of-work transactions, and abstracts database interactions.</li>
+  <li><b>Infrastructure & Security Layer (Passlib, PyJWT, Pydantic-Settings):</b> Manages password hashing, token validation, environment variable isolation, and CORS middleware.</li>
+</ol>
+      `,
+      diagram: `
+CAPSTONE ARCHITECTURE PIPELINE:
+
+  Client Request (HTTP / JSON + Bearer Token)
+                       |
+                       v
+  [ FastAPI APIRouter ] ---> Verifies JWT Token & Rates
+                       |
+                       v
+  [ Pydantic v2 Schema ] ---> Sanitizes Input & Validates Constraints
+                       |
+                       v
+  [ Domain Service ]     ---> Executes Business Rules & Pricing
+                       |
+                       v
+  [ Async Repository ]  ---> Executes SQLAlchemy 2.0 Queries (AsyncSession)
+                       |
+                       v
+  [ PostgreSQL / SQLite Database ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Capstone System Layer Wiring
+# ==============================================================================
+
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+# 1. ORM Model (Persistence Layer)
+class Base(DeclarativeBase):
+    pass
+
+class ParcelModel(Base):
+    __tablename__ = "capstone_parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    weight_lbs: Mapped[float] = mapped_column(Float)
+    fee_usd: Mapped[float] = mapped_column(Float)
+
+# 2. Pydantic Schema (Data Contract Layer)
+class CreateParcelSchema(BaseModel):
+    tracking_id: str = Field(..., pattern=r"^TRK-\\d{4}$")
+    weight_lbs: float = Field(..., gt=0.0)
+
+# 3. Async Repository (Data Access Abstraction Layer)
+class ParcelAsyncRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_tracking_id(self, tracking_id: str) -> ParcelModel | None:
+        stmt = select(ParcelModel).where(ParcelModel.tracking_id == tracking_id)
+        result = await self.session.scalars(stmt)
+        return result.first()
+
+    async def create(self, model: ParcelModel) -> ParcelModel:
+        self.session.add(model)
+        await self.session.commit()
+        await self.session.refresh(model)
+        return model
+
+print("--- LESSON 1: Capstone Architecture Layers Initialized ---")
+      `,
+      keyTakeaways: [
+        "A production architecture cleanly separates Routers, Schemas, Services, Repositories, and Infrastructure.",
+        "Async database repositories (`AsyncSession`) prevent blocking the Uvicorn event loop during I/O operations.",
+        "Domain Services remain pure Python classes decoupled from web or database frameworks.",
+        "Pydantic schemas enforce type safety and input sanitization at the API boundary."
+      ],
+      commonMistakes: [
+        "<b>Leaking ORM models directly into API responses:</b> Returning SQLAlchemy database models directly in route functions instead of serializing through Pydantic response models, exposing internal database structures.",
+        "<b>Mixing async and sync database operations:</b> Calling synchronous database methods inside async route handlers, freezing the Event Loop."
+      ],
+      quizzes: [
+        {
+          question: "Which layer in the Phase 1 Capstone Architecture is responsible for computing business pricing rules and SLA checks without depending on FastAPI or database drivers?",
+          options: [
+            "Routers Layer",
+            "Business Logic Service Layer",
+            "Repositories Layer",
+            "Schemas Layer"
+          ],
+          correctIndex: 1,
+          explanation: "The Service Layer encapsulates pure domain business rules, remaining independent of web and database frameworks."
+        },
+        {
+          question: "What is the primary benefit of using an Async Repository (`AsyncSession`) in a FastAPI backend application?",
+          options: [
+            "It encrypts database tables on disk.",
+            "It executes database I/O asynchronously without blocking the Uvicorn single-threaded Event Loop.",
+            "It automatically writes unit tests.",
+            "It converts SQL into HTML."
+          ],
+          correctIndex: 1,
+          explanation: "Async repositories execute non-blocking database queries, allowing the Event Loop to handle concurrent requests during I/O wait times."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Async Persistence & Unit of Work in FastAPI",
+      durationMinutes: 20,
+      explanation: `
+<b>Managing Database Lifecycles via Dependency Injection</b><br/>
+In production applications, database connections must be acquired, scoped to individual requests, and safely closed after every HTTP request. Combining **FastAPI Dependency Injection** with **SQLAlchemy AsyncSession** creates a clean, request-scoped Unit of Work pattern.<br/><br/>
+
+<b>1. The Async Database Engine & Session Factory:</b><br/>
+<code>from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker</code><br/>
+<code>engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")</code><br/>
+<code>AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)</code><br/><br/>
+
+<b>2. Request-Scoped Session Dependency:</b><br/>
+Using a generator dependency with <code>yield</code> guarantees that every incoming request receives a fresh, isolated `AsyncSession`, and that the session is closed automatically when the request finishes:
+<pre><code>async def get_async_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()</code></pre>
+      `,
+      diagram: `
+REQUEST-SCOPED ASYNC SESSION LIFECYCLE:
+
+  HTTP Request Received -> [ Depends(get_async_db) ]
+                                   |
+                                   v  Spawns AsyncSession
+  [ Route Operation ] --------> Executes DB Queries via Repository
+                                   |
+                                   v  Request Finishes
+  [ Yield Completes ] --------> Auto-Commits or Auto-Rollbacks & Closes Session!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Async Database Session Injection
+# ==============================================================================
+
+from fastapi import FastAPI, Depends, status
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import select, Float, String
+
+# Setup Async Engine (using SQLite in-memory async driver for demonstration)
+ASYNC_DB_URL = "sqlite+aiosqlite:///:memory:"
+async_engine = create_async_engine(ASYNC_DB_URL, echo=False)
+AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class ItemModel(Base):
+    __tablename__ = "items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+    price: Mapped[float] = mapped_column(Float)
+
+# Dependency providing request-scoped AsyncSession
+async def get_db_session():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+
+app = FastAPI()
+
+@app.get("/api/v1/items", tags=["Items"])
+async def list_items_endpoint(db: AsyncSession = Depends(get_db_session)):
+    stmt = select(ItemModel)
+    result = await db.scalars(stmt)
+    return [{"id": item.id, "name": item.name} for item in result.all()]
+
+print("--- LESSON 2: Async Session Generator Configured ---")
+      `,
+      keyTakeaways: [
+        "Use `create_async_engine()` and `async_sessionmaker()` for non-blocking database sessions.",
+        "Set `expire_on_commit=False` on async session factories to prevent detached object access errors after commits.",
+        "Inject database sessions using a generator dependency (`yield session`) to guarantee request-scoped cleanup.",
+        "Always roll back uncommitted changes if exceptions occur during request processing."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `expire_on_commit=False`:</b> Allowing SQLAlchemy to expire object attributes on commit, which triggers synchronous I/O loading attempts on async models and crashes the application.",
+        "<b>Sharing a single AsyncSession globally across all requests:</b> Causing race conditions and transaction state corruption across concurrent HTTP requests."
+      ],
+      quizzes: [
+        {
+          question: "Why should `expire_on_commit=False` be configured when initializing an async SQLAlchemy session factory (`async_sessionmaker`)?",
+          options: [
+            "It disables all database transactions.",
+            "It prevents SQLAlchemy from expiring model attributes upon commit, avoiding synchronous lazy-loading attempts on async instances.",
+            "It speeds up password hashing.",
+            "It converts models to JSON."
+          ],
+          correctIndex: 1,
+          explanation: "`expire_on_commit=False` prevents SQLAlchemy from clearing in-memory model attributes after commit, which would otherwise trigger illegal synchronous lazy-loading calls."
+        },
+        {
+          question: "What is the primary operational guarantee of using a generator function with `yield session` as a FastAPI database dependency?",
+          options: [
+            "It forces all queries to run in parallel on multiple GPUs.",
+            "It guarantees that every HTTP request receives an isolated database session that is closed cleanly after the response is sent.",
+            "It automatically writes migration scripts.",
+            "It disables rate limiting."
+          ],
+          correctIndex: 1,
+          explanation: "Generator dependencies scope session lifecycles to individual HTTP requests, closing connections automatically when processing completes."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Hardened Security Pipeline & Middleware Assembly",
+      durationMinutes: 18,
+      explanation: `
+<b>Multi-Layered Security Enforcement</b><br/>
+Securing the capstone architecture requires layering defensive security controls across request processing phases.<br/><br/>
+
+<b>The 4 Security Layers:</b>
+<ol>
+  <li><b>Transport Middleware Layer:</b> Enforces CORS restrictions, sets security headers (HSTS, CSP, X-Frame-Options), and logs incoming request telemetry.</li>
+  <li><b>Rate Limiting Throttling Layer:</b> Rejects traffic spikes exceeding client quotas (`HTTP 429 Too Many Requests`).</li>
+  <li><b>Authentication Layer:</b> Parses `Authorization: Bearer <JWT>` headers, verifies cryptographic signatures, and extracts user identity.</li>
+  <li><b>Authorization Guard Layer:</b> Enforces Role-Based Access Control (`RoleChecker(["ADMIN"])`), returning `HTTP 403 Forbidden` if permissions are insufficient.</li>
+</ol>
+      `,
+      diagram: `
+SECURITY PIPELINE EXECUTION SEQUENCE:
+
+  HTTP Request
+      |
+      v
+  [ CORSMiddleware ] ------------> Validates Allowed Origin
+      |
+      v
+  [ Security Headers Middleware ] -> Attaches HSTS, CSP, X-Frame-Options
+      |
+      v
+  [ Rate Limiter ] --------------> Checks Request Quota (429 if exceeded)
+      |
+      v
+  [ OAuth2 / JWT Auth ] ---------> Verifies Bearer Token (401 if invalid)
+      |
+      v
+  [ RBAC Role Guard ] -----------> Verifies Role Permissions (403 if forbidden)
+      |
+      v
+  [ Route Operation Execution ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Complete Security Pipeline Assembly
+# ==============================================================================
+
+from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import html
+
+app = FastAPI(title="Hardened Capstone API")
+
+# 1. CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://dashboard.enterprise.com"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"]
+)
+
+# 2. Security Headers Middleware
+@app.middleware("http")
+async def apply_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    return response
+
+# 3. Input Sanitization Model
+class SecurePayload(BaseModel):
+    title: str
+
+    def get_sanitized_title(self) -> str:
+        return html.escape(self.title.strip())
+
+@app.post("/api/v1/secure-submit", tags=["Security"])
+async def handle_secure_submission(payload: SecurePayload):
+    return {"clean_title": payload.get_sanitized_title()}
+
+print("--- LESSON 3: Hardened Security Pipeline Assembly Complete ---")
+      `,
+      keyTakeaways: [
+        "A hardened pipeline layers CORS, security headers, rate limiting, JWT auth, and RBAC guards.",
+        "CORS middleware restricts frontend web origins; security headers harden browser execution.",
+        "Pydantic model validators sanitize inputs against XSS and HTML injection.",
+        "Auth dependencies extract user identities before business logic executes."
+      ],
+      commonMistakes: [
+        "<b>Allowing wildcard CORS origins alongside credentials in production:</b> Exposing authenticated sessions to cross-site origin attacks.",
+        "<b>Omitting HSTS headers on HTTPS deployments:</b> Leaving applications vulnerable to SSL-stripping downgrade attacks."
+      ],
+      quizzes: [
+        {
+          question: "Which HTTP status code is returned when an authenticated user attempts to access an endpoint restricted to `ADMIN` roles while holding only `DISPATCHER` permissions?",
+          options: [
+            "`400 Bad Request`",
+            "`401 Unauthorized`",
+            "`403 Forbidden`",
+            "`404 Not Found`"
+          ],
+          correctIndex: 2,
+          explanation: "HTTP 403 Forbidden indicates an authenticated user lacks required authorization permissions."
+        },
+        {
+          question: "What security vulnerability is mitigated by setting `X-Frame-Options: DENY` in HTTP response headers?",
+          options: [
+            "SQL Injection",
+            "Clickjacking attacks via hidden `<iframe>` overlays",
+            "Password hash cracking",
+            "DNS spoofing"
+          ],
+          correctIndex: 1,
+          explanation: "`X-Frame-Options: DENY` blocks third-party websites from embedding your application inside frames, mitigating Clickjacking."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Comprehensive Automated Testing Strategy",
+      durationMinutes: 18,
+      explanation: `
+<b>Verifying Capstone Systems with Unit and Integration Tests</b><br/>
+A complex architecture is only as reliable as its test suite. A complete testing strategy combines fast, isolated unit tests with full-stack integration tests.<br/><br/>
+
+<b>1. Unit Testing Service Logic (Fast & Isolated):</b><br/>
+Test business domain services in isolation using mock repositories and mock data models without spinning up web servers or database drivers.<br/><br/>
+
+<b>2. Integration Testing Endpoints with Starlette `TestClient`:</b><br/>
+Use Starlette's `TestClient` (or `httpx.AsyncClient`) to send simulated HTTP requests against FastAPI endpoints in memory.<br/><br/>
+
+<b>3. Overriding Dependencies for Testing (`dependency_overrides`):</b><br/>
+FastAPI allows overriding production database and authentication dependencies during testing:<br/>
+<pre><code>from fastapi.testclient import TestClient
+
+# Override production database dependency with in-memory test session
+app.dependency_overrides[get_db_session] = get_test_db_session
+
+client = TestClient(app)
+
+def test_create_parcel_endpoint():
+    response = client.post("/api/v1/parcels", json={"tracking_id": "TRK-1001", "weight_lbs": 10.0})
+    assert response.status_code == 201
+    assert response.json()["tracking_id"] == "TRK-1001"</code></pre>
+      `,
+      diagram: `
+CAPSTONE TEST ARCHITECTURE:
+
+  Unit Tests (Services Layer):
+  [ Test Case ] ---> [ Domain Service ] ---> [ Mock Repository ] (0ms, no network/DB)
+
+  Integration Tests (API Endpoints):
+  [ TestClient ] ---> [ FastAPI Router ] ---> [ In-Memory SQLite DB ] (Verifies HTTP & SQL)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Automated Testing & Dependency Overrides
+# ==============================================================================
+
+from fastapi import FastAPI, Depends
+from starlette.testclient import TestClient
+
+app = FastAPI()
+
+# Production dependency
+def get_production_database_url() -> str:
+    return "postgresql://prod_user:secret@prod-host:5432/prod_db"
+
+@app.get("/api/v1/db-info")
+async def read_db_info(db_url: str = Depends(get_production_database_url)):
+    return {"active_db": db_url}
+
+
+# ------------------------------------------------------------------------------
+# Test Suite with Dependency Override
+# ------------------------------------------------------------------------------
+
+def get_test_database_url() -> str:
+    return "sqlite+aiosqlite:///:memory:"
+
+def test_db_info_endpoint_with_override():
+    # 1. Override production dependency with test dependency
+    app.dependency_overrides[get_production_database_url] = get_test_database_url
+
+    # 2. Execute request via TestClient
+    client = TestClient(app)
+    response = client.get("/api/v1/db-info")
+
+    # 3. Assert test results
+    assert response.status_code == 200
+    assert response.json()["active_db"] == "sqlite+aiosqlite:///:memory:"
+
+    # 4. Clean up overrides
+    app.dependency_overrides.clear()
+    print("Test passed cleanly with dependency override!")
+
+print("--- LESSON 4: Automated Test Suite Execution ---")
+test_db_info_endpoint_with_override()
+      `,
+      keyTakeaways: [
+        "Test domain services in isolation using mock repositories.",
+        "Use Starlette `TestClient` or `httpx.AsyncClient` for API endpoint integration tests.",
+        "Override production database/auth dependencies using `app.dependency_overrides`.",
+        "Always clear `app.dependency_overrides.clear()` after test runs to prevent test contamination."
+      ],
+      commonMistakes: [
+        "<b>Running integration tests against live production databases:</b> Accidentally writing test records to production tables.",
+        "<b>Forgetting to clear `app.dependency_overrides`:</b> Leaving test overrides active, causing subsequent tests to execute against mock objects unintentionally."
+      ],
+      quizzes: [
+        {
+          question: "How do you temporarily replace a production database dependency with a mock database session during FastAPI integration testing?",
+          options: [
+            "By editing `main.py` source code manually.",
+            "By setting `app.dependency_overrides[prod_dep] = mock_dep`.",
+            "By setting `os.environ[\"TEST_MODE\"] = \"TRUE\"`.",
+            "FastAPI dependencies cannot be overridden."
+          ],
+          correctIndex: 1,
+          explanation: "`app.dependency_overrides` maps production dependency functions to mock functions during testing."
+        },
+        {
+          question: "What tool allows sending simulated HTTP requests directly to FastAPI routes in memory during unit/integration tests?",
+          options: [
+            "`requests.post()`",
+            "Starlette `TestClient` (or `httpx.AsyncClient`)",
+            "Selenium WebDriver",
+            "Postman CLI"
+          ],
+          correctIndex: 1,
+          explanation: "`TestClient` simulates HTTP requests directly against FastAPI route handlers in memory without spinning up a physical network server."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Phase 1 Complete Mastery & Production Readiness",
+      durationMinutes: 14,
+      explanation: `
+<b>Reviewing the 50-Day Core Python Journey</b><br/>
+Congratulations on reaching Day 50! Over the course of Phase 1, you have built a comprehensive foundation in modern enterprise Python engineering.<br/><br/>
+
+<b>Phase 1 Core Competency Mastery Summary:</b>
+<ul>
+  <li><b>Core Python Mechanics (Days 1–35):</b> Object-Oriented Programming, Advanced Data Structures, Decorators, Context Managers, Descriptors, Metaprogramming, and Type Systems.</li>
+  <li><b>Type Safety & Quality Automation (Days 36–38):</b> Static type hints, \`mypy\` strict analysis, \`Ruff\` linting/formatting, and \`pre-commit\` automated quality hooks.</li>
+  <li><b>Testing Mastery (Days 39–40):</b> Unit testing with \`pytest\`, \`pytest.raises\`, reusable fixtures, parametrization, \`unittest.mock\`, monkeypatching, and \`pytest-cov\` coverage auditing.</li>
+  <li><b>Relational Persistence & ORM (Days 41–43):</b> PostgreSQL integration, \`psycopg3\`, SQL injection defense, SQLAlchemy 2.0 ORM, Unit of Work sessions, and Alembic zero-downtime database migrations.</li>
+  <li><b>Web Frameworks & Async Architecture (Days 44–49):</b> HTTP/REST standards, FastAPI, Pydantic v2 schemas, Dependency Injection, OAuth2/JWT security, RBAC authorization, and \`asyncio\` Event Loop concurrency.</li>
+</ul>
+
+<b>Production Deployment Readiness Checklist:</b>
+<ul>
+  <li>Type hints pass \`mypy\` static checks without errors.</li>
+  <li>Code formatted with \`ruff format\` and linted with \`ruff check\`.</li>
+  <li>Test suite passes with high coverage (\`pytest --cov\`).</li>
+  <li>All database queries parameterized to prevent SQL Injection.</li>
+  <li>Passwords hashed using Argon2/Bcrypt and authentication secured via JWT/OAuth2.</li>
+  <li>Production configuration isolated via \`pydantic-settings\` and secrets excluded from Git.</li>
+</ul>
+      `,
+      diagram: `
+PHASE 1 MASTERY ROADMAP:
+
+  [ Days 1-35: Core Python & Metaprogramming ]
+                       |
+                       v
+  [ Days 36-40: Type Safety, Quality Automation & pytest ]
+                       |
+                       v
+  [ Days 41-43: PostgreSQL, SQLAlchemy 2.0 & Alembic ]
+                       |
+                       v
+  [ Days 44-49: REST APIs, FastAPI, Security & asyncio ]
+                       |
+                       v
+  [ Day 50: Enterprise Production Capstone Architecture! ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Phase 1 Final Mastery Verification
+# ==============================================================================
+
+def verify_phase1_mastery_completion() -> dict[str, str]:
+    """Summary function validating completion of Phase 1 Core Python Curriculum."""
+    return {
+        "status": "PHASE_1_COMPLETE",
+        "core_python": "MASTERED",
+        "type_safety": "VERIFIED_MYPY",
+        "testing_suite": "PASSED_PYTEST",
+        "orm_database": "SQLALCHEMY_2_ALEMBIC",
+        "web_framework": "FASTAPI_ASYNCIO",
+        "readiness": "PRODUCTION_READY"
+    }
+
+report = verify_phase1_mastery_completion()
+print("--- PHASE 1 FINAL MASTERY REPORT ---")
+for key, value in report.items():
+    print(f"  {key:<20}: {value}")
+      `,
+      keyTakeaways: [
+        "Phase 1 provides a comprehensive foundation spanning Python mechanics, ORMs, security, testing, and async web frameworks.",
+        "Production readiness requires combining static type checking, automated testing, secure coding practices, and clean architecture.",
+        "Keep business logic decoupled from web and database frameworks for long-term maintainability.",
+        "You are now fully prepared to build enterprise-grade Python backend microservices!"
+      ],
+      commonMistakes: [
+        "<b>Stopping at functional code without automated testing or static type checks:</b> Deploying untested or un-typed code to production environments.",
+        "<b>Neglecting ongoing security audits:</b> Failing to regularly update dependencies and audit secret credentials."
+      ],
+      quizzes: [
+        {
+          question: "Which combination of tools represents the modern, standard stack for building high-performance, type-safe Python web APIs?",
+          options: [
+            "Flask + SQLite + Raw Strings",
+            "FastAPI + Pydantic + SQLAlchemy 2.0 + Alembic + pytest",
+            "Django 1.0 + MySQL + Python 2.7",
+            "CGI Scripts + Plain Text Files"
+          ],
+          correctIndex: 1,
+          explanation: "FastAPI, Pydantic, SQLAlchemy 2.0, Alembic, and pytest form the modern enterprise standard stack for Python web development."
+        },
+        {
+          question: "What is the primary architectural goal achieved by mastering the Phase 1 Core Python curriculum?",
+          options: [
+            "Writing single-file desktop scripts.",
+            "Building secure, scalable, maintainable, and fully tested enterprise backend software systems.",
+            "Designing graphics in C++.",
+            "Disabling type hints."
+          ],
+          correctIndex: 1,
+          explanation: "Phase 1 prepares you to design, build, test, secure, and deploy production-ready backend architectures."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which layer in a clean enterprise architecture encapsulates pure domain business rules without depending on FastAPI or database drivers?",
+      options: [
+        "Routers Layer",
+        "Business Logic Services Layer",
+        "Repositories Layer",
+        "Database Engine"
+      ],
+      correctIndex: 1,
+      explanation: "The Services Layer encapsulates pure business domain rules."
+    },
+    {
+      question: "Why should `expire_on_commit=False` be configured on async SQLAlchemy session factories?",
+      options: [
+        "It disables database transactions.",
+        "It prevents SQLAlchemy from expiring in-memory attributes upon commit, avoiding illegal synchronous lazy-loading calls on async instances.",
+        "It converts SQL to JSON.",
+        "It speeds up password hashing."
+      ],
+      correctIndex: 1,
+      explanation: "`expire_on_commit=False` prevents synchronous lazy-loading errors on async model instances."
+    },
+    {
+      question: "Which HTTP status code should be returned when an authenticated user attempts an action forbidden to their role?",
+      options: [
+        "`400 Bad Request`",
+        "`401 Unauthorized`",
+        "`403 Forbidden`",
+        "`404 Not Found`"
+      ],
+      correctIndex: 2,
+      explanation: "HTTP 403 Forbidden indicates an authenticated user lacks required authorization rights."
+    },
+    {
+      question: "How do you override production database dependencies with mock test dependencies in FastAPI test suites?",
+      options: [
+        "Edit source code files directly.",
+        "Set `app.dependency_overrides[prod_dep] = test_dep`.",
+        "Reboot the server.",
+        "Dependencies cannot be overridden."
+      ],
+      correctIndex: 1,
+      explanation: "`app.dependency_overrides` maps production dependencies to mock functions during testing."
+    },
+    {
+      question: "Which tool simulates HTTP requests directly against FastAPI route handlers in memory during integration tests?",
+      options: [
+        "Starlette `TestClient` (or `httpx.AsyncClient`)",
+        "`requests.post()`",
+        "cURL CLI",
+        "Postman"
+      ],
+      correctIndex: 0,
+      explanation: "`TestClient` simulates HTTP requests directly in memory against route handlers."
+    },
+    {
+      question: "What is the primary function of Pydantic model field sanitizers (`html.escape`) at the API boundary?",
+      options: [
+        "To speed up database queries.",
+        "To escape special HTML characters, neutralizing Cross-Site Scripting (XSS) payload injection.",
+        "To encrypt database backups.",
+        "To format CSS styles."
+      ],
+      correctIndex: 1,
+      explanation: "`html.escape()` converts HTML special characters to entities, neutralizing XSS attacks."
+    },
+    {
+      question: "Which header forces web browsers to communicate with the server exclusively over encrypted HTTPS connections?",
+      options: [
+        "`Content-Security-Policy`",
+        "`Strict-Transport-Security` (HSTS)",
+        "`X-Frame-Options`",
+        "`Referrer-Policy`"
+      ],
+      correctIndex: 1,
+      explanation: "HSTS forces browsers to enforce encrypted HTTPS connections exclusively."
+    },
+    {
+      question: "What is the recommended practice for managing secret credentials (JWT secret keys, database passwords) across environments?",
+      options: [
+        "Hardcode credentials inside `main.py`.",
+        "Isolate credentials in environment variables parsed via `pydantic-settings` and exclude `.env` from Git.",
+        "Commit `.env` files to public GitHub repositories.",
+        "Store credentials in plain text text files in `/tmp`."
+      ],
+      correctIndex: 1,
+      explanation: "Isolate credentials in environment variables, parse with `pydantic-settings`, and exclude `.env` from version control."
+    }
+  ],
+  project: {
+    name: "Phase 1 Complete Enterprise Production Capstone Engine",
+    goal: "Build a complete, production-ready enterprise logistics API service that integrates FastAPI, Pydantic v2 validation, SQLAlchemy 2.0 AsyncSession persistence, Passlib/PyJWT OAuth2 security, RBAC role guards, rate limiting, and pytest automated integration tests.",
+    brief: "Congratulations! As your Phase 1 Capstone Project, you will assemble an enterprise-grade logistics dispatch microservice (`phase1_capstone_app.py`). The microservice must feature a clean architecture (Routers, Schemas, Services, Repositories), async SQLAlchemy persistence, OAuth2 password authentication with JWT access tokens, RBAC permissions, Pydantic input sanitization, rate limiting, and an automated pytest integration test suite.",
+    steps: [
+      "Create a workspace script file named `phase1_capstone_app.py`.",
+      "Define `pydantic-settings` `AppSettings` loading environment configuration.",
+      "Define SQLAlchemy 2.0 models (`UserModel`, `ParcelModel`) and setup `create_async_engine()` with `AsyncSessionLocal`.",
+      "Implement `Passlib` password hashing and `PyJWT` token generation/verification helpers.",
+      "Implement a `ParcelAsyncRepository` managing async database queries (`select()`, `scalars()`).",
+      "Implement a `ParcelDomainService` executing business rules (shipping fee calculations).",
+      "Implement an `OAuth2PasswordBearer` token endpoint (`/token`) and an RBAC role guard (`RoleChecker([\"ADMIN\"])`).",
+      "Build modular `APIRouter` endpoints (`/api/v1/parcels`) with input sanitization and rate limiting.",
+      "Write an automated integration test suite using Starlette `TestClient` and `dependency_overrides`.",
+      "Run `python3 phase1_capstone_app.py` in your terminal and print a complete Capstone Verification Report."
+    ],
+    acceptance: [
+      "Application is cleanly organized into Schemas, Repositories, Services, and Routers.",
+      "Database operations execute asynchronously using SQLAlchemy 2.0 `AsyncSession`.",
+      "Authentication and authorization enforce OAuth2 JWT tokens and RBAC role guards.",
+      "Automated integration tests pass cleanly using `TestClient` and `dependency_overrides`.",
+      "Executing `python3 phase1_capstone_app.py` outputs a clean Capstone Verification Report and exits with status code 0."
+    ],
+    stretch: [
+      "Add an Alembic migration environment and generate a complete revision chain for the capstone models.",
+      "Run `mypy --strict` and `ruff check` on the capstone file to verify 100% code quality compliance."
+    ]
+  }
+};
