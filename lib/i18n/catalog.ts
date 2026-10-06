@@ -12,6 +12,11 @@ export const UI_STRINGS = {
     np: "पुस्तकालय",
     jp: "ライブラリ",
   },
+  "nav.blog": {
+    en: "Blog",
+    np: "ब्लग",
+    jp: "ブログ",
+  },
   "nav.language": {
     en: "Language",
     np: "भाषा",
