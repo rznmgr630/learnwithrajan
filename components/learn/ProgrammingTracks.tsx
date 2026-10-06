@@ -811,6 +811,38 @@ export function ProgrammingTracks() {
             {t("hub.backendEngineering.cta")}
           </span>
         </Link>
+
+      </HubAccordionSection>
+
+      <HubAccordionSection
+        sectionId={`${baseId}-code-review`}
+        titleKey="hub.programming.groupCodeReview"
+        hintKey="hub.programming.groupCodeReviewHint"
+      >
+        <Link href="/learn/code-review/javascript" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.codeReview.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.codeReview.subtitle")}</p>
+            </div>
+            <PinButton id="code-review-javascript" />
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["JavaScript", "Bugs", "Code Quality", "Review Skills"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.codeReview.cta")}
+          </span>
+        </Link>
       </HubAccordionSection>
     </div>
   );

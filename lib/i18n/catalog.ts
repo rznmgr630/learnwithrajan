@@ -789,6 +789,31 @@ export const UI_STRINGS = {
     np: "सिस्टम डिजाइन, व्यावहारिक, र प्राविधिक अन्तर्वार्ता स्रोतहरू।",
     jp: "システム設計・行動・技術面接リソース。",
   },
+  "hub.codeReview.title": {
+    en: "JavaScript Code Review Series",
+    np: "JavaScript कोड रिभ्यू शृङ्खला",
+    jp: "JavaScript コードレビュー・シリーズ",
+  },
+  "hub.codeReview.subtitle": {
+    en: "Read complete JavaScript code, spot the bugs, and practise writing useful review comments.",
+    np: "पूरा JavaScript कोड पढ्नुहोस्, बग पत्ता लगाउनुहोस्, र उपयोगी रिभ्यू टिप्पणी लेख्ने अभ्यास गर्नुहोस्।",
+    jp: "完成した JavaScript コードを読み、バグを見つけ、役立つレビューコメントを書く練習をします。",
+  },
+  "hub.codeReview.cta": {
+    en: "Start reviewing →",
+    np: "रिभ्यू सुरु गर्नुहोस् →",
+    jp: "レビューを始める →",
+  },
+  "hub.programming.groupCodeReview": {
+    en: "Code Review Challenge",
+    np: "कोड रिभ्यू चुनौती",
+    jp: "コードレビュー・チャレンジ",
+  },
+  "hub.programming.groupCodeReviewHint": {
+    en: "Find bugs and improve real-world code before it reaches production.",
+    np: "वास्तविक कोड प्रोडक्सनमा पुग्नु अघि बग पत्ता लगाउनुहोस् र सुधार गर्नुहोस्।",
+    jp: "実務コードを本番へ出す前に、バグを見つけて改善します。",
+  },
   "hub.programming.groupWebsites": {
     en: "Websites for Developers",
     np: "डेभलपरका लागि वेबसाइटहरू",
