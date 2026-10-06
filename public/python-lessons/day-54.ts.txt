@@ -1,0 +1,759 @@
+/**
+ * DAY 54: Phase 1 · Core Python — Observability, Telemetry, and Production Debugging
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1ObservabilityAndDebugging = {
+  day: 54,
+  topic: "Phase 1 · Core Python — Observability, Telemetry, and Production Debugging",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Structured JSON Logging and Contextual Correlation IDs",
+      durationMinutes: 18,
+      explanation: `
+<b>Replacing Unstructured Text Logs with Machine-Readable Telemetry</b><br/>
+In production microservices, plain text log strings created via standard <code>print()</code> or basic <code>logging.info("User logged in")</code> are extremely difficult to parse at scale. When centralizing millions of log lines across log aggregators (Datadog, ElasticSearch/Kibana, Grafana Loki), team members must be able to query, filter, and alert based on key-value attributes.<br/><br/>
+
+<b>1. Plain Text vs. Structured JSON Logging:</b>
+<ul>
+  <li><b>Plain Text (Bad):</b> <code>2026-10-06 04:57:00 INFO Order 9901 processed for user 101 in 42ms</code>
+    <br/><i>Problem:</i> Requires complex regular expressions to extract metrics in log aggregators!</li>
+  <li><b>Structured JSON (Good):</b> <code>{"timestamp": "2026-10-06T04:57:00Z", "level": "INFO", "event": "order_processed", "order_id": "9901", "user_id": "101", "duration_ms": 42}</code>
+    <br/><i>Benefit:</i> Machine-readable JSON allows instant index queries: <code>event=="order_processed" AND duration_ms > 40</code>!</li>
+</ul>
+
+<b>2. The Power of Correlation / Trace IDs:</b><br/>
+When an HTTP request enters your API, custom middleware generates a unique UUID (a **Correlation ID** or **Request ID**). This ID is injected into every log entry emitted during that request's lifecycle and passed down to downstream database calls and microservice webhooks.<br/>
+<i>Benefit:</i> Searching a single Correlation ID (e.g. `req_8f3a9a12`) isolates the exact end-to-end execution path across your entire service stack!
+      `,
+      diagram: `
+CORRELATION ID DISTRIBUTED LOG TRACING:
+
+  HTTP Request (Header: X-Request-ID: req_8f3a9a12)
+                     |
+                     v
+  [ FastAPI Middleware ] -> Injects 'correlation_id = req_8f3a9a12' into Context
+                     |
+                     +---> [ Router Log ]   {"correlation_id": "req_8f3a9a12", "event": "route_entry"}
+                     |
+                     +---> [ Service Log ]  {"correlation_id": "req_8f3a9a12", "event": "calc_fee"}
+                     |
+                     +---> [ Database Log ] {"correlation_id": "req_8f3a9a12", "event": "sql_exec"}
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Structured JSON Logging & Contextual Correlation IDs
+# ==============================================================================
+
+import json
+import logging
+import uuid
+from contextvars import ContextVar
+from fastapi import FastAPI, Request
+
+# ContextVar holds the Request/Correlation ID thread-safely across async tasks
+correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="system")
+
+
+class JSONFormatter(logging.Formatter):
+    """Custom logging Formatter outputting structured JSON log entries."""
+    def format(self, record: logging.LogRecord) -> str:
+        log_payload = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "correlation_id": correlation_id_ctx.get(),
+            "message": record.getMessage()
+        }
+        # Attach extra contextual key-value dicts if present
+        if hasattr(record, "extra_fields"):
+            log_payload.update(record.extra_fields)
+
+        return json.dumps(log_payload)
+
+
+# Configure root logger
+logger = logging.getLogger("capstone_logger")
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger.addHandler(handler)
+
+
+app = FastAPI()
+
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    """Middleware extracting or generating X-Request-ID correlation tokens."""
+    request_id = request.headers.get("X-Request-ID", f"req_{uuid.uuid4().hex[:8]}")
+    correlation_id_ctx.set(request_id)
+
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+@app.get("/api/v1/log-demo")
+async def execute_logged_route():
+    logger.info("Processing parcel request", extra={"extra_fields": {"parcel_id": "TRK-9001", "weight": 14.5}})
+    return {"status": "SUCCESS"}
+
+print("--- LESSON 1: Structured JSON Logging Enabled ---")
+logger.info("Logger initialized successfully")
+      `,
+      keyTakeaways: [
+        "Structured JSON logging allows centralized log aggregators to query key-value fields instantly.",
+        "Correlation IDs (Request IDs) correlate every log line emitted across a single request lifecycle.",
+        "Use `contextvars.ContextVar` to propagate correlation tokens thread-safely across async tasks.",
+        "Never log raw unmasked credit card numbers, passwords, or PII (Personally Identifiable Information)."
+      ],
+      commonMistakes: [
+        "<b>Using standard string concatenation or `print()` for production logging:</b> Emitting unstructured plain text strings that cannot be indexed or parsed by automated log monitoring tools.",
+        "<b>Storing correlation tokens in global variables:</b> Overwriting correlation IDs across concurrent requests in async environments instead of using isolated `ContextVar` containers."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural purpose of assigning a Correlation ID (Request ID) to incoming HTTP requests?",
+          options: [
+            "To encrypt database backups.",
+            "To tag every log line emitted across microservice layers during that request's lifecycle, allowing developers to isolate its full execution path.",
+            "To speed up integer math.",
+            "To disable CORS."
+          ],
+          correctIndex: 1,
+          explanation: "Correlation IDs link all logs generated across multiple services and threads to a single originating HTTP request."
+        },
+        {
+          question: "Which Python standard library module provides thread-safe and async-task-isolated context storage for correlation tokens?",
+          options: [
+            "`sys`",
+            "`contextvars`",
+            "`threading.local`",
+            "`os`"
+          ],
+          correctIndex: 1,
+          explanation: "`contextvars.ContextVar` isolates context data per asynchronous task and thread."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Application Metrics: Prometheus Counters, Gauges, and Histograms",
+      durationMinutes: 20,
+      explanation: `
+<b>Quantifying System Health with Numerical Time-Series Telemetry</b><br/>
+Logs detail *what happened* in individual events; **Metrics** track numerical time-series aggregates quantifying how the application is performing as a whole over time.<br/><br/>
+
+<b>1. The 3 Primary Prometheus Metric Types:</b>
+<ul>
+  <li><b>Counter:</b> A cumulative metric that **only increases** (or resets to zero on restart).
+    <br/><i>Use Case:</i> Total HTTP requests served, total login failures, total errors.
+    <br/><i>Example:</i> <code>http_requests_total{method="POST", status="201"} 14205</code></li>
+  <li><b>Gauge:</b> A metric representing a single numerical value that can **go up or down**.
+    <br/><i>Use Case:</i> Active database connection pool size, current memory usage (MB), active WebSocket connections.
+    <br/><i>Example:</i> <code>db_active_connections_count 8</code></li>
+  <li><b>Histogram:</b> Samples observations (usually execution durations or payload sizes) and counts them in configurable bucket ranges.
+    <br/><i>Use Case:</i> HTTP request latency ($p50$, $p95$, $p99$ percentiles).
+    <br/><i>Example:</i> Measuring if 99% of requests complete in under 200 ms.</li>
+</ul>
+
+<b>2. The Four Golden Signals of Monitoring:</b>
+1. **Latency:** Time taken to service a request.
+2. **Traffic:** Demand placed on the system (requests/sec).
+3. **Errors:** Rate of requests that fail.
+4. **Saturation:** How "full" the system is (CPU %, memory %, pool usage %).
+      `,
+      diagram: `
+PROMETHEUS METRICS SCRAPE PIPELINE:
+
+  [ FastAPI Application ] ---> Exposes Metrics Endpoint: GET /metrics
+                                          |
+                                          v  Scrapes periodically (every 15s)
+  [ Prometheus Server ]   ---> Stores Time-Series Metrics Data
+                                          |
+                                          v
+  [ Grafana Dashboard ]   ---> Visualizes Latency Histograms & Golden Signals!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Application Metrics with prometheus_client
+# ==============================================================================
+
+# Simulated prometheus_client metric interfaces
+class MockCounter:
+    def __init__(self, name: str, doc: str, labels: list[str]):
+        self.name = name
+        self._counts = {}
+
+    def labels(self, **kwargs) -> "MockCounter":
+        self._last_label = tuple(sorted(kwargs.items()))
+        if self._last_label not in self._counts:
+            self._counts[self._last_label] = 0
+        return self
+
+    def inc(self, amount: int = 1):
+        self._counts[self._last_label] += amount
+
+    def get_val(self, **kwargs) -> int:
+        lbl = tuple(sorted(kwargs.items()))
+        return self._counts.get(lbl, 0)
+
+
+class MockGauge:
+    def __init__(self, name: str, doc: str):
+        self.name = name
+        self.value = 0
+
+    def set(self, val: int):
+        self.value = val
+
+
+# Declaring Core Metrics
+REQUEST_COUNTER = MockCounter(
+    "http_requests_total",
+    "Total HTTP requests received",
+    labels=["method", "endpoint", "status"]
+)
+
+ACTIVE_DB_GAUGE = MockGauge(
+    "database_active_connections",
+    "Active pool connection count"
+)
+
+
+def handle_simulated_request(method: str, endpoint: str, status_code: int):
+    # Increment Counter
+    REQUEST_COUNTER.labels(method=method, endpoint=endpoint, status=str(status_code)).inc()
+
+    # Update Gauge
+    ACTIVE_DB_GAUGE.set(4)
+
+print("--- LESSON 2: Prometheus Metrics Tracking ---")
+handle_simulated_request("POST", "/api/v1/parcels", 201)
+handle_simulated_request("POST", "/api/v1/parcels", 201)
+handle_simulated_request("GET", "/api/v1/parcels", 404)
+
+print("Counter Output (POST 201):", REQUEST_COUNTER.get_val(method="POST", endpoint="/api/v1/parcels", status="201"))
+print("Counter Output (GET 404) :", REQUEST_COUNTER.get_val(method="GET", endpoint="/api/v1/parcels", status="404"))
+print("Active DB Gauge Value    :", ACTIVE_DB_GAUGE.value)
+      `,
+      keyTakeaways: [
+        "Metrics quantify aggregate system health across the Four Golden Signals (Latency, Traffic, Errors, Saturation).",
+        "Use **Counters** for values that only increase (request totals, error counts).",
+        "Use **Gauges** for values that rise and fall (active connections, RAM usage).",
+        "Use **Histograms** to calculate $p95$ and $p99$ response latency percentiles.",
+        "Expose metrics endpoints at `/metrics` for Prometheus scraping."
+      ],
+      commonMistakes: [
+        "<b>Using Counters for values that can decrease:</b> Using a Counter to track active WebSocket connections instead of a Gauge.",
+        "<b>High-cardinality label pollution:</b> Adding unique user IDs or UUIDs as metric labels (e.g. `http_requests_total{user_id="12345"}`), creating millions of time-series streams that crash Prometheus servers!"
+      ],
+      quizzes: [
+        {
+          question: "Which Prometheus metric type should be selected to measure the active number of database pool connections currently in use?",
+          options: [
+            "Counter",
+            "Gauge",
+            "Histogram",
+            "Summary"
+          ],
+          correctIndex: 1,
+          explanation: "Gauges represent values that can fluctuate up and down over time, making them ideal for connection pool tracking."
+        },
+        {
+          question: "Why should unique high-cardinality values (such as User UUIDs or Barcode IDs) NEVER be used as Prometheus metric labels?",
+          options: [
+            "Because Prometheus converts strings to integers.",
+            "Each unique label combination generates a brand new time-series stream, creating 'cardinality explosion' that consumes gigabytes of RAM and crashes the metrics server.",
+            "Labels only accept booleans.",
+            "Prometheus forbids labels."
+          ],
+          correctIndex: 1,
+          explanation: "High-cardinality labels create millions of unique time-series streams, overloading Prometheus memory."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Distributed Tracing with OpenTelemetry Concepts",
+      durationMinutes: 18,
+      explanation: `
+<b>Visualizing Cross-Service Latency Graphs</b><br/>
+In distributed microservices, a single user request might trigger calls across API Gateway -> Auth Service -> Inventory Service -> PostgreSQL DB -> External Webhook. When a request takes 3 seconds to complete, logs and metrics cannot easily show which specific component caused the bottleneck. **Distributed Tracing** solves this problem.<br/><br/>
+
+<b>1. Core OpenTelemetry Tracing Concepts:</b>
+<ul>
+  <li><b>Trace:</b> Represents the complete end-to-end journey of a request through a distributed system.</li>
+  <li><b>Span:</b> A single timed building block representing a unit of contiguous work (e.g. executing a specific database query or rendering a template).
+    <br/>A Trace is a directed acyclic graph of nested Spans!</li>
+  <li><b>Trace Context Propagation:</b> Spans pass their `trace_id` and `parent_span_id` across microservices using standard HTTP headers (W3C `traceparent` standard).</li>
+</ul>
+
+<b>2. OpenTelemetry (OTel):</b><br/>
+OpenTelemetry is the vendor-neutral CNCF standard framework for collecting and exporting traces, metrics, and logs to visualization backends (Jaeger, Zipkin, Datadog).
+      `,
+      diagram: `
+OPENTELEMETRY TRACE SPAN TREE:
+
+  Trace ID: 4bf92f3577b34da6a3ce929d0e0e4736
+
+  [ Span 1: HTTP POST /api/v1/parcels ] (Total: 120ms)
+    |
+    ├── [ Span 2: JWT Auth Verification ] (10ms)
+    |
+    ├── [ Span 3: Service Fee Calculation ] (5ms)
+    |
+    └── [ Span 4: Async PostgreSQL INSERT ] (100ms - Bottleneck identified!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: OpenTelemetry Span & Trace Abstraction
+# ==============================================================================
+
+import time
+import uuid
+
+class MockSpan:
+    def __init__(self, name: str, parent_id: str | None = None):
+        self.name = name
+        self.trace_id = "trace_4bf92f3577b34"
+        self.span_id = f"span_{uuid.uuid4().hex[:6]}"
+        self.parent_id = parent_id
+        self.start_time = 0.0
+        self.duration_ms = 0.0
+
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.duration_ms = round((time.perf_counter() - self.start_time) * 1000, 2)
+        print(f"  [SPAN END] '{self.name}' (ID: {self.span_id}, Parent: {self.parent_id}) -> {self.duration_ms} ms")
+
+
+# Simulating Nested OpenTelemetry Spans
+def execute_traced_service_pipeline():
+    print("--- LESSON 3: OpenTelemetry Span Execution Tree ---")
+
+    # Root HTTP Span
+    with MockSpan("HTTP POST /api/v1/parcels") as root_span:
+        time.sleep(0.01) # Simulate auth
+
+        # Child Span 1: Service Logic
+        with MockSpan("ParcelDomainService.process", parent_id=root_span.span_id):
+            time.sleep(0.005)
+
+            # Child Span 2: Database Query
+            with MockSpan("PostgreSQL INSERT parcels", parent_id=root_span.span_id):
+                time.sleep(0.030) # Bottleneck!
+
+execute_traced_service_pipeline()
+      `,
+      keyTakeaways: [
+        "Distributed Tracing tracks the complete lifecycle of a request across microservices.",
+        "A **Trace** contains multiple nested **Spans**, where each Span represents a timed unit of work.",
+        "Spans pass context across service boundaries using W3C `traceparent` HTTP headers.",
+        "OpenTelemetry is the vendor-neutral standard for trace generation and export."
+      ],
+      commonMistakes: [
+        "<b>Confusing Traces with Logs:</b> Traces capture timed call-tree graphs; logs record text events. They complement each other.",
+        "<b>Creating un-indexed custom header names for tracing:</b> Inventing custom trace headers instead of following the W3C `traceparent` standard (`00-trace_id-parent_id-flags`)."
+      ],
+      quizzes: [
+        {
+          question: "What is the relationship between a Trace and a Span in OpenTelemetry distributed tracing?",
+          options: [
+            "A Trace is a database table; a Span is a row.",
+            "A Trace represents the full end-to-end request journey, consisting of a tree of individual timed Spans representing specific units of work.",
+            "Spans are only used in JavaScript.",
+            "Traces replace metrics."
+          ],
+          correctIndex: 1,
+          explanation: "A Trace represents the end-to-end execution path, composed of nested Spans timing individual execution steps."
+        },
+        {
+          question: "Which HTTP header standard is used by OpenTelemetry to propagate trace context across microservice boundaries?",
+          options: [
+            "`X-API-Key`",
+            "W3C `traceparent`",
+            "`Authorization`",
+            "`Content-Type`"
+          ],
+          correctIndex: 1,
+          explanation:="The W3C `traceparent` specification standardizes passing trace ID and parent span ID metadata across HTTP boundaries."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Production Health Checks: Readiness vs. Liveness Probes",
+      durationMinutes: 18,
+      explanation: `
+<b>Automating Orchestration Lifecycle Management in Kubernetes</b><br/>
+In containerized environments (Kubernetes, AWS ECS), orchestration platforms constantly monitor application health to decide whether to route user traffic to a container, restart a frozen container, or remove a failing instance.<br/><br/>
+
+Orchestrators rely on two distinct Health Check endpoints:<br/><br/>
+
+<b>1. Liveness Probe (`GET /health/liveness`):</b>
+<ul>
+  <li><b>Question Answered:</b> *"Is the Python application process alive and executing?"*</li>
+  <li><b>Behavior:</b> Performs minimal internal checks (e.g. returns `200 OK` if the Uvicorn process is running).</li>
+  <li><b>Action on Failure:</b> If Liveness fails, Kubernetes **restarts/kills the container process**!</li>
+  <li><i>CRITICAL RULE:</i> **NEVER** query external dependencies (PostgreSQL or Redis) inside a Liveness probe! If your database goes down temporarily, Liveness failures will cause Kubernetes to restart all web containers simultaneously, escalating the outage!</li>
+</ul>
+
+<b>2. Readiness Probe (`GET /health/readiness`):</b>
+<ul>
+  <li><b>Question Answered:</b> *"Is the application ready to accept and process live user traffic?"*</li>
+  <li><b>Behavior:</b> Verifies connectivity to mandatory downstream dependencies (e.g. pinging PostgreSQL and Redis).</li>
+  <li><b>Action on Failure:</b> If Readiness fails, Kubernetes **removes the container from load balancer routing** until dependencies recover, without killing the process!</li>
+</ul>
+      `,
+      diagram: `
+KUBERNETES PROBE ACTIONS:
+
+  GET /health/liveness -> [ Process Dead / Frozen? ] ---> (FAIL) ---> Restart Container Process!
+                                                                  (Kills Container)
+
+  GET /health/readiness -> [ DB / Redis Offline? ]   ---> (FAIL) ---> Remove from Load Balancer!
+                                                                  (Keeps Container Alive)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Readiness vs Liveness Probe Endpoints
+# ==============================================================================
+
+from fastapi import FastAPI, Response, status
+
+app = FastAPI(title="Orchestration Health API")
+
+# Simulated dependency state
+database_online = True
+redis_online = True
+
+
+# ------------------------------------------------------------------------------
+# 1. Liveness Probe (Internal Process Health ONLY)
+# ------------------------------------------------------------------------------
+
+@app.get("/health/liveness", tags=["Health"])
+async def liveness_probe():
+    """
+    Liveness Check: Answers 'Is the web container process alive?'
+    Action on Failure: Container is KILLED and RESTARTED by Kubernetes.
+    NO external dependency checks here!
+    """
+    return {"status": "ALIVE", "process": "UP"}
+
+
+# ------------------------------------------------------------------------------
+# 2. Readiness Probe (Dependency Connectivity Check)
+# ------------------------------------------------------------------------------
+
+@app.get("/health/readiness", tags=["Health"])
+async def readiness_probe(response: Response):
+    """
+    Readiness Check: Answers 'Is the application ready to process user traffic?'
+    Action on Failure: Container is REMOVED from Load Balancer (NOT killed).
+    Checks DB and Redis connectivity!
+    """
+    is_db_ok = database_online
+    is_redis_ok = redis_online
+
+    if not is_db_ok or not is_redis_ok:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "UNREADY",
+            "dependencies": {
+                "postgres": "UP" if is_db_ok else "DOWN",
+                "redis": "UP" if is_redis_ok else "DOWN"
+            }
+        }
+
+    return {
+        "status": "READY",
+        "dependencies": {"postgres": "UP", "redis": "UP"}
+    }
+
+print("--- LESSON 4: Liveness and Readiness Probes Defined ---")
+      `,
+      keyTakeaways: [
+        "Liveness checks verify internal process health; failure triggers container restarts.",
+        "Readiness checks verify downstream dependency connectivity; failure removes the container from load balancers.",
+        "Never check database connections inside Liveness probes to avoid cascading container restarts.",
+        "Return `HTTP 200 OK` for healthy states and `HTTP 503 Service Unavailable` for unready states."
+      ],
+      commonMistakes: [
+        "<b>Checking PostgreSQL or external APIs inside Liveness probes:</b> Causing Kubernetes to kill and restart all application containers during a minor database restart, worsening the outage.",
+        "<b>Combining Liveness and Readiness into a single endpoint:</b> Preventing the orchestrator from distinguishing between process crashes and network blips."
+      ],
+      quizzes: [
+        {
+          question: "What action does an orchestrator (such as Kubernetes) execute when an application container's Liveness probe returns `HTTP 500` or fails repeatedly?",
+          options: [
+            "It sends an email.",
+            "It immediately terminates (kills) the container and spawns a fresh replacement instance.",
+            "It removes the container from the load balancer without killing it.",
+            "It resizes the disk."
+          ],
+          correctIndex: 1,
+          explanation: "Failing a Liveness probe indicates a frozen or dead process, prompting the orchestrator to kill and restart the container."
+        },
+        {
+          question: "Why should external database connectivity checks be placed strictly inside Readiness probes rather than Liveness probes?",
+          options: [
+            "Database queries run too fast for Liveness.",
+            "If a database undergoes a temporary restart, failing Liveness probes will cause orchestrators to kill all app containers simultaneously, turning a minor database blip into a catastrophic cascading outage.",
+            "PostgreSQL forbids Liveness checks.",
+            "Liveness probes cannot return JSON."
+          ],
+          correctIndex: 1,
+          explanation: "Readiness probes safely remove traffic from unready containers without killing the process during temporary dependency blips."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Error Tracking and Production Debugging with Sentry Concepts",
+      durationMinutes: 6,
+      explanation: `
+<b>Automating Unhandled Exception Capture and Real-Time Error Reporting</b><br/>
+Even with comprehensive unit and integration test suites, unhandled exceptions will inevitably occur in production environments due to corrupt payloads, network blips, or unexpected edge cases.<br/><br/>
+
+Relying on developers to manually search raw server log files for error stack traces is unscalable. Modern production environments use **Error Tracking Platforms** (like **Sentry**).<br/><br/>
+
+<b>1. How Error Tracking Platforms Work:</b>
+<ul>
+  <li><b>Automatic Interception:</b> Hooks into FastAPI/Uvicorn exception handlers to capture unhandled exceptions automatically.</li>
+  <li><b>Rich Diagnostic Snapshots:</b> Captures full stack traces, local variable states, active Correlation IDs, user environment details (browser, OS), and exact HTTP request payloads.</li>
+  <li><b>Error Grouping:</b> Groups thousands of identical exceptions into a single actionable issue ticket, preventing alert fatigue.</li>
+</ul>
+
+<b>2. Sentry FastAPI Integration Pattern:</b>
+<pre><code>import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://your_sentry_key@sentry.io/123456",
+    traces_sample_rate=0.1, # Sample 10% of transactions for tracing
+    environment="production"
+)</code></pre>
+      `,
+      diagram: `
+SENTRY ERROR TRACKING PIPELINE:
+
+  Unhandled Exception Raised in Route (e.g. ZeroDivisionError)
+                            |
+                            v  Captured by Sentry SDK
+  [ Diagnostic Snapshot Created ]
+  - Full Stack Trace & Line Numbers
+  - Correlation ID & User Context
+  - Local Variable State
+                            |
+                            v  Transmitted to Sentry Server
+  [ Sentry Alert Notification ] ---> Slack / PagerDuty Alert for Engineers!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Error Tracking & Unhandled Exception Handler
+# ==============================================================================
+
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONStyleResponse if hasattr(FastAPI, 'JSONStyleResponse') else None
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+# Simulated Sentry error capture buffer
+captured_sentry_events = []
+
+def capture_sentry_exception(exc: Exception, request: Request):
+    """Simulates Sentry SDK capturing unhandled exception metadata."""
+    event = {
+        "exception_type": type(exc).__name__,
+        "error_message": str(exc),
+        "path": request.url.path,
+        "method": request.method,
+        "correlation_id": request.headers.get("X-Request-ID", "unknown")
+    }
+    captured_sentry_events.append(event)
+    print(f"  [SENTRY CAPTURE] Exception '{event['exception_type']}' captured and alerted!")
+
+
+@app.exception_handler(Exception)
+async def global_unhandled_exception_handler(request: Request, exc: Exception):
+    """Global fallback exception handler capturing unhandled errors."""
+    # 1. Capture snapshot in Sentry
+    capture_sentry_exception(exc, request)
+
+    # 2. Return RFC 7807 problem details response (Masking internal stack trace!)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "type": "https://api.logistics.com/errors/internal-server-error",
+            "title": "Internal Server Error",
+            "status": 500,
+            "detail": "An unexpected error occurred. Our engineering team has been notified.",
+            "instance": request.url.path
+        }
+    )
+
+print("--- LESSON 5: Global Exception Handler & Sentry Capture Initialized ---")
+      `,
+      keyTakeaways: [
+        "Error tracking platforms (Sentry) capture unhandled exceptions, stack traces, and local variable states automatically.",
+        "Error aggregation groups thousands of duplicate errors into a single actionable issue.",
+        "Always mask internal raw stack traces from public HTTP 500 error responses.",
+        "Attach Correlation IDs to Sentry error events to cross-reference with logs and traces."
+      ],
+      commonMistakes: [
+        "<b>Exposing raw Python stack traces in public HTTP 500 responses:</b> Leaking internal file paths, database structure, and line numbers to potential attackers.",
+        "<b>Silently swallowing exceptions with bare `except:` blocks:</b> Catching errors without logging or reporting them to error tracking platforms, making bugs invisible."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary operational benefit of using an Error Tracking Platform (such as Sentry) over reading plain text log files?",
+          options: [
+            "It compiles Python code into C.",
+            "It automatically captures unhandled exceptions with full stack traces, groups duplicate errors into single issues, and alerts engineering teams with rich diagnostic context.",
+            "It speeds up database queries.",
+            "It converts HTML to PDF."
+          ],
+          correctIndex: 1,
+          explanation: "Error tracking platforms automate exception capture, group duplicate errors, and provide rich diagnostic context for rapid debugging."
+        },
+        {
+          question: "Why should raw Python exception stack traces NEVER be returned in public HTTP 500 response bodies?",
+          options: [
+            "Stack traces are too short.",
+            "Exposing internal file paths, module structures, and line numbers reveals sensitive system architecture details to malicious actors.",
+            "HTTP servers forbid strings.",
+            "It breaks JSON formatting."
+          ],
+          correctIndex: 1,
+          explanation: "Raw stack traces expose internal codebase architecture and file paths, creating security reconnaissance vulnerabilities."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which logging format renders log records as machine-readable key-value pairs easily indexed by log aggregators?",
+      options: [
+        "Plain Text",
+        "Structured JSON",
+        "XML",
+        "CSV"
+      ],
+      correctIndex: 1,
+      explanation: "Structured JSON logs organize entries into machine-readable key-value fields for indexing."
+    },
+    {
+      question: "What is the primary role of a Correlation ID (Request ID) in microservice observability?",
+      options: [
+        "To encrypt database passwords.",
+        "To tag every log line emitted across services for a single HTTP request, allowing developers to isolate its full execution path.",
+        "To speed up integer arithmetic.",
+        "To format JSON output."
+      ],
+      correctIndex: 1,
+      explanation: "Correlation IDs link all telemetry emitted across multiple microservices to a single originating request."
+    },
+    {
+      question: "Which Prometheus metric type represents a single numerical value that can fluctuate both up and down over time?",
+      options: [
+        "Counter",
+        "Gauge",
+        "Histogram",
+        "Summary"
+      ],
+      correctIndex: 1,
+      explanation: "Gauges represent values that can fluctuate up and down over time."
+    },
+    {
+      question: "What is the relationship between a Trace and a Span in OpenTelemetry?",
+      options: [
+        "A Trace is a database table; a Span is a row.",
+        "A Trace represents the full end-to-end request journey, composed of a tree of individual timed Spans representing specific units of work.",
+        "Spans replace logs.",
+        "Traces are only used in Python 2."
+      ],
+      correctIndex: 1,
+      explanation: "A Trace represents the complete request execution path, composed of nested Spans timing individual execution steps."
+    },
+    {
+      question: "What action does an orchestrator (such as Kubernetes) take when a container fails its Liveness probe repeatedly?",
+      options: [
+        "It sends an email.",
+        "It terminates (kills) the container process and spawns a fresh replacement instance.",
+        "It removes traffic without killing the process.",
+        "It formats the disk."
+      ],
+      correctIndex: 1,
+      explanation: "Failing Liveness indicates a frozen process, prompting the orchestrator to kill and restart the container."
+    },
+    {
+      question: "Why should external database checks be placed in Readiness probes rather than Liveness probes?",
+      options: [
+        "Liveness probes cannot parse SQL.",
+        "If a database undergoes a temporary restart, failing Liveness probes will cause orchestrators to kill all app containers, causing a cascading outage.",
+        "PostgreSQL forbids Liveness.",
+        "Readiness probes run on GPUs."
+      ],
+      correctIndex: 1,
+      explanation: "Readiness probes safely remove traffic from unready containers without killing the process during temporary dependency blips."
+    },
+    {
+      question: "What metric metric label practice causes 'cardinality explosion' and overloads Prometheus memory?",
+      options: [
+        "Using constant HTTP methods (`method=\"GET\"`)",
+        "Using high-cardinality unique values (such as User UUIDs or Barcode IDs) as label key values",
+        "Using HTTP status codes",
+        "Using fixed endpoint paths"
+      ],
+      correctIndex: 1,
+      explanation: "High-cardinality labels create millions of unique time-series streams, overloading Prometheus memory."
+    },
+    {
+      question: "Why should raw Python stack traces be masked from public HTTP 500 responses?",
+      options: [
+        "Stack traces consume too much bandwidth.",
+        "Exposing internal file paths, module structures, and line numbers reveals sensitive architecture details to malicious actors.",
+        "Python forbids stack traces.",
+        "HTTP 500 must be empty."
+      ],
+      correctIndex: 1,
+      explanation: "Raw stack traces expose internal codebase architecture and file paths, creating security reconnaissance vulnerabilities."
+    }
+  ],
+  project: {
+    name: "Enterprise Observability & Health Telemetry Suite (Phase 1 Project)",
+    goal: "Build a complete, production-grade observability suite featuring structured JSON logging with ContextVar correlation IDs, Prometheus metric tracking (Counter/Gauge), OpenTelemetry-style span tracing abstractions, Liveness/Readiness probes, and Sentry-style error capture handlers.",
+    brief: "Your global web engineering platform requires an observability and telemetry suite (`observability_suite.py`). The module must feature a custom JSON log formatter, a `contextvars` correlation ID middleware, Prometheus counters and gauges, a Readiness health probe testing mock database/Redis connectivity, a Liveness health probe, and a global error capture handler.",
+    steps: [
+      "Create a workspace script file named `observability_suite.py`.",
+      "Implement a `JSONFormatter` class outputting structured log records with `correlation_id` values extracted from a `ContextVar`.",
+      "Implement a FastAPI request ID middleware injecting `X-Request-ID` correlation tokens.",
+      "Implement Prometheus-style `Counter` (HTTP requests) and `Gauge` (active DB connections) trackers.",
+      "Expose `/health/liveness` (process status) and `/health/readiness` (testing database/Redis state) probes.",
+      "Implement a global exception handler capturing errors in a mock Sentry exception buffer.",
+      "Run `python3 observability_suite.py` in your terminal and print a complete telemetry report."
+    ],
+    acceptance: [
+      "Logs are formatted as machine-readable structured JSON with correlation IDs.",
+      "Metrics track Counters and Gauges correctly.",
+      "Readiness probe evaluates dependency states and returns HTTP 503 on failures.",
+      "Global exception handler catches errors and masks raw stack traces from response bodies.",
+      "Executing `python3 observability_suite.py` outputs a clean report and exits with status code 0."
+    ],
+    stretch: [
+      "Export trace spans in W3C `traceparent` HTTP format.",
+      "Annotate all functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};

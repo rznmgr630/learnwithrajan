@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 50;
+export const PYTHON_TOTAL_DAYS = 53;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -158,6 +158,7 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
     id: "python-phase-9",
     title: { en: "Phase 9 · Production Backend", np: "Phase 9 · Production Backend", jp: "Phase 9・本番バックエンド" },
     dotClass: "bg-[color-mix(in_oklab,var(--accent)_8%,#ef4444)]",
-    days: [{ day: 46, title: { en: "Enterprise FastAPI Architecture & Design Patterns", np: "Enterprise FastAPI Architecture", jp: "エンタープライズFastAPIアーキテクチャ" }, tags: [] }, { day: 47, title: { en: "Authentication, Authorization & Security", np: "Authentication, Authorization र Security", jp: "認証・認可・セキュリティ" }, tags: [] }, { day: 49, title: { en: "Asynchronous Python & asyncio", np: "Asynchronous Python र asyncio", jp: "非同期Pythonとasyncio" }, tags: [] }, { day: 50, title: { en: "Capstone Architecture & End-to-End Integration", np: "Capstone Architecture", jp: "キャップストーンアーキテクチャ" }, tags: [] }],
+    days: [{ day: 46, title: { en: "Enterprise FastAPI Architecture & Design Patterns", np: "Enterprise FastAPI Architecture", jp: "エンタープライズFastAPIアーキテクチャ" }, tags: [] }, { day: 47, title: { en: "Authentication, Authorization & Security", np: "Authentication, Authorization र Security", jp: "認証・認可・セキュリティ" }, tags: [] }, { day: 48, title: { en: "Enterprise API Security & Threat Defense", np: "Enterprise API Security", jp: "エンタープライズAPIセキュリティ" }, tags: [] }, { day: 49, title: { en: "Asynchronous Python & asyncio", np: "Asynchronous Python र asyncio", jp: "非同期Pythonとasyncio" }, tags: [] }, { day: 50, title: { en: "Capstone Architecture & End-to-End Integration", np: "Capstone Architecture", jp: "キャップストーンアーキテクチャ" }, tags: [] }],
   },
+  { id: "python-phase-10", title: { en: "Phase 10 · Production Engineering", np: "Phase 10 · Production Engineering", jp: "Phase 10・プロダクションエンジニアリング" }, dotClass: "bg-[color-mix(in_oklab,var(--accent)_6%,#f59e0b)]", days: [{ day: 51, title: { en: "Enterprise Performance, Profiling & Optimization", np: "Enterprise Performance", jp: "エンタープライズパフォーマンス" }, tags: [] }, { day: 52, title: { en: "Distributed Caching & Rate Limiting", np: "Distributed Caching", jp: "分散キャッシュとレート制限" }, tags: [] }, { day: 53, title: { en: "Asynchronous Background Jobs & Task Queues", np: "Background Jobs", jp: "非同期バックグラウンドジョブ" }, tags: [] }] },
 ];
