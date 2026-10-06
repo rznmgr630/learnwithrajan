@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { BrandMark } from "@/components/BrandMark";
 import { useTheme } from "@/components/ThemeProvider";
 
 const links = [
@@ -161,10 +160,9 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-5xl min-w-0 items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           href="/"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] bg-[var(--surface)] text-[var(--accent)] transition hover:border-[var(--accent)] hover:bg-[color-mix(in_oklab,var(--accent)_12%,var(--surface))] sm:block sm:h-auto sm:w-auto sm:border-0 sm:bg-transparent sm:text-base sm:font-semibold sm:tracking-tight sm:text-[var(--text)] sm:hover:border-0 sm:hover:bg-transparent sm:hover:text-[var(--accent)]"
+          className="flex h-8 shrink-0 items-center rounded-lg border border-[color-mix(in_oklab,var(--accent)_45%,var(--border))] bg-[var(--surface)] px-2 text-[var(--accent)] transition hover:border-[var(--accent)] hover:bg-[color-mix(in_oklab,var(--accent)_12%,var(--surface))] sm:block sm:h-auto sm:w-auto sm:border-0 sm:bg-transparent sm:px-0 sm:text-base sm:font-semibold sm:tracking-tight sm:text-[var(--text)] sm:hover:border-0 sm:hover:bg-transparent sm:hover:text-[var(--accent)]"
         >
-          <BrandMark className="h-4 w-4 sm:hidden" />
-          <span className="hidden whitespace-nowrap sm:inline">{t("site.title")}</span>
+          <span className="whitespace-nowrap text-sm font-semibold sm:text-base">{t("site.title")}</span>
         </Link>
         <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <nav className="hidden min-w-0 items-center gap-0 text-sm sm:flex sm:gap-1">
