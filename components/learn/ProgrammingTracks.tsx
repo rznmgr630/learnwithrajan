@@ -891,6 +891,30 @@ export function ProgrammingTracks() {
             {t("hub.codeReview.cta")}
           </span>
         </Link>
+        <Link href="/learn/code-review/python" className={learnHubCardClass}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
+                {t("hub.pythonCodeReview.title")}
+              </h3>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.pythonCodeReview.subtitle")}</p>
+            </div>
+            <PinButton id="code-review-python" />
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["Python", "Django", "Data Safety", "Review Skills"].map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_50%,transparent)] px-2.5 py-1 text-xs text-[var(--muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
+            {t("hub.codeReview.cta")}
+          </span>
+        </Link>
       </HubAccordionSection>
     </div>
   );

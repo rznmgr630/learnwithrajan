@@ -60,14 +60,14 @@ function ChallengeCard({ number, active, completed, onSelect }: {
 
 type CodeReviewChallengesProps = {
   challenges?: CodeReviewChallenge[];
-  language?: "JavaScript" | "TypeScript" | "Laravel";
+  language?: "JavaScript" | "TypeScript" | "Laravel" | "Python";
 };
 
 export function CodeReviewChallenges({
   challenges = CODE_REVIEW_CHALLENGES,
   language = "JavaScript",
 }: CodeReviewChallengesProps) {
-  const isRunnable = language !== "Laravel";
+  const isRunnable = language === "JavaScript" || language === "TypeScript";
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
@@ -335,11 +335,11 @@ export function CodeReviewChallenges({
         <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit xl:self-start">
               <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
                 <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text)]">
-                  {isRunnable ? "Console output" : "Laravel review"}
+                  {isRunnable ? "Console output" : "Code review"}
                 </div>
                 <div className="min-h-40 bg-[#0b0e14] p-4 font-mono text-sm leading-6">
                   {!isRunnable ? (
-                    <p className="text-slate-500">Review the request, model, policy, and query flow before revealing the expected review.</p>
+                    <p className="text-slate-500">Review the code and its real-world behaviour before revealing the expected review.</p>
                   ) : output.length === 0 ? (
                     <p className="text-slate-500">Run the code to inspect its behaviour.</p>
                   ) : output.map((line, index) => (

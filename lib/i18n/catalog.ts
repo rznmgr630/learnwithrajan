@@ -819,6 +819,16 @@ export const UI_STRINGS = {
     np: "request, Eloquent, policy, queue, र database code का वास्तविक Laravel bug पत्ता लगाउनुहोस्।",
     jp: "リクエスト、Eloquent、ポリシー、キュー、データベースの実務 Laravel バグを見つけます。",
   },
+  "hub.pythonCodeReview.title": {
+    en: "Python Code Review Series",
+    np: "Python कोड रिभ्यू शृङ्खला",
+    jp: "Python コードレビュー・シリーズ",
+  },
+  "hub.pythonCodeReview.subtitle": {
+    en: "Spot real Python bugs in APIs, Django, data processing, and background jobs.",
+    np: "API, Django, data processing, र background job का वास्तविक Python bug पत्ता लगाउनुहोस्।",
+    jp: "API、Django、データ処理、バックグラウンドジョブの実務 Python バグを見つけます。",
+  },
   "hub.codeReview.cta": {
     en: "Start reviewing →",
     np: "रिभ्यू सुरु गर्नुहोस् →",
