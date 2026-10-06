@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 45;
+export const PYTHON_TOTAL_DAYS = 46;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -153,5 +153,11 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 44, title: { en: "HTTP & REST APIs", np: "HTTP र REST APIs", jp: "HTTPとREST API" }, tags: [] },
       { day: 45, title: { en: "FastAPI Fundamentals", np: "FastAPI Fundamentals", jp: "FastAPI基礎" }, tags: [] },
     ],
+  },
+  {
+    id: "python-phase-9",
+    title: { en: "Phase 9 · Production Backend", np: "Phase 9 · Production Backend", jp: "Phase 9・本番バックエンド" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_8%,#ef4444)]",
+    days: [{ day: 46, title: { en: "Enterprise FastAPI Architecture & Design Patterns", np: "Enterprise FastAPI Architecture", jp: "エンタープライズFastAPIアーキテクチャ" }, tags: [] }],
   },
 ];

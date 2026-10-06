@@ -1,0 +1,786 @@
+/**
+ * DAY 46: Phase 9 · Production Backend — Enterprise FastAPI Architecture & Design Patterns
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1FastApiArchitecture = {
+  day: 46,
+  topic: "Phase 9 · Production Backend — Enterprise FastAPI Architecture & Design Patterns",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Clean Architecture Principles and Layered Separation of Concerns",
+      durationMinutes: 18,
+      explanation: `
+<b>Decoupling HTTP Transport from Domain Business Logic</b><br/>
+When building small proof-of-concept scripts, placing database queries, Pydantic validation, business rules, and HTTP endpoint decorators in a single file works fine. However, as enterprise applications grow to hundreds of endpoints, monolithic file structures become unmaintainable.<br/><br/>
+
+<b>Separation of Concerns (SoC)</b> is the architectural principle of dividing a software application into distinct layers, where each layer has a single, well-defined responsibility:<br/><br/>
+
+<b>1. The 4 Core Architectural Layers:</b>
+<ul>
+  <li><b>Routers Layer (Presentation / HTTP Transport):</b> Receives HTTP requests, parses path/query parameters, handles HTTP status codes, and delegates work to the Service Layer. Contains ZERO SQL queries or core business logic!</li>
+  <li><b>Schemas Layer (Data Contracts):</b> Pydantic models defining input validation constraints and output JSON serialization models.</li>
+  <li><b>Services Layer (Core Business Logic):</b> Implements domain rules, calculations, permissions, and orchestration. Completely decoupled from HTTP frameworks!</li>
+  <li><b>Repositories Layer (Data Access):</b> Manages database interactions (SQLAlchemy, Redis, S3). Abstracts database queries behind clean Python methods.</li>
+</ul>
+
+<b>Benefits of Layered Clean Architecture:</b>
+1. **Testability:** Business services and repository layers can be unit-tested in isolation without spinning up web servers.
+2. **Maintainability:** Changing from PostgreSQL to MongoDB or changing web frameworks requires modifying only the Repository or Router layer—leaving business services untouched!
+      `,
+      diagram: `
+LAYERED CLEAN ARCHITECTURAL PIPELINE:
+
+  HTTP Request -> [ Routers Layer ]      (Parses HTTP, Status Codes, Path/Query)
+                         |
+                         v  Invokes Service Method
+                  [ Services Layer ]     (Domain Rules, Pricing, SLA Logic)
+                         |
+                         v  Invokes Repository Method
+                  [ Repositories Layer ] (SQLAlchemy ORM Queries, Raw SQL, DB)
+                         |
+                         v
+                  [ PostgreSQL / SQLite Database ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Layered Separation of Concerns
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Schemas Layer (Pydantic Contracts)
+# ------------------------------------------------------------------------------
+
+from pydantic import BaseModel, Field
+
+class ParcelCreateSchema(BaseModel):
+    tracking_id: str = Field(..., pattern=r"^TRK-\d{4}$")
+    weight_lbs: float = Field(..., gt=0.0)
+
+class ParcelResponseSchema(BaseModel):
+    tracking_id: str
+    weight_lbs: float
+    shipping_fee_usd: float
+    status: str
+
+
+# ------------------------------------------------------------------------------
+# 2. Services Layer (Pure Business Logic - No HTTP/Database Dependencies!)
+# ------------------------------------------------------------------------------
+
+class ParcelDomainService:
+    """Core domain logic executing business rules independently of web frameworks."""
+
+    @staticmethod
+    def calculate_shipping_fee(weight_lbs: float) -> float:
+        base_fee = 12.00
+        weight_surcharge = weight_lbs * 0.75
+        return round(base_fee + weight_surcharge, 2)
+
+
+# ------------------------------------------------------------------------------
+# 3. Routers Layer (HTTP Transport Endpoint)
+# ------------------------------------------------------------------------------
+
+from fastapi import FastAPI, status
+
+app = FastAPI()
+
+@app.post("/api/v1/parcels", response_model=ParcelResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create_parcel_endpoint(payload: ParcelCreateSchema):
+    # Router delegates calculation to Service Layer
+    fee = ParcelDomainService.calculate_shipping_fee(payload.weight_lbs)
+
+    return {
+        "tracking_id": payload.tracking_id,
+        "weight_lbs": payload.weight_lbs,
+        "shipping_fee_usd": fee,
+        "status": "QUEUED"
+    }
+
+print("--- BEGINNER: Layered Architecture Configured ---")
+print("Schemas, Services, and Routers separated cleanly.")
+      `,
+      keyTakeaways: [
+        "Separation of Concerns divides code into Routers, Schemas, Services, and Repositories.",
+        "Routers handle HTTP transport; Services handle business rules; Repositories handle database I/O.",
+        "Keeping business services decoupled from web frameworks enables fast unit testing.",
+        "Layered architecture prevents monolithic file complexity as applications scale."
+      ],
+      commonMistakes: [
+        "<b>Writing raw SQL or SQLAlchemy queries directly inside Router endpoint functions:</b> Coupling database logic to HTTP controllers, making testing without a database impossible.",
+        "<b>Mixing Pydantic model validation inside business service classes:</b> Coupling domain logic tightly to HTTP schema contracts."
+      ],
+      quizzes: [
+        {
+          question: "Which layer in a clean enterprise FastAPI architecture is strictly responsible for database I/O operations (e.g. executing SQLAlchemy queries)?",
+          options: [
+            "Routers Layer",
+            "Schemas Layer",
+            "Repositories Layer",
+            "Services Layer"
+          ],
+          correctIndex: 2,
+          explanation: "The Repositories Layer abstracts all database access and queries away from business services and HTTP routers."
+        },
+        {
+          question: "Why should business logic services be kept decoupled from web framework objects (like FastAPI's `Request` or `HTTPException`)?",
+          options: [
+            "To speed up compilation times.",
+            "So core business logic can be unit-tested directly in isolation without needing to spin up web servers or mock HTTP requests.",
+            "Because Python forbids importing FastAPI in services.",
+            "To automatically format JSON strings."
+          ],
+          correctIndex: 1,
+          explanation: "Decoupling domain services allows fast unit testing and enables reusing business logic across CLI scripts or background workers."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Modular Routing with APIRouter",
+      durationMinutes: 18,
+      explanation: `
+<b>Modular Endpoint Organization for Enterprise Applications</b><br/>
+In large production applications, declaring all endpoints on a single `app = FastAPI()` instance leads to massive file length and merge conflicts. FastAPI provides **`APIRouter`** to group related endpoints into modular, self-contained domain components.<br/><br/>
+
+<b>1. What is an APIRouter?</b><br/>
+An `APIRouter` operates as a mini-FastAPI application instance containing a subset of path operations.<br/>
+<code>from fastapi import APIRouter</code><br/>
+<code>router = APIRouter(prefix="/api/v1/parcels", tags=["Parcels"])</code><br/><br/>
+
+<b>2. Key APIRouter Parameters:</b>
+<ul>
+  <li><code>prefix</code>: Common URL path prefix prepended to all routes in the module (e.g., <code>prefix="/api/v1/parcels"</code>).</li>
+  <li><code>tags</code>: Grouping labels for OpenAPI `/docs` organization.</li>
+  <li><code>dependencies</code>: List of global dependencies applied automatically to **every** route in the router module (e.g., enforcing authentication across an entire router file!).</li>
+</ul>
+
+<b>3. Registering Routers on the Main App Instance:</b><br/>
+In `main.py`, include feature routers using `app.include_router(router)`:<br/>
+<code>app.include_router(parcels.router)</code><br/>
+<code>app.include_router(hubs.router)</code>
+      `,
+      diagram: `
+MODULAR APIROUTER ARCHITECTURE:
+
+  main.py (Root Application)
+    ├── app.include_router(parcels_router) ---> /api/v1/parcels (routes/parcels.py)
+    └── app.include_router(hubs_router)    ---> /api/v1/hubs    (routes/hubs.py)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Modular APIRouter Component Setup
+# ==============================================================================
+
+from fastapi import FastAPI, APIRouter, status
+
+# ------------------------------------------------------------------------------
+# 1. Feature Module 1: Parcels Router (routes/parcels.py)
+# ------------------------------------------------------------------------------
+
+parcels_router = APIRouter(
+    prefix="/api/v1/parcels",
+    tags=["Parcels Management"]
+)
+
+@parcels_router.get("", status_code=status.HTTP_200_OK)
+async def list_parcels():
+    return [{"id": "TRK-1001", "status": "QUEUED"}]
+
+@parcels_router.get("/{tracking_id}", status_code=status.HTTP_200_OK)
+async def get_parcel(tracking_id: str):
+    return {"id": tracking_id, "status": "IN_TRANSIT"}
+
+
+# ------------------------------------------------------------------------------
+# 2. Feature Module 2: Hubs Router (routes/hubs.py)
+# ------------------------------------------------------------------------------
+
+hubs_router = APIRouter(
+    prefix="/api/v1/hubs",
+    tags=["Hubs Management"]
+)
+
+@hubs_router.get("", status_code=status.HTTP_200_OK)
+async def list_hubs():
+    return [{"code": "CHICAGO_CENTRAL"}, {"code": "AUSTIN_REGIONAL"}]
+
+
+# ------------------------------------------------------------------------------
+# 3. Main Application Entry Point (main.py)
+# ------------------------------------------------------------------------------
+
+app = FastAPI(title="Modular Logistics Engine")
+
+# Register feature routers on main app
+app.include_router(parcels_router)
+app.include_router(hubs_router)
+
+print("--- BEGINNER: APIRouter Modules Registered ---")
+print("Routes active:")
+print("  - GET /api/v1/parcels")
+print("  - GET /api/v1/parcels/{tracking_id}")
+print("  - GET /api/v1/hubs")
+      `,
+      keyTakeaways: [
+        "`APIRouter` splits endpoints into modular, domain-specific feature files.",
+        "Use `prefix` to set common path prefixes and `tags` for Swagger `/docs` organization.",
+        "Pass `dependencies=[Depends(...)]` to `APIRouter()` to enforce global security across all routes in a file.",
+        "Register routers in `main.py` using `app.include_router(router)`."
+      ],
+      commonMistakes: [
+        "<b>Duplicating path prefixes:</b> Setting `prefix=\"/api/v1/parcels\"` on the router and then writing `@router.get(\"/api/v1/parcels\")`, resulting in duplicated paths like `/api/v1/parcels/api/v1/parcels`!",
+        "<b>Forgetting `app.include_router()` in `main.py`:</b> Defining an `APIRouter` in a feature file but failing to include it on the root `FastAPI` instance."
+      ],
+      quizzes: [
+        {
+          question: "How do you register a feature `APIRouter` instance `parcels_router` onto the root `FastAPI` application `app` in `main.py`?",
+          options: [
+            "`app.add_router(parcels_router)`",
+            "`app.include_router(parcels_router)`",
+            "`app.register(parcels_router)`",
+            "`app.attach(parcels_router)`"
+          ],
+          correctIndex: 1,
+          explanation: "`app.include_router(router)` attaches modular APIRouter instances to the primary FastAPI application."
+        },
+        {
+          question: "If an `APIRouter` defines `prefix=\"/api/v1/parcels\"`, what is the full endpoint URL for a route decorated with `@router.get(\"/{id}\")`?",
+          options: [
+            "`/{id}`",
+            "`/api/v1/parcels/{id}`",
+            "`/api/v1/parcels/id`",
+            "`/parcels/{id}`"
+          ],
+          correctIndex: 1,
+          explanation: "FastAPI automatically prepends the router's `prefix` string to all inner path operation decorators."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Data Access Abstraction with the Repository Pattern",
+      durationMinutes: 20,
+      explanation: `
+<b>Abstracting Database Queries Behind Clean Interfaces</b><br/>
+If your business logic services execute raw SQLAlchemy `select()` queries directly, switching database technologies or testing service logic requires complex database mocking setups. The **Repository Pattern** abstracts all data access logic behind a clean, object-oriented interface.<br/><br/>
+
+<b>1. What is a Repository?</b><br/>
+A **Repository** acts as an in-memory collection interface for database entities. The Service layer requests domain objects from the Repository without needing to know whether data is stored in PostgreSQL, SQLite, Redis, or an external web API.<br/><br/>
+
+<b>2. Defining a Repository Class:</b>
+<pre><code>class ParcelRepository:
+    def __init__(self, db_session: Session):
+        self.db = db_session
+
+    def get_by_tracking_id(self, tracking_id: str) -> ParcelModel | None:
+        stmt = select(ParcelModel).where(ParcelModel.tracking_id == tracking_id)
+        return self.db.scalars(stmt).first()
+
+    def create(self, parcel_model: ParcelModel) -> ParcelModel:
+        self.db.add(parcel_model)
+        self.db.commit()
+        self.db.refresh(parcel_model)
+        return parcel_model</code></pre><br/>
+
+<b>Why use the Repository Pattern?</b>
+1. **Centralized Queries:** Database queries are defined in one place, preventing SQL query duplication across multiple routes.
+2. **Easy Unit Testing:** You can swap `SQLAlchemyParcelRepository` with a `MockParcelRepository` in unit tests without touching database code!
+      `,
+      diagram: `
+REPOSITORY PATTERN ABSTRACT DATA ACCESS:
+
+  [ Service Layer ] ---> Invokes repo.get_by_id("TRK-1001")
+                                 |
+                                 v
+  [ ParcelRepository Interface ]
+  ├── SQLAlchemyRepository (Queries PostgreSQL / SQLite)
+  └── InMemoryMockRepository (Queries RAM dict for fast unit testing!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: The Repository Pattern
+# ==============================================================================
+
+from sqlalchemy import create_engine, select, String, Float
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+engine = create_engine("sqlite:///:memory:", echo=False)
+
+class Base(DeclarativeBase):
+    pass
+
+class ParcelModel(Base):
+    __tablename__ = "parcels"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracking_id: Mapped[str] = mapped_column(String(50), unique=True)
+    weight_lbs: Mapped[float] = mapped_column(Float)
+
+Base.metadata.create_all(engine)
+
+# ------------------------------------------------------------------------------
+# Repositories Layer (Data Access Abstraction)
+# ------------------------------------------------------------------------------
+
+class ParcelRepository:
+    """Repository handling all database queries for ParcelModel entities."""
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_tracking_id(self, tracking_id: str) -> ParcelModel | None:
+        stmt = select(ParcelModel).where(ParcelModel.tracking_id == tracking_id)
+        return self.session.scalars(stmt).first()
+
+    def create(self, tracking_id: str, weight: float) -> ParcelModel:
+        model = ParcelModel(tracking_id=tracking_id, weight_lbs=weight)
+        self.session.add(model)
+        self.session.commit()
+        self.session.refresh(model)
+        return model
+
+
+# ------------------------------------------------------------------------------
+# Demonstration of Repository Data Access
+# ------------------------------------------------------------------------------
+
+print("--- BEGINNER: Repository Pattern Execution ---")
+
+with Session(engine) as session:
+    repo = ParcelRepository(session)
+
+    # 1. Create record via repository
+    new_item = repo.create(tracking_id="TRK-9001", weight=24.5)
+    print("Created Parcel ID via Repo:", new_item.id)
+
+    # 2. Fetch record via repository
+    retrieved = repo.get_by_tracking_id("TRK-9001")
+    if retrieved is not None:
+        print(f"Retrieved via Repo: {retrieved.tracking_id} ({retrieved.weight_lbs} lbs)")
+      `,
+      keyTakeaways: [
+        "The Repository Pattern abstracts database queries behind clean class interfaces.",
+        "Services call repository methods (`repo.get_by_id()`) rather than writing ORM queries directly.",
+        "Repositories centralize SQL/ORM logic, preventing duplicate queries across routes.",
+        "Abstract repositories enable fast unit testing using in-memory mock repositories."
+      ],
+      commonMistakes: [
+        "<b>Leaking ORM sessions or queries into the Service or Router layers:</b> Writing `select()` queries outside the Repository layer, breaking the data abstraction boundary.",
+        "<b>Placing business logic rules inside Repository classes:</b> Adding pricing algorithms or permission checks to repositories instead of keeping repositories focused solely on data persistence."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural responsibility of a Repository class in enterprise applications?",
+          options: [
+            "Parsing HTTP headers and query parameters.",
+            "Abstracting database queries and data persistence operations behind a clean, object-oriented interface.",
+            "Formatting HTML pages.",
+            "Executing unit tests."
+          ],
+          correctIndex: 1,
+          explanation: "Repositories encapsulate data access and database query logic away from business services and web controllers."
+        },
+        {
+          question: "Why does the Repository Pattern simplify unit testing for business service classes?",
+          options: [
+            "It runs tests in parallel.",
+            "It allows replacing real database repositories with in-memory mock repositories without changing service code.",
+            "It automatically generates test data.",
+            "It disables type checking."
+          ],
+          correctIndex: 1,
+          explanation: "Services interact with repositories via clean interfaces, allowing mock repositories to be substituted during testing."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Layered Settings Management with pydantic-settings",
+      durationMinutes: 18,
+      explanation: `
+<b>Type-Safe Environment Configuration and Validation</b><br/>
+Production applications require configuration settings (database URLs, secret keys, debug flags) that vary between development, staging, and production environments. Hardcoding configuration strings or manually reading `os.environ` with unsafe type casts causes runtime crashes.<br/><br/>
+
+FastAPI applications use <b><code>pydantic-settings</code></b> (BaseSettings) for type-safe environment variable management.<br/><br/>
+
+<b>1. What is `BaseSettings`?</b><br/>
+`BaseSettings` extends Pydantic models to parse and validate environment variables automatically:<br/>
+<pre><code>from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    app_name: str = "Enterprise Logistics API"
+    environment: str = "development"
+    database_url: str
+    secret_key: str
+
+    class Config:
+        env_file = ".env" # Loads environment variables from .env file!</code></pre><br/>
+
+<b>2. Caching Settings with `@lru_cache`:</b><br/>
+Reading environment settings on every request is inefficient. Wrap the settings factory function with `@lru_cache` to instantiate settings **once** as a global singleton:<br/>
+<pre><code>from functools import lru_cache
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings() # Instantiated once and cached!</code></pre>
+      `,
+      diagram: `
+PYDANTIC-SETTINGS RESOLUTION LIFECYCLE:
+
+  1. Read .env file / Environment Variables
+                    |
+                    v
+  2. Pydantic BaseSettings Validation (Type checks, defaults)
+                    |
+                    v
+  3. Cached via @lru_cache -> get_settings()
+                    |
+                    v  Injected via Depends(get_settings)
+  4. Available across Routers, Services, and Repositories!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Type-Safe Settings Management with Pydantic
+# ==============================================================================
+
+from functools import lru_cache
+from pydantic import BaseModel, Field
+
+# ------------------------------------------------------------------------------
+# Production Settings Model
+# ------------------------------------------------------------------------------
+
+class ApplicationSettings(BaseModel):
+    """Production settings model validating environment configuration."""
+    app_title: str = "Global Logistics Engine"
+    environment: str = Field(default="development", description="dev, staging, production")
+    database_url: str = Field(
+        default="sqlite:///:memory:",
+        description="SQLAlchemy database connection DSN"
+    )
+    secret_key: str = Field(
+        default="DEFAULT_DEV_SECRET_KEY_CHANGE_IN_PROD",
+        min_length=16
+    )
+
+
+# Memoize settings creation so environment files are parsed exactly once
+@lru_cache
+def get_app_settings() -> ApplicationSettings:
+    """Factory function returning cached application settings singleton."""
+    return ApplicationSettings()
+
+
+# ------------------------------------------------------------------------------
+# Injecting Settings into FastAPI Endpoints
+# ------------------------------------------------------------------------------
+
+from fastapi import FastAPI, Depends
+
+app = FastAPI()
+
+@app.get("/api/v1/config", tags=["System"])
+async def get_public_config_info(
+    settings: ApplicationSettings = Depends(get_app_settings)
+) -> dict:
+    """Route endpoint consuming injected application settings."""
+    return {
+        "title": settings.app_title,
+        "environment": settings.environment,
+        "database_backend": settings.database_url.split(":")[0]
+    }
+
+print("--- BEGINNER: Settings Management Configured ---")
+cfg = get_app_settings()
+print(f"App Title: '{cfg.app_title}' | Env: '{cfg.environment}'")
+      `,
+      keyTakeaways: [
+        "Use `pydantic-settings` (`BaseSettings`) for type-safe environment variable parsing.",
+        "`BaseSettings` automatically reads environment variables and `.env` files.",
+        "Wrap settings factory functions with `@lru_cache` to instantiate and cache settings once.",
+        "Inject settings into routes using FastAPI's `Depends(get_settings)` system."
+      ],
+      commonMistakes: [
+        "<b>Parsing `.env` files repeatedly on every request:</b> Calling `Settings()` inside route functions without `@lru_cache`, creating file I/O overhead.",
+        "<b>Committing `.env` files containing real production secrets to Git:</b> Exposing passwords in version control. Always add `.env` to `.gitignore`!"
+      ],
+      quizzes: [
+        {
+          question: "Why should a settings factory function returning `BaseSettings` be decorated with `@functools.lru_cache`?",
+          options: [
+            "To encrypt database passwords in memory.",
+            "To cache the settings instance so environment files and variables are parsed only once as a singleton rather than on every request.",
+            "To allow settings to be converted to HTML.",
+            "Because FastAPI requires it."
+          ],
+          correctIndex: 1,
+          explanation: "`@lru_cache` caches the settings instance, preventing environment variables and `.env` files from being re-parsed on every HTTP request."
+        },
+        {
+          question: "Which file should ALWAYS be added to `.gitignore` to prevent leaking production database passwords and secret keys?",
+          options: [
+            "`pyproject.toml`",
+            "`.env`",
+            "`main.py`",
+            "`README.md`"
+          ],
+          correctIndex: 1,
+          explanation: "The `.env` file contains secret credentials and environment variables; it must never be committed to Git repositories."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Standard Enterprise FastAPI Project Layout",
+      durationMinutes: 6,
+      explanation: `
+<b>Standard Production Directory Tree Architecture</b><br/>
+To ensure codebase scalability and team collaboration, production FastAPI applications follow a standardized modular directory layout.<br/><br/>
+
+<b>Standard Enterprise Directory Layout:</b>
+<pre><code>src/logistics_app/
+│── main.py                   <-- Root FastAPI app instantiation & router inclusion
+│── config.py                 <-- Pydantic BaseSettings & @lru_cache
+│── database.py               <-- SQLAlchemy Engine, SessionLocal factory, Base
+│
+├── domain/                   <-- Feature Modules (Domain-Driven Organization)
+│   ├── parcels/
+│   │   ├── __init__.py
+│   │   ├── router.py         <-- APIRouter endpoints (/parcels)
+│   │   ├── schemas.py        <-- Pydantic request/response schemas
+│   │   ├── models.py         <-- SQLAlchemy ORM models
+│   │   ├── service.py        <-- Domain business logic functions
+│   │   └── repository.py     <-- Data access repository queries
+│   │
+│   └── hubs/
+│       ├── router.py
+│       ├── schemas.py
+│       └── models.py
+│
+└── tests/                    <-- Pytest Suite
+    ├── conftest.py
+    └── test_parcels.py</code></pre>
+      `,
+      diagram: `
+MODULAR DOMAIN-DRIVEN FILE ORGANIZER:
+
+  logistics_app/
+  ├── main.py  (App Entry Point)
+  └── domain/  (Feature Modules)
+      ├── parcels/  ---> router.py, schemas.py, models.py, service.py, repository.py
+      └── hubs/     ---> router.py, schemas.py, models.py, service.py, repository.py
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Complete Enterprise Architecture Simulation
+# ==============================================================================
+
+# Simulation of main.py assembling modular domain components
+from fastapi import FastAPI, Depends, status
+from pydantic import BaseModel, Field
+
+# ------------------------------------------------------------------------------
+# 1. Domain Component: Schemas
+# ------------------------------------------------------------------------------
+class CreateParcelSchema(BaseModel):
+    tracking_id: str = Field(..., pattern=r"^TRK-\d{4}$")
+    weight_lbs: float = Field(..., gt=0.0)
+
+class ParcelResponseSchema(BaseModel):
+    tracking_id: str
+    weight_lbs: float
+    shipping_fee_usd: float
+
+
+# ------------------------------------------------------------------------------
+# 2. Domain Component: Service
+# ------------------------------------------------------------------------------
+class ParcelService:
+    @staticmethod
+    def process_parcel(tracking_id: str, weight: float) -> dict:
+        fee = round(10.00 + (weight * 0.50), 2)
+        return {
+            "tracking_id": tracking_id,
+            "weight_lbs": weight,
+            "shipping_fee_usd": fee
+        }
+
+
+# ------------------------------------------------------------------------------
+# 3. Domain Component: Router
+# ------------------------------------------------------------------------------
+from fastapi import APIRouter
+
+parcels_router = APIRouter(prefix="/api/v1/parcels", tags=["Parcels"])
+
+@parcels_router.post("", response_model=ParcelResponseSchema, status_code=status.HTTP_201_CREATED)
+async def create_parcel(payload: CreateParcelSchema):
+    return ParcelService.process_parcel(payload.tracking_id, payload.weight_lbs)
+
+
+# ------------------------------------------------------------------------------
+# 4. Root Application Assembly (main.py)
+# ------------------------------------------------------------------------------
+app = FastAPI(title="Enterprise Logistics Platform")
+app.include_router(parcels_router)
+
+print("--- LESSON 5: Enterprise Application Assembly Complete ---")
+print("Main app initialized with domain router '/api/v1/parcels'")
+      `,
+      keyTakeaways: [
+        "Organize project files into modular domain feature directories (`domain/parcels/`).",
+        "Each feature domain contains dedicated files: `router.py`, `schemas.py`, `models.py`, `service.py`, `repository.py`.",
+        "`main.py` serves as the assembly root, including feature routers and database sessions.",
+        "Modular domain-driven organization prevents monolithic file friction as teams scale."
+      ],
+      commonMistakes: [
+        "<b>Grouping files by technical type instead of domain feature:</b> Placing 100 router files in a single `controllers/` folder and 100 model files in `models/` instead of grouping files by domain feature (`parcels/`, `hubs/`)."
+      ],
+      quizzes: [
+        {
+          question: "Which file in a standard enterprise FastAPI application layout serves as the root assembly entry point that instantiates `FastAPI()` and includes feature routers?",
+          options: [
+            "`config.py`",
+            "`main.py`",
+            "`database.py`",
+            "`schemas.py`"
+          ],
+          correctIndex: 1,
+          explanation: "`main.py` acts as the root assembly file instantiating the app and attaching feature routers."
+        },
+        {
+          question: "What is the primary operational benefit of organizing a codebase into feature domain modules (e.g. `domain/parcels/` containing router, schemas, and models)?",
+          options: [
+            "It runs code faster on GPUs.",
+            "It keeps all related code for a specific business feature localized in one directory, reducing merge conflicts and improving maintainability.",
+            "It disables static type checking.",
+            "It automatically writes unit tests."
+          ],
+          correctIndex: 1,
+          explanation: "Feature domain organization groups all related routers, schemas, and services for a business domain together."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which layer in clean enterprise architecture is strictly responsible for handling HTTP transport, path parameters, and status codes?",
+      options: [
+        "Services Layer",
+        "Routers Layer",
+        "Repositories Layer",
+        "Schemas Layer"
+      ],
+      correctIndex: 1,
+      explanation: "The Routers Layer manages HTTP transport, path parsing, and response status codes."
+    },
+    {
+      question: "Which FastAPI component allows grouping related API endpoints into modular, self-contained feature files?",
+      options: [
+        "`APIRouter`",
+        "`FastAPIApp`",
+        "`RouteGroup`",
+        "`EndpointModule`"
+      ],
+      correctIndex: 0,
+      explanation: "`APIRouter` enables modularizing endpoints across feature files."
+    },
+    {
+      question: "What is the primary architectural responsibility of a Repository class?",
+      options: [
+        "Validating incoming HTTP headers.",
+        "Abstracting database queries and persistence operations away from business services.",
+        "Rendering HTML templates.",
+        "Parsing command-line flags."
+      ],
+      correctIndex: 1,
+      explanation: "Repositories encapsulate database queries and data persistence operations."
+    },
+    {
+      question: "Why should settings functions returning `BaseSettings` be decorated with `@functools.lru_cache`?",
+      options: [
+        "To encrypt passwords in RAM.",
+        "To cache the settings instance so `.env` files and environment variables are parsed only once as a singleton.",
+        "To convert settings to HTML.",
+        "To disable type hints."
+      ],
+      correctIndex: 1,
+      explanation: "`@lru_cache` caches settings instances, preventing redundant `.env` file parsing on every HTTP request."
+    },
+    {
+      question: "Which method attaches an `APIRouter` instance `parcels_router` to the main `FastAPI` instance `app`?",
+      options: [
+        "`app.add_router(parcels_router)`",
+        "`app.include_router(parcels_router)`",
+        "`app.attach(parcels_router)`",
+        "`app.register(parcels_router)`"
+      ],
+      correctIndex: 1,
+      explanation: "`app.include_router()` registers modular routers on the root FastAPI application."
+    },
+    {
+      question: "What design pattern does the Repositories Layer implement to abstract data access from business services?",
+      options: [
+        "Factory Pattern",
+        "Repository Pattern",
+        "Singleton Pattern",
+        "Observer Pattern"
+      ],
+      correctIndex: 1,
+      explanation: "The Repository Pattern abstracts database queries behind an object collection interface."
+    },
+    {
+      question: "Where should business domain rules and calculations be placed in a clean layered architecture?",
+      options: [
+        "Inside `main.py` root router functions.",
+        "Inside pure business logic classes in the Services Layer.",
+        "Inside Pydantic `BaseModel` classes.",
+        "Inside database SQL scripts."
+      ],
+      correctIndex: 1,
+      explanation: "Domain business rules belong in pure business service classes in the Services Layer."
+    },
+    {
+      question: "Which file should NEVER be committed to Git repositories because it contains secret passwords and local API keys?",
+      options: [
+        "`pyproject.toml`",
+        "`.env`",
+        "`main.py`",
+        "`router.py`"
+      ],
+      correctIndex: 1,
+      explanation: "`.env` files hold secret environment credentials and must be excluded via `.gitignore`."
+    }
+  ],
+  project: {
+    name: "Enterprise Clean-Architecture FastAPI Engine (Phase 1 Final Project)",
+    goal: "Build a complete enterprise-grade FastAPI application featuring clean layered architecture (Routers, Schemas, Services, Repositories), modular APIRouter organization, type-safe BaseSettings, and dependency injection.",
+    brief: "Your enterprise web engineering team requires a clean-architecture FastAPI service (`clean_logistics_app.py`). The application must feature modular `APIRouter` feature files (`parcels_router`), clear Pydantic schemas, a business domain service (`ParcelDomainService`), an in-memory repository (`ParcelRepository`), and type-safe settings management via `pydantic-settings`.",
+    steps: [
+      "Create a workspace script file named `clean_logistics_app.py`.",
+      "Define application settings `AppSettings` using Pydantic and memoize instantiation with `@lru_cache`.",
+      "Define request and response Pydantic schemas (`ParcelCreateSchema`, `ParcelResponseSchema`).",
+      "Implement a `ParcelRepository` class managing in-memory dataset storage.",
+      "Implement a `ParcelDomainService` class executing business rules (shipping fee calculations) and interacting with the repository.",
+      "Build a modular `APIRouter` (`parcels_router`) with prefix `/api/v1/parcels` that injects the service and executes endpoints (`GET`, `POST`).",
+      "Assemble the application in `main()` by including the router on the `FastAPI` instance.",
+      "Run `python3 clean_logistics_app.py` in your terminal and verify the layered execution flow."
+    ],
+    acceptance: [
+      "Application is cleanly separated into Schemas, Repositories, Services, and Routers.",
+      "Router uses `APIRouter` with prefix `/api/v1/parcels`.",
+      "Settings management uses Pydantic with `@lru_cache` memoization.",
+      "Executing `python3 clean_logistics_app.py` outputs a clean architecture execution report and returns exit code 0."
+    ],
+    stretch: [
+      "Add a `pytest` test file using `starlette.testclient.TestClient` that unit-tests the domain service in isolation without HTTP servers.",
+      "Annotate all architecture classes with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
