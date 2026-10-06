@@ -1,0 +1,725 @@
+/**
+ * DAY 56: Phase 1 · Core Python — Docker for Python & Enterprise Containerization
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1DockerForPython = {
+  day: 56,
+  topic: "Phase 1 · Core Python — Docker for Python & Enterprise Containerization",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Docker Fundamentals, Containerization vs. VMs, and the OCI Standard",
+      durationMinutes: 18,
+      explanation: `
+<b>Standardizing Python Environments Across Development, Testing, and Cloud Deployments</b><br/>
+The classic developer nightmare—*"It worked fine on my machine, but crashed in production!"*—is caused by environment drifts: differing OS C-libraries, mismatched Python minor versions, or missing system dependencies. **Docker** solves this by packaging the Python application, its dependencies, runtime, and OS file system into a lightweight, portable container image.<br/><br/>
+
+<b>1. Virtual Machines (VMs) vs. Docker Containers:</b>
+<ul>
+  <li><b>Virtual Machines (Heavyweight):</b> Hypervisors virtualize physical hardware. Each VM runs a full guest operating system (Linux/Windows Kernel), consuming gigabytes of RAM and taking minutes to boot.</li>
+  <li><b>Docker Containers (Lightweight):</b> Containers share the host operating system kernel and isolate processes using Linux <code>namespaces</code> and <code>cgroups</code>. They boot in milliseconds and consume megabytes of RAM!</li>
+</ul>
+
+<b>2. Core Docker Concepts:</b>
+<ul>
+  <li><b>Dockerfile:</b> A plain-text blueprint containing instructions to build a Docker image.</li>
+  <li><b>Docker Image (Read-Only):</b> An immutable, layered snapshot of the application and runtime environment.</li>
+  <li><b>Docker Container (Read-Write Execution Instance):</b> A running instance of a Docker image.</li>
+  <li><b>Open Container Initiative (OCI):</b> The industry standard specification ensuring Docker images run identically across AWS, GCP, Azure, and Kubernetes clusters.</li>
+</ul>
+      `,
+      diagram: `
+VMs vs DOCKER CONTAINERS TOPOLOGY:
+
+  Virtual Machines (Heavyweight Hardware Isolation):
+  +-----------------------+  +-----------------------+
+  | App A + Python + Libs |  | App B + Python + Libs |
+  +-----------------------+  +-----------------------+
+  | Guest OS (Ubuntu Kernel)|  | Guest OS (Debian)     |
+  +-----------------------+  +-----------------------+
+  |          Hypervisor (VMware / VirtualBox)         |
+  +--------------------------------------------------+
+  |                  Host OS Kernel                  |
+  +--------------------------------------------------+
+
+  Docker Containers (Lightweight OS Kernel Sharing):
+  +-----------------------+  +-----------------------+
+  | App A + Python + Libs |  | App B + Python + Libs |
+  +-----------------------+  +-----------------------+
+  | Isolated Namespace A  |  | Isolated Namespace B  |
+  +--------------------------------------------------+
+  |                  Docker Engine                   |
+  +--------------------------------------------------+
+  |              Shared Host OS Kernel               |
+  +--------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Docker CLI Fundamentals Demonstration
+# ==============================================================================
+
+# Common Docker CLI commands for Python developers (Simulated execution)
+
+CLI_COMMANDS_CHEAT_SHEET = {
+    # 1. Build an image named 'logistics-api' with tag 'v1.0' from current folder
+    "build": "docker build -t logistics-api:v1.0 .",
+
+    # 2. Run container in background (-d) mapping host port 8000 to container port 8000
+    "run": "docker run -d -p 8000:8000 --name active-api logistics-api:v1.0",
+
+    # 3. View active running containers
+    "list": "docker ps",
+
+    # 4. Inspect container logs in real time
+    "logs": "docker logs -f active-api",
+
+    # 5. Open an interactive bash shell inside the running container
+    "exec": "docker exec -it active-api /bin/bash"
+}
+
+print("--- LESSON 1: Core Docker CLI Workflow Commands ---")
+for action, cmd in CLI_COMMANDS_CHEAT_SHEET.items():
+    print(f"  {action.upper():<8} : {cmd}")
+      `,
+      keyTakeaways: [
+        "Containers isolate applications at the OS process level, sharing the host OS kernel.",
+        "A Dockerfile is the build blueprint; an Image is the read-only template; a Container is the running instance.",
+        "Containers boot in milliseconds and consume significantly less RAM than Virtual Machines.",
+        "OCI compliance guarantees images run identically across all cloud providers and Kubernetes."
+      ],
+      commonMistakes: [
+        "<b>Confusing Docker Images with Containers:</b> Editing files inside a running container expecting the original Docker image file to update automatically.",
+        "<b>Using Docker as a Virtual Machine:</b> Running full OS init systems (like `systemd`) inside a container instead of keeping the container focused on a single process."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural difference between a Docker Container and a traditional Virtual Machine (VM)?",
+          options: [
+            "VMs only run Python 2; containers run Python 3.",
+            "VMs virtualize hardware and run dedicated guest OS kernels; Docker containers share the host OS kernel and isolate processes using Linux namespaces.",
+            "Docker containers require dedicated GPUs.",
+            "VMs do not use file systems."
+          ],
+          correctIndex: 1,
+          explanation: "Docker containers share the host kernel and isolate processes, making them vastly lighter and faster than hardware-virtualized VMs."
+        },
+        {
+          question: "Which component represents the immutable, read-only multi-layer template generated from a Dockerfile?",
+          options: [
+            "Docker Container",
+            "Docker Image",
+            "Docker Volume",
+            "Hypervisor"
+          ],
+          correctIndex: 1,
+          explanation: "A Docker Image is the immutable, read-only multi-layered template from which executable containers are spawned."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Optimizing Base Python Images and .dockerignore",
+      durationMinutes: 18,
+      explanation: `
+<b>Selecting Python Base Images and Reducing Context Bloat</b><br/>
+Building efficient container images requires selecting the correct official base image and excluding unnecessary files from the build context.<br/><br/>
+
+<b>1. Selecting the Right Python Base Image:</b>
+<ul>
+  <li><b><code>python:3.11</code> (Full Standard - ~1 GB):</b> Includes complete C compilers, build tools, and OS packages. Great for local experimentation; too large for production!</li>
+  <li><b><code>python:3.11-slim</code> (Recommended - ~150 MB):</b> Stripped-down Debian distribution containing standard C runtime libraries (`glibc`). **Best default choice** for production Python microservices!</li>
+  <li><b><code>python:3.11-alpine</code> (Ultra-light - ~50 MB):</b> Based on Alpine Linux using `musl` libc. *Warning:* Python wheels with C extensions (like `numpy`, `asyncpg`, `cryptography`) often fail to build or compile slowly on Alpine!</li>
+</ul>
+
+<b>2. Preventing Build Context Bloat with <code>.dockerignore</code>:</b><br/>
+When you run <code>docker build .</code>, Docker copies the entire working directory to the Docker daemon. Including local virtual environments (`.venv`), Git history (`.git`), or temporary cache files (`__pycache__`) drastically slows down builds and inflates image sizes!<br/><br/>
+
+<b>Mandatory <code>.dockerignore</code> File Entries:</b>
+<pre><code>.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.env
+.pytest_cache
+.coverage
+htmlcov</code></pre>
+      `,
+      diagram: `
+DOCKERIGNORE BUILD CONTEXT FILTER:
+
+  Project Directory (500 MB)           .dockerignore Filter
+  ├── main.py                           [ .git ]        ---> BLOCKED
+  ├── requirements.txt                  [ .venv ]       ---> BLOCKED
+  ├── .git/ (300 MB!)         ======>   [ __pycache__ ] ---> BLOCKED
+  ├── .venv/ (150 MB!)
+  └── __pycache__/                      Filtered Build Context Sent to Docker Daemon:
+                                        ===> ONLY main.py & requirements.txt (10 KB!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Single-Stage Production Dockerfile (python:3.11-slim)
+# ==============================================================================
+
+DOCKERFILE_SLIM_CONTENT = """
+# 1. Official Python Slim Base Image
+FROM python:3.11-slim
+
+# 2. Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \\
+    PYTHONUNBUFFERED=1 \\
+    WORKDIR=/app
+
+# 3. Set container working directory
+WORKDIR \${WORKDIR}
+
+# 4. Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    curl \\
+    && rm -rf /var/lib/apt/lists/*
+
+# 5. Copy and install Python requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 6. Copy application source code
+COPY . .
+
+# 7. Expose API port
+EXPOSE 8000
+
+# 8. Command to launch FastAPI production server
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+"""
+
+print("--- LESSON 2: Optimized Single-Stage Dockerfile Blueprint ---")
+print(DOCKERFILE_SLIM_CONTENT)
+      `,
+      keyTakeaways: [
+        "Use `python:3.11-slim` as the default production base image (~150 MB).",
+        "Avoid `python:3.11-alpine` for Python projects relying on C-extensions (`numpy`, `asyncpg`).",
+        "Always add a `.dockerignore` file containing `.venv`, `.git`, `__pycache__`, and `.env`.",
+        "Set `PYTHONUNBUFFERED=1` to ensure Python log outputs stream to container stdout instantly."
+      ],
+      commonMistakes: [
+        "<b>Forgetting a `.dockerignore` file:</b> Sending a 500 MB `.venv` folder to the Docker daemon on every build, slowing build times from 2 seconds to 2 minutes.",
+        "<b>Using `python:latest` in production:</b> Allowing automatic base image updates to break production builds unpredictably when Python minor versions upgrade."
+      ],
+      quizzes: [
+        {
+          question: "Why is `python:3.11-slim` generally preferred over `python:3.11-alpine` for Python microservices using C extensions (like `asyncpg` or `cryptography`)?",
+          options: [
+            "Alpine is proprietary.",
+            "Alpine uses `musl` libc instead of standard `glibc`, causing binary C-wheel incompatibilities that force slow manual source compilation or runtime crashes.",
+            "Slim images do not support Uvicorn.",
+            "Slim images are larger than 10 GB."
+          ],
+          correctIndex: 1,
+          explanation: "Alpine's `musl` C library breaks pre-compiled `glibc` Python wheels, leading to slow build failures or missing library errors."
+        },
+        {
+          question: "What is the primary function of a `.dockerignore` file during the container build process?",
+          options: [
+            "To delete files from the host hard drive.",
+            "To exclude unnecessary files (like `.venv`, `.git`, `__pycache__`) from being sent to the Docker build daemon, speeding up builds and shrinking image sizes.",
+            "To format Python code with Ruff.",
+            "To encrypt passwords in RAM."
+          ],
+          correctIndex: 1,
+          explanation: "A `.dockerignore` file filters out unneeded local development files before sending the build context to Docker."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Multi-Stage Docker Builds and Non-Root Security Hardening",
+      durationMinutes: 20,
+      explanation: `
+<b>Minimizing Image Sizes and Enforcing Least-Privilege Security</b><br/>
+In enterprise production deployments, shipping build toolchains (like `gcc`, `g++`, `make`, `git`) inside production container images creates massive security risks and inflates image sizes.<br/><br/>
+
+**Multi-Stage Builds** solve this by separating the **Build Stage** (where C dependencies and wheels are compiled) from the final **Runtime Stage** (where only compiled artifacts are copied into a clean minimal image).<br/><br/>
+
+<b>1. Multi-Stage Build Pattern:</b>
+<ul>
+  <li><b>Stage 1 (Builder):</b> Uses a full base image to compile C extensions and build Python wheels into a temporary directory (<code>/root/.cache/wheels</code>).</li>
+  <li><b>Stage 2 (Final Runtime):</b> Starts from a fresh minimal `slim` image, copies *only* the compiled wheels from Stage 1, installs them, and discards all compilers and build tools!</li>
+</ul>
+
+<b>2. Non-Root Security Hardening:</b><br/>
+By default, Docker containers execute processes as the `root` user (`uid=0`). If an attacker exploits a vulnerability in a web framework, they gain root access inside the container and potentially compromise the host system.<br/>
+<i>Production Hardening Rule:</i> Always create and switch to a unprivileged non-root user (`appuser`) inside the Dockerfile!
+      `,
+      diagram: `
+MULTI-STAGE BUILD ARCHITECTURE:
+
+  STAGE 1: Builder Stage (python:3.11-slim + gcc)
+  ├── Install gcc, make, libpq-dev
+  ├── Build C Wheels: pip wheel --wheel-dir=/app/wheels -r requirements.txt
+  └── Yields: /app/wheels (Compiled artifacts)
+                                |
+                                v  COPY --from=builder /app/wheels
+  STAGE 2: Final Production Stage (python:3.11-slim)
+  ├── NO gcc! NO make! NO build tools!
+  ├── Install compiled wheels: pip install /wheels/*.whl
+  ├── Create Non-Root User: USER appuser (uid=10001)
+  └── Resulting Production Image: Minimal Size (~160 MB) + Hardened Security!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Enterprise Multi-Stage Dockerfile with Non-Root Security
+# ==============================================================================
+
+MULTI_STAGE_DOCKERFILE_CONTENT = """
+# ==============================================================================
+# STAGE 1: Builder (Compile C Extensions & Build Wheels)
+# ==============================================================================
+FROM python:3.11-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \\
+    PYTHONUNBUFFERED=1
+
+WORKDIR /build
+
+# Install temporary C build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    build-essential \\
+    gcc \\
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+# Build wheels for requirements
+RUN pip wheel --no-cache-dir --wheel-dir /build/wheels -r requirements.txt
+
+
+# ==============================================================================
+# STAGE 2: Final Production Runtime (Minimal & Hardened)
+# ==============================================================================
+FROM python:3.11-slim AS runner
+
+ENV PYTHONDONTWRITEBYTECODE=1 \\
+    PYTHONUNBUFFERED=1 \\
+    WORKDIR=/app
+
+WORKDIR \${WORKDIR}
+
+# Copy compiled wheels from builder stage
+COPY --from=builder /build/wheels /wheels
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+
+# Copy application source code
+COPY . .
+
+# SECURITY HARDENING: Create unprivileged non-root user
+RUN groupadd -g 10001 appgroup && \\
+    useradd -u 10001 -g appgroup -s /bin/sh appuser && \\
+    chown -R appuser:appgroup \${WORKDIR}
+
+# Switch to non-root user context
+USER appuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+"""
+
+print("--- LESSON 3: Enterprise Multi-Stage Dockerfile ---")
+print(MULTI_STAGE_DOCKERFILE_CONTENT)
+      `,
+      keyTakeaways: [
+        "Multi-stage builds compile artifacts in a builder stage and copy only binaries to the runtime stage.",
+        "Discarding compilers (`gcc`, `make`) reduces image sizes and eliminates attack surface vulnerabilities.",
+        "By default, containers run as `root`. Always create a unprivileged non-root user (`USER appuser`).",
+        "Multi-stage builds produce hardened production containers ready for Kubernetes."
+      ],
+      commonMistakes: [
+        "<b>Running production containers as `root`:</b> Exposing host systems to container breakout exploits if web applications are compromised.",
+        "<b>Leaving `build-essential` and `gcc` installed in production images:</b> Giving attackers ready-made C compilation tools inside compromised containers."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural goal of using Multi-Stage Docker builds in production Python applications?",
+          options: [
+            "To run multiple Python versions simultaneously.",
+            "To compile dependencies in a temporary builder stage and copy only compiled artifacts into a minimal runtime image, discarding heavy compilers and build tools.",
+            "To speed up CSS rendering.",
+            "To replace Docker Compose."
+          ],
+          correctIndex: 1,
+          explanation: "Multi-stage builds separate compilation from execution, producing small runtime images free of build toolchain vulnerabilities."
+        },
+        {
+          question: "Why is switching away from the `root` user (`USER appuser`) inside a production Dockerfile considered a critical security requirement?",
+          options: [
+            "Python refuses to run as root.",
+            "If an attacker exploits a web vulnerability, running as non-root prevents them from gaining administrative privileges inside the container or breaking out to the host system.",
+            "Root containers cannot connect to PostgreSQL.",
+            "It speeds up network I/O."
+          ],
+          correctIndex: 1,
+          explanation: "Enforcing non-root execution restricts attacker privileges if a vulnerability in the application layer is compromised."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Multi-Container Orchestration with Docker Compose (FastAPI + PostgreSQL + Redis)",
+      durationMinutes: 18,
+      explanation: `
+<b>Local Development Orchestration of Interdependent Microservices</b><br/>
+Modern backend Python services rarely run in total isolation. They depend on database servers (PostgreSQL), in-memory caches (Redis), and background task queues (Celery). Manually running `docker run` commands with complex network flags for 4 different containers is tedious and error-prone.<br/><br/>
+
+**Docker Compose** is a tool for defining and running multi-container Docker applications using a declarative `docker-compose.yml` file.<br/><br/>
+
+<b>1. Key Docker Compose Concepts:</b>
+<ul>
+  <li><b>Services:</b> Containerized components (e.g. `web`, `db`, `redis`).</li>
+  <li><b>Networks:</b> Isolated virtual networks allowing containers to communicate using service names as hostname DNS entries (e.g. `postgresql://db:5432/logistics`).</li>
+  <li><b>Volumes:</b> Persistent data storage managed outside the container lifecycle (ensuring database data survives container restarts!).</li>
+  <li><b>`depends_on` with Health Checks:</b> Controlling startup order so the FastAPI web app waits for PostgreSQL to pass readiness health checks before launching!</li>
+</ul>
+      `,
+      diagram: `
+DOCKER COMPOSE MULTI-CONTAINER TOPOLOGY:
+
+  Docker Compose Network (isolated-internal-net)
+  +------------------------------------------------------------------+
+  |                                                                  |
+  |  [ FastAPI Web Container ] ---> Connects via DNS: "redis:6379"  |
+  |  (Host Port 8000:8000)   ---> Connects via DNS: "db:5432"    |
+  |                                 |                    |           |
+  +---------------------------------|--------------------|-----------+
+                                    v                    v
+                          [ Redis Container ]   [ PostgreSQL DB Container ]
+                          (Port 6379)           (Port 5432)
+                                                (Volume: pgdata)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Declarative docker-compose.yml Specification
+# ==============================================================================
+
+DOCKER_COMPOSE_YML_SPEC = """
+version: '3.8'
+
+services:
+  # 1. FastAPI Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: logistics_web_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres_pass@db:5432/logistics_db
+      - REDIS_URL=redis://redis:6379/0
+      - APP_ENV=development
+    volumes:
+      - .:/app  # Live-reloading bind mount for local development
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - logistics_net
+
+  # 2. PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: logistics_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_pass
+      - POSTGRES_DB=logistics_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - logistics_net
+
+  # 3. Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: logistics_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - logistics_net
+
+volumes:
+  postgres_data:
+
+networks:
+  logistics_net:
+    driver: bridge
+"""
+
+print("--- LESSON 4: Declarative docker-compose.yml Blueprint ---")
+print(DOCKER_COMPOSE_YML_SPEC)
+      `,
+      keyTakeaways: [
+        "Docker Compose orchestrates multi-container applications using a single `docker-compose.yml` file.",
+        "Containers on the same Compose network communicate using service names (`db`, `redis`) as DNS hostnames.",
+        "Use Named Volumes (`postgres_data:/var/lib/postgresql/data`) to persist database data across container restarts.",
+        "Use `depends_on` with `service_healthy` conditions to ensure databases pass readiness checks before dependent web applications launch."
+      ],
+      commonMistakes: [
+        "<b>Using `localhost` inside a container to connect to PostgreSQL running in another container:</b> Forgetting that `localhost` inside a container refers to *itself*, not other containers or the host machine! Use the service name (e.g. `db`) as the hostname.",
+        "<b>Forgetting Named Volumes for databases:</b> Losing all database data when `docker compose down` destroys container instances."
+      ],
+      quizzes: [
+        {
+          question: "How do containerized microservices running on the same Docker Compose network locate and communicate with each other?",
+          options: [
+            "By hardcoding host IP addresses.",
+            "Through Docker's embedded DNS server, using service names declared in `docker-compose.yml` (e.g. `db` or `redis`) as hostnames.",
+            "Over bluetooth.",
+            "By writing text files to disk."
+          ],
+          correctIndex: 1,
+          explanation: "Docker Compose creates an isolated network where service names act as DNS hostnames resolving directly to container IP addresses."
+        },
+        {
+          question: "Why must a Named Volume (e.g. `postgres_data:/var/lib/postgresql/data`) be attached to a PostgreSQL container in Docker Compose?",
+          options: [
+            "PostgreSQL refuses to run without volumes.",
+            "Containers are ephemeral; without a volume, database data is permanently deleted when the container is stopped or removed.",
+            "Volumes encrypt database passwords.",
+            "Volumes speed up CSS rendering."
+          ],
+          correctIndex: 1,
+          explanation: "Containers are ephemeral. Named volumes store database data on host storage independently of the container lifecycle."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Production Container Checklist and Kubernetes Deployment Readiness",
+      durationMinutes: 6,
+      explanation: `
+<b>Preparing Python Containers for Enterprise Production & Kubernetes</b><br/>
+Before deploying Dockerized Python applications to production or Kubernetes clusters, verify that container specifications satisfy production hardening guidelines.<br/><br/>
+
+<b>Production Container Hardening Checklist:</b>
+<ol>
+  <li><b>Explicit Minimal Base Image:</b> Fixed tag (`python:3.11-slim`), never `latest`.</li>
+  <li><b>Clean Build Context:</b> Complete `.dockerignore` file excluding `.venv`, `.git`, `__pycache__`, and `.env`.</li>
+  <li><b>Multi-Stage Build:</b> Discard compilers (`gcc`, `make`) from final runtime images.</li>
+  <li><b>Non-Root Execution:</b> Process executes as unprivileged user (`USER appuser`).</li>
+  <li><b>Unbuffered Log Streaming:</b> `PYTHONUNBUFFERED=1` set so Python logs stream instantly to container stdout.</li>
+  <li><b>No Hardcoded Secrets:</b> Credentials injected dynamically via environment variables (`pydantic-settings`).</li>
+  <li><b>Health Probes Configured:</b> `/health/liveness` and `/health/readiness` HTTP endpoints exposed.</li>
+  <li><b>Resource Bounds Set:</b> CPU and Memory limit constraints defined to prevent container memory hogging.</li>
+</ol>
+      `,
+      diagram: `
+PRODUCTION KUBERNETES CONTAINER READINESS:
+
+  Production Container Image: logistics-api:v1.0 (Non-Root, Slim, Multi-Stage)
+                             |
+                             v  Deployed to Kubernetes Pod
+  +------------------------------------------------------------------+
+  |  Kubernetes Pod Specification                                    |
+  |  - Liveness Probe  : GET /health/liveness                        |
+  |  - Readiness Probe : GET /health/readiness                       |
+  |  - Resource Limits : Memory max 512Mi, CPU max 500m              |
+  |  - Env Secrets     : Injected from Kubernetes Secret Vault       |
+  +------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Production Container Verification Helper
+# ==============================================================================
+
+def audit_dockerfile_compliance(dockerfile_text: str) -> dict[str, bool]:
+    """Audits a Dockerfile string against production security standards."""
+    return {
+        "uses_slim_or_multistage": "AS builder" in dockerfile_text or "slim" in dockerfile_text,
+        "enforces_non_root": "USER " in dockerfile_text,
+        "has_unbuffered_env": "PYTHONUNBUFFERED=1" in dockerfile_text,
+        "exposes_port": "EXPOSE " in dockerfile_text,
+        "uses_explicit_cmd": "CMD " in dockerfile_text
+    }
+
+sample_dockerfile = """
+FROM python:3.11-slim AS runner
+ENV PYTHONUNBUFFERED=1
+USER appuser
+EXPOSE 8000
+CMD ["uvicorn", "main:app"]
+"""
+
+audit_results = audit_dockerfile_compliance(sample_dockerfile)
+
+print("--- LESSON 5: Production Container Audit Report ---")
+for rule, passed in audit_results.items():
+    status_str = "PASSED" if passed else "FAILED"
+    print(f"  {rule:<28} : {status_str}")
+      `,
+      keyTakeaways: [
+        "Production containers must use minimal base images, multi-stage builds, and non-root execution.",
+        "Set `PYTHONUNBUFFERED=1` to ensure real-time log streaming to container stdout.",
+        "Never hardcode secrets inside Dockerfiles or container images.",
+        "Production containers should expose health probe endpoints for Kubernetes readiness monitoring."
+      ],
+      commonMistakes: [
+        "<b>Hardcoding sensitive `.env` files into Docker images (`COPY .env .`):</b> Baking secret passwords into immutable Docker image layers that can be inspected by anyone pulling the image!"
+      ],
+      quizzes: [
+        {
+          question: "Why should environment configuration secret files (`.env`) NEVER be copied into a Docker image during `docker build` (`COPY .env .`)?",
+          options: [
+            "Docker fails to copy text files.",
+            "Docker image layers are immutable and stored in registry repositories, allowing anyone with pull access to extract plain-text production passwords.",
+            "Environment variables do not work in containers.",
+            "It slows down Python startup."
+          ],
+          correctIndex: 1,
+          explanation: "Copying secret files into Docker images bakes plain-text credentials permanently into immutable image layers."
+        },
+        {
+          question: "What environment variable setting ensures Python logs bypass internal memory buffers and stream instantly to container stdout/stderr?",
+          options: [
+            "`PYTHONLOG=DEBUG`",
+            "`PYTHONUNBUFFERED=1`",
+            "`DOCKER_LOGS=TRUE`",
+            "`NO_BUFFER=1`"
+          ],
+          correctIndex: 1,
+          explanation: "`PYTHONUNBUFFERED=1` forces standard output and error streams to be unbuffered, streaming logs instantly to Docker logging drivers."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "What is the primary difference between a Docker Container and a Virtual Machine (VM)?",
+      options: [
+        "Containers do not use memory.",
+        "VMs virtualize hardware and run guest OS kernels; Docker containers share the host OS kernel and isolate processes.",
+        "VMs only run Python.",
+        "Containers require dedicated GPUs."
+      ],
+      correctIndex: 1,
+      explanation: "Containers share the host OS kernel and isolate processes, making them lightweight and fast."
+    },
+    {
+      question: "Which official Python base image is recommended as the default starting point for production microservices?",
+      options: [
+        "`python:latest`",
+        "`python:3.11-slim`",
+        "`python:3.11-alpine`",
+        "`ubuntu:latest`"
+      ],
+      correctIndex: 1,
+      explanation: "`python:3.11-slim` provides a lightweight Debian base with standard `glibc` support."
+    },
+    {
+      question: "What is the primary operational benefit of using Multi-Stage Docker builds?",
+      options: [
+        "It compiles Python to C++.",
+        "It compiles build artifacts in a builder stage and copies only compiled dependencies into a clean runtime image, discarding heavy compilers.",
+        "It runs multiple containers on one port.",
+        "It disables CORS."
+      ],
+      correctIndex: 1,
+      explanation: "Multi-stage builds discard compilers and build tools, producing minimal and secure runtime images."
+    },
+    {
+      question: "Why is running production containers as non-root (`USER appuser`) a critical security requirement?",
+      options: [
+        "Root containers crash Uvicorn.",
+        "It prevents attackers from gaining root administrative privileges inside the container or host if the web application is compromised.",
+        "Python requires non-root user accounts.",
+        "It speeds up network I/O."
+      ],
+      correctIndex: 1,
+      explanation: "Non-root execution restricts attacker privileges if a vulnerability in the application layer is exploited."
+    },
+    {
+      question: "How do containers on the same Docker Compose network locate each other?",
+      options: [
+        "By hardcoding IP addresses.",
+        "Through Docker's embedded DNS server, using service names declared in `docker-compose.yml` as hostnames.",
+        "Over bluetooth.",
+        "By writing files to disk."
+      ],
+      correctIndex: 1,
+      explanation: "Docker Compose DNS resolves service names (`db`, `redis`) directly to container IP addresses."
+    },
+    {
+      question: "Why must Named Volumes be attached to database containers in Docker Compose?",
+      options: [
+        "Databases refuse to start without volumes.",
+        "Containers are ephemeral; named volumes persist database storage on the host independently of container lifecycles.",
+        "Volumes encrypt passwords.",
+        "Volumes format JSON."
+      ],
+      correctIndex: 1,
+      explanation: "Named volumes ensure database records survive container destruction and restarts."
+    },
+    {
+      question: "Which file prevents copying local `.venv`, `.git`, and `__pycache__` folders into the Docker build daemon?",
+      options: [
+        "`.dockerignore`",
+        "`.gitignore`",
+        "`Dockerfile`",
+        "`docker-compose.yml`"
+      ],
+      correctIndex: 0,
+      explanation: "The `.dockerignore` file filters out unneeded local development files before building images."
+    },
+    {
+      question: "What environment variable setting ensures Python logs stream instantly to container stdout/stderr without buffering?",
+      options: [
+        "`PYTHONUNBUFFERED=1`",
+        "`LOG_STREAM=1`",
+        "`NO_BUFFER=TRUE`",
+        "`DOCKER_STREAM=1`"
+      ],
+      correctIndex: 0,
+      explanation: "`PYTHONUNBUFFERED=1` disables standard output buffering, streaming logs to container drivers in real time."
+    }
+  ],
+  project: {
+    name: "Enterprise Dockerized FastAPI + PostgreSQL + Redis Microservice Suite (Phase 1 Project)",
+    goal: "Build a production-grade multi-stage Dockerfile for a FastAPI microservice, configure a .dockerignore file, and orchestrate a complete multi-container Docker Compose stack featuring FastAPI, PostgreSQL, and Redis.",
+    brief: "Your cloud engineering organization requires a complete containerized deployment suite (`docker_deployment_suite.py`). You will write a multi-stage `Dockerfile` with non-root security (`USER appuser`), a `.dockerignore` file, and a complete `docker-compose.yml` specification orchestrating FastAPI, PostgreSQL (with health checks and volumes), and Redis.",
+    steps: [
+      "Create a workspace script file named `docker_deployment_suite.py`.",
+      "Write an enterprise multi-stage `Dockerfile` (Builder stage compiling wheels -> Final runtime stage with non-root user).",
+      "Write a `.dockerignore` file specification excluding `.venv`, `.git`, `__pycache__`, and `.env`.",
+      "Write a `docker-compose.yml` specification connecting `web`, `db` (PostgreSQL with health check), and `redis` services on a bridge network.",
+      "Write a Python verification script that audits Dockerfile security compliance (checking for non-root user, slim base, and unbuffered logging).",
+      "Run `python3 docker_deployment_suite.py` in your terminal and print a container compliance report."
+    ],
+    acceptance: [
+      "Dockerfile uses multi-stage builds (`AS builder` and `AS runner`).",
+      "Production runtime enforces non-root security (`USER appuser`).",
+      "docker-compose.yml wires FastAPI, PostgreSQL, and Redis on a bridge network.",
+      "PostgreSQL uses a named volume for persistent storage.",
+      "Executing `python3 docker_deployment_suite.py` outputs a clean container compliance report and exits with status code 0."
+    ],
+    stretch: [
+      "Add a `healthcheck` block to the `web` service in `docker-compose.yml` querying `/health/readiness`.",
+      "Annotate all verification functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
