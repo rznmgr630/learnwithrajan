@@ -1,0 +1,651 @@
+/**
+ * DAY 52: Phase 1 · Core Python — Distributed Caching & Rate Limiting with Redis
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1RedisCachingAndRateLimiting = {
+  day: 52,
+  topic: "Phase 1 · Core Python — Distributed Caching & Rate Limiting with Redis",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Redis Fundamentals & Native Data Structures",
+      durationMinutes: 18,
+      explanation: `
+<b>Sub-Millisecond Data Operations in Memory</b><br/>
+Redis (**RE**mote **D**ictionary **S**erver) is an open-source, in-memory key-value data store known for sub-millisecond response latencies ($O(1)$ operations). Unlike basic key-value stores, Redis provides rich native data structures suited for distinct backend tasks:<br/><br/>
+
+<b>Core Redis Data Structures:</b>
+<ul>
+  <li><b>Strings:</b> Text, serialized JSON, or binary data (up to 512 MB). Supports atomic integer operations (<code>INCR</code>, <code>DECR</code>).</li>
+  <li><b>Hashes:</b> Field-value maps for structured objects (<code>HSET user:100 name "Marcus" role "admin"</code>).</li>
+  <li><b>Lists:</b> Linked lists supporting queue and stack operations (<code>LPUSH</code>, <code>RPOP</code>).</li>
+  <li><b>Sets:</b> Unordered collections of unique strings (<code>SADD</code>, <code>SISMEMBER</code>).</li>
+  <li><b>Sorted Sets (ZSet):</b> Collections of unique strings ordered by a floating-point <code>score</code> (<code>ZADD</code>, <code>ZRANGEBYSCORE</code>). Ideal for leaderboards and sliding-window rate limiters.</li>
+</ul>
+      `,
+      diagram: `
+REDIS NATIVE DATA STRUCTURES:
+
+  1. String : "parcel:TRK-1001:status" -> "IN_TRANSIT"
+  2. Hash   : "parcel:TRK-1001"        -> { weight_lbs: 14.5, dest: "CHICAGO" }
+  3. List   : "queue:dispatch"         -> [ "TRK-101", "TRK-102", "TRK-103" ]
+  4. Set    : "active_hubs"            -> { "CHICAGO", "AUSTIN", "SEATTLE" }
+  5. ZSet   : "ratelimit:192.168.1.1"  -> { Member: "ts_1", Score: 170000000.0 }
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Redis Native Data Structures with redis-py
+# ==============================================================================
+
+import redis
+
+# Connecting to a Redis instance
+r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+# ------------------------------------------------------------------------------
+# 1. String Operations with TTL
+# ------------------------------------------------------------------------------
+r.set("parcel:TRK-1001:status", "IN_TRANSIT", ex=300)  # TTL of 300 seconds
+status = r.get("parcel:TRK-1001:status")
+
+# ------------------------------------------------------------------------------
+# 2. Hash Operations
+# ------------------------------------------------------------------------------
+r.hset("parcel:TRK-1001", mapping={"weight_lbs": 14.5, "destination": "CHICAGO"})
+weight = r.hget("parcel:TRK-1001", "weight_lbs")
+
+# ------------------------------------------------------------------------------
+# 3. Atomic Counter
+# ------------------------------------------------------------------------------
+r.incr("global:dispatch_counter")
+
+print("--- LESSON 1: Redis Operations Complete ---")
+print(f"Status: {status} | Weight: {weight} lbs")
+      `,
+      keyTakeaways: [
+        "Redis stores all data in memory, delivering sub-millisecond $O(1)$ reads and writes.",
+        "Choose data structures intentionally: Strings for values, Hashes for objects, ZSets for rate limiting.",
+        "Set `decode_responses=True` in `redis-py` to automatically decode Redis byte responses into Python strings.",
+        "Atomic operations like `INCR` prevent race conditions across concurrent processes."
+      ],
+      commonMistakes: [
+        "<b>Forgetting `decode_responses=True`:</b> Receiving raw `b'value'` byte strings in Python instead of decoded text strings.",
+        "<b>Using keys without namespacing:</b> Storing keys as `1001` instead of `parcel:1001:status`, causing key collisions in shared Redis databases."
+      ],
+      quizzes: [
+        {
+          question: "Which Redis data structure stores unique elements sorted by an associated numeric score, making it ideal for sliding-window rate limiters?",
+          options: [
+            "Hash",
+            "Sorted Set (ZSet)",
+            "List",
+            "Set"
+          ],
+          correctIndex: 1,
+          explanation: "Sorted Sets (ZSet) order unique elements by floating-point scores, making them ideal for time-series logs and rate limiters."
+        },
+        {
+          question: "What does setting `decode_responses=True` accomplish in the `redis.Redis()` Python client constructor?",
+          options: [
+            "It encrypts strings stored in Redis.",
+            "It automatically decodes raw binary byte responses returned by Redis into UTF-8 Python strings.",
+            "It enables automatic JSON serialization.",
+            "It converts numbers to floats."
+          ],
+          correctIndex: 1,
+          explanation: "`decode_responses=True` tells `redis-py` to convert byte outputs (`b'data'`) to native Python strings (`'data'`)."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "The Cache-Aside Pattern, TTL, and Cache Invalidation",
+      durationMinutes: 20,
+      explanation: `
+<b>Read-Heavy Application Caching and Staleness Protection</b><br/>
+The **Cache-Aside (Lazy Loading)** pattern is the enterprise standard for read-heavy application caching.<br/><br/>
+
+<b>The Cache-Aside Lifecycle:</b>
+<ol>
+  <li>The application receives a request for data.</li>
+  <li>It queries **Redis** first.</li>
+  <li><b>Cache HIT:</b> If the key exists, return the cached value immediately (sub-millisecond).</li>
+  <li><b>Cache MISS:</b> If the key does not exist:
+    <ul>
+      <li>Query the underlying database (e.g., PostgreSQL).</li>
+      <li>Write the result to Redis with a **Time-To-Live (TTL)**.</li>
+      <li>Return the database result to the user.</li>
+    </ul>
+  </li>
+</ol>
+
+<b>Expiration (TTL) & Invalidation Strategies:</b>
+<ul>
+  <li><b>TTL (Time-To-Live):</b> Prevents stale data from remaining indefinitely (<code>r.expire(key, time_in_seconds)</code>).</li>
+  <li><b>Active Invalidation:</b> Explicitly deleting or updating the Redis key when a database record is modified (<code>r.delete(key)</code> on `UPDATE`/`DELETE`).</li>
+</ul>
+      `,
+      diagram: `
+CACHE-ASIDE PATTERN LIFECYCLE:
+
+  Client Request
+        |
+        v
+  [ Check Redis Cache ]
+        |
+  +-----+-----------------+
+  |                       |
+(Cache HIT)          (Cache MISS)
+  |                       |
+  v                       v
+Return Cached Data   Query PostgreSQL Database
+                          |
+                          v
+                     Write Result to Redis (Set TTL)
+                          |
+                          v
+                     Return Database Data
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Cache-Aside & Active Invalidation Implementation
+# ==============================================================================
+
+import json
+import redis
+
+redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+def mock_database_query(tracking_id: str) -> dict | None:
+    """Simulates a database query execution."""
+    print("  [DATABASE QUERY] Fetching from PostgreSQL...")
+    return {"tracking_id": tracking_id, "weight_lbs": 14.5, "status": "IN_TRANSIT"}
+
+
+def get_parcel_details_cache_aside(tracking_id: str) -> dict | None:
+    """Implements the Cache-Aside pattern with a 300-second TTL."""
+    cache_key = f"cache:parcel:{tracking_id}"
+
+    # 1. Attempt Redis Read (Sub-millisecond)
+    cached_data = redis_client.get(cache_key)
+    if cached_data:
+        print("  [REDIS CACHE HIT] Returned from RAM instantly!")
+        return json.loads(cached_data)
+
+    # 2. Cache MISS -> Query PostgreSQL
+    print("  [REDIS CACHE MISS] Querying underlying database...")
+    db_data = mock_database_query(tracking_id)
+    if not db_data:
+        return None
+
+    # 3. Populate Redis Cache with 300s TTL
+    redis_client.setex(cache_key, 300, json.dumps(db_data))
+    return db_data
+
+
+def update_parcel_status_with_invalidation(tracking_id: str, new_status: str):
+    """Updates database and performs active cache invalidation."""
+    print(f"  [DATABASE UPDATE] Updating {tracking_id} status to {new_status}...")
+
+    # Active Cache Invalidation: Purge stale key
+    cache_key = f"cache:parcel:{tracking_id}"
+    redis_client.delete(cache_key)
+    print("  [CACHE INVALIDATION] Stale Redis key purged.")
+
+print("--- LESSON 2: Cache-Aside Execution ---")
+# Call 1: Miss
+get_parcel_details_cache_aside("TRK-1001")
+# Call 2: Hit
+get_parcel_details_cache_aside("TRK-1001")
+# Update & Invalidate
+update_parcel_status_with_invalidation("TRK-1001", "DELIVERED")
+      `,
+      keyTakeaways: [
+        "Cache-Aside checks Redis first; on a miss, it queries the database and populates Redis with a TTL.",
+        "Always set a TTL (`setex`) on cached entries to bound data staleness.",
+        "Perform active cache invalidation (`r.delete(key)`) whenever database records are updated or deleted.",
+        "Cache-aside drastically reduces database load for read-heavy API workloads."
+      ],
+      commonMistakes: [
+        "<b>Omitting TTL expiration times on cached keys:</b> Serving outdated data indefinitely when database records change.",
+        "<b>Ignoring cache invalidation on database updates:</b> Updating PostgreSQL but leaving stale values inside Redis."
+      ],
+      quizzes: [
+        {
+          question: "What sequence of steps defines the Cache-Aside (Lazy Loading) pattern during a read operation?",
+          options: [
+            "Write to database first, then read from Redis.",
+            "Check Redis -> If HIT, return cached data; If MISS, query database, write result to Redis with TTL, and return data.",
+            "Query database first, then write to Redis without checking.",
+            "Delete all keys from Redis on every read."
+          ],
+          correctIndex: 1,
+          explanation: "Cache-Aside checks Redis first; on a miss, it falls back to the database, caches the result with a TTL, and returns it."
+        },
+        {
+          question: "Why should active cache invalidation (`r.delete(key)`) be executed immediately after a database update operation?",
+          options: [
+            "To encrypt Redis keys.",
+            "To purge stale cached entries so subsequent read operations fetch updated data from the database.",
+            "To speed up database writes.",
+            "To reset connection pools."
+          ],
+          correctIndex: 1,
+          explanation: "Deleting stale keys forces the next read request to fetch fresh updated records from the database."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Distributed Caching Architecture in Multi-Worker Environments",
+      durationMinutes: 18,
+      explanation: `
+<b>Centralizing Cache State Across Multi-Node Clusters</b><br/>
+In multi-instance production environments (e.g., a FastAPI application scaled across 10 Uvicorn worker nodes behind a load balancer), process-local caches like `@lru_cache` create inconsistent state. Node 1 might serve updated data while Node 2 serves outdated memory.<br/><br/>
+
+A centralized **Distributed Redis** cluster ensures all workers read and invalidate a unified cache source.<br/><br/>
+
+<b>Distributed Cache Benefits:</b>
+<ul>
+  <li><b>Global State Synchronization:</b> Every worker process reads from and invalidates the exact same cache instance.</li>
+  <li><b>Memory Efficiency:</b> Cached data exists in one centralized Redis instance rather than duplicating RAM across 10 worker nodes.</li>
+  <li><b>Persistence Options:</b> Redis can persist RAM snapshots to disk (RDB / AOF), allowing cached state to survive server restarts.</li>
+</ul>
+      `,
+      diagram: `
+DISTRIBUTED CACHING IN MULTI-WORKER CLUSTERS:
+
+  Load Balancer (Nginx / ALB)
+        |
+        +-----------------------+-----------------------+
+        |                                               |
+  Uvicorn Worker 1                        Uvicorn Worker 2
+  (FastAPI Process)                       (FastAPI Process)
+        |                                               |
+        +-----------------------+-----------------------+
+                                |
+                                v
+               [ Centralized Redis Cluster ]
+               (Shared cache & rate limit state!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Centralized Distributed Redis Client Setup
+# ==============================================================================
+
+import redis
+from pydantic_settings import BaseSettings
+
+class RedisSettings(BaseSettings):
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: str | None = None
+
+settings = RedisSettings()
+
+# Singleton distributed Redis connection pool
+redis_pool = redis.ConnectionPool(
+    host=settings.redis_host,
+    port=settings.redis_port,
+    db=settings.redis_db,
+    password=settings.redis_password,
+    decode_responses=True,
+    max_connections=20
+)
+
+def get_redis_client() -> redis.Redis:
+    """Returns a Redis client using the shared connection pool."""
+    return redis.Redis(connection_pool=redis_pool)
+
+print("--- LESSON 3: Distributed Redis Connection Pool Initialized ---")
+client = get_redis_client()
+print("Ping Redis Cluster:", client.ping())
+      `,
+      keyTakeaways: [
+        "Distributed Redis caching centralizes state across multi-node server clusters.",
+        "Use a shared connection pool (`redis.ConnectionPool`) to manage connections efficiently.",
+        "Centralized caches eliminate data inconsistencies across load-balanced worker processes.",
+        "Configure Redis credentials securely using `pydantic-settings`."
+      ],
+      commonMistakes: [
+        "<b>Relying on `@lru_cache` in multi-worker production deployments:</b> Causing inconsistent responses when worker processes hold different local memory states.",
+        "<b>Opening a new `redis.Redis()` connection on every request without a pool:</b> Exhausting socket connections under high API traffic."
+      ],
+      quizzes: [
+        {
+          question: "Why is a centralized Redis cluster preferred over process-local `@lru_cache` in multi-worker, load-balanced deployments?",
+          options: [
+            "`@lru_cache` does not work on Linux.",
+            "Redis provides a shared global cache, ensuring consistent responses and invalidations across all worker processes.",
+            "Redis disables CORS security.",
+            "Process-local memory is faster than light."
+          ],
+          correctIndex: 1,
+          explanation: "Distributed Redis centralizes cache state across all load-balanced server nodes."
+        },
+        {
+          question: "How should Redis connections be managed in a high-throughput Python API?",
+          options: [
+            "Create a new connection object for every query and never close it.",
+            "Use a shared connection pool (`redis.ConnectionPool`) to reuse persistent connections across requests.",
+            "Use global variables without pooling.",
+            "Reboot Redis after every request."
+          ],
+          correctIndex: 1,
+          explanation: "Connection pools manage and reuse warm socket connections, preventing socket exhaustion."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Sliding-Window Rate Limiting with Redis Sorted Sets (ZSet)",
+      durationMinutes: 18,
+      explanation: `
+<b>Precision Traffic Throttling across Distributed Nodes</b><br/>
+Fixed-window rate limiters suffer from boundary bursts (e.g., receiving 100 requests at 00:59 and 100 requests at 01:01).<br/><br/>
+
+A **Sliding-Window Log** using Redis **Sorted Sets (`ZSet`)** tracks individual request timestamps with high precision, removing timestamps older than the active window.<br/><br/>
+
+<b>Sliding Window Algorithm (`ZSet`):</b>
+<ol>
+  <li>Key: <code>ratelimit:sliding:{client_ip}</code>.</li>
+  <li>Member & Score: Current Unix timestamp (<code>time.time()</code>).</li>
+  <li><b>Step 1:</b> Remove entries older than <code>now - window_seconds</code> using <code>ZREMRANGEBYSCORE</code>.</li>
+  <li><b>Step 2:</b> Count active requests using <code>ZCARD</code>.</li>
+  <li><b>Step 3:</b> If count $< \text{max\_requests}$, add current request timestamp using <code>ZADD</code> and set TTL (<code>EXPIRE</code>). Allow request.</li>
+  <li><b>Step 4:</b> If count $\ge \text{max\_requests}$, reject request (`HTTP 429 Too Many Requests`).</li>
+</ol>
+      `,
+      diagram: `
+SLIDING WINDOW RATE LIMITING WITH REDIS ZSET:
+
+  Timeline (Window: 60s, Max: 3 Requests):
+  [ t-70s (Purged) ] ... [ t-40s (1) ] ... [ t-20s (2) ] ... [ t-5s (3) ] ... [ NOW ]
+
+  Steps executed atomically via Redis Pipeline:
+  1. ZREMRANGEBYSCORE -> Purges t-70s
+  2. ZCARD           -> Count = 3
+  3. Count >= Max    -> REJECT! (HTTP 429 Too Many Requests)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Sliding-Window Rate Limiter with Redis ZSet
+# ==============================================================================
+
+import time
+import redis
+from fastapi import HTTPException, status
+
+r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+def check_sliding_window_rate_limit(
+    client_id: str,
+    max_requests: int = 3,
+    window_sec: int = 10
+) -> bool:
+    """Enforces sliding-window rate limiting using Redis Sorted Sets."""
+    key = f"ratelimit:sliding:{client_id}"
+    now = time.time()
+    clear_before = now - window_sec
+
+    # Execute atomically via Redis Pipeline
+    pipe = r.pipeline()
+    pipe.zremrangebyscore(key, 0, clear_before)  # 1. Purge expired log entries
+    pipe.zcard(key)                              # 2. Count remaining active requests
+    pipe.zadd(key, {str(now): now})               # 3. Add current request
+    pipe.expire(key, window_sec)                 # 4. Refresh key TTL
+    results = pipe.execute()
+
+    active_request_count = results[1]
+
+    if active_request_count >= max_requests:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded ({max_requests} req / {window_sec}s).",
+            headers={"Retry-After": str(window_sec)}
+        )
+    return True
+
+print("--- LESSON 4: Sliding-Window Rate Limiter Configured ---")
+print("Algorithm: Redis ZSet Pipeline with ZREMRANGEBYSCORE and ZCARD.")
+      `,
+      keyTakeaways: [
+        "Sliding-window rate limiting prevents boundary traffic spikes.",
+        "Redis Sorted Sets (`ZSet`) store request timestamps as members and scores.",
+        "Use Redis Pipelines (`r.pipeline()`) to execute commands atomically.",
+        "Return `HTTP 429 Too Many Requests` with a `Retry-After` header when limits are exceeded."
+      ],
+      commonMistakes: [
+        "<b>Executing commands individually instead of inside a Pipeline:</b> Creating race conditions between `ZCARD` and `ZADD` under high concurrency.",
+        "<b>Forgetting to set a key TTL (`EXPIRE`):</b> Leaving stale rate-limiting keys in Redis memory permanently."
+      ],
+      quizzes: [
+        {
+          question: "Which Redis Sorted Set command removes members whose scores fall outside the active sliding window time range?",
+          options: [
+            "`ZREM`",
+            "`ZREMRANGEBYSCORE`",
+            "`ZPOP`",
+            "`ZDEL`"
+          ],
+          correctIndex: 1,
+          explanation: "`ZREMRANGEBYSCORE key min max` removes all elements with scores falling within the specified range."
+        },
+        {
+          question: "Why should rate-limiting operations be executed inside a Redis Pipeline (`r.pipeline()`)?",
+          options: [
+            "Pipelines encrypt Redis data.",
+            "Pipelines group multiple commands into a single atomic network round-trip, preventing race conditions and improving throughput.",
+            "Pipelines format JSON automatically.",
+            "Pipelines bypass Redis security."
+          ],
+          correctIndex: 1,
+          explanation: "Pipelines execute commands atomically in a single round-trip, preventing race conditions under high concurrency."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Production Redis Architecture: Pipelines, Pub/Sub, and Celery Integration",
+      durationMinutes: 6,
+      explanation: `
+<b>Advanced Redis Integration Patterns for Microservices</b><br/>
+Beyond caching and rate limiting, Redis serves as a versatile communication hub across microservices.<br/><br/>
+
+<b>Advanced Redis Production Patterns:</b>
+<ul>
+  <li><b>Redis Pipelines:</b> Batching multiple commands into a single network buffer, cutting latency by 90% during bulk operations.</li>
+  <li><b>Redis Pub/Sub:</b> Real-time message broadcasting across microservices (<code>PUBLISH channel message</code> / <code>SUBSCRIBE channel</code>).</li>
+  <li><b>Redis as a Celery Message Broker:</b> Serving as the high-speed task queue broker for background workers executing asynchronous jobs (e.g., PDF generation, bulk email dispatch).</li>
+</ul>
+      `,
+      diagram: `
+REDIS MICROSERVICES COMMUNICATION HUB:
+
+  [ API Server (FastAPI) ] ---> Enqueues Task ---> [ Redis Task Queue ]
+                                                         |
+                                                         v
+                                              [ Celery Worker Process ]
+                                              (Executes heavy background task)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Redis Pipeline Bulk Execution
+# ==============================================================================
+
+import redis
+
+r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+def bulk_seed_parcels(parcels: dict[str, str]):
+    """Demonstrates Redis Pipeline for high-speed batch execution."""
+    print("--- LESSON 5: Executing Redis Pipeline Batch ---")
+
+    pipe = r.pipeline()
+    for tracking_id, status in parcels.items():
+        pipe.set(f"cache:parcel:{tracking_id}", status, ex=300)
+
+    # Executes all commands in a single network round-trip!
+    results = pipe.execute()
+    print(f"Pipeline executed {len(results)} SET commands in 1 round-trip.")
+
+data = {f"TRK-200{i}": "QUEUED" for i in range(5)}
+bulk_seed_parcels(data)
+      `,
+      keyTakeaways: [
+        "Redis Pipelines batch multiple commands into a single network round-trip.",
+        "Redis Pub/Sub provides real-time event broadcasting between services.",
+        "Redis is the primary message broker for Celery async background task queues.",
+        "Redis acts as a unified caching, rate limiting, and messaging hub for microservices."
+      ],
+      commonMistakes: [
+        "<b>Using Pub/Sub for guaranteed message delivery:</b> Pub/Sub messages are 'fire and forget'; if a subscriber is offline, the message is lost. Use Redis Streams or Celery for guaranteed delivery."
+      ],
+      quizzes: [
+        {
+          question: "Which Redis feature allows batching 100 commands into a single network request to reduce network latency?",
+          options: [
+            "Pub/Sub",
+            "Redis Pipeline",
+            "Sorted Set",
+            "Keyspace Notifications"
+          ],
+          correctIndex: 1,
+          explanation: "Redis Pipelines bundle multiple commands into a single network round-trip."
+        },
+        {
+          question: "What happens to a Redis Pub/Sub message if a subscriber service is offline when the message is published?",
+          options: [
+            "It is stored permanently in PostgreSQL.",
+            "The message is lost because Pub/Sub is an at-most-once 'fire and forget' messaging model.",
+            "The publisher crashes.",
+            "It is converted to a string."
+          ],
+          correctIndex: 1,
+          explanation: "Pub/Sub is 'fire and forget'. For persistent queues, use Redis Streams or Celery."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which Redis data structure orders elements by floating-point scores, making it ideal for rate limiting?",
+      options: [
+        "Hash",
+        "Sorted Set (ZSet)",
+        "List",
+        "Set"
+      ],
+      correctIndex: 1,
+      explanation: "Sorted Sets order elements by scores, enabling sliding-window time calculations."
+    },
+    {
+      question: "What sequence defines the Cache-Aside pattern on a read request?",
+      options: [
+        "Write to database first, then read from Redis.",
+        "Check Redis -> If HIT, return cached data; If MISS, query DB, write to Redis with TTL, and return data.",
+        "Delete keys from Redis on every read.",
+        "Query database only."
+      ],
+      correctIndex: 1,
+      explanation: "Cache-Aside checks Redis first, falling back to the database on a miss and caching the result."
+    },
+    {
+      question: "Why should active cache invalidation (`r.delete(key)`) be run after a database update?",
+      options: [
+        "To encrypt Redis keys.",
+        "To purge stale cached entries so subsequent reads fetch fresh database records.",
+        "To restart Redis.",
+        "To update index scores."
+      ],
+      correctIndex: 1,
+      explanation: "Purging stale keys ensures subsequent reads fetch fresh data from the database."
+    },
+    {
+      question: "What parameter in `redis.Redis()` decodes byte responses into UTF-8 Python strings?",
+      options: [
+        "`decode_responses=True`",
+        "`auto_string=True`",
+        "`utf8=True`",
+        "`convert_types=True`"
+      ],
+      correctIndex: 0,
+      explanation: "`decode_responses=True` decodes byte responses into native strings."
+    },
+    {
+      question: "Which Redis Sorted Set command purges elements outside the active sliding window time range?",
+      options: [
+        "`ZREM`",
+        "`ZREMRANGEBYSCORE`",
+        "`ZPOP`",
+        "`ZDEL`"
+      ],
+      correctIndex: 1,
+      explanation: "`ZREMRANGEBYSCORE` deletes elements with scores inside a min/max range."
+    },
+    {
+      question: "What HTTP status code is returned when a client exceeds their rate limit threshold?",
+      options: [
+        "`400 Bad Request`",
+        "`401 Unauthorized`",
+        "`429 Too Many Requests`",
+        "`500 Server Error`"
+      ],
+      correctIndex: 2,
+      explanation: "HTTP 429 Too Many Requests indicates rate limit threshold exhaustion."
+    },
+    {
+      question: "Why should rate-limiting operations be run inside a Redis Pipeline?",
+      options: [
+        "Pipelines encrypt traffic.",
+        "Pipelines execute commands atomically in a single round-trip, preventing race conditions.",
+        "Pipelines clear memory.",
+        "Pipelines run on GPUs."
+      ],
+      correctIndex: 1,
+      explanation: "Pipelines execute commands atomically in a single round-trip."
+    },
+    {
+      question: "Why is a centralized Redis cluster preferred over `@lru_cache` in multi-worker deployments?",
+      options: [
+        "`@lru_cache` fails on Linux.",
+        "Redis provides a shared cache accessible by all load-balanced workers, ensuring consistent state.",
+        "Redis disables CORS.",
+        "`@lru_cache` uses too much disk space."
+      ],
+      correctIndex: 1,
+      explanation: "Distributed Redis centralizes cache state across all cluster nodes."
+    }
+  ],
+  project: {
+    name: "Enterprise Redis Distributed Caching & Rate Limiting Engine (Phase 1 Project)",
+    goal: "Build a production-grade Redis caching and rate-limiting engine featuring the Cache-Aside pattern, active cache invalidation, a sliding-window rate limiter using Redis ZSets, and pipelined batching.",
+    brief: "Your microservice architecture requires a centralized caching and security utility (`redis_engine.py`). The application must query data using Cache-Aside, invalidate stale keys on database updates, enforce sliding-window rate limiting (`ZSet`), and batch operations with Redis Pipelines.",
+    steps: [
+      "Create a workspace script file named `redis_engine.py`.",
+      "Initialize a `redis.Redis` client with connection pooling and `decode_responses=True`.",
+      "Implement `get_parcel_cache_aside(tracking_id)` checking Redis first and falling back to a mock database.",
+      "Implement `update_parcel_and_invalidate(tracking_id, status)` purging cached keys.",
+      "Implement `check_rate_limit(client_ip)` using a Redis Pipeline with `ZREMRANGEBYSCORE`, `ZCARD`, and `ZADD`.",
+      "Test cache hits, cache misses, invalidations, and rate limit throttling.",
+      "Run `python3 redis_engine.py` in your terminal and print an execution report."
+    ],
+    acceptance: [
+      "Cache-Aside pattern returns cached data on HIT and populates Redis with TTL on MISS.",
+      "Database updates trigger active cache invalidation (`r.delete`).",
+      "Sliding-window rate limiter enforces request limits using ZSets and Pipelines.",
+      "Executing `python3 redis_engine.py` outputs a clean report and exits with status code 0."
+    ],
+    stretch: [
+      "Add a Redis Pub/Sub listener coroutine broadcasting cache invalidation events.",
+      "Annotate all functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
