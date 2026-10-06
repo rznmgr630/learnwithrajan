@@ -1,0 +1,545 @@
+/**
+ * DAY 43: Phase 8 · Databases & Backend Development — Database Migrations & Schema Evolution with Alembic
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1AlembicMigrations = {
+  day: 43,
+  topic: "Phase 8 · Databases & Backend Development — Database Migrations & Schema Evolution with Alembic",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Database Schema Evolution and Alembic Fundamentals",
+      durationMinutes: 16,
+      explanation: `
+<b>Version Control for Relational Database Schemas</b><br/>
+In production software engineering, database schemas are never static. As business requirements evolve, you must add columns, create indexes, alter table constraints, and drop legacy fields. Running `Base.metadata.create_all(engine)` works fine for brand-new empty databases, but **it cannot modify existing tables without destroying user data**.<br/><br/>
+
+**Alembic** is the official database migration tool built for SQLAlchemy. It acts as version control (like Git) for your database schema.<br/><br/>
+
+<b>1. Why Alembic?</b>
+<ul>
+  <li><b>Version Control for Data:</b> Tracks every schema change as an incremental revision script with forward (<code>upgrade</code>) and reverse (<code>downgrade</code>) directions.</li>
+  <li><b>Zero Data Loss:</b> Modifies database tables safely using DDL (Data Definition Language) without dropping tables or clearing production records.</li>
+  <li><b>Team Synchronization:</b> Ensures every developer on the team and every CI/CD deployment pipeline executes the exact same sequence of schema migrations.</li>
+</ul>
+
+<b>2. Core Alembic CLI Lifecycle:</b>
+<ol>
+  <li><code>$ alembic init alembic</code> (Initializes migration directory structure and <code>alembic.ini</code> config).</li>
+  <li><code>$ alembic revision -m "add_cargo_weight_column"</code> (Generates a blank revision script).</li>
+  <li><code>$ alembic upgrade head</code> (Applies all pending migrations to the latest database version).</li>
+  <li><code>$ alembic downgrade -1</code> (Rolls back the most recent migration by 1 revision step).</li>
+</ol>
+      `,
+      diagram: `
+ALEMBIC MIGRATION REVISION CHAIN:
+
+  [ Revision 001_base ] ---> [ Revision 002_add_cargo ] ---> [ Revision 003_add_index ]
+  (Initial Tables)           (Added weight_lbs column)      (Added idx_tracking_id)
+                                                                     ^
+                                                                     |
+                                                              [ Head Revision ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Alembic Environment Architecture & Config
+# ==============================================================================
+
+# Simulated alembic.ini configuration file
+ALEMBIC_INI_CONTENT = """
+[alembic]
+script_location = alembic
+file_template = %%(year)d_%%(month)02d_%%(day)02d_%%(hour)02d%%(minute)02d-%%(rev)s_%%(slug)s
+sqlalchemy.url = postgresql://postgres:postgres@localhost:5432/logistics_db
+
+[logging]
+keys = root,sqlalchemy,alembic
+"""
+
+# Simulated env.py setup connecting Alembic to SQLAlchemy DeclarativeBase
+ENV_PY_CONTENT = """
+from logging.config import fileConfig
+from sqlalchemy import engine_from_config, pool
+from alembic import context
+from logistics_app.models import Base # Import ORM DeclarativeBase
+
+config = context.config
+fileConfig(config.config_file_name)
+
+# Point target_metadata to ORM Base for autogenerate detection!
+target_metadata = Base.metadata
+
+def run_migrations_online():
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+"""
+
+print("--- LESSON 1: Alembic Configuration Architecture ---")
+print("Target Metadata Linked to SQLAlchemy Base.metadata.")
+      `,
+      keyTakeaways: [
+        "Alembic is the official database migration tool for SQLAlchemy.",
+        "`Base.metadata.create_all()` creates missing tables but cannot alter existing tables safely.",
+        "Alembic tracks database history as a chain of revision scripts with `upgrade()` and `downgrade()` steps.",
+        "Link `target_metadata = Base.metadata` inside `alembic/env.py` to enable model detection."
+      ],
+      commonMistakes: [
+        "<b>Relying on `create_all()` in production:</b> Expecting SQLAlchemy ORM models to update existing database columns without running proper Alembic migrations.",
+        "<b>Forgetting to import models in `env.py`:</b> Leaving `target_metadata = None` in `env.py`, which prevents Alembic from detecting ORM model classes."
+      ],
+      quizzes: [
+        {
+          question: "Why is `Base.metadata.create_all(engine)` insufficient for managing database schemas in production applications?",
+          options: [
+            "It runs 100x slower than Alembic.",
+            "It can only create brand-new missing tables; it cannot alter, rename, or drop existing columns on existing tables.",
+            "It only works with SQLite.",
+            "It converts database tables to JSON files."
+          ],
+          correctIndex: 1,
+          explanation: "`create_all()` creates missing tables, but cannot alter or migrate existing tables without dropping them and destroying data."
+        },
+        {
+          question: "Which command applies all pending Alembic migration revision scripts up to the latest revision?",
+          options: [
+            "`$ alembic run all`",
+            "`$ alembic upgrade head`",
+            "`$ alembic apply --latest`",
+            "`$ alembic update database`"
+          ],
+          correctIndex: 1,
+          explanation: "`alembic upgrade head` executes the `upgrade()` functions of all pending revision scripts up to the head revision."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Auto-Generating Migration Files and Modifying Schemas",
+      durationMinutes: 20,
+      explanation: `
+<b>Automated Diff Detection and Manual Revision Scripting</b><br/>
+Instead of manually typing SQL `ALTER TABLE` statements for every model change, Alembic can compare your SQLAlchemy `DeclarativeBase` Python models against the live database schema and automatically generate revision scripts.<br/><br/>
+
+<b>1. Generating Auto-Migrations:</b><br/>
+<code>$ alembic revision --autogenerate -m "add_hazmat_flag_to_parcels"</code><br/>
+Alembic inspects `Base.metadata`, compares it to the active database table structure, and generates a new Python file inside `alembic/versions/`.<br/><br/>
+
+<b>2. Structure of an Alembic Revision Script:</b><br/>
+Every migration file exports an `upgrade()` function (moves schema forward) and a `downgrade()` function (reverts changes):
+<pre><code>from alembic import op
+import sqlalchemy as sa
+
+# Revision Identifiers
+revision = "a1b2c3d4e5f6"
+down_revision = "001_base_schema"
+
+def upgrade():
+    # Op directives execute DDL commands
+    op.add_column("parcels", sa.Column("is_hazmat", sa.Boolean(), nullable=False, server_default="false"))
+    op.create_index("idx_parcels_hazmat", "parcels", ["is_hazmat"])
+
+def downgrade():
+    op.drop_index("idx_parcels_hazmat", table_name="parcels")
+    op.drop_column("parcels", "is_hazmat")</code></pre><br/>
+
+<b>3. What Autogenerate Detects vs. Misses:</b>
+<ul>
+  <li><b>Detects Well:</b> Added/removed tables, added/removed columns, new indexes, foreign key constraints.</li>
+  <li><b>Misses or Requires Extra Config:</b> Changed column names (detected as a drop + add!), column type changes, server default changes. Always inspect auto-generated scripts manually!</li>
+</ul>
+      `,
+      diagram: `
+ALEMBIC AUTOGENERATE COMPARISON:
+
+  SQLAlchemy Python Models  vs  Live Database Schema
+  (is_hazmat = True)            (is_hazmat column missing!)
+             \\                   /
+              v                 v
+     [ Alembic Autogenerate Diff Engine ]
+                     |
+                     v
+  Generates revision script: op.add_column("parcels", ...)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Alembic Revision Script Operations (op directives)
+# ==============================================================================
+
+# Simulated Migration Revision File (alembic/versions/20261005_add_driver_notes.py)
+
+from alembic import op
+import sqlalchemy as sa
+
+# Revision metadata
+revision = "20261005_002"
+down_revision = "20261001_001"
+branch_labels = None
+depends_on = None
+
+def upgrade() -> None:
+    """Applies schema changes forward (Upgrade)."""
+    print("--- ALEMBIC UPGRADE: Adding driver_notes column ---")
+
+    # 1. Add new nullable column to 'parcels' table
+    op.add_column("parcels", sa.Column("driver_notes", sa.String(length=255), nullable=True))
+
+    # 2. Add an index to speed up lookups on tracking_id
+    op.create_index("idx_parcels_tracking_id", "parcels", ["tracking_id"], unique=True)
+
+
+def downgrade() -> None:
+    """Reverts schema changes backward (Downgrade)."""
+    print("--- ALEMBIC DOWNGRADE: Removing driver_notes column ---")
+
+    # Revert operations in REVERSE order!
+    op.drop_index("idx_parcels_tracking_id", table_name="parcels")
+    op.drop_column("parcels", "driver_notes")
+
+# Test execution simulation
+print("Sample Alembic revision script compiled successfully.")
+      `,
+      keyTakeaways: [
+        "Use `alembic revision --autogenerate -m \"msg\"` to auto-detect model changes.",
+        "Alembic scripts export `upgrade()` (applies changes) and `downgrade()` (reverts changes).",
+        "Always review auto-generated migration scripts manually before applying them to production.",
+        "Revert downgrade operations in exact reverse order of the upgrade steps."
+      ],
+      commonMistakes: [
+        "<b>Applying auto-generated migrations without manual review:</b> Assuming autogenerate is perfect; autogenerate can misinterpret column renames as destructive drop-and-add operations!",
+        "<b>Writing `downgrade()` functions that don't match `upgrade()`:</b> Leaving `downgrade()` blank (`pass`), preventing schema rollbacks during failed deployments."
+      ],
+      quizzes: [
+        {
+          question: "Why must you ALWAYS manually review an Alembic revision script generated by `alembic revision --autogenerate` before applying it?",
+          options: [
+            "Autogenerate deletes Python files.",
+            "Autogenerate can misinterpret certain schema changes (like column renames or complex constraints) as destructive `drop_column` + `add_column` operations.",
+            "Autogenerate only works with MySQL.",
+            "Autogenerate disables transactions."
+          ],
+          correctIndex: 1,
+          explanation: "Autogenerate compares state diffs and may interpret a column rename as dropping the old column and adding a new one, causing data loss unless corrected."
+        },
+        {
+          question: "In what order should database operations be executed inside a migration's `downgrade()` function relative to its `upgrade()` function?",
+          options: [
+            "In the exact same order.",
+            "In exact reverse order (undoing the most recent upgrade operation first).",
+            "Alphabetical order.",
+            "Order does not matter."
+          ],
+          correctIndex: 1,
+          explanation: "Downgrades must execute in reverse order to respect foreign keys and table dependency constraints."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Rollbacks and Version Inspection",
+      durationMinutes: 18,
+      explanation: `
+<b>Managing Migration History and Emergency Rollbacks</b><br/>
+When a deployment fails or a newly added column breaks application logic, you must roll back the database schema safely to a previous stable revision state without corrupting database integrity.<br/><br/>
+
+<b>1. How Alembic Tracks Database Version State (`alembic_version` Table):</b><br/>
+Alembic creates a special 1-column table inside your target database named <b><code>alembic_version</code></b>. This table holds a single string: the `version_num` hash of the currently active migration head!<br/>
+When you run `alembic upgrade`, Alembic reads `alembic_version`, compares it against available revision files, and executes only the un-applied upgrade steps.<br/><br/>
+
+<b>2. Rollback Commands:</b>
+<ul>
+  <li><code>$ alembic downgrade -1</code>: Rolls back the database schema by **exactly 1 revision step**.</li>
+  <li><code>$ alembic downgrade <revision_hash></code>: Rolls back the database schema to a specific historical revision hash.</li>
+  <li><code>$ alembic downgrade base</code>: Rolls back **ALL** migrations, reverting the database to an empty, un-migrated state!</li>
+</ul>
+
+<b>3. Inspected Migration State Commands:</b>
+<ul>
+  <li><code>$ alembic current</code>: Displays the current active revision hash in the target database.</li>
+  <li><code>$ alembic history</code>: Displays the full chronological timeline list of all migration revisions.</li>
+  <li><code>$ alembic heads</code>: Displays the current head revision(s).</li>
+</ul>
+      `,
+      diagram: `
+ALEMBIC VERSION TABLE TRACKING:
+
+  Target Database:
+  +-----------------+
+  | alembic_version |
+  +-----------------+
+  | 20261005_002    |  <--- Stores active head revision hash!
+  +-----------------+
+
+  When running $ alembic downgrade -1:
+  1. Executes 20261005_002.downgrade()
+  2. Updates alembic_version table to "20261001_001"
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Inspected Version Tracking and Rollback Mechanics
+# ==============================================================================
+
+# Simulated version tracking query against 'alembic_version' table
+def inspect_database_migration_version(connection_dsn: str) -> str:
+    """Simulates querying the alembic_version table to identify active revision."""
+    print("--- LESSON 3: Inspecting alembic_version Table ---")
+
+    # Query: SELECT version_num FROM alembic_version;
+    simulated_version = "20261005_002"
+    return simulated_version
+
+active_rev = inspect_database_migration_version("postgresql://localhost:5432/logistics")
+print(f"Active Migration Revision Hash in DB: [{active_rev}]")
+      `,
+      keyTakeaways: [
+        "Alembic tracks active database migration state using a single-row table named `alembic_version`.",
+        "Use `alembic downgrade -1` to roll back the most recent migration step during emergency deployment fixes.",
+        "Use `alembic current` to display the active revision hash stored in the target database.",
+        "Use `alembic history` to inspect the full timeline history of all migration revisions."
+      ],
+      commonMistakes: [
+        "<b>Manually editing the `alembic_version` table value:</b> Changing the database's version string directly in SQL without running migration code, causing Alembic to desynchronize from actual table schemas.",
+        "<b>Deleting revision files that have already been applied in production:</b> Creating orphaned database version hashes that prevent future migrations."
+      ],
+      quizzes: [
+        {
+          question: "What is the name of the special table created by Alembic inside the database to track the active schema version hash?",
+          options: [
+            "`schema_migrations`",
+            "`alembic_version`",
+            "`migration_history`",
+            "`db_version`"
+          ],
+          correctIndex: 1,
+          explanation: "Alembic tracks active schema revisions in a 1-column table named `alembic_version`."
+        },
+        {
+          question: "Which command rolls back the database schema by exactly 1 revision step?",
+          options: [
+            "`$ alembic rollback`",
+            "`$ alembic downgrade -1`",
+            "`$ alembic undo`",
+            "`$ alembic revert head`"
+          ],
+          correctIndex: 1,
+          explanation: "`alembic downgrade -1` executes the `downgrade()` function of the most recent revision and updates the version pointer."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Production Migration Strategies: Zero-Downtime and Backward Compatibility",
+      durationMinutes: 18,
+      explanation: `
+<b>Executing Database Schema Changes in High-Availability Environments</b><br/>
+In enterprise production environments running hundreds of web server instances behind a load balancer, you **cannot** take the application offline to run database migrations. You must execute **Zero-Downtime Migrations**.<br/><br/>
+
+<b>The Golden Rule of Zero-Downtime Migrations:</b><br/>
+> *"At any point during a deployment, Old Code (v1) and New Code (v2) are running simultaneously against the Database!"*<br/>
+Every schema change must be **backward-compatible** with the older code version currently serving live users.<br/><br/>
+
+<b>1. Dangerous Anti-Pattern (Destructive Single-Step Migration):</b><br/>
+Dropping a column or renaming a column in a single migration instantly crashes Old Code (v1) instances that are still querying that column!
+
+<b>2. The Expand-Contract (Parallel Change) Pattern:</b><br/>
+To rename a column safely without downtime, execute changes across 3 separate deployment releases:
+<ol>
+  <li><b>Phase 1 (Expand - Release 1):</b> Add the new column as nullable. Write to BOTH old and new columns in application code.</li>
+  <li><b>Phase 2 (Backfill - Release 2):</b> Run a background data migration script copying historical data from old column to new column.</li>
+  <li><b>Phase 3 (Contract - Release 3):</b> Update application code to read solely from the new column. Finally, drop the old column in a future release!</li>
+</ol>
+      `,
+      diagram: `
+EXPAND-CONTRACT (PARALLEL CHANGE) ZERO-DOWNTIME PATTERN:
+
+  Phase 1 (Expand)   : Add 'new_col' as nullable. Write to BOTH old_col & new_col.
+  Phase 2 (Backfill) : Copy historical data from old_col -> new_col in background.
+  Phase 3 (Contract) : Switch code reads to new_col. Safely drop old_col!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Zero-Downtime Expand-Contract Migration Pattern
+# ==============================================================================
+
+# Phase 1: Expand Migration (Adding new_weight column alongside legacy weight_lbs)
+
+from alembic import op
+import sqlalchemy as sa
+
+revision = "phase1_expand_weight"
+down_revision = "001_base"
+
+def upgrade():
+    # SAFE: Add new column as NULLABLE so Old Code v1 doesn't crash!
+    op.add_column("parcels", sa.Column("weight_kg", sa.Float(), nullable=True))
+
+def downgrade():
+    op.drop_column("parcels", "weight_kg")
+
+print("--- LESSON 4: Expand-Contract Zero-Downtime Pattern ---")
+print("Phase 1 Expand Migration compiled. Column added as NULLABLE for backward compatibility.")
+      `,
+      keyTakeaways: [
+        "In zero-downtime environments, schema changes must be backward-compatible with running application instances.",
+        "Never drop or rename active columns in a single deployment release.",
+        "Use the Expand-Contract pattern: Add new column -> Backfill data -> Drop old column in a future release.",
+        "Always add new columns as NULLABLE or with server defaults so legacy code writes succeed."
+      ],
+      commonMistakes: [
+        "<b>Renaming a column directly in a single migration:</b> Executing `op.alter_column('col_a', new_name='col_b')`, instantly breaking live app instances querying `col_a`.",
+        "<b>Adding a non-nullable column without a server default:</b> Adding `NOT NULL` without `server_default`, causing SQL insertions from legacy code instances to fail."
+      ],
+      quizzes: [
+        {
+          question: "Why is renaming a database column in a single migration step dangerous in zero-downtime production deployments?",
+          options: [
+            "Renaming columns causes database tables to lock for 24 hours.",
+            "Active application instances running older code still query the old column name, causing immediate runtime database crashes.",
+            "Alembic does not support column renames.",
+            "PostgreSQL forbids column renames."
+          ],
+          correctIndex: 1,
+          explanation: "Active web servers running older application code expect the old column name. Renaming it instantly breaks those queries."
+        },
+        {
+          question: "What is the correct 3-phase pattern for altering database schemas safely without application downtime?",
+          options: [
+            "Lock-Edit-Unlock",
+            "Expand-Contract (Parallel Change) Pattern",
+            "Drop-Recreate-Restore",
+            "Backup-Delete-Import"
+          ],
+          correctIndex: 1,
+          explanation: "The Expand-Contract pattern adds new columns alongside old ones (Expand), backfills data, and drops old columns later (Contract)."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which database migration tool is the official schema version control system for SQLAlchemy?",
+      options: [
+        "Flyway",
+        "Alembic",
+        "Django Migrations",
+        "Liquibase"
+      ],
+      correctIndex: 1,
+      explanation: "Alembic is SQLAlchemy's official database migration tool."
+    },
+    {
+      question: "Which command auto-generates a migration script by comparing SQLAlchemy ORM models against the live database?",
+      options: [
+        "`$ alembic generate`",
+        "`$ alembic revision --autogenerate -m \"msg\"`",
+        "`$ alembic diff`",
+        "`$ alembic Compare`"
+      ],
+      correctIndex: 1,
+      explanation: "`alembic revision --autogenerate` compares ORM metadata against the live database schema."
+    },
+    {
+      question: "What is the name of the special table created by Alembic inside the database to track the active schema version hash?",
+      options: [
+        "`schema_version`",
+        "`alembic_version`",
+        "`migration_state`",
+        "`db_head`"
+      ],
+      correctIndex: 1,
+      explanation: "Alembic stores the active revision hash in a single-row table named `alembic_version`."
+    },
+    {
+      question: "Which command rolls back the database schema by exactly 1 revision step?",
+      options: [
+        "`$ alembic rollback -1`",
+        "`$ alembic downgrade -1`",
+        "`$ alembic undo`",
+        "`$ alembic revert`"
+      ],
+      correctIndex: 1,
+      explanation: "`alembic downgrade -1` reverts the database by 1 migration revision step."
+    },
+    {
+      question: "In an Alembic revision script, what function contains the DDL operations executed during `alembic upgrade head`?",
+      options: [
+        "`run()`",
+        "`upgrade()`",
+        "`apply()`",
+        "`forward()`"
+      ],
+      correctIndex: 1,
+      explanation: "The `upgrade()` function defines DDL operations for forward schema migrations."
+    },
+    {
+      question: "What must be set as `target_metadata` inside `alembic/env.py` to enable autogenerate detection?",
+      options: [
+        "`target_metadata = None`",
+        "`target_metadata = Base.metadata`",
+        "`target_metadata = engine`",
+        "`target_metadata = Session`"
+      ],
+      correctIndex: 1,
+      explanation: "Linking `target_metadata = Base.metadata` allows Alembic to detect mapped SQLAlchemy models."
+    },
+    {
+      question: "What is the Golden Rule of zero-downtime database migrations?",
+      options: [
+        "Always shut down the database before migrating.",
+        "Schema changes must be backward-compatible with running application instances.",
+        "Delete old tables immediately.",
+        "Use single-step column renames."
+      ],
+      correctIndex: 1,
+      explanation: "Zero-downtime migrations require backward compatibility because old and new code run simultaneously against the database."
+    },
+    {
+      question: "Which CLI command displays the current active revision hash in the target database?",
+      options: [
+        "`$ alembic status`",
+        "`$ alembic current`",
+        "`$ alembic version`",
+        "`$ alembic head`"
+      ],
+      correctIndex: 1,
+      explanation: "`alembic current` displays the active revision hash stored in the database."
+    }
+  ],
+  project: {
+    name: "Enterprise Database Schema Migration Pipeline (Phase 1 Project)",
+    goal: "Set up a complete database migration environment using Alembic and SQLAlchemy, generating auto-migrations, inspecting version tracking tables, writing upgrade/downgrade scripts, and executing safe rollback procedures.",
+    brief: "Your enterprise engineering team requires a database migration setup (`alembic_pipeline.py`). You will configure an Alembic environment, link `target_metadata` to your SQLAlchemy `DeclarativeBase` models, generate revision scripts for adding columns and indexes, inspect the `alembic_version` table, and test rollback functionality using `downgrade -1`.",
+    steps: [
+      "Create a workspace project structure containing a SQLAlchemy `DeclarativeBase` model `ParcelModel` in `models.py`.",
+      "Initialize an Alembic migration environment (`alembic init alembic`).",
+      "Configure `alembic.ini` and link `target_metadata = Base.metadata` inside `alembic/env.py`.",
+      "Generate an initial schema migration script (`alembic revision --autogenerate -m \"001_initial_schema\"`).",
+      "Apply the migration to an in-memory or file-based SQLite/PostgreSQL database (`alembic upgrade head`).",
+      "Modify the `ParcelModel` in Python (add `is_hazmat: Mapped[bool]`) and generate a second migration.",
+      "Execute `alembic current` to inspect the active version hash, then test rolling back with `alembic downgrade -1`.",
+      "Run your pipeline script in the terminal and verify clean migration logs."
+    ],
+    acceptance: [
+      "Alembic environment initialized with `target_metadata = Base.metadata` in `env.py`.",
+      "Revision scripts export valid `upgrade()` and `downgrade()` functions.",
+      "`alembic upgrade head` and `alembic downgrade -1` execute without errors.",
+      "Database schema version tracking operates cleanly."
+    ],
+    stretch: [
+      "Add a custom SQL data backfill script inside an Alembic revision using `op.execute()`.",
+      "Annotate all migration helper functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
