@@ -1,0 +1,855 @@
+/**
+ * DAY 36: Phase 7 · Type Safety & Code Quality — Type Hints & Static Analysis
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Intermediate
+ * Lessons: 5
+ */
+
+export const phase1TypeHints = {
+  day: 36,
+  topic: "Phase 7 · Type Safety & Code Quality — Type Hints & Static Analysis",
+  totalMinutes: 80,
+  difficulty: "Intermediate",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Type Annotations, Primitive Collections, and Python 3.9+ Generic Built-ins",
+      durationMinutes: 18,
+      explanation: `
+<b>Static Type Clarity in a Dynamically Typed Language</b><br/>
+Python is dynamically typed: variable labels can point to an integer at one moment and be rebound to a string later. While dynamic typing enables rapid prototyping, large codebases become hard to maintain without clear type contracts. Developers must constantly inspect function bodies or run code to discover whether a function parameter expects a string, a list of floats, or a dictionary.<br/><br/>
+
+<b>Type Hints (PEP 484 & PEP 585)</b> solve this by adding explicit type annotations to variables, function parameters, and return types.<br/><br/>
+
+<b>1. Crucial Rule: Type Hints Are NOT Enforced at Runtime!</b><br/>
+Type hints are purely informational metadata for human developers, IDEs (VS Code, PyCharm), and static type analysis tools (like <code>mypy</code>). The Python interpreter completely ignores type annotations at runtime—passing a string into a function annotated with <code>weight: float</code> will <b>never</b> raise a runtime error on its own!<br/><br/>
+
+<b>2. Basic Annotation Syntax:</b>
+<ul>
+  <li><b>Variable Annotations:</b> <code>tracking_id: str = "TRK-1001"</code></li>
+  <li><b>Function Annotations:</b> <code>def calculate_fee(weight: float) -> float:</code></li>
+</ul>
+
+<b>3. Modern Python 3.9+ Generic Built-ins:</b><br/>
+Prior to Python 3.9, developers had to import capital-letter generics from the <code>typing</code> module (<code>from typing import List, Dict, Tuple</code>). In modern Python (3.9+), you use native lowercase built-in types directly as generics!
+<ul>
+  <li><code>list[str]</code>: A list containing only string elements.</li>
+  <li><code>dict[str, float]</code>: A dictionary mapping string keys to float values.</li>
+  <li><code>tuple[str, float, bool]</code>: A fixed 3-element tuple where index 0 is a string, index 1 is a float, and index 2 is a boolean.</li>
+  <li><code>tuple[str, ...]</code>: An arbitrary-length tuple where every element is a string.</li>
+</ul>
+
+<b>Real-World Logistics Analogy: Shipping Container Weight Limit Sign</b><br/>
+Think of a type annotation as the weight capacity sign stenciled on the outside of a shipping container (<code>MAX_CARGO_LBS: 50000</code>). The stenciled sign itself cannot physically stop a forklift operator from overloading the container. However, inspectors (like <code>mypy</code> static type checkers) read the sign during audits and flag policy violations before the container boards a ship!
+      `,
+      diagram: `
+TYPE ANNOTATION SYNTAX BREAKDOWN:
+
+  def process_batch(manifest: list[str], rates: dict[str, float]) -> tuple[int, float]:
+                             |                         |                  |
+                             |                         |                  +---> Return Type Annotation
+                             |                         +----------------------> Parameter 2: Dict (str -> float)
+                             +------------------------------------------------> Parameter 1: List of Strings
+
+  NOTE: Python evaluates annotations into __annotations__ dict, but performs ZERO runtime validation!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Type Annotations and Python 3.9+ Generic Built-ins
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Annotating Variables and Functions
+# ------------------------------------------------------------------------------
+
+# Variable type annotations
+tracking_code: str = "TRK-9001"
+package_weight_lbs: float = 14.5
+is_priority_dispatch: bool = True
+
+# Function with parameter annotations and explicit return type annotation -> float
+def calculate_standard_shipping_fee(weight_lbs: float, distance_miles: float) -> float:
+    """Calculates shipping fee based on weight and distance."""
+    base_rate = 10.00
+    return round(base_rate + (weight_lbs * 0.75) + (distance_miles * 0.10), 2)
+
+print("--- BEGINNER: Type Annotation Inspection ---")
+fee = calculate_standard_shipping_fee(14.5, 250.0)
+print(f"Calculated Fee for {tracking_code}: ${fee:.2f}")
+
+# Inspecting function annotations dict at runtime
+print("Function __annotations__ dict:", calculate_standard_shipping_fee.__annotations__)
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Python 3.9+ Native Collection Generics (list, dict, tuple)
+# ------------------------------------------------------------------------------
+
+# 1. List containing only strings
+package_queue: list[str] = ["TRK-101", "TRK-102", "TRK-103"]
+
+# 2. Dictionary mapping String keys to Float values
+hub_weight_totals: dict[str, float] = {
+    "CHICAGO_HUB": 1450.8,
+    "AUSTIN_HUB": 890.2
+}
+
+# 3. Fixed-length tuple (3 exact element types: str, float, bool)
+parcel_record_tuple: tuple[str, float, bool] = ("TRK-9001", 18.5, True)
+
+# 4. Variable-length tuple where ALL elements are strings
+all_hubs_tuple: tuple[str, ...] = ("CHICAGO", "AUSTIN", "SEATTLE", "MIAMI")
+
+print("\n--- INTERMEDIATE: Native Collection Generics ---")
+print("Package Queue List :", package_queue)
+print("Hub Weight Map     :", hub_weight_totals)
+print("Fixed Parcel Tuple :", parcel_record_tuple)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Typed Batch Ingestion Pipeline
+# ------------------------------------------------------------------------------
+
+def process_hub_inventory_manifest(
+    hub_code: str,
+    incoming_parcels: list[tuple[str, float]],
+    tax_rates_map: dict[str, float]
+) -> dict[str, float]:
+    \"\"\"
+    Processes a list of (tracking_id, weight) tuples and returns a summary
+    dictionary mapping tracking IDs to calculated costs.
+    \"\"\"
+    print(f"\n--- ADVANCED: Typed Batch Processing for [{hub_code}] ---")
+
+    applied_tax = tax_rates_map.get(hub_code, 0.05)
+    processed_costs: dict[str, float] = {}
+
+    for tracking_id, weight_lbs in incoming_parcels:
+        base_cost = 15.00 + (weight_lbs * 0.85)
+        final_cost = round(base_cost * (1.0 + applied_tax), 2)
+        processed_costs[tracking_id] = final_cost
+
+    return processed_costs
+
+# Test execution with fully typed data structures
+parcels_batch: list[tuple[str, float]] = [("TRK-801", 12.0), ("TRK-802", 45.5)]
+tax_map: dict[str, float] = {"CHICAGO": 0.1025, "AUSTIN": 0.0825}
+
+batch_results = process_hub_inventory_manifest("CHICAGO", parcels_batch, tax_map)
+print("Processed Billing Costs Output:", batch_results)
+      `,
+      keyTakeaways: [
+        "Type hints improve code readability, enable IDE autocomplete, and allow static analysis with `mypy`.",
+        "Type hints are NOT enforced by Python at runtime; passing invalid types will not raise automatic runtime errors.",
+        "In Python 3.9+, use native lowercase collection generics directly: `list[str]`, `dict[str, float]`, `tuple[int, ...]`, `set[str]`.",
+        "Inspect function type annotations at runtime using the `func.__annotations__` dictionary."
+      ],
+      commonMistakes: [
+        "<b>Expecting Python to throw runtime errors on type mismatches:</b> Assuming `def add(x: int):` will crash if passed a string. Runtime type validation requires explicit code or libraries like Pydantic.",
+        "<b>Importing legacy `from typing import List, Dict` in Python 3.9+:</b> Using outdated capitalized generics when native lowercase generics (`list[str]`, `dict[k, v]`) are standard.",
+        "<b>Confusing fixed-length vs variable-length tuple annotations:</b> Writing `tuple[str]` (expects 1 string) when `tuple[str, ...]` (arbitrary number of strings) was intended."
+      ],
+      quizzes: [
+        {
+          question: "What happens at runtime if you pass a string argument into a function parameter annotated as `weight: float`?",
+          options: [
+            "Python automatically converts the string into a float.",
+            "Python raises a `TypeError` immediately before entering the function.",
+            "Python executes the function normally without raising an error unless the internal function code itself causes a failure.",
+            "The program enters a fallback loop."
+          ],
+          correctIndex: 2,
+          explanation: "Type annotations are purely static metadata ignored by the Python runtime interpreter."
+        },
+        {
+          question: "Starting in Python 3.9+, what is the recommended way to annotate a dictionary that maps string keys to integer values?",
+          options: [
+            "`from typing import Dict; Dict[str, int]`",
+            "`dict[str, int]`",
+            "`Dictionary<string, int>`",
+            "`dict(str -> int)`"
+          ],
+          correctIndex: 1,
+          explanation: "Python 3.9+ (PEP 585) introduced native lowercase generics, allowing `dict[str, int]` directly without importing from `typing`."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Expressing Nullability and Polymorphism: Optional, Union, and '|' Syntax",
+      durationMinutes: 20,
+      explanation: `
+<b>Handling Optional Values and Alternative Data Types</b><br/>
+Real-world application parameters are rarely single-type guarantees. A function parameter might accept either an integer or a float; an API database query might return a valid package record dictionary or <code>None</code> if missing; a status code might arrive as a numeric code or string label.<br/><br/>
+
+The <code>typing</code> module and modern Python syntax provide tools to model these dynamic typing patterns safely.<br/><br/>
+
+<b>1. Union Types (Multiple Allowed Types):</b>
+<ul>
+  <li><b>Legacy Syntax (Python &lt; 3.10):</b> <code>from typing import Union</code>
+    <br/><code>def process(weight: Union[int, float]):</code></li>
+  <li><b>Modern Syntax (Python 3.10+ PEP 604):</b> Use the pipe operator <code>|</code> directly!
+    <br/><code>def process(weight: int | float):</code></li>
+</ul>
+
+<b>2. Optional Types (Handling Nullability / None):</b><br/>
+An <b>Optional</b> type indicates that a parameter or return value can hold a specific data type OR <code>None</code>.
+<ul>
+  <li><b>Legacy Syntax:</b> <code>from typing import Optional</code>
+    <br/><code>def find_package(tracking_id: str) -> Optional[dict]:</code> (Equivalent to `Union[dict, None]`)</li>
+  <li><b>Modern Syntax (Python 3.10+):</b> Use the pipe operator <code>| None</code> directly!
+    <br/><code>def find_package(tracking_id: str) -> dict | None:</code></li>
+</ul>
+
+<b>Why explicit Nullability annotations matter:</b><br/>
+Static type checkers (like `mypy`) use `dict | None` annotations to force you to write `if record is not None:` guard checks before reading keys, eliminating `AttributeError: 'NoneType' object has no attribute ...` crashes!
+      `,
+      diagram: `
+NULLABILITY & UNION SYNTAX COMPARISON:
+
+  Legacy Syntax (Python < 3.10):
+  from typing import Union, Optional
+  record: Optional[dict]        <--- Means dict OR None
+  value : Union[int, float]     <--- Means int OR float
+
+  Modern PEP 604 Syntax (Python 3.10+):
+  record: dict | None           <--- Clean pipe operator!
+  value : int | float           <--- Clean pipe operator!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Union Types and Nullability (| None)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Beginner: Modern Python 3.10+ Union Syntax (|)
+# ------------------------------------------------------------------------------
+
+# Parameter accepts int OR float using pipe '|'
+def format_package_weight(weight: int | float) -> str:
+    """Formats weight number as a clean display string."""
+    return f"{float(weight):.2f} lbs"
+
+print("--- BEGINNER: Union Types ---")
+print("Int Input   :", format_package_weight(25))    # "25.00 lbs"
+print("Float Input :", format_package_weight(18.75)) # "18.75 lbs"
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Optional / Nullable Return Types (dict | None)
+# ------------------------------------------------------------------------------
+
+# Database lookup simulating optional return record
+def lookup_package_in_db(tracking_id: str) -> dict | None:
+    """Looks up package record; returns dictionary if found, None if missing."""
+    mock_db = {
+        "TRK-1001": {"id": "TRK-1001", "status": "DELIVERED"},
+        "TRK-1002": {"id": "TRK-1002", "status": "IN_TRANSIT"}
+    }
+    return mock_db.get(tracking_id) # Returns None if missing!
+
+print("\n--- INTERMEDIATE: Nullable Return Types ---")
+
+record_1 = lookup_package_in_db("TRK-1001")
+record_missing = lookup_package_in_db("TRK-MISSING")
+
+# Defensive guard required when type is annotated as 'dict | None'
+if record_1 is not None:
+    print("Found Record Status:", record_1["status"])
+
+if record_missing is None:
+    print("Record lookup returned None as annotated.")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Multi-Type Payload Normalizer
+# ------------------------------------------------------------------------------
+
+def normalize_dispatch_code(raw_identifier: int | str | None) -> str | None:
+    \"\"\"
+    Normalizes tracking identifiers arriving as integers, strings, or None.
+    \"\"\"
+    print(f"\n--- ADVANCED: Normalizing Input [{raw_identifier}] ---")
+
+    if raw_identifier is None:
+        return None
+
+    if isinstance(raw_identifier, int):
+        return f"TRK-INT-{raw_identifier:06d}"
+
+    cleaned_str = raw_identifier.strip().upper()
+    if not cleaned_str:
+        return None
+
+    return cleaned_str if cleaned_str.startswith("TRK-") else f"TRK-{cleaned_str}"
+
+# Execute across different union input types
+print("Int Input Normalized   :", normalize_dispatch_code(42))
+print("String Input Normalized:", normalize_dispatch_code("  chi-9001  "))
+print("None Input Normalized  :", normalize_dispatch_code(None))
+      `,
+      keyTakeaways: [
+        "In Python 3.10+ (PEP 604), use the pipe operator `A | B` to express Union types (`int | float`).",
+        "Express nullable values cleanly as `TargetType | None` (e.g., `dict | None` or `str | None`).",
+        "Legacy codebases use `from typing import Union, Optional` (`Optional[str]` is equivalent to `str | None`).",
+        "Nullable type annotations enforce writing `if obj is not None:` guards, preventing `NoneType` attribute crashes."
+      ],
+      commonMistakes: [
+        "<b>Assuming `Optional[str]` means the argument is optional to pass:</b> `Optional[str]` means the value can be `str` OR `None`; it does NOT give the parameter a default value unless you write `= None`!",
+        "<b>Forgetting null checks on `dict | None` return types:</b> Directly accessing `result[\"key\"]` without checking `if result is not None:`, causing static type checkers to flag errors.",
+        "<b>Importing `Optional` in Python 3.10+ codebases:</b> Using verbose `Optional[str]` when clean native syntax `str | None` is supported."
+      ],
+      quizzes: [
+        {
+          question: "In Python 3.10+, what is the recommended, idiomatic way to annotate a variable that can hold either a `str` or `None`?",
+          options: [
+            "`str or None`",
+            "`str | None`",
+            "`Optional<str>`",
+            "`str(nullable=True)`"
+          ],
+          correctIndex: 1,
+          explanation: "PEP 604 introduced the pipe operator for unions and nullability: `str | None`."
+        },
+        {
+          question: "What is the key difference between `weight: float = 10.0` and `weight: float | None`?",
+          options: [
+            "The first provides a default value of `10.0`; the second indicates the variable can hold `None` or a float value.",
+            "The first works only on Windows; the second works only on Linux.",
+            "They are completely identical.",
+            "The second forces Python to convert numbers into strings."
+          ],
+          correctIndex: 0,
+          explanation: "A default value (`= 10.0`) assigns an initial value if omitted during a function call. A union annotation (`float | None`) specifies allowed data types."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Constraining Inputs: Literal, Any, and Final",
+      durationMinutes: 22,
+      explanation: `
+<b>Advanced Type Specializations for Enterprise Systems</b><br/>
+Standard primitive types like <code>str</code> or <code>int</code> are often too broad. A delivery status code isn't just *any* arbitrary string; it must be one of exactly three specific values: <code>"PENDING"</code>, <code>"IN_TRANSIT"</code>, or <code>"DELIVERED"</code>. The <code>typing</code> module provides specialized annotations to constrain types tightly.<br/><br/>
+
+<b>1. Exact Value Constraints with <code>Literal</code>:</b><br/>
+<code>Literal[...]</code> restricts an argument or variable to a specific set of exact literal values.<br/>
+<code>from typing import Literal</code><br/>
+<code>StatusType = Literal["PENDING", "IN_TRANSIT", "DELIVERED"]</code><br/>
+<code>def set_status(status: StatusType): pass</code><br/>
+Passing `"CANCELLED"` to `set_status()` causes `mypy` to throw a static type validation error!<br/><br/>
+
+<b>2. The Escape Hatch: <code>Any</code>:</b><br/>
+<code>from typing import Any</code><br/>
+<code>Any</code> tells static type checkers to disable type checking for that specific variable.
+<ul>
+  <li><b>When to use:</b> Interfacing with legacy un-annotated third-party libraries or handling arbitrary dynamic JSON payloads during migration.</li>
+  <li><b>Warning:</b> Overusing `Any` defeats the entire purpose of type hints! Use `Any` sparingly.</li>
+</ul>
+
+<b>3. Immutability Constraints with <code>Final</code>:</b><br/>
+<code>from typing import Final</code><br/>
+<code>MAX_CARGO_CAPACITY_LBS: Final[float] = 50000.0</code><br/>
+`Final` tells static type checkers and IDEs that a variable or class attribute **must never be reassigned or overridden** in subclasses.
+      `,
+      diagram: `
+SPECIALIZED TYPING ANNOTATIONS:
+
+  Literal["CHICAGO", "AUSTIN"]  ---> Restricts value to exact matching strings
+  Final[float] = 50000.0       ---> Declares a constant that CANNOT be reassigned
+  Any                          ---> Disables static type checking for this variable
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Specialized Annotations (Literal, Any, Final)
+# ==============================================================================
+
+from typing import Literal, Any, Final
+
+# ------------------------------------------------------------------------------
+# Beginner: Constant Declarations with Final
+# ------------------------------------------------------------------------------
+
+# Final indicates constant values that must not be reassigned
+MAX_FLEET_CAPACITY_LBS: Final[float] = 40000.0
+DEFAULT_HUB_CODE: Final[str] = "CHICAGO_CENTRAL"
+
+print("--- BEGINNER: Final Constants ---")
+print("Max Capacity Constant:", MAX_FLEET_CAPACITY_LBS)
+
+# Note: Static type checkers like mypy will flag this re-assignment as an error!
+# MAX_FLEET_CAPACITY_LBS = 50000.0
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Value Restricting with Literal
+# ------------------------------------------------------------------------------
+
+# Define custom type alias for allowed logistics status strings
+ShippingStatus = Literal["QUEUED", "IN_TRANSIT", "DELIVERED"]
+PriorityTier = Literal[1, 2, 3]
+
+def update_package_status(tracking_id: str, new_status: ShippingStatus) -> None:
+    """Updates status, restricting allowed status strings via Literal."""
+    print(f"  [STATUS UPDATE] Package {tracking_id} set to '{new_status}'")
+
+print("\n--- INTERMEDIATE: Literal Value Restrictions ---")
+update_package_status("TRK-1001", "IN_TRANSIT") # Valid
+
+# Mypy static type checker will flag invalid string values at build time!
+# update_package_status("TRK-1001", "CANCELLED_INVALID")
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Legacy Payload Ingestion with Any
+# ------------------------------------------------------------------------------
+
+def parse_unstructured_legacy_payload(raw_payload: dict[str, Any]) -> dict[str, Any]:
+    \"\"\"
+    Uses 'Any' to process dynamic legacy JSON payloads where dictionary
+    value types are heterogeneous and unpredictable.
+    \"\"\"
+    print("\n--- ADVANCED: Legacy Ingestion with Any ---")
+
+    extracted_data: dict[str, Any] = {}
+
+    for key, value in raw_payload.items():
+        if key.startswith("meta_"):
+            extracted_data[key] = value
+            print(f"  Captured dynamic field '{key}' (Type: {type(value).__name__}) = {value}")
+
+    return extracted_data
+
+# Test payload with heterogeneous values (str, int, list, dict)
+legacy_dict: dict[str, Any] = {
+    "meta_tracking": "TRK-9004",
+    "meta_weight": 25.5,
+    "meta_tags": ["URGENT", "COLD_STORAGE"],
+    "unrelated_field": "IGNORE"
+}
+
+parsed = parse_unstructured_legacy_payload(legacy_dict)
+print("Extracted Metadata Count:", len(parsed))
+      `,
+      keyTakeaways: [
+        "Use `Literal[\"A\", \"B\"]` to restrict variables or arguments to a specific set of exact literal values.",
+        "Use `Final[Type]` to declare constants that static type checkers ensure are never reassigned.",
+        "Use `Any` sparingly as an explicit escape hatch for dynamic un-typed legacy code.",
+        "Type aliases (e.g., `Status = Literal[\"A\", \"B\"]`) make complex annotations reusable across modules."
+      ],
+      commonMistakes: [
+        "<b>Overusing `Any` across application models:</b> Using `Any` everywhere disables type checking completely, forfeiting all benefits of static analysis.",
+        "<b>Expecting `Final` to prevent runtime variable reassignment:</b> Python's interpreter does not enforce `Final` at runtime; static analysis tools (`mypy`) enforce it during build checks.",
+        "<b>Passing variable expressions to `Literal`:</b> `Literal[x]` requires literal constants (strings, numbers, booleans), not dynamic variables."
+      ],
+      quizzes: [
+        {
+          question: "Which `typing` annotation restricts an argument to a specific list of allowed literal values (e.g., `\"PENDING\"` or `\"DELIVERED\"`)?",
+          options: [
+            "`Enum`",
+            "`Literal`",
+            "`Final`",
+            "`Option`"
+          ],
+          correctIndex: 1,
+          explanation: "`Literal[\"VAL1\", \"VAL2\"]` constrains an argument to exact specified literal values."
+        },
+        {
+          question: "What is the primary function of `Final[str]` when annotating a variable in Python?",
+          options: [
+            "It encrypts string values on disk.",
+            "It signals to static type checkers (like mypy) that the variable is a constant and must never be reassigned.",
+            "It automatically converts string text to uppercase.",
+            "It prevents the script from closing."
+          ],
+          correctIndex: 1,
+          explanation: "`Final` indicates constant variables that static type analysis tools ensure are never reassigned."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Static Analysis and Verification with mypy",
+      durationMinutes: 12,
+      explanation: `
+<b>Automated Build-Time Quality Audits with mypy</b><br/>
+Adding type hints to your Python files is only the first step. To catch bugs automatically before deploying code to production, software teams integrate static type analysis tools into their development pipelines. The industry-standard static type checker for Python is <b><code>mypy</code></b>.<br/><br/>
+
+<b>1. What is mypy?</b><br/>
+<code>mypy</code> is an open-source static code analyzer. It reads your Python source code files, parses type annotations, and verifies type safety **without actually executing the code**.<br/><br/>
+
+<b>2. How mypy Catches Bugs Before Production:</b><br/>
+Suppose a developer accidentally writes code that passes `None` into a function expecting a `float`, or attempts to call `.upper()` on an integer variable.
+<ul>
+  <li><b>Without mypy:</b> The code passes code reviews, deploys to production servers, and crashes at 2:00 AM when a user hits that specific execution path!</li>
+  <li><b>With mypy:</b> Running <code>mypy script.py</code> during automated CI/CD builds flags the type mismatch immediately, halting the build and preventing the bug from ever reaching production!</li>
+</ul>
+
+<b>3. Typical mypy Command Line Usage:</b>
+<ul>
+  <li><code>$ mypy tracker.py</code> (Scans a single file)</li>
+  <li><code>$ mypy src/</code> (Scans an entire source directory tree recursively)</li>
+  <li><code>$ mypy --strict src/</code> (Enforces strict type annotations on all functions)</li>
+</ul>
+      `,
+      diagram: `
+CI/CD DEVELOPMENT PIPELINE WITH MYPY STATIC ANALYSIS:
+
+  [ Developer Writes Code + Type Hints ]
+                    |
+                    v
+  [ Run mypy Static Analyzer ($ mypy src/) ]
+                    |
+        +-----------+-----------+
+        |                       |
+  (Type Error Found)    (Type Check Passed)
+        |                       |
+        v                       v
+  [ Halt CI/CD Build! ]   [ Deploy to Production Server ]
+  (Bug Caught Early!)     (Resilient Code Executed)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Static Type Verification Patterns
+# Demonstrating code that passes/fails mypy analysis.
+# ==============================================================================
+
+from typing import Literal
+
+# ------------------------------------------------------------------------------
+# Demonstration Code: Static Type Safety Contract
+# ------------------------------------------------------------------------------
+
+StatusChoice = Literal["QUEUED", "DISPATCHED", "DELIVERED"]
+
+def calculate_discounted_fee(base_fee: float, discount_ratio: float | None = None) -> float:
+    """Calculates discounted shipping fee with defensive nullability guards."""
+    if discount_ratio is None:
+        return base_fee
+
+    # mypy verifies that discount_ratio is guaranteed to be a float here!
+    return base_fee * (1.0 - discount_ratio)
+
+
+def update_parcel_status_record(tracking_id: str, new_status: StatusChoice) -> dict[str, str]:
+    return {"id": tracking_id, "status": new_status}
+
+
+print("--- BEGINNER: Type Checked Function Execution ---")
+# Valid executions (mypy passes cleanly)
+fee_1 = calculate_discounted_fee(100.0, 0.15)
+fee_2 = calculate_discounted_fee(100.0, None)
+status_record = update_parcel_status_record("TRK-1001", "DISPATCHED")
+
+print(f"Fee 1: ${fee_1:.2f} | Fee 2: ${fee_2:.2f}")
+print("Status Record:", status_record)
+
+
+# ------------------------------------------------------------------------------
+# Anti-Patterns That Mypy Will Flag as Errors During Build Checks:
+# ------------------------------------------------------------------------------
+
+# BUG 1: Passing wrong primitive type (mypy error: Argument 1 to "calculate_discounted_fee" has incompatible type "str"; expected "float")
+# bad_fee = calculate_discounted_fee("ONE_HUNDRED_DOLLARS", 0.15)
+
+# BUG 2: Passing invalid literal choice (mypy error: Argument 2 to "update_parcel_status_record" has incompatible type "Literal['INVALID']"; expected "Literal['QUEUED', 'DISPATCHED', 'DELIVERED']")
+# bad_status = update_parcel_status_record("TRK-1001", "INVALID_STATUS_STRING")
+
+# BUG 3: Missing nullability guard (mypy error: Item "None" of "float | None" has no attribute ...)
+# def unsafe_discount(fee: float, ratio: float | None) -> float:
+#     return fee * ratio # Error: ratio might be None!
+      `,
+      keyTakeaways: [
+        "`mypy` is the industry-standard static type analyzer for Python.",
+        "Static type checkers analyze code type safety at build time without executing the script.",
+        "`mypy` enforces nullability guards (`if obj is not None:`), catching `NoneType` bugs before deployment.",
+        "Integrate `mypy` into automated CI/CD pipelines to catch bugs early in development."
+      ],
+      commonMistakes: [
+        "<b>Relying on type hints without running `mypy`:</b> Writing annotations but never executing static type checks, allowing type errors to bypass reviews.",
+        "<b>Ignoring `mypy` nullability warnings:</b> Using `dict | None` without writing `is not None` guards, causing `mypy` build failures.",
+        "<b>Suppressing `mypy` warnings globally:</b> Overusing `# type: ignore` comments everywhere instead of fixing genuine type mismatch bugs."
+      ],
+      quizzes: [
+        {
+          question: "When does the `mypy` static type checker analyze Python source code files for type safety errors?",
+          options: [
+            "Dynamically while the application is serving live production users.",
+            "Statically at build/analysis time without actually executing the Python code.",
+            "Inside the CPU hardware registers.",
+            "Only when converting files to binary."
+          ],
+          correctIndex: 1,
+          explanation: "`mypy` is a static analyzer that reads source code files and verifies type annotations without executing the program."
+        },
+        {
+          question: "How do you temporarily instruct `mypy` to ignore a specific line that raises a false-positive static type error?",
+          options: [
+            "Add `# ignore-type` at the end of the line.",
+            "Add `# type: ignore` at the end of the line.",
+            "Wrap the line in a `try/except` block.",
+            "Delete the variable."
+          ],
+          correctIndex: 1,
+          explanation: "Adding the inline comment `# type: ignore` instructs `mypy` to skip static type checking for that specific line."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Real-World Domain Type Architecture & Data Contracts",
+      durationMinutes: 10,
+      explanation: `
+<b>Building Enterprise Domain Models with Type Hints</b><br/>
+In enterprise application development, type hints serve as the foundational **Data Contract** across architectural layers (API endpoints, business logic services, database repositories).<br/><br/>
+
+<b>1. Type Aliases for Clean Domain Terms:</b><br/>
+Complex annotations like <code>dict[str, list[tuple[str, float]]]</code> reduce readability. Use **Type Aliases** to assign clear domain names to complex annotations:<br/>
+<code>TrackingID = str</code><br/>
+<code>WeightLbs = float</code><br/>
+<code>ParcelBatch = list[tuple[TrackingID, WeightLbs]]</code><br/><br/>
+
+<b>2. Typed Data Transfer Objects (DTOs) with TypedDict / Dataclasses:</b><br/>
+For structured dictionary payloads, use <code>TypedDict</code> (from <code>typing</code>) to specify exact key names and their corresponding value types:<br/>
+<pre><code>from typing import TypedDict
+
+class ParcelPayloadDict(TypedDict):
+    tracking_id: str
+    weight_lbs: float
+    destination_city: str
+    is_priority: bool</code></pre><br/>
+
+Now static checkers verify that dictionaries contain the required keys with matching types!
+      `,
+      diagram: `
+DOMAIN TYPE ALIAS & DATA CONTRACT ARCHITECTURE:
+
+  Domain Type Aliases:
+  TrackingID = str
+  HubCode    = str
+  WeightLbs  = float
+
+  Structured TypedDict Data Contract:
+  class ParcelPayloadDict(TypedDict):
+      id: TrackingID
+      hub: HubCode
+      weight: WeightLbs
+      status: Literal["QUEUED", "DISPATCHED"]
+
+  Result: Clean, self-documenting code contracts across API boundaries!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Type Aliases and TypedDict Data Contracts
+# ==============================================================================
+
+from typing import TypedDict, Literal
+
+# ------------------------------------------------------------------------------
+# 1. Defining Clear Domain Type Aliases
+# ------------------------------------------------------------------------------
+
+TrackingID = str
+HubCode = str
+WeightLbs = float
+CurrencyUSD = float
+
+LogisticsStatus = Literal["QUEUED", "IN_TRANSIT", "DELIVERED", "FAILED"]
+
+
+# ------------------------------------------------------------------------------
+# 2. Defining Structured Dictionary Contracts with TypedDict
+# ------------------------------------------------------------------------------
+
+class ParcelManifestDict(TypedDict):
+    """Explicit dictionary contract specifying required keys and value types."""
+    tracking_id: TrackingID
+    destination_hub: HubCode
+    weight_lbs: WeightLbs
+    status: LogisticsStatus
+    assigned_driver: str | None
+
+
+# ------------------------------------------------------------------------------
+# 3. Service Layer Executing Against Data Contracts
+# ------------------------------------------------------------------------------
+
+def dispatch_manifest_payload(manifest: ParcelManifestDict) -> CurrencyUSD:
+    """Service function processing strongly-typed ParcelManifestDict payloads."""
+    print(f"\n--- SERVICE: Dispatching Manifest [{manifest['tracking_id']}] ---")
+    print(f"  Hub         : {manifest['destination_hub']}")
+    print(f"  Weight      : {manifest['weight_lbs']} lbs")
+    print(f"  Status      : {manifest['status']}")
+    print(f"  Driver      : {manifest['assigned_driver'] or 'UNASSIGNED'}")
+
+    # Calculate fee
+    base_fee: CurrencyUSD = 12.50
+    weight_fee: CurrencyUSD = manifest['weight_lbs'] * 0.50
+    return round(base_fee + weight_fee, 2)
+
+# Instantiating valid payload matching TypedDict contract
+valid_manifest: ParcelManifestDict = {
+    "tracking_id": "TRK-9001",
+    "destination_hub": "CHICAGO_CENTRAL",
+    "weight_lbs": 24.5,
+    "status": "IN_TRANSIT",
+    "assigned_driver": "DRIVER_MARCUS"
+}
+
+# Execute service
+calculated_billing: CurrencyUSD = dispatch_manifest_payload(valid_manifest)
+print(f"Final Billed Fee: ${calculated_billing:.2f}")
+      `,
+      keyTakeaways: [
+        "Type aliases (`TrackingID = str`) create self-documenting domain terms.",
+        "Use `TypedDict` to define explicit key-and-type contracts for dictionary payloads.",
+        "Data contracts eliminate key-spelling errors and type bugs across architectural boundaries.",
+        "Combining Type Aliases, `TypedDict`, and `mypy` produces enterprise-grade resilient Python codebases."
+      ],
+      commonMistakes: [
+        "<b>Using untyped plain dicts for complex payloads:</b> Passing un-annotated dictionaries across multiple service layers, forcing developers to guess key names.",
+        "<b>Expecting TypedDict to validate keys at runtime:</b> Like all type hints, `TypedDict` is enforced by static analyzers (`mypy`), not by the Python runtime interpreter!"
+      ],
+      quizzes: [
+        {
+          question: "Which `typing` construct allows you to define an explicit key-name and value-type contract for dictionary objects in Python?",
+          options: [
+            "`DictContract`",
+            "`TypedDict`",
+            "`DictSchema`",
+            "`ModelDict`"
+          ],
+          correctIndex: 1,
+          explanation: "`TypedDict` defines dictionary schemas specifying mandatory key names and their expected value types."
+        },
+        {
+          question: "What is the primary architectural goal of using Type Aliases (e.g., `TrackingID = str`) in Python codebases?",
+          options: [
+            "To speed up integer arithmetic.",
+            "To replace complex annotations with self-documenting, meaningful domain terminology across application layers.",
+            "To encrypt string variables.",
+            "To force functions to run asynchronously."
+          ],
+          correctIndex: 1,
+          explanation: "Type aliases assign domain-specific names to primitive annotations, making data contracts self-documenting."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Are Python type annotations enforced automatically by the runtime interpreter during script execution?",
+      options: [
+        "Yes, Python raises a `TypeError` on any type mismatch.",
+        "No, type hints are static metadata ignored by the runtime interpreter.",
+        "Only when running Python on Linux.",
+        "Only when importing the `typing` module."
+      ],
+      correctIndex: 1,
+      explanation: "Type hints are static metadata designed for IDEs and static analysis tools like `mypy`; the Python interpreter ignores them at runtime."
+    },
+    {
+      question: "Starting in Python 3.9+, how should a list containing only strings be annotated?",
+      options: [
+        "`List[str]`",
+        "`list[str]`",
+        "`List<string>`",
+        "`list(str)`"
+      ],
+      correctIndex: 1,
+      explanation: "Python 3.9+ supports native lowercase collection generics directly: `list[str]`."
+    },
+    {
+      question: "How do you annotate a function parameter in Python 3.10+ that accepts either an integer or a float value?",
+      options: [
+        "`weight: int or float`",
+        "`weight: int | float`",
+        "`weight: Union(int, float)`",
+        "`weight: int + float`"
+      ],
+      correctIndex: 1,
+      explanation: "Python 3.10+ (PEP 604) uses the pipe operator for union types: `int | float`."
+    },
+    {
+      question: "What does the annotation `dict | None` indicate for a return type?",
+      options: [
+        "The function always returns a dictionary.",
+        "The function can return either a valid dictionary or `None`.",
+        "The function returns a boolean.",
+        "The function deletes the dictionary."
+      ],
+      correctIndex: 1,
+      explanation: "`dict | None` expresses nullability, indicating the function returns a dictionary or `None`."
+    },
+    {
+      question: "Which `typing` annotation restricts an argument to an exact set of allowed literal values (e.g., `\"PENDING\"` or `\"DELIVERED\"`)?",
+      options: [
+        "`Enum`",
+        "`Literal`",
+        "`Final`",
+        "`Exact`"
+      ],
+      correctIndex: 1,
+      explanation: "`Literal[\"VAL1\", \"VAL2\"]` constrains values to exact specified literals."
+    },
+    {
+      question: "Which annotation declares a constant variable that static type checkers ensure is never reassigned?",
+      options: [
+        "`Const`",
+        "`Final`",
+        "`Static`",
+        "`Immutable`"
+      ],
+      correctIndex: 1,
+      explanation: "`Final[Type]` designates constant variables that static type checkers ensure remain unchanged."
+    },
+    {
+      question: "What is the industry-standard static type analyzer tool used to audit Python source code for type safety?",
+      options: [
+        "`mypy`",
+        "`pylint`",
+        "`black`",
+        "`pytest`"
+      ],
+      correctIndex: 0,
+      explanation: "`mypy` is the standard static type analyzer for Python."
+    },
+    {
+      question: "Which `typing` class allows defining structured dictionary schemas with fixed key names and expected value types?",
+      options: [
+        "`DictModel`",
+        "`TypedDict`",
+        "`DictSchema`",
+        "`DataDict`"
+      ],
+      correctIndex: 1,
+      explanation: "`TypedDict` defines dictionary schemas with fixed key names and value types."
+    }
+  ],
+  project: {
+    name: "Enterprise Typed Logistics API & Static Verification Suite (Phase 1 Final Project)",
+    goal: "Build a fully type-annotated enterprise logistics API layer using native generics, union types, nullability guards, Literal value choices, Final constants, TypedDict data contracts, and static mypy verification.",
+    brief: "Your global logistics software team requires a fully type-annotated domain API module (`typed_logistics_api.py`). The module must define domain type aliases, structured `TypedDict` payload contracts, functions with parameter and return type annotations (`list[str]`, `dict | None`, `Literal`), `Final` constants, and defensive nullability guards. The code must pass static type verification cleanly.",
+    steps: [
+      "Create a script file named `typed_logistics_api.py` in your workspace.",
+      "Define `Final` system constants (`MAX_PAYLOAD_LBS: Final[float] = 50000.0`).",
+      "Define domain type aliases (`TrackingID = str`, `WeightLbs = float`, `StatusTier = Literal[\"QUEUED\", \"IN_TRANSIT\", \"DELIVERED\"]`).",
+      "Define a structured `TypedDict` contract `ParcelPayloadContract` specifying required keys (`tracking_id`, `weight_lbs`, `status`, `driver_id`).",
+      "Write a fully annotated service function `process_parcel_dispatch(payload: ParcelPayloadContract) -> dict[str, Any] | None` with defensive nullability guards.",
+      "Write a batch manifest calculator `calculate_batch_totals(parcels: list[ParcelPayloadContract]) -> tuple[int, float]`.",
+      "Instantiate typed dictionary payloads and execute service calls.",
+      "Run `python3 typed_logistics_api.py` in your integrated terminal and verify zero static errors."
+    ],
+    acceptance: [
+      "All functions and variables feature explicit type annotations using Python 3.10+ syntax (`list[str]`, `int | float`, `dict | None`).",
+      "`TypedDict` data contracts define dictionary payload key names and value types.",
+      "`Final` constants and `Literal` value choices restrict variable assignments.",
+      "Executing `python3 typed_logistics_api.py` prints a clean, fully validated API summary report without runtime errors."
+    ],
+    stretch: [
+      "Install `mypy` in your Python environment (`pip install mypy`) and execute `mypy typed_logistics_api.py` to confirm zero static type errors.",
+      "Add strict mypy configuration flags (`--disallow-untyped-defs`) to enforce 100% type annotation coverage across all functions."
+    ]
+  }
+};
