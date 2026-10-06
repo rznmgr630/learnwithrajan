@@ -63,9 +63,12 @@ function createChallenges(level: ChallengeLevel, startId: number, scenarios: Sce
     const serviceContext = level === "Advanced"
       ? `type RequestContext = { requestId: string; actorId: string; tenantId: string };\n+type AuditEntry = { action: string; requestId: string; actorId: string };\n+\n+const auditLog: AuditEntry[] = [];\n+\n+function audit(context: RequestContext, action: string) {\n+  auditLog.push({\n+    action,\n+    requestId: context.requestId,\n+    actorId: context.actorId,\n+  });\n+}\n+\n+function requireActor(context: RequestContext) {\n+  if (!context.actorId) throw new Error("Unauthenticated");\n+}\n+\n+const context: RequestContext = {\n+  requestId: "req_1",\n+  actorId: "u1",\n+  tenantId: "tenant_a",\n+};\n+\n+requireActor(context);\n+audit(context, "review.started");\n+\n+`
       : "";
+    const intermediateContext = level === "Intermediate"
+      ? `const requestId = "req_1";\n+void requestId;\n\n`
+      : "";
     const cleanServiceContext = serviceContext.replaceAll("\n+", "\n");
-    const code = `${cleanServiceContext}${rawCode}`;
-    const fixedCode = `${cleanServiceContext}${rawFixedCode}`;
+    const code = `${cleanServiceContext}${intermediateContext}${rawCode}`;
+    const fixedCode = `${cleanServiceContext}${intermediateContext}${rawFixedCode}`;
     return {
       id: startId + index,
       level,
