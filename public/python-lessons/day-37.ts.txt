@@ -1,0 +1,910 @@
+/**
+ * DAY 37: Phase 7 · Type Safety & Code Quality — Advanced Typing
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase1AdvancedTyping = {
+  day: 37,
+  topic: "Phase 7 · Type Safety & Code Quality — Advanced Typing",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Generics and TypeVar",
+      durationMinutes: 18,
+      explanation: `
+<b>Type-Safe Generic Abstractions without Losing Specificity</b><br/>
+In complex software architecture, you frequently write functions or classes that operate on multiple types while maintaining the internal type relationships. For example, a queue data structure, a caching wrapper, or a repository query function.<br/><br/>
+
+<b>1. The Problem with <code>Any</code>:</b><br/>
+If you annotate a function parameter as <code>Any</code>, static type checkers like <code>mypy</code> lose all type context. Passing a <code>ParcelPackage</code> into a function returning <code>Any</code> means <code>mypy</code> cannot verify if the return value actually has package methods or attributes!<br/><br/>
+
+<b>2. TypeVar (Generic Type Variables):</b><br/>
+A <b>TypeVar</b> acts as a parameter placeholder for a type. It creates a **type-binding contract**: "Whatever concrete type is passed in as Parameter X MUST be the exact same type returned as Return Y!"<br/>
+<code>from typing import TypeVar</code><br/>
+<code>T = TypeVar("T") # Declare a generic type variable</code><br/>
+<code>def get_first_item(items: list[T]) -> T:</code><br/>
+<code>    return items[0] # If passed list[int], returns int! If passed list[str], returns str!</code><br/><br/>
+
+<b>3. Bounded TypeVar (Restricting Generic Options):</b><br/>
+You can constrain a `TypeVar` to specific types or subclasses using `bound`:<br/>
+<code>T_Package = TypeVar("T_Package", bound=BaseParcel)</code><br/>
+This guarantees that `T_Package` can only be `BaseParcel` or one of its child subclasses!
+      `,
+      diagram: `
+GENERIC TYPEVAR TYPE BINDING CONTRACT:
+
+  Without TypeVar (Using Any):
+  def get_first(items: list[Any]) -> Any: ...
+  input: list[ParcelPackage] ---> mypy output: Any (TYPE IDENTITY LOST!)
+
+  With TypeVar T:
+  def get_first(items: list[T]) -> T: ...
+  input: list[ParcelPackage] ---> mypy output: ParcelPackage (EXACT TYPE PRESERVED!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: Generics and TypeVar
+# ==============================================================================
+
+from typing import TypeVar, Generic
+
+# ------------------------------------------------------------------------------
+# Beginner: Type-Preserving Functions with TypeVar
+# ------------------------------------------------------------------------------
+
+# 1. Declare a generic TypeVar symbol
+T = TypeVar("T")
+
+def extract_first_element(collection: list[T]) -> T:
+    """Returns the first element of a list while preserving its exact element type."""
+    if not collection:
+        raise IndexError("Collection is empty.")
+    return collection[0]
+
+print("--- BEGINNER: TypeVar Function Preservation ---")
+
+# Passed list[str] -> mypy knows return is str!
+str_result: str = extract_first_element(["TRK-101", "TRK-102"])
+
+# Passed list[float] -> mypy knows return is float!
+float_result: float = extract_first_element([14.5, 22.8, 85.0])
+
+print(f"Extracted String : {str_result} (Type: {type(str_result).__name__})")
+print(f"Extracted Float  : {float_result} (Type: {type(float_result).__name__})")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Bounded TypeVar (subclass constraints)
+# ------------------------------------------------------------------------------
+
+class BaseParcel:
+    def __init__(self, tracking_id: str, weight_lbs: float):
+        self.tracking_id = tracking_id
+        self.weight_lbs = weight_lbs
+
+class ExpressParcel(BaseParcel):
+    def priority_dispatch(self) -> str:
+        return f"Express Dispatch: {self.tracking_id}"
+
+# Constrain TypeVar to BaseParcel or its child subclasses
+P = TypeVar("P", bound=BaseParcel)
+
+def audit_heavy_parcel(parcel: P, threshold_lbs: float = 50.0) -> P:
+    """Inspects parcel; returns the EXACT subclass type passed in."""
+    if parcel.weight_lbs > threshold_lbs:
+        print(f"  [AUDIT ALERT] {parcel.tracking_id} exceeds {threshold_lbs} lbs!")
+    return parcel # Returns 'P' (Preserves ExpressParcel subclass methods!)
+
+print("\n--- INTERMEDIATE: Bounded TypeVar ---")
+express_item = ExpressParcel("TRK-EXPRESS-99", weight_lbs=85.0)
+
+# Mypy knows audited_item is strictly an ExpressParcel (retains .priority_dispatch())
+audited_item = audit_heavy_parcel(express_item)
+print("Invoking Subclass Method:", audited_item.priority_dispatch())
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Generic Storage Repository Class
+# ------------------------------------------------------------------------------
+
+EntityType = TypeVar("EntityType")
+
+class GenericRepository(Generic[EntityType]):
+    \"\"\"
+    Generic data access repository pattern managing typed entity collections.
+    \"\"\"
+    def __init__(self):
+        self._storage: dict[str, EntityType] = {}
+
+    def save(self, key: str, entity: EntityType) -> None:
+        self._storage[key] = entity
+        print(f"  [GENERIC REPO] Saved key '{key}'")
+
+    def get(self, key: str) -> EntityType | None:
+        return self._storage.get(key)
+
+print("\n--- ADVANCED: Generic[T] Repository ---")
+# Instantiate repository typed specifically for BaseParcel objects
+parcel_repo: GenericRepository[BaseParcel] = GenericRepository()
+parcel_repo.save("TRK-1001", BaseParcel("TRK-1001", 12.5))
+
+retrieved_parcel = parcel_repo.get("TRK-1001")
+if retrieved_parcel is not None:
+    print(f"Retrieved Parcel: {retrieved_parcel.tracking_id} | Weight: {retrieved_parcel.weight_lbs} lbs")
+      `,
+      keyTakeaways: [
+        "`TypeVar` creates type-binding relationships between parameters and return values.",
+        "Use `bound=BaseClass` on `TypeVar` to constrain generic types to a specific class hierarchy.",
+        "Inherit from `Generic[T]` to build generic classes (like repositories, stacks, or queues).",
+        "`TypeVar` avoids using `Any`, preserving static type safety with `mypy`."
+      ],
+      commonMistakes: [
+        "<b>Using `Any` when `TypeVar` is needed:</b> Losing type identity across function calls.",
+        "<b>Re-declaring `TypeVar` inside function bodies:</b> `TypeVar` symbols must be declared at module scope.",
+        "<b>Forgetting to pass `Generic[T]` to generic parent classes:</b> Defining a class without `Generic[T]` prevents static type checkers from validating inner generic parameters."
+      ],
+      quizzes: [
+        {
+          question: "Why is using a `TypeVar` preferable to using `Any` for function parameters and return types?",
+          options: [
+            "`TypeVar` converts strings to integers automatically.",
+            "`TypeVar` establishes a binding contract that preserves the exact concrete type passed in across return values.",
+            "`Any` causes runtime syntax errors.",
+            "`TypeVar` only works on Linux."
+          ],
+          correctIndex: 1,
+          explanation: "`TypeVar` establishes a type-binding contract, allowing `mypy` to verify that the return type matches the input parameter type."
+        },
+        {
+          question: "How do you constrain a `TypeVar` so it only accepts `BaseParcel` or its child subclasses?",
+          options: [
+            "`T = TypeVar(\"T\", restrict=BaseParcel)`",
+            "`T = TypeVar(\"T\", bound=BaseParcel)`",
+            "`T = TypeVar(\"T\", extends=BaseParcel)`",
+            "`T = TypeVar(\"T\", inherits=BaseParcel)`"
+          ],
+          correctIndex: 1,
+          explanation: "`bound=BaseClass` constrains a `TypeVar` to a specific parent class or its subclasses."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Structural Typing and Protocols",
+      durationMinutes: 20,
+      explanation: `
+<b>Static Duck Typing without Inheritance Chains</b><br/>
+Python's execution model is built on **Duck Typing**: *"If it walks like a duck and quacks like a duck, it's a duck."* Functions don't care if an object inherits from a specific parent class; they only care if the object possesses the required methods or attributes.<br/><br/>
+
+Traditionally, nominal typing (using inheritance: `class Dog(Animal)`) forces explicit class relationships. **Protocols (PEP 544)** bring static duck typing to Python! A **Protocol** defines a structural interface—any class that implements the required methods automatically satisfies the Protocol **without needing to inherit from it**.<br/><br/>
+
+<b>1. Defining a Protocol:</b><br/>
+<code>from typing import Protocol</code><br/>
+<code>class Printable(Protocol):</code><br/>
+<code>    def print_manifest(self) -> str:</code><br/>
+<code>        ... # Ellipsis indicates method signature contract</code><br/><br/>
+
+<b>2. Satisfying a Protocol Implicitly:</b><br/>
+Any class that implements `print_manifest(self) -> str` satisfies `Printable` automatically!
+<pre><code>class Invoice:
+    def print_manifest(self) -> str:
+        return "Invoice #101" # Satisfies Printable implicitly!</code></pre>
+
+<b>Why use Protocols?</b>
+1. **Decoupling:** Eliminates tight coupling between packages and inheritance hierarchies.
+2. **Third-Party Integration:** Allows defining type contracts for third-party library classes you don't control!
+      `,
+      diagram: `
+NOMINAL TYPING vs STRUCTURAL TYPING (Protocols):
+
+  Nominal Inheritance (Rigid):
+  class Parcel(BaseEntity)  ---> MUST inherit from BaseEntity explicitly!
+
+  Structural Protocol (Duck Typing):
+  class Printable(Protocol):
+      def format_label(self) -> str: ...
+
+  class Order: # No inheritance!
+      def format_label(self) -> str: return "Label"
+
+  (Order satisfies Printable automatically in mypy because methods match!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Structural Typing with Protocols (PEP 544)
+# ==============================================================================
+
+from typing import Protocol, runtime_checkable
+
+# ------------------------------------------------------------------------------
+# Beginner: Defining and Satisfying a Structural Protocol
+# ------------------------------------------------------------------------------
+
+# Define structural protocol interface
+class MeasurableParcel(Protocol):
+    """Structural protocol requiring weight_lbs and volume_cuft attributes."""
+    weight_lbs: float
+    volume_cuft: float
+
+
+# Function accepting ANY object that matches the MeasurableParcel interface
+def calculate_density(item: MeasurableParcel) -> float:
+    """Calculates density (lbs / cuft) for any structurally compatible object."""
+    if item.volume_cuft <= 0:
+        return 0.0
+    return round(item.weight_lbs / item.volume_cuft, 2)
+
+
+# Class A: No explicit inheritance from MeasurableParcel!
+class StandardBox:
+    def __init__(self, weight_lbs: float, volume_cuft: float):
+        self.weight_lbs = weight_lbs
+        self.volume_cuft = volume_cuft
+
+# Class B: Third-party or separate class with matching fields
+class CargoCrate:
+    def __init__(self, weight_lbs: float, volume_cuft: float, crate_id: str):
+        self.weight_lbs = weight_lbs
+        self.volume_cuft = volume_cuft
+        self.crate_id = crate_id
+
+print("--- BEGINNER: Structural Protocols ---")
+box = StandardBox(45.0, 5.0)
+crate = CargoCrate(120.0, 10.0, "CRATE-99")
+
+# Both objects satisfy the protocol structurally!
+print("Box Density   :", calculate_density(box))   # 9.0 lbs/cuft
+print("Crate Density :", calculate_density(crate)) # 12.0 lbs/cuft
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: @runtime_checkable Protocols for isinstance()
+# ------------------------------------------------------------------------------
+
+# Standard Protocols exist only at static build time.
+# @runtime_checkable enables isinstance() checks at runtime!
+@runtime_checkable
+class Dispatchable(Protocol):
+    def dispatch(self) -> bool:
+        ...
+
+class ExpressShipment:
+    def dispatch(self) -> bool:
+        print("  Dispatching express shipment...")
+        return True
+
+class StationaryWarehouse:
+    pass
+
+print("\n--- INTERMEDIATE: @runtime_checkable Protocols ---")
+shipment = ExpressShipment()
+warehouse = StationaryWarehouse()
+
+print("Is ExpressShipment Dispatchable?", isinstance(shipment, Dispatchable))  # True
+print("Is Warehouse Dispatchable?      ", isinstance(warehouse, Dispatchable)) # False
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Decoupled Storage Provider Protocol
+# ------------------------------------------------------------------------------
+
+class ManifestStorageProvider(Protocol):
+    """Protocol defining data persistence contracts for storage drivers."""
+    def save_manifest(self, tracking_id: str, data: dict) -> bool:
+        ...
+
+class S3CloudStorageDriver:
+    """S3 driver implementing Protocol implicitly."""
+    def save_manifest(self, tracking_id: str, data: dict) -> bool:
+        print(f"  [S3 BUCKET] Saved manifest '{tracking_id}' to AWS S3.")
+        return True
+
+class LocalDiskStorageDriver:
+    """Local disk driver implementing Protocol implicitly."""
+    def save_manifest(self, tracking_id: str, data: dict) -> bool:
+        print(f"  [LOCAL DISK] Saved manifest '{tracking_id}' to /var/data.")
+        return True
+
+def persist_package_event(storage_driver: ManifestStorageProvider, tracking_id: str) -> None:
+    """Service function decoupled from concrete storage implementations."""
+    print(f"\n--- ADVANCED: Persisting Event [{tracking_id}] ---")
+    storage_driver.save_manifest(tracking_id, {"status": "CHECKED_IN"})
+
+# Execute service with different un-coupled drivers
+persist_package_event(S3CloudStorageDriver(), "TRK-9001")
+persist_package_event(LocalDiskStorageDriver(), "TRK-9002")
+      `,
+      keyTakeaways: [
+        "Protocols implement **Structural Typing** (static duck typing) in Python.",
+        "Classes do NOT need to inherit from a `Protocol` to satisfy it—they only need matching attributes/methods.",
+        "Protocols eliminate tight inheritance coupling across application packages.",
+        "Use `@runtime_checkable` on a Protocol to enable runtime `isinstance(obj, MyProtocol)` verification."
+      ],
+      commonMistakes: [
+        "<b>Using `isinstance()` on a standard Protocol without `@runtime_checkable`:</b> Raises a `TypeError: Instance and class checks can only be used with @runtime_checkable protocols`.",
+        "<b>Forgetting the ellipsis `...` in Protocol method stubs:</b> Protocols define method signatures; the method body must consist of `...`.",
+        "<b>Mismatched method signatures:</b> Implementing a method with different parameter types or return types than the Protocol contract, causing `mypy` errors."
+      ],
+      quizzes: [
+        {
+          question: "How does a class satisfy a `Protocol` interface in Python?",
+          options: [
+            "It must explicitly inherit from the Protocol class.",
+            "It satisfies the Protocol implicitly simply by implementing the matching attributes and method signatures required by the Protocol.",
+            "By decorating the class with `@register_protocol`.",
+            "Protocols only apply to functions, not classes."
+          ],
+          correctIndex: 1,
+          explanation: "Protocols rely on structural typing: any class possessing matching attributes and methods satisfies the Protocol automatically without inheritance."
+        },
+        {
+          question: "Which decorator must be added to a `Protocol` class to allow checking instances at runtime using `isinstance(obj, MyProtocol)`?",
+          options: [
+            "`@staticmethod`",
+            "`@runtime_checkable`",
+            "`@dataclass`",
+            "`@type_check`"
+          ],
+          correctIndex: 1,
+          explanation: "`@runtime_checkable` allows `isinstance()` and `issubclass()` checks on Protocol classes at runtime."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Higher-Order Function Signatures with Callable and ParamSpec",
+      durationMinutes: 18,
+      explanation: `
+<b>Precise Type Annotations for Callables, Callbacks, and Decorators</b><br/>
+When writing higher-order functions or decorators that accept or return other functions, annotating parameters as plain <code>Callable</code> can lose signature details.<br/><br/>
+
+<b>1. The <code>Callable</code> Annotation:</b><br/>
+<code>from typing import Callable</code><br/>
+Syntax: <code>Callable[[ParamType1, ParamType2], ReturnType]</code><br/>
+Example: <code>Callable[[str, float], bool]</code> indicates a function that accepts a string and a float, and returns a boolean.<br/><br/>
+
+<b>2. The Decorator Signature Problem:</b><br/>
+Standard `Callable` cannot preserve the exact parameter signature of wrapped target functions. If a decorator takes `Callable[..., Any]`, static type checkers lose all autocomplete parameter hints for decorated functions!<br/><br/>
+
+<b>3. Preserving Decorator Signatures with <code>ParamSpec</code> (Python 3.10+ PEP 612):</b><br/>
+<code>ParamSpec</code> captures the exact parameter signature of a target function and passes it through to the wrapper, preserving full IDE autocomplete and parameter type checking!<br/>
+<code>P = ParamSpec("P")</code><br/>
+<code>R = TypeVar("R")</code><br/>
+<code>def decorator(func: Callable[P, R]) -> Callable[P, R]: ...</code>
+      `,
+      diagram: `
+PARAMSPEC DECORATOR SIGNATURE PRESERVATION:
+
+  Without ParamSpec (Callable[..., Any]):
+  @audit_decorator
+  def dispatch(tracking_id: str, weight: float) -> bool: ...
+  --> IDE loses parameter hints! (Parameter types become Any)
+
+  With ParamSpec P & TypeVar R:
+  def decorator(func: Callable[P, R]) -> Callable[P, R]: ...
+  --> IDE preserves tracking_id: str and weight: float parameter hints completely!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Callable and ParamSpec Signature Preservation
+# ==============================================================================
+
+from typing import Callable, ParamSpec, TypeVar
+from functools import wraps
+
+# ------------------------------------------------------------------------------
+# Beginner: Annotating Callable Callbacks
+# ------------------------------------------------------------------------------
+
+# Define callback function signature: Accepts (str, float) -> returns bool
+ProcessCallback = Callable[[str, float], bool]
+
+def execute_parcel_processor(
+    tracking_id: str,
+    weight_lbs: float,
+    callback_handler: ProcessCallback
+) -> bool:
+    """Executes a processing pipeline using a strongly-typed callback function."""
+    print(f"--- BEGINNER: Executing Typed Callback for [{tracking_id}] ---")
+    return callback_handler(tracking_id, weight_lbs)
+
+def verify_weight_limit(id_code: str, weight: float) -> bool:
+    is_valid = weight <= 150.0
+    print(f"  Callback Execution: Parcel {id_code} weight {weight} lbs valid? {is_valid}")
+    return is_valid
+
+# Pass callback matching Callable[[str, float], bool]
+result = execute_parcel_processor("TRK-1001", 45.0, verify_weight_limit)
+print("Callback Result:", result)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Decorator Parameter Preservation with ParamSpec
+# ------------------------------------------------------------------------------
+
+# ParamSpec captures argument parameters (*args, **kwargs)
+P = ParamSpec("P")
+# TypeVar captures return type
+R = TypeVar("R")
+
+def production_audit_wrapper(func: Callable[P, R]) -> Callable[P, R]:
+    \"\"\"
+    Production decorator preserving exact parameter signatures using ParamSpec (PEP 612).
+    \"\"\"
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        print(f"\n--- ADVANCED ParamSpec: Audit Log for [{func.__name__}] ---")
+        return func(*args, **kwargs)
+    return wrapper
+
+@production_audit_wrapper
+def dispatch_express_cargo(tracking_id: str, priority_level: int, is_fragile: bool = False) -> dict:
+    """Target function with complex parameter signature."""
+    return {
+        "id": tracking_id,
+        "priority": priority_level,
+        "fragile": is_fragile,
+        "status": "DISPATCHED"
+    }
+
+# Invoking decorated function (ParamSpec preserves full IDE parameter hints!)
+dispatch_data = dispatch_express_cargo("TRK-8802", priority_level=1, is_fragile=True)
+print("Dispatch Output:", dispatch_data)
+      `,
+      keyTakeaways: [
+        "Annotate function callbacks using `Callable[[ParamTypes...], ReturnType]`.",
+        "Use `ParamSpec` (Python 3.10+) to capture and preserve exact parameter signatures in custom decorators.",
+        "Combining `ParamSpec(\"P\")` and `TypeVar(\"R\")` allows decorators to be fully typed without losing IDE autocomplete.",
+        "`P.args` and `P.kwargs` provide precise type annotations for wrapper `*args` and `**kwargs`."
+      ],
+      commonMistakes: [
+        "<b>Using `Callable` without inner brackets:</b> Writing `Callable[str, bool]` instead of `Callable[[str], bool]`. The parameter list must be enclosed in an inner list `[...]`.",
+        "<b>Using `Callable[..., Any]` for decorators:</b> Causing IDEs and static type checkers to lose autocomplete parameter hints for wrapped functions."
+      ],
+      quizzes: [
+        {
+          question: "How should a callback parameter that accepts a `str` and an `int` and returns a `bool` be annotated with `Callable`?",
+          options: [
+            "`Callable[str, int, bool]`",
+            "`Callable[[str, int], bool]`",
+            "`Callable(str, int -> bool)`",
+            "`Callable[[str, int] = bool]`"
+          ],
+          correctIndex: 1,
+          explanation: "`Callable` requires parameter types in an inner list, followed by the return type: `Callable[[str, int], bool]`."
+        },
+        {
+          question: "What is the primary benefit of using `ParamSpec` in decorator type annotations?",
+          options: [
+            "It runs decorators asynchronously.",
+            "It captures and preserves the exact parameter signature of the target function, maintaining IDE autocomplete for decorated functions.",
+            "It converts function return values into JSON strings.",
+            "It prevents runtime exceptions."
+          ],
+          correctIndex: 1,
+          explanation: "`ParamSpec` captures parameter signatures (`*args, **kwargs`) and passes them through to wrapper functions, preserving IDE autocomplete."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Data Contracts with TypedDict and Advanced Mappings",
+      durationMinutes: 14,
+      explanation: `
+<b>Strict Schema Validation for Dictionary Objects</b><br/>
+Dictionaries are the standard currency for JSON payloads, API endpoints, and configuration files. However, plain dictionaries offer zero structural guarantees—keys can be misspelled, optional fields missed, or data types corrupted.<br/><br/>
+
+<b>1. TypedDict (PEP 589):</b><br/>
+<code>TypedDict</code> allows defining schema contracts for dictionary objects, specifying expected key names and their value types.<br/>
+<code>from typing import TypedDict</code><br/>
+<pre><code>class ParcelPayload(TypedDict):
+    tracking_id: str
+    weight_lbs: float
+    is_priority: bool</code></pre><br/>
+
+<b>2. Optional Fields with <code>total=False</code> and <code>NotRequired</code>:</b>
+<ul>
+  <li><code>total=True</code> (Default): All defined keys are **mandatory**.</li>
+  <li><code>total=False</code>: All defined keys are **optional**.</li>
+  <li><b><code>NotRequired[...]</code> (Python 3.11+ PEP 655):</b> Allows marking specific individual keys as optional within an otherwise mandatory schema!</li>
+</ul>
+<pre><code>from typing import TypedDict, NotRequired
+
+class ParcelPayload(TypedDict):
+    tracking_id: str # Mandatory
+    weight_lbs: float # Mandatory
+    notes: NotRequired[str] # Optional key!</code></pre>
+      `,
+      diagram: `
+TYPEDDICT DATA CONTRACT SCHEMA:
+
+  class ParcelPayload(TypedDict):
+      tracking_id: str          <--- Mandatory Key
+      weight_lbs: float         <--- Mandatory Key
+      notes: NotRequired[str]   <--- Optional Key (Python 3.11+)
+
+  Valid Payload:   {"tracking_id": "TRK-1", "weight_lbs": 12.0}
+  Invalid Payload: {"weight_lbs": 12.0}  <--- mypy Error: Missing key 'tracking_id'!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: TypedDict Schema Contracts and NotRequired
+# ==============================================================================
+
+from typing import TypedDict, NotRequired
+
+# ------------------------------------------------------------------------------
+# Beginner: Standard Mandatory TypedDict Schema
+# ------------------------------------------------------------------------------
+
+class MandatoryParcelSchema(TypedDict):
+    tracking_id: str
+    destination_city: str
+    weight_lbs: float
+
+
+# Valid dictionary instantiation
+parcel_payload: MandatoryParcelSchema = {
+    "tracking_id": "TRK-1001",
+    "destination_city": "CHICAGO",
+    "weight_lbs": 18.5
+}
+
+print("--- BEGINNER: TypedDict Data Contract ---")
+print("Tracking ID :", parcel_payload["tracking_id"])
+print("Weight      :", parcel_payload["weight_lbs"], "lbs")
+
+
+# ------------------------------------------------------------------------------
+# Intermediate: Fine-Grained Key Optionality with NotRequired (Python 3.11+)
+# ------------------------------------------------------------------------------
+
+class FlexibleParcelSchema(TypedDict):
+    # Mandatory keys
+    tracking_id: str
+    destination_city: str
+    # Fine-grained optional keys using NotRequired
+    special_instructions: NotRequired[str]
+    driver_notes: NotRequired[str]
+
+
+# Valid payload omitting optional 'special_instructions' and 'driver_notes'
+valid_minimal_payload: FlexibleParcelSchema = {
+    "tracking_id": "TRK-2002",
+    "destination_city": "AUSTIN"
+}
+
+print("\n--- INTERMEDIATE: TypedDict with NotRequired ---")
+print("Minimal Payload Data:", valid_minimal_payload)
+
+
+# ------------------------------------------------------------------------------
+# Advanced / Production-Style: Typed API Ingestion Service
+# ------------------------------------------------------------------------------
+
+def process_api_parcel_ingestion(payload: FlexibleParcelSchema) -> bool:
+    \"\"\"
+    Service function validating TypedDict contracts and processing incoming payloads.
+    \"\"\"
+    print(f"\n--- ADVANCED: Ingesting Payload [{payload['tracking_id']}] ---")
+    print(f"  Destination : {payload['destination_city']}")
+
+    # Reading optional field safely using .get()
+    instructions = payload.get("special_instructions", "NO_SPECIAL_INSTRUCTIONS")
+    print(f"  Instructions: {instructions}")
+    return True
+
+process_api_parcel_ingestion(valid_minimal_payload)
+
+# Full payload including optional keys
+full_payload: FlexibleParcelSchema = {
+    "tracking_id": "TRK-3003",
+    "destination_city": "SEATTLE",
+    "special_instructions": "Gate code #4012"
+}
+
+process_api_parcel_ingestion(full_payload)
+      `,
+      keyTakeaways: [
+        "`TypedDict` defines dictionary schema contracts for fixed key names and value types.",
+        "By default (`total=True`), all defined keys in a `TypedDict` are mandatory.",
+        "Use `NotRequired[Type]` (Python 3.11+) to mark specific individual keys as optional.",
+        "`TypedDict` schemas enforce static type safety with `mypy` without adding runtime performance overhead."
+      ],
+      commonMistakes: [
+        "<b>Expecting `TypedDict` to perform runtime type validation:</b> `TypedDict` is a static type hint checked by `mypy`. It does not validate or reject keys at runtime (use Pydantic for runtime validation).",
+        "<b>Accessing optional `NotRequired` keys without `.get()`:</b> Reading `payload[\"optional_key\"]` directly can raise a runtime `KeyError` if omitted."
+      ],
+      quizzes: [
+        {
+          question: "Which feature added in Python 3.11 allows marking specific individual keys as optional within an otherwise mandatory `TypedDict`?",
+          options: [
+            "`Optional[Type]`",
+            "`NotRequired[Type]`",
+            "`Union[Type, None]`",
+            "`AllowMissing[Type]`"
+          ],
+          correctIndex: 1,
+          explanation: "`NotRequired[Type]` (PEP 655) marks specific dictionary keys as optional in `TypedDict` schemas."
+        },
+        {
+          question: "Does `TypedDict` perform automatic type conversion or raise errors at runtime when instantiating a dictionary?",
+          options: [
+            "Yes, it raises a `TypeError` if keys or types mismatch at runtime.",
+            "No, `TypedDict` is a static type hint enforced by `mypy` during build checks; Python executes standard dictionary operations at runtime.",
+            "Yes, it converts strings to integers automatically.",
+            "It deletes missing keys automatically."
+          ],
+          correctIndex: 1,
+          explanation: "`TypedDict` is a static type annotation checked by tools like `mypy`; it imposes zero runtime performance overhead."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "Type Aliases and Enterprise Architectural Type Contracts",
+      durationMinutes: 10,
+      explanation: `
+<b>Self-Documenting Codebases and Type System Architecture</b><br/>
+As applications expand, complex annotations like <code>dict[str, list[tuple[str, float | None]]]</code> pollute function signatures and obscure business intent.<br/><br/>
+
+<b>1. Type Aliases (PEP 613 & PEP 695):</b><br/>
+Type Aliases allow assigning clear domain names to complex annotations.
+<ul>
+  <li><b>Explicit Alias (Python 3.10+ PEP 613):</b><br/>
+  <code>from typing import TypeAlias</code><br/>
+  <code>ParcelBatch: TypeAlias = list[tuple[str, float]]</code></li>
+  <li><b>Modern Type Statement (Python 3.12+ PEP 695):</b><br/>
+  <code>type ParcelBatch = list[tuple[str, float]]</code></li>
+</ul>
+
+<b>2. Building Domain-Driven Type Architectures:</b><br/>
+In enterprise systems, replace raw primitives (`str`, `float`) with meaningful domain aliases:<br/>
+<code>TrackingCode = str</code><br/>
+<code>HubIdentifier = str</code><br/>
+<code>WeightLbs = float</code><br/>
+<code>def route_parcel(code: TrackingCode, hub: HubIdentifier, weight: WeightLbs): pass</code>
+
+<b>Benefits of Type Contracts:</b>
+1. **Self-Documenting Code:** Signatures explain business domain concepts directly.
+2. **Refactoring Safety:** Changing an underlying data structure requires updating the type alias in one central location.
+      `,
+      diagram: `
+ENTERPRISE DOMAIN TYPE ALIAS ARCHITECTURE:
+
+  Raw Unclear Annotation:
+  def process(data: dict[str, list[tuple[str, float]]]) -> None: ...
+
+  Refactored Domain Type Aliases:
+  TrackingID = str
+  WeightLbs  = float
+  ParcelBatch = list[tuple[TrackingID, WeightLbs]]
+
+  def process(data: dict[HubCode, ParcelBatch]) -> None: ...
+  (Self-documenting, clean, and maintainable!)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: Type Aliases and Enterprise Type Architecture
+# ==============================================================================
+
+from typing import TypeAlias, TypedDict, Literal
+
+# ------------------------------------------------------------------------------
+# 1. Defining Domain Type Aliases (PEP 613 / PEP 695)
+# ------------------------------------------------------------------------------
+
+# Primitive Domain Aliases
+TrackingCode: TypeAlias = str
+HubIdentifier: TypeAlias = str
+WeightLbs: TypeAlias = float
+CurrencyUSD: TypeAlias = float
+
+LogisticsStatus: TypeAlias = Literal["QUEUED", "IN_TRANSIT", "DELIVERED"]
+
+# Complex Structured Type Alias
+ParcelBatch: TypeAlias = list[tuple[TrackingCode, WeightLbs]]
+
+
+# ------------------------------------------------------------------------------
+# 2. Defining Domain Data Contracts
+# ------------------------------------------------------------------------------
+
+class ShipmentContract(TypedDict):
+    tracking_code: TrackingCode
+    hub_id: HubIdentifier
+    weight: WeightLbs
+    status: LogisticsStatus
+
+
+# ------------------------------------------------------------------------------
+# 3. Clean Domain Service Layer
+# ------------------------------------------------------------------------------
+
+def process_shipping_batch(
+    hub: HubIdentifier,
+    batch: ParcelBatch
+) -> tuple[int, CurrencyUSD]:
+    \"\"\"
+    Processes a batch of parcels for a specific hub, returning total item count
+    and total calculated revenue.
+    \"\"\"
+    print(f"--- SERVICE: Processing Batch for Hub [{hub}] ---")
+
+    total_revenue: CurrencyUSD = 0.0
+
+    for code, weight in batch:
+        item_fee: CurrencyUSD = 10.00 + (weight * 0.50)
+        total_revenue += item_fee
+        print(f"  Processed {code:<10} | Weight: {weight:>5.1f} lbs | Fee: ${item_fee:.2f}")
+
+    return len(batch), round(total_revenue, 2)
+
+# Instantiating structured domain batch
+batch_input: ParcelBatch = [
+    ("TRK-1001", 14.5),
+    ("TRK-1002", 42.0),
+    ("TRK-1003", 8.2)
+]
+
+count, revenue = process_shipping_batch("CHICAGO_CENTRAL", batch_input)
+
+print(f"\nBatch Summary: Processed {count} items | Total Revenue: ${revenue:.2f}")
+      `,
+      keyTakeaways: [
+        "Type Aliases (`TypeAlias`) assign clear domain names to complex annotations.",
+        "Domain type aliases (`TrackingCode = str`) make function signatures self-documenting.",
+        "Centralized type aliases simplify refactoring when underlying data structures change.",
+        "In Python 3.12+, use the native `type AliasName = TargetType` statement."
+      ],
+      commonMistakes: [
+        "<b>Creating type aliases for every single primitive:</b> Over-aliasing simple variables when standard primitive types (`str`, `int`) are clear.",
+        "<b>Forgetting `TypeAlias` in Python 3.10:</b> Assigning simple aliases without `TypeAlias` can cause static type checkers to confuse aliases with variable assignments."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary architectural benefit of using Type Aliases (e.g., `TrackingCode = str`) in enterprise Python codebases?",
+          options: [
+            "They run functions faster in the Python interpreter.",
+            "They replace complex annotations with clear, self-documenting domain terminology across architectural layers.",
+            "They prevent SQL injection vulnerabilities.",
+            "They automatically encrypt data on disk."
+          ],
+          correctIndex: 1,
+          explanation: "Type aliases assign self-documenting domain terminology to annotations, making code readable and maintainable."
+        },
+        {
+          question: "How do you explicitly declare a Type Alias in Python 3.10 using the `typing` module?",
+          options: [
+            "`MyAlias: TypeAlias = list[str]`",
+            "`alias MyAlias = list[str]`",
+            "`def MyAlias() -> list[str]: pass`",
+            "`MyAlias = Alias(list[str])`"
+          ],
+          correctIndex: 0,
+          explanation: "In Python 3.10, explicit type aliases use `MyAlias: TypeAlias = TargetType`."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Why is `TypeVar` preferable to `Any` when annotating generic function parameters and return types?",
+      options: [
+        "It speeds up execution in the interpreter.",
+        "It establishes a type-binding contract that preserves the exact input parameter type across the return value.",
+        "It converts float values into integers.",
+        "It disables static type checking."
+      ],
+      correctIndex: 1,
+      explanation: "`TypeVar` binds input parameter types to return types, preserving static type safety."
+    },
+    {
+      question: "How does a class satisfy a `Protocol` interface in Python?",
+      options: [
+        "It must explicitly inherit from the Protocol class.",
+        "It satisfies the Protocol implicitly by possessing matching attributes and method signatures.",
+        "By decorating the class with `@register_protocol`.",
+        "Classes cannot satisfy Protocols."
+      ],
+      correctIndex: 1,
+      explanation: "Protocols implement structural typing: any class with matching attributes and methods satisfies the Protocol implicitly."
+    },
+    {
+      question: "Which decorator allows checking Protocol instances at runtime using `isinstance(obj, MyProtocol)`?",
+      options: [
+        "`@staticmethod`",
+        "`@runtime_checkable`",
+        "`@dataclass`",
+        "`@type_check`"
+      ],
+      correctIndex: 1,
+      explanation: "`@runtime_checkable` enables runtime `isinstance()` and `issubclass()` checks on Protocol classes."
+    },
+    {
+      question: "How should a callback function parameter accepting a `str` and a `float` and returning a `bool` be annotated with `Callable`?",
+      options: [
+        "`Callable[str, float, bool]`",
+        "`Callable[[str, float], bool]`",
+        "`Callable(str, float -> bool)`",
+        "`Callable[[str, float] = bool]`"
+      ],
+      correctIndex: 1,
+      explanation: "`Callable` requires parameter types in an inner list, followed by the return type: `Callable[[str, float], bool]`."
+    },
+    {
+      question: "Which `typing` construct (Python 3.10+) captures and preserves exact parameter signatures (`*args, **kwargs`) in decorator type annotations?",
+      options: [
+        "`TypeVar`",
+        "`ParamSpec`",
+        "`Protocol`",
+        "`Generic`"
+      ],
+      correctIndex: 1,
+      explanation: "`ParamSpec` captures parameter signatures and passes them through to wrapper functions."
+    },
+    {
+      question: "Which construct added in Python 3.11 marks specific individual keys as optional within an otherwise mandatory `TypedDict` schema?",
+      options: [
+        "`Optional[Type]`",
+        "`NotRequired[Type]`",
+        "`Union[Type, None]`",
+        "`AllowMissing`"
+      ],
+      correctIndex: 1,
+      explanation: "`NotRequired[Type]` marks specific dictionary keys as optional in `TypedDict` schemas."
+    },
+    {
+      question: "Does `TypedDict` raise runtime errors when instantiating a dictionary with missing or extra keys?",
+      options: [
+        "Yes, it raises a `TypeError` at runtime.",
+        "No, `TypedDict` is a static type hint checked by `mypy`; standard dictionary operations run normally at runtime.",
+        "Yes, it raises a `KeyError`.",
+        "It deletes invalid keys at runtime."
+      ],
+      correctIndex: 1,
+      explanation: "`TypedDict` is a static type annotation checked by `mypy`; it imposes zero runtime overhead."
+    },
+    {
+      question: "What is the primary architectural purpose of Type Aliases (e.g., `TrackingCode = str`) in enterprise codebases?",
+      options: [
+        "To encrypt string variables.",
+        "To assign clear, self-documenting domain terminology to complex annotations across architectural layers.",
+        "To speed up database queries.",
+        "To convert floats to decimals."
+      ],
+      correctIndex: 1,
+      explanation: "Type aliases assign domain-specific terminology to annotations, making data contracts self-documenting."
+    }
+  ],
+  project: {
+    name: "Enterprise Structural Plugin Architecture & Data Contract Suite (Phase 1 Final Project)",
+    goal: "Build an enterprise-grade plugin and data contract architecture using TypeVar generics, Protocol structural typing, ParamSpec decorator signatures, NotRequired TypedDict contracts, and domain Type Aliases.",
+    brief: "Your enterprise platform requires a decoupled, strongly typed plugin architecture (`advanced_typing_suite.py`). The suite must define domain type aliases (`TrackingCode`, `WeightLbs`), a `TypedDict` contract with `NotRequired` keys, a structural `StorageProvider` `Protocol`, a generic `Repository[T]` class using `TypeVar`, and a signature-preserving audit decorator using `ParamSpec`.",
+    steps: [
+      "Create a script file named `advanced_typing_suite.py` in your workspace.",
+      "Define domain type aliases (`TrackingCode = str`, `WeightLbs = float`, `CurrencyUSD = float`).",
+      "Define a `TypedDict` contract `ParcelSchemaDict` with mandatory fields (`tracking_code`, `weight_lbs`) and optional fields using `NotRequired[str]` (`notes`).",
+      "Define a structural protocol `StorageProvider(Protocol)` with a `save(self, code: TrackingCode, payload: dict) -> bool` method stub.",
+      "Implement a generic class `Repository(Generic[T])` using `TypeVar` to store entity collections type-safely.",
+      "Build a decorator `audit_decorator` using `ParamSpec(\"P\")` and `TypeVar(\"R\")` to preserve parameter hints.",
+      "Instantiate storage drivers that satisfy `StorageProvider` implicitly (without inheritance) and process test batches.",
+      "Run `python3 advanced_typing_suite.py` in your integrated terminal and output a clean execution report."
+    ],
+    acceptance: [
+      "All functions, decorators, and generic classes feature advanced type annotations (`TypeVar`, `Protocol`, `ParamSpec`, `TypedDict`).",
+      "Storage drivers satisfy `StorageProvider` structurally without inheriting from it.",
+      "Decorator parameter hints are preserved using `ParamSpec`.",
+      "Executing `python3 advanced_typing_suite.py` prints a clean, fully validated summary report without runtime errors."
+    ],
+    stretch: [
+      "Install `mypy` (`pip install mypy`) and run `mypy --strict advanced_typing_suite.py` to verify zero static type errors.",
+      "Add a `@runtime_checkable` decorator to your `Protocol` and demonstrate `isinstance()` validation at runtime."
+    ]
+  }
+};
