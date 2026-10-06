@@ -628,6 +628,40 @@ const generatedChallenges = [
   ...EXPLICIT_ADVANCED_CHALLENGES,
 ];
 
+function addAdvancedContext(challenge: CodeReviewChallenge): CodeReviewChallenge {
+  if (challenge.level !== "Advanced") return challenge;
+
+  const context = [
+    "const reviewRequest = {",
+    '  requestId: "req_1",',
+    '  actorId: "u1",',
+    '  tenantId: "tenant_a",',
+    "};",
+    "",
+    "const reviewAuditLog = [];",
+    "",
+    "function recordReviewAudit(action) {",
+    "  reviewAuditLog.push({",
+    "    action,",
+    "    requestId: reviewRequest.requestId,",
+    "    actorId: reviewRequest.actorId,",
+    "  });",
+    "}",
+    "",
+    "if (!reviewRequest.actorId) {",
+    '  throw new Error("Unauthenticated");',
+    "}",
+    "",
+    'recordReviewAudit("challenge.opened");',
+  ].join("\n");
+
+  return {
+    ...challenge,
+    code: `${context}\n\n${challenge.code}`,
+    fixedCode: `${context}\n\n${challenge.fixedCode}`,
+  };
+}
+
 export const CODE_REVIEW_CHALLENGES: CodeReviewChallenge[] = [
   ...INITIAL_CODE_REVIEW_CHALLENGES,
   ...EXPLICIT_BASIC_CHALLENGES,
@@ -635,6 +669,6 @@ export const CODE_REVIEW_CHALLENGES: CodeReviewChallenge[] = [
   ...EXPLICIT_BASIC_CHALLENGES_PHASE_THREE,
   ...EXPLICIT_BASIC_CHALLENGES_PHASE_FOUR,
   ...generatedChallenges,
-];
+].map(addAdvancedContext);
 
 export const CODE_REVIEW_LEVELS: ChallengeLevel[] = ["Basic", "Intermediate", "Advanced"];
