@@ -1,6 +1,6 @@
 import type { RoadmapWeek } from "@/lib/challenge-data";
 
-export const PYTHON_TOTAL_DAYS = 35;
+export const PYTHON_TOTAL_DAYS = 40;
 
 export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
   {
@@ -128,6 +128,18 @@ export const PYTHON_ROADMAP_WEEKS: RoadmapWeek[] = [
       { day: 33, title: { en: "Context Managers & Resource Safety", np: "Context Managers र Resource Safety", jp: "コンテキストマネージャとリソース安全性" }, tags: [] },
       { day: 34, title: { en: "Descriptors & Attribute Access", np: "Descriptors र Attribute Access", jp: "ディスクリプタと属性アクセス" }, tags: [] },
       { day: 35, title: { en: "Metaprogramming & Introspection", np: "Metaprogramming र Introspection", jp: "メタプログラミングとイントロスペクション" }, tags: [] },
+    ],
+  },
+  {
+    id: "python-phase-7",
+    title: { en: "Phase 7 · Type Safety & Code Quality", np: "Phase 7 · Type Safety र Code Quality", jp: "Phase 7・型安全性とコード品質" },
+    dotClass: "bg-[color-mix(in_oklab,var(--accent)_14%,#8b5cf6)]",
+    days: [
+      { day: 36, title: { en: "Type Hints & Static Analysis", np: "Type Hints र Static Analysis", jp: "型ヒントと静的解析" }, tags: [] },
+      { day: 37, title: { en: "Advanced Typing", np: "Advanced Typing", jp: "高度な型付け" }, tags: [] },
+      { day: 38, title: { en: "Static Analysis & Code Quality Automation", np: "Static Analysis र Code Quality Automation", jp: "静的解析とコード品質自動化" }, tags: [] },
+      { day: 39, title: { en: "Testing Fundamentals with pytest", np: "pytestによるテスト基礎", jp: "pytestによるテスト基礎" }, tags: [] },
+      { day: 40, title: { en: "Advanced Testing & Test Doubles", np: "Advanced Testing र Test Doubles", jp: "高度なテストとテストダブル" }, tags: [] },
     ],
   },
 ];
