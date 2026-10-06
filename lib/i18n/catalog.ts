@@ -17,6 +17,11 @@ export const UI_STRINGS = {
     np: "ब्लग",
     jp: "ブログ",
   },
+  "nav.compiler": {
+    en: "Code Compiler",
+    np: "कोड कम्पाइलर",
+    jp: "コードコンパイラ",
+  },
   "nav.language": {
     en: "Language",
     np: "भाषा",

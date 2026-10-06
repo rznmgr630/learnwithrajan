@@ -11,6 +11,7 @@ import { useTheme } from "@/components/ThemeProvider";
 const links = [
   { href: "/learn", key: "nav.learningHub" as const, icon: "M2 10l10-5 10 5-10 5-10-5Zm4 2v5c0 2.5 12 2.5 12 0v-5" },
   { href: "/blog", key: "nav.blog" as const, icon: "M4 4h16v16H4zM7 8h10M7 12h10M7 16h6" },
+  { href: "/learn/compiler", key: "nav.compiler" as const, icon: "M8 9l3 3-3 3M13 15h3M3 4h18v16H3z" },
   { href: "/library", key: "nav.library" as const, icon: "M5 3h14v18H5zM8 3v18" },
 ];
 
@@ -92,33 +93,6 @@ function SettingsMenu() {
       {isOpen && (
         <>
           <div role="menu" className="hidden sm:absolute sm:right-0 sm:top-10 sm:z-30 sm:block sm:w-48 sm:rounded-xl sm:border sm:border-[var(--border)] sm:bg-[var(--surface)] sm:p-2 sm:shadow-xl">
-          <div className="border-b border-[var(--border)] pb-1 sm:hidden">
-            <Link href="/focus" role="menuitem" onClick={() => setIsOpen(false)} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>
-              Focus
-            </Link>
-            <Link href="/learn" role="menuitem" onClick={() => setIsOpen(false)} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10l10-5 10 5-10 5-10-5Zm4 2v5c0 2.5 12 2.5 12 0v-5" /></svg>
-              {t("nav.learningHub")}
-            </Link>
-            <Link href="/blog" role="menuitem" onClick={() => setIsOpen(false)} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4zM7 8h10M7 12h10M7 16h6" /></svg>
-              {t("nav.blog")}
-            </Link>
-            <Link href="/library" role="menuitem" onClick={() => setIsOpen(false)} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h14v18H5zM8 3v18" /></svg>
-              {t("nav.library")}
-            </Link>
-          </div>
-          <Link
-            href="/learn/compiler"
-            role="menuitem"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>
-            Code Compiler
-          </Link>
           <div className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-[var(--muted)]">
             <span>Theme</span>
             <ThemeToggle />
