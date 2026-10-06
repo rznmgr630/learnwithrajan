@@ -799,6 +799,16 @@ export const UI_STRINGS = {
     np: "पूरा JavaScript कोड पढ्नुहोस्, बग पत्ता लगाउनुहोस्, र उपयोगी रिभ्यू टिप्पणी लेख्ने अभ्यास गर्नुहोस्।",
     jp: "完成した JavaScript コードを読み、バグを見つけ、役立つレビューコメントを書く練習をします。",
   },
+  "hub.typeScriptCodeReview.title": {
+    en: "TypeScript Code Review Series",
+    np: "TypeScript कोड रिभ्यू शृङ्खला",
+    jp: "TypeScript コードレビュー・シリーズ",
+  },
+  "hub.typeScriptCodeReview.subtitle": {
+    en: "Find real-world type bugs, review the code, then run the safer result.",
+    np: "वास्तविक type bug पत्ता लगाउनुहोस्, कोड रिभ्यू गर्नुहोस्, अनि सुरक्षित नतिजा चलाउनुहोस्।",
+    jp: "実務の型バグを見つけ、コードをレビューし、安全な結果を実行します。",
+  },
   "hub.codeReview.cta": {
     en: "Start reviewing →",
     np: "रिभ्यू सुरु गर्नुहोस् →",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as ts from "typescript";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { CODE_REVIEW_CHALLENGES, CODE_REVIEW_LEVELS, CODE_REVIEW_PROBLEMS_PER_LEVEL, type CodeReviewChallenge, type ChallengeLevel } from "@/lib/code-review/challenges";
 import { useCodeReviewProgress } from "@/hooks/use-code-review-progress";
@@ -56,25 +57,34 @@ function ChallengeCard({ number, active, completed, onSelect }: {
   );
 }
 
-export function CodeReviewChallenges() {
+type CodeReviewChallengesProps = {
+  challenges?: CodeReviewChallenge[];
+  language?: "JavaScript" | "TypeScript";
+};
+
+export function CodeReviewChallenges({
+  challenges = CODE_REVIEW_CHALLENGES,
+  language = "JavaScript",
+}: CodeReviewChallengesProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [runnerKey, setRunnerKey] = useState(0);
-  const [selectedId, setSelectedId] = useState(1);
-  const [code, setCode] = useState(CODE_REVIEW_CHALLENGES[0].code);
+  const [selectedId, setSelectedId] = useState(challenges[0].id);
+  const [code, setCode] = useState(challenges[0].code);
   const [output, setOutput] = useState<OutputLine[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [pages, setPages] = useState<Record<ChallengeLevel, number>>({ Basic: 0, Intermediate: 0, Advanced: 0 });
   const [mobileLevel, setMobileLevel] = useState<ChallengeLevel>("Basic");
-  const { completed, completedCount, toggleCompleted } = useCodeReviewProgress();
+  const storageKey = `learnwithrajan.code-review.${language.toLowerCase()}.completed`;
+  const { completed, completedCount, toggleCompleted } = useCodeReviewProgress(challenges, storageKey);
 
   const challenge = useMemo(
-    () => CODE_REVIEW_CHALLENGES.find((item) => item.id === selectedId) ?? CODE_REVIEW_CHALLENGES[0],
-    [selectedId],
+    () => challenges.find((item) => item.id === selectedId) ?? challenges[0],
+    [challenges, selectedId],
   );
-  const levelProblemNumber = CODE_REVIEW_CHALLENGES
+  const levelProblemNumber = challenges
     .filter((item) => item.level === challenge.level)
     .findIndex((item) => item.id === challenge.id) + 1;
 
@@ -121,7 +131,13 @@ export function CodeReviewChallenges() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setOutput([]);
     setIsRunning(true);
-    iframeRef.current.contentWindow.postMessage({ source: "learnwithrajan-code-review", code }, "*");
+    const executableCode = language === "TypeScript"
+      ? ts.transpileModule(code, {
+        compilerOptions: { target: ts.ScriptTarget.ES2022 },
+        reportDiagnostics: true,
+      }).outputText
+      : code;
+    iframeRef.current.contentWindow.postMessage({ source: "learnwithrajan-code-review", code: executableCode }, "*");
     timeoutRef.current = setTimeout(() => {
       setOutput([{ type: "error", text: "Stopped after 3 seconds." }]);
       setIsRunning(false);
@@ -134,7 +150,7 @@ export function CodeReviewChallenges() {
   };
 
   const renderLevelSection = (level: ChallengeLevel) => {
-    const levelChallenges = CODE_REVIEW_CHALLENGES.filter((item) => item.level === level);
+    const levelChallenges = challenges.filter((item) => item.level === level);
     const pageCount = Math.max(1, Math.ceil(levelChallenges.length / PROBLEMS_PER_PAGE));
     const page = Math.min(pages[level], pageCount - 1);
     const visibleChallenges = levelChallenges.slice(page * PROBLEMS_PER_PAGE, (page + 1) * PROBLEMS_PER_PAGE);
@@ -190,19 +206,19 @@ export function CodeReviewChallenges() {
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-[var(--accent)]">JavaScript practice</p>
+          <p className="text-sm font-medium text-[var(--accent)]">{language} practice</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--text)]">Code Review Challenge</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
             Read code like an AI reviewer should: run it, find the issue, then compare your review with the expected answer.
           </p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--elevated)] px-3 py-1.5 text-sm font-medium text-[var(--text)]">
-          {completedCount}/{CODE_REVIEW_CHALLENGES.length} available completed
+          {completedCount}/{challenges.length} available completed
         </span>
       </div>
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-4 lg:self-start">
+      <div className="mt-8 gap-5 lg:flex">
+        <aside className="lg:sticky lg:top-24 lg:h-fit lg:w-[260px] lg:shrink-0">
           <div className="mb-5 flex rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 lg:hidden">
             {CODE_REVIEW_LEVELS.map((level) => (
               <button
@@ -221,7 +237,7 @@ export function CodeReviewChallenges() {
           </div>
         </aside>
 
-        <section className="min-w-0">
+        <section className="min-w-0 lg:flex-1 lg:flex lg:flex-col">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${LEVEL_STYLE[challenge.level]}`}>
@@ -253,9 +269,10 @@ export function CodeReviewChallenges() {
             {showDetails && <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{challenge.prompt}</p>}
           </section>
 
-          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
-            <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
-              <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+          <div className="mt-4 grid flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
+        <section className="min-w-0 xl:sticky xl:top-24 xl:h-fit xl:self-start">
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
+              <div className="z-10 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <span className="text-sm font-medium text-[var(--text)]">Review this code</span>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setCode(challenge.code)} className="rounded-lg px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--elevated)]">Reset</button>
@@ -274,11 +291,14 @@ export function CodeReviewChallenges() {
                 spellCheck={false}
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                className="min-h-[390px] w-full resize-y bg-[#0b0e14] p-4 font-mono text-sm leading-6 text-slate-100 outline-none"
+                className="min-h-[390px] w-full resize-y rounded-b-2xl bg-[#0b0e14] p-4 font-mono text-sm leading-6 text-slate-100 outline-none"
               />
             </section>
 
-            <div className="space-y-4">
+          <p className="mt-4 text-xs leading-5 text-[var(--faint)]">Code runs in an isolated browser frame and is not sent to your server.</p>
+        </section>
+
+        <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit xl:self-start">
               <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
                 <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text)]">Console output</div>
                 <div className="min-h-40 bg-[#0b0e14] p-4 font-mono text-sm leading-6">
@@ -309,9 +329,8 @@ export function CodeReviewChallenges() {
                   </div>
                 )}
               </section>
-            </div>
+        </aside>
           </div>
-          <p className="mt-4 text-xs leading-5 text-[var(--faint)]">Code runs in an isolated browser frame and is not sent to your server.</p>
         </section>
       </div>
       <iframe key={runnerKey} ref={iframeRef} title="Code review runner" sandbox="allow-scripts" srcDoc={RUNNER_DOCUMENT} className="hidden" />
