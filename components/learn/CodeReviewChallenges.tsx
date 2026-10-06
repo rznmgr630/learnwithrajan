@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as ts from "typescript";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { CODE_REVIEW_CHALLENGES, CODE_REVIEW_LEVELS, CODE_REVIEW_PROBLEMS_PER_LEVEL, type CodeReviewChallenge, type ChallengeLevel } from "@/lib/code-review/challenges";
 import { useCodeReviewProgress } from "@/hooks/use-code-review-progress";
@@ -68,6 +69,9 @@ export function CodeReviewChallenges({
 }: CodeReviewChallengesProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [runnerKey, setRunnerKey] = useState(0);
   const [selectedId, setSelectedId] = useState(challenges[0].id);
   const [code, setCode] = useState(challenges[0].code);
@@ -109,6 +113,26 @@ export function CodeReviewChallenges({
   }, []);
 
   useEffect(() => {
+    const levelName = searchParams.get("level")?.toLowerCase();
+    const problemNumber = Number(searchParams.get("problem"));
+    const level = CODE_REVIEW_LEVELS.find((item) => item.toLowerCase() === levelName);
+    const next = level && Number.isInteger(problemNumber) && problemNumber > 0
+      ? challenges.filter((item) => item.level === level)[problemNumber - 1]
+      : undefined;
+
+    if (!next || next.id === selectedId) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setSelectedId(next.id);
+    setMobileLevel(next.level);
+    setCode(next.code);
+    setOutput([]);
+    setShowReview(false);
+    setShowDetails(false);
+    setIsRunning(false);
+    setRunnerKey((current) => current + 1);
+  }, [challenges, searchParams, selectedId]);
+
+  useEffect(() => {
     const closeDetails = () => setShowDetails(false);
     window.addEventListener("pageshow", closeDetails);
     return () => window.removeEventListener("pageshow", closeDetails);
@@ -124,6 +148,13 @@ export function CodeReviewChallenges({
     setShowDetails(false);
     setIsRunning(false);
     setRunnerKey((current) => current + 1);
+    const problemNumber = challenges
+      .filter((item) => item.level === next.level)
+      .findIndex((item) => item.id === next.id) + 1;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("level", next.level.toLowerCase());
+    params.set("problem", String(problemNumber));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const runCode = () => {
