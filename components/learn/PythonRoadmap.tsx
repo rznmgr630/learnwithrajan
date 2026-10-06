@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LessonDayDetail } from "@/components/learn/LessonDayDetail";
 import { RawPythonLessonDay } from "@/components/learn/RawPythonLessonDay";
+import { PythonProjectSource } from "@/components/learn/PythonProjectSource";
 import { pickLocalized } from "@/lib/i18n/pick";
 import type { LessonDay } from "@/lib/learn/lesson-types";
 import { PYTHON_DAY_1_LESSONS } from "@/lib/python-learning/python-day-1-lessons";
@@ -152,7 +153,9 @@ export function PythonRoadmap() {
       {lessonDay === 19 ? <LessonDayDetail open day={PYTHON_DAY_19_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 20 ? <LessonDayDetail open day={PYTHON_DAY_20_LESSONS} onClose={() => setLessonDay(null)} /> : null}
       {lessonDay === 23 ? <LessonDayDetail open day={PYTHON_DAY_23_LESSONS} onClose={() => setLessonDay(null)} /> : null}
-      {lessonDay !== null && lessonDay > 20 && lessonDay !== 21 && lessonDay !== 22 && lessonDay !== 23 && lessonDay !== 24 && lessonDay !== 25 && lessonDay !== 26 && lessonDay !== 27 && lessonDay !== 28 && lessonDay !== 29 && lessonDay !== 30 && lessonDay !== 31 && lessonDay !== 32 && lessonDay !== 33 && lessonDay !== 34 && lessonDay !== 35 && lessonDay !== 36 && lessonDay !== 37 && lessonDay !== 38 && lessonDay !== 39 && lessonDay !== 40 && lessonDay !== 41 && lessonDay !== 42 && lessonDay !== 43 && lessonDay !== 44 && lessonDay !== 45 && lessonDay !== 46 && lessonDay !== 47 && lessonDay !== 49 && lessonDay !== 50 && lessonDay !== 48 && lessonDay !== 51 && lessonDay !== 52 && lessonDay !== 53 && lessonDay !== 54 && lessonDay !== 55 && lessonDay !== 56 && lessonDay !== 57 && lessonDay !== 58 && lessonDay !== 59 && lessonDay !== 60 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay === 61 || lessonDay === 62 ? <PythonProjectSource project={lessonDay === 61 ? 1 : 2} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay === 64 ? <RawPythonLessonDay day={60} onClose={() => setLessonDay(null)} /> : null}
+      {lessonDay !== null && lessonDay > 20 && lessonDay !== 21 && lessonDay !== 22 && lessonDay !== 23 && lessonDay !== 24 && lessonDay !== 25 && lessonDay !== 26 && lessonDay !== 27 && lessonDay !== 28 && lessonDay !== 29 && lessonDay !== 30 && lessonDay !== 31 && lessonDay !== 32 && lessonDay !== 33 && lessonDay !== 34 && lessonDay !== 35 && lessonDay !== 36 && lessonDay !== 37 && lessonDay !== 38 && lessonDay !== 39 && lessonDay !== 40 && lessonDay !== 41 && lessonDay !== 42 && lessonDay !== 43 && lessonDay !== 44 && lessonDay !== 45 && lessonDay !== 46 && lessonDay !== 47 && lessonDay !== 49 && lessonDay !== 50 && lessonDay !== 48 && lessonDay !== 51 && lessonDay !== 52 && lessonDay !== 53 && lessonDay !== 54 && lessonDay !== 55 && lessonDay !== 56 && lessonDay !== 57 && lessonDay !== 58 && lessonDay !== 59 && lessonDay !== 60 && lessonDay !== 61 && lessonDay !== 62 && lessonDay !== 63 && lessonDay !== 64 ? <LessonDayDetail open day={pendingPythonDay(lessonDay)} onClose={() => setLessonDay(null)} /> : null}
     </div>
   );
 }
