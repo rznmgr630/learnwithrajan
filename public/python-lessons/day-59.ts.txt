@@ -1,0 +1,731 @@
+/**
+ * DAY 59: Phase 2 · Advanced Cloud & Infrastructure — Cloud Architectures & Kubernetes Fundamentals
+ *
+ * Total Duration: 80 minutes
+ * Difficulty: Advanced
+ * Lessons: 5
+ */
+
+export const phase2CloudAndKubernetes = {
+  day: 59,
+  topic: "Phase 2 · Advanced Cloud & Infrastructure — Cloud Architectures & Kubernetes Fundamentals",
+  totalMinutes: 80,
+  difficulty: "Advanced",
+  lessons: [
+    {
+      id: "lesson-1",
+      title: "Cloud Infrastructure Architecture and Core AWS Primitives (EC2, RDS, S3, ALB)",
+      durationMinutes: 18,
+      explanation: `
+<b>Transitioning from Single-Server VPS Deployments to Resilient Cloud Primitives</b><br/>
+Deploying applications on a single Linux server (VPS) creates single-point-of-failure risks: if the underlying server hardware fails, the entire application, database, and uploaded user files go offline simultaneously.<br/><br/>
+
+Cloud computing replaces single-node servers with **managed cloud primitives** designed for elastic scaling, high availability, and fault isolation across isolated Availability Zones (AZs).<br/><br/>
+
+<b>Core AWS Enterprise Infrastructure Primitives:</b>
+<ul>
+  <li><b>Amazon EC2 (Elastic Compute Cloud):</b> Virtualized compute instances running Linux OS kernels. EC2 instances host application worker pools and can be auto-scaled dynamically based on CPU/RAM usage.</li>
+  <li><b>Amazon RDS (Relational Database Service):</b> Managed relational database instances (PostgreSQL, MySQL). Provides automated Multi-AZ replication, failover switching, automated daily backups, and point-in-time recovery without manual DBA overhead.</li>
+  <li><b>Amazon S3 (Simple Storage Service):</b> Highly durable ($99.999999999\%$, "11 nines"), unconstrained object storage for user uploads, PDF reports, and media assets. *Rule:* Never store user uploads on local EC2 server disks!</li>
+  <li><b>AWS ALB (Application Load Balancer):</b> Layer 7 load balancer distributing incoming HTTP/HTTPS traffic across multi-AZ EC2 worker instances, executing health checks and SSL/TLS termination.</li>
+</ul>
+      `,
+      diagram: `
+AWS MULTI-AZ ENTERPRISE ARCHITECTURE TOPOLOGY:
+
+  Public Internet Traffic (api.logistics.com)
+                       |
+                       v  (HTTPS Port 443)
+  [ AWS Application Load Balancer (ALB) ]
+                       |
+        +--------------+--------------+
+        | (AZ-1a)                     | (AZ-1b)
+        v                             v
+  [ Auto Scaling EC2 Pool ]     [ Auto Scaling EC2 Pool ]
+  (FastAPI Worker Nodes)        (FastAPI Worker Nodes)
+        |              |              |              |
+        +-------+------+=+=+=+=+=+=+=+=+------+------+
+                |                             |
+                v                             v
+  [ Amazon RDS PostgreSQL ]       [ Amazon S3 Object Bucket ]
+  (Multi-AZ Primary/Standby)      (Media & PDF Object Store)
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 1: AWS Boto3 SDK Integration for Amazon S3 Object Storage
+# ==============================================================================
+
+import boto3
+from botocore.exceptions import ClientError
+from pydantic_settings import BaseSettings
+
+class CloudSettings(BaseSettings):
+    aws_region: str = "us-east-1"
+    s3_bucket_name: str = "enterprise-logistics-assets-prod"
+
+settings = CloudSettings()
+
+# ------------------------------------------------------------------------------
+# Production S3 Helper Class
+# ------------------------------------------------------------------------------
+
+class S3ObjectStore:
+    """Encapsulates boto3 S3 object storage operations."""
+    def __init__(self):
+        self.s3_client = boto3.client("s3", region_name=settings.aws_region)
+        self.bucket = settings.s3_bucket_name
+
+    def upload_parcel_pdf_report(self, tracking_id: str, pdf_bytes: bytes) -> str | None:
+        """Uploads a PDF report to S3 and returns the public object S3 Key."""
+        object_key = f"reports/2026/parcels/{tracking_id}.pdf"
+        try:
+            self.s3_client.put_object(
+                Bucket=self.bucket,
+                Key=object_key,
+                Body=pdf_bytes,
+                ContentType="application/pdf",
+                ServerSideEncryption="AES256"
+            )
+            print(f"  [S3 UPLOAD SUCCESS] Saved key '{object_key}' with AES256 encryption.")
+            return object_key
+        except ClientError as err:
+            print(f"  [S3 UPLOAD ERROR] Failed: {err}")
+            return None
+
+print("--- LESSON 1: Cloud Object Store Helper Initialized ---")
+      `,
+      keyTakeaways: [
+        "Cloud architectures decouple compute (EC2), relational storage (RDS), object storage (S3), and routing (ALB).",
+        "Never store persistent user file uploads on EC2 instances; offload files to Amazon S3.",
+        "Amazon RDS Multi-AZ automatically replicates database transactions and provides seamless failover.",
+        "AWS ALB performs SSL/TLS termination at the edge and balances traffic across worker instances."
+      ],
+      commonMistakes: [
+        "<b>Storing user file uploads on local EC2 instance disks:</b> Losing all uploaded user files when an Auto Scaling group terminates or replaces an EC2 instance.",
+        "<b>Hardcoding AWS Access Keys inside source code:</b> Accidental key leakage to GitHub. Always use AWS IAM Roles for EC2/EKS instances."
+      ],
+      quizzes: [
+        {
+          question: "Why should uploaded user files (like PDFs or images) be stored in Amazon S3 rather than on an EC2 instance's local file system?",
+          options: [
+            "EC2 disks are too fast for images.",
+            "EC2 instances in Auto Scaling groups are ephemeral and can be terminated at any time; S3 provides durable, unconstrained object storage decoupled from compute lifecycles.",
+            "S3 automatically compiles Python code.",
+            "EC2 does not support file systems."
+          ],
+          correctIndex: 1,
+          explanation: "EC2 compute nodes are ephemeral. Offloading files to S3 ensures persistent durability ($99.999999999\%$) independently of server lifecycles."
+        },
+        {
+          question: "What AWS IAM security feature permits EC2 instances to access S3 buckets without needing hardcoded AWS_ACCESS_KEY_ID credentials in code?",
+          options: [
+            "AWS VPC Peering",
+            "AWS IAM Roles attached to EC2 instances",
+            "AWS Route 53 DNS",
+            "AWS Security Group Ingress"
+          ],
+          correctIndex: 1,
+          explanation: "IAM Roles grant temporary security credentials to EC2/EKS compute instances automatically via instance metadata."
+        }
+      ]
+    },
+    {
+      id: "lesson-2",
+      title: "Kubernetes Fundamentals: Pods, Declarative YAML Specifications, and Scheduling",
+      durationMinutes: 20,
+      explanation: `
+<b>Container Orchestration Engine Architecture</b><br/>
+While Docker packages applications into portable container images, **Kubernetes (K8s)** is the open-source container orchestration engine that manages, scales, heals, and network-routes container fleets across large cluster nodes.<br/><br/>
+
+<b>1. The Atomic Unit: What is a Pod?</b><br/>
+A **Pod** is the smallest deployable atomic object in Kubernetes.
+<ul>
+  <li>A Pod wraps one or more co-located containers (e.g., a FastAPI application container + a sidecar logging agent container) that share the same IP address, network namespace, and storage volumes.</li>
+  <li>*Rule:* Pods are ephemeral! Kubernetes can kill, reschedule, or move Pods across cluster worker nodes at any instant. Never write code that assumes a Pod's IP address is permanent.</li>
+</ul>
+
+<b>2. Declarative YAML Manifest Specifications:</b><br/>
+Rather than executing imperative commands (`docker run`), Kubernetes operates on **Declarative Declarations**. You declare the *Desired State* in a YAML file, and the Kubernetes Control Plane continuously adjusts the *Actual State* to match.
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: logistics-api-pod
+  labels:
+    app: logistics-api
+spec:
+  containers:
+    - name: fastapi-container
+      image: ghcr.io/org/logistics-api:v1.0
+      ports:
+        - containerPort: 8000
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+        requests:
+          memory: "256Mi"
+          cpu: "250m"</code></pre>
+      `,
+      diagram: `
+KUBERNETES POD ARCHITECTURE & CONTROL LOOP:
+
+  [ Kubernetes Control Plane (API Server) ]
+                 |
+                 | Continuous Reconcile Loop (Desired State == Actual State)
+                 v
+  [ Kubernetes Worker Node (Kubelet Process) ]
+  +------------------------------------------------------------------+
+  |  POD: logistics-api-pod (Shared IP: 10.244.1.42)                 |
+  |  +-----------------------------+  +---------------------------+  |
+  |  | Main Container              |  | Sidecar Container         |  |
+  |  | (FastAPI / Uvicorn Port 8000)|  | (Prometheus Metrics Exporter)||
+  |  +-----------------------------+  +---------------------------+  |
+  |  Volume: Shared IPC / Storage Loop                               |
+  +------------------------------------------------------------------+
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 2: Declarative Kubernetes Pod Specification Blueprint
+# ==============================================================================
+
+POD_MANIFEST_YAML = """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logistics-api-pod
+  namespace: production
+  labels:
+    app.kubernetes.io/name: logistics-api
+    app.kubernetes.io/part-of: logistics-platform
+spec:
+  containers:
+    - name: api-server
+      image: ghcr.io/company/logistics-api:sha-8f3a9a12
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 8000
+          name: http-web
+
+      # Resource Allocation Constraints
+      resources:
+        requests:
+          cpu: "250m"     # 0.25 vCPU cores
+          memory: "256Mi" # 256 Megabytes
+        limits:
+          cpu: "500m"     # 0.5 vCPU cores (Throttled if exceeded)
+          memory: "512Mi" # 512 Megabytes (OOMKilled if exceeded!)
+"""
+
+print("--- LESSON 2: Declarative Kubernetes Pod Manifest Blueprint ---")
+print(POD_MANIFEST_YAML)
+      `,
+      keyTakeaways: [
+        "A Pod is the smallest deployable atomic compute unit in Kubernetes wrapping one or more containers.",
+        "Containers inside the same Pod share network namespaces (IP address) and IPC volumes.",
+        "Always declare `resources.requests` (scheduling requirements) and `resources.limits` (enforced bounds).",
+        "If a container exceeds its memory `limit`, Kubernetes terminates it with an `OOMKilled` (Out Of Memory) status."
+      ],
+      commonMistakes: [
+        "<b>Deploying standalone bare Pods directly into production:</b> If a bare Pod crashes or its worker node dies, Kubernetes will NOT replace it automatically! Always wrap Pods inside a `Deployment` manager.",
+        "<b>Omitting resource limits:</b> Allowing a single buggy container with a memory leak to consume all node RAM and crash sibling Pods on the same node."
+      ],
+      quizzes: [
+        {
+          question: "What happens when a container inside a Kubernetes Pod exceeds its configured memory `resources.limits.memory` threshold?",
+          options: [
+            "Kubernetes ignores it.",
+            "The container is terminated by the kernel with an `OOMKilled` status and restarted by Kubernetes.",
+            "The node increases its physical RAM.",
+            "The CPU speed is slowed down."
+          ],
+          correctIndex: 1,
+          explanation: "Exceeding memory limits triggers the Linux OOM (Out Of Memory) killer, terminating the container process (`OOMKilled`)."
+        },
+        {
+          question: "Do containers wrapped inside the same Kubernetes Pod share the same network IP address?",
+          options: [
+            "No, every container receives a unique IP address.",
+            "Yes, containers inside the same Pod share the network namespace and IP address, communicating with each other on `localhost`.",
+            "IP addresses are only used by database nodes.",
+            "Pods do not use network IP addresses."
+          ],
+          correctIndex: 1,
+          explanation: "Containers in the same Pod share network namespaces, communicating via `localhost` across different ports."
+        }
+      ]
+    },
+    {
+      id: "lesson-3",
+      title: "Kubernetes Deployments: Declarative Replicas, Self-Healing, and Rolling Updates",
+      durationMinutes: 20,
+      explanation: `
+<b>Managing Scalable, Self-Healing Application Workloads</b><br/>
+Because individual Pods are ephemeral, enterprise production applications are managed using high-level controllers called **Deployments**.<br/><br/>
+
+<b>Core Superpowers of a Kubernetes Deployment:</b>
+<ul>
+  <li><b>Declarative Replica Scaling:</b> Instructs Kubernetes to maintain $N$ identical Pod instances (`replicas: 3`).</li>
+  <li><b>Self-Healing & Auto-Restoration:</b> If a worker node crashes or a Pod fails its Liveness probe, the Deployment Controller automatically spawns a replacement Pod on a healthy node to restore the desired replica count.</li>
+  <li><b>Zero-Downtime Rolling Updates:</b> When deploying a new container image version, the Deployment replaces Pods incrementally (`maxSurge: 25%`, `maxUnavailable: 25%`), ensuring live user traffic is never dropped!</li>
+  <li><b>Instant Version Rollbacks:</b> If a newly deployed image crashes in production, run `kubectl rollout undo deployment/logistics-api` to instantly revert to the previous working image version!</li>
+</ul>
+      `,
+      diagram: `
+KUBERNETES ROLLING UPDATE STRATEGY:
+
+  Deployment Version v1 (Replicas: 3) ---> Deployment Version v2 (Update Triggered)
+
+  Step 1: Spawns new v2 Pod (Surge)   : [v1 Pod] [v1 Pod] [v1 Pod] + [v2 Pod (New)]
+  Step 2: Readiness probe passes      : [v1 Pod] [v1 Pod] [v1 Pod]   [v2 Pod (READY)]
+  Step 3: Terminates old v1 Pod       : [v1 Pod] [v1 Pod]            [v2 Pod (READY)]
+  Step 4: Repeat until all Pods are v2:                              [v2 Pod] [v2 Pod] [v2 Pod]
+                                       ===> ZERO DOWNTIME MAINTAINED!
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 3: Declarative Kubernetes Deployment Manifest
+# ==============================================================================
+
+DEPLOYMENT_MANIFEST_YAML = """
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistics-api-deployment
+  namespace: production
+  labels:
+    app: logistics-api
+spec:
+  replicas: 3 # Maintains 3 identical Pods across the cluster
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Spawns 1 extra Pod during updates
+      maxUnavailable: 0  # Guarantees 100% capacity remains active during updates!
+  selector:
+    matchLabels:
+      app: logistics-api
+  template:
+    metadata:
+      labels:
+        app: logistics-api
+    spec:
+      containers:
+        - name: api-server
+          image: ghcr.io/company/logistics-api:v2.1.0
+          ports:
+            - containerPort: 8000
+
+          # Health Probes for Rolling Updates & Self-Healing
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+"""
+
+print("--- LESSON 3: Production Kubernetes Deployment Manifest ---")
+print(DEPLOYMENT_MANIFEST_YAML)
+      `,
+      keyTakeaways: [
+        "Deployments manage Pod lifecycles, replica counts, self-healing, and zero-downtime rolling updates.",
+        "Set `maxUnavailable: 0` in rolling update strategies to prevent capacity drops during deployments.",
+        "Readiness probes prevent Kubernetes from routing user traffic to updating Pods until they are fully booted.",
+        "Use `kubectl rollout undo deployment/deployment_name` for instant rollbacks."
+      ],
+      commonMistakes: [
+        "<b>Omitting Readiness Probes during Rolling Updates:</b> Allowing Kubernetes to route live user traffic to newly spawned Pods before FastAPI finishes initializing database connection pools.",
+        "<b>Setting `maxUnavailable: 100%`:</b> Terminating all active application Pods simultaneously during an image update, causing self-inflicted downtime."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary role of a Readiness Probe during a Kubernetes Rolling Update deployment?",
+          options: [
+            "To encrypt disk drives.",
+            "To inform the Deployment controller when a newly spawned Pod is ready to receive live user traffic before terminating old Pod versions.",
+            "To check if the Git repository has new commits.",
+            "To compile C code."
+          ],
+          correctIndex: 1,
+          explanation: "Readiness Probes hold traffic from newly updating Pods until their internal connection pools and caches are ready."
+        },
+        {
+          question: "Which `kubectl` command instantly rolls back a failing Kubernetes deployment to its previous stable release version?",
+          options: [
+            "`kubectl delete pods --all`",
+            "`kubectl rollout undo deployment/logistics-api-deployment`",
+            "`kubectl restart cluster`",
+            "`kubectl revert image`"
+          ],
+          correctIndex: 1,
+          explanation: "`kubectl rollout undo` reverts a deployment state to the preceding revision in its rollout history."
+        }
+      ]
+    },
+    {
+      id: "lesson-4",
+      title: "Kubernetes Services: ClusterIP, NodePort, LoadBalancer, and Ingress",
+      durationMinutes: 18,
+      explanation: `
+<b>Stable Abstraction Layers for Network Routing and Service Discovery</b><br/>
+Because Pods are ephemeral and receive dynamic IP addresses every time they restart, frontend clients cannot connect directly to Pod IPs. **Kubernetes Services** provide persistent IP addresses, DNS hostnames, and layer-4 load balancing across matching Pod sets.<br/><br/>
+
+<b>1. The Four Kubernetes Service Types:</b>
+<ul>
+  <li><b>ClusterIP (Default - Internal Only):</b> Exposes the Service on an internal cluster IP address. Reachable *only* from within the Kubernetes cluster. Ideal for internal microservices and database pods!</li>
+  <li><b>NodePort (Exposes Static Port on Worker Nodes):</b> Opens a static port ($30000\text{--}32767$) on every Kubernetes worker node's physical IP address.</li>
+  <li><b>LoadBalancer (Cloud Provider Integration):</b> Requests an external cloud load balancer (e.g. AWS Network Load Balancer or Application Load Balancer) from AWS/GCP/Azure, routing public traffic directly into the Service.</li>
+  <li><b>Ingress Controller (Layer 7 HTTP/HTTPS Router):</b> Operates as an edge router (e.g. Nginx Ingress Controller) managing SSL/TLS termination, path-based routing (<code>/api/v1</code> $\rightarrow$ Service A, <code>/auth</code> $\rightarrow$ Service B), and virtual host routing under a single public IP!</li>
+</ul>
+      `,
+      diagram: `
+KUBERNETES SERVICE ROUTING TYPES:
+
+  Public Internet Client (HTTPS: api.logistics.com)
+                       |
+                       v
+  [ Ingress Controller (Nginx) ] (Layer 7 Host & Path Routing + TLS Termination)
+                       |
+                       v  Routes to Internal Cluster Service
+  [ Kubernetes ClusterIP Service ] (Internal Virtual IP: 10.96.0.100, DNS: logistics-svc)
+                       |
+        +--------------+--------------+
+        | (Load Balances across matching labels: app=logistics-api)
+        v                             v
+  [ Pod 1 (10.244.1.5) ]        [ Pod 2 (10.244.2.8) ]
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 4: Kubernetes Service and Ingress Manifest Specifications
+# ==============================================================================
+
+SERVICE_AND_INGRESS_YAML = """
+# 1. ClusterIP Internal Service Manifest
+apiVersion: v1
+kind: Service
+metadata:
+  name: logistics-api-service
+  namespace: production
+spec:
+  type: ClusterIP
+  selector:
+    app: logistics-api # Route traffic to Pods with label 'app: logistics-api'
+  ports:
+    - protocol: TCP
+      port: 80         # Internal Service Port
+      targetPort: 8000 # Target Container Port inside Pod
+
+---
+# 2. Ingress HTTP/HTTPS Routing Manifest
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logistics-api-ingress
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  rules:
+    - host: api.logistics.company.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: logistics-api-service
+                port:
+                  number: 80
+"""
+
+print("--- LESSON 4: Kubernetes Service & Ingress Manifest Blueprints ---")
+print(SERVICE_AND_INGRESS_YAML)
+      `,
+      keyTakeaways: [
+        "Services provide persistent virtual IP addresses and DNS hostnames for ephemeral Pod sets.",
+        "Services use Label Selectors (`selector: app: logistics-api`) to discover target Pods dynamically.",
+        "`ClusterIP` is internal only; `LoadBalancer` provisions cloud provider infrastructure.",
+        "An `Ingress Controller` manages Layer-7 HTTP/HTTPS path routing and TLS termination."
+      ],
+      commonMistakes: [
+        "<b>Mismatched label selectors in Services:</b> Writing `selector: app: my-api` in the Service when Pods have label `app: my-fastapi-app`, causing the Service to route to 0 endpoints!",
+        "<b>Exposing internal microservices via `LoadBalancer` type:</b> Provisioning expensive cloud load balancers for internal-only services that should use `ClusterIP`."
+      ],
+      quizzes: [
+        {
+          question: "Which Kubernetes Service type is selected by default to expose internal microservices strictly within the cluster network without public internet access?",
+          options: [
+            "`NodePort`",
+            "`ClusterIP`",
+            "`LoadBalancer`",
+            "`ExternalName`"
+          ],
+          correctIndex: 1,
+          explanation: "`ClusterIP` exposes the Service on an internal-only IP address accessible exclusively within the Kubernetes cluster."
+        },
+        {
+          question: "How does a Kubernetes Service determine which specific Pod instances should receive network traffic?",
+          options: [
+            "By hardcoding container IP addresses.",
+            "By evaluating Label Selectors (`selector: app: my-app`) matching metadata labels declared on Pods.",
+            "By random guessing.",
+            "By scanning file names on disk."
+          ],
+          correctIndex: 1,
+          explanation: "Services use Label Selectors to map traffic dynamically to all Pods matching key-value labels."
+        }
+      ]
+    },
+    {
+      id: "lesson-5",
+      title: "ConfigMaps and Secrets: Decoupling Configuration and Injecting Sensitive Credentials",
+      durationMinutes: 16,
+      explanation: `
+<b>Configuration Management and Key Protection in Kubernetes</b><br/>
+Following Twelve-Factor App principles, container images must remain identical across environments. **ConfigMaps** and **Secrets** decouple environment settings and sensitive passwords from container source code.<br/><br/>
+
+<b>1. Kubernetes ConfigMaps (Non-Sensitive Settings):</b><br/>
+Stores plain-text key-value configuration pairs (e.g. `LOG_LEVEL: "INFO"`, `MAX_WORKERS: "4"`). Injected into Pod containers as environment variables or mounted configuration files.<br/><br/>
+
+<b>2. Kubernetes Secrets (Sensitive Credentials):</b><br/>
+Stores sensitive credentials (database passwords, JWT secret keys, API tokens).
+<ul>
+  <li>Keys inside Secret manifests are Base64-encoded.</li>
+  <li>Secrets are mounted into Pod memory spaces (`tmpfs`) or injected as environment variables using `valueFrom.secretKeyRef`.</li>
+  <li>*Security Hardening Rule:* Enable Encryption-at-Rest in the Kubernetes etcd data store, and use RBAC policy bindings to restrict secret access!</li>
+</ul>
+      `,
+      diagram: `
+CONFIGMAP AND SECRET POD INJECTION ARCHITECTURE:
+
+  [ ConfigMap: app-config ]        [ Secret: app-secrets ]
+  - LOG_LEVEL: "INFO"              - DB_PASS: "c2VjcmV0MTIz" (Base64)
+  - APP_ENV: "production"          - JWT_KEY: "dG9rZW45OQ==" (Base64)
+           |                                  |
+           +----------------+-----------------+
+                            |  Injected via env / valueFrom
+                            v
+  [ Kubernetes Pod Container Spec ]
+  - ENV: LOG_LEVEL = "INFO"
+  - ENV: DATABASE_PASSWORD = (Decoded in Pod RAM: "secret123")
+      `,
+      codeExample: `
+# ==============================================================================
+# LESSON 5: ConfigMap, Secret, and Pod Injection Specifications
+# ==============================================================================
+
+CONFIGMAP_SECRET_POD_YAML = """
+# 1. ConfigMap Manifest (Non-sensitive)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logistics-app-config
+  namespace: production
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  MAX_CONNECTIONS: "100"
+
+---
+# 2. Secret Manifest (Base64 Encoded Credentials)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: logistics-app-secrets
+  namespace: production
+type: Opaque
+data:
+  # Base64 encoded values ("SecretDbPass2026!" and "CRITICAL_JWT_KEY")
+  DATABASE_PASSWORD: U2VjcmV0RGJQYXNzMjAyNiE=
+  JWT_SECRET_KEY: Q1JJVElDQUxfSldUX0tFWQ==
+
+---
+# 3. Pod Container Environment Injection
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistics-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/company/logistics-api:v1.0
+          env:
+            # Inject from ConfigMap
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: logistics-app-config
+                  key: LOG_LEVEL
+            # Inject from Secret
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: logistics-app-secrets
+                  key: DATABASE_PASSWORD
+"""
+
+print("--- LESSON 5: ConfigMap, Secret & Pod Injection Blueprint ---")
+print(CONFIGMAP_SECRET_POD_YAML)
+      `,
+      keyTakeaways: [
+        "Use ConfigMaps for non-sensitive settings (`LOG_LEVEL`) and Secrets for sensitive credentials (`DATABASE_PASSWORD`).",
+        "Secrets are Base64 encoded in YAML manifests and decoded automatically upon injection into Pods.",
+        "Inject configuration into Pods via environment variables (`valueFrom`) or mounted files.",
+        "Decoupling settings ensures container images remain immutable and environment-agnostic."
+      ],
+      commonMistakes: [
+        "<b>Assuming Base64 encoding in Secret YAML files is encryption:</b> Base64 is simple encoding, NOT encryption! Anyone can decode Base64 strings. Enable etcd encryption-at-rest in Kubernetes.",
+        "<b>Hardcoding production secrets inside ConfigMaps:</b> Exposing plain-text passwords in unencrypted ConfigMap objects."
+      ],
+      quizzes: [
+        {
+          question: "What is the primary difference in usage between a Kubernetes ConfigMap and a Kubernetes Secret?",
+          options: [
+            "ConfigMaps run on Linux; Secrets run on Windows.",
+            "ConfigMaps store non-sensitive configuration settings (e.g. log levels), whereas Secrets store sensitive credentials (e.g. passwords, private keys) with Base64 encoding.",
+            "ConfigMaps replace Docker images.",
+            "Secrets can only be used by database Pods."
+          ],
+          correctIndex: 1,
+          explanation: "ConfigMaps hold plain-text configuration settings; Secrets isolate Base64-encoded sensitive keys and credentials."
+        },
+        {
+          question: "Is Base64 encoding used in Kubernetes Secret YAML manifests considered cryptographic encryption?",
+          options: [
+            "Yes, Base64 is unbreakable RSA encryption.",
+            "No, Base64 is a reversible encoding scheme; Kubernetes cluster administrators must enable etcd encryption-at-rest for true security.",
+            "Base64 is only used for images.",
+            "Yes, it requires private keys to decode."
+          ],
+          correctIndex: 1,
+          explanation: "Base64 is simple encoding easily decoded by anyone. Etcd encryption-at-rest must be enabled for true cryptographic security."
+        }
+      ]
+    }
+  ],
+  finalQuiz: [
+    {
+      question: "Which AWS managed service provides automated Multi-AZ database replication and failover switching for relational database engines like PostgreSQL?",
+      options: [
+        "Amazon EC2",
+        "Amazon RDS",
+        "Amazon S3",
+        "AWS Route 53"
+      ],
+      correctIndex: 1,
+      explanation: "Amazon RDS provides managed relational databases with Multi-AZ replication and automated failover."
+    },
+    {
+      question: "What is the smallest deployable atomic unit in Kubernetes?",
+      options: [
+        "Container",
+        "Pod",
+        "Deployment",
+        "Service"
+      ],
+      correctIndex: 1,
+      explanation: "A Pod is the smallest atomic deployable object in Kubernetes, wrapping one or more containers."
+    },
+    {
+      question: "What happens when a container in a Pod exceeds its `resources.limits.memory` threshold?",
+      options: [
+        "It is assigned more RAM automatically.",
+        "The container process is terminated by the kernel with an `OOMKilled` status.",
+        "The CPU speed is reduced.",
+        "Kubernetes stops logging."
+      ],
+      correctIndex: 1,
+      explanation: "Exceeding memory limits triggers the kernel Out-Of-Memory killer, resulting in an `OOMKilled` status."
+    },
+    {
+      question: "Which Kubernetes controller manages Pod replicas, self-healing restoration, and zero-downtime rolling updates?",
+      options: [
+        "ConfigMap",
+        "Deployment",
+        "Ingress",
+        "ClusterIP"
+      ],
+      correctIndex: 1,
+      explanation: "Deployments manage Pod replicas, self-healing, and rolling updates."
+    },
+    {
+      question: "Which Kubernetes Service type provides internal-only cluster network connectivity without public internet exposure?",
+      options: [
+        "`NodePort`",
+        "`ClusterIP`",
+        "`LoadBalancer`",
+        "`ExternalName`"
+      ],
+      correctIndex: 1,
+      explanation: "`ClusterIP` exposes the Service on an internal IP address reachable only within the cluster."
+    },
+    {
+      question: "How do Kubernetes Services dynamically discover which Pods should receive incoming network traffic?",
+      options: [
+        "By hardcoded IP addresses.",
+        "By evaluating Label Selectors (`selector: app: my-app`) matching Pod metadata labels.",
+        "By random selection.",
+        "By container ID."
+      ],
+      correctIndex: 1,
+      explanation: "Services use Label Selectors to route traffic dynamically to Pods with matching labels."
+    },
+    {
+      question: "Which Kubernetes object handles Layer-7 HTTP/HTTPS path routing and TLS termination under a single public IP?",
+      options: [
+        "ClusterIP",
+        "Ingress Controller",
+        "ConfigMap",
+        "DaemonSet"
+      ],
+      correctIndex: 1,
+      explanation: "Ingress Controllers manage Layer-7 HTTP/HTTPS host and path routing with TLS termination."
+    },
+    {
+      question: "How are sensitive database passwords injected securely into Kubernetes Pod containers?",
+      options: [
+        "Hardcoded in Dockerfiles.",
+        "Stored in Kubernetes Secrets and injected via environment variables using `valueFrom.secretKeyRef`.",
+        "Committed in public Git repositories.",
+        "Printed in system logs."
+      ],
+      correctIndex: 1,
+      explanation: "Kubernetes Secrets store sensitive credentials and inject them into Pods at runtime via `valueFrom`."
+    }
+  ],
+  project: {
+    name: "Enterprise Kubernetes Deployment Suite (Phase 2 Project)",
+    goal: "Build a complete production-grade Kubernetes manifest suite featuring Deployment specifications with rolling updates, ConfigMaps, Secrets, ClusterIP Services, and Nginx Ingress routing.",
+    brief: "Your cloud platform architecture team requires a complete Kubernetes deployment manifest suite (`k8s_manifest_suite.py`). You will write declarative YAML manifests for an application ConfigMap, a Base64-encoded Secret, a Deployment wrapping 3 Pod replicas with resource bounds and health probes, a ClusterIP Service, and an Nginx Ingress object.",
+    steps: [
+      "Create a workspace script file named `k8s_manifest_suite.py`.",
+      "Write a ConfigMap manifest (`logistics-config`) declaring `LOG_LEVEL` and `APP_ENV`.",
+      "Write a Secret manifest (`logistics-secrets`) declaring Base64-encoded database credentials.",
+      "Write a Deployment manifest (`logistics-deployment`) wrapping 3 Pod replicas, CPU/memory limits, Liveness/Readiness probes, and environment injection.",
+      "Write a ClusterIP Service manifest (`logistics-service`) targeting `app: logistics-api` on port 8000.",
+      "Write an Nginx Ingress manifest (`logistics-ingress`) routing `api.logistics.company.com` to the Service.",
+      "Write a Python audit script that parses and verifies manifest security and compliance rules.",
+      "Run `python3 k8s_manifest_suite.py` in your terminal and print a complete Kubernetes audit report."
+    ],
+    acceptance: [
+      "Manifests specify ConfigMap, Secret, Deployment, Service, and Ingress objects.",
+      "Deployment configures 3 replicas with resource limits and health probes.",
+      "Service routes traffic to target Pods using Label Selectors.",
+      "Ingress configures Layer-7 host routing.",
+      "Executing `python3 k8s_manifest_suite.py` outputs a clean audit report and returns status code 0."
+    ],
+    stretch: [
+      "Include a HorizontalPodAutoscaler (HPA) manifest targeting 70% CPU utilization.",
+      "Annotate all verification functions with strict type hints and pass static `mypy` verification."
+    ]
+  }
+};
