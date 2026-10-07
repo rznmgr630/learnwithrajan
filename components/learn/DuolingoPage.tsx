@@ -293,7 +293,7 @@ export function DuolingoPage() {
           </div>
 
           <div className="grid min-w-0 gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
-            <aside className="min-w-0 lg:sticky lg:top-5">
+            <aside className="min-w-0 lg:sticky lg:top-20">
               <p className="text-sm font-semibold text-[var(--muted)]">Browse notes</p>
               <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
                 <button
@@ -320,7 +320,7 @@ export function DuolingoPage() {
               </div>
             </aside>
 
-            <div id="note-content" className="min-w-0 scroll-mt-8 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
+            <div id="note-content" className="min-w-0 scroll-mt-8 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
               {activeNoteSection === "words" && (
                 <div className="animate-[fade-in_200ms_ease-out]">
                   <h2 className="text-lg font-semibold text-[var(--text)]">Vocabulary Notes</h2>
