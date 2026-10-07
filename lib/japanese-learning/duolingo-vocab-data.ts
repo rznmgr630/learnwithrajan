@@ -4684,6 +4684,15 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "おしょうがつ", romaji: "oshōgatsu", meaning_en: "Japanese New Year", meaning_np: "जापानी नयाँ वर्ष", examples: [{ ja: "おしょうがつは一月一日です。", en: "Japanese New Year begins on January 1.", np: "जापानी नयाँ वर्ष जनवरी १ मा सुरु हुन्छ।" }] },
     ],
   },
+  {
+    day: 36,
+    category: "Dates & Giving",
+    words: [
+      { word: "にじゅうごにち", romaji: "nijūgonichi", meaning_en: "The twenty-fifth day of the month", meaning_np: "महिनाको पच्चीसौं दिन", examples: [{ ja: "にじゅうごにちに会います。", en: "I will meet you on the twenty-fifth.", np: "म पच्चीसौं दिनमा भेट्छु।" }] },
+      { word: "はつか", romaji: "hatsuka", meaning_en: "The twentieth day of the month", meaning_np: "महिनाको बीसौं दिन", examples: [{ ja: "はつかは休みです。", en: "The twentieth is a day off.", np: "बीसौं दिन बिदा हुन्छ।" }] },
+      { word: "きのう、すごいあめがふりました。あめがにがてです。", romaji: "kinō, sugoi ame ga furimashita. ame ga nigate desu", meaning_en: "Yesterday, it rained terribly. Rain is not my favourite.", meaning_np: "हिजो धेरै ठूलो पानी पर्यो। मलाई पानी मन पर्दैन।", examples: [{ ja: "きのう、すごいあめがふりました。あめがにがてです。", en: "Yesterday, it rained terribly. Rain is not my favourite.", np: "हिजो धेरै ठूलो पानी पर्यो। मलाई पानी मन पर्दैन।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5251,5 +5260,59 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "おしょうがつ",
     note: "Oshōgatsu is the Japanese New Year, celebrated from January 1 to 3 with family, special osechi ryōri meals, shrine visits, and otoshidama money gifts for children.",
     examples: [{ ja: "おしょうがつに家族と会います。", en: "I meet my family during the Japanese New Year.", np: "म जापानी नयाँ वर्षमा परिवारलाई भेट्छु।" }],
+  },
+  {
+    title: "Christmas Karaoke",
+    japanese: "クリスマス / カラオケ",
+    note: "During the Christmas season, karaoke is a popular activity in Japan. Many people sing Christmas songs with friends or family.",
+    examples: [{ ja: "クリスマスに家族とカラオケへ行きます。", en: "I go to karaoke with my family at Christmas.", np: "म क्रिसमसमा परिवारसँग कराओके जान्छु।" }],
+  },
+  {
+    title: "Giving with あげます",
+    japanese: "ともだちにプレゼントをあげます",
+    note: "With あげます, を marks the thing given and に marks the person who receives it.",
+    examples: [{ ja: "ともだちにプレゼントをあげます。", en: "I will give a present to my friend.", np: "म साथीलाई उपहार दिन्छु।" }],
+  },
+  {
+    title: "Kōshū Wine",
+    japanese: "甲州ワイン（こうしゅうワイン）",
+    note: "Kōshū wine is made from the native Kōshū grape in Yamanashi. It is a light, crisp wine that pairs well with local cuisine and has been produced in Japan for over 1,000 years.",
+    examples: [{ ja: "山梨で甲州ワインを飲みます。", en: "I drink Kōshū wine in Yamanashi.", np: "म यामानाशीमा कोशु वाइन पिउँछु।" }],
+  },
+  {
+    title: "Receiving with もらいます",
+    japanese: "ともだちにくつをもらいました",
+    note: "With もらいます, に marks the person from whom you receive something.",
+    examples: [{ ja: "ともだちにくつをもらいました。", en: "I received shoes from my friend.", np: "मैले साथीबाट जुत्ता पाएँ।" }],
+  },
+  {
+    title: "Japanese Date Order",
+    japanese: "にがつふつか",
+    note: "Japanese dates use a month-day pattern: the month comes first, followed by the day. にがつふつか means 'February 2nd.'",
+    examples: [{ ja: "にがつふつかです。", en: "It is February 2nd.", np: "आज फेब्रुअरी २ हो।" }],
+  },
+  {
+    title: "Christmas in Japan",
+    japanese: "クリスマス",
+    note: "In Japan, Christmas is often associated with romance and couples. Many people enjoy illuminations, exchange gifts, eat KFC, and have strawberry shortcake.",
+    examples: [{ ja: "クリスマスにケーキを食べます。", en: "I eat cake at Christmas.", np: "म क्रिसमसमा केक खान्छु।" }],
+  },
+  {
+    title: "Katakana ヂ and ジ",
+    japanese: "ヂ / ジ",
+    note: "ヂ and ジ are both pronounced ji, but ヂ is much less common. Modern Japanese more often uses ジ.",
+    examples: [{ ja: "ジョンさんです。", en: "This is John.", np: "उहाँ जोन हुनुहुन्छ।" }],
+  },
+  {
+    title: "Japanese Soufflé Cheesecake",
+    japanese: "スフレチーズケーキ",
+    note: "Japanese soufflé cheesecake, also called Japanese cotton cheesecake, is a popular dessert known for being fluffy, light, and cloud-like.",
+    examples: [{ ja: "スフレチーズケーキを食べます。", en: "I eat Japanese soufflé cheesecake.", np: "म जापानी सुफ्ले चिजकेक खान्छु।" }],
+  },
+  {
+    title: "Coming-of-Age Day",
+    japanese: "せいじんしき",
+    note: "Seijin shiki is Japan's coming-of-age ceremony, held annually on the second Monday of January. It celebrates people who turned 20 in the past year.",
+    examples: [{ ja: "せいじんしきは一月です。", en: "Coming-of-Age Day is in January.", np: "वयस्कता समारोह जनवरीमा हुन्छ।" }],
   },
 ];
