@@ -4665,6 +4665,25 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "やめたいです。", romaji: "yametai desu", meaning_en: "I want to quit.", meaning_np: "म छोड्न चाहन्छु।", examples: [{ ja: "やめたいです。", en: "I want to quit.", np: "म छोड्न चाहन्छु।" }] },
     ],
   },
+  {
+    day: 35,
+    category: "People, Celebrations & New Year",
+    words: [
+      { word: "かれし", romaji: "kareshi", meaning_en: "Boyfriend", meaning_np: "प्रेमी", examples: [{ ja: "かれしがいます。", en: "I have a boyfriend.", np: "मेरो प्रेमी छ।" }] },
+      { word: "じゅうよっか", romaji: "jūyokka", meaning_en: "The fourteenth day of the month", meaning_np: "महिनाको चौधौं दिन", examples: [{ ja: "じゅうよっかに会います。", en: "I will meet you on the fourteenth.", np: "म चौधौं दिनमा भेट्छु।" }] },
+      { word: "バレンタインデー", romaji: "barentaindē", meaning_en: "Valentine's Day", meaning_np: "भ्यालेन्टाइन डे", examples: [{ ja: "バレンタインデーにチョコレートをあげます。", en: "I give chocolate on Valentine's Day.", np: "म भ्यालेन्टाइन डेमा चकलेट दिन्छु।" }] },
+      { word: "従業員休憩室", romaji: "jūgyōin kyūkeishitsu", reading: "じゅうぎょういんきゅうけいしつ", meaning_en: "Employee break room", meaning_np: "कर्मचारी विश्राम कक्ष", examples: [{ ja: "従業員休憩室は二階です。", en: "The employee break room is on the second floor.", np: "कर्मचारी विश्राम कक्ष दोस्रो तलामा छ।" }] },
+      { word: "禁煙", romaji: "kin'en", reading: "きんえん", meaning_en: "No smoking", meaning_np: "धूम्रपान निषेध", examples: [{ ja: "ここは禁煙です。", en: "No smoking here.", np: "यहाँ धूम्रपान निषेध छ।" }] },
+      { word: "学校のちかくに住みたいです。", romaji: "gakkō no chikaku ni sumitai desu", meaning_en: "I want to live near the school.", meaning_np: "म विद्यालय नजिक बस्न चाहन्छु।", examples: [{ ja: "学校のちかくに住みたいです。", en: "I want to live near the school.", np: "म विद्यालय नजिक बस्न चाहन्छु।" }] },
+      { word: "大会", romaji: "taikai", reading: "たいかい", meaning_en: "Tournament / competition", meaning_np: "प्रतियोगिता", examples: [{ ja: "サッカー大会に行きます。", en: "I go to a soccer tournament.", np: "म फुटबल प्रतियोगितामा जान्छु।" }] },
+      { word: "しずか", romaji: "shizuka", meaning_en: "Quiet / calm", meaning_np: "शान्त", examples: [{ ja: "しずかなへやです。", en: "It is a quiet room.", np: "यो शान्त कोठा हो।" }] },
+      { word: "にぎやか", romaji: "nigiyaka", meaning_en: "Lively / bustling", meaning_np: "चहलपहल भएको", examples: [{ ja: "にぎやかなパーティーです。", en: "It is a lively party.", np: "यो चहलपहल भएको पार्टी हो।" }] },
+      { word: "はつもうで", romaji: "hatsumōde", meaning_en: "First shrine visit of the New Year", meaning_np: "नयाँ वर्षको पहिलो मन्दिर भ्रमण", examples: [{ ja: "おしょうがつにはつもうでに行きます。", en: "I go for the first shrine visit of the New Year.", np: "म नयाँ वर्षमा पहिलो मन्दिर भ्रमणमा जान्छु।" }] },
+      { word: "じんじゃ", romaji: "jinja", meaning_en: "Shinto shrine", meaning_np: "शिन्तो मन्दिर", examples: [{ ja: "じんじゃでおいのりします。", en: "I pray at a Shinto shrine.", np: "म शिन्तो मन्दिरमा प्रार्थना गर्छु।" }] },
+      { word: "あけましておめでとう", romaji: "akemashite omedetō", meaning_en: "Happy New Year", meaning_np: "नयाँ वर्षको शुभकामना", examples: [{ ja: "あけましておめでとう。", en: "Happy New Year.", np: "नयाँ वर्षको शुभकामना।" }] },
+      { word: "おしょうがつ", romaji: "oshōgatsu", meaning_en: "Japanese New Year", meaning_np: "जापानी नयाँ वर्ष", examples: [{ ja: "おしょうがつは一月一日です。", en: "Japanese New Year begins on January 1.", np: "जापानी नयाँ वर्ष जनवरी १ मा सुरु हुन्छ।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5178,5 +5197,59 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "かわいい",
     note: "In Japan, かわいい (kawaii), meaning 'cute,' is a cultural phenomenon influencing fashion, art, and behavior. It is used to describe everything from animals to food, reflecting Japan's love for all things adorable.",
     examples: [{ ja: "このねこはかわいいです。", en: "This cat is cute.", np: "यो बिरालो प्यारो छ।" }],
+  },
+  {
+    title: "やさしい as an い-Adjective",
+    japanese: "やさしい",
+    note: "やさしい is an い-adjective meaning 'kind' or 'gentle.' It often describes a person's caring or compassionate nature.",
+    examples: [{ ja: "やさしい人です。", en: "They are a kind person.", np: "उहाँ दयालु व्यक्ति हुनुहुन्छ।" }],
+  },
+  {
+    title: "Valentine's Day and White Day",
+    japanese: "バレンタインデー / ホワイトデー",
+    note: "In Japan, women commonly give chocolates to men on Valentine's Day. On White Day, March 14, men return the gesture with gifts such as chocolates or cookies.",
+    examples: [{ ja: "バレンタインデーにチョコレートをあげます。", en: "I give chocolate on Valentine's Day.", np: "म भ्यालेन्टाइन डेमा चकलेट दिन्छु।" }],
+  },
+  {
+    title: "に with Specific Times",
+    japanese: "たんじょうびに",
+    note: "に marks a specific time or event. With たんじょうび, it means 'on one's birthday.'",
+    examples: [{ ja: "たんじょうびにケーキを食べます。", en: "I eat cake on my birthday.", np: "म मेरो जन्मदिनमा केक खान्छु।" }],
+  },
+  {
+    title: "ほしい Is an Adjective",
+    japanese: "ほしいです",
+    note: "In Japanese, ほしい is an adjective meaning 'want.' English uses the verb 'want,' but ほしいです translates to 'I want.'",
+    examples: [{ ja: "新しいかばんがほしいです。", en: "I want a new bag.", np: "मलाई नयाँ झोला चाहिन्छ।" }],
+  },
+  {
+    title: "しずか and Shizuka",
+    japanese: "しずか",
+    note: "しずか is a な-adjective meaning 'quiet' or 'calm.' Shizuka is also a popular character in the Japanese anime Doraemon, known for being kind, smart, and gentle.",
+    examples: [{ ja: "しずかなまちです。", en: "It is a quiet town.", np: "यो शान्त सहर हो।" }],
+  },
+  {
+    title: "な-Adjectives Before Nouns",
+    japanese: "にぎやかなパーティー",
+    note: "When a な-adjective describes a noun, add な between the adjective and the noun. にぎやかなパーティー means 'lively party.'",
+    examples: [{ ja: "にぎやかなパーティーです。", en: "It is a lively party.", np: "यो चहलपहल भएको पार्टी हो।" }],
+  },
+  {
+    title: "Hatsumōde",
+    japanese: "はつもうで",
+    note: "Hatsumōde is Japan's first shrine visit of the New Year, usually around January 1, to pray for health and luck. People often draw omikuji fortunes and offer prayers.",
+    examples: [{ ja: "はつもうでにじんじゃへ行きます。", en: "I go to a shrine for Hatsumōde.", np: "म हत्सुमोउदेका लागि मन्दिर जान्छु।" }],
+  },
+  {
+    title: "Ake Ome",
+    japanese: "あけおめ",
+    note: "Ake ome is a short, casual way to say 'Happy New Year' in Japanese. It is popular among friends, especially in messages and on social media during New Year.",
+    examples: [{ ja: "あけおめ！", en: "Happy New Year! (casual)", np: "नयाँ वर्षको शुभकामना! (अनौपचारिक)" }],
+  },
+  {
+    title: "Japanese New Year",
+    japanese: "おしょうがつ",
+    note: "Oshōgatsu is the Japanese New Year, celebrated from January 1 to 3 with family, special osechi ryōri meals, shrine visits, and otoshidama money gifts for children.",
+    examples: [{ ja: "おしょうがつに家族と会います。", en: "I meet my family during the Japanese New Year.", np: "म जापानी नयाँ वर्षमा परिवारलाई भेट्छु।" }],
   },
 ];
