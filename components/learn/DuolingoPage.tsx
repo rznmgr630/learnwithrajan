@@ -42,6 +42,7 @@ function NoteExamples({ examples }: { examples?: { ja: string; en: string; np: s
 }
 
 type NoteGroupId = "grammar" | "dates" | "food" | "culture" | "daily";
+type NoteSectionId = "words" | NoteGroupId;
 
 const NOTE_GROUPS: { id: NoteGroupId; label: string; description: string; icon: string }[] = [
   { id: "grammar", label: "Grammar & Usage", description: "Particles, adjective patterns, and useful expressions.", icon: "文" },
@@ -76,12 +77,25 @@ function StandaloneNoteCard({ note }: { note: (typeof DUOLINGO_NOTES)[number] })
   );
 }
 
+function WordNoteCard({ note }: { note: (typeof WORD_NOTES)[number] }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] hover:shadow-lg hover:shadow-black/5">
+      <div className="flex items-baseline gap-2">
+        <span className="text-base font-semibold text-[var(--text)]">{note.word}</span>
+        {note.reading && <span className="text-sm text-[var(--muted)]">（{note.reading}）</span>}
+        <span className="text-xs text-[var(--faint)] font-mono">· {note.romaji}</span>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{note.note}</p>
+      <NoteExamples examples={note.examples} />
+    </div>
+  );
+}
+
 export function DuolingoPage() {
   const { locale } = useLocale();
   const [tab, setTab] = useState<"words" | "notes">("words");
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
-  const [openNoteGroups, setOpenNoteGroups] = useState<Set<NoteGroupId>>(new Set(["grammar"]));
-  const [activeNoteGroup, setActiveNoteGroup] = useState<NoteGroupId>("grammar");
+  const [activeNoteSection, setActiveNoteSection] = useState<NoteSectionId | null>(null);
 
   const groupedNotes = NOTE_GROUPS.map((group) => ({
     ...group,
@@ -97,19 +111,8 @@ export function DuolingoPage() {
     });
   }
 
-  function toggleNoteGroup(group: NoteGroupId) {
-    setOpenNoteGroups((previous) => {
-      const next = new Set(previous);
-      if (next.has(group)) next.delete(group);
-      else next.add(group);
-      return next;
-    });
-  }
-
-  function selectNoteGroup(group: NoteGroupId) {
-    setActiveNoteGroup(group);
-    setOpenNoteGroups((previous) => new Set(previous).add(group));
-    document.getElementById(`note-group-${group}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function selectNoteSection(section: NoteSectionId) {
+    setActiveNoteSection(section);
   }
 
   return (
@@ -285,34 +288,24 @@ export function DuolingoPage() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-sm font-semibold text-[var(--muted)]">Word Notes</h2>
-            <p className="mt-1 text-xs text-[var(--faint)]">Grammar and usage notes attached to specific vocabulary.</p>
-            <div className="mt-4 flex flex-col gap-3">
-              {WORD_NOTES.map((n, idx) => (
-                <div key={idx} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-base font-semibold text-[var(--text)]">{n.word}</span>
-                    {n.reading && <span className="text-sm text-[var(--muted)]">（{n.reading}）</span>}
-                    <span className="text-xs text-[var(--faint)] font-mono">· {n.romaji}</span>
-                  </div>
-                  <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
-                  <NoteExamples examples={n.examples} />
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
             <aside className="lg:sticky lg:top-5">
               <p className="text-sm font-semibold text-[var(--muted)]">Browse notes</p>
               <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+                <button
+                  onClick={() => selectNoteSection("words")}
+                  className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition ${activeNoteSection === "words" ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] hover:text-[var(--text)]"}`}
+                >
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[10px] font-bold">語</span>
+                  <span className="whitespace-nowrap lg:whitespace-normal">Vocabulary Notes</span>
+                  <span className="ml-auto text-[10px] tabular-nums opacity-70">{WORD_NOTES.length}</span>
+                </button>
                 {groupedNotes.map((group) => {
-                  const isActive = activeNoteGroup === group.id;
+                  const isActive = activeNoteSection === group.id;
                   return (
                     <button
                       key={group.id}
-                      onClick={() => selectNoteGroup(group.id)}
+                      onClick={() => selectNoteSection(group.id)}
                       className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition ${isActive ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] hover:text-[var(--text)]"}`}
                     >
                       <span className="grid h-5 w-5 place-items-center rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[10px] font-bold">{group.icon}</span>
@@ -324,43 +317,40 @@ export function DuolingoPage() {
             </aside>
 
             <div>
-              <h2 className="text-sm font-semibold text-[var(--muted)]">Culture & Grammar Notes</h2>
-              <p className="mt-1 text-xs text-[var(--faint)]">Open one section at a time to keep your study list focused.</p>
-              <div className="mt-4 flex flex-col gap-3">
-              {groupedNotes.map((group) => {
-                const isOpen = openNoteGroups.has(group.id);
+              {activeNoteSection === null && (
+                <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_65%,transparent)] p-8 text-center">
+                  <div>
+                    <span className="grid mx-auto h-11 w-11 place-items-center rounded-2xl bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-lg text-[var(--accent)]">←</span>
+                    <h2 className="mt-4 text-base font-semibold text-[var(--text)]">Choose a note section</h2>
+                    <p className="mt-1 text-sm text-[var(--muted)]">Select a category from the side menu to begin.</p>
+                  </div>
+                </div>
+              )}
+
+              {activeNoteSection === "words" && (
+                <div className="animate-[fade-in_200ms_ease-out]">
+                  <h2 className="text-lg font-semibold text-[var(--text)]">Vocabulary Notes</h2>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Grammar and usage notes attached to specific vocabulary.</p>
+                  <div className="mt-4 space-y-3">{WORD_NOTES.map((note) => <WordNoteCard key={note.word} note={note} />)}</div>
+                </div>
+              )}
+
+              {activeNoteSection !== null && activeNoteSection !== "words" && (() => {
+                const group = groupedNotes.find((item) => item.id === activeNoteSection);
+                if (!group) return null;
                 return (
-                  <section
-                    key={group.id}
-                    id={`note-group-${group.id}`}
-                    className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isOpen ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)]"}`}
-                  >
-                    <button
-                      onClick={() => toggleNoteGroup(group.id)}
-                      className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--accent)_5%,transparent)]"
-                      aria-expanded={isOpen}
-                    >
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-sm font-bold text-[var(--accent)]">{group.icon}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-[var(--text)]">{group.label}</span>
-                        <span className="mt-0.5 block text-xs text-[var(--faint)]">{group.description}</span>
-                      </span>
-                      <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">{group.notes.length}</span>
-                      <svg className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-                      </svg>
-                    </button>
-                    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                      <div className="min-h-0 overflow-hidden">
-                        <div className="space-y-3 border-t border-[var(--border)] p-4">
-                          {group.notes.map((note) => <StandaloneNoteCard key={note.title} note={note} />)}
-                        </div>
+                  <div className="animate-[fade-in_200ms_ease-out]">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-sm font-bold text-[var(--accent)]">{group.icon}</span>
+                      <div>
+                        <h2 className="text-lg font-semibold text-[var(--text)]">{group.label}</h2>
+                        <p className="text-sm text-[var(--muted)]">{group.description}</p>
                       </div>
                     </div>
-                  </section>
+                    <div className="mt-4 space-y-3">{group.notes.map((note) => <StandaloneNoteCard key={note.title} note={note} />)}</div>
+                  </div>
                 );
-              })}
-              </div>
+              })()}
             </div>
           </div>
         </div>
