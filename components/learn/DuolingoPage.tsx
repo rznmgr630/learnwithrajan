@@ -120,7 +120,7 @@ export function DuolingoPage() {
   }
 
   return (
-    <div className="min-w-0 overflow-x-hidden">
+    <div className="min-w-0 overflow-x-clip">
       {/* Back nav */}
       <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4 sm:px-6">
