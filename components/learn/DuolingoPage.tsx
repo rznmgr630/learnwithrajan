@@ -8,7 +8,7 @@ import { DUOLINGO_DAYS, DUOLINGO_NOTES } from "@/lib/japanese-learning/duolingo-
 
 const TOTAL_WORDS = DUOLINGO_DAYS.reduce((sum, d) => sum + d.words.length, 0);
 const DUOLINGO_TAB_KEY = "duolingo:active-tab";
-const DUOLINGO_OPEN_DAYS_KEY = "duolingo:open-days";
+const DUOLINGO_ACTIVE_DAY_KEY = "duolingo:active-day";
 
 const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
   d.words
@@ -96,27 +96,21 @@ function WordNoteCard({ note }: { note: (typeof WORD_NOTES)[number] }) {
 export function DuolingoPage() {
   const { locale } = useLocale();
   const [tab, setTab] = useState<"words" | "notes">("words");
-  const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
+  const [activeDay, setActiveDay] = useState(1);
   const [activeNoteSection, setActiveNoteSection] = useState<NoteSectionId>("words");
 
   const groupedNotes = NOTE_GROUPS.map((group) => ({
     ...group,
     notes: DUOLINGO_NOTES.filter((note) => noteGroup(note.title) === group.id),
   }));
+  const activeDayData = DUOLINGO_DAYS.find((day) => day.day === activeDay) ?? DUOLINGO_DAYS[0];
 
   useEffect(() => {
     const savedTab = window.sessionStorage.getItem(DUOLINGO_TAB_KEY);
     if (savedTab === "words" || savedTab === "notes") setTab(savedTab);
 
-    try {
-      const savedOpenDays = window.sessionStorage.getItem(DUOLINGO_OPEN_DAYS_KEY);
-      if (savedOpenDays) {
-        const savedDays = JSON.parse(savedOpenDays);
-        if (Array.isArray(savedDays)) setOpenDays(new Set(savedDays.filter((day): day is number => typeof day === "number")));
-      }
-    } catch {
-      window.sessionStorage.removeItem(DUOLINGO_OPEN_DAYS_KEY);
-    }
+    const savedDay = Number(window.sessionStorage.getItem(DUOLINGO_ACTIVE_DAY_KEY));
+    if (DUOLINGO_DAYS.some((day) => day.day === savedDay)) setActiveDay(savedDay);
   }, []);
 
   function selectTab(nextTab: "words" | "notes") {
@@ -124,14 +118,13 @@ export function DuolingoPage() {
     window.sessionStorage.setItem(DUOLINGO_TAB_KEY, nextTab);
   }
 
-  function toggle(day: number) {
-    setOpenDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(day)) next.delete(day);
-      else next.add(day);
-      window.sessionStorage.setItem(DUOLINGO_OPEN_DAYS_KEY, JSON.stringify([...next]));
-      return next;
-    });
+  function selectVocabularyDay(day: number) {
+    setActiveDay(day);
+    window.sessionStorage.setItem(DUOLINGO_ACTIVE_DAY_KEY, String(day));
+    const content = document.getElementById("vocabulary-content");
+    if (!content) return;
+    if (window.matchMedia("(min-width: 1024px)").matches) content.scrollTo({ top: 0, behavior: "smooth" });
+    else content.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function selectNoteSection(section: NoteSectionId) {
@@ -143,7 +136,7 @@ export function DuolingoPage() {
   }
 
   return (
-    <div className="min-w-0 overflow-x-clip">
+    <div className="min-w-0">
       {/* Back nav */}
       <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4 sm:px-6">
@@ -203,96 +196,72 @@ export function DuolingoPage() {
         </div>
       </div>
 
-      {/* Accordion list */}
+      {/* Vocabulary list */}
       {tab === "words" && (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <div className="flex flex-col gap-3">
-          {DUOLINGO_DAYS.map((d) => {
-            const isOpen = openDays.has(d.day);
-            return (
-              <div
-                key={d.day}
-                className={`overflow-hidden rounded-2xl border transition-colors ${
-                  isOpen
-                    ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)]"
-                    : "border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)]"
-                }`}
-              >
-                <button
-                  onClick={() => toggle(d.day)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_60%,transparent)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-lg bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-bold text-[var(--accent)]">
-                      Day {d.day}
-                    </span>
-                    <span className="text-sm font-medium text-[var(--text)]">{d.category}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">
-                      {d.words.length} words
-                    </span>
-                    <svg
-                      className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </button>
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
+          <aside className="min-w-0 lg:sticky lg:top-20 lg:z-10 lg:self-start">
+            <p className="text-sm font-semibold text-[var(--muted)]">Browse vocabulary</p>
+            <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:max-h-[calc(100vh-7.5rem)] lg:flex-col lg:overflow-y-auto lg:pr-1">
+              {DUOLINGO_DAYS.map((day) => {
+                const isActive = activeDay === day.day;
+                return (
+                  <button
+                    key={day.day}
+                    onClick={() => selectVocabularyDay(day.day)}
+                    className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition ${isActive ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] hover:text-[var(--text)]"}`}
+                  >
+                    <span className="whitespace-nowrap lg:whitespace-normal">{day.category}</span>
+                    <span className="ml-auto text-[10px] tabular-nums opacity-70">{day.words.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
 
-                {isOpen && (
-                  <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
-                    {d.words.map((w, idx) => (
-                      <div key={idx} className="px-5 py-4">
-                        <div className="flex items-baseline gap-3">
-                          <span className="w-6 shrink-0 font-mono text-xs text-[var(--faint)]">
-                            {String(idx + 1).padStart(2, "0")}
-                          </span>
-                          <span className="text-base font-semibold text-[var(--text)]">{w.word}</span>
-                          {w.reading && (
-                            <span className="text-sm text-[var(--muted)]">（{w.reading}）</span>
-                          )}
-                          <span className="text-xs text-[var(--faint)] font-mono">· {w.romaji}</span>
-                        </div>
-
-                        <div className="mt-2 ml-9 flex flex-wrap gap-1.5">
-                          <span className="rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
-                            {w.meaning_en}
-                          </span>
-                          {w.meaning_np && (
-                            <span className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-xs text-[var(--muted)]">
-                              {w.meaning_np}
-                            </span>
-                          )}
-                        </div>
-
-                        {w.examples.length > 0 && (
-                          <div className="mt-2.5 ml-9 border-l-2 border-[color-mix(in_oklab,var(--accent)_30%,var(--border))] pl-3">
-                            {w.examples.map((ex, ei) => (
-                              <p key={ei} className={`text-sm text-[var(--muted)] ${ei > 0 ? "mt-1" : ""}`}>
-                                {ex.ja}{" "}
-                                <span className="text-[var(--faint)]">
-                                  ({exampleMeaning(ex.en, ex.np, locale)})
-                                </span>
-                              </p>
-                            ))}
-                          </div>
-                        )}
-
-                        {w.note && (
-                          <p className="mt-1.5 ml-9 text-xs italic text-[var(--faint)]">{w.note}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div id="vocabulary-content" className="min-w-0 scroll-mt-8 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
+            <div className="animate-[fade-in_200ms_ease-out]">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Day {activeDayData.day}</p>
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--text)]">{activeDayData.category}</h2>
+                </div>
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs tabular-nums text-[var(--muted)]">
+                  {activeDayData.words.length} words
+                </span>
               </div>
-            );
-          })}
+
+              <div className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                {activeDayData.words.map((word, index) => (
+                  <div key={index} className="px-5 py-4">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="w-6 shrink-0 font-mono text-xs text-[var(--faint)]">{String(index + 1).padStart(2, "0")}</span>
+                      <span className="text-base font-semibold text-[var(--text)]">{word.word}</span>
+                      {word.reading && <span className="text-sm text-[var(--muted)]">（{word.reading}）</span>}
+                      <span className="text-xs font-mono text-[var(--faint)]">· {word.romaji}</span>
+                    </div>
+
+                    <div className="mt-2 ml-9 flex flex-wrap gap-1.5">
+                      <span className="rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">{word.meaning_en}</span>
+                      {word.meaning_np && <span className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-xs text-[var(--muted)]">{word.meaning_np}</span>}
+                    </div>
+
+                    {word.examples.length > 0 && (
+                      <div className="mt-2.5 ml-9 border-l-2 border-[color-mix(in_oklab,var(--accent)_30%,var(--border))] pl-3">
+                        {word.examples.map((example, exampleIndex) => (
+                          <p key={exampleIndex} className={`text-sm text-[var(--muted)] ${exampleIndex > 0 ? "mt-1" : ""}`}>
+                            {example.ja} <span className="text-[var(--faint)]">({exampleMeaning(example.en, example.np, locale)})</span>
+                          </p>
+                        ))}
+                      </div>
+                    )}
+
+                    {word.note && <p className="mt-1.5 ml-9 text-xs italic text-[var(--faint)]">{word.note}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       )}
