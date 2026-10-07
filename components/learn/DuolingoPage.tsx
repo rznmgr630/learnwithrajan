@@ -12,8 +12,6 @@ const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
   d.words
     .filter((w) => w.note)
     .map((w) => ({
-      day: d.day,
-      category: d.category,
       word: w.word,
       romaji: w.romaji,
       reading: w.reading,
@@ -83,6 +81,7 @@ export function DuolingoPage() {
   const [tab, setTab] = useState<"words" | "notes">("words");
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
   const [openNoteGroups, setOpenNoteGroups] = useState<Set<NoteGroupId>>(new Set(["grammar"]));
+  const [activeNoteGroup, setActiveNoteGroup] = useState<NoteGroupId>("grammar");
 
   const groupedNotes = NOTE_GROUPS.map((group) => ({
     ...group,
@@ -105,6 +104,12 @@ export function DuolingoPage() {
       else next.add(group);
       return next;
     });
+  }
+
+  function selectNoteGroup(group: NoteGroupId) {
+    setActiveNoteGroup(group);
+    setOpenNoteGroups((previous) => new Set(previous).add(group));
+    document.getElementById(`note-group-${group}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -140,7 +145,7 @@ export function DuolingoPage() {
             </div>
             <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2">
               <span className="font-mono text-xl font-bold text-[var(--accent)]">{TOTAL_WORDS}</span>
-              <span className="text-sm text-[var(--muted)]">words</span>
+              <span className="text-sm text-[var(--muted)]">entries</span>
             </div>
           </div>
         </div>
@@ -290,9 +295,6 @@ export function DuolingoPage() {
                     <span className="text-base font-semibold text-[var(--text)]">{n.word}</span>
                     {n.reading && <span className="text-sm text-[var(--muted)]">（{n.reading}）</span>}
                     <span className="text-xs text-[var(--faint)] font-mono">· {n.romaji}</span>
-                    <span className="ml-auto rounded-full border border-[var(--border)] bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--faint)]">
-                      Day {n.day}
-                    </span>
                   </div>
                   <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
                   <NoteExamples examples={n.examples} />
@@ -301,15 +303,36 @@ export function DuolingoPage() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-sm font-semibold text-[var(--muted)]">Culture & Grammar Notes</h2>
-            <p className="mt-1 text-xs text-[var(--faint)]">Open one section at a time to keep your study list focused.</p>
-            <div className="mt-4 flex flex-col gap-3">
+          <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
+            <aside className="lg:sticky lg:top-5">
+              <p className="text-sm font-semibold text-[var(--muted)]">Browse notes</p>
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+                {groupedNotes.map((group) => {
+                  const isActive = activeNoteGroup === group.id;
+                  return (
+                    <button
+                      key={group.id}
+                      onClick={() => selectNoteGroup(group.id)}
+                      className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition ${isActive ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] hover:text-[var(--text)]"}`}
+                    >
+                      <span className="grid h-5 w-5 place-items-center rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-[10px] font-bold">{group.icon}</span>
+                      <span className="whitespace-nowrap lg:whitespace-normal">{group.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--muted)]">Culture & Grammar Notes</h2>
+              <p className="mt-1 text-xs text-[var(--faint)]">Open one section at a time to keep your study list focused.</p>
+              <div className="mt-4 flex flex-col gap-3">
               {groupedNotes.map((group) => {
                 const isOpen = openNoteGroups.has(group.id);
                 return (
                   <section
                     key={group.id}
+                    id={`note-group-${group.id}`}
                     className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isOpen ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)]"}`}
                   >
                     <button
@@ -337,6 +360,7 @@ export function DuolingoPage() {
                   </section>
                 );
               })}
+              </div>
             </div>
           </div>
         </div>
