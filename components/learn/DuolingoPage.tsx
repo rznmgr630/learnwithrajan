@@ -95,7 +95,7 @@ export function DuolingoPage() {
   const { locale } = useLocale();
   const [tab, setTab] = useState<"words" | "notes">("words");
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
-  const [activeNoteSection, setActiveNoteSection] = useState<NoteSectionId | null>(null);
+  const [activeNoteSection, setActiveNoteSection] = useState<NoteSectionId>("words");
 
   const groupedNotes = NOTE_GROUPS.map((group) => ({
     ...group,
@@ -120,7 +120,7 @@ export function DuolingoPage() {
   }
 
   return (
-    <div>
+    <div className="min-w-0 overflow-x-hidden">
       {/* Back nav */}
       <div className="border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_85%,transparent)]">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4 sm:px-6">
@@ -292,10 +292,10 @@ export function DuolingoPage() {
             </div>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
-            <aside className="lg:sticky lg:top-5">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
+            <aside className="min-w-0 lg:sticky lg:top-5">
               <p className="text-sm font-semibold text-[var(--muted)]">Browse notes</p>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+              <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
                 <button
                   onClick={() => selectNoteSection("words")}
                   className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs font-medium transition ${activeNoteSection === "words" ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-[var(--accent)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] hover:text-[var(--text)]"}`}
@@ -320,17 +320,7 @@ export function DuolingoPage() {
               </div>
             </aside>
 
-            <div id="note-content" className="scroll-mt-8 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
-              {activeNoteSection === null && (
-                <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_65%,transparent)] p-8 text-center">
-                  <div>
-                    <span className="grid mx-auto h-11 w-11 place-items-center rounded-2xl bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] text-lg text-[var(--accent)]">←</span>
-                    <h2 className="mt-4 text-base font-semibold text-[var(--text)]">Choose a note section</h2>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Select a category from the side menu to begin.</p>
-                  </div>
-                </div>
-              )}
-
+            <div id="note-content" className="min-w-0 scroll-mt-8 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
               {activeNoteSection === "words" && (
                 <div className="animate-[fade-in_200ms_ease-out]">
                   <h2 className="text-lg font-semibold text-[var(--text)]">Vocabulary Notes</h2>
@@ -339,7 +329,7 @@ export function DuolingoPage() {
                 </div>
               )}
 
-              {activeNoteSection !== null && activeNoteSection !== "words" && (() => {
+              {activeNoteSection !== "words" && (() => {
                 const group = groupedNotes.find((item) => item.id === activeNoteSection);
                 if (!group) return null;
                 return (
