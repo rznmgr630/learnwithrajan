@@ -8,6 +8,7 @@ import { DUOLINGO_DAYS, DUOLINGO_NOTES } from "@/lib/japanese-learning/duolingo-
 
 const TOTAL_WORDS = DUOLINGO_DAYS.reduce((sum, d) => sum + d.words.length, 0);
 const DUOLINGO_TAB_KEY = "duolingo:active-tab";
+const DUOLINGO_OPEN_DAYS_KEY = "duolingo:open-days";
 
 const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
   d.words
@@ -106,6 +107,16 @@ export function DuolingoPage() {
   useEffect(() => {
     const savedTab = window.sessionStorage.getItem(DUOLINGO_TAB_KEY);
     if (savedTab === "words" || savedTab === "notes") setTab(savedTab);
+
+    try {
+      const savedOpenDays = window.sessionStorage.getItem(DUOLINGO_OPEN_DAYS_KEY);
+      if (savedOpenDays) {
+        const savedDays = JSON.parse(savedOpenDays);
+        if (Array.isArray(savedDays)) setOpenDays(new Set(savedDays.filter((day): day is number => typeof day === "number")));
+      }
+    } catch {
+      window.sessionStorage.removeItem(DUOLINGO_OPEN_DAYS_KEY);
+    }
   }, []);
 
   function selectTab(nextTab: "words" | "notes") {
@@ -118,6 +129,7 @@ export function DuolingoPage() {
       const next = new Set(prev);
       if (next.has(day)) next.delete(day);
       else next.add(day);
+      window.sessionStorage.setItem(DUOLINGO_OPEN_DAYS_KEY, JSON.stringify([...next]));
       return next;
     });
   }
