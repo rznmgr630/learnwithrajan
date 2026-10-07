@@ -20,7 +20,6 @@ import { NEXTJS_DAY_4_LESSONS } from "@/lib/nextjs-learning/nextjs-day-4-lessons
 import { NEXTJS_DAY_5_LESSONS } from "@/lib/nextjs-learning/nextjs-day-5-lessons";
 import { NEXTJS_DAY_6_LESSONS } from "@/lib/nextjs-learning/nextjs-day-6-lessons";
 import { NEXTJS_DAY_7_LESSONS } from "@/lib/nextjs-learning/nextjs-day-7-lessons";
-import { NEXTJS_DAY_7_RENDERING_LESSONS } from "@/lib/nextjs-learning/nextjs-day-7-rendering-lessons";
 import { NEXTJS_DAY_8_LESSONS } from "@/lib/nextjs-learning/nextjs-day-8-lessons";
 import { NEXTJS_DAY_9_LESSONS } from "@/lib/nextjs-learning/nextjs-day-9-lessons";
 import { NEXTJS_DAY_10_LESSONS } from "@/lib/nextjs-learning/nextjs-day-10-lessons";

@@ -62,8 +62,6 @@ function PromptDrawer({
   next: LessonNavTarget | null;
   onNavigate: (target: LessonNavTarget) => void;
 }) {
-  const [copied, setCopied] = useState(false);
-
   useEffect(() => {
     if (!item) return;
     const prev = document.body.style.overflow;
