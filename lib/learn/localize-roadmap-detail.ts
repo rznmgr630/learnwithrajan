@@ -7,7 +7,7 @@ import type {
   RoadmapDetailBlock,
   RoadmapDetailBlockResolved,
 } from "@/lib/challenge-data";
-import { resolveBackendCopy } from "@/lib/backend-learning/backend-copy-i18n";
+import { pickLocalized } from "@/lib/i18n/pick";
 
 export type ResolvedRoadmapDayFaqItem = {
   question: string;
@@ -32,7 +32,7 @@ export type ResolvedRoadmapDayDetail = Omit<RoadmapDayDetail, "overview" | "sect
 
 /** Recursively resolves English lesson copy to the active UI locale. */
 export function localizeRoadmapDayDetail(detail: RoadmapDayDetail, locale: Locale): ResolvedRoadmapDayDetail {
-  const ls = (s: LocalizedString) => resolveBackendCopy(s, locale);
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
 
   const ov = detail.overview;
   const overview =
@@ -51,7 +51,7 @@ export function localizeRoadmapDayDetail(detail: RoadmapDayDetail, locale: Local
 }
 
 function localizeSection(sec: RoadmapDayDetailSection, locale: Locale): ResolvedRoadmapDayDetailSection {
-  const ls = (s: LocalizedString) => resolveBackendCopy(s, locale);
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
   return {
     ...sec,
     title: ls(sec.title),
@@ -61,7 +61,7 @@ function localizeSection(sec: RoadmapDayDetailSection, locale: Locale): Resolved
 }
 
 function localizeBlock(block: RoadmapDetailBlock, locale: Locale): RoadmapDetailBlockResolved {
-  const ls = (s: LocalizedString) => resolveBackendCopy(s, locale);
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
   switch (block.type) {
     case "paragraph":
       return { ...block, text: ls(block.text) };
@@ -88,7 +88,7 @@ function localizeBlock(block: RoadmapDetailBlock, locale: Locale): RoadmapDetail
 }
 
 function localizeFaq(item: RoadmapDayFaqItem, locale: Locale): ResolvedRoadmapDayFaqItem {
-  const ls = (s: LocalizedString) => resolveBackendCopy(s, locale);
+  const ls = (s: LocalizedString) => pickLocalized(s, locale);
   return {
     question: ls(item.question),
     answer: ls(item.answer),
@@ -96,3 +96,4 @@ function localizeFaq(item: RoadmapDayFaqItem, locale: Locale): ResolvedRoadmapDa
     callout: item.callout !== undefined ? ls(item.callout) : undefined,
   };
 }
+

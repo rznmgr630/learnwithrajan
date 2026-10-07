@@ -283,16 +283,6 @@ export const UI_STRINGS = {
   "library.thinkAgain.subtitle": { en: "Build the habit of rethinking what you know and believe.", np: "आफूले जानेका र विश्वास गरेका कुरा पुनर्विचार गर्ने बानी बनाउनुहोस्।", jp: "知識や信念を再考する習慣を身につけます。" },
   "library.innovatorsDilemma.title": { en: "The Innovator's Dilemma", np: "The Innovator's Dilemma", jp: "The Innovator's Dilemma" },
   "library.innovatorsDilemma.subtitle": { en: "Why successful companies can fail when new technology changes markets.", np: "नयाँ प्रविधिले बजार बदल्दा सफल कम्पनी किन असफल हुन सक्छन्।", jp: "新技術が市場を変えるとき、成功企業が失敗する理由。" },
-  "hub.backend.title": {
-    en: "Backend in 30 days",
-    np: "३० दिनमा ब्याकएन्ड",
-    jp: "30日でバックエンド",
-  },
-  "hub.backend.subtitle": {
-    en: "Advanced roadmap · weeks & day cards",
-    np: "उन्नत रोडम्याप · हप्ता र दिन कार्ड",
-    jp: "発展向けロードマップ · 週と日のカード",
-  },
   "hub.backend.progress": {
     en: "Progress",
     np: "प्रगति",
@@ -1213,31 +1203,6 @@ export const UI_STRINGS = {
     en: "← Loksewa",
     np: "← लोकसेवा",
     jp: "← ロークセワ",
-  },
-  "backendRoadmap.title": {
-    en: "Backend in 30 days",
-    np: "३० दिनमा ब्याकएन्ड",
-    jp: "30日でバックエンド",
-  },
-  "backendRoadmap.subtitle": {
-    en: "Advanced backend engineering roadmap",
-    np: "उन्नत ब्याकएन्ड इन्जिनियरिङ रोडम्याप",
-    jp: "発展向けバックエンド工学ロードマップ",
-  },
-  "backendRoadmap.overallProgress": {
-    en: "Overall progress",
-    np: "समग्र प्रगति",
-    jp: "全体の進捗",
-  },
-  "backendRoadmap.percentComplete": {
-    en: "% complete",
-    np: "% पूरा",
-    jp: "% 完了",
-  },
-  "backendRoadmap.doneSlash": {
-    en: "done",
-    np: "पूरा",
-    jp: "完了",
   },
   "gitRoadmap.title": {
     en: "Git in 7 days",

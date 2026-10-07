@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useId } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
 import { useGit7Progress } from "@/hooks/use-git-7-progress";
 import { useReactProgress } from "@/hooks/use-react-progress";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
@@ -14,7 +13,6 @@ import { usePythonProgress } from "@/hooks/use-python-progress";
 import { useJsProgress } from "@/hooks/use-js-progress";
 import { useReactNativeProgress } from "@/hooks/use-react-native-progress";
 import { useDevopsProgress } from "@/hooks/use-devops-progress";
-import { TOTAL_DAYS } from "@/lib/challenge-data";
 import { GIT_TOTAL_DAYS } from "@/lib/git-learning/git-challenge-data";
 import { REACT_TOTAL_DAYS } from "@/lib/react-learning/react-challenge-data";
 import { LARAVEL_TOTAL_DAYS } from "@/lib/laravel-learning/laravel-challenge-data";
@@ -44,7 +42,6 @@ import { REACT_NATIVE_TOTAL_DAYS } from "@/lib/react-native-learning/react-nativ
 export function ProgrammingTracks() {
   const { t } = useLocale();
   const baseId = useId();
-  const { completedCount, percent } = useBackend30Progress();
   const git = useGit7Progress();
   const react = useReactProgress();
   const laravel = useLaravelProgress();
@@ -243,43 +240,6 @@ export function ProgrammingTracks() {
         titleKey="hub.programming.groupBackend"
         hintKey="hub.programming.groupBackendHint"
       >
-        <Link href="/learn/backend-30-days" className={learnHubCardClass}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
-                {t("hub.backend.title")}
-              </h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">{t("hub.backend.subtitle")}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                className="rounded-full bg-[var(--elevated)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent)]"
-                suppressHydrationWarning
-              >
-                {percent}%
-              </span>
-              <PinButton id="backend-30-days" />
-            </div>
-          </div>
-          <div className="mt-6" suppressHydrationWarning>
-            <div className="flex items-center justify-between text-xs text-[var(--muted)]">
-              <span>{t("hub.backend.progress")}</span>
-              <span className="tabular-nums text-[var(--muted)]">
-                {completedCount}/{TOTAL_DAYS} {t("hub.backend.days")}
-              </span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
-              <div
-                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-500"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
-          </div>
-          <span className="mt-6 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
-            {t("hub.backend.cta")}
-          </span>
-        </Link>
-
         <Link href="/learn/laravel" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>

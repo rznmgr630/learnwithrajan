@@ -12,7 +12,7 @@ import type {
   ResolvedRoadmapDayDetail,
   ResolvedRoadmapDayDetailSection,
   ResolvedRoadmapDayFaqItem,
-} from "@/lib/backend-learning/localize-roadmap-detail";
+} from "@/lib/learn/localize-roadmap-detail";
 
 function ls(s: LocalizedString, locale: Locale): string {
   return typeof s === "string" ? s : pickLocalized(s, locale);

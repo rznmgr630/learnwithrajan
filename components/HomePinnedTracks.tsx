@@ -5,7 +5,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { usePinnedTracks } from "@/hooks/use-pinned-tracks";
 import { PinButton } from "@/components/learn/PinButton";
 import { PINNABLE_TRACKS } from "@/lib/pinned-tracks";
-import { useBackend30Progress } from "@/hooks/use-backend-30-progress";
 import { useGit7Progress } from "@/hooks/use-git-7-progress";
 import { useReactProgress } from "@/hooks/use-react-progress";
 import { useLaravelProgress } from "@/hooks/use-laravel-progress";
@@ -22,7 +21,6 @@ export function HomePinnedTracks() {
   const { t } = useLocale();
   const { pinned } = usePinnedTracks();
 
-  const backend30 = useBackend30Progress();
   const git = useGit7Progress();
   const react = useReactProgress();
   const laravel = useLaravelProgress();
@@ -36,7 +34,6 @@ export function HomePinnedTracks() {
   const jpN3 = useJapaneseN3Progress();
 
   const percentById: Record<string, number> = {
-    "backend-30-days": backend30.percent,
     "git-7-days": git.percent,
     react: react.percent,
     laravel: laravel.percent,
