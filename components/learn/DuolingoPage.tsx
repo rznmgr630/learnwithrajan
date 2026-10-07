@@ -113,7 +113,10 @@ export function DuolingoPage() {
 
   function selectNoteSection(section: NoteSectionId) {
     setActiveNoteSection(section);
-    document.getElementById("note-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const content = document.getElementById("note-content");
+    if (!content) return;
+    if (window.matchMedia("(min-width: 1024px)").matches) content.scrollTo({ top: 0, behavior: "smooth" });
+    else content.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -317,7 +320,7 @@ export function DuolingoPage() {
               </div>
             </aside>
 
-            <div id="note-content" className="scroll-mt-8 lg:scroll-mt-10">
+            <div id="note-content" className="scroll-mt-8 lg:sticky lg:top-5 lg:max-h-[calc(100vh-2.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
               {activeNoteSection === null && (
                 <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-[var(--border)] bg-[color-mix(in_oklab,var(--surface)_65%,transparent)] p-8 text-center">
                   <div>
