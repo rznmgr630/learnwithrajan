@@ -476,7 +476,7 @@ export function ReactDiagram({ id }: { id: RoadmapDetailDiagramId }) {
             <text x="109" y="28" textAnchor="middle" className="fill-red-300 text-[8px] font-semibold">✗  Mutation (wrong)</text>
 
             <rect x="8" y="46" width="202" height="36" rx="5" fill="#18181b" stroke="#3f3f46" />
-            <text x="20" y="60" className="fill-neutral-400 text-[7px]">// mutate in place</text>
+            <text x="20" y="60" className="fill-neutral-400 text-[7px]">{"// mutate in place"}</text>
             <text x="20" y="74" className="fill-red-300/90 text-[8px]">user.name = "Bob"</text>
 
             <line x1="109" y1="82" x2="109" y2="96" stroke="#334155" strokeWidth="1" />
@@ -499,7 +499,7 @@ export function ReactDiagram({ id }: { id: RoadmapDetailDiagramId }) {
             <text x="331" y="28" textAnchor="middle" className="fill-emerald-300 text-[8px] font-semibold">✓  Spread copy (correct)</text>
 
             <rect x="230" y="46" width="202" height="36" rx="5" fill="#18181b" stroke="#3f3f46" />
-            <text x="242" y="60" className="fill-neutral-400 text-[7px]">// create a new object</text>
+            <text x="242" y="60" className="fill-neutral-400 text-[7px]">{"// create a new object"}</text>
             <text x="242" y="74" className="fill-emerald-300/90 text-[8px]">setUser({"{"} ...user, name: "Bob" {"}"})</text>
 
             <line x1="331" y1="82" x2="331" y2="96" stroke="#334155" strokeWidth="1" />

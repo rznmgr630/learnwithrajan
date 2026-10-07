@@ -143,7 +143,7 @@ export function LaravelDiagram({ id }: { id: RoadmapDetailDiagramId }) {
             <text x="320" y="49" className="fill-neutral-500 text-[7px]">function __construct(</text>
             <text x="320" y="61" className="fill-sky-300/90 text-[7px]">  Interface $dep</text>
             <text x="320" y="73" className="fill-neutral-500 text-[7px]">) {"{}"}</text>
-            <text x="320" y="85" className="fill-emerald-300/80 text-[7px]">// auto-injected ✓</text>
+            <text x="320" y="85" className="fill-emerald-300/80 text-[7px]">{"// auto-injected ✓"}</text>
 
             {/* Note strip */}
             <rect x="8" y="106" width="424" height="28" rx="5" fill="#1e1a2f" stroke="#a78bfa" strokeWidth="1" />
@@ -156,7 +156,7 @@ export function LaravelDiagram({ id }: { id: RoadmapDetailDiagramId }) {
 
             {/* Tip */}
             <rect x="8" y="146" width="424" height="36" rx="5" fill="#0f172a" stroke="#334155" />
-            <text x="20" y="159" className="fill-neutral-500 text-[7px]">// resolve manually anywhere:</text>
+            <text x="20" y="159" className="fill-neutral-500 text-[7px]">{"// resolve manually anywhere:"}</text>
             <text x="20" y="173" className="fill-emerald-300/90 text-[8px]">$service = app(Interface::class);  // or dependency injection via constructor</text>
           </svg>
         </figure>

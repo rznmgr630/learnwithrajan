@@ -44,7 +44,6 @@ export function LibraryShelf() {
   const [personalPage, setPersonalPage] = useState(0);
   const [fictionPage, setFictionPage] = useState(0);
   const [nepaliPage, setNepaliPage] = useState(0);
-  const [businessPage, setBusinessPage] = useState(0);
   const [softwareEngineeringPage, setSoftwareEngineeringPage] = useState(0);
   const [pinnedBook, setPinnedBook] = useState<string>();
   const [orderingVersion, setOrderingVersion] = useState(0);
@@ -71,7 +70,6 @@ export function LibraryShelf() {
     setPersonalPage(0);
     setFictionPage(0);
     setNepaliPage(0);
-    setBusinessPage(0);
     setSoftwareEngineeringPage(0);
     document.querySelectorAll<HTMLAnchorElement>('main a[href*="/library/"]').forEach((book) => {
       const path = new URL(book.href).pathname;
@@ -497,8 +495,8 @@ export function LibraryShelf() {
       </section>
       <section className="mt-12" aria-labelledby="business-heading">
         <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-fuchsia-600">{t("library.collection")}</p><h2 id="business-heading" className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.businessCollection")} ({businessBookCount})</h2></div></div>
-        <div ref={businessCarouselRef} onScroll={() => updateShelfPage(businessCarouselRef, businessBookCount, setBusinessPage)} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2 [&>a]:w-full [&>a]:shrink-0 [&>a]:snap-start">
-          <Link href="/library/business/the-innovators-dilemma" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-fuchsia-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]"><div className="relative grid min-h-72 place-items-center bg-[#eaddec] p-8 sm:min-h-full"><div className="flex h-60 w-40 flex-col justify-between bg-[#573263] p-5 text-white shadow-[12px_12px_0_#39214055]"><p className="text-xs uppercase tracking-[0.16em]">Clayton Christensen</p><h3 className="font-serif text-3xl leading-[0.95]">The<br />Innovator's<br />Dilemma</h3><span className="h-1 w-12 bg-[#e4be5f]" /></div></div><div className="flex flex-col p-7 sm:p-9"><div className="text-xs font-medium uppercase tracking-[0.16em] text-fuchsia-600">{t("library.business")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.innovatorsDilemma.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.innovatorsDilemma.subtitle")}</p><span className="mt-8 inline-flex w-fit rounded-xl bg-fuchsia-600 px-4 py-2.5 text-sm font-medium text-white">{t("library.continueReading")} →</span></div></Link>
+        <div ref={businessCarouselRef} className="mt-5 flex w-full snap-x snap-mandatory touch-pan-y gap-4 overflow-hidden scroll-smooth pb-2 [&>a]:w-full [&>a]:shrink-0 [&>a]:snap-start">
+          <Link href="/library/business/the-innovators-dilemma" className="group grid overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_58%,transparent)] shadow-sm transition hover:-translate-y-1 hover:border-fuchsia-400/50 hover:shadow-xl sm:grid-cols-[220px_1fr]"><div className="relative grid min-h-72 place-items-center bg-[#eaddec] p-8 sm:min-h-full"><div className="flex h-60 w-40 flex-col justify-between bg-[#573263] p-5 text-white shadow-[12px_12px_0_#39214055]"><p className="text-xs uppercase tracking-[0.16em]">Clayton Christensen</p><h3 className="font-serif text-3xl leading-[0.95]">The<br />Innovator&apos;s<br />Dilemma</h3><span className="h-1 w-12 bg-[#e4be5f]" /></div></div><div className="flex flex-col p-7 sm:p-9"><div className="text-xs font-medium uppercase tracking-[0.16em] text-fuchsia-600">{t("library.business")}</div><h3 className="mt-4 text-2xl font-semibold tracking-tight text-[var(--text)]">{t("library.innovatorsDilemma.title")}</h3><p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">{t("library.innovatorsDilemma.subtitle")}</p><span className="mt-8 inline-flex w-fit rounded-xl bg-fuchsia-600 px-4 py-2.5 text-sm font-medium text-white">{t("library.continueReading")} →</span></div></Link>
         </div>
       </section>
       <section className="mt-12" aria-labelledby="software-engineering-heading">

@@ -106,22 +106,18 @@ function Edge({
   const dy = toY - fromY;
 
   let d: string;
-  let arrowEndX: number, arrowEndY: number;
-
   if (Math.abs(dy) > 10) {
     // Vertical (or mostly vertical) — exit bottom, enter top
     const sx = fromX, sy = fromY + NH / 2;
     const ex = toX,   ey = toY  - NH / 2 - 6; // -6 so arrow tip lands on the border
     const mY = (sy + ey) / 2;
     d = `M ${sx} ${sy} C ${sx} ${mY}, ${ex} ${mY}, ${ex} ${ey}`;
-    arrowEndX = ex; arrowEndY = ey;
   } else {
     // Horizontal — exit right, enter left
     const sx = fromX + NW / 2, sy = fromY;
     const ex = toX   - NW / 2 - 6, ey = toY;
     const mX = (sx + ex) / 2;
     d = `M ${sx} ${sy} C ${mX} ${sy}, ${mX} ${ey}, ${ex} ${ey}`;
-    arrowEndX = ex; arrowEndY = ey;
   }
 
   const midX = (fromX + toX) / 2;
@@ -185,11 +181,6 @@ export function SdDiagram({
   const maxCols = Math.max(...rows.map((r) => r.length));
   const svgW = Math.max(maxCols * NW + (maxCols - 1) * HG + 2 * PAD, NW + 2 * PAD);
   const svgH = rows.length * NH + (rows.length - 1) * VG + 2 * PAD;
-
-  const nodeMap = useMemo(
-    () => Object.fromEntries(nodes.map((n) => [n.id, n])),
-    [nodes]
-  );
 
   return (
     <svg

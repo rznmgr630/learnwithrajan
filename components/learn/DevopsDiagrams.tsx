@@ -1438,7 +1438,7 @@ function GitBranchingDiagram() {
         <line x1="200" y1="130" x2="380" y2="130" stroke="#6366f1" strokeWidth="2"/>
         <path d="M 380 130 Q 410 130 430 80" fill="none" stroke="#6366f1" strokeWidth="2"/>
         <text x="135" y="118" fontSize="8" fill="#818cf8">branch off</text>
-        {[200, 280, 380].map((x, i) => (
+        {[200, 280, 380].map((x) => (
           <circle key={x} cx={x} cy="130" r="5" fill="#6366f1"/>
         ))}
         <text x="180" y="148" textAnchor="middle" fontSize="7.5" fill="var(--muted)">commit</text>

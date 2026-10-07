@@ -8,7 +8,6 @@ import { McqExerciseBlock } from "@/components/learn/McqExerciseBlock";
 import { FuriganaText } from "@/components/learn/FuriganaText";
 import type {
   ConversationLine,
-  FuriganaString,
   GrammarPoint,
   L10n,
   LessonMcq,
