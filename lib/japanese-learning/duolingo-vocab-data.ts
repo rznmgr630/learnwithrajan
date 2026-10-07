@@ -4649,6 +4649,22 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "曜日", romaji: "yōbi", reading: "ようび", meaning_en: "Day of the week", meaning_np: "हप्ताको दिन", examples: [{ ja: "何曜日ですか。", en: "What day of the week is it?", np: "आज कुन बार हो?" }] },
     ],
   },
+  {
+    day: 34,
+    category: "Work, Skills & Office Life",
+    words: [
+      { word: "別の会社", romaji: "betsu no kaisha", reading: "べつのかいしゃ", meaning_en: "Different company", meaning_np: "फरक कम्पनी", examples: [{ ja: "別の会社で働きます。", en: "I work at a different company.", np: "म फरक कम्पनीमा काम गर्छु।" }] },
+      { word: "どんなスキルがありますか。", romaji: "donna sukiru ga arimasu ka", meaning_en: "What kind of skills do you have?", meaning_np: "तपाईंसँग कस्ता सीपहरू छन्?", examples: [{ ja: "どんなスキルがありますか。", en: "What kind of skills do you have?", np: "तपाईंसँग कस्ता सीपहरू छन्?" }] },
+      { word: "げんごのスキル", romaji: "gengo no sukiru", meaning_en: "Language skills", meaning_np: "भाषा सीपहरू", examples: [{ ja: "げんごのスキルがあります。", en: "I have language skills.", np: "मसँग भाषा सीपहरू छन्।" }] },
+      { word: "毎日おなじべんとうです。", romaji: "mainichi onaji bentō desu", meaning_en: "It’s the same boxed lunch every day.", meaning_np: "हरेक दिन उही बेन्टो हुन्छ।", examples: [{ ja: "毎日おなじべんとうです。", en: "It’s the same boxed lunch every day.", np: "हरेक दिन उही बेन्टो हुन्छ।" }] },
+      { word: "CEOはよくおこります。", romaji: "shīīō wa yoku okorimasu", meaning_en: "The CEO often gets angry.", meaning_np: "सीईओ प्रायः रिसाउनुहुन्छ।", examples: [{ ja: "CEOはよくおこります。", en: "The CEO often gets angry.", np: "सीईओ प्रायः रिसाउनुहुन्छ।" }] },
+      { word: "山口さんもよくおこります。", romaji: "Yamaguchi-san mo yoku okorimasu", reading: "やまぐちさんもよくおこります", meaning_en: "Yamaguchi also often gets angry.", meaning_np: "यामागुची पनि प्रायः रिसाउनुहुन्छ।", examples: [{ ja: "山口さんもよくおこります。", en: "Yamaguchi also often gets angry.", np: "यामागुची पनि प्रायः रिसाउनुहुन्छ।" }] },
+      { word: "まじめなどうりょう", romaji: "majime na dōryō", meaning_en: "Hard-working coworker", meaning_np: "मेहनती सहकर्मी", examples: [{ ja: "まじめなどうりょうです。", en: "They are a hard-working coworker.", np: "उहाँ मेहनती सहकर्मी हुनुहुन्छ।" }] },
+      { word: "このプリンターはよくこわれます。", romaji: "kono purintā wa yoku kowaremasu", meaning_en: "This printer often breaks.", meaning_np: "यो प्रिन्टर प्रायः बिग्रन्छ।", examples: [{ ja: "このプリンターはよくこわれます。", en: "This printer often breaks.", np: "यो प्रिन्टर प्रायः बिग्रन्छ।" }] },
+      { word: "オフィス", romaji: "ofisu", meaning_en: "Office", meaning_np: "कार्यालय", examples: [{ ja: "オフィスで働きます。", en: "I work in an office.", np: "म कार्यालयमा काम गर्छु।" }] },
+      { word: "やめたいです。", romaji: "yametai desu", meaning_en: "I want to quit.", meaning_np: "म छोड्न चाहन्छु।", examples: [{ ja: "やめたいです。", en: "I want to quit.", np: "म छोड्न चाहन्छु।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5150,5 +5166,17 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "おつきみ",
     note: "おつきみ is a traditional Japanese autumn festival for appreciating the moon and thanking nature.",
     examples: [{ ja: "おつきみをします。", en: "I enjoy moon viewing.", np: "म चन्द्रमा हेर्ने पर्व मनाउँछु।" }],
+  },
+  {
+    title: "Hana as a Name",
+    japanese: "はな",
+    note: "はな (hana) is also a common girl's name in Japan, symbolizing beauty and elegance.",
+    examples: [{ ja: "はなさんは学生です。", en: "Hana is a student.", np: "हाना विद्यार्थी हुन्।" }],
+  },
+  {
+    title: "Kawaii Culture",
+    japanese: "かわいい",
+    note: "In Japan, かわいい (kawaii), meaning 'cute,' is a cultural phenomenon influencing fashion, art, and behavior. It is used to describe everything from animals to food, reflecting Japan's love for all things adorable.",
+    examples: [{ ja: "このねこはかわいいです。", en: "This cat is cute.", np: "यो बिरालो प्यारो छ।" }],
   },
 ];
