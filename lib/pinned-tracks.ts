@@ -13,7 +13,6 @@ export const PINNABLE_TRACKS: PinnableTrackMeta[] = [
   { id: "javascript", href: "/learn/javascript", titleKey: "hub.js.title", groupKey: "hub.sectionProgramming" },
   { id: "react-native", href: "/learn/react-native", titleKey: "hub.reactNative.title", groupKey: "hub.sectionProgramming" },
   { id: "nextjs", href: "/learn/nextjs", titleKey: "hub.nextjs.title", groupKey: "hub.sectionProgramming" },
-  { id: "backend-30-days", href: "/learn/backend-30-days", titleKey: "hub.backend.title", groupKey: "hub.sectionProgramming" },
   { id: "laravel", href: "/learn/laravel", titleKey: "hub.laravel.title", groupKey: "hub.sectionProgramming" },
   { id: "nodejs", href: "/learn/nodejs", titleKey: "hub.nodejs.title", groupKey: "hub.sectionProgramming" },
   { id: "sql", href: "/learn/sql", titleKey: "hub.sql.title", groupKey: "hub.sectionProgramming" },

@@ -1,6 +1,5 @@
 import type { Locale } from "@/lib/i18n/types";
 import type { RoadmapDetailBlockResolved } from "@/lib/challenge-data";
-import { DayDetailDiagram } from "@/components/learn/DayDetailDiagrams";
 import { GitDiagram, isGitRoadmapDiagram } from "@/components/learn/GitDiagrams";
 import { ReactDiagram, isReactRoadmapDiagram } from "@/components/learn/ReactDiagrams";
 import { DevopsDiagram, isDevopsRoadmapDiagram } from "@/components/learn/DevopsDiagrams";
@@ -12,7 +11,6 @@ import { stripLessonTimingFromTitle } from "@/lib/learn/strip-lesson-timing";
 import { LessonVideos } from "@/components/learn/LessonVideos";
 
 export type RoadmapDiagramTrack =
-  | "backend"
   | "git"
   | "react"
   | "laravel"
@@ -83,11 +81,11 @@ function DetailCode({ title, code }: { title?: string; code: string }) {
 export function DayDetailBlockRenderer({
   blocks,
   locale,
-  diagramTrack = "backend",
+  diagramTrack,
 }: {
   blocks: RoadmapDetailBlockResolved[];
   locale: Locale;
-  diagramTrack?: RoadmapDiagramTrack;
+  diagramTrack: RoadmapDiagramTrack;
 }) {
   // Consecutive videos are shown as one tabbed player rather than stacked
   // iframes, so a section with several parts stays readable.
@@ -182,16 +180,14 @@ export function DayDetailBlockRenderer({
             if (diagramTrack === "laravel" && isLaravelRoadmapDiagram(block.id)) {
               return <LaravelDiagram key={key} id={block.id} />;
             }
-            if (diagramTrack === "laravel" || diagramTrack === "nextjs" || diagramTrack === "nodejs") {
-              return <DayDetailDiagram key={key} id={block.id} />;
-            }
+            if (diagramTrack === "laravel" || diagramTrack === "nextjs" || diagramTrack === "nodejs") return null;
             if (diagramTrack === "devops" && isDevopsRoadmapDiagram(block.id)) {
               return <DevopsDiagram key={key} id={block.id} />;
             }
             if (diagramTrack === "react-native" && isReactNativeRoadmapDiagram(block.id)) {
               return <ReactNativeDiagram key={key} id={block.id} locale={locale} />;
             }
-            return <DayDetailDiagram key={key} id={block.id} />;
+            return null;
           case "youtube":
             return (
               <div key={key} className="mt-3 overflow-hidden rounded-xl border border-[var(--border)]">

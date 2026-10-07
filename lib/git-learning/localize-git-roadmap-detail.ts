@@ -8,7 +8,7 @@ import type {
   RoadmapDetailBlockResolved,
 } from "@/lib/challenge-data";
 import { pickLocalized } from "@/lib/i18n/pick";
-import type { ResolvedRoadmapDayDetail, ResolvedRoadmapDayDetailSection, ResolvedRoadmapDayFaqItem } from "@/lib/backend-learning/localize-roadmap-detail";
+import type { ResolvedRoadmapDayDetail, ResolvedRoadmapDayDetailSection, ResolvedRoadmapDayFaqItem } from "@/lib/learn/localize-roadmap-detail";
 
 function ls(s: LocalizedString, locale: Locale): string {
   return typeof s === "string" ? s : pickLocalized(s, locale);

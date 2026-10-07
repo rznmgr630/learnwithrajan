@@ -6,9 +6,8 @@ import { DayDetailBlockRenderer } from "@/components/learn/DayDetailBlockRendere
 import type { RoadmapDiagramTrack } from "@/components/learn/DayDetailBlockRenderer";
 import { RichText, RichParagraph } from "@/components/learn/RichText";
 import { SelfCheckList } from "@/components/learn/SelfCheckList";
-import { localizeRoadmapDayDetail } from "@/lib/backend-learning/localize-roadmap-detail";
+import { localizeRoadmapDayDetail } from "@/lib/learn/localize-roadmap-detail";
 import { localizeGitRoadmapDayDetail } from "@/lib/git-learning/localize-git-roadmap-detail";
-import { getRoadmapDayContext, resolveDayDetail } from "@/lib/challenge-data";
 import { getGitRoadmapDayContext, resolveGitDayDetail } from "@/lib/git-learning/git-challenge-data";
 import { getReactRoadmapDayContext, resolveReactDayDetail } from "@/lib/react-learning/react-challenge-data";
 import { localizeReactRoadmapDayDetail } from "@/lib/react-learning/localize-react-roadmap-detail";
@@ -38,8 +37,7 @@ type DayDetailPanelProps = {
   onClose: () => void;
   isDone: (day: number) => boolean;
   onToggleDone: (day: number) => void;
-  /** Defaults to backend 30-day roadmap. */
-  track?: RoadmapDiagramTrack;
+  track: RoadmapDiagramTrack;
   /** Enables the previous/next footer; receives the day to open. */
   onNavigateDay?: (day: number) => void;
 };
@@ -63,7 +61,7 @@ function dayContextFor(track: RoadmapDiagramTrack, dayNumber: number) {
     case "devops":
       return getDevopsRoadmapDayContext(dayNumber);
     default:
-      return getRoadmapDayContext(dayNumber);
+      return null;
   }
 }
 
@@ -77,7 +75,7 @@ export function DayDetailPanel({
   onClose,
   isDone,
   onToggleDone,
-  track = "backend",
+  track,
   onNavigateDay,
 }: DayDetailPanelProps) {
   const { locale, t } = useLocale();
@@ -111,7 +109,7 @@ export function DayDetailPanel({
                 ? resolveReactNativeDayDetail(ctx.day)
                 : track === "devops"
                   ? resolveDevopsDayDetail(ctx.day)
-                  : resolveDayDetail(ctx.day)
+                  : null
     : null;
   const detail = detailRaw
     ? track === "git"

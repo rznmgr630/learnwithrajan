@@ -17,7 +17,7 @@ export const PROGRAMMING_SEARCH_TRACKS: ProgrammingSearchTrack[] = [
   { title: "JavaScript", href: "/learn/javascript" },
   { title: "React Native", href: "/learn/react-native" },
   { title: "Next.js", href: "/learn/nextjs" },
-  { title: "Backend Engineering", href: "/learn/backend-30-days" },
+  { title: "Backend Engineering", href: "/learn/backend-engineering" },
   { title: "Laravel", href: "/learn/laravel" },
   { title: "Node.js", href: "/learn/nodejs" },
   { title: "NestJS", href: "/learn/nestjs" },
