@@ -11,6 +11,7 @@ export type KanjiStrokeEntry = {
 /** Single-character JLPT N5–grade entries (stroke counts typical textbook values). */
 const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "日", r: "ひ・ニチ", m: "day / sun", s: 4 },
+  { k: "毎", r: "まい", m: "every", s: 6 },
   { k: "一", r: "いち", m: "one", s: 1 },
   { k: "二", r: "に", m: "two", s: 2 },
   { k: "三", r: "さん", m: "three", s: 3 },
@@ -65,6 +66,8 @@ const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "来", r: "くる・ライ", m: "come", s: 7 },
   { k: "夜", r: "よる・ヤ", m: "night / evening", s: 8 },
   { k: "食", r: "たべる・ショク", m: "eat / meal", s: 9 },
+  { k: "昼", r: "ひる・チュウ", m: "daytime / noon", s: 9 },
+  { k: "飯", r: "めし・ハン", m: "meal / cooked rice", s: 12 },
   { k: "飲", r: "のむ", m: "drink", s: 12 },
   { k: "見", r: "みる・ケン", m: "see", s: 7 },
   { k: "聞", r: "きく", m: "hear / ask", s: 14 },

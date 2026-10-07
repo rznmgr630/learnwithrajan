@@ -57,8 +57,9 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   ],
 
   // ── Lesson 6 — transitive verbs, food, weekday context ────────────────────
-  // Five-element / weekday kanji (月曜〜土曜)  |  Week / weekend (週末)
+  // Food and daily routine  |  Five-element / weekday kanji (月曜〜土曜)  |  Week / weekend (週末)
   6: [
+    "昼", "飯", "毎",               // lunch (昼ご飯) / every day (毎日)
     "水", "火", "木", "金", "土",  // water, fire, wood, gold, earth (weekdays)
     "週", "末",                    // week / end (週末 = weekend)
   ],
