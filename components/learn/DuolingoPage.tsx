@@ -43,16 +43,66 @@ function NoteExamples({ examples }: { examples?: { ja: string; en: string; np: s
   );
 }
 
+type NoteGroupId = "grammar" | "dates" | "food" | "culture" | "daily";
+
+const NOTE_GROUPS: { id: NoteGroupId; label: string; description: string; icon: string }[] = [
+  { id: "grammar", label: "Grammar & Usage", description: "Particles, adjective patterns, and useful expressions.", icon: "文" },
+  { id: "dates", label: "Dates & Numbers", description: "Counting, calendars, and time expressions.", icon: "日" },
+  { id: "food", label: "Food & Dining", description: "Meals, restaurants, and Japanese food culture.", icon: "食" },
+  { id: "culture", label: "Culture & Traditions", description: "Festivals, customs, and life in Japan.", icon: "祭" },
+  { id: "daily", label: "Daily Life", description: "Travel, home, work, and everyday topics.", icon: "生" },
+];
+
+function noteGroup(title: string): NoteGroupId {
+  if (/Counting|Number|Hundreds|Day Before|Times|Moon and Sun|Sunrise|Date/.test(title)) return "dates";
+  if (/Meal|Tea|Restaurant|Cuisine|Cafeteria|Set Meals|Curry|Bread|Breakfast|Miso|Oden|Nabe|Soba|Soufflé|Kōshū/.test(title)) return "food";
+  if (/Particle|Adjective|Making|Softening|Present and|Using|Specific|Returning|Asking|Coming with|いちばん|ぜんぜん|きらい|でしょう|すごい|にがて|おだやか|Snow with|Giving|Receiving|Katakana|ちかく|Near a Place|Naming/.test(title)) return "grammar";
+  if (/Japanese|Hana|Kawaii|Hatsumōde|Ake Ome|Onsen|Kotatsu|Bonsai|Sapporo|Autumn|Summer|Rainy|Moon Viewing|Anime|Cinema|Karaoke|Oshogatsu|Coming-of-Age/.test(title)) return "culture";
+  return "daily";
+}
+
+function StandaloneNoteCard({ note }: { note: (typeof DUOLINGO_NOTES)[number] }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] hover:shadow-lg hover:shadow-black/5">
+      <div className="flex items-baseline gap-2">
+        <span className="text-base font-semibold text-[var(--text)]">{note.title}</span>
+        {note.japanese && (
+          <span className="ml-auto rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
+            {note.japanese}
+          </span>
+        )}
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{note.note}</p>
+      <NoteExamples examples={note.examples} />
+    </div>
+  );
+}
+
 export function DuolingoPage() {
   const { locale } = useLocale();
   const [tab, setTab] = useState<"words" | "notes">("words");
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
+  const [openNoteGroups, setOpenNoteGroups] = useState<Set<NoteGroupId>>(new Set(["grammar"]));
+
+  const groupedNotes = NOTE_GROUPS.map((group) => ({
+    ...group,
+    notes: DUOLINGO_NOTES.filter((note) => noteGroup(note.title) === group.id),
+  }));
 
   function toggle(day: number) {
     setOpenDays((prev) => {
       const next = new Set(prev);
       if (next.has(day)) next.delete(day);
       else next.add(day);
+      return next;
+    });
+  }
+
+  function toggleNoteGroup(group: NoteGroupId) {
+    setOpenNoteGroups((previous) => {
+      const next = new Set(previous);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
       return next;
     });
   }
@@ -216,6 +266,20 @@ export function DuolingoPage() {
       {tab === "notes" && (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-8">
+          <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] bg-[color-mix(in_oklab,var(--accent)_7%,var(--surface))] p-5">
+            <div aria-hidden className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[var(--glow)] blur-2xl" />
+            <p className="relative text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Study notes</p>
+            <div className="relative mt-2 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-[var(--text)]">Find the explanation you need</h2>
+                <p className="mt-1 text-sm text-[var(--muted)]">Grammar, dates, culture, and everyday Japanese in focused sections.</p>
+              </div>
+              <span className="rounded-full border border-[color-mix(in_oklab,var(--accent)_25%,var(--border))] bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--muted)]">
+                {DUOLINGO_NOTES.length} notes
+              </span>
+            </div>
+          </div>
+
           <div>
             <h2 className="text-sm font-semibold text-[var(--muted)]">Word Notes</h2>
             <p className="mt-1 text-xs text-[var(--faint)]">Grammar and usage notes attached to specific vocabulary.</p>
@@ -239,22 +303,40 @@ export function DuolingoPage() {
 
           <div>
             <h2 className="text-sm font-semibold text-[var(--muted)]">Culture & Grammar Notes</h2>
-            <p className="mt-1 text-xs text-[var(--faint)]">Standalone notes not tied to a single vocabulary word.</p>
+            <p className="mt-1 text-xs text-[var(--faint)]">Open one section at a time to keep your study list focused.</p>
             <div className="mt-4 flex flex-col gap-3">
-              {DUOLINGO_NOTES.map((n, idx) => (
-                <div key={idx} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-base font-semibold text-[var(--text)]">{n.title}</span>
-                    {n.japanese && (
-                      <span className="ml-auto rounded-md bg-[color-mix(in_oklab,var(--accent)_10%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--accent)]">
-                        {n.japanese}
+              {groupedNotes.map((group) => {
+                const isOpen = openNoteGroups.has(group.id);
+                return (
+                  <section
+                    key={group.id}
+                    className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isOpen ? "border-[color-mix(in_oklab,var(--accent)_35%,var(--border))] bg-[var(--elevated)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)]"}`}
+                  >
+                    <button
+                      onClick={() => toggleNoteGroup(group.id)}
+                      className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--accent)_5%,transparent)]"
+                      aria-expanded={isOpen}
+                    >
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--accent)_12%,transparent)] text-sm font-bold text-[var(--accent)]">{group.icon}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-[var(--text)]">{group.label}</span>
+                        <span className="mt-0.5 block text-xs text-[var(--faint)]">{group.description}</span>
                       </span>
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm text-[var(--muted)]">{n.note}</p>
-                  <NoteExamples examples={n.examples} />
-                </div>
-              ))}
+                      <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-0.5 text-xs tabular-nums text-[var(--muted)]">{group.notes.length}</span>
+                      <svg className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                      <div className="min-h-0 overflow-hidden">
+                        <div className="space-y-3 border-t border-[var(--border)] p-4">
+                          {group.notes.map((note) => <StandaloneNoteCard key={note.title} note={note} />)}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           </div>
         </div>
