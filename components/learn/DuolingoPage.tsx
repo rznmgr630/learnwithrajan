@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import type { Locale } from "@/lib/i18n/types";
 import { DUOLINGO_DAYS, DUOLINGO_NOTES } from "@/lib/japanese-learning/duolingo-vocab-data";
 
 const TOTAL_WORDS = DUOLINGO_DAYS.reduce((sum, d) => sum + d.words.length, 0);
+const DUOLINGO_TAB_KEY = "duolingo:active-tab";
 
 const WORD_NOTES = DUOLINGO_DAYS.flatMap((d) =>
   d.words
@@ -102,6 +103,16 @@ export function DuolingoPage() {
     notes: DUOLINGO_NOTES.filter((note) => noteGroup(note.title) === group.id),
   }));
 
+  useEffect(() => {
+    const savedTab = window.sessionStorage.getItem(DUOLINGO_TAB_KEY);
+    if (savedTab === "words" || savedTab === "notes") setTab(savedTab);
+  }, []);
+
+  function selectTab(nextTab: "words" | "notes") {
+    setTab(nextTab);
+    window.sessionStorage.setItem(DUOLINGO_TAB_KEY, nextTab);
+  }
+
   function toggle(day: number) {
     setOpenDays((prev) => {
       const next = new Set(prev);
@@ -162,7 +173,7 @@ export function DuolingoPage() {
       <div className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
         <div className="inline-flex gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
           <button
-            onClick={() => setTab("words")}
+            onClick={() => selectTab("words")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
               tab === "words" ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "text-[var(--muted)] hover:text-[var(--text)]"
             }`}
@@ -170,7 +181,7 @@ export function DuolingoPage() {
             Vocabulary
           </button>
           <button
-            onClick={() => setTab("notes")}
+            onClick={() => selectTab("notes")}
             className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
               tab === "notes" ? "bg-[var(--accent)] text-[var(--accent-fg)]" : "text-[var(--muted)] hover:text-[var(--text)]"
             }`}
