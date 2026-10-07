@@ -4,114 +4,83 @@ import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool"
 /**
  * Strict no-repeat kanji assignment across lesson days.
  *
- * Days 1–11  — all 100 pool kanji distributed exactly once, grouped by theme.
- * Days 12–25 — empty (grammar-focus lessons; kanji section is hidden by the component).
+ * Days 1–13  — all pool kanji distributed exactly once, grouped from simpler to more complex themes.
+ * Days 14–25 — empty (grammar-focus lessons; kanji section is hidden by the component).
  * Days 26–30 — curated review sets for sprint/mock-exam prep (intentional re-exposure).
  *
  * Characters must exist in n5-kanji-pool.ts ROWS — unknowns are silently skipped.
  */
 export const N5_KANJI_BY_DAY: Record<number, string[]> = {
 
-  // ── Lesson 1 — は/です, self-introduction, jobs ─────────────────────────────
-  // Numbers 1–10  |  People / roles / question word
+  // ── Day 1 — numbers ─────────────────────────────────────────────────────────
   1: [
-    "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",  // numbers 1–10
-    "私", "生", "人", "名", "会", "社", "員", "何",              // people / jobs / question
+    "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
   ],
 
-  // ── Lesson 2 — これ/それ/あれ, things, prices ──────────────────────────────
-  // Directions (compass + vertical)  |  Things & value adjectives
+  // ── Day 2 — numbers, money, and time ───────────────────────────────────────
   2: [
-    "上", "下", "左", "右", "後", "南", "東", "西",          // directions
-    "本", "百", "千", "小", "高", "長", "白",       // things / adjectives
+    "百", "千", "万", "円", "日", "月", "年", "時", "分", "半",
   ],
 
-  // ── Lesson 3 — ここ/そこ/あそこ, places, floors ────────────────────────────
-  // Rooms / buildings  |  Position (inside/middle)  |  Communication  |  Country / food
+  // ── Day 3 — people and family ──────────────────────────────────────────────
   3: [
-    "室", "堂", "場",        // rooms / buildings (教室 食堂 売り場 学校)
-    "中",                    // inside / middle (floor context)
-    "話",                    // speak / telephone (電話)
-    "国",                    // country (お国)
-    "食",                    // eat / food (食堂)
+    "人", "女", "男", "子", "私", "名", "父", "母", "兄", "姉",
   ],
 
-  // ── Lesson 4 — ます/ました, daily actions ───────────────────────────────────
-  // Literacy  |  Senses  |  Drink  |  Movement  |  Time-now
+  // ── Day 4 — family, school, and company ────────────────────────────────────
   4: [
-    "読", "書",              // literacy
-    "見", "聞",              // senses
-    "飲",                    // drink
-    "来", "行", "入",         // movement
-    "今",                    // time — now
+    "弟", "妹", "友", "手", "生", "学", "校", "会", "社", "員",
   ],
 
-  // ── Lesson 5 — movement へ/で/と, transport ────────────────────────────────
-  // Transport: station, car, electric (電車), shop  |  Movement, direction, school, time, home, price, large number
+  // ── Day 5 — everyday actions and words ─────────────────────────────────────
   5: [
-    "駅", "車", "電", "店",  // station / car / electric (train) / shop
-    "出", "外", "夜",        // exit / outside / night (今夜)
-    "先", "北", "大", "家",  // last month / north / landlord
-    "学", "校",              // school
-    "前", "安", "万",        // front / cheap / ten thousand
+    "今", "毎", "食", "飲", "見", "聞", "読", "書", "話", "言",
   ],
 
-  // ── Lesson 6 — transitive verbs, food, weekday context ────────────────────
-  // Food and daily routine  |  Five-element / weekday kanji (月曜〜土曜)  |  Week / weekend (週末)
+  // ── Day 6 — meals and daily routine ────────────────────────────────────────
   6: [
-    "昼", "飯", "毎",               // lunch (昼ご飯) / every day (毎日)
-    "水", "火", "木", "金", "土",  // water, fire, wood, gold, earth (weekdays)
-    "週", "末",                    // week / end (週末 = weekend)
+    "午", "昼", "飯", "週", "末", "休", "買", "魚", "少", "多",
   ],
 
-  // ── Lesson 7 — あげる/もらう, giving/receiving, family ────────────────────
-  // Parents  |  Older siblings  |  Younger siblings  |  Other people  |  Hand (手紙)
+  // ── Day 7 — position and direction ─────────────────────────────────────────
   7: [
-    "父", "母",              // parents
-    "兄", "姉",              // older siblings
-    "弟", "妹",              // younger siblings
-    "友", "子", "女",        // other people
-    "手",                    // hand (手紙 = letter)
+    "上", "中", "下", "左", "右", "前", "後", "外", "入", "出",
   ],
 
-  // ── Lesson 8 — い/な adjectives ───────────────────────────────────────────
-  // New / old  |  Man  |  Stone  |  Time & calendar  |  Places
+  // ── Day 8 — travel and places ──────────────────────────────────────────────
   8: [
-    "新", "古",              // age — new / old
-    "男",                    // man (contrast with 女 from Day 7)
-    "石",                    // stone
-    "月", "年", "秒", "歳",  // time & calendar (month/moon, year, second, age-counter)
-    "寺", "刀",              // places / objects (temple, katana)
+    "行", "来", "立", "駅", "車", "電", "店", "口", "室", "堂",
   ],
 
-  // ── Lesson 9 — すき/じょうず/わかる, preferences & hobbies ────────────────
-  // Language  |  Geography / nature  |  Body / strength  |  Places (Tokyo / Kyoto)
+  // ── Day 9 — places and the world ───────────────────────────────────────────
   9: [
-    "語",              // language (日本語 英語)
-    "山", "川", "花",  // geography / nature
-    "耳", "足", "力",  // body parts / strength
-    "京", "都",        // places — capital (東京 Tōkyō, 京都 Kyōto)
+    "場", "国", "本", "家", "犬", "田", "山", "川", "石", "寺",
   ],
 
-  // ── Lesson 10 — います/あります, existence & location ─────────────────────
-  // Weather / sky  |  Animal  |  Land  |  Family (自分/家族)
+  // ── Day 10 — nature, weather, and weekdays ─────────────────────────────────
   10: [
-    "天", "気", "雨",  // weather / sky
-    "犬",              // dog (animal)
-    "田",              // rice field / land
-    "自", "族",          // family — self, house, clan (自分 家族)
+    "天", "気", "雨", "空", "花", "木", "火", "水", "金", "土",
   ],
 
-  // ── Lesson 11 — counters & time ───────────────────────────────────────────
-  // Time words: day/sun, hour, minute, half, noon
+  // ── Day 11 — directions and descriptions ───────────────────────────────────
   11: [
-    "日", "時", "分", "半", "午",  // time counters
+    "南", "北", "東", "西", "小", "大", "高", "安", "長", "新",
   ],
 
-  // ── Lessons 12–25 — grammar-focus lessons (no new kanji) ──────────────────
-  // All 100 pool kanji have been introduced by Day 11.
+  // ── Day 12 — body, language, and connections ───────────────────────────────
+  12: [
+    "古", "白", "耳", "目", "足", "力", "語", "何", "道", "間",
+  ],
+
+  // ── Day 13 — later beginner kanji ─────────────────────────────────────────
+  13: [
+    "夜", "先", "秒", "歳", "京", "都", "自", "族", "刀",
+  ],
+
+  // ── Days 14–25 — grammar-focus lessons (no new kanji) ─────────────────────
+  // All pool kanji have been introduced by Day 13.
   // The kanji accordion is hidden by the component when this array is empty.
-  12: [], 13: [], 14: [], 15: [], 16: [], 17: [], 18: [], 19: [],
+  14: [], 15: [], 16: [], 17: [], 18: [], 19: [],
   20: [], 21: [], 22: [], 23: [], 24: [], 25: [],
 
   // ── Sprint Day 26 — numbers & counting review ──────────────────────────────
