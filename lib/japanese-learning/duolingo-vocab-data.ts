@@ -4627,6 +4627,28 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       },
     ],
   },
+  {
+    day: 33,
+    category: "Work, Weekdays & Nature",
+    words: [
+      { word: "いまの かいしゃは あまり よくないです。", romaji: "ima no kaisha wa amari yokunai desu", meaning_en: "My current company is not very good.", meaning_np: "मेरो अहिलेको कम्पनी धेरै राम्रो छैन।", examples: [{ ja: "いまの かいしゃは あまり よくないです。", en: "My current company is not very good.", np: "मेरो अहिलेको कम्पनी धेरै राम्रो छैन।" }] },
+      { word: "おそくまで しごとしますか。", romaji: "osoku made shigoto shimasu ka", meaning_en: "Do you work until late?", meaning_np: "के तपाईं ढिलासम्म काम गर्नुहुन्छ?", examples: [{ ja: "おそくまで しごとしますか。", en: "Do you work until late?", np: "के तपाईं ढिलासम्म काम गर्नुहुन्छ?" }] },
+      { word: "昼ご飯", romaji: "hirugohan", reading: "ひるごはん", meaning_en: "Lunch", meaning_np: "दिउँसोको खाना", examples: [{ ja: "昼ご飯を食べます。", en: "I eat lunch.", np: "म दिउँसोको खाना खान्छु।" }] },
+      { word: "毎日", romaji: "mainichi", reading: "まいにち", meaning_en: "Every day", meaning_np: "हरेक दिन", examples: [{ ja: "毎日日本語を勉強します。", en: "I study Japanese every day.", np: "म हरेक दिन जापानी पढ्छु।" }] },
+      { word: "火が強いです。", romaji: "hi ga tsuyoi desu", meaning_en: "The fire is strong.", meaning_np: "आगो बलियो छ।", examples: [{ ja: "火が強いです。", en: "The fire is strong.", np: "आगो बलियो छ।" }] },
+      { word: "しずみます", romaji: "shizumimasu", meaning_en: "To set", meaning_np: "अस्ताउनु", examples: [{ ja: "太陽がしずみます。", en: "The sun sets.", np: "सूर्य अस्ताउँछ।" }] },
+      { word: "かのじょは おだやかな ひとです。", romaji: "kanojo wa odayaka na hito desu", meaning_en: "My girlfriend is a calm person.", meaning_np: "मेरी प्रेमिका शान्त व्यक्ति हुन्।", examples: [{ ja: "かのじょは おだやかな ひとです。", en: "My girlfriend is a calm person.", np: "मेरी प्रेमिका शान्त व्यक्ति हुन्।" }] },
+      { word: "おだやかな てんきが すきです。", romaji: "odayaka na tenki ga suki desu", meaning_en: "I like calm weather.", meaning_np: "मलाई शान्त मौसम मन पर्छ।", examples: [{ ja: "おだやかな てんきが すきです。", en: "I like calm weather.", np: "मलाई शान्त मौसम मन पर्छ।" }] },
+      { word: "メッセージを おくります。", romaji: "messēji o okurimasu", meaning_en: "I am going to send a message.", meaning_np: "म सन्देश पठाउनेछु।", examples: [{ ja: "メッセージを おくります。", en: "I am going to send a message.", np: "म सन्देश पठाउनेछु।" }] },
+      { word: "月曜日", romaji: "getsuyōbi", reading: "げつようび", meaning_en: "Monday", meaning_np: "सोमबार", examples: [{ ja: "月曜日に学校へ行きます。", en: "I go to school on Monday.", np: "म सोमबार विद्यालय जान्छु।" }] },
+      { word: "おつきみ", romaji: "otsukimi", meaning_en: "Moon viewing", meaning_np: "चन्द्रमा हेर्ने पर्व", examples: [{ ja: "おつきみをします。", en: "I enjoy moon viewing.", np: "म चन्द्रमा हेर्ने पर्व मनाउँछु।" }] },
+      { word: "太陽が のぼります。", romaji: "taiyō ga noborimasu", meaning_en: "The sun rises.", meaning_np: "सूर्य उदाउँछ।", examples: [{ ja: "太陽が のぼります。", en: "The sun rises.", np: "सूर्य उदाउँछ।" }] },
+      { word: "たいよう", romaji: "taiyō", meaning_en: "The sun", meaning_np: "सूर्य", examples: [{ ja: "たいようがあかるいです。", en: "The sun is bright.", np: "सूर्य उज्यालो छ।" }] },
+      { word: "あかるい", romaji: "akarui", meaning_en: "Bright", meaning_np: "उज्यालो", examples: [{ ja: "あかるい へやです。", en: "It is a bright room.", np: "यो उज्यालो कोठा हो।" }] },
+      { word: "日曜日", romaji: "nichiyōbi", reading: "にちようび", meaning_en: "Sunday", meaning_np: "आइतबार", examples: [{ ja: "日曜日は休みです。", en: "Sunday is a day off.", np: "आइतबार बिदा हुन्छ।" }] },
+      { word: "曜日", romaji: "yōbi", reading: "ようび", meaning_en: "Day of the week", meaning_np: "हप्ताको दिन", examples: [{ ja: "何曜日ですか。", en: "What day of the week is it?", np: "आज कुन बार हो?" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5104,5 +5126,29 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "にがて / から / どんな",
     note: "にがて is softer than saying you hate something. から means 'because' and follows the reason. どんな comes before a noun to ask about its type or characteristics.",
     examples: [{ ja: "どんな本ですか。", en: "What kind of book is it?", np: "यो कस्तो प्रकारको किताब हो?" }],
+  },
+  {
+    title: "おだやか",
+    japanese: "おだやかな てんき",
+    note: "おだやか is a な-adjective meaning 'calm' or 'peaceful.' Use な when it comes before a noun.",
+    examples: [{ ja: "おだやかな てんきが すきです。", en: "I like calm weather.", np: "मलाई शान्त मौसम मन पर्छ।" }],
+  },
+  {
+    title: "Moon and Sun Weekdays",
+    japanese: "月曜日 / 日曜日 / 曜日",
+    note: "月曜日 means 'moon day' and 日曜日 means 'sun's day.' Japanese weekday names come from the five classical Chinese elements, plus the sun and moon.",
+    examples: [{ ja: "月曜日と日曜日です。", en: "They are Monday and Sunday.", np: "ती सोमबार र आइतबार हुन्।" }],
+  },
+  {
+    title: "Sunrise and Sunset",
+    japanese: "太陽がしずみます / のぼります",
+    note: "が marks the thing that is setting or rising. しずみます means 'set,' while のぼります means 'rise.' Japan is often called the Land of the Rising Sun.",
+    examples: [{ ja: "太陽がしずみます。", en: "The sun sets.", np: "सूर्य अस्ताउँछ।" }],
+  },
+  {
+    title: "Moon Viewing",
+    japanese: "おつきみ",
+    note: "おつきみ is a traditional Japanese autumn festival for appreciating the moon and thanking nature.",
+    examples: [{ ja: "おつきみをします。", en: "I enjoy moon viewing.", np: "म चन्द्रमा हेर्ने पर्व मनाउँछु।" }],
   },
 ];
