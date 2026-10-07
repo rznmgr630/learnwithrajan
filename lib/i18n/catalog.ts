@@ -829,6 +829,16 @@ export const UI_STRINGS = {
     np: "API, Django, data processing, र background job का वास्तविक Python bug पत्ता लगाउनुहोस्।",
     jp: "API、Django、データ処理、バックグラウンドジョブの実務 Python バグを見つけます。",
   },
+  "hub.reactCodeReview.title": {
+    en: "React Code Review Series",
+    np: "React कोड रिभ्यू शृङ्खला",
+    jp: "React コードレビュー・シリーズ",
+  },
+  "hub.reactCodeReview.subtitle": {
+    en: "Spot real React bugs in state, effects, rendering, forms, and performance.",
+    np: "state, effect, rendering, form, र performance का वास्तविक React bug पत्ता लगाउनुहोस्।",
+    jp: "state、effect、レンダリング、フォーム、パフォーマンスの実務 React バグを見つけます。",
+  },
   "hub.codeReview.cta": {
     en: "Start reviewing →",
     np: "रिभ्यू सुरु गर्नुहोस् →",

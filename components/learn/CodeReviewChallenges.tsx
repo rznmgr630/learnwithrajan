@@ -60,7 +60,7 @@ function ChallengeCard({ number, active, completed, onSelect }: {
 
 type CodeReviewChallengesProps = {
   challenges?: CodeReviewChallenge[];
-  language?: "JavaScript" | "TypeScript" | "Laravel" | "Python";
+  language?: "JavaScript" | "TypeScript" | "Laravel" | "Python" | "React";
 };
 
 export function CodeReviewChallenges({
