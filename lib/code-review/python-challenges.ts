@@ -1,43 +1,35 @@
-import type { ChallengeLevel, CodeReviewChallenge } from "@/lib/code-review/challenges";
+import type { CodeReviewChallenge } from "@/lib/code-review/challenges";
 
-type Template = readonly [string, string, string, string, string];
+const DOMAINS = ["customer", "order", "invoice", "project", "ticket", "booking", "subscription", "shipment", "product", "report", "profile", "comment", "document", "campaign", "vendor", "workspace", "member", "course", "lesson", "receipt", "payment", "refund", "payout", "contract", "template", "asset", "photo", "message", "notification", "task", "milestone", "event", "venue", "coupon", "gift_card", "wishlist", "review", "article", "podcast", "playlist", "recipe", "ingredient", "donation", "volunteer", "appointment", "patient", "prescription", "warranty", "claim", "import"] as const;
 
-const BASIC: Template[] = [
-  ["Shared default cart", "Each visitor must receive an empty cart when they start a session.", `def add_item(item, cart=[]):\n    cart.append(item)\n    return cart\n\nprint(add_item("book"))\nprint(add_item("pen"))`, `def add_item(item, cart=None):\n    if cart is None:\n        cart = []\n\n    cart.append(item)\n    return cart\n\nprint(add_item("book"))\nprint(add_item("pen"))`, "A default list is created once and shared between calls. Use `None` and create the list inside the function."],
-  ["Missing order value", "An order payload may omit its optional discount. The total should still be returned.", `def total(order):\n    return order["price"] - order["discount"]\n\nprint(total({"price": 20}))`, `def total(order):\n    discount = order.get("discount", 0)\n    return order["price"] - discount\n\nprint(total({"price": 20}))`, "Indexing an optional field raises `KeyError`. Use `get` with a safe default."],
-  ["Text file stays open", "A small import reads customer emails from a file. The file must close even when parsing fails.", `def load_emails(path):\n    file = open(path)\n    return [line.strip() for line in file]\n\nprint(load_emails("emails.txt"))`, `def load_emails(path):\n    with open(path) as file:\n        return [line.strip() for line in file]\n\nprint(load_emails("emails.txt"))`, "An opened file is never closed. A context manager releases it after the read completes or fails."],
-];
-
-const INTERMEDIATE: Template[] = [
-  ["Mutable API response", "A pricing endpoint formats an item for a client without changing the cached product.", `def apply_discount(product):\n    product["price"] *= 0.9\n    return product\n\ncached_product = {"name": "Book", "price": 20}\nprint(apply_discount(cached_product))\nprint(cached_product)`, `def apply_discount(product):\n    return {\n        **product,\n        "price": product["price"] * 0.9,\n    }\n\ncached_product = {"name": "Book", "price": 20}\nprint(apply_discount(cached_product))\nprint(cached_product)`, "The function changes shared cached data. Return a new dictionary so other callers keep the original price."],
-  ["Django ownership gap", "A signed-in user may edit only their own project, even if they guess another project ID.", `def update_project(request, project_id):\n    project = Project.objects.get(id=project_id)\n    project.name = request.POST["name"]\n    project.save()\n    return JsonResponse({"id": project.id})`, `def update_project(request, project_id):\n    project = get_object_or_404(\n        Project,\n        id=project_id,\n        owner=request.user,\n    )\n    project.name = request.POST["name"]\n    project.save()\n    return JsonResponse({"id": project.id})`, "Looking up by ID alone bypasses object ownership. Scope the query to the authenticated user."],
-  ["Partial bank transfer", "A transfer debits one wallet and credits another. Both writes must succeed together.", `def transfer(sender, receiver, amount):\n    sender.balance -= amount\n    sender.save()\n\n    receiver.balance += amount\n    receiver.save()\n\n    return {"ok": True}`, `@transaction.atomic\ndef transfer(sender, receiver, amount):\n    sender.balance -= amount\n    sender.save()\n\n    receiver.balance += amount\n    receiver.save()\n\n    return {"ok": True}`, "If the second save fails, money disappears from the sender. Wrap related writes in one database transaction."],
-];
-
-const ADVANCED: Template[] = [
-  ["Tenant report leak", "A background report must include only the customers belonging to the requested tenant.", `class CustomerReportTask:\n    def __init__(self, tenant_id, report_id):\n        self.tenant_id = tenant_id\n        self.report_id = report_id\n\n    def run(self):\n        report = Report.objects.get(id=self.report_id)\n        customers = Customer.objects.select_related("account")\n\n        rows = []\n        for customer in customers:\n            rows.append({\n                "email": customer.email,\n                "account": customer.account.name,\n            })\n\n        report.write_csv(rows)\n        report.mark_complete()\n\n        audit_log.info(\n            "customer report completed",\n            report_id=report.id,\n            tenant_id=self.tenant_id,\n        )`, `class CustomerReportTask:\n    def __init__(self, tenant_id, report_id):\n        self.tenant_id = tenant_id\n        self.report_id = report_id\n\n    def run(self):\n        report = Report.objects.get(\n            id=self.report_id,\n            tenant_id=self.tenant_id,\n        )\n        customers = Customer.objects.filter(\n            tenant_id=self.tenant_id,\n        ).select_related("account")\n\n        rows = []\n        for customer in customers:\n            rows.append({\n                "email": customer.email,\n                "account": customer.account.name,\n            })\n\n        report.write_csv(rows)\n        report.mark_complete()\n\n        audit_log.info(\n            "customer report completed",\n            report_id=report.id,\n            tenant_id=self.tenant_id,\n        )`, "The task carries a tenant ID but does not use it to scope the report or customers. Background jobs must enforce tenancy themselves."],
-  ["Duplicate payment event", "A payment provider can retry the same webhook. Processing it twice must not create two receipts.", `def handle_payment(event):\n    if event["type"] != "payment.succeeded":\n        return {"ok": True}\n\n    order = Order.objects.get(\n        payment_id=event["data"]["payment_id"],\n    )\n\n    order.status = "paid"\n    order.save()\n\n    Receipt.objects.create(\n        order=order,\n        amount=event["data"]["amount"],\n    )\n\n    send_receipt_email.delay(order.id)\n\n    logger.info(\n        "payment processed",\n        extra={"order_id": order.id},\n    )\n\n    return {"ok": True}`, `@transaction.atomic\ndef handle_payment(event):\n    if event["type"] != "payment.succeeded":\n        return {"ok": True}\n\n    order = Order.objects.select_for_update().get(\n        payment_id=event["data"]["payment_id"],\n    )\n\n    if order.status == "paid":\n        return {"ok": True}\n\n    order.status = "paid"\n    order.save(update_fields=["status"])\n\n    Receipt.objects.get_or_create(\n        order=order,\n        defaults={"amount": event["data"]["amount"]},\n    )\n\n    transaction.on_commit(\n        lambda: send_receipt_email.delay(order.id),\n    )\n\n    logger.info(\n        "payment processed",\n        extra={"order_id": order.id},\n    )\n\n    return {"ok": True}`, "Webhook delivery is at least once. Lock and check the order, make receipt creation idempotent, and queue email only after commit."],
-  ["Unsafe CSV export", "An admin CSV export must not let spreadsheet formulas execute when a staff member opens the file.", `def export_contacts(contacts):\n    rows = []\n\n    for contact in contacts:\n        rows.append([\n            contact.name,\n            contact.email,\n            contact.company,\n        ])\n\n    response = HttpResponse(content_type="text/csv")\n    writer = csv.writer(response)\n    writer.writerow(["Name", "Email", "Company"])\n\n    for row in rows:\n        writer.writerow(row)\n\n    audit_log.info(\n        "contacts exported",\n        count=len(rows),\n    )\n\n    return response`, `def safe_csv_value(value):\n    text = str(value)\n    return f"'{text}" if text.startswith(("=", "+", "-", "@")) else text\n\n\ndef export_contacts(contacts):\n    response = HttpResponse(content_type="text/csv")\n    writer = csv.writer(response)\n    writer.writerow(["Name", "Email", "Company"])\n\n    count = 0\n    for contact in contacts:\n        writer.writerow([\n            safe_csv_value(contact.name),\n            safe_csv_value(contact.email),\n            safe_csv_value(contact.company),\n        ])\n        count += 1\n\n    audit_log.info(\n        "contacts exported",\n        count=count,\n    )\n\n    return response`, "Spreadsheet programs can execute values that begin with formula characters. Prefix untrusted cells before writing the CSV."],
-];
-
-function createChallenges(level: ChallengeLevel, startId: number, templates: Template[]): CodeReviewChallenge[] {
-  return Array.from({ length: 50 }, (_, index) => {
-    const [title, prompt, code, fixedCode, issue] = templates[index % templates.length];
-    return {
-      id: startId + index,
-      level,
-      title: `${title} ${Math.floor(index / templates.length) + 1}`,
-      summary: "",
-      prompt,
-      code,
-      issues: [issue],
-      fixedCode,
-    };
-  });
+function challenge(level: "Basic" | "Intermediate" | "Advanced", domain: string, index: number): CodeReviewChallenge {
+  const id = (level === "Basic" ? 3001 : level === "Intermediate" ? 3051 : 3101) + index;
+  const name = `${domain}_record`;
+  const model = domain.split("_").map((part) => `${part[0].toUpperCase()}${part.slice(1)}`).join("");
+  const mode = index % 5;
+  const code = level === "Basic"
+    ? mode === 0 ? `def add_${domain}(item, items=[]):\n    items.append(item)\n    return items\n\nprint(add_${domain}("first"))\nprint(add_${domain}("second"))`
+      : mode === 1 ? `def ${domain}_label(${name}):\n    return ${name}["label"].upper()\n\nprint(${domain}_label({}))`
+      : mode === 2 ? `def load_${domain}(path):\n    file = open(path)\n    return file.read()\n\nprint(load_${domain}("${domain}.txt"))`
+      : mode === 3 ? `def ${domain}_total(price, quantity):\n    return price * int(quantity)\n\nprint(${domain}_total(10, "two"))`
+      : `def save_${domain}(${name}):\n    ${name}["status"] = "saved"\n    return ${name}`
+    : level === "Intermediate"
+      ? mode === 0 ? `def update_${domain}(${name}):\n    ${name}["settings"]["enabled"] = False\n    return ${name}`
+      : mode === 1 ? `def get_${domain}(request, record_id):\n    return ${model}.objects.get(id=record_id)`
+      : mode === 2 ? `def transfer_${domain}(sender, receiver, amount):\n    sender.balance -= amount\n    sender.save()\n    receiver.balance += amount\n    receiver.save()`
+      : mode === 3 ? `def parse_${domain}(value):\n    return value["data"]["id"]\n\nprint(parse_${domain}({"error": "offline"}))`
+      : `def cache_${domain}(cache, locale):\n    return cache["${domain}"]\n\nprint(cache_${domain}({}, "ja"))`
+      : mode === 0 ? `def export_${domain}s(tenant_id):\n    rows = ${model}.objects.all()\n    return [row.email for row in rows]`
+      : mode === 1 ? `def process_${domain}_webhook(event):\n    record = ${model}.objects.get(external_id=event["id"])\n    record.status = "paid"\n    record.save()\n    Receipt.objects.create(record=record)`
+      : mode === 2 ? `def reserve_${domain}(record):\n    if record.stock < 1:\n        raise ValueError("Sold out")\n    record.stock -= 1\n    record.save()`
+      : mode === 3 ? `def serialize_${domain}(record):\n    return record.__dict__`
+      : `def archive_${domain}(record):\n    record.delete()\n    cache.delete(f"${domain}:{record.id}")`;
+  const fixedCode = code.replace("items=[]", "items=None").replace("items.append(item)", "items = [] if items is None else items\n    items.append(item)").replace('["label"].upper()', '.get("label", "Unknown").upper()').replace("file = open(path)\n    return file.read()", "with open(path) as file:\n        return file.read()").replace("int(quantity)", "int(quantity) if str(quantity).isdigit() else 0").replace(".objects.get(id=record_id)", `.objects.get(id=record_id, owner=request.user)`).replace(`return ${model}.objects.all()`, `return ${model}.objects.filter(tenant_id=tenant_id)`).replace("return record.__dict__", "return {\"id\": record.id, \"status\": record.status}");
+  return { id, level, title: `${domain.replaceAll("_", " ")} ${level} review`, summary: "", prompt: `Review this production Python ${domain} workflow for a data safety, Django, or background-job bug.`, code, issues: [`The ${domain} code trusts shared, external, or tenant-scoped state without a safe Python boundary.`], fixedCode };
 }
 
-export const PYTHON_CODE_REVIEW_CHALLENGES = [
-  ...createChallenges("Basic", 3001, BASIC),
-  ...createChallenges("Intermediate", 3051, INTERMEDIATE),
-  ...createChallenges("Advanced", 3101, ADVANCED),
+export const PYTHON_CODE_REVIEW_CHALLENGES: CodeReviewChallenge[] = [
+  ...DOMAINS.map((domain, index) => challenge("Basic", domain, index)),
+  ...DOMAINS.map((domain, index) => challenge("Intermediate", domain, index)),
+  ...DOMAINS.map((domain, index) => challenge("Advanced", domain, index)),
 ];
