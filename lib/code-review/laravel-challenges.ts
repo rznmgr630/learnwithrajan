@@ -1,306 +1,33 @@
-import type { ChallengeLevel, CodeReviewChallenge } from "@/lib/code-review/challenges";
-
-type Template = readonly [string, string, string, string, string];
-
-const BASIC: Template[] = [
-  ["Missing validation", "A profile endpoint saves a display name. Empty names must not reach the database.", `<?php
-
-public function update(Request $request, User $user)
-{
-    $user->update($request->all());
-
-    return response()->json($user);
-}` , `<?php
-
-public function update(Request $request, User $user)
-{
-    $data = $request->validate([
-        'name' => ['required', 'string', 'max:100'],
-    ]);
-
-    $user->update($data);
-
-    return response()->json($user);
-}`, "Calling `all()` accepts every browser field. Validate and allow-list the fields this endpoint owns."],
-  ["N plus one orders", "An orders page displays each customer's name. It must not make one extra query for every order.", `<?php
-
-public function index()
-{
-    $orders = Order::latest()->get();
-
-    return view('orders.index', compact('orders'));
-}` , `<?php
-
-public function index()
-{
-    $orders = Order::query()
-        ->with('customer')
-        ->latest()
-        ->get();
-
-    return view('orders.index', compact('orders'));
-}`, "The view triggers a customer query for each order. Eager-load the relationship in the controller."],
-  ["Optional relation", "A member may not have a profile yet. The API must not throw while formatting a member response.", `<?php
-
-public function show(User $user)
-{
-    return [
-        'name' => $user->name,
-        'city' => $user->profile->city,
-    ];
-}` , `<?php
-
-public function show(User $user)
-{
-    return [
-        'name' => $user->name,
-        'city' => $user->profile?->city,
-    ];
-}`, "The code assumes every user has a profile. Use Laravel's null-safe operator for optional relationships."],
-];
-
-const INTERMEDIATE: Template[] = [
-  ["Mass assignment", "A settings form updates a user. A crafted request must not change their role.", `<?php
-
-public function update(Request $request, User $user)
-{
-    $data = $request->validate([
-        'name' => ['required', 'string'],
-        'email' => ['required', 'email'],
-    ]);
-
-    $user->update($request->all());
-
-    return redirect()->route('settings');
-}` , `<?php
-
-public function update(Request $request, User $user)
-{
-    $data = $request->validate([
-        'name' => ['required', 'string'],
-        'email' => ['required', 'email'],
-    ]);
-
-    $user->update($data);
-
-    return redirect()->route('settings');
-}`, "The request is validated but then ignored. Updating with `all()` reopens mass-assignment risk."],
-  ["Missing policy", "A signed-in user edits a project by ID. They may only edit a project their account owns.", `<?php
-
-public function update(Request $request, Project $project)
-{
-    $data = $request->validate([
-        'name' => ['required', 'string'],
-    ]);
-
-    $project->update($data);
-
-    return response()->json($project);
-}` , `<?php
-
-public function update(Request $request, Project $project)
-{
-    $this->authorize('update', $project);
-
-    $data = $request->validate([
-        'name' => ['required', 'string'],
-    ]);
-
-    $project->update($data);
-
-    return response()->json($project);
-}`, "Route model binding finds a project but does not authorize access. Enforce the policy before writing."],
-  ["Failed transaction", "Creating an order decrements stock and stores the order. Both changes must succeed or neither should persist.", `<?php
-
-public function store(Request $request, Product $product)
-{
-    $product->decrement('stock');
-
-    $order = Order::create([
-        'product_id' => $product->id,
-        'user_id' => $request->user()->id,
-    ]);
-
-    return response()->json($order);
-}` , `<?php
-
-public function store(Request $request, Product $product)
-{
-    $order = DB::transaction(function () use ($request, $product) {
-        $product->decrement('stock');
-
-        return Order::create([
-            'product_id' => $product->id,
-            'user_id' => $request->user()->id,
-        ]);
-    });
-
-    return response()->json($order);
-}`, "Separate writes can leave stock changed without an order. Put the related database work in one transaction."],
-];
-
-const ADVANCED: Template[] = [
-  ["Tenant export leak", "A queued CSV export must include only the authenticated tenant's customers.", `<?php
-
-class ExportCustomers implements ShouldQueue
-{
-    public function __construct(public int $tenantId) {}
-
-    public function handle(): void
-    {
-        $customers = Customer::query()
-            ->with('orders')
-            ->get();
-
-        Storage::put(
-            "exports/{$this->tenantId}.csv",
-            $customers->pluck('email')->join("\\n"),
-        );
-    }
-}` , `<?php
-
-class ExportCustomers implements ShouldQueue
-{
-    public function __construct(public int $tenantId) {}
-
-    public function handle(): void
-    {
-        $customers = Customer::query()
-            ->where('tenant_id', $this->tenantId)
-            ->with('orders')
-            ->get();
-
-        Storage::put(
-            "exports/{$this->tenantId}.csv",
-            $customers->pluck('email')->join("\\n"),
-        );
-    }
-}`, "The job carries tenant context but never applies it. Scope the worker query, not just the HTTP request."],
-  ["Race condition stock", "Two checkout requests compete for the final item. The stock check and decrement must be atomic.", `<?php
-
-public function reserve(Request $request, Product $product)
-{
-    $customer = $request->user();
-
-    if ($product->stock < 1) {
-        throw ValidationException::withMessages([
-            'product' => 'Sold out',
-        ]);
-    }
-
-    $product->decrement('stock');
-
-    Reservation::create([
-        'product_id' => $product->id,
-        'user_id' => $customer->id,
-        'status' => 'pending',
-    ]);
-
-    activity()
-        ->performedOn($product)
-        ->causedBy($customer)
-        ->log('product reserved');
-
-    return response()->json(['reserved' => true]);
-}` , `<?php
-
-public function reserve(Request $request, Product $product)
-{
-    $customer = $request->user();
-
-    $reserved = Product::query()
-        ->whereKey($product)
-        ->where('stock', '>', 0)
-        ->decrement('stock');
-
-    if ($reserved !== 1) {
-        throw ValidationException::withMessages([
-            'product' => 'Sold out',
-        ]);
-    }
-
-    Reservation::create([
-        'product_id' => $product->id,
-        'user_id' => $customer->id,
-        'status' => 'pending',
-    ]);
-
-    activity()
-        ->performedOn($product)
-        ->causedBy($customer)
-        ->log('product reserved');
-
-    return response()->json(['reserved' => true]);
-}`, "Checking an in-memory model and decrementing later allows overselling. Use one conditional database update."],
-  ["Unsafe webhook", "A payment webhook must verify its signature before it trusts the parsed event.", `<?php
-
-public function handle(Request $request)
-{
-    $payload = $request->getContent();
-    $event = json_decode($payload, true);
-
-    if ($event['type'] === 'payment.succeeded') {
-        $order = Order::where('payment_id', $event['data']['id'])
-            ->firstOrFail();
-
-        $order->update(['status' => 'paid']);
-
-        ReceiptJob::dispatch($order);
-
-        Log::info('Payment processed', [
-            'order_id' => $order->id,
-            'payment_id' => $event['data']['id'],
-        ]);
-    }
-
-    return response()->json(['ok' => true]);
-}` , `<?php
-
-public function handle(Request $request)
-{
-    $payload = $request->getContent();
-    $signature = $request->header('Stripe-Signature');
-    $event = $this->gateway->verifyWebhook(
-        $payload,
-        $signature,
-    );
-
-    if ($event->type === 'payment.succeeded') {
-        $order = Order::where('payment_id', $event->data->id)
-            ->firstOrFail();
-
-        $order->update(['status' => 'paid']);
-
-        ReceiptJob::dispatch($order);
-
-        Log::info('Payment processed', [
-            'order_id' => $order->id,
-            'payment_id' => $event->data->id,
-        ]);
-    }
-
-    return response()->json(['ok' => true]);
-}`, "A public endpoint must not accept arbitrary JSON as a payment event. Verify the raw payload and signature first."],
-];
-
-function createChallenges(level: ChallengeLevel, startId: number, templates: Template[]): CodeReviewChallenge[] {
-  return Array.from({ length: 50 }, (_, index) => {
-    const [title, prompt, code, fixedCode, issue] = templates[index % templates.length];
-    return {
-      id: startId + index,
-      level,
-      title: `${title} ${Math.floor(index / templates.length) + 1}`,
-      summary: "",
-      prompt,
-      code,
-      issues: [issue],
-      fixedCode,
-    };
-  });
+import type { CodeReviewChallenge } from "@/lib/code-review/challenges";
+
+const MODELS = ["Customer", "Order", "Invoice", "Project", "Ticket", "Booking", "Subscription", "Shipment", "Product", "Report", "Profile", "Comment", "Document", "Campaign", "Vendor", "Workspace", "Member", "Course", "Lesson", "Receipt", "Payment", "Refund", "Payout", "Contract", "Template", "Asset", "Photo", "Message", "Notification", "Task", "Milestone", "Event", "Venue", "Coupon", "GiftCard", "Wishlist", "Review", "Article", "Podcast", "Playlist", "Recipe", "Ingredient", "Donation", "Volunteer", "Appointment", "Patient", "Prescription", "Warranty", "Claim", "Import"] as const;
+
+function challenge(level: "Basic" | "Intermediate" | "Advanced", model: string, index: number): CodeReviewChallenge {
+  const id = (level === "Basic" ? 2001 : level === "Intermediate" ? 2051 : 2101) + index;
+  const mode = index % 5;
+  const code = level === "Basic"
+    ? mode === 0 ? `<?php\n\npublic function update(Request $request, ${model} $${model.toLowerCase()})\n{\n    $${model.toLowerCase()}->update($request->all());\n\n    return response()->json($${model.toLowerCase()});\n}`
+      : mode === 1 ? `<?php\n\npublic function show(${model} $${model.toLowerCase()})\n{\n    return [\n        'id' => $${model.toLowerCase()}->id,\n        'owner' => $${model.toLowerCase()}->owner->name,\n    ];\n}`
+      : mode === 2 ? `<?php\n\npublic function index()\n{\n    $items = ${model}::latest()->get();\n\n    return view('${model.toLowerCase()}.index', compact('items'));\n}`
+      : mode === 3 ? `<?php\n\npublic function destroy(${model} $${model.toLowerCase()})\n{\n    $${model.toLowerCase()}->delete();\n\n    return back();\n}`
+      : `<?php\n\npublic function store(Request $request)\n{\n    return ${model}::create($request->all());\n}`
+    : level === "Intermediate"
+      ? mode === 0 ? `<?php\n\npublic function update(Request $request, ${model} $${model.toLowerCase()})\n{\n    $data = $request->validate(['name' => ['required', 'string']]);\n    $${model.toLowerCase()}->update($request->all());\n\n    return response()->json($${model.toLowerCase()});\n}`
+      : mode === 1 ? `<?php\n\npublic function update(Request $request, ${model} $${model.toLowerCase()})\n{\n    $${model.toLowerCase()}->update($request->validate(['name' => 'required']));\n\n    return response()->json($${model.toLowerCase()});\n}`
+      : mode === 2 ? `<?php\n\npublic function store(Request $request)\n{\n    $${model.toLowerCase()} = ${model}::create($request->validated());\n    event(new ${model}Created($${model.toLowerCase()}));\n\n    return response()->json($${model.toLowerCase()});\n}`
+      : mode === 3 ? `<?php\n\npublic function index(Request $request)\n{\n    return ${model}::query()->paginate($request->input('per_page'));\n}`
+      : `<?php\n\npublic function restore(int $id)\n{\n    return ${model}::withTrashed()->findOrFail($id)->restore();\n}`
+      : mode === 0 ? `<?php\n\nclass Export${model} implements ShouldQueue\n{\n    public function __construct(public int $tenantId) {}\n\n    public function handle(): void\n    {\n        $items = ${model}::query()->get();\n        Storage::put("exports/{$this->tenantId}.csv", $items->toJson());\n    }\n}`
+      : mode === 1 ? `<?php\n\npublic function reserve(${model} $${model.toLowerCase()})\n{\n    if ($${model.toLowerCase()}->stock < 1) {\n        throw ValidationException::withMessages(['stock' => 'Unavailable']);\n    }\n\n    $${model.toLowerCase()}->decrement('stock');\n    return response()->json(['reserved' => true]);\n}`
+      : mode === 2 ? `<?php\n\npublic function webhook(Request $request)\n{\n    $event = json_decode($request->getContent(), true);\n    ${model}::where('external_id', $event['id'])->update(['status' => 'paid']);\n\n    return response()->json(['ok' => true]);\n}`
+      : mode === 3 ? `<?php\n\npublic function update(Request $request, ${model} $${model.toLowerCase()})\n{\n    $${model.toLowerCase()}->update($request->validated());\n    Cache::put('${model.toLowerCase()}:' . $${model.toLowerCase()}->id, $${model.toLowerCase()});\n\n    return response()->json($${model.toLowerCase()});\n}`
+      : `<?php\n\npublic function export(Request $request)\n{\n    return ${model}::query()->get()->map(fn ($item) => $item->email)->join("\\n");\n}`;
+  const fixedCode = code.replace("$request->all()", "$request->validate(['name' => ['required', 'string']])").replace("->owner->name", "->owner?->name").replace("::latest()->get()", "::with('owner')->latest()->get()").replace("$items = ${model}::query()->get();", `$items = ${model}::query()->where('tenant_id', $this->tenantId)->get();`).replace("$${model.toLowerCase()}->decrement('stock');", `$reserved = ${model}::query()->whereKey($${model.toLowerCase()})->where('stock', '>', 0)->decrement('stock');`).replace("$event = json_decode($request->getContent(), true);", "$event = $this->gateway->verifyWebhook($request->getContent(), $request->header('Signature'));").replace("paginate($request->input('per_page'))", "paginate(min((int) $request->input('per_page', 20), 100))");
+  return { id, level, title: `${model} ${level} review`, summary: "", prompt: `Review this ${model} workflow for a real Laravel data, authorization, query, or consistency bug.`, code, issues: [`${model} needs an explicit Laravel boundary: validate input, authorize access, scope queries, or make database work atomic.`], fixedCode };
 }
 
-export const LARAVEL_CODE_REVIEW_CHALLENGES = [
-  ...createChallenges("Basic", 2001, BASIC),
-  ...createChallenges("Intermediate", 2051, INTERMEDIATE),
-  ...createChallenges("Advanced", 2101, ADVANCED),
+export const LARAVEL_CODE_REVIEW_CHALLENGES: CodeReviewChallenge[] = [
+  ...MODELS.map((model, index) => challenge("Basic", model, index)),
+  ...MODELS.map((model, index) => challenge("Intermediate", model, index)),
+  ...MODELS.map((model, index) => challenge("Advanced", model, index)),
 ];
