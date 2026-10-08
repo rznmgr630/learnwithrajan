@@ -89,9 +89,8 @@ export function CodeReviewChallenges({
     () => challenges.find((item) => item.id === selectedId) ?? challenges[0],
     [challenges, selectedId],
   );
-  const levelProblemNumber = challenges
-    .filter((item) => item.level === challenge.level)
-    .findIndex((item) => item.id === challenge.id) + 1;
+  const currentLevelChallenges = challenges.filter((item) => item.level === challenge.level);
+  const levelProblemNumber = currentLevelChallenges.findIndex((item) => item.id === challenge.id) + 1;
 
   useEffect(() => {
     const receiveOutput = (event: MessageEvent) => {
@@ -180,6 +179,36 @@ export function CodeReviewChallenges({
   const setPage = (level: ChallengeLevel, page: number) => {
     setPages((current) => ({ ...current, [level]: page }));
   };
+
+  const selectAdjacentChallenge = (direction: -1 | 1) => {
+    const nextIndex = currentLevelChallenges.findIndex((item) => item.id === challenge.id) + direction;
+    const nextChallenge = currentLevelChallenges[nextIndex];
+    if (!nextChallenge) return;
+
+    setPage(challenge.level, Math.floor(nextIndex / PROBLEMS_PER_PAGE));
+    selectChallenge(nextChallenge);
+  };
+
+  const renderProblemNavigation = () => (
+    <>
+      <button
+        type="button"
+        disabled={levelProblemNumber === 1}
+        onClick={() => selectAdjacentChallenge(-1)}
+        className="rounded-lg border border-[var(--border)] px-2 py-1.5 text-xs font-medium text-[var(--text)] hover:border-[var(--accent)]/60 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        ← Previous
+      </button>
+      <button
+        type="button"
+        disabled={levelProblemNumber === currentLevelChallenges.length}
+        onClick={() => selectAdjacentChallenge(1)}
+        className="rounded-lg border border-[var(--border)] px-2 py-1.5 text-xs font-medium text-[var(--text)] hover:border-[var(--accent)]/60 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Next →
+      </button>
+    </>
+  );
 
   const renderLevelSection = (level: ChallengeLevel) => {
     const levelChallenges = challenges.filter((item) => item.level === level);
@@ -277,13 +306,16 @@ export function CodeReviewChallenges({
               </span>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--text)]">Problem {String(levelProblemNumber).padStart(2, "0")}</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => toggleCompleted(challenge.id)}
-              className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text)] hover:border-[var(--accent)]/60"
-            >
-              {completed.has(challenge.id) ? "Mark incomplete" : "Mark complete"}
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="hidden items-center gap-2 lg:flex">{renderProblemNavigation()}</div>
+              <button
+                type="button"
+                onClick={() => toggleCompleted(challenge.id)}
+                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text)] hover:border-[var(--accent)]/60"
+              >
+                {completed.has(challenge.id) ? "Mark incomplete" : "Mark complete"}
+              </button>
+            </div>
           </div>
 
           <section className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
@@ -368,6 +400,9 @@ export function CodeReviewChallenges({
                 )}
               </section>
         </aside>
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-2 lg:hidden">
+            {renderProblemNavigation()}
           </div>
         </section>
       </div>
