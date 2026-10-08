@@ -200,9 +200,9 @@ export function DuolingoPage() {
       {tab === "words" && (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="grid min-w-0 gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
-          <aside className="min-w-0 lg:sticky lg:top-20 lg:z-10 lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:top-16 lg:z-10 lg:self-start">
             <p className="text-sm font-semibold text-[var(--muted)]">Browse vocabulary</p>
-            <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:max-h-[calc(100vh-7.5rem)] lg:flex-col lg:overflow-y-auto lg:pr-1">
+            <div className="mt-3 flex w-full min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:max-h-[min(28rem,calc(100vh-18rem))] lg:flex-col lg:overflow-y-auto lg:pr-1">
               {DUOLINGO_DAYS.map((day) => {
                 const isActive = activeDay === day.day;
                 return (
@@ -219,7 +219,7 @@ export function DuolingoPage() {
             </div>
           </aside>
 
-          <div id="vocabulary-content" className="min-w-0 scroll-mt-8 lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:scroll-smooth lg:pr-2 lg:scroll-mt-10">
+          <div id="vocabulary-content" className="min-w-0 scroll-mt-8 lg:pr-2 lg:scroll-mt-10">
             <div className="animate-[fade-in_200ms_ease-out]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
