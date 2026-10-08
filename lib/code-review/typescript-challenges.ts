@@ -1,4 +1,4 @@
-import type { ChallengeLevel, CodeReviewChallenge } from "@/lib/code-review/challenges";
+import type { CodeReviewChallenge } from "@/lib/code-review/challenges";
 
 type Domain = readonly [string, string];
 

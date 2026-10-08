@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const posts = [
   {
@@ -40,16 +40,15 @@ const categoryStorageKey = "blog:selected-category";
 const postsPerPage = 8;
 
 export function BlogPostList() {
-  const [selectedCategory, setSelectedCategory] = useState<Category>("All");
+  const [selectedCategory, setSelectedCategory] = useState<Category>(() => {
+    if (typeof window === "undefined") return "All";
+    const savedCategory = window.sessionStorage.getItem(categoryStorageKey);
+    return savedCategory && categories.includes(savedCategory as Category) ? savedCategory as Category : "All";
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const filteredPosts = selectedCategory === "All" ? posts : posts.filter((post) => post.category === selectedCategory);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   const visiblePosts = filteredPosts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
-
-  useEffect(() => {
-    const savedCategory = window.sessionStorage.getItem(categoryStorageKey);
-    if (savedCategory && categories.includes(savedCategory as Category)) setSelectedCategory(savedCategory as Category);
-  }, []);
 
   function selectCategory(category: Category) {
     window.sessionStorage.setItem(categoryStorageKey, category);
