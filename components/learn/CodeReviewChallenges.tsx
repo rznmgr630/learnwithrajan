@@ -332,7 +332,7 @@ export function CodeReviewChallenges({
           <p className="mt-4 text-xs leading-5 text-[var(--faint)]">Code runs in an isolated browser frame and is not sent to your server.</p>
         </section>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:h-fit xl:self-start">
+        <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:h-fit xl:self-start">
               <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-xl shadow-black/10">
                 <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text)]">
                   {isRunnable ? "Console output" : "Code review"}
@@ -348,7 +348,7 @@ export function CodeReviewChallenges({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <section className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
                 <button type="button" onClick={() => setShowReview((current) => !current)} className="text-sm font-semibold text-[var(--accent)]">
                   {showReview ? "Hide expected review" : "Reveal expected review"}
                 </button>
@@ -362,7 +362,7 @@ export function CodeReviewChallenges({
                     </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--faint)]">One possible fix</p>
-                      <pre className="mt-2 overflow-x-auto rounded-lg bg-[#0b0e14] p-3 text-xs leading-5 text-slate-100">{challenge.fixedCode}</pre>
+                      <pre className="mt-2 max-w-full overflow-x-auto rounded-lg bg-[#0b0e14] p-3 text-xs leading-5 text-slate-100">{challenge.fixedCode}</pre>
                     </div>
                   </div>
                 )}
