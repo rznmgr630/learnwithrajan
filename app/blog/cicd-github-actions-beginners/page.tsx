@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata = { title: "CI/CD Explained with GitHub Actions | Learn with Rajan", description: "A beginner-friendly guide to CI/CD, GitHub Actions, automated checks, and safe deployments." };
+export const metadata: Metadata = {
+  title: "CI/CD Explained with GitHub Actions | Learn with Rajan",
+  description: "A beginner-friendly guide to CI/CD, GitHub Actions, automated checks, and safe deployments.",
+  alternates: { canonical: "/blog/cicd-github-actions-beginners" },
+  openGraph: {
+    title: "CI/CD Explained with GitHub Actions",
+    description: "A beginner-friendly guide to CI/CD, GitHub Actions, automated checks, and safe deployments.",
+    type: "article",
+    url: "/blog/cicd-github-actions-beginners",
+    images: "/images/blog/cicd-github-actions-cover.png",
+  },
+};
 
 function Flow({ children }: { children: string }) {
   return <pre className="my-6 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-5 font-mono text-sm leading-6 text-slate-100 shadow-sm">{children}</pre>;

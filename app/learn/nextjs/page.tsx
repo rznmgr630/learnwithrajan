@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { NextjsRoadmap } from "@/components/learn/NextjsRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Next.js Roadmap", "Learn Next.js with a practical roadmap covering App Router, data fetching, APIs, authentication, and deployment.", "/learn/nextjs");
 
 export default function LearnNextjsPage() {
   return (
