@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { NestjsRoadmap } from "@/components/learn/NestjsRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("NestJS Roadmap", "Learn NestJS from fundamentals to building maintainable APIs, authentication, testing, and deployment.", "/learn/nestjs");
 
 export default function LearnNestjsPage() {
   return (

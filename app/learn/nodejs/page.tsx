@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { NodejsRoadmap } from "@/components/learn/NodejsRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Node.js Roadmap", "Learn Node.js from fundamentals to production APIs, databases, authentication, testing, and deployment.", "/learn/nodejs");
 
 export default function LearnNodejsPage() {
   return (
