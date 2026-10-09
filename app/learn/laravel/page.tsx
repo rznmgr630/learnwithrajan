@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { LaravelRoadmap } from "@/components/learn/LaravelRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Laravel Roadmap", "Learn Laravel from beginner to production-ready developer with a structured hands-on roadmap.", "/learn/laravel");
 
 export default function LearnLaravelPage() {
   return (

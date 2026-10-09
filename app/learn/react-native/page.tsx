@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { ReactNativeRoadmap } from "@/components/learn/ReactNativeRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("React Native Roadmap", "Learn React Native from fundamentals to building, testing, and shipping mobile apps for iOS and Android.", "/learn/react-native");
 
 export default function LearnReactNativePage() {
   return (

@@ -1,9 +1,18 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "AI Engineer Roadmap 2027 | Learn with Rajan",
   description: "A practical AI Engineer roadmap for building real AI products, from software foundations to production systems.",
+  alternates: { canonical: "/blog/ai-engineer-roadmap-2027" },
+  openGraph: {
+    title: "AI Engineer Roadmap 2027",
+    description: "A practical AI Engineer roadmap for building real AI products, from software foundations to production systems.",
+    type: "article",
+    url: "/blog/ai-engineer-roadmap-2027",
+    images: "/images/blog/ai-engineer-roadmap-cover.png",
+  },
 };
 
 function Flow({ children }: { children: string }) {

@@ -14,8 +14,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://learn.rajanmidun.com.np"),
   title: "Learn with Rajan",
-  description: "A public log of what I am learning — currently a 30-day backend challenge.",
+  description: "Free, beginner-friendly learning paths for programming, Japanese, DevOps, and more.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Learn with Rajan",
+    title: "Learn with Rajan",
+    description: "Free, beginner-friendly learning paths for programming, Japanese, DevOps, and more.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learn with Rajan",
+    description: "Free, beginner-friendly learning paths for programming, Japanese, DevOps, and more.",
+  },
 };
 
 export default function RootLayout({
