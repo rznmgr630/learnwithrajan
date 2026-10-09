@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { JsRoadmap } from "@/components/learn/JsRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("JavaScript Roadmap", "Learn modern JavaScript from fundamentals to advanced browser, async, and TypeScript-ready skills.", "/learn/javascript");
 
 export default function LearnJavaScriptPage() {
   return (

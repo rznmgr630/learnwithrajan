@@ -1,5 +1,8 @@
 import { DevopsRoadmap } from "@/components/learn/DevopsRoadmap";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("DevOps Roadmap", "A beginner-friendly DevOps roadmap covering Linux, Git, Docker, CI/CD, cloud, monitoring, and production workflows.", "/learn/devops");
 
 export default function DevopsPage() {
   return (

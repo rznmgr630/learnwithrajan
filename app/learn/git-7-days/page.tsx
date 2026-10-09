@@ -1,5 +1,8 @@
 import { GitRoadmap } from "@/components/learn/GitRoadmap";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Learn Git in 7 Days", "A beginner-friendly seven-day Git roadmap covering commits, branches, merges, pull requests, and collaboration.", "/learn/git-7-days");
 
 export default function Git7DaysPage() {
   return (

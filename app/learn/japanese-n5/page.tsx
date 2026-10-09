@@ -1,5 +1,8 @@
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { JapaneseRoadmap } from "@/components/learn/JapaneseRoadmap";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("JLPT N5 Japanese Roadmap", "Start learning Japanese for JLPT N5 with daily lessons, vocabulary, kanji, grammar, and practice tests.", "/learn/japanese-n5");
 
 export default function JapaneseN5Page() {
   return (
