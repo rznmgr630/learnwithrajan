@@ -1,10 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Source_Serif_4 } from "next/font/google";
 
 export const metadata = {
   title: "Software Engineering Career in the AI Era | Learn with Rajan",
   description: "A practical guide to building a durable software engineering career in the AI era.",
 };
+
+const sourceSerif = Source_Serif_4({ subsets: ["latin"], weight: "variable", style: ["normal", "italic"] });
 
 const CAREER_ARTICLE = `# How to Build a Software Engineering Career in the AI Era
 
@@ -290,7 +293,7 @@ function toId(text: string) {
 
 function ArticleHeading({ level, text }: { level: number; text: string }) {
   const id = toId(text);
-  if (level <= 2) return <h2 id={id} className="scroll-mt-20 mt-12 text-2xl font-bold tracking-tight text-[var(--text)]">{renderInline(text)}</h2>;
+  if (level <= 2) return <h2 id={id} className="scroll-mt-20 mt-14 border-t border-[var(--border)] pt-7 text-2xl font-semibold tracking-tight text-[var(--text)]">{renderInline(text)}</h2>;
   return <h3 id={id} className="scroll-mt-20 mt-8 text-xl font-bold text-[var(--text)]">{renderInline(text)}</h3>;
 }
 
@@ -359,14 +362,16 @@ export default function SoftwareEngineeringCareerPage() {
   const bodyBlocks = blocks.slice(4);
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
-      <Link href="/blog" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← Back to blog</Link>
-      <p className="mt-8 text-sm font-medium text-[var(--accent)]">CAREER · 15 MIN READ</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">{title}</h1>
-      <p className="mt-5 text-lg leading-8 text-[var(--muted)]">{renderInline(intro)}</p>
-      <Image src="/images/blog/software-engineering-career-cover.png" alt="An upward software engineering career path in the AI era" width={1200} height={675} priority className="mt-8 rounded-2xl border border-[var(--border)]" />
+    <article className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/blog" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← Back to blog</Link>
+        <p className="mt-7 text-xs font-semibold tracking-[0.18em] text-[var(--accent)]">CAREER · 15 MIN READ</p>
+        <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight text-[var(--text)] sm:text-6xl">{title}</h1>
+        <p className="mt-6 max-w-xl text-xl leading-8 text-[var(--muted)]">{renderInline(intro)}</p>
+      </div>
+      <Image src="/images/blog/software-engineering-career-cover.png" alt="An upward software engineering career path in the AI era" width={1200} height={675} priority className="mt-10 aspect-[16/8] w-full rounded-lg object-cover shadow-2xl shadow-black/15" />
 
-      <div className="mt-10 max-w-none">
+      <div className={`${sourceSerif.className} mx-auto mt-10 max-w-2xl`}>
         {bodyBlocks.map((block, index) => {
           if (block.type === "heading") {
             const image = sectionImages[block.text];
@@ -374,13 +379,13 @@ export default function SoftwareEngineeringCareerPage() {
             return (
               <div key={index}>
                 <ArticleHeading level={block.level} text={block.text} />
-                {image ? <Image src={image.src} alt={image.alt} width={1200} height={675} className="my-8 rounded-2xl border border-[var(--border)]" /> : null}
+                {image ? <Image src={image.src} alt={image.alt} width={1200} height={675} className="my-10 rounded-lg" /> : null}
               </div>
             );
           }
 
-          if (block.type === "paragraph") return <p key={index} className="mt-5 text-[1.05rem] leading-8 text-[var(--muted)]">{renderInline(block.text)}</p>;
-          if (block.type === "list") return <ul key={index} className="mt-6 list-disc space-y-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-5 pl-10 leading-7 text-[var(--muted)]">{block.items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ul>;
+          if (block.type === "paragraph") return <p key={index} className="mt-5 text-[1.125rem] leading-8 text-[var(--muted)]">{renderInline(block.text)}</p>;
+          if (block.type === "list") return <ul key={index} className="mt-6 list-disc space-y-2 pl-6 text-[1.05rem] leading-8 text-[var(--muted)]">{block.items.map((item) => <li key={item}>{renderInline(item)}</li>)}</ul>;
           if (block.type === "code") return <pre key={index} className="my-7 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-5 font-mono text-sm leading-6 text-slate-100 shadow-sm"><code>{block.text}</code></pre>;
           if (block.type === "quote") return <blockquote key={index} className="my-7 rounded-r-xl border-l-4 border-[var(--accent)] bg-[color-mix(in_oklab,var(--accent)_7%,var(--surface))] px-5 py-4 text-lg leading-8 text-[var(--muted)]">{renderInline(block.text)}</blockquote>;
           return null;
