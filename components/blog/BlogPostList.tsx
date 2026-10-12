@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 const posts = [
+  { href: "/blog/how-to-become-more-confident", image: "/images/blog/confidence-communication-cover.png", alt: "A professional speaking confidently in a supportive meeting", category: "Career", readTime: "16 min read", title: "How to Become More Confident", description: "Practical communication habits for speaking up, organising your thoughts, and building confidence." },
   {
     href: "/blog/better-communicator-practical-techniques",
     image: "/images/blog/communication-techniques-cover.png",
