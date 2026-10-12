@@ -6,6 +6,15 @@ import { useState } from "react";
 
 const posts = [
   {
+    href: "/blog/personal-university-with-ai",
+    image: "/images/blog/personal-ai-university-cover.png",
+    alt: "A learner building a personal university with AI",
+    category: "AI Learning",
+    readTime: "18 min read",
+    title: "Build Your Own Personal University With AI",
+    description: "Use AI as an advisor, librarian, tutor, editor, and roommate to build a learning system around your goals.",
+  },
+  {
     href: "/blog/reading-habit-that-lasts",
     image: "/images/blog/reading-habit-cover.png",
     alt: "A calm reading chair with an open book and warm evening light",
