@@ -6,6 +6,15 @@ import { useState } from "react";
 
 const posts = [
   {
+    href: "/blog/better-communicator-practical-techniques",
+    image: "/images/blog/communication-techniques-cover.png",
+    alt: "A professional speaking clearly in a collaborative meeting",
+    category: "Career",
+    readTime: "20 min read",
+    title: "How to Become a Better Communicator",
+    description: "17 practical techniques for speaking clearly, listening well, and guiding conversations toward useful outcomes.",
+  },
+  {
     href: "/blog/how-duolingo-makes-learning-addictive",
     image: "/images/blog/duolingo-learning-cover.png",
     alt: "Learner using a language-learning app with a progress path",
