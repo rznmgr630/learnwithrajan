@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Source_Serif_4 } from "next/font/google";
 
 export const metadata: Metadata = {
   title: "AI Engineer Roadmap 2027 | Learn with Rajan",
@@ -15,24 +16,28 @@ export const metadata: Metadata = {
   },
 };
 
+const sourceSerif = Source_Serif_4({ subsets: ["latin"], weight: "variable", style: ["normal", "italic"] });
+
 function Flow({ children }: { children: string }) {
   return <pre className="my-6 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-5 font-mono text-sm leading-6 text-slate-100 shadow-sm">{children}</pre>;
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-12 text-2xl font-bold tracking-tight text-[var(--text)]">{children}</h2>;
+  return <h2 className="mt-14 border-t border-[var(--border)] pt-7 text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl">{children}</h2>;
 }
 
 export default function AiEngineerRoadmapPage() {
   return (
-    <article className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
-      <Link href="/blog" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← Back to blog</Link>
-      <p className="mt-8 text-sm font-medium text-[var(--accent)]">AI ENGINEERING · 15 MIN READ</p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">AI Engineer Roadmap 2027: From Beginner to Builder</h1>
-      <p className="mt-5 text-lg leading-8 text-[var(--muted)]">AI engineering is not about learning every model or framework. It is about learning the stable ideas that help you build useful AI products.</p>
-      <Image src="/images/blog/ai-engineer-roadmap-cover.png" alt="An abstract roadmap from software engineering foundations to AI product building" width={1200} height={675} priority className="mt-8 rounded-2xl border border-[var(--border)]" />
+    <article className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/blog" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">← Back to blog</Link>
+        <p className="mt-7 text-xs font-semibold tracking-[0.18em] text-[var(--accent)]">AI ENGINEERING · 15 MIN READ</p>
+        <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">AI Engineer Roadmap 2027: From Beginner to Builder</h1>
+        <p className="mt-6 max-w-xl text-xl leading-8 text-[var(--muted)]">AI engineering is not about learning every model or framework. It is about learning the stable ideas that help you build useful AI products.</p>
+      </div>
+      <Image src="/images/blog/ai-engineer-roadmap-cover.png" alt="An abstract roadmap from software engineering foundations to AI product building" width={1200} height={675} priority className="mt-10 aspect-[16/8] w-full rounded-lg object-cover shadow-2xl shadow-black/15" />
 
-      <div className="prose mt-10 max-w-none prose-p:text-[var(--muted)] prose-p:leading-8 prose-li:text-[var(--muted)] dark:prose-invert">
+      <div className={`${sourceSerif.className} prose mx-auto mt-10 max-w-2xl prose-p:text-[1.125rem] prose-p:text-[var(--muted)] prose-p:leading-8 prose-li:text-[1.05rem] prose-li:text-[var(--muted)] dark:prose-invert`}>
         <SectionTitle>First, choose the path you are actually taking</SectionTitle>
         <p>There are two broad paths. <strong>AI research</strong> focuses on discovering methods, training models, and pushing the field forward. <strong>AI product development</strong> uses existing models to solve real user problems.</p>
         <p>This roadmap is for the second path. You might be called an AI Engineer, Applied AI Engineer, Generative AI Developer, or AI Product Engineer. The job is similar: connect models to products, data, tools, and users.</p>
@@ -42,7 +47,7 @@ export default function AiEngineerRoadmapPage() {
         <p>Do not start with agents or a trendy framework. Start with the layers underneath. Each stage makes the next one easier to understand and safer to build.</p>
         <Flow>{"Software engineering\n        ↓\nAI primitives\n        ↓\nAI systems\n        ↓\nProduction AI\n        ↓\nBuilder mindset + products"}</Flow>
 
-        <h3 className="mt-8 text-xl font-bold text-[var(--text)]">Stage 1: Software engineering</h3>
+        <h3 className="mt-9 text-xl font-semibold text-[var(--text)]">Stage 1: Software engineering</h3>
         <p>An LLM is only one component of an AI product. You still need APIs, databases, authentication, backend logic, infrastructure, streaming, and a usable interface.</p>
         <Flow>{"Frontend\n   ↓\nAPI\n   ↓\nAI application\n ├── Database\n ├── LLM API\n └── External tools"}</Flow>
         <p>Python is excellent for AI work. JavaScript or TypeScript is excellent when you want one ecosystem across your frontend and backend. Learn the language you need, but do not let syntax become the main goal. The important ideas transfer.</p>
@@ -61,10 +66,10 @@ export default function AiEngineerRoadmapPage() {
         <SectionTitle>Stage 3: Build AI systems</SectionTitle>
         <p>This is where a simple chat prompt becomes an application. You learn how a model can return structured data, call tools, remember useful details, and work with your company data.</p>
         <Image src="/images/blog/ai-agent-tools.png" alt="AI agent connected to database, web search, and calendar tools" width={1200} height={675} className="my-8 rounded-2xl border border-[var(--border)]" />
-        <h3 className="mt-8 text-xl font-bold text-[var(--text)]">Agents and workflows</h3>
+        <h3 className="mt-9 text-xl font-semibold text-[var(--text)]">Agents and workflows</h3>
         <p>An <strong>agent</strong> decides what to do next. A <strong>workflow</strong> follows a sequence your application already knows. Start with a workflow when the steps are predictable. Add an agent only when decisions really need flexibility.</p>
         <Flow>{"Agent\nLLM → decide → tool → decide → answer\n\nWorkflow\nStep 1 → Step 2 → Step 3 → result"}</Flow>
-        <h3 className="mt-8 text-xl font-bold text-[var(--text)]">Structured output, tools, memory, and RAG</h3>
+        <h3 className="mt-9 text-xl font-semibold text-[var(--text)]">Structured output, tools, memory, and RAG</h3>
         <p>Use <strong>structured output</strong> when software must consume the answer. Use <strong>tool calling</strong> when the model needs a database, calendar, search, payments, or another API. Add memory only when a conversation needs to retain relevant information.</p>
         <p><strong>RAG</strong>, short for Retrieval-Augmented Generation, lets an application retrieve relevant company knowledge before asking the model to answer. It is useful for support bots, document assistants, and internal search.</p>
         <Flow>{"Company documents\n       ↓\nKnowledge base → search → relevant facts\n                              ↓\n                         LLM answer"}</Flow>
