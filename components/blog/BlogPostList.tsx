@@ -6,6 +6,15 @@ import { useState } from "react";
 
 const posts = [
   {
+    href: "/blog/reading-habit-that-lasts",
+    image: "/images/blog/reading-habit-cover.png",
+    alt: "A calm reading chair with an open book and warm evening light",
+    category: "Reading",
+    readTime: "12 min read",
+    title: "How to Build a Reading Habit That Actually Lasts",
+    description: "A gentle system for making reading easy to return to, even after a busy day or a missed week.",
+  },
+  {
     href: "/blog/software-engineering-career-ai-era",
     image: "/images/blog/software-engineering-career-cover.png",
     alt: "Illustration of a software engineering career path",
