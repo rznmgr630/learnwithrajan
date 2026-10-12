@@ -6,6 +6,15 @@ import { useState } from "react";
 
 const posts = [
   {
+    href: "/blog/how-duolingo-makes-learning-addictive",
+    image: "/images/blog/duolingo-learning-cover.png",
+    alt: "Learner using a language-learning app with a progress path",
+    category: "Learning",
+    readTime: "15 min read",
+    title: "How Duolingo Makes Learning Addictive and What We Can Learn From It",
+    description: "How accessible design, habits, and gamification can help people keep learning.",
+  },
+  {
     href: "/blog/reading-habit-that-lasts",
     image: "/images/blog/reading-habit-cover.png",
     alt: "A calm reading chair with an open book and warm evening light",
