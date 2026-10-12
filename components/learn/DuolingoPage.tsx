@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import type { Locale } from "@/lib/i18n/types";
@@ -95,8 +95,16 @@ function WordNoteCard({ note }: { note: (typeof WORD_NOTES)[number] }) {
 
 export function DuolingoPage() {
   const { locale } = useLocale();
-  const [tab, setTab] = useState<"words" | "notes">("words");
-  const [activeDay, setActiveDay] = useState(1);
+  const [tab, setTab] = useState<"words" | "notes">(() => {
+    if (typeof window === "undefined") return "words";
+    const savedTab = window.sessionStorage.getItem(DUOLINGO_TAB_KEY);
+    return savedTab === "words" || savedTab === "notes" ? savedTab : "words";
+  });
+  const [activeDay, setActiveDay] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    const savedDay = Number(window.sessionStorage.getItem(DUOLINGO_ACTIVE_DAY_KEY));
+    return DUOLINGO_DAYS.some((day) => day.day === savedDay) ? savedDay : 1;
+  });
   const [activeNoteSection, setActiveNoteSection] = useState<NoteSectionId>("words");
 
   const groupedNotes = NOTE_GROUPS.map((group) => ({
@@ -104,14 +112,6 @@ export function DuolingoPage() {
     notes: DUOLINGO_NOTES.filter((note) => noteGroup(note.title) === group.id),
   }));
   const activeDayData = DUOLINGO_DAYS.find((day) => day.day === activeDay) ?? DUOLINGO_DAYS[0];
-
-  useEffect(() => {
-    const savedTab = window.sessionStorage.getItem(DUOLINGO_TAB_KEY);
-    if (savedTab === "words" || savedTab === "notes") setTab(savedTab);
-
-    const savedDay = Number(window.sessionStorage.getItem(DUOLINGO_ACTIVE_DAY_KEY));
-    if (DUOLINGO_DAYS.some((day) => day.day === savedDay)) setActiveDay(savedDay);
-  }, []);
 
   function selectTab(nextTab: "words" | "notes") {
     setTab(nextTab);
