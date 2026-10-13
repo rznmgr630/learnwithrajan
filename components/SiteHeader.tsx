@@ -51,6 +51,7 @@ function SettingsMenu() {
 
   async function handleLogout() {
     if (!auth) return;
+    await fetch("/api/auth/session", { method: "DELETE" });
     await signOut(auth);
     setIsOpen(false);
   }
@@ -129,7 +130,7 @@ function SettingsMenu() {
                   <Link href="/focus" onClick={() => setIsOpen(false)} className={mobileLinkClass("/focus")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
                   <Link href="/learn" onClick={() => setIsOpen(false)} className={mobileLinkClass("/learn")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10l10-5 10 5-10 5-10-5Zm4 2v5c0 2.5 12 2.5 12 0v-5" /></svg>{t("nav.learningHub")}</Link>
                   <Link href="/blog" onClick={() => setIsOpen(false)} className={mobileLinkClass("/blog")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4zM7 8h10M7 12h10M7 16h6" /></svg>{t("nav.blog")}</Link>
-                  <Link href="/library" onClick={() => setIsOpen(false)} className={mobileLinkClass("/library")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h14v18H5zM8 3v18" /></svg>{t("nav.library")}</Link>
+                  {user && <Link href="/library" onClick={() => setIsOpen(false)} className={mobileLinkClass("/library")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h14v18H5zM8 3v18" /></svg>{t("nav.library")}</Link>}
                   <Link href="/learn/compiler" onClick={() => setIsOpen(false)} className={mobileLinkClass("/learn/compiler")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>Code Compiler</Link>
                   <Link href="/login" onClick={() => setIsOpen(false)} className={mobileLinkClass("/login")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Login</Link>
                   <Link href="/register" onClick={() => setIsOpen(false)} className={mobileLinkClass("/register")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6" /></svg>Register</Link>
@@ -164,6 +165,7 @@ export function SiteHeader() {
           <nav className="hidden min-w-0 items-center gap-0 text-sm lg:flex lg:gap-1">
             <Link href="/focus" aria-current={pathname === "/focus" ? "page" : undefined} className={`inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-1.5 py-2 transition sm:px-3 ${pathname === "/focus" ? "bg-[var(--elevated)] font-medium text-[var(--text)]" : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"}`}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
             {links.map((item) => {
+              if (item.href === "/library" && !user) return null;
               const isActive = item.href === "/learn" ? pathname.startsWith(item.href) && !pathname.startsWith("/learn/compiler") : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link

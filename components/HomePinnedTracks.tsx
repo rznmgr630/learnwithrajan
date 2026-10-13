@@ -16,10 +16,12 @@ import { useDevopsProgress } from "@/hooks/use-devops-progress";
 import { useJapaneseN5Progress } from "@/hooks/use-japanese-n5-progress";
 import { useJapaneseN4Progress } from "@/hooks/use-japanese-n4-progress";
 import { useJapaneseN3Progress } from "@/hooks/use-japanese-n3-progress";
+import { useAuth } from "@/context/AuthContext";
 
 export function HomePinnedTracks() {
   const { t } = useLocale();
   const { pinned } = usePinnedTracks();
+  const { isAdmin } = useAuth();
 
   const git = useGit7Progress();
   const react = useReactProgress();
@@ -47,7 +49,7 @@ export function HomePinnedTracks() {
     "japanese-n3": jpN3.percent,
   };
 
-  const pinnedTracks = PINNABLE_TRACKS.filter((track) => pinned.has(track.id));
+  const pinnedTracks = PINNABLE_TRACKS.filter((track) => pinned.has(track.id) && (isAdmin || track.groupKey === "hub.sectionProgramming"));
 
   return (
     <section id="pinned" className="border-b border-[var(--border)]">
