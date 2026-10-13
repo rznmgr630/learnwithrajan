@@ -1,13 +1,14 @@
 "use client";
 
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { auth } from "@/lib/firebase";
 
 type AuthContextValue = {
   user: User | null;
   isAdmin: boolean;
   isLoading: boolean;
+  refreshAuthState: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -16,32 +17,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(auth));
+  const refreshRequestRef = useRef(0);
+
+  const refreshAuthState = useCallback(async () => {
+    const requestId = ++refreshRequestRef.current;
+    const nextUser = auth?.currentUser ?? null;
+    setUser(nextUser);
+
+    if (!nextUser) {
+      if (requestId === refreshRequestRef.current) {
+        setIsAdmin(false);
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/session", { cache: "no-store" });
+      const session = response.ok ? await response.json() : { isAdmin: false };
+      if (requestId === refreshRequestRef.current) setIsAdmin(session.isAdmin === true);
+    } catch {
+      if (requestId === refreshRequestRef.current) setIsAdmin(false);
+    }
+    if (requestId === refreshRequestRef.current) setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     if (!auth) {
       return;
     }
 
-    return onAuthStateChanged(auth, async (nextUser) => {
-      setUser(nextUser);
-      if (!nextUser) {
-        setIsAdmin(false);
-        setIsLoading(false);
-        return;
-      }
+    return onAuthStateChanged(auth, () => void refreshAuthState());
+  }, [refreshAuthState]);
 
-      try {
-        const response = await fetch("/api/auth/session");
-        const session = response.ok ? await response.json() : { isAdmin: false };
-        setIsAdmin(session.isAdmin === true);
-      } catch {
-        setIsAdmin(false);
-      }
-      setIsLoading(false);
-    });
-  }, []);
-
-  return <AuthContext.Provider value={{ user, isAdmin, isLoading }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, isAdmin, isLoading, refreshAuthState }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
