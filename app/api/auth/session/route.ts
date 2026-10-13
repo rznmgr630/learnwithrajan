@@ -1,8 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminAuth, isAdminEmail } from "@/lib/firebase-admin";
+
+export const runtime = "nodejs";
 
 const sessionCookieName = "firebase-session";
 const sessionDurationMs = 1000 * 60 * 60 * 24 * 5;
+
+async function getFirebaseAdmin() {
+  try {
+    return await import("@/lib/firebase-admin");
+  } catch {
+    return null;
+  }
+}
 
 function getSessionCookie(value: string, maxAge: number) {
   return {
@@ -17,24 +26,30 @@ function getSessionCookie(value: string, maxAge: number) {
 }
 
 export async function GET(request: NextRequest) {
-  const adminAuth = getAdminAuth();
+  const firebaseAdmin = await getFirebaseAdmin();
+  const adminAuth = firebaseAdmin?.getAdminAuth();
   const sessionCookie = request.cookies.get(sessionCookieName)?.value;
 
-  if (!adminAuth || !sessionCookie) {
-    return NextResponse.json({ isAdmin: false });
+  if (!firebaseAdmin || !adminAuth) {
+    return NextResponse.json({ isAuthenticated: false, isAdmin: false }, { status: 503 });
+  }
+
+  if (!sessionCookie) {
+    return NextResponse.json({ isAuthenticated: false, isAdmin: false });
   }
 
   try {
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    return NextResponse.json({ isAdmin: isAdminEmail(decodedToken.email) });
+    return NextResponse.json({ isAuthenticated: true, isAdmin: firebaseAdmin.isAdminEmail(decodedToken.email) });
   } catch {
-    return NextResponse.json({ isAdmin: false });
+    return NextResponse.json({ isAuthenticated: false, isAdmin: false });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const adminAuth = getAdminAuth();
-  if (!adminAuth) {
+  const firebaseAdmin = await getFirebaseAdmin();
+  const adminAuth = firebaseAdmin?.getAdminAuth();
+  if (!firebaseAdmin || !adminAuth) {
     return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
   }
 
@@ -54,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const signedSessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn: sessionDurationMs });
-    const response = NextResponse.json({ isAdmin: isAdminEmail(decodedToken.email) });
+    const response = NextResponse.json({ isAdmin: firebaseAdmin.isAdminEmail(decodedToken.email) });
     response.cookies.set(getSessionCookie(signedSessionCookie, sessionDurationMs / 1000));
     return response;
   } catch {
