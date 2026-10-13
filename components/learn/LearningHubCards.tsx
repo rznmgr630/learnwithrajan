@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
+import { useAuth } from "@/context/AuthContext";
 
 const gridClass = "grid gap-4 sm:grid-cols-2";
 
 export function LearningHubCards() {
   const { t } = useLocale();
+  const { isAdmin } = useAuth();
 
   return (
     <div className={gridClass}>
@@ -21,7 +23,7 @@ export function LearningHubCards() {
         </span>
       </Link>
 
-      <Link href="/learn/language" className={learnHubCardClass}>
+      {isAdmin && <Link href="/learn/language" className={learnHubCardClass}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
           {t("hub.sectionLanguage")}
         </h2>
@@ -29,7 +31,7 @@ export function LearningHubCards() {
         <span className="mt-8 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
           {t("hub.category.cta")}
         </span>
-      </Link>
+      </Link>}
 
       <Link href="/learn/ai-prompts" className={learnHubCardClass}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -41,7 +43,7 @@ export function LearningHubCards() {
         </span>
       </Link>
 
-      <Link href="/learn/personal-development" className={learnHubCardClass}>
+      {isAdmin && <Link href="/learn/personal-development" className={learnHubCardClass}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
           {t("hub.sectionPersonalDev")}
         </h2>
@@ -49,9 +51,9 @@ export function LearningHubCards() {
         <span className="mt-8 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
           {t("hub.category.cta")}
         </span>
-      </Link>
+      </Link>}
 
-      <Link href="/learn/loksewa" className={learnHubCardClass}>
+      {isAdmin && <Link href="/learn/loksewa" className={learnHubCardClass}>
         <h2 className="text-xl font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
           {t("hub.sectionLoksewa")}
         </h2>
@@ -59,7 +61,7 @@ export function LearningHubCards() {
         <span className="mt-8 text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
           {t("hub.category.cta")}
         </span>
-      </Link>
+      </Link>}
     </div>
   );
 }
