@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminAuth, isAdminEmail } from "@/lib/firebase-admin";
+import { getAdminAuth, isAdminEmail } from "@/lib/firebase-admin";
 
 function redirectUnauthorized(request: NextRequest, requiresLogin: boolean) {
   return NextResponse.redirect(new URL(requiresLogin ? "/login" : "/learn", request.url));
 }
 
 export async function proxy(request: NextRequest) {
+  const adminAuth = getAdminAuth();
   const sessionCookie = request.cookies.get("firebase-session")?.value;
   const requiresLogin = ["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/library"]
     .some((path) => request.nextUrl.pathname.startsWith(path));

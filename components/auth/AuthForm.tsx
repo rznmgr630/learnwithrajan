@@ -18,7 +18,7 @@ const authErrors: Record<string, string> = {
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshAuthState } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +67,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         throw new Error("Unable to create a secure session.");
       }
 
+      await refreshAuthState();
       router.replace("/learn");
       router.refresh();
     } catch (caughtError) {

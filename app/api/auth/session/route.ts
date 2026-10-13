@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminAuth, isAdminEmail } from "@/lib/firebase-admin";
+import { getAdminAuth, isAdminEmail } from "@/lib/firebase-admin";
 
 const sessionCookieName = "firebase-session";
 const sessionDurationMs = 1000 * 60 * 60 * 24 * 5;
@@ -17,6 +17,7 @@ function getSessionCookie(value: string, maxAge: number) {
 }
 
 export async function GET(request: NextRequest) {
+  const adminAuth = getAdminAuth();
   const sessionCookie = request.cookies.get(sessionCookieName)?.value;
 
   if (!adminAuth || !sessionCookie) {
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const adminAuth = getAdminAuth();
   if (!adminAuth) {
     return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
   }
