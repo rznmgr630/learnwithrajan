@@ -72,8 +72,10 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ isAdmin: firebaseAdmin.isAdminEmail(decodedToken.email) });
     response.cookies.set(getSessionCookie(signedSessionCookie, sessionDurationMs / 1000));
     return response;
-  } catch {
-    return NextResponse.json({ error: "Unable to create a session." }, { status: 401 });
+  } catch (error) {
+    const code = error && typeof error === "object" && "code" in error ? String(error.code) : "unknown";
+    console.error("Firebase session creation failed", { code });
+    return NextResponse.json({ error: "Unable to create a secure session. Check the Vercel Function Logs." }, { status: 401 });
   }
 }
 
