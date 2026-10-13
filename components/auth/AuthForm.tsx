@@ -64,7 +64,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       });
 
       if (!sessionResponse.ok) {
-        throw new Error("Unable to create a secure session.");
+        const session = await sessionResponse.json().catch(() => null);
+        throw new Error(session?.error ?? "Unable to create a secure session.");
       }
 
       await refreshAuthState();
@@ -72,7 +73,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       router.refresh();
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
-      setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : "We could not sign you in. Please try again.");
+      setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : caughtError instanceof Error ? caughtError.message : "We could not sign you in. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
