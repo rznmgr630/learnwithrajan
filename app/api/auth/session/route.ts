@@ -13,6 +13,15 @@ async function getFirebaseAdmin() {
   }
 }
 
+function logFirebaseAdminUnavailable(firebaseAdmin: Awaited<ReturnType<typeof getFirebaseAdmin>>) {
+  const reason = !firebaseAdmin
+    ? "module-load-failed"
+    : firebaseAdmin.isFirebaseAdminConfigured
+      ? "initialization-failed"
+      : "missing-configuration";
+  console.error("Firebase Admin is unavailable", { reason });
+}
+
 function getSessionCookie(value: string, maxAge: number) {
   return {
     name: sessionCookieName,
@@ -31,6 +40,7 @@ export async function GET(request: NextRequest) {
   const sessionCookie = request.cookies.get(sessionCookieName)?.value;
 
   if (!firebaseAdmin || !adminAuth) {
+    logFirebaseAdminUnavailable(firebaseAdmin);
     return NextResponse.json({ isAuthenticated: false, isAdmin: false }, { status: 503 });
   }
 
@@ -50,6 +60,7 @@ export async function POST(request: NextRequest) {
   const firebaseAdmin = await getFirebaseAdmin();
   const adminAuth = firebaseAdmin?.getAdminAuth();
   if (!firebaseAdmin || !adminAuth) {
+    logFirebaseAdminUnavailable(firebaseAdmin);
     return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
   }
 
