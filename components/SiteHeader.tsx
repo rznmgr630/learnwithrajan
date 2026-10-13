@@ -50,6 +50,7 @@ function SettingsMenu() {
   const shouldShowAuthActions = !isLoading && !user;
 
   async function handleLogout() {
+    if (!auth) return;
     await signOut(auth);
     setIsOpen(false);
   }

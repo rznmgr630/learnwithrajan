@@ -13,12 +13,18 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(auth));
 
-  useEffect(() => onAuthStateChanged(auth, (nextUser) => {
-    setUser(nextUser);
-    setIsLoading(false);
-  }), []);
+  useEffect(() => {
+    if (!auth) {
+      return;
+    }
+
+    return onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      setIsLoading(false);
+    });
+  }, []);
 
   return <AuthContext.Provider value={{ user, isLoading }}>{children}</AuthContext.Provider>;
 }
