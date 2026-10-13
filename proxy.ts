@@ -1,25 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminAuth, isAdminEmail } from "@/lib/firebase-admin";
 
 function redirectUnauthorized(request: NextRequest, requiresLogin: boolean) {
   return NextResponse.redirect(new URL(requiresLogin ? "/login" : "/learn", request.url));
 }
 
+async function getSessionStatus(request: NextRequest) {
+  try {
+    const response = await fetch(new URL("/api/auth/session", request.url), {
+      headers: { cookie: request.headers.get("cookie") ?? "" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) return { isAuthenticated: false, isAdmin: false };
+    return await response.json() as { isAuthenticated: boolean; isAdmin: boolean };
+  } catch {
+    return { isAuthenticated: false, isAdmin: false };
+  }
+}
+
 export async function proxy(request: NextRequest) {
-  const adminAuth = getAdminAuth();
-  const sessionCookie = request.cookies.get("firebase-session")?.value;
   const requiresLogin = ["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/library"]
     .some((path) => request.nextUrl.pathname.startsWith(path));
+  const session = await getSessionStatus(request);
 
-  if (adminAuth && sessionCookie) {
-    try {
-      const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-      if (requiresLogin || isAdminEmail(decodedToken.email)) {
-        return NextResponse.next();
-      }
-    } catch {
-      return redirectUnauthorized(request, requiresLogin);
-    }
+  if ((requiresLogin && session.isAuthenticated) || (!requiresLogin && session.isAdmin)) {
+    return NextResponse.next();
   }
 
   return redirectUnauthorized(request, requiresLogin);
