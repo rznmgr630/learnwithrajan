@@ -29,6 +29,11 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     event.preventDefault();
     setError("");
 
+    if (!auth) {
+      setError("Firebase is not configured yet. Please try again later.");
+      return;
+    }
+
     if (!isLogin && password.length < 6) {
       setError("Use a password with at least 6 characters.");
       return;
