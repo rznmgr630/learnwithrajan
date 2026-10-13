@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { signOut } from "firebase/auth";
@@ -47,6 +47,7 @@ function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { user, isLoading } = useAuth();
+  const router = useRouter();
   const shouldShowAuthActions = !isLoading && !user;
 
   async function handleLogout() {
@@ -54,6 +55,8 @@ function SettingsMenu() {
     await fetch("/api/auth/session", { method: "DELETE" });
     await signOut(auth);
     setIsOpen(false);
+    router.replace("/login");
+    router.refresh();
   }
   const menuRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
