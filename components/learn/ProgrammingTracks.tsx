@@ -25,6 +25,7 @@ import { learnHubCardClass } from "@/components/learn/learn-hub-card-class";
 import { PinButton } from "@/components/learn/PinButton";
 import { HubAccordionSection } from "@/components/learn/HubAccordionSection";
 import { ProgrammingSearch } from "@/components/learn/ProgrammingSearch";
+import { AuthRequiredLink } from "@/components/auth/AuthRequiredLink";
 import { REACT_PROGRAMMING_OUTLINE, reactCurriculumLessonCount } from "@/lib/react-learning/react-curriculum";
 import { LARAVEL_TOPIC_OUTLINE, laravelOutlineBulletCount, laravelOutlineTopicCount } from "@/lib/laravel-learning/laravel-curriculum";
 import { NEXTJS_TOPIC_OUTLINE, nextjsOutlineBulletCount, nextjsOutlineTopicCount } from "@/lib/nextjs-learning/nextjs-curriculum";
@@ -556,7 +557,7 @@ export function ProgrammingTracks() {
         titleKey="hub.programming.groupDsa"
         hintKey="hub.programming.groupDsaHint"
       >
-        <Link href="/learn/dsa" className={learnHubCardClass}>
+        <AuthRequiredLink href="/learn/dsa" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -585,7 +586,7 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.dsa.cta")}
           </span>
-        </Link>
+        </AuthRequiredLink>
       </HubAccordionSection>
 
       <HubAccordionSection
@@ -722,7 +723,7 @@ export function ProgrammingTracks() {
         titleKey="hub.programming.groupInterview"
         hintKey="hub.programming.groupInterviewHint"
       >
-        <Link href="/learn/system-design" className={learnHubCardClass}>
+        <AuthRequiredLink href="/learn/system-design" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -745,9 +746,9 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.systemDesign.cta")}
           </span>
-        </Link>
+        </AuthRequiredLink>
 
-        <Link href="/learn/backend-engineering" className={learnHubCardClass}>
+        <AuthRequiredLink href="/learn/backend-engineering" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -770,7 +771,7 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.backendEngineering.cta")}
           </span>
-        </Link>
+        </AuthRequiredLink>
 
       </HubAccordionSection>
 
@@ -779,7 +780,7 @@ export function ProgrammingTracks() {
         titleKey="hub.programming.groupCodeReview"
         hintKey="hub.programming.groupCodeReviewHint"
       >
-        <Link href="/learn/code-review/javascript" className={learnHubCardClass}>
+        <AuthRequiredLink href="/learn/code-review/javascript" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -802,8 +803,8 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.codeReview.cta")}
           </span>
-        </Link>
-        <Link href="/learn/code-review/typescript" className={learnHubCardClass}>
+        </AuthRequiredLink>
+        <AuthRequiredLink href="/learn/code-review/typescript" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -826,8 +827,8 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.codeReview.cta")}
           </span>
-        </Link>
-        <Link href="/learn/code-review/laravel" className={learnHubCardClass}>
+        </AuthRequiredLink>
+        <AuthRequiredLink href="/learn/code-review/laravel" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -850,8 +851,8 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.codeReview.cta")}
           </span>
-        </Link>
-        <Link href="/learn/code-review/python" className={learnHubCardClass}>
+        </AuthRequiredLink>
+        <AuthRequiredLink href="/learn/code-review/python" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -874,8 +875,8 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.codeReview.cta")}
           </span>
-        </Link>
-        <Link href="/learn/code-review/react" className={learnHubCardClass}>
+        </AuthRequiredLink>
+        <AuthRequiredLink href="/learn/code-review/react" className={learnHubCardClass}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold tracking-tight text-[var(--text)] group-hover:text-[var(--accent)]">
@@ -898,7 +899,7 @@ export function ProgrammingTracks() {
           <span className="mt-4 block text-sm font-medium text-[var(--accent)] transition group-hover:brightness-110">
             {t("hub.codeReview.cta")}
           </span>
-        </Link>
+        </AuthRequiredLink>
       </HubAccordionSection>
     </div>
   );

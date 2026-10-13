@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 
 type AuthMode = "login" | "register";
 
@@ -17,6 +18,7 @@ const authErrors: Record<string, string> = {
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +26,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/learn");
+    }
+  }, [router, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,19 +49,36 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
     setIsSubmitting(true);
     try {
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        const credential = await createUserWithEmailAndPassword(auth, email, password);
+      const credential = isLogin
+        ? await signInWithEmailAndPassword(auth, email, password)
+        : await createUserWithEmailAndPassword(auth, email, password);
+
+      if (!isLogin) {
         await updateProfile(credential.user, { displayName: fullName });
       }
+
+      const sessionResponse = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: await credential.user.getIdToken() }),
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error("Unable to create a secure session.");
+      }
+
       router.replace("/learn");
+      router.refresh();
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
       setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : "We could not sign you in. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isLoading || user) {
+    return <main className="min-h-screen" />;
   }
 
   return (

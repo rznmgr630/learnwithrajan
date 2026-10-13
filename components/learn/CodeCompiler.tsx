@@ -289,8 +289,8 @@ export function CodeCompiler() {
         </section>
       </div>
       <p className="mt-4 text-xs leading-5 text-[var(--faint)]">Each language runs in an isolated browser runtime. Python and PHP load on first use. npm packages, files, databases, and server-side APIs are not available.</p>
-      <iframe key={runnerKey} ref={iframeRef} title="Code runner" sandbox="allow-scripts" srcDoc={RUNNER_DOCUMENT} className="hidden" />
-      <iframe key={phpFrameKey} ref={phpIframeRef} title="PHP runtime" className="hidden" />
+      <iframe key={`runner-${runnerKey}`} ref={iframeRef} title="Code runner" sandbox="allow-scripts" srcDoc={RUNNER_DOCUMENT} className="hidden" />
+      <iframe key={`php-${phpFrameKey}`} ref={phpIframeRef} title="PHP runtime" className="hidden" />
     </main>
   );
 }
