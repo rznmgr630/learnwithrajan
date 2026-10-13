@@ -1,26 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createSession, isAdminEmail, isSessionConfigured, readSession, sessionCookieName, verifyFirebaseIdToken } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
 
-const sessionCookieName = "firebase-session";
 const sessionDurationMs = 1000 * 60 * 60 * 24 * 5;
-
-async function getFirebaseAdmin() {
-  try {
-    return await import("@/lib/firebase-admin");
-  } catch {
-    return null;
-  }
-}
-
-function logFirebaseAdminUnavailable(firebaseAdmin: Awaited<ReturnType<typeof getFirebaseAdmin>>) {
-  const reason = !firebaseAdmin
-    ? "module-load-failed"
-    : firebaseAdmin.isFirebaseAdminConfigured
-      ? "initialization-failed"
-      : "missing-configuration";
-  console.error("Firebase Admin is unavailable", { reason });
-}
 
 function getSessionCookie(value: string, maxAge: number) {
   return {
@@ -35,32 +18,20 @@ function getSessionCookie(value: string, maxAge: number) {
 }
 
 export async function GET(request: NextRequest) {
-  const firebaseAdmin = await getFirebaseAdmin();
-  const adminAuth = firebaseAdmin?.getAdminAuth();
-  const sessionCookie = request.cookies.get(sessionCookieName)?.value;
-
-  if (!firebaseAdmin || !adminAuth) {
-    logFirebaseAdminUnavailable(firebaseAdmin);
+  if (!isSessionConfigured()) {
     return NextResponse.json({ isAuthenticated: false, isAdmin: false }, { status: 503 });
   }
 
-  if (!sessionCookie) {
+  const session = readSession(request.cookies.get(sessionCookieName)?.value);
+  if (!session) {
     return NextResponse.json({ isAuthenticated: false, isAdmin: false });
   }
 
-  try {
-    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    return NextResponse.json({ isAuthenticated: true, isAdmin: firebaseAdmin.isAdminEmail(decodedToken.email) });
-  } catch {
-    return NextResponse.json({ isAuthenticated: false, isAdmin: false });
-  }
+  return NextResponse.json({ isAuthenticated: true, isAdmin: isAdminEmail(session.email) });
 }
 
 export async function POST(request: NextRequest) {
-  const firebaseAdmin = await getFirebaseAdmin();
-  const adminAuth = firebaseAdmin?.getAdminAuth();
-  if (!firebaseAdmin || !adminAuth) {
-    logFirebaseAdminUnavailable(firebaseAdmin);
+  if (!isSessionConfigured()) {
     return NextResponse.json({ error: "Authentication is not configured." }, { status: 503 });
   }
 
@@ -74,19 +45,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing authentication token." }, { status: 400 });
     }
 
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    if (Date.now() / 1000 - decodedToken.auth_time > 60 * 5) {
+    const account = await verifyFirebaseIdToken(idToken);
+    if (!account?.email || !account.localId) {
       return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
     }
 
-    const signedSessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn: sessionDurationMs });
-    const response = NextResponse.json({ isAdmin: firebaseAdmin.isAdminEmail(decodedToken.email) });
-    response.cookies.set(getSessionCookie(signedSessionCookie, sessionDurationMs / 1000));
+    const expiresAt = Date.now() + sessionDurationMs;
+    const response = NextResponse.json({ isAdmin: isAdminEmail(account.email) });
+    response.cookies.set(getSessionCookie(createSession(account.email, account.localId, expiresAt), sessionDurationMs / 1000));
     return response;
-  } catch (error) {
-    const code = error && typeof error === "object" && "code" in error ? String(error.code) : "unknown";
-    console.error("Firebase session creation failed", { code });
-    return NextResponse.json({ error: "Unable to create a secure session. Check the Vercel Function Logs." }, { status: 401 });
+  } catch {
+    return NextResponse.json({ error: "Unable to create a secure session." }, { status: 401 });
   }
 }
 

@@ -60,7 +60,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       const sessionResponse = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: await credential.user.getIdToken() }),
+        body: JSON.stringify({ idToken: await credential.user.getIdToken(true) }),
       });
 
       if (!sessionResponse.ok) {

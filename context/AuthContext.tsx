@@ -34,8 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await fetch("/api/auth/session", { cache: "no-store" });
-      const session = response.ok ? await response.json() : { isAdmin: false };
-      if (requestId === refreshRequestRef.current) setIsAdmin(session.isAdmin === true);
+      let session = response.ok ? await response.json() : null;
+      if (session?.isAuthenticated !== true) {
+        const sessionResponse = await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: await nextUser.getIdToken(true) }),
+        });
+        session = sessionResponse.ok ? await sessionResponse.json() : null;
+      }
+      if (requestId === refreshRequestRef.current) setIsAdmin(session?.isAdmin === true);
     } catch {
       if (requestId === refreshRequestRef.current) setIsAdmin(false);
     }
