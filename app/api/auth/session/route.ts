@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
     if (!account?.email || !account.localId) {
       return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
     }
+    if (account.emailVerified !== true) {
+      return NextResponse.json({ error: "Verify your email address before signing in." }, { status: 403 });
+    }
 
     const expiresAt = Date.now() + sessionDurationMs;
     const response = NextResponse.json({ isAdmin: isAdminEmail(account.email) });
