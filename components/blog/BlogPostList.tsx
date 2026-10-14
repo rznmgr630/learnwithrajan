@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 const posts = [
+  { href: "/blog/ai-engineer-roadmap-2026", image: "/images/blog/ai-engineer-2026-cover.png", alt: "A software developer building AI systems", category: "AI Engineering", readTime: "20 min read", title: "The AI Engineer Roadmap for 2026", description: "An eight-phase path from software foundations to reliable AI products." },
   { href: "/blog/888-balanced-life-rule", image: "/images/blog/888-balanced-life-cover.png", alt: "A balanced day with work, exercise, family time, reading, and sleep", category: "Lifestyle", readTime: "10 min read", title: "The 8+8+8 Rule: Build a Balanced Life", description: "A practical guide to making space for work, rest, relationships, health, and joy." },
   { href: "/blog/how-to-become-more-confident", image: "/images/blog/confidence-communication-cover.png", alt: "A professional speaking confidently in a supportive meeting", category: "Career", readTime: "16 min read", title: "How to Become More Confident", description: "Practical communication habits for speaking up, organising your thoughts, and building confidence." },
   {
