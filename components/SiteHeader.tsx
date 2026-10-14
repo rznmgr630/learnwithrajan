@@ -177,7 +177,20 @@ function SettingsMenu() {
           )}
         </>
       )}
-      {isLogoutConfirmOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title"><button type="button" aria-label="Cancel logout" onClick={() => setIsLogoutConfirmOpen(false)} className="absolute inset-0 cursor-default" /><section className="relative w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl"><h2 id="logout-confirm-title" className="text-xl font-semibold text-[var(--text)]">Log out?</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">You will need to log in again to access your saved progress.</p><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setIsLogoutConfirmOpen(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--elevated)]">Cancel</button><button type="button" onClick={() => void handleLogout()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600">Log out</button></div></section></div>}
+      {isMounted && isLogoutConfirmOpen && createPortal(
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title">
+          <button type="button" aria-label="Cancel logout" onClick={() => setIsLogoutConfirmOpen(false)} className="absolute inset-0 cursor-default" />
+          <section className="relative w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl">
+            <h2 id="logout-confirm-title" className="text-xl font-semibold text-[var(--text)]">Log out?</h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">You will need to log in again to access your saved progress.</p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setIsLogoutConfirmOpen(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--elevated)]">Cancel</button>
+              <button type="button" onClick={() => void handleLogout()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600">Log out</button>
+            </div>
+          </section>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
