@@ -11,6 +11,7 @@ type Session = {
 
 type FirebaseAccount = {
   email?: string;
+  emailVerified?: boolean;
   localId?: string;
 };
 
