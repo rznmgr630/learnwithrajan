@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -26,12 +26,23 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
+  const returnPath = () => {
+    if (typeof window === "undefined") return "/learn";
+    const next = new URLSearchParams(window.location.search).get("next");
+    return next?.startsWith("/") && !next.startsWith("//") ? next : "/learn";
+  };
+  const switchAuthMode = (event: MouseEvent<HTMLAnchorElement>) => {
+    const next = returnPath();
+    if (next === "/learn") return;
+    event.preventDefault();
+    router.push(`/${isLogin ? "register" : "login"}?next=${encodeURIComponent(next)}`);
+  };
 
   useEffect(() => {
-    if (user) {
-      router.replace("/learn");
+    if (user && !isLoading && !isSubmitting) {
+      window.location.replace(returnPath());
     }
-  }, [router, user]);
+  }, [isLoading, isSubmitting, router, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,8 +80,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
 
       await refreshAuthState();
-      router.replace("/learn");
-      router.refresh();
+      window.location.assign(returnPath());
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
       setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : caughtError instanceof Error ? caughtError.message : "We could not sign you in. Please try again.");
@@ -118,7 +128,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
           {isLogin ? "New here? " : "Already have an account? "}
-          <Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link>
+          <Link href={isLogin ? "/register" : "/login"} onClick={switchAuthMode} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link>
         </p>
       </section>
     </main>

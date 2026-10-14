@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 function redirectUnauthorized(request: NextRequest, requiresLogin: boolean) {
-  return NextResponse.redirect(new URL(requiresLogin ? "/login" : "/learn", request.url));
+  const destination = new URL(requiresLogin ? "/login" : "/learn", request.url);
+  if (requiresLogin) destination.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+  return NextResponse.redirect(destination);
 }
 
 async function getSessionStatus(request: NextRequest) {
