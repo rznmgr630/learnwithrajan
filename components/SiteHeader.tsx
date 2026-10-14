@@ -66,18 +66,25 @@ function ToolsMenu() {
 
 function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const shouldShowAuthActions = !isLoading && !user;
 
   async function handleLogout() {
+    setIsLogoutConfirmOpen(false);
     if (!auth) return;
     await fetch("/api/auth/session", { method: "DELETE" });
     await signOut(auth);
     setIsOpen(false);
     router.replace("/login");
     router.refresh();
+  }
+
+  function requestLogout() {
+    setIsOpen(false);
+    setIsLogoutConfirmOpen(true);
   }
   const menuRef = useRef<HTMLDivElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -99,6 +106,7 @@ function SettingsMenu() {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
+        setIsLogoutConfirmOpen(false);
       }
     }
 
@@ -143,7 +151,7 @@ function SettingsMenu() {
             <span className="text-sm text-[var(--muted)]">Language</span>
             <LanguageSwitcher compact />
           </div>
-          {user && <button type="button" onClick={handleLogout} className="mt-2 inline-flex w-full cursor-pointer items-center gap-2 rounded-lg border-t border-[var(--border)] px-2 pt-3 text-left text-sm font-medium text-red-500 transition hover:text-red-600"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Log out</button>}
+          {user && <button type="button" onClick={requestLogout} className="mt-2 inline-flex w-full cursor-pointer items-center gap-2 rounded-lg border-t border-[var(--border)] px-2 pt-3 text-left text-sm font-medium text-red-500 transition hover:text-red-600"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Log out</button>}
           </div>
           {isMounted && createPortal(
             <div className="fixed inset-0 z-50 md:hidden">
@@ -162,13 +170,14 @@ function SettingsMenu() {
                   <Link href="/login" onClick={() => setIsOpen(false)} className={mobileLinkClass("/login")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Login</Link>
                   <Link href="/register" onClick={() => setIsOpen(false)} className={mobileLinkClass("/register")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6" /></svg>Register</Link>
                 </nav>
-                <div className="mt-auto space-y-3 border-t border-[var(--border)] pt-4"><div className="flex items-center justify-between px-3 py-2 text-sm text-[var(--muted)]"><span>Theme</span><ThemeToggle /></div><div className="flex items-center justify-between px-3 py-2 text-sm text-[var(--muted)]"><span>Language</span><LanguageSwitcher compact /></div>{user && <button type="button" onClick={handleLogout} className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-500 transition hover:bg-red-500/10 hover:text-red-600"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Log out</button>}</div>
+                <div className="mt-auto space-y-3 border-t border-[var(--border)] pt-4"><div className="flex items-center justify-between px-3 py-2 text-sm text-[var(--muted)]"><span>Theme</span><ThemeToggle /></div><div className="flex items-center justify-between px-3 py-2 text-sm text-[var(--muted)]"><span>Language</span><LanguageSwitcher compact /></div>{user && <button type="button" onClick={requestLogout} className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-500 transition hover:bg-red-500/10 hover:text-red-600"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 17l5-5-5-5M15 12H3" /><path d="M21 3v18H9" /></svg>Log out</button>}</div>
               </aside>
             </div>,
             document.body,
           )}
         </>
       )}
+      {isLogoutConfirmOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title"><button type="button" aria-label="Cancel logout" onClick={() => setIsLogoutConfirmOpen(false)} className="absolute inset-0 cursor-default" /><section className="relative w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl"><h2 id="logout-confirm-title" className="text-xl font-semibold text-[var(--text)]">Log out?</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">You will need to log in again to access your saved progress.</p><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setIsLogoutConfirmOpen(false)} className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--elevated)]">Cancel</button><button type="button" onClick={() => void handleLogout()} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600">Log out</button></div></section></div>}
     </div>
   );
 }
