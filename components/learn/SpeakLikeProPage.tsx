@@ -5,6 +5,36 @@ import { LearnBackNav } from "@/components/learn/LearnBackNav";
 import { SPEAK_LIKE_A_PRO, UPGRADE_YOUR_ENGLISH, FULL_FORMS } from "@/lib/english-learning/speak-like-pro-data";
 import type { SpeakSwap, FullFormEntry } from "@/lib/english-learning/speak-like-pro-data";
 
+type SpeakGroup = {
+  title: string;
+  items: SpeakSwap[];
+};
+
+const speakGroup = (ids: number[]) => ids.flatMap((id) => SPEAK_LIKE_A_PRO.filter((item) => item.id === id));
+
+const SPEAK_LIKE_A_PRO_GROUPS: SpeakGroup[] = [
+  {
+    title: "Conversation & Social English",
+    items: speakGroup([1, 3, 6, 8, 9, 10, 11, 12, 13, 14, 16, 19, 22, 30, 31, 32, 33, 40, 43, 44, 49]),
+  },
+  {
+    title: "Feelings & People",
+    items: speakGroup([4, 5, 17, 18, 21, 23, 28, 29, 38, 39, 46]),
+  },
+  {
+    title: "Work & Daily Life",
+    items: speakGroup([2, 24, 26, 34, 35, 36, 37, 41, 42, 47, 48]),
+  },
+  {
+    title: "Idioms, Advice & Actions",
+    items: speakGroup([7, 15, 20, 25, 27, 45]),
+  },
+  {
+    title: "C1 Slang & Expressions",
+    items: speakGroup([50, 51, 52, 53, 54, 55]),
+  },
+];
+
 function SwapList({ items, fromLabel, toLabel }: { items: SpeakSwap[]; fromLabel: string; toLabel: string }) {
   return (
     <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
@@ -22,9 +52,9 @@ function SwapList({ items, fromLabel, toLabel }: { items: SpeakSwap[]; fromLabel
               <span className="text-sm font-medium text-[var(--accent)]">
                 {toLabel}: {s.upgraded}
               </span>
+              </div>
             </div>
           </div>
-        </div>
       ))}
     </div>
   );
@@ -54,10 +84,14 @@ function FullFormList({ items }: { items: FullFormEntry[] }) {
   );
 }
 
-type SectionId = "swap" | "upgrade" | "fullforms";
+type SectionId = "conversation" | "feelings" | "work" | "idioms" | "slang" | "upgrade" | "fullforms";
 
 const SECTIONS: { id: SectionId; title: string; count: number; render: () => React.ReactNode }[] = [
-  { id: "swap", title: "Speak Like A Pro", count: SPEAK_LIKE_A_PRO.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO} fromLabel="Don't say" toLabel="Say" /> },
+  { id: "conversation", title: "Conversation & Social English", count: SPEAK_LIKE_A_PRO_GROUPS[0].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[0].items} fromLabel="Don't say" toLabel="Say" /> },
+  { id: "feelings", title: "Feelings & People", count: SPEAK_LIKE_A_PRO_GROUPS[1].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[1].items} fromLabel="Don't say" toLabel="Say" /> },
+  { id: "work", title: "Work & Daily Life", count: SPEAK_LIKE_A_PRO_GROUPS[2].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[2].items} fromLabel="Don't say" toLabel="Say" /> },
+  { id: "idioms", title: "Idioms, Advice & Actions", count: SPEAK_LIKE_A_PRO_GROUPS[3].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[3].items} fromLabel="Don't say" toLabel="Say" /> },
+  { id: "slang", title: "C1 Slang & Expressions", count: SPEAK_LIKE_A_PRO_GROUPS[4].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[4].items} fromLabel="Don't say" toLabel="Say" /> },
   {
     id: "upgrade",
     title: "Upgrade Your English (Basic → Advanced)",
@@ -68,7 +102,7 @@ const SECTIONS: { id: SectionId; title: string; count: number; render: () => Rea
 ];
 
 export function SpeakLikeProPage() {
-  const [openSections, setOpenSections] = useState<Set<SectionId>>(new Set(["swap"]));
+  const [openSections, setOpenSections] = useState<Set<SectionId>>(new Set(["conversation"]));
 
   function toggle(id: SectionId) {
     setOpenSections((prev) => {

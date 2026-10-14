@@ -54,6 +54,12 @@ export const SPEAK_LIKE_A_PRO: SpeakSwap[] = [
   { id: 47, basic: "It's too expensive.", upgraded: "It costs a fortune." },
   { id: 48, basic: "I'm going to sleep.", upgraded: "I'm hitting the sack." },
   { id: 49, basic: "I understand.", upgraded: "That makes sense." },
+  { id: 50, basic: "What's your location?", upgraded: "What's your 20?" },
+  { id: 51, basic: "What's the update?", upgraded: "What's the 411?" },
+  { id: 52, basic: "She's very attractive.", upgraded: "She's a 10." },
+  { id: 53, basic: "A problem with no easy solution.", upgraded: "A catch-22." },
+  { id: 54, basic: "Back to the start.", upgraded: "Back to square one." },
+  { id: 55, basic: "Dressed very smartly.", upgraded: "Dressed to the nines." },
 ];
 
 export type FullFormEntry = {
