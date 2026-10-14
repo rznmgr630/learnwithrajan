@@ -21,7 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 export function HomePinnedTracks() {
   const { t } = useLocale();
   const { pinned } = usePinnedTracks();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   const git = useGit7Progress();
   const react = useReactProgress();
@@ -59,7 +59,16 @@ export function HomePinnedTracks() {
         </h2>
         <p className="mt-2 max-w-xl text-[var(--muted)]">{t("home.pinnedSubtitle")}</p>
 
-        {pinnedTracks.length === 0 ? (
+        {!user ? (
+          <div className="mt-10 flex flex-col items-start gap-3 rounded-2xl border border-dashed border-[var(--border)] p-8">
+            <p className="text-base font-semibold text-[var(--text)]">Log in to view your pinned tracks</p>
+            <p className="max-w-md text-sm text-[var(--muted)]">Your pins and learning progress are saved to your account.</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <Link href="/login?next=%2F%23pinned" className="inline-flex items-center justify-center rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110">Log in</Link>
+              <Link href="/register?next=%2F%23pinned" className="inline-flex items-center justify-center rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--elevated)]">Create account</Link>
+            </div>
+          </div>
+        ) : pinnedTracks.length === 0 ? (
           <div className="mt-10 flex flex-col items-start gap-3 rounded-2xl border border-dashed border-[var(--border)] p-8">
             <p className="text-base font-semibold text-[var(--text)]">{t("home.pinnedEmptyTitle")}</p>
             <p className="max-w-md text-sm text-[var(--muted)]">{t("home.pinnedEmptyBody")}</p>
