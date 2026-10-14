@@ -25,6 +25,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [verificationNotice, setVerificationNotice] = useState("");
+  const [canResendVerification, setCanResendVerification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
 
@@ -38,6 +39,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     event.preventDefault();
     setError("");
     setVerificationNotice("");
+    setCanResendVerification(false);
 
     if (!auth) {
       setError("Firebase is not configured yet. Please try again later.");
@@ -69,6 +71,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       await reload(credential.user);
       if (!credential.user.emailVerified) {
         await signOut(auth);
+        setCanResendVerification(true);
         setError("Verify your email address before signing in. Check your inbox for the verification link.");
         return;
       }
@@ -90,6 +93,36 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
       setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : caughtError instanceof Error ? caughtError.message : "We could not sign you in. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function resendVerificationEmail() {
+    if (!auth) return;
+
+    setError("");
+    setIsSubmitting(true);
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      await reload(credential.user);
+
+      if (credential.user.emailVerified) {
+        await signOut(auth);
+        setCanResendVerification(false);
+        setError("Your email address is already verified. Sign in again.");
+        return;
+      }
+
+      await sendEmailVerification(credential.user);
+      await signOut(auth);
+      setEmail("");
+      setPassword("");
+      setCanResendVerification(false);
+      setVerificationNotice("We sent a new verification email. Verify your email address before signing in.");
+    } catch (caughtError) {
+      const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
+      setError(code ? authErrors[code] ?? "We could not resend the verification email. Please try again." : "We could not resend the verification email. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +160,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             </span>
           </label>
           {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
+          {canResendVerification && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Resend verification email</button>}
           <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-fg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
             {isSubmitting ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
           </button>
@@ -137,7 +171,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link>
         </p>
       </section>
-      {verificationNotice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-blue-500/30 bg-[var(--surface)] p-4 text-sm text-[var(--text)] shadow-2xl"><span className="mt-0.5 text-blue-500">✓</span><p>We sent you a verification email. Verify your email address before accessing the app.</p><button type="button" onClick={() => setVerificationNotice("")} aria-label="Close message" className="text-[var(--muted)] hover:text-[var(--text)]">×</button></div>}
+      {verificationNotice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-blue-500/30 bg-[var(--surface)] p-4 text-sm text-[var(--text)] shadow-2xl"><span className="mt-0.5 text-blue-500">✓</span><p>{verificationNotice}</p><button type="button" onClick={() => setVerificationNotice("")} aria-label="Close message" className="text-[var(--muted)] hover:text-[var(--text)]">×</button></div>}
     </main>
   );
 }
