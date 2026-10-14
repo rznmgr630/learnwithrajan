@@ -4,6 +4,7 @@ import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { useAuthAction } from "@/context/AuthActionContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { db } from "@/lib/firebase";
 
 type ProgressValue = number | string;
@@ -30,6 +31,7 @@ function readLegacyValues<T extends ProgressValue>(storageKey: string | undefine
 export function useUserProgress<T extends ProgressValue>({ id, initialValues = [], legacyStorageKey, isValid }: UserProgressOptions<T>) {
   const { user } = useAuth();
   const { requestAuthentication } = useAuthAction();
+  const { showToast } = useToast();
   const [values, setValues] = useState<Set<T>>(() => new Set(initialValues));
 
   useEffect(() => {
@@ -55,17 +57,20 @@ export function useUserProgress<T extends ProgressValue>({ id, initialValues = [
       return;
     }
 
+    const wasCompleted = values.has(value);
     const next = new Set(values);
-    if (next.has(value)) next.delete(value);
+    if (wasCompleted) next.delete(value);
     else next.add(value);
     setValues(next);
 
     try {
       await setDoc(doc(db, "users", user.uid, "learningProgress", id), { values: [...next], updatedAt: Date.now() });
+      showToast(wasCompleted ? "Marked as incomplete" : "Marked as complete");
     } catch {
       setValues(values);
+      showToast("Could not save progress");
     }
-  }, [id, requestAuthentication, user, values]);
+  }, [id, requestAuthentication, showToast, user, values]);
 
   return { values, toggle, isAuthenticated: Boolean(user) };
 }
