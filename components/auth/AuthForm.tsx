@@ -8,6 +8,15 @@ import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 
 type AuthMode = "login" | "register";
+const resendCooldownMs = 2 * 60 * 1000;
+
+function resendCooldownKey(email: string) {
+  return `email-verification-resend:${email.trim().toLowerCase()}`;
+}
+
+function formatCooldown(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
 
 const authErrors: Record<string, string> = {
   "auth/email-already-in-use": "An account already uses this email address.",
@@ -26,6 +35,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState("");
   const [verificationNotice, setVerificationNotice] = useState("");
   const [canResendVerification, setCanResendVerification] = useState(false);
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
 
@@ -34,6 +44,30 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       router.replace("/learn");
     }
   }, [isSubmitting, router, user, verificationNotice]);
+
+  useEffect(() => {
+    if (!email.trim()) return;
+
+    const key = resendCooldownKey(email);
+    const updateCooldown = () => {
+      const expiresAt = Number(window.localStorage.getItem(key));
+      const seconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setResendCooldownSeconds(seconds);
+      if (seconds === 0) window.localStorage.removeItem(key);
+    };
+
+    const timeout = window.setTimeout(updateCooldown, 0);
+    const interval = window.setInterval(updateCooldown, 1000);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+    };
+  }, [email]);
+
+  function startResendCooldown(emailAddress: string) {
+    window.localStorage.setItem(resendCooldownKey(emailAddress), String(Date.now() + resendCooldownMs));
+    setResendCooldownSeconds(resendCooldownMs / 1000);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,6 +95,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         await updateProfile(credential.user, { displayName: fullName });
         await sendEmailVerification(credential.user);
         await signOut(auth);
+        startResendCooldown(email);
         setFullName("");
         setEmail("");
         setPassword("");
@@ -99,7 +134,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   async function resendVerificationEmail() {
-    if (!auth) return;
+    if (!auth || resendCooldownSeconds > 0) return;
 
     setError("");
     setIsSubmitting(true);
@@ -116,9 +151,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
       await sendEmailVerification(credential.user);
       await signOut(auth);
+      startResendCooldown(email);
       setEmail("");
       setPassword("");
-      setCanResendVerification(false);
+      setCanResendVerification(true);
       setVerificationNotice("We sent a new verification email. Verify your email address before signing in.");
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
@@ -184,7 +220,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           </label>
           {isLogin && <button type="button" onClick={requestPasswordReset} disabled={isSubmitting} className="-mt-2 block text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Forgot password?</button>}
           {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
-          {canResendVerification && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Resend verification email</button>}
+          {canResendVerification && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting || resendCooldownSeconds > 0} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">{resendCooldownSeconds > 0 ? `Resend available in ${formatCooldown(resendCooldownSeconds)}` : "Resend verification email"}</button>}
           <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-fg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
             {isSubmitting ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
           </button>
