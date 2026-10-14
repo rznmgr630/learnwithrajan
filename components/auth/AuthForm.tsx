@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { createUserWithEmailAndPassword, reload, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -44,12 +44,23 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [passwordResetCooldownSeconds, setPasswordResetCooldownSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
+  const returnPath = () => {
+    if (typeof window === "undefined") return "/learn";
+    const next = new URLSearchParams(window.location.search).get("next");
+    return next?.startsWith("/") && !next.startsWith("//") ? next : "/learn";
+  };
+  const switchAuthMode = (event: MouseEvent<HTMLAnchorElement>) => {
+    const next = returnPath();
+    if (next === "/learn") return;
+    event.preventDefault();
+    router.push(`/${isLogin ? "register" : "login"}?next=${encodeURIComponent(next)}`);
+  };
 
   useEffect(() => {
-    if (user && !isSubmitting && !verificationNotice) {
-      router.replace("/learn");
+    if (user && !isLoading && !isSubmitting && !verificationNotice) {
+      window.location.replace(returnPath());
     }
-  }, [isSubmitting, router, user, verificationNotice]);
+  }, [isLoading, isSubmitting, router, user, verificationNotice]);
 
   useEffect(() => {
     if (!email.trim()) return;
@@ -153,8 +164,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
 
       await refreshAuthState();
-      router.replace("/learn");
-      router.refresh();
+      window.location.assign(returnPath());
     } catch (caughtError) {
       const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
       setError(code ? authErrors[code] ?? "We could not sign you in. Please try again." : caughtError instanceof Error ? caughtError.message : "We could not sign you in. Please try again.");
@@ -260,7 +270,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         </form>
 
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
-          {isPasswordResetMode ? <button type="button" onClick={() => { setError(""); setIsPasswordResetMode(false); }} className="font-medium text-[var(--accent)] hover:underline">Back to sign in</button> : <>{isLogin ? "New here? " : "Already have an account? "}<Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link></>}
+          {isPasswordResetMode ? <button type="button" onClick={() => { setError(""); setIsPasswordResetMode(false); }} className="font-medium text-[var(--accent)] hover:underline">Back to sign in</button> : <>{isLogin ? "New here? " : "Already have an account? "}<Link href={isLogin ? "/register" : "/login"} onClick={switchAuthMode} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link></>}
         </p>
       </section>
       {verificationNotice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-blue-500/30 bg-[var(--surface)] p-4 text-sm text-[var(--text)] shadow-2xl"><span className="mt-0.5 text-blue-500">✓</span><p>{verificationNotice}</p><button type="button" onClick={() => setVerificationNotice("")} aria-label="Close message" className="text-[var(--muted)] hover:text-[var(--text)]">×</button></div>}
