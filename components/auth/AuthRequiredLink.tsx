@@ -13,6 +13,8 @@ type AuthRequiredLinkProps = {
 export function AuthRequiredLink({ href, className, children }: AuthRequiredLinkProps) {
   const { user, isLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const loginHref = `/login?next=${encodeURIComponent(href)}`;
+  const registerHref = `/register?next=${encodeURIComponent(href)}`;
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -51,8 +53,8 @@ export function AuthRequiredLink({ href, className, children }: AuthRequiredLink
             <h2 id="auth-required-title" className="text-xl font-semibold text-[var(--text)]">Unlock Code Review Challenges</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Please log in or create an account to view this content.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/login" className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110">Log in</Link>
-              <Link href="/register" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--elevated)]">Create account</Link>
+              <Link href={loginHref} className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] transition hover:brightness-110">Log in</Link>
+              <Link href={registerHref} className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--elevated)]">Create account</Link>
             </div>
           </section>
         </div>
