@@ -1,74 +1,68 @@
 "use client";
 
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuthAction } from "@/context/AuthActionContext";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
 
 const STORAGE_KEY = "learnwithrajan.pinned";
-const LOCAL_EVENT = "learnwithrajan.pinned.changed";
 
-function serialize(ids: Set<string>): string {
-  return JSON.stringify([...ids].sort());
-}
-
-function deserialize(raw: string): Set<string> | null {
+function legacyPinnedTracks() {
   try {
-    const arr = JSON.parse(raw) as unknown;
-    if (!Array.isArray(arr)) return null;
-    return new Set(arr.filter((id): id is string => typeof id === "string"));
+    const values = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]") as unknown;
+    return Array.isArray(values) ? values.filter((value): value is string => typeof value === "string") : [];
   } catch {
-    return null;
-  }
-}
-
-function getServerSnapshot(): string {
-  return "[]";
-}
-
-function getClientSnapshot(): string {
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return getServerSnapshot();
-  const parsed = deserialize(raw);
-  if (!parsed) return getServerSnapshot();
-  return serialize(parsed);
-}
-
-function subscribe(onStoreChange: () => void) {
-  if (typeof window === "undefined") return () => {};
-
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY || event.key === null) onStoreChange();
-  };
-  const onLocal = () => onStoreChange();
-
-  window.addEventListener("storage", onStorage);
-  window.addEventListener(LOCAL_EVENT, onLocal);
-  return () => {
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener(LOCAL_EVENT, onLocal);
-  };
-}
-
-function emitLocal() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(LOCAL_EVENT));
+    return [];
   }
 }
 
 export function usePinnedTracks() {
-  const snapshot = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
-  const pinned = useMemo(() => new Set(JSON.parse(snapshot) as string[]), [snapshot]);
+  const { user } = useAuth();
+  const { requestAuthentication } = useAuthAction();
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const pinned = useMemo(() => new Set(pinnedIds), [pinnedIds]);
 
-  const togglePin = useCallback((id: string) => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const base = raw === null || raw === "" ? new Set<string>() : (deserialize(raw) ?? new Set<string>());
-    const next = new Set(base);
+  useEffect(() => {
+    if (!db || !user) {
+      const timeout = window.setTimeout(() => setPinnedIds([]), 0);
+      return () => window.clearTimeout(timeout);
+    }
+
+    const pinnedRef = doc(db, "users", user.uid, "learning", "pinnedTracks");
+    return onSnapshot(pinnedRef, (snapshot) => {
+      const stored = snapshot.data()?.ids;
+      if (Array.isArray(stored)) {
+        setPinnedIds(stored.filter((value): value is string => typeof value === "string"));
+        return;
+      }
+
+      const migrated = legacyPinnedTracks();
+      setPinnedIds(migrated);
+      if (migrated.length > 0) void setDoc(pinnedRef, { ids: migrated, updatedAt: Date.now() });
+    });
+  }, [user]);
+
+  const togglePin = useCallback(async (id: string) => {
+    if (!user || !db) {
+      requestAuthentication();
+      return;
+    }
+
+    const next = new Set(pinned);
     if (next.has(id)) next.delete(id);
     else next.add(id);
-    window.localStorage.setItem(STORAGE_KEY, serialize(next));
-    emitLocal();
-  }, []);
+    const ids = [...next].sort();
+    setPinnedIds(ids);
+
+    try {
+      await setDoc(doc(db, "users", user.uid, "learning", "pinnedTracks"), { ids, updatedAt: Date.now() });
+    } catch {
+      setPinnedIds([...pinned]);
+    }
+  }, [pinned, requestAuthentication, user]);
 
   const isPinned = useCallback((id: string) => pinned.has(id), [pinned]);
 
-  return { pinned, togglePin, isPinned };
+  return { pinned, togglePin, isPinned, isAuthenticated: Boolean(user) };
 }
