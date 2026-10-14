@@ -11,6 +11,7 @@ export type KanjiStrokeEntry = {
 /** Single-character JLPT N5–grade entries (stroke counts typical textbook values). */
 const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "日", r: "ひ・ニチ", m: "day / sun", s: 4 },
+  { k: "明", r: "あした・あかるい・メイ", m: "tomorrow / bright", s: 8 },
   { k: "毎", r: "まい", m: "every", s: 6 },
   { k: "一", r: "いち", m: "one", s: 1 },
   { k: "二", r: "に", m: "two", s: 2 },
