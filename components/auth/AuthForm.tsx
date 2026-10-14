@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, reload, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,18 +24,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [verificationNotice, setVerificationNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
 
   useEffect(() => {
-    if (user) {
+    if (user && !isSubmitting && !verificationNotice) {
       router.replace("/learn");
     }
-  }, [router, user]);
+  }, [isSubmitting, router, user, verificationNotice]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setVerificationNotice("");
 
     if (!auth) {
       setError("Firebase is not configured yet. Please try again later.");
@@ -55,6 +57,20 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
       if (!isLogin) {
         await updateProfile(credential.user, { displayName: fullName });
+        await sendEmailVerification(credential.user);
+        await signOut(auth);
+        setFullName("");
+        setEmail("");
+        setPassword("");
+        setVerificationNotice("We sent a verification email. Verify your email address, then sign in.");
+        return;
+      }
+
+      await reload(credential.user);
+      if (!credential.user.emailVerified) {
+        await signOut(auth);
+        setError("Verify your email address before signing in. Check your inbox for the verification link.");
+        return;
       }
 
       const sessionResponse = await fetch("/api/auth/session", {
@@ -79,7 +95,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
   }
 
-  if (isLoading || user) {
+  if ((isLoading || user) && !isSubmitting && !verificationNotice) {
     return <main className="min-h-screen" />;
   }
 
@@ -121,6 +137,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link>
         </p>
       </section>
+      {verificationNotice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-blue-500/30 bg-[var(--surface)] p-4 text-sm text-[var(--text)] shadow-2xl"><span className="mt-0.5 text-blue-500">✓</span><p>We sent you a verification email. Verify your email address before accessing the app.</p><button type="button" onClick={() => setVerificationNotice("")} aria-label="Close message" className="text-[var(--muted)] hover:text-[var(--text)]">×</button></div>}
     </main>
   );
 }
