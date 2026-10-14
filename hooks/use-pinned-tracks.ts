@@ -4,6 +4,7 @@ import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthAction } from "@/context/AuthActionContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { db } from "@/lib/firebase";
 
 const STORAGE_KEY = "learnwithrajan.pinned";
@@ -20,6 +21,7 @@ function legacyPinnedTracks() {
 export function usePinnedTracks() {
   const { user } = useAuth();
   const { requestAuthentication } = useAuthAction();
+  const { showToast } = useToast();
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const pinned = useMemo(() => new Set(pinnedIds), [pinnedIds]);
 
@@ -49,18 +51,21 @@ export function usePinnedTracks() {
       return;
     }
 
+    const wasPinned = pinned.has(id);
     const next = new Set(pinned);
-    if (next.has(id)) next.delete(id);
+    if (wasPinned) next.delete(id);
     else next.add(id);
     const ids = [...next].sort();
     setPinnedIds(ids);
 
     try {
       await setDoc(doc(db, "users", user.uid, "learning", "pinnedTracks"), { ids, updatedAt: Date.now() });
+      showToast(wasPinned ? "Removed from pinned" : "Added to pinned");
     } catch {
       setPinnedIds([...pinned]);
+      showToast("Could not save pin");
     }
-  }, [pinned, requestAuthentication, user]);
+  }, [pinned, requestAuthentication, showToast, user]);
 
   const isPinned = useCallback((id: string) => pinned.has(id), [pinned]);
 
