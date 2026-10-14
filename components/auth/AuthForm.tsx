@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { createUserWithEmailAndPassword, reload, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, reload, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 
@@ -128,6 +128,29 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
   }
 
+  async function requestPasswordReset() {
+    if (!auth) return;
+
+    if (!email.trim()) {
+      setError("Enter your email address to reset your password.");
+      return;
+    }
+
+    setError("");
+    setVerificationNotice("");
+    setIsSubmitting(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setPassword("");
+      setVerificationNotice("We sent a password reset email. Check your inbox to continue.");
+    } catch (caughtError) {
+      const code = caughtError instanceof Error ? caughtError.message.match(/auth\/[\w-]+/)?.[0] : undefined;
+      setError(code ? authErrors[code] ?? "We could not send a password reset email. Please try again." : "We could not send a password reset email. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   if ((isLoading || user) && !isSubmitting && !verificationNotice) {
     return <main className="min-h-screen" />;
   }
@@ -159,6 +182,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               </button>
             </span>
           </label>
+          {isLogin && <button type="button" onClick={requestPasswordReset} disabled={isSubmitting} className="-mt-2 block text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Forgot password?</button>}
           {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
           {canResendVerification && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Resend verification email</button>}
           <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-fg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
