@@ -74,7 +74,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
 
   // ── Day 13 — later beginner kanji ─────────────────────────────────────────
   13: [
-    "夜", "先", "秒", "歳", "京", "都", "自", "族", "刀",
+    "夜", "先", "秒", "歳", "京", "都", "自", "族", "刀", "明",
   ],
 
   // ── Days 14–25 — grammar-focus lessons (no new kanji) ─────────────────────
