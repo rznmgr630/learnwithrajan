@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (requestId === refreshRequestRef.current) {
         setIsAdmin(false);
         setIsLoading(false);
-        if (["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/library"].some((path) => pathname.startsWith(path))) {
+        if (["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/learn/compiler", "/library", "/todo", "/focus"].some((path) => pathname.startsWith(path))) {
           router.replace("/login");
         }
       }
