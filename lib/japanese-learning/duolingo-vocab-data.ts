@@ -4757,6 +4757,25 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "さぎ", romaji: "sagi", meaning_en: "Heron", meaning_np: "बकुल्ला", examples: [{ ja: "さぎが川にいます。", en: "A heron is by the river.", np: "नदी किनारमा बकुल्ला छ।" }] },
     ],
   },
+  {
+    day: 39,
+    category: "Nature, Weather & Weekdays",
+    words: [
+      { word: "うつくしい", romaji: "utsukushii", meaning_en: "Beautiful / pretty", meaning_np: "सुन्दर / मनमोहक", examples: [{ ja: "うつくしいもりです。", en: "It is a beautiful forest.", np: "यो सुन्दर जंगल हो।" }] },
+      { word: "しぜん", romaji: "shizen", meaning_en: "Nature / natural environment", meaning_np: "प्रकृति / प्राकृतिक वातावरण", examples: [{ ja: "しぜんがすきです。", en: "I like nature.", np: "मलाई प्रकृति मन पर्छ।" }] },
+      { word: "きんようび", romaji: "kin'yōbi", meaning_en: "Friday", meaning_np: "शुक्रबार", examples: [{ ja: "きんようびに会いましょう。", en: "Let's meet on Friday.", np: "शुक्रबार भेटौँ।" }] },
+      { word: "木に水をあげました。", romaji: "ki ni mizu o agemashita", meaning_en: "I gave water to the tree.", meaning_np: "मैले रुखलाई पानी दिएँ।", examples: [{ ja: "木に水をあげました。", en: "I gave water to the tree.", np: "मैले रुखलाई पानी दिएँ।" }] },
+      { word: "みどり", romaji: "midori", meaning_en: "Green / greenery", meaning_np: "हरियो / हरियाली", examples: [{ ja: "みどりのシャツです。", en: "It is a green shirt.", np: "यो हरियो सर्ट हो।" }] },
+      { word: "もり", romaji: "mori", meaning_en: "Forest", meaning_np: "जंगल", examples: [{ ja: "もりをさんぽします。", en: "I take a walk in the forest.", np: "म जंगलमा हिँड्छु।" }] },
+      { word: "もくようび", romaji: "mokuyōbi", meaning_en: "Thursday", meaning_np: "बिहीबार", examples: [{ ja: "もくようびは休みです。", en: "Thursday is a day off.", np: "बिहीबार बिदा हो।" }] },
+      { word: "オフィスのエアコンはよくこわれます。", romaji: "ofisu no eakon wa yoku kowaremasu", meaning_en: "The office air conditioner often breaks down.", meaning_np: "अफिसको एयर कन्डिसनर बारम्बार बिग्रन्छ।", examples: [{ ja: "オフィスのエアコンはよくこわれます。", en: "The office air conditioner often breaks down.", np: "अफिसको एयर कन्डिसनर बारम्बार बिग्रन्छ।" }] },
+      { word: "うみでおよぎます。", romaji: "umi de oyogimasu", meaning_en: "I swim in the ocean.", meaning_np: "म समुद्रमा पौडिन्छु।", examples: [{ ja: "夏にうみでおよぎます。", en: "I swim in the ocean in summer.", np: "म गर्मीमा समुद्रमा पौडिन्छु।" }] },
+      { word: "およぎます", romaji: "oyogimasu", meaning_en: "To swim", meaning_np: "पौडिनु", examples: [{ ja: "プールでおよぎます。", en: "I swim in the pool.", np: "म पोखरीमा पौडिन्छु।" }] },
+      { word: "つめたい", romaji: "tsumetai", meaning_en: "Cold to the touch", meaning_np: "छुँदा चिसो", examples: [{ ja: "水がつめたいです。", en: "The water is cold.", np: "पानी चिसो छ।" }] },
+      { word: "すいようび", romaji: "suiyōbi", meaning_en: "Wednesday", meaning_np: "बुधबार", examples: [{ ja: "すいようびに水をあげます。", en: "I water the plants on Wednesday.", np: "म बुधबार बिरुवालाई पानी दिन्छु।" }] },
+      { word: "しなのがわ", romaji: "Shinano-gawa", meaning_en: "Shinano River", meaning_np: "शिनानो नदी", examples: [{ ja: "しなのがわは長い川です。", en: "The Shinano River is a long river.", np: "शिनानो नदी लामो नदी हो।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5480,5 +5499,47 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "さぎ",
     note: "Herons have a long presence in Japanese art and poetry, including haiku, where they can evoke water, seasons, and quiet landscapes.",
     examples: [{ ja: "さぎが川にいます。", en: "A heron is by the river.", np: "नदी किनारमा बकुल्ला छ।" }],
+  },
+  {
+    title: "うつくしい and きれい",
+    japanese: "うつくしい / きれい",
+    note: "きれい means beautiful or pretty, often for appearance. うつくしい can describe deeper emotional or aesthetic beauty in nature, art, and scenes.",
+    examples: [{ ja: "うつくしいよぞらです。", en: "It is a beautiful night sky.", np: "यो सुन्दर रातको आकाश हो।" }],
+  },
+  {
+    title: "Nature and Shinto",
+    japanese: "しぜん",
+    note: "Japan's forests, mountains, rivers, and wildlife are closely connected with Shinto traditions, where natural places can be treated with reverence.",
+    examples: [{ ja: "しぜんを大切にします。", en: "I take care of nature.", np: "म प्रकृतिको ख्याल राख्छु।" }],
+  },
+  {
+    title: "Weekday Names and the Elements",
+    japanese: "水曜日 / 木曜日 / 金曜日",
+    note: "すいようび comes from 水, water. もくようび comes from 木, wood. きんようび comes from 金, gold.",
+    examples: [{ ja: "金曜日はきんようびです。", en: "Friday is kin'yōbi.", np: "शुक्रबार किन्योबी हो।" }],
+  },
+  {
+    title: "の Describes a Noun",
+    japanese: "みどりのシャツ",
+    note: "の can connect nouns when the first noun describes the second. みどりのシャツ means 'a green shirt.'",
+    examples: [{ ja: "みどりのシャツです。", en: "It is a green shirt.", np: "यो हरियो सर्ट हो।" }],
+  },
+  {
+    title: "で Marks Where an Action Happens",
+    japanese: "うみでおよぎます",
+    note: "で marks the location where an action takes place, such as swimming in the ocean or working in an office.",
+    examples: [{ ja: "プールでおよぎます。", en: "I swim in the pool.", np: "म पोखरीमा पौडिन्छु।" }],
+  },
+  {
+    title: "さむい and つめたい",
+    japanese: "さむい / つめたい",
+    note: "さむい describes cold weather. つめたい describes something physically cold to the touch, such as water or a drink.",
+    examples: [{ ja: "冬はさむいです。水はつめたいです。", en: "Winter is cold. The water is cold.", np: "जाडो चिसो हुन्छ। पानी चिसो हुन्छ।" }],
+  },
+  {
+    title: "Shinano River",
+    japanese: "しなのがわ",
+    note: "The Shinano River is Japan's longest river. It flows through Nagano and Niigata before reaching the Sea of Japan.",
+    examples: [{ ja: "しなのがわは長い川です。", en: "The Shinano River is a long river.", np: "शिनानो नदी लामो नदी हो।" }],
   },
 ];
