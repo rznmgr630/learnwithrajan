@@ -116,7 +116,9 @@ export function NextjsRoadmap() {
   const [detailDay, setDetailDay] = useState<number | null>(null);
 
   useEffect(() => {
-    const day = Number(searchParams.get("day"));
+    const dayParam = searchParams.get("day");
+    if (dayParam === null) return;
+    const day = Number(dayParam);
     if (!Number.isInteger(day)) return;
     if (NEXTJS_LESSON_DAYS[day]) setLessonDay(day);
     else if (NEXTJS_ROADMAP_WEEKS.some((week) => week.days.some((roadmapDay) => roadmapDay.day === day))) setDetailDay(day);

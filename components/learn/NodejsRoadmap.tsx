@@ -93,7 +93,9 @@ export function NodejsRoadmap() {
   const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   useEffect(() => {
-    const day = Number(searchParams.get("day"));
+    const dayParam = searchParams.get("day");
+    if (dayParam === null) return;
+    const day = Number(dayParam);
     if (!Number.isInteger(day)) return;
     if (LESSON_DAYS[day]) setLessonDay(day);
     else if (NODEJS_ROADMAP_WEEKS.some((week) => week.days.some((roadmapDay) => roadmapDay.day === day))) setDetailDay(day);

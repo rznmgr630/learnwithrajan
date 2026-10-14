@@ -106,7 +106,9 @@ export function NestjsRoadmap() {
   const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   useEffect(() => {
-    const day = Number(searchParams.get("day"));
+    const dayParam = searchParams.get("day");
+    if (dayParam === null) return;
+    const day = Number(dayParam);
     if (Number.isInteger(day) && LESSON_DAYS[day as keyof typeof LESSON_DAYS]) setLessonDay(day);
   }, [searchParams]);
 
