@@ -19,7 +19,7 @@ async function getSessionStatus(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
-  const requiresLogin = ["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/library"]
+  const requiresLogin = ["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/learn/compiler", "/library", "/todo", "/focus"]
     .some((path) => request.nextUrl.pathname.startsWith(path));
   const session = await getSessionStatus(request);
 
@@ -54,6 +54,9 @@ export const config = {
     "/learn/dsa/:path*",
     "/learn/system-design/:path*",
     "/learn/backend-engineering/:path*",
+    "/learn/compiler/:path*",
     "/library/:path*",
+    "/todo/:path*",
+    "/focus/:path*",
   ],
 };
