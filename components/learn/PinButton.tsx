@@ -4,7 +4,7 @@ import { usePinnedTracks } from "@/hooks/use-pinned-tracks";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function PinButton({ id, className = "" }: { id: string; className?: string }) {
-  const { isPinned, togglePin } = usePinnedTracks();
+  const { isAuthenticated, isPinned, togglePin } = usePinnedTracks();
   const { t } = useLocale();
   const pinned = isPinned(id);
 
@@ -17,8 +17,8 @@ export function PinButton({ id, className = "" }: { id: string; className?: stri
         togglePin(id);
       }}
       aria-pressed={pinned}
-      aria-label={pinned ? t("pin.remove") : t("pin.add")}
-      title={pinned ? t("pin.remove") : t("pin.add")}
+      aria-label={isAuthenticated ? (pinned ? t("pin.remove") : t("pin.add")) : "Log in to save pins"}
+      title={isAuthenticated ? (pinned ? t("pin.remove") : t("pin.add")) : "Log in to save pins"}
       suppressHydrationWarning
       className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
         pinned
