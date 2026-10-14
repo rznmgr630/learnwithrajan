@@ -14,6 +14,10 @@ function resendCooldownKey(email: string) {
   return `email-verification-resend:${email.trim().toLowerCase()}`;
 }
 
+function passwordResetCooldownKey(email: string) {
+  return `password-reset:${email.trim().toLowerCase()}`;
+}
+
 function formatCooldown(seconds: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
@@ -36,6 +40,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [verificationNotice, setVerificationNotice] = useState("");
   const [canResendVerification, setCanResendVerification] = useState(false);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
+  const [isPasswordResetMode, setIsPasswordResetMode] = useState(false);
+  const [passwordResetCooldownSeconds, setPasswordResetCooldownSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
 
@@ -64,9 +70,33 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     };
   }, [email]);
 
+  useEffect(() => {
+    if (!email.trim()) return;
+
+    const key = passwordResetCooldownKey(email);
+    const updateCooldown = () => {
+      const expiresAt = Number(window.localStorage.getItem(key));
+      const seconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setPasswordResetCooldownSeconds(seconds);
+      if (seconds === 0) window.localStorage.removeItem(key);
+    };
+
+    const timeout = window.setTimeout(updateCooldown, 0);
+    const interval = window.setInterval(updateCooldown, 1000);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+    };
+  }, [email]);
+
   function startResendCooldown(emailAddress: string) {
     window.localStorage.setItem(resendCooldownKey(emailAddress), String(Date.now() + resendCooldownMs));
     setResendCooldownSeconds(resendCooldownMs / 1000);
+  }
+
+  function startPasswordResetCooldown(emailAddress: string) {
+    window.localStorage.setItem(passwordResetCooldownKey(emailAddress), String(Date.now() + resendCooldownMs));
+    setPasswordResetCooldownSeconds(resendCooldownMs / 1000);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -164,8 +194,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     }
   }
 
-  async function requestPasswordReset() {
-    if (!auth) return;
+  async function requestPasswordReset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!auth || passwordResetCooldownSeconds > 0) return;
 
     if (!email.trim()) {
       setError("Enter your email address to reset your password.");
@@ -177,6 +209,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     setIsSubmitting(true);
     try {
       await sendPasswordResetEmail(auth, email.trim());
+      startPasswordResetCooldown(email);
       setPassword("");
       setVerificationNotice("We sent a password reset email. Check your inbox to continue.");
     } catch (caughtError) {
@@ -195,10 +228,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl sm:p-8">
         <Link href="/" className="text-sm font-semibold text-[var(--accent)] hover:underline">Learn with Rajan</Link>
-        <h1 className="mt-6 text-2xl font-bold text-[var(--text)]">{isLogin ? "Welcome back" : "Create your account"}</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">{isLogin ? "Sign in to continue learning." : "Save your place as you learn."}</p>
+        <h1 className="mt-6 text-2xl font-bold text-[var(--text)]">{isPasswordResetMode ? "Reset your password" : isLogin ? "Welcome back" : "Create your account"}</h1>
+        <p className="mt-2 text-sm text-[var(--muted)]">{isPasswordResetMode ? "Enter your email and we’ll send a reset link." : isLogin ? "Sign in to continue learning." : "Save your place as you learn."}</p>
 
-        <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+        <form className="mt-7 space-y-5" onSubmit={isPasswordResetMode ? requestPasswordReset : handleSubmit}>
           {!isLogin && (
             <label className="block text-sm font-medium text-[var(--text)]">
               Full name
@@ -209,7 +242,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
             Email address
             <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--glow)]" />
           </label>
-          <label className="block text-sm font-medium text-[var(--text)]">
+          {!isPasswordResetMode && <label className="block text-sm font-medium text-[var(--text)]">
             Password
             <span className="relative mt-2 block">
               <input type={showPassword ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} required minLength={isLogin ? undefined : 6} className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 pr-14 text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--glow)]" />
@@ -217,18 +250,17 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 {showPassword ? <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 4.2A10.7 10.7 0 0 1 12 4c5 0 9.3 3.3 10 8-0.3 1.8-1.3 3.4-2.7 4.7M6.1 6.1C3.8 7.5 2.3 9.6 2 12c0.7 4.7 5 8 10 8 1.3 0 2.6-0.2 3.7-0.7" /></svg> : <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>}
               </button>
             </span>
-          </label>
-          {isLogin && <button type="button" onClick={requestPasswordReset} disabled={isSubmitting} className="-mt-2 block text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Forgot password?</button>}
+          </label>}
+          {isLogin && !isPasswordResetMode && <button type="button" onClick={() => { setError(""); setVerificationNotice(""); setIsPasswordResetMode(true); }} disabled={isSubmitting} className="-mt-2 block text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">Forgot password?</button>}
           {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-300">{error}</p>}
-          {canResendVerification && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting || resendCooldownSeconds > 0} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">{resendCooldownSeconds > 0 ? `Resend available in ${formatCooldown(resendCooldownSeconds)}` : "Resend verification email"}</button>}
-          <button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-fg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
+          {canResendVerification && !isPasswordResetMode && <button type="button" onClick={resendVerificationEmail} disabled={isSubmitting || resendCooldownSeconds > 0} className="text-sm font-medium text-[var(--accent)] hover:underline disabled:cursor-not-allowed disabled:opacity-60">{resendCooldownSeconds > 0 ? `Resend available in ${formatCooldown(resendCooldownSeconds)}` : "Resend verification email"}</button>}
+          <button type="submit" disabled={isSubmitting || (isPasswordResetMode && passwordResetCooldownSeconds > 0)} className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-fg)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
+            {isSubmitting ? "Please wait..." : isPasswordResetMode && passwordResetCooldownSeconds > 0 ? `Send reset link in ${formatCooldown(passwordResetCooldownSeconds)}` : isPasswordResetMode ? "Send reset link" : isLogin ? "Sign in" : "Create account"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
-          {isLogin ? "New here? " : "Already have an account? "}
-          <Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link>
+          {isPasswordResetMode ? <button type="button" onClick={() => { setError(""); setIsPasswordResetMode(false); }} className="font-medium text-[var(--accent)] hover:underline">Back to sign in</button> : <>{isLogin ? "New here? " : "Already have an account? "}<Link href={isLogin ? "/register" : "/login"} className="font-medium text-[var(--accent)] hover:underline">{isLogin ? "Create an account" : "Sign in"}</Link></>}
         </p>
       </section>
       {verificationNotice && <div role="status" className="fixed bottom-5 right-5 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-blue-500/30 bg-[var(--surface)] p-4 text-sm text-[var(--text)] shadow-2xl"><span className="mt-0.5 text-blue-500">✓</span><p>{verificationNotice}</p><button type="button" onClick={() => setVerificationNotice("")} aria-label="Close message" className="text-[var(--muted)] hover:text-[var(--text)]">×</button></div>}
