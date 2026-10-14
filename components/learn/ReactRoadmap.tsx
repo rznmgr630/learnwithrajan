@@ -109,7 +109,9 @@ export function ReactRoadmap() {
   const [lessonDay, setLessonDay] = useState<number | null>(null);
 
   useEffect(() => {
-    const day = Number(searchParams.get("day"));
+    const dayParam = searchParams.get("day");
+    if (dayParam === null) return;
+    const day = Number(dayParam);
     if (!Number.isInteger(day)) return;
     if (REACT_LESSON_DAYS[day]) setLessonDay(day);
     else if (REACT_ROADMAP_WEEKS.some((week) => week.days.some((roadmapDay) => roadmapDay.day === day))) setDetailDay(day);
