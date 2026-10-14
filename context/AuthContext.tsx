@@ -1,6 +1,7 @@
 "use client";
 
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { auth } from "@/lib/firebase";
 
@@ -14,6 +15,8 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(auth));
@@ -25,9 +28,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
 
     if (!nextUser) {
+      await fetch("/api/auth/session", { method: "DELETE" }).catch(() => undefined);
       if (requestId === refreshRequestRef.current) {
         setIsAdmin(false);
         setIsLoading(false);
+        if (["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/library"].some((path) => pathname.startsWith(path))) {
+          router.replace("/login");
+        }
       }
       return;
     }
@@ -48,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (requestId === refreshRequestRef.current) setIsAdmin(false);
     }
     if (requestId === refreshRequestRef.current) setIsLoading(false);
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!auth) {
