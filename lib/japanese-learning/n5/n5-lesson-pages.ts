@@ -6659,6 +6659,100 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What does いちどもすもうをみたことがありません mean?", np: "いちどもすもうをみたことがありません को अर्थ के हो?" }, choices: [{ en: "I have never watched sumo", np: "मैले कहिल्यै सुमो हेरेको छैन" }, { en: "I watched sumo once", np: "मैले एक पटक सुमो हेरेँ" }, { en: "I want to watch sumo", np: "म सुमो हेर्न चाहन्छु" }, { en: "Please do not watch sumo", np: "कृपया सुमो नहेर्नुस्" }], correctIndex: 0, explanation: { en: "いちども with a negative means not even once, or never.", np: "नकारात्मक वाक्यमा いちども भनेको एक पटक पनि होइन, कहिल्यै होइन।" } },
     ],
   },
+  {
+    id: 20,
+    title: "Lesson 20 — plain forms and casual conversation",
+    intro: [
+      { en: "Lesson 20 introduces plain forms, the casual forms used with family and close friends. You will learn the present, negative, past, and past-negative forms for verbs, adjectives, and nouns.", np: "पाठ २० मा परिवार र नजिकका साथीहरूसँग प्रयोग हुने plain form सिक्नुहुन्छ। Verb, adjective र noun का वर्तमान, नकारात्मक, भूतकाल र भूतकाल नकारात्मक रूप सिक्नुहुन्छ।" },
+      { en: "Plain form is not rude by itself. It matches the relationship and situation. Use です・ます with people you do not know well, at work, or in formal situations.", np: "plain form आफैंमा अशिष्ट होइन। यो सम्बन्ध र परिस्थितिअनुसार प्रयोग हुन्छ। नचिनेका व्यक्ति, काम वा औपचारिक अवस्थामा です・ます प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "Bk2-rRAQQbY", np: "e7tKHkWnLYw" },
+    youtubeVideoIdPart2: { en: "QKM4z7dGWhQ" },
+    youtubeTitle: "Minna no Nihongo · Lesson 20 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 20 notes",
+          np: "हस्तलिखित Chapter 20 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第20課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1u5deFj-_9L_SLRW1soxApooW_0M6cx2z/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "あした、くにへかえるの？", reading: "Ashita, kuni e kaeru no?", english: { en: "Are you going back to your country tomorrow?", np: "भोलि देश फर्किंदै छौ?" } },
+      { speaker: "B", japanese: "ううん、かえらない。ビザがいるから。", reading: "Uun, kaeranai. Biza ga iru kara.", english: { en: "No, I'm not going back. Because I need a visa.", np: "होइन, फर्किंदिनँ। किनकि भिसा चाहिन्छ।" } },
+      { speaker: "A", japanese: "じゃ、どうするの？", reading: "Ja, dō suru no?", english: { en: "Then, what will you do?", np: "त्यसो भए, के गर्छौ?" } },
+      { speaker: "B", japanese: "しらべたり、でんわしたりする。", reading: "Shirabetari, denwa shitari suru.", english: { en: "I'll do things like check it and make phone calls.", np: "जाँच्ने र फोन गर्ने जस्ता काम गर्छु।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Verb plain forms", np: "Verb plain form" },
+        meaning: { en: "Plain verbs have four basic forms: present or future, negative, past, and past negative. They are used in casual speech and before many grammar patterns.", np: "plain Verb का चार मुख्य रूप हुन्छन्: वर्तमान वा भविष्य, नकारात्मक, भूतकाल र भूतकाल नकारात्मक। यी casual बोलचाल र धेरै grammar pattern अघि प्रयोग हुन्छन्।" },
+        whereWeUse: [
+          { en: "いきます → いく / いかない / いった / いかなかった", np: "いきます → いく / いかない / いった / いかなかった" },
+          { en: "たべます → たべる / たべない / たべた / たべなかった", np: "たべます → たべる / たべない / たべた / たべなかった" },
+          { en: "します → する / しない / した / しなかった", np: "します → する / しない / した / しなかった" },
+        ],
+        examples: [
+          { japanese: "きのう、ともだちにでんわした。", reading: "Kinō, tomodachi ni denwa shita.", english: { en: "I called a friend yesterday.", np: "हिजो साथीलाई फोन गरेँ।" }, scenario: { en: "Talking with a friend", np: "साथीसँग कुरा गर्दा" } },
+          { japanese: "きょうはくるまをしゅうりしない。", reading: "Kyō wa kuruma o shūri shinai.", english: { en: "I'm not repairing the car today.", np: "आज कार मर्मत गर्दिनँ।" }, scenario: { en: "Casual plan", np: "साधारण योजना" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "い-adjective plain forms", np: "い-adjective plain form" },
+        meaning: { en: "Remove です from the polite form. The adjective itself changes for negative and past forms: おもしろい, おもしろくない, おもしろかった, おもしろくなかった.", np: "विनम्र रूपको です हटाउनुहोस्। नकारात्मक र भूतकालमा adjective आफैं बदलिन्छ: おもしろい, おもしろくない, おもしろかった, おもしろくなかった।" },
+        whereWeUse: [
+          { en: "たかいです → たかい / たかくない / たかかった / たかくなかった", np: "たかいです → たかい / たかくない / たかかった / たかくなかった" },
+          { en: "このきもの、たかい？", np: "このきもの、たかい？" },
+        ],
+        examples: [
+          { japanese: "きのうのえいが、おもしろかった。", reading: "Kinō no eiga, omoshirokatta.", english: { en: "Yesterday's movie was interesting.", np: "हिजोको फिल्म रोचक थियो।" }, scenario: { en: "Casual review", np: "साधारण समीक्षा" } },
+          { japanese: "ぶっかはあまりやすくない。", reading: "Bukka wa amari yasukunai.", english: { en: "Prices are not very cheap.", np: "मूल्य धेरै सस्तो छैन।" }, scenario: { en: "Talking about prices", np: "मूल्यबारे कुरा गर्दा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "な-adjective and noun plain forms", np: "な-adjective र noun plain form" },
+        meaning: { en: "In plain form, な-adjectives and nouns use だ in the affirmative present. Their negative uses じゃない, their past uses だった, and their past negative uses じゃなかった.", np: "plain form मा な-adjective र noun को वर्तमान सकारात्मकमा だ आउँछ। नकारात्मकमा じゃない, भूतकालमा だった, र भूतकाल नकारात्मकमा じゃなかった आउँछ।" },
+        whereWeUse: [
+          { en: "げんきです → げんきだ / げんきじゃない / げんきだった / げんきじゃなかった", np: "げんきです → げんきだ / げんきじゃない / げんきだった / げんきじゃなかった" },
+          { en: "サラリーマンです → サラリーマンだ / サラリーマンじゃない", np: "サラリーマンです → サラリーマンだ / サラリーマンじゃない" },
+        ],
+        examples: [
+          { japanese: "きのうはひまだった。", reading: "Kinō wa hima datta.", english: { en: "I was free yesterday.", np: "हिजो म फुर्सदमा थिएँ।" }, scenario: { en: "Talking about yesterday", np: "हिजोबारे कुरा गर्दा" } },
+          { japanese: "ぼくはサラリーマンじゃない。", reading: "Boku wa sararīman ja nai.", english: { en: "I'm not an office worker.", np: "म अफिस कर्मचारी होइन।" }, scenario: { en: "Self-introduction to a friend", np: "साथीसँग परिचय दिँदा" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "Casual questions and replies", np: "casual प्रश्न र जवाफ" },
+        meaning: { en: "In casual conversation, questions often rise in intonation instead of ending with か. Use うん for yes and ううん for no with close friends.", np: "casual कुराकानीमा प्रश्नको अन्त्यमा か नभई स्वर उचालिन्छ। नजिकका साथीहरूसँग हो का लागि うん र होइन का लागि ううん प्रयोग हुन्छ।" },
+        whereWeUse: [
+          { en: "あしたいく？ — うん、いく。", np: "あしたいく？ — うん、いく。" },
+          { en: "ビザ、いる？ — ううん、いらない。", np: "ビザ、いる？ — ううん、いらない。" },
+        ],
+        examples: [
+          { japanese: "よかったら、みんなでいかない？", reading: "Yokattara, minna de ikanai?", english: { en: "If you like, shall we all go?", np: "राम्रो लागे, सबै जना जाऔँ?" }, scenario: { en: "Inviting friends", np: "साथीलाई निम्तो दिँदा" } },
+          { japanese: "どうしようかな。", reading: "Dō shiyō kana.", english: { en: "What shall I do?", np: "म के गरूँ?" }, scenario: { en: "Thinking aloud", np: "सोच्दै गर्दा" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "の", romaji: "no", name: { en: "casual question ending", np: "casual प्रश्नको अन्त्य" }, meaning: { en: "Adds a casual explanatory question tone: どうするの？", np: "casual ढंगले व्याख्यात्मक प्रश्न बनाउँछ: どうするの？" }, examples: [{ japanese: "あしたなにをするの？", reading: "Ashita nani o suru no?", english: { en: "What will you do tomorrow?", np: "भोलि के गर्छौ?" }, scenario: { en: "Friend chat", np: "साथीसँग कुरा" } }] },
+      { particle: "け", romaji: "ke", name: { en: "casual but", np: "casual तर" }, meaning: { en: "An informal ending related to が that can add a reason or contrast.", np: "が सँग सम्बन्धित अनौपचारिक अन्त्य हो, जसले कारण वा तुलना थप्न सक्छ।" }, examples: [{ japanese: "いくけ、またね。", reading: "Iku ke, mata ne.", english: { en: "I'm going, see you.", np: "म जाँदैछु, फेरि भेटौँला।" }, scenario: { en: "Casual goodbye", np: "साधारण बिदाइ" } }] },
+    ],
+    vocabulary: buildVocab(20),
+    mcqs: [
+      { question: { en: "What is the plain negative of いきます?", np: "いきます को plain नकारात्मक रूप कुन हो?" }, choices: ["いかない", "いきない", "いかなかった", "いきません"], correctIndex: 0, explanation: { en: "The plain negative is いかない. いきません is polite.", np: "plain नकारात्मक いかない हो। いきません विनम्र रूप हो।" } },
+      { question: { en: "Choose the plain past form of おもしろいです.", np: "おもしろいです को plain भूतकाल रूप छान्नुहोस्।" }, choices: ["おもしろかった", "おもしろいだった", "おもしろくない", "おもしろかったです"], correctIndex: 0, explanation: { en: "An い-adjective past plain form ends in かった: おもしろかった.", np: "い-adjective को plain भूतकाल かった मा अन्त्य हुन्छ: おもしろかった।" } },
+      { question: { en: "Complete: きのうは ひま___。", np: "पूरा गर्नुस्: きのうは ひま___。" }, choices: ["だった", "かった", "じゃない", "だ"], correctIndex: 0, explanation: { en: "ひま is a な-adjective. Its plain past form is ひまだった.", np: "ひま な-adjective हो। यसको plain भूतकाल ひまだった हो।" } },
+      { question: { en: "Which reply is a casual ‘No’?", np: "casual ‘होइन’ भन्ने जवाफ कुन हो?" }, choices: ["ううん", "いいえ", "はい", "ありがとうございます"], correctIndex: 0, explanation: { en: "ううん is the casual form of ‘no.’", np: "ううん, ‘होइन’ को casual रूप हो।" } },
+      { question: { en: "What does ビザがいる mean?", np: "ビザがいる को अर्थ के हो?" }, choices: [{ en: "A visa is needed", np: "भिसा चाहिन्छ" }, { en: "I have a visa", np: "मसँग भिसा छ" }, { en: "Please show your visa", np: "कृपया भिसा देखाउनुस्" }, { en: "I lost my visa", np: "मैले भिसा हराएँ" }], correctIndex: 0, explanation: { en: "いる here means ‘need’ and is the casual plain form of いります.", np: "यहाँ いる को अर्थ ‘चाहिनु’ हो र यो いります को casual plain form हो।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
