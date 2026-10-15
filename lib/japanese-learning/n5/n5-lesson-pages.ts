@@ -77,6 +77,7 @@ export type N5LessonPageData = {
   /** Optional second video (Part 2) — shown as a Part 1 / Part 2 toggle in the Grammar accordion. */
   youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
+  resources?: { title: L10n; url: string }[];
   conversation: ConversationLine[];
   grammar: GrammarPoint[];
   particles: ParticleEntry[];
@@ -4250,7 +4251,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       {
         question: { en: "What is the correct way to praise someone else's Japanese skill?", np: "अरूको जापानी भाषाको तारिफ गर्ने सही तरिका कुन हो?" },
         choices: [
-          { en: "にほんごがお上手ですね", np: "にほんごがお上手ですね" },
+          { en: "にほんごがお{上手|じょうず}ですね", np: "にほんごがお{上手|じょうず}ですね" },
           { en: "にほんごがじょうずですね", np: "にほんごがじょうずですね" },
           { en: "にほんごがすきですね", np: "にほんごがすきですね" },
           { en: "にほんごがわかりますね", np: "にほんごがわかりますね" },
@@ -4537,7 +4538,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     mcqs: [
       {
         question: { en: "Which verb do you use for animate beings (people, animals)?", np: "जीवित प्राणीहरू (मान्छे, जनावर) को लागि कुन verb प्रयोग गर्नुहुन्छ?" },
-        choices: ["います", "あります", "あります", "おります"],
+        choices: ["います", "あります", "です", "します"],
         correctIndex: 0,
         explanation: { en: "います is for animate beings that can move on their own (people, animals). あります is for inanimate objects.", np: "います, आफैं चल्न सक्ने जीवित प्राणीका लागि (मान्छे, जनावर)। あります, निर्जीव वस्तुका लागि।" },
       },
@@ -4952,24 +4953,24 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "Which counter is used for bottles of beer?", np: "बियरको बोतल गन्न कुन counter प्रयोग हुन्छ?" },
-        choices: ["〜本", "〜枚", "〜台", "〜匹"],
+        choices: ["〜{本|ほん}", "〜{枚|まい}", "〜{台|だい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜本 (ほん) counts long objects including bottles. Beer bottles = ビールをさんぼん.", np: "〜本 (ほん) ले बोतल सहित लामो वस्तु गन्छ। बियरको बोतल = ビールをさんぼん।" },
+        explanation: { en: "〜{本|ほん} counts long objects including bottles. Beer bottles = ビールをさんぼん.", np: "〜{本|ほん} ले बोतल सहित लामो वस्तु गन्छ। बियरको बोतल = ビールをさんぼん।" },
       },
       {
-        question: { en: "How do you say 'one bottle' using 〜本?", np: "〜本 प्रयोग गरी 'एक बोतल' कसरी भनिन्छ?" },
+        question: { en: "How do you say 'one bottle' using 〜{本|ほん}?", np: "〜{本|ほん} प्रयोग गरी 'एक बोतल' कसरी भनिन्छ?" },
         choices: ["いっぽん", "いちほん", "ひとつほん", "いちぽん"],
         correctIndex: 0,
-        explanation: { en: "1 with 〜本 = いっぽん (double consonant p). にほん (2), さんぼん (3).", np: "〜本 सँग 1 = いっぽん (double p)। にほん (२), さんぼん (३)।" },
+        explanation: { en: "1 with 〜{本|ほん} = いっぽん (double consonant p). にほん (2), さんぼん (3).", np: "〜{本|ほん} सँग 1 = いっぽん (double p)। にほん (२), さんぼん (३)।" },
       },
       {
         question: { en: "Which counter is for flat thin objects like stamps and paper?", np: "टिकट र कागज जस्ता flat पातलो वस्तुका लागि कुन counter हो?" },
-        choices: ["〜枚", "〜本", "〜台", "〜匹"],
+        choices: ["〜{枚|まい}", "〜{本|ほん}", "〜{台|だい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜枚 (まい) counts flat, thin objects: stamps (きって), paper (かみ), shirts (シャツ).", np: "〜枚 (まい) ले flat, पातलो वस्तु गन्छ: टिकट, कागज, सर्ट।" },
+        explanation: { en: "〜{枚|まい} counts flat, thin objects: stamps (きって), paper (かみ), shirts (シャツ).", np: "〜{枚|まい} ले flat, पातलो वस्तु गन्छ: टिकट, कागज, सर्ट।" },
       },
       {
-        question: { en: "How do you order 'three beers' using 〜本?", np: "〜本 प्रयोग गरी 'तीन बियर' कसरी अर्डर गर्ने?" },
+        question: { en: "How do you order 'three beers' using 〜{本|ほん}?", np: "〜{本|ほん} प्रयोग गरी 'तीन बियर' कसरी अर्डर गर्ने?" },
         choices: [
           "ビールをさんぼんください",
           "ビールをみっつください",
@@ -4981,9 +4982,9 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "Which counter is used for machines and cars?", np: "मेसिन र कारका लागि कुन counter हो?" },
-        choices: ["〜台", "〜本", "〜枚", "〜匹"],
+        choices: ["〜{台|だい}", "〜{本|ほん}", "〜{枚|まい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜台 (だい) counts machines and vehicles: car (くるま), TV (テレビ), computer (パソコン).", np: "〜台 (だい) ले मेसिन र सवारी साधन: कार, टिभी, कम्प्युटर।" },
+        explanation: { en: "〜{台|だい} counts machines and vehicles: car (くるま), TV (テレビ), computer (パソコン).", np: "〜{台|だい} ले मेसिन र सवारी साधन: कार, टिभी, कम्प्युटर।" },
       },
       {
         question: { en: "What does いくつありますか mean?", np: "いくつありますか को अर्थ के हो?" },
@@ -5005,13 +5006,13 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           "きってをごだいください",
         ],
         correctIndex: 0,
-        explanation: { en: "Stamps are flat → 〜枚. Five = ご. きってをごまいください = five stamps please.", np: "टिकट flat → 〜枚। पाँच = ご। きってをごまいください = पाँच टिकट दिनुस्।" },
+        explanation: { en: "Stamps are flat → 〜{枚|まい}. Five = ご. きってをごまいください = five stamps please.", np: "टिकट flat → 〜{枚|まい}। पाँच = ご। きってをごまいください = पाँच टिकट दिनुस्।" },
       },
       {
         question: { en: "Fill the blank: ねこをさん___かっています。(keeping three cats)", np: "खाली भर्नुस्: ねこをさん___かっています।" },
         choices: ["びき", "ぼん", "まい", "だい"],
         correctIndex: 0,
-        explanation: { en: "〜匹 for small animals. さん + ひき → さんびき (b sound after さん). Three cats = さんびき.", np: "〜匹 सानो जनावरका लागि। さん + ひき → さんびき। तीन बिरालो = さんびき।" },
+        explanation: { en: "〜{匹|ひき} for small animals. さん + ひき → さんびき (b sound after さん). Three cats = さんびき.", np: "〜{匹|ひき} सानो जनावरका लागि। さん + ひき → さんびき। तीन बिरालो = さんびき।" },
       },
       {
         question: { en: "Native Japanese counter for 'eight'?", np: "'आठ' को लागि मौलिक जापानी counter के हो?" },
@@ -5038,9 +5039,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "दुई वस्तु बराबर भए: A も B も [adj] (A र B दुवै [adj] छन्)। फरक भए: adj + ほうが ले 'बढी' भएको थाहा पाइन्छ।",
       },
     ],
-    youtubeVideoId: { en: "Xq_CGhOMc1Q" },
-    youtubeVideoIdPart2: { en: "7DYaL10t9oM" },
+    youtubeVideoId: { en: "mBto6IwmFWw", np: "8xvNuJTACYY" },
+    youtubeVideoIdPart2: { en: "griYubG2Yvo" },
     youtubeTitle: "Minna no Nihongo · Lesson 12 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 12 notes",
+          np: "हस्तलिखित Chapter 12 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第12課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/175s6wkUccSeTNMB7_ofm3CesfB8Xdhup/view?usp=drive_link",
+      },
+    ],
     conversation: [
       {
         speaker: "A",
@@ -5363,9 +5374,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "प्रश्न शब्द どんな = 'कस्तो' — どんなN が ほしいですか (कस्तो N चाहिन्छ?)। ほしい, い-adj हो — त्यसैले त्यसैगरी conjugate।",
       },
     ],
-    youtubeVideoId: { en: "JriNbAXfwEM" },
-    youtubeVideoIdPart2: { en: "0n7Hsd9J-LQ" },
+    youtubeVideoId: { en: "bvi_K6YkDWQ", np: "fRt3-SrYVmU" },
+    youtubeVideoIdPart2: { en: "6HtPTrmhDAA" },
     youtubeTitle: "Minna no Nihongo · Lesson 13 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 13 notes",
+          np: "हस्तलिखित Chapter 13 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第13課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1q0Iq9CEEIDWBT6vjGqWwkN0OI8ztqxTU/view?usp=sharing",
+      },
+    ],
     conversation: [
       {
         speaker: "A",
@@ -5482,6 +5503,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           { en: "Want a thing (ほしい): あたらしいくるまがほしいです", np: "वस्तु चाहनु (ほしい): あたらしいくるまがほしいです" },
           { en: "Want to do (たい): うみへいきたいです", np: "काम गर्न चाहनु (たい): うみへいきたいです" },
           { en: "Both negated: ほしくないです / いきたくないです", np: "दुवै नकार: ほしくないです / いきたくないです" },
+          { en: "Questions: なにをしたいですか / どこへいきたいですか / いつにほんへいきたいですか", np: "प्रश्न: なにをしたいですか / どこへいきたいですか / いつにほんへいきたいですか" },
         ],
         examples: [
           {
@@ -5501,6 +5523,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Nani o shitai desu ka?",
             english: { en: "What do you want to do?", np: "के गर्न चाहनुहुन्छ?" },
             scenario: { en: "Asking about desired actions", np: "इच्छित कार्य सोध्दा" },
+          },
+          {
+            japanese: "いつにほんへいきたいですか。",
+            reading: "Itsu Nihon e ikitai desu ka?",
+            english: { en: "When do you want to go to Japan?", np: "तपाईं जापान कहिले जान चाहनुहुन्छ?" },
+            scenario: { en: "Question word + たい", np: "प्रश्न शब्द + たい" },
           },
         ],
       },
@@ -5704,17 +5732,27 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "यस पाठमा Verb को て-form सिक्नुहुनेछ — जापानी व्याकरणको सबभन्दा महत्त्वपूर्ण आधार। अनुरोध (てください), जारी कार्य वा अवस्था (ています), र Verb जोड्न प्रयोग।",
       },
       {
-        en: "て-form construction rules depend on verb group: Group 1 (u-verbs) — the final kana changes sound; Group 2 (ru-verbs) — drop る, add て; Irregular — する → して、くる → きて.",
-        np: "て-form बनाउने नियम Verb group अनुसार: Group 1 (u-verb) — अन्तिम kana परिवर्तन; Group 2 (ru-verb) — る हटाएर て; Irregular — する → して、くる → きて।",
+        en: "て-form construction rules depend on verb group: Group 1 (u-verbs) — the final kana changes sound; Group 2 (ru-verbs) — drop る, add て; Group 3 (irregular) — する → して、くる → きて.",
+        np: "て-form बनाउने नियम Verb group अनुसार: Group 1 (u-verb) — अन्तिम kana परिवर्तन; Group 2 (ru-verb) — る हटाएर て; Group 3 (अनियमित) — する → して、くる → きて।",
       },
       {
         en: "ています has two main meanings: an action in progress (いま よんでいます — reading now) and a resulting state (けっこんしています — is married, i.e. got married and the state continues).",
         np: "ています को दुई मुख्य अर्थ: जारी कार्य (いま よんでいます — अहिले पढ्दैछु) र resulting state (けっこんしています — विवाहित छ — विवाह भएको र अवस्था जारी)।",
       },
     ],
-    youtubeVideoId: { en: "rjIB-PPVQZY" },
-    youtubeVideoIdPart2: { en: "2a3ZWlFcFM8" },
+    youtubeVideoId: { en: "kkJoQTQhS78", np: "Y1hCJy5HaHI" },
+    youtubeVideoIdPart2: { en: "4fZsMSO_OIo" },
     youtubeTitle: "Minna no Nihongo · Lesson 14 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 14 notes",
+          np: "हस्तलिखित Chapter 14 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第14課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1zAR5NGmYsIMBJidMzOj4I7rOP4P5Viuz/view?usp=drive_link",
+      },
+    ],
     conversation: [
       {
         speaker: "A",
@@ -5764,6 +5802,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         whereWeUse: [
           { en: "Group 2: たべる→たべて、みる→みて、おきる→おきて", np: "Group 2: たべる→たべて、みる→みて、おきる→おきて" },
           { en: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いく→いって)", np: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いって)" },
+          { en: "Group 1 -む/-ぶ/-ぬ: よむ→よんで、あそぶ→あそんで、しぬ→しんで", np: "Group 1 -む/-ぶ/-ぬ: よむ→よんで、あそぶ→あそんで、しぬ→しんで" },
+          { en: "Group 1 -す: はなす→はなして", np: "Group 1 -す: はなす→はなして" },
           { en: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって", np: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって" },
         ],
         examples: [
@@ -5782,8 +5822,14 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           {
             japanese: "する → して ／ くる → きて",
             reading: "suru → shite / kuru → kite",
-            english: { en: "Irregular verbs", np: "अनियमित Verb" },
-            scenario: { en: "Irregular て-form", np: "अनियमित て-form" },
+            english: { en: "Group 3: irregular verbs", np: "Group 3: अनियमित Verb" },
+            scenario: { en: "Group 3 て-form", np: "Group 3 て-form" },
+          },
+          {
+            japanese: "よむ → よんで ／ はなす → はなして",
+            reading: "yomu → yonde / hanasu → hanashite",
+            english: { en: "Group 1: む → んで and す → して", np: "Group 1: む → んで र す → して" },
+            scenario: { en: "More Group 1 patterns", np: "थप Group 1 नियमहरू" },
           },
         ],
       },
@@ -5798,6 +5844,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           { en: "Direction: みぎへ まがってください (please turn right)", np: "दिशा: みぎへ まがってください" },
           { en: "Hurry: はやく きてください (please come quickly)", np: "हतार: はやく きてください" },
           { en: "Help: てつだってください (please help me)", np: "मद्दत: てつだってください" },
+          { en: "Classroom: このほんをよんでください (please read this book)", np: "कक्षाकोठा: このほんをよんでください" },
         ],
         examples: [
           {
@@ -5817,6 +5864,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Mō ichi-do itte kudasai.",
             english: { en: "Please say it one more time.", np: "अझ एकपटक भनिदिनुस्।" },
             scenario: { en: "Classroom request", np: "कक्षाकोठाको अनुरोध" },
+          },
+          {
+            japanese: "ここにパスポートをみせてください。",
+            reading: "Koko ni pasupōto o misete kudasai.",
+            english: { en: "Please show your passport here.", np: "यहाँ पासपोर्ट देखाइदिनुस्।" },
+            scenario: { en: "Service request", np: "सेवा सम्बन्धी अनुरोध" },
           },
         ],
       },
@@ -5919,6 +5972,25 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           },
         ],
       },
+      {
+        number: 6,
+        name: { en: "V-て、V — connect actions in order", np: "V-て、V — कार्यहरू क्रमसँग जोड्नु" },
+        meaning: {
+          en: "Use the て-form to join actions in sequence: do A, then do B. Pattern: V-て、V. The final verb carries the tense and politeness.",
+          np: "कार्यलाई क्रमसँग जोड्न て-form प्रयोग हुन्छ: A गरेर B। Pattern: V-て、V। अन्तिम Verb ले tense र politeness देखाउँछ।",
+        },
+        whereWeUse: [
+          { en: "Daily routine: get up, eat, then go out", np: "दैनिक काम: उठेर, खाएर, बाहिर जानु" },
+        ],
+        examples: [
+          {
+            japanese: "あさごはんをたべて、がっこうへいきます。",
+            reading: "Asagohan o tabete, gakkō e ikimasu.",
+            english: { en: "I eat breakfast and go to school.", np: "बिहानको खाना खाएर स्कुल जान्छु।" },
+            scenario: { en: "Actions in order", np: "क्रममा भएका कार्यहरू" },
+          },
+        ],
+      },
     ],
     particles: [
       {
@@ -5949,13 +6021,13 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     mcqs: [
       {
         question: { en: "What is the て-form of たべる (Group 2)?", np: "たべる (Group 2) को て-form के हो?" },
-        choices: ["たべて", "たべって", "たべいて", "たべnte"],
+        choices: ["たべて", "たべって", "たべいて", "たべるて"],
         correctIndex: 0,
         explanation: { en: "Group 2: drop る, add て. たべる → drop る → たべ + て = たべて.", np: "Group 2: る हटाएर て। たべる → る हटाउनुस् → たべ + て = たべて।" },
       },
       {
         question: { en: "What is the て-form of かく (write)?", np: "かく (लेख्नु) को て-form के हो?" },
-        choices: ["かいて", "かって", "かくて", "かnde"],
+        choices: ["かいて", "かって", "かくて", "かいで"],
         correctIndex: 0,
         explanation: { en: "Group 1 -く: く → いて. かく → かいて.", np: "Group 1 -く: く → いて। かく → かいて।" },
       },
@@ -6017,7 +6089,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "What is the て-form of のむ (drink)?", np: "のむ (पिउनु) को て-form के हो?" },
-        choices: ["のんで", "のいで", "のって", "のmて"],
+        choices: ["のんで", "のいで", "のって", "のみて"],
         correctIndex: 0,
         explanation: { en: "Group 1 -む: む → んで. のむ → のんで.", np: "Group 1 -む: む → んで। のむ → のんで।" },
       },
@@ -6031,6 +6103,229 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         ],
         correctIndex: 0,
         explanation: { en: "もう (already) + past verb たべました (ate). = already ate. Contrast: まだたべていません = haven't eaten yet.", np: "もう (पहिले नै) + भूत verb たべました (खाएँ)। = पहिले नै खाएँ। विरोधाभास: まだたべていません = अझै खाएको छैन।" },
+      },
+    ],
+  },
+  {
+    id: 15,
+    title: "Lesson 15 — てもいいですか・てはいけません",
+    intro: [
+      {
+        en: "Lesson 15 teaches how to ask permission, state rules, and describe actions or states with the て-form. Use てもいいですか to ask ‘May I?’, and てはいけません to say ‘You must not.’",
+        np: "पाठ १५ मा अनुमति माग्ने, नियम बताउने, र て-form बाट कार्य वा अवस्था बताउने सिक्नुहुन्छ। ‘मिल्छ?’ का लागि てもいいですか र ‘हुँदैन’ का लागि てはいけません।",
+      },
+      {
+        en: "The same て-form also joins います. It can describe something happening now, a regular habit, or a continuing state such as すんでいます (live) and しっています (know).",
+        np: "उही て-form ले います सँग मिलेर अहिले भइरहेको काम, बानी, वा जारी अवस्था बताउँछ। जस्तै すんでいます (बस्छु) र しっています (थाहा छ)।",
+      },
+    ],
+    youtubeVideoId: { en: "eJFHqDPL8Mc", np: "LFFGOOBLZ00" },
+    youtubeVideoIdPart2: { en: "qFOFiBK4PjQ" },
+    youtubeTitle: "Minna no Nihongo · Lesson 15 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 15 notes",
+          np: "हस्तलिखित Chapter 15 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第15課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1b3GpeuTy0mhakyPCm3fxbKf08iww8_f3/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      {
+        speaker: "A",
+        japanese: "ここで{写真|しゃしん}をとってもいいですか。",
+        reading: "Koko de shashin o totte mo ii desu ka?",
+        english: { en: "May I take a photo here?", np: "यहाँ फोटो खिच्न मिल्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "はい、いいですよ。でも、たばこをすってはいけません。",
+        reading: "Hai, ii desu yo. Demo, tabako o sutte wa ikemasen.",
+        english: { en: "Yes, you may. But you must not smoke.", np: "हो, मिल्छ। तर चुरोट खान हुँदैन।" },
+      },
+      {
+        speaker: "A",
+        japanese: "{大阪|おおさか}にすんでいますか。",
+        reading: "Ōsaka ni sunde imasu ka?",
+        english: { en: "Do you live in Osaka?", np: "तपाईं ओसाकामा बस्नुहुन्छ?" },
+      },
+      {
+        speaker: "B",
+        japanese: "いいえ、{東京|とうきょう}にすんでいます。",
+        reading: "Iie, Tōkyō ni sunde imasu.",
+        english: { en: "No, I live in Tokyo.", np: "होइन, म टोक्योमा बस्छु।" },
+      },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "V-て + もいいですか — asking permission", np: "V-て + もいいですか — अनुमति माग्नु" },
+        meaning: {
+          en: "Use the て-form + もいいですか to ask whether an action is allowed. Answer yes with はい、いいです or はい、どうぞ. Answer no politely with すみません、ちょっと…. ",
+          np: "ते-form + もいいですか ले काम गर्न अनुमति मागिन्छ। हो भन्न はい、いいです वा はい、どうぞ। नरम रूपमा होइन भन्न すみません、ちょっと…।",
+        },
+        whereWeUse: [
+          { en: "Classroom: ここにすわってもいいですか (May I sit here?)", np: "कक्षाकोठा: ここにすわってもいいですか" },
+          { en: "Library: このほんをかりてもいいですか (May I borrow this book?)", np: "पुस्तकालय: このほんをかりてもいいですか" },
+          { en: "Phone: でんわをつかってもいいですか (May I use the phone?)", np: "फोन: でんわをつかってもいいですか" },
+        ],
+        examples: [
+          {
+            japanese: "ここににもつをおいてもいいですか。",
+            reading: "Koko ni nimotsu o oite mo ii desu ka?",
+            english: { en: "May I put my luggage here?", np: "यहाँ सामान राख्न मिल्छ?" },
+            scenario: { en: "Asking in a public place", np: "सार्वजनिक ठाउँमा अनुमति माग्दा" },
+          },
+          {
+            japanese: "このパソコンをつかってもいいですか。",
+            reading: "Kono pasokon o tsukatte mo ii desu ka?",
+            english: { en: "May I use this computer?", np: "यो कम्प्युटर प्रयोग गर्न मिल्छ?" },
+            scenario: { en: "Asking to use equipment", np: "उपकरण चलाउन अनुमति माग्दा" },
+          },
+          {
+            japanese: "テニスをしてもいいですか。",
+            reading: "Tenisu o shite mo ii desu ka?",
+            english: { en: "May I play tennis?", np: "टेनिस खेल्न मिल्छ?" },
+            scenario: { en: "Asking about an activity", np: "गतिविधिको अनुमति माग्दा" },
+          },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "V-て + はいけません — prohibition", np: "V-て + はいけません — निषेध" },
+        meaning: {
+          en: "Use the て-form + はいけません to say an action is prohibited: ‘must not’ or ‘may not’. In signs and rules, てはいけません is firm but polite.",
+          np: "ते-form + はいけません ले काम गर्न निषेध छ भन्छ: ‘गर्न हुँदैन’। साइन र नियममा てはいけません कडा तर विनम्र हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "No smoking: たばこをすってはいけません", np: "धूम्रपान निषेध: たばこをすってはいけません" },
+          { en: "No entry: ここにはいってはいけません", np: "प्रवेश निषेध: ここにはいってはいけません" },
+          { en: "Library rule: ここでたべてはいけません", np: "पुस्तकालयको नियम: ここでたべてはいけません" },
+        ],
+        examples: [
+          {
+            japanese: "このへやで{写真|しゃしん}をとってはいけません。",
+            reading: "Kono heya de shashin o totte wa ikemasen.",
+            english: { en: "You must not take photos in this room.", np: "यस कोठामा फोटो खिच्न हुँदैन।" },
+            scenario: { en: "Museum rule", np: "संग्रहालयको नियम" },
+          },
+          {
+            japanese: "ここにくるまをとめてはいけません。",
+            reading: "Koko ni kuruma o tomete wa ikemasen.",
+            english: { en: "You must not park a car here.", np: "यहाँ गाडी पार्क गर्न हुँदैन।" },
+            scenario: { en: "Parking restriction", np: "पार्किङ निषेध" },
+          },
+          {
+            japanese: "きょうしつでおさけをのんではいけません。",
+            reading: "Kyōshitsu de osake o nonde wa ikemasen.",
+            english: { en: "You must not drink alcohol in the classroom.", np: "कक्षाकोठामा रक्सी पिउन हुँदैन।" },
+            scenario: { en: "School rule", np: "स्कुलको नियम" },
+          },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "V-て + います — ongoing action, habit, or state", np: "V-て + います — जारी काम, बानी, वा अवस्था" },
+        meaning: {
+          en: "V-て + います can mean an action happening now, a repeated habit, or a state that continues after a change. With しる, use しっています for ‘know’ and しりません for ‘do not know’.",
+          np: "V-ते + います ले अहिलेको काम, दोहोरिने बानी, वा परिवर्तनपछि जारी अवस्था बताउँछ। しる सँग ‘थाहा छ’ को लागि しっています र ‘थाहा छैन’ को लागि しりません प्रयोग हुन्छ।",
+        },
+        whereWeUse: [
+          { en: "Now: いまほんをよんでいます (I am reading now)", np: "अहिले: いまほんをよんでいます" },
+          { en: "Residence: とうきょうにすんでいます (I live in Tokyo)", np: "बसोबास: とうきょうにすんでいます" },
+          { en: "Knowledge: たなかさんをしっています (I know Tanaka)", np: "थाहा: たなかさんをしっています" },
+        ],
+        examples: [
+          {
+            japanese: "わたしはにほんごをけんきゅうしています。",
+            reading: "Watashi wa Nihongo o kenkyū shite imasu.",
+            english: { en: "I am researching Japanese.", np: "म जापानी भाषामा अनुसन्धान गर्दैछु।" },
+            scenario: { en: "Action in progress", np: "जारी काम" },
+          },
+          {
+            japanese: "{大阪|おおさか}にすんでいます。",
+            reading: "Ōsaka ni sunde imasu.",
+            english: { en: "I live in Osaka.", np: "म ओसाकामा बस्छु।" },
+            scenario: { en: "Continuing residence", np: "जारी बसोबास" },
+          },
+          {
+            japanese: "その{人|ひと}をしっていますか。いいえ、しりません。",
+            reading: "Sono hito o shitte imasu ka? Iie, shirimasen.",
+            english: { en: "Do you know that person? No, I do not.", np: "तपाईंलाई त्यो व्यक्ति थाहा छ? होइन, थाहा छैन।" },
+            scenario: { en: "Knowledge state", np: "ज्ञानको अवस्था" },
+          },
+        ],
+      },
+    ],
+    particles: [
+      {
+        particle: "てもいい",
+        romaji: "te mo ii",
+        name: { en: "permission", np: "अनुमति" },
+        meaning: { en: "After a verb’s て-form, it asks or gives permission: V-てもいいですか.", np: "Verb को て-form पछि अनुमति माग्न वा दिन: V-てもいいですか।" },
+        examples: [
+          {
+            japanese: "まどをあけてもいいですか。",
+            reading: "Mado o akete mo ii desu ka?",
+            english: { en: "May I open the window?", np: "झ्याल खोल्न मिल्छ?" },
+            scenario: { en: "Permission", np: "अनुमति" },
+          },
+        ],
+      },
+      {
+        particle: "てはいけません",
+        romaji: "te wa ikemasen",
+        name: { en: "prohibition", np: "निषेध" },
+        meaning: { en: "After a verb’s て-form, it states that an action is not allowed: V-てはいけません.", np: "Verb को て-form पछि काम गर्न नहुने बताउँछ: V-てはいけません।" },
+        examples: [
+          {
+            japanese: "ここであそんではいけません。",
+            reading: "Koko de asonde wa ikemasen.",
+            english: { en: "You must not play here.", np: "यहाँ खेल्न हुँदैन।" },
+            scenario: { en: "Prohibition", np: "निषेध" },
+          },
+        ],
+      },
+    ],
+    vocabulary: buildVocab(15),
+    mcqs: [
+      {
+        question: { en: "How do you ask ‘May I take a photo here?’", np: "‘यहाँ फोटो खिच्न मिल्छ?’ कसरी सोध्ने?" },
+        choices: ["ここでしゃしんをとってもいいですか。", "ここでしゃしんをとってはいけません。", "ここでしゃしんをとりますか。", "ここでしゃしんをとってくださいか。"],
+        correctIndex: 0,
+        explanation: { en: "Permission uses V-て + もいいですか. とる → とって → とってもいいですか.", np: "अनुमति: V-て + もいいですか। とる → とって → とってもいいですか।" },
+      },
+      {
+        question: { en: "Which sign means ‘No smoking’ ?", np: "‘धूम्रपान निषेध’ भन्ने साइन कुन हो?" },
+        choices: ["たばこをすってはいけません。", "たばこをすってもいいです。", "たばこをすっています。", "たばこをすってください。"],
+        correctIndex: 0,
+        explanation: { en: "Prohibition uses V-て + はいけません. すう → すって → すってはいけません.", np: "निषेध: V-て + はいけません। すう → すって → すってはいけません।" },
+      },
+      {
+        question: { en: "What does とうきょうにすんでいます mean?", np: "とうきょうにすんでいます को अर्थ के हो?" },
+        choices: [{ en: "I live in Tokyo", np: "म टोक्योमा बस्छु" }, { en: "I am going to Tokyo", np: "म टोक्यो जाँदैछु" }, { en: "I know Tokyo", np: "मलाई टोक्यो थाहा छ" }, { en: "I will stay in Tokyo", np: "म टोक्योमा बस्नेछु" }],
+        correctIndex: 0,
+        explanation: { en: "すんでいます is the continuing state of living somewhere.", np: "すんでいます, कतै बसिरहेको जारी अवस्था हो।" },
+      },
+      {
+        question: { en: "Which is the correct negative for ‘know’?", np: "‘थाहा छैन’ को सही जापानी कुन हो?" },
+        choices: ["しりません", "しっていません", "しらています", "しりてはいけません"],
+        correctIndex: 0,
+        explanation: { en: "For しる, the natural negative is しりません, not しっていません.", np: "しる को स्वाभाविक नकार しりません हो, しっていません होइन।" },
+      },
+      {
+        question: { en: "Complete: このパソコンを___もいいですか。", np: "पूरा गर्नुस्: このパソコンを___もいいですか。" },
+        choices: ["つかって", "つかいます", "つかっては", "つかい"],
+        correctIndex: 0,
+        explanation: { en: "Permission needs the て-form: つかう → つかって + もいいですか.", np: "अनुमतिमा て-form: つかう → つかって + もいいですか।" },
+      },
+      {
+        question: { en: "Which sentence is a prohibition?", np: "निषेध जनाउने वाक्य कुन हो?" },
+        choices: ["ここにはいってはいけません。", "ここにはいってもいいですか。", "ここにはいっています。", "ここにはいってください。"],
+        correctIndex: 0,
+        explanation: { en: "V-て + はいけません means ‘must not do V.’", np: "V-て + はいけません = V गर्न हुँदैन।" },
       },
     ],
   },

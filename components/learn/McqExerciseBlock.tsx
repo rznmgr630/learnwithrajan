@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FuriganaText } from "@/components/learn/FuriganaText";
 import type { Locale } from "@/lib/i18n/types";
 
 export interface ResolvedMcq {
@@ -58,7 +59,7 @@ export function McqExerciseBlock({ mcqs, locale }: { mcqs: ResolvedMcq[]; locale
           >
             <p className="text-sm font-medium text-[var(--text)]">
               <span className="mr-1.5 text-[var(--muted)]">Q{qi + 1}.</span>
-              {mcq.question}
+              <FuriganaText text={mcq.question} />
             </p>
             <div className="mt-2.5 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
               {mcq.choices.map((choice, ci) => {
@@ -82,7 +83,7 @@ export function McqExerciseBlock({ mcqs, locale }: { mcqs: ResolvedMcq[]; locale
                     className={cls}
                     onClick={() => pick(qi, ci)}
                   >
-                    {String.fromCharCode(65 + ci)}. {choice}
+                    {String.fromCharCode(65 + ci)}. <FuriganaText text={choice} />
                   </button>
                 );
               })}
@@ -92,7 +93,7 @@ export function McqExerciseBlock({ mcqs, locale }: { mcqs: ResolvedMcq[]; locale
                 <span className="font-semibold text-[var(--accent)]">
                   {locale === "np" ? "व्याख्या: " : "Explanation: "}
                 </span>
-                {mcq.explanation}
+                <FuriganaText text={mcq.explanation} />
               </p>
             )}
           </div>
