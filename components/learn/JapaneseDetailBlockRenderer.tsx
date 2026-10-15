@@ -230,8 +230,8 @@ function ListeningQnaBlock({ block }: { block: QnaBlock }) {
               <li key={vi}>
                 <a
                   href={v.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target={v.openInNewTab === false ? undefined : "_blank"}
+                  rel={v.openInNewTab === false ? undefined : "noopener noreferrer"}
                   className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:brightness-110 hover:underline"
                 >
                   {v.title}
@@ -340,8 +340,8 @@ export function JapaneseDetailBlockRenderer({ blocks }: { blocks: JapaneseDetail
                         <li key={vi}>
                           <a
                             href={v.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            target={v.openInNewTab === false ? undefined : "_blank"}
+                            rel={v.openInNewTab === false ? undefined : "noopener noreferrer"}
                             className="text-sm font-medium text-[var(--accent)] underline-offset-2 hover:brightness-110 hover:underline"
                           >
                             {v.title}

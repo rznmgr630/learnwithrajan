@@ -77,6 +77,7 @@ export type N5LessonPageData = {
   /** Optional second video (Part 2) — shown as a Part 1 / Part 2 toggle in the Grammar accordion. */
   youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
+  resources?: { title: L10n; url: string }[];
   conversation: ConversationLine[];
   grammar: GrammarPoint[];
   particles: ParticleEntry[];
@@ -5038,9 +5039,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "दुई वस्तु बराबर भए: A も B も [adj] (A र B दुवै [adj] छन्)। फरक भए: adj + ほうが ले 'बढी' भएको थाहा पाइन्छ।",
       },
     ],
-    youtubeVideoId: { en: "Xq_CGhOMc1Q" },
-    youtubeVideoIdPart2: { en: "7DYaL10t9oM" },
+    youtubeVideoId: { en: "mBto6IwmFWw", np: "8xvNuJTACYY" },
+    youtubeVideoIdPart2: { en: "griYubG2Yvo" },
     youtubeTitle: "Minna no Nihongo · Lesson 12 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 12 notes",
+          np: "हस्तलिखित Chapter 12 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第12課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/175s6wkUccSeTNMB7_ofm3CesfB8Xdhup/view?usp=drive_link",
+      },
+    ],
     conversation: [
       {
         speaker: "A",

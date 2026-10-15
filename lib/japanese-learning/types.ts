@@ -36,7 +36,7 @@ export type JapaneseDetailBlock =
       keyPhrases: LocalizedString[];
       studyTip?: LocalizedString;
       /** Curated YouTube watch or search URLs for chapter-aligned listening. */
-      youtubeVideos?: { url: string; title: string }[];
+      youtubeVideos?: { url: string; title: string; openInNewTab?: boolean }[];
     }
   | {
       type: "listeningQna";
@@ -53,7 +53,7 @@ export type JapaneseDetailBlock =
       }[];
       /** Full script revealed after all questions are answered. */
       transcript?: string;
-      youtubeVideos?: { url: string; title: string }[];
+      youtubeVideos?: { url: string; title: string; openInNewTab?: boolean }[];
     }
   | {
       type: "kanjiStrokeStudy";
