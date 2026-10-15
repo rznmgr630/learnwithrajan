@@ -7008,6 +7008,130 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What does くるまにきをつけてください mean?", np: "くるまにきをつけてください को अर्थ के हो?" }, choices: [{ en: "Please watch out for cars", np: "कारमा ध्यान दिनुस्" }, { en: "Please repair the car", np: "कार मर्मत गर्नुस्" }, { en: "Please park the car", np: "कार पार्क गर्नुस्" }, { en: "Please pull the car", np: "कार तान्नुस्" }], correctIndex: 0, explanation: { en: "気をつける means pay attention or take care.", np: "気をつける भनेको ध्यान दिनु वा सावधानी अपनाउनु हो।" } },
     ],
   },
+  {
+    id: 24,
+    title: "Lesson 24 — doing favours for people",
+    intro: [
+      { en: "Lesson 24 lets you say who does a helpful action for whom. Japanese changes the expression depending on whose point of view you use.", np: "पाठ २४ मा कसले कसका लागि सहयोगी काम गर्छ भन्ने भन्न सिक्नुहुन्छ। कसको दृष्टिकोणबाट बोलिएको हो भनेर जापानी अभिव्यक्ति बदलिन्छ।" },
+      { en: "Use てあげます when you do something for another person, てくれます when someone does something for you, and てもらいます when you receive someone’s help.", np: "अरूका लागि काम गर्दा てあげます, कसैले तपाईंका लागि काम गर्दा てくれます, र कसैको सहयोग पाउँदा てもらいます प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "K6yVCbz41as", np: "jorcUln_lNI" },
+    youtubeVideoIdPart2: { en: "VOslIM6LGOU" },
+    youtubeTitle: "Minna no Nihongo · Lesson 24 — Grammar",
+    resources: [
+      { title: { en: "Open handwritten Chapter 24 notes", np: "हस्तलिखित Chapter 24 नोटहरू खोल्नुहोस्", jp: "手書きの第24課ノートを開く" }, url: "https://drive.google.com/file/d/1nwOuMTtkw7Oxla3IH5UCvbTARBTPuefP/view?usp=drive_link" },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "わたしはともだちににほんごをおしえてあげます。", reading: "Watashi wa tomodachi ni nihongo o oshiete agemasu.", english: { en: "I teach Japanese to my friend.", np: "म साथीलाई जापानी सिकाइदिन्छु।" } },
+      { speaker: "B", japanese: "ともだちはわたしにコーヒーをいれてくれます。", reading: "Tomodachi wa watashi ni kōhī o irete kuremasu.", english: { en: "My friend makes coffee for me.", np: "साथीले मेरो लागि कफी बनाइदिन्छ।" } },
+      { speaker: "A", japanese: "せんせいにいみをせつめいしてもらいました。", reading: "Sensei ni imi o setsumei shite moraimashita.", english: { en: "I had the teacher explain the meaning to me.", np: "मैले शिक्षकबाट अर्थ बुझाइ पाएँ।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Verb て-form + あげます — do for someone", np: "Verb て-form + あげます — अरूका लागि गर्नु" },
+        meaning: { en: "Use this when the speaker or someone close to the speaker does a helpful action for another person. Mark the receiver with に.", np: "बोल्ने व्यक्ति वा नजिकको कसैले अरूका लागि सहयोगी काम गर्दा यो प्रयोग हुन्छ। सहयोग पाउने व्यक्तिलाई に ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "わたしは友達に日本語を教えてあげます", np: "わたしは友達に日本語を教えてあげます" }, { en: "母にコーヒーを入れてあげます", np: "母にコーヒーを入れてあげます" }],
+        examples: [
+          { japanese: "おばあちゃんにおかしをかってあげました。", reading: "Obāchan ni okashi o katte agemashita.", english: { en: "I bought sweets for my grandmother.", np: "मैले हजुरआमाका लागि मिठाई किनिदिएँ।" }, scenario: { en: "Helping family", np: "परिवारलाई सहयोग" } },
+          { japanese: "わたしがあんないしてあげます。", reading: "Watashi ga annai shite agemasu.", english: { en: "I will show you the way.", np: "म तपाईंलाई बाटो देखाइदिन्छु।" }, scenario: { en: "Offering help", np: "सहयोग प्रस्ताव गर्दा" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Verb て-form + くれます — someone does for me", np: "Verb て-form + くれます — कसैले मेरा लागि गर्छ" },
+        meaning: { en: "Use this when another person does a helpful action for you or your in-group. The person helping is marked with が or は.", np: "अरू कसैले तपाईं वा तपाईंको समूहका लागि सहयोगी काम गर्दा यो प्रयोग हुन्छ। सहयोग गर्ने व्यक्तिलाई が वा は ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "友達が手伝ってくれました", np: "友達が手伝ってくれました" }, { en: "父が駅まで送ってくれます", np: "父が駅まで送ってくれます" }],
+        examples: [
+          { japanese: "ともだちがわたしをえきまでおくってくれました。", reading: "Tomodachi ga watashi o eki made okutte kuremashita.", english: { en: "My friend escorted me to the station.", np: "साथीले मलाई स्टेशनसम्म पुर्‍याइदियो।" }, scenario: { en: "Receiving help", np: "सहयोग पाउँदा" } },
+          { japanese: "あにはべんとうをつくってくれました。", reading: "Ani wa bentō o tsukutte kuremashita.", english: { en: "My older brother made a boxed lunch for me.", np: "दाइले मेरो लागि टिफिन बनाइदिनुभयो।" }, scenario: { en: "Family favour", np: "परिवारको सहयोग" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Verb て-form + もらいます — receive someone’s help", np: "Verb て-form + もらいます — कसैको सहयोग पाउनु" },
+        meaning: { en: "Use this from the receiver’s point of view when you receive a helpful action. Mark the person who helps with に.", np: "सहयोग पाउनेको दृष्टिकोणबाट सहयोग प्राप्त भएको भन्न यो प्रयोग हुन्छ। सहयोग गर्ने व्यक्तिलाई に ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "先生に説明してもらいました", np: "先生に説明してもらいました" }, { en: "友達に手伝ってもらいます", np: "友達に手伝ってもらいます" }],
+        examples: [
+          { japanese: "せんせいにこのことばのいみをせつめいしてもらいました。", reading: "Sensei ni kono kotoba no imi o setsumei shite moraimashita.", english: { en: "I had the teacher explain this word’s meaning to me.", np: "मैले शिक्षकबाट यो शब्दको अर्थ बुझाइ पाएँ।" }, scenario: { en: "Classroom help", np: "कक्षाकोठाको सहयोग" } },
+          { japanese: "ともだちにパーティーのじゅんびをてつだってもらいます。", reading: "Tomodachi ni pātī no junbi o tetsudatte moraimasu.", english: { en: "I will have my friend help prepare for the party.", np: "म साथीबाट पार्टीको तयारीमा सहयोग लिन्छु।" }, scenario: { en: "Planning", np: "तयारी" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "に", romaji: "ni", name: { en: "receiver or helper", np: "सहयोग पाउने वा गर्ने व्यक्ति" }, meaning: { en: "With these patterns, に marks the person receiving help in てあげる, or the person giving help in てもらう.", np: "यी pattern मा に ले てあげる मा सहयोग पाउने र てもらう मा सहयोग गर्ने व्यक्ति जनाउँछ।" }, examples: [{ japanese: "せんせいにおしえてもらいました。", reading: "Sensei ni oshiete moraimashita.", english: { en: "I had the teacher teach me.", np: "मैले शिक्षकबाट सिकाइ पाएँ।" }, scenario: { en: "Receiving help", np: "सहयोग पाउँदा" } }] },
+      { particle: "が", romaji: "ga", name: { en: "helper", np: "सहयोग गर्ने व्यक्ति" }, meaning: { en: "In てくれる sentences, が often marks the person who kindly does something for you.", np: "てくれる वाक्यमा が ले तपाईंका लागि सहयोगी काम गर्ने व्यक्ति जनाउँछ।" }, examples: [{ japanese: "ともだちがてつだってくれました。", reading: "Tomodachi ga tetsudatte kuremashita.", english: { en: "My friend helped me.", np: "साथीले मलाई सहयोग गर्‍यो।" }, scenario: { en: "Favour", np: "सहयोग" } }] },
+    ],
+    vocabulary: buildVocab(24),
+    mcqs: [
+      { question: { en: "Choose the sentence for ‘I made coffee for my mother.’", np: "‘मैले आमाका लागि कफी बनाएँ’ कुन हो?" }, choices: ["ははにコーヒーをいれてあげました。", "ははがコーヒーをいれてくれました。", "ははにコーヒーをいれてもらいました。", "ははをコーヒーをいれました。"], correctIndex: 0, explanation: { en: "Use てあげました when you do something for another person.", np: "अरूका लागि काम गर्दा てあげました प्रयोग हुन्छ।" } },
+      { question: { en: "Which means ‘My friend helped me’?", np: "‘साथीले मलाई सहयोग गर्‍यो’ कुन हो?" }, choices: ["ともだちがてつだってくれました。", "ともだちにてつだってあげました。", "ともだちをてつだってもらいました。", "ともだちがてつだってあげました。"], correctIndex: 0, explanation: { en: "Use てくれました when another person does a favour for you.", np: "अरूले तपाईंका लागि सहयोग गर्दा てくれました प्रयोग हुन्छ।" } },
+      { question: { en: "Complete: せんせいに いみを せつめいして ___。", np: "पूरा गर्नुस्: せんせいに いみを せつめいして ___。" }, choices: ["もらいました", "あげました", "くれました", "います"], correctIndex: 0, explanation: { en: "The speaker receives the teacher’s help, so use てもらいました.", np: "बोल्ने व्यक्तिले शिक्षकको सहयोग पाउँछ, त्यसैले てもらいました प्रयोग हुन्छ।" } },
+      { question: { en: "What does 案内します mean?", np: "案内します को अर्थ के हो?" }, choices: [{ en: "show around; show the way", np: "बाटो देखाउनु" }, { en: "prepare", np: "तयार गर्नु" }, { en: "introduce", np: "परिचय गराउनु" }, { en: "explain", np: "व्याख्या गर्नु" }], correctIndex: 0, explanation: { en: "案内します is used for guiding someone or showing the way.", np: "案内します भनेको कसैलाई मार्गदर्शन वा बाटो देखाउनु हो।" } },
+    ],
+  },
+  {
+    id: 25,
+    title: "Lesson 25 — conditions with たら and ても",
+    intro: [
+      { en: "Lesson 25 teaches two useful condition patterns: たら for ‘if/when’ and ても/でも for ‘even if.’", np: "पाठ २५ मा दुई उपयोगी सर्तका pattern सिक्नुहुन्छ: ‘यदि/जब’ का लागि たら र ‘भए पनि’ का लागि ても/でも।" },
+      { en: "Use たら when the second action depends on a condition. Use ても or でも when the result stays the same despite that condition.", np: "दोस्रो काम सर्तमा निर्भर हुँदा たら प्रयोग गर्नुहोस्। सर्त भए पनि नतिजा उही रहँदा ても वा でも प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "hJhPnXIZoTg", np: "ki_onABQ6fs" },
+    youtubeVideoIdPart2: { en: "VZmZiS5tnHs" },
+    youtubeTitle: "Minna no Nihongo · Lesson 25 — Grammar",
+    resources: [
+      { title: { en: "Open handwritten Chapter 25 notes", np: "हस्तलिखित Chapter 25 नोटहरू खोल्नुहोस्", jp: "手書きの第25課ノートを開く" }, url: "https://drive.google.com/file/d/1mSL05_APmVhijhajJvojPon-wzX_2o8Q/view?usp=drive_link" },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "じかんがあったら、いっしょにいっぱいのみましょう。", reading: "Jikan ga attara, issho ni ippai nomimashō.", english: { en: "If you have time, let’s have a drink together.", np: "समय भए सँगै बियर पिऔँ।" } },
+      { speaker: "B", japanese: "あめがふっても、えきへいきます。", reading: "Ame ga futtemo, eki e ikimasu.", english: { en: "Even if it rains, I will go to the station.", np: "पानी परे पनि स्टेशन जान्छु।" } },
+      { speaker: "A", japanese: "もしにほんへりゅうがくしたら、たいしかんへいきます。", reading: "Moshi Nihon e ryūgaku shitara, taishikan e ikimasu.", english: { en: "If I study in Japan, I will go to the embassy.", np: "यदि जापानमा अध्ययन गर्न गएँ भने दूतावास जान्छु।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain past + ら — if; when", np: "plain past + ら — यदि; जब" },
+        meaning: { en: "Attach ら to the plain past form to express a condition. The main clause happens after, or depends on, that condition.", np: "plain past form मा ら जोडेर सर्त व्यक्त गर्नुहोस्। मुख्य वाक्यको काम त्यो सर्तपछि वा त्यसमा निर्भर भएर हुन्छ।" },
+        whereWeUse: [{ en: "Verb: 行ったら", np: "Verb: 行ったら" }, { en: "い-adjective: 安かったら", np: "い-adjective: 安かったら" }, { en: "Noun / な-adjective: 暇だったら", np: "Noun / な-adjective: 暇だったら" }],
+        examples: [
+          { japanese: "にほんへいったら、すしをたべたいです。", reading: "Nihon e ittara, sushi o tabetai desu.", english: { en: "If I go to Japan, I want to eat sushi.", np: "जापान गएँ भने सुशी खान चाहन्छु।" }, scenario: { en: "Travel plan", np: "यात्रा योजना" } },
+          { japanese: "えきについたら、でんわしてください。", reading: "Eki ni tsuitara, denwa shite kudasai.", english: { en: "When you arrive at the station, please call me.", np: "स्टेशन पुगेपछि फोन गर्नुहोस्।" }, scenario: { en: "Meeting someone", np: "भेट्ने बेला" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "もし + たら — if", np: "もし + たら — यदि" },
+        meaning: { en: "Add もし before a たら clause to make the ‘if’ condition clearer or stronger. It is optional, so たら works by itself too.", np: "‘यदि’ को सर्त अझ स्पष्ट वा जोड दिएर भन्न たら clause अगाडि もし थप्नुहोस्। यो वैकल्पिक हो, त्यसैले たら एक्लै पनि प्रयोग हुन्छ।" },
+        whereWeUse: [{ en: "もし時間があったら、来てください", np: "もし時間があったら、来てください" }, { en: "もしチャンスがあったら、留学したいです", np: "もしチャンスがあったら、留学したいです" }],
+        examples: [
+          { japanese: "もしチャンスがあったら、にほんへりゅうがくしたいです。", reading: "Moshi chansu ga attara, Nihon e ryūgaku shitai desu.", english: { en: "If I have the chance, I want to study in Japan.", np: "अवसर पाएँ भने जापानमा अध्ययन गर्न चाहन्छु।" }, scenario: { en: "Future hope", np: "भविष्यको चाहना" } },
+          { japanese: "もしひまだったら、うちへきてください。", reading: "Moshi hima dattara, uchi e kite kudasai.", english: { en: "If you are free, please come to my house.", np: "फुर्सद भए मेरो घर आउनुहोस्।" }, scenario: { en: "Invitation", np: "निमन्त्रणा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "〜ても / 〜でも — even if", np: "〜ても / 〜でも — भए पनि" },
+        meaning: { en: "Use ても after a verb or い-adjective, and でも after a noun or な-adjective. The main result does not change even with the condition.", np: "Verb वा い-adjective पछि ても, Noun वा な-adjective पछि でも प्रयोग हुन्छ। सर्त भए पनि मुख्य नतिजा बदलिँदैन।" },
+        whereWeUse: [{ en: "Verb: 雨が降っても行きます", np: "Verb: 雨が降っても行きます" }, { en: "い-adjective: 高くても買います", np: "い-adjective: 高くても買います" }, { en: "Noun: 日曜日でも働きます", np: "Noun: 日曜日でも働きます" }],
+        examples: [
+          { japanese: "いくらたかくても、このほんをかいます。", reading: "Ikura takakutemo, kono hon o kaimasu.", english: { en: "No matter how expensive it is, I will buy this book.", np: "जति महँगो भए पनि यो किताब किन्छु।" }, scenario: { en: "Strong decision", np: "दृढ निर्णय" } },
+          { japanese: "いそがしくても、にほんごをべんきょうします。", reading: "Isogashikutemo, Nihongo o benkyō shimasu.", english: { en: "Even if I am busy, I study Japanese.", np: "व्यस्त भए पनि जापानी पढ्छु।" }, scenario: { en: "Study habit", np: "पढाइको बानी" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "たら", romaji: "tara", name: { en: "conditional", np: "सर्त" }, meaning: { en: "Adds an if-or-when condition after a plain past form.", np: "plain past form पछि यदि वा जबको सर्त थप्छ।" }, examples: [{ japanese: "あしたはれたら、さんぽします。", reading: "Ashita haretara, sanpo shimasu.", english: { en: "If it is sunny tomorrow, I will take a walk.", np: "भोलि घाम लागे हिँड्न जान्छु।" }, scenario: { en: "Plan", np: "योजना" } }] },
+      { particle: "ても／でも", romaji: "temo/demo", name: { en: "even if", np: "भए पनि" }, meaning: { en: "Shows that the main result does not change despite the condition.", np: "सर्त भए पनि मुख्य नतिजा नबदलिने देखाउँछ।" }, examples: [{ japanese: "にちようびでも、はたらきます。", reading: "Nichiyōbi demo, hatarakimasu.", english: { en: "Even on Sunday, I work.", np: "आइतबार भए पनि काम गर्छु।" }, scenario: { en: "Work", np: "काम" } }] },
+    ],
+    vocabulary: buildVocab(25),
+    mcqs: [
+      { question: { en: "Complete: えきに ___、でんわしてください。", np: "पूरा गर्नुस्: えきに ___、でんわしてください。" }, choices: ["ついたら", "ついても", "つくでも", "つきたら"], correctIndex: 0, explanation: { en: "着く becomes 着いたら for an if-or-when condition.", np: "着く लाई if-or-when सर्त बनाउन 着いたら हुन्छ।" } },
+      { question: { en: "Which means ‘Even if it rains, I will go’?", np: "‘पानी परे पनि जान्छु’ कुन हो?" }, choices: ["あめがふっても、いきます。", "あめがふったら、いきます。", "あめがふるでも、いきます。", "あめがふりたら、いきます。"], correctIndex: 0, explanation: { en: "Verb て-form + も means ‘even if.’", np: "Verb て-form + も भनेको ‘भए पनि’ हो।" } },
+      { question: { en: "What does もしチャンスがあったら mean?", np: "もしチャンスがあったら को अर्थ के हो?" }, choices: [{ en: "if I have a chance", np: "अवसर पाएँ भने" }, { en: "because I have a chance", np: "अवसर भएकाले" }, { en: "I had a chance", np: "मैले अवसर पाएँ" }, { en: "please give me a chance", np: "मलाई अवसर दिनुस्" }], correctIndex: 0, explanation: { en: "もし makes the たら condition explicit: ‘if there is a chance.’", np: "もし ले たら को सर्त स्पष्ट बनाउँछ: ‘अवसर भएमा।’" } },
+      { question: { en: "What does 頑張ります mean?", np: "頑張ります को अर्थ के हो?" }, choices: [{ en: "do one’s best", np: "मेहनत गर्नु" }, { en: "be transferred", np: "सरुवा हुनु" }, { en: "grow old", np: "उमेर बढ्नु" }, { en: "consider", np: "सोच्नु" }], correctIndex: 0, explanation: { en: "頑張ります means to work hard or do one’s best.", np: "頑張ります भनेको मेहनत गर्नु वा सक्दो प्रयास गर्नु हो।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
