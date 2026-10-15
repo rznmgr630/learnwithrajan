@@ -5374,9 +5374,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "प्रश्न शब्द どんな = 'कस्तो' — どんなN が ほしいですか (कस्तो N चाहिन्छ?)। ほしい, い-adj हो — त्यसैले त्यसैगरी conjugate।",
       },
     ],
-    youtubeVideoId: { en: "JriNbAXfwEM" },
-    youtubeVideoIdPart2: { en: "0n7Hsd9J-LQ" },
+    youtubeVideoId: { en: "bvi_K6YkDWQ", np: "fRt3-SrYVmU" },
+    youtubeVideoIdPart2: { en: "6HtPTrmhDAA" },
     youtubeTitle: "Minna no Nihongo · Lesson 13 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 13 notes",
+          np: "हस्तलिखित Chapter 13 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第13課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1q0Iq9CEEIDWBT6vjGqWwkN0OI8ztqxTU/view?usp=sharing",
+      },
+    ],
     conversation: [
       {
         speaker: "A",
@@ -5493,6 +5503,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           { en: "Want a thing (ほしい): あたらしいくるまがほしいです", np: "वस्तु चाहनु (ほしい): あたらしいくるまがほしいです" },
           { en: "Want to do (たい): うみへいきたいです", np: "काम गर्न चाहनु (たい): うみへいきたいです" },
           { en: "Both negated: ほしくないです / いきたくないです", np: "दुवै नकार: ほしくないです / いきたくないです" },
+          { en: "Questions: なにをしたいですか / どこへいきたいですか / いつにほんへいきたいですか", np: "प्रश्न: なにをしたいですか / どこへいきたいですか / いつにほんへいきたいですか" },
         ],
         examples: [
           {
@@ -5512,6 +5523,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Nani o shitai desu ka?",
             english: { en: "What do you want to do?", np: "के गर्न चाहनुहुन्छ?" },
             scenario: { en: "Asking about desired actions", np: "इच्छित कार्य सोध्दा" },
+          },
+          {
+            japanese: "いつにほんへいきたいですか。",
+            reading: "Itsu Nihon e ikitai desu ka?",
+            english: { en: "When do you want to go to Japan?", np: "तपाईं जापान कहिले जान चाहनुहुन्छ?" },
+            scenario: { en: "Question word + たい", np: "प्रश्न शब्द + たい" },
           },
         ],
       },
