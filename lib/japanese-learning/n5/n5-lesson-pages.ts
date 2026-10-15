@@ -5723,9 +5723,19 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "ています को दुई मुख्य अर्थ: जारी कार्य (いま よんでいます — अहिले पढ्दैछु) र resulting state (けっこんしています — विवाहित छ — विवाह भएको र अवस्था जारी)।",
       },
     ],
-    youtubeVideoId: { en: "rjIB-PPVQZY" },
-    youtubeVideoIdPart2: { en: "2a3ZWlFcFM8" },
+    youtubeVideoId: { en: "kkJoQTQhS78", np: "Y1hCJy5HaHI" },
+    youtubeVideoIdPart2: { en: "4fZsMSO_OIo" },
     youtubeTitle: "Minna no Nihongo · Lesson 14 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 14 notes",
+          np: "हस्तलिखित Chapter 14 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第14課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1zAR5NGmYsIMBJidMzOj4I7rOP4P5Viuz/view?usp=drive_link",
+      },
+    ],
     conversation: [
       {
         speaker: "A",
@@ -5775,6 +5785,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         whereWeUse: [
           { en: "Group 2: たべる→たべて、みる→みて、おきる→おきて", np: "Group 2: たべる→たべて、みる→みて、おきる→おきて" },
           { en: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いく→いって)", np: "Group 1 -く: かく→かいて、きく→きいて (いく exception: いって)" },
+          { en: "Group 1 -む/-ぶ/-ぬ: よむ→よんで、あそぶ→あそんで、しぬ→しんで", np: "Group 1 -む/-ぶ/-ぬ: よむ→よんで、あそぶ→あそんで、しぬ→しんで" },
+          { en: "Group 1 -す: はなす→はなして", np: "Group 1 -す: はなす→はなして" },
           { en: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって", np: "Group 1 -う/つ/る: かう→かって、まつ→まって、とる→とって" },
         ],
         examples: [
@@ -5796,6 +5808,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             english: { en: "Irregular verbs", np: "अनियमित Verb" },
             scenario: { en: "Irregular て-form", np: "अनियमित て-form" },
           },
+          {
+            japanese: "よむ → よんで ／ はなす → はなして",
+            reading: "yomu → yonde / hanasu → hanashite",
+            english: { en: "Group 1: む → んで and す → して", np: "Group 1: む → んで र す → して" },
+            scenario: { en: "More Group 1 patterns", np: "थप Group 1 नियमहरू" },
+          },
         ],
       },
       {
@@ -5809,6 +5827,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           { en: "Direction: みぎへ まがってください (please turn right)", np: "दिशा: みぎへ まがってください" },
           { en: "Hurry: はやく きてください (please come quickly)", np: "हतार: はやく きてください" },
           { en: "Help: てつだってください (please help me)", np: "मद्दत: てつだってください" },
+          { en: "Classroom: このほんをよんでください (please read this book)", np: "कक्षाकोठा: このほんをよんでください" },
         ],
         examples: [
           {
@@ -5828,6 +5847,12 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Mō ichi-do itte kudasai.",
             english: { en: "Please say it one more time.", np: "अझ एकपटक भनिदिनुस्।" },
             scenario: { en: "Classroom request", np: "कक्षाकोठाको अनुरोध" },
+          },
+          {
+            japanese: "ここにパスポートをみせてください。",
+            reading: "Koko ni pasupōto o misete kudasai.",
+            english: { en: "Please show your passport here.", np: "यहाँ पासपोर्ट देखाइदिनुस्।" },
+            scenario: { en: "Service request", np: "सेवा सम्बन्धी अनुरोध" },
           },
         ],
       },
@@ -5927,6 +5952,25 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
             reading: "Hai, mō tabemashita.",
             english: { en: "Yes, I already ate.", np: "हो, पहिले नै खाएँ।" },
             scenario: { en: "もう + past tense", np: "もう + भूतकाल" },
+          },
+        ],
+      },
+      {
+        number: 6,
+        name: { en: "V-て、V — connect actions in order", np: "V-て、V — कार्यहरू क्रमसँग जोड्नु" },
+        meaning: {
+          en: "Use the て-form to join actions in sequence: do A, then do B. Pattern: V-て、V. The final verb carries the tense and politeness.",
+          np: "कार्यलाई क्रमसँग जोड्न て-form प्रयोग हुन्छ: A गरेर B। Pattern: V-て、V। अन्तिम Verb ले tense र politeness देखाउँछ।",
+        },
+        whereWeUse: [
+          { en: "Daily routine: get up, eat, then go out", np: "दैनिक काम: उठेर, खाएर, बाहिर जानु" },
+        ],
+        examples: [
+          {
+            japanese: "あさごはんをたべて、がっこうへいきます。",
+            reading: "Asagohan o tabete, gakkō e ikimasu.",
+            english: { en: "I eat breakfast and go to school.", np: "बिहानको खाना खाएर स्कुल जान्छु।" },
+            scenario: { en: "Actions in order", np: "क्रममा भएका कार्यहरू" },
           },
         ],
       },
