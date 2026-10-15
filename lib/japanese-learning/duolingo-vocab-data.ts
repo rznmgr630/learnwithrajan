@@ -4776,6 +4776,19 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "しなのがわ", romaji: "Shinano-gawa", meaning_en: "Shinano River", meaning_np: "शिनानो नदी", examples: [{ ja: "しなのがわは長い川です。", en: "The Shinano River is a long river.", np: "शिनानो नदी लामो नदी हो।" }] },
     ],
   },
+  {
+    day: 40,
+    category: "Health & Healthcare",
+    words: [
+      { word: "くすりや", romaji: "kusuriya", meaning_en: "Drugstore / pharmacy", meaning_np: "औषधि पसल / फार्मेसी", examples: [{ ja: "くすりやでくすりをかいます。", en: "I buy medicine at the drugstore.", np: "म औषधि पसलमा औषधि किन्छु।" }] },
+      { word: "かぜをひきます", romaji: "kaze o hikimasu", meaning_en: "To catch a cold", meaning_np: "रुघा लाग्नु", examples: [{ ja: "かぜをひきました。", en: "I caught a cold.", np: "मलाई रुघा लाग्यो।" }] },
+      { word: "おなか", romaji: "onaka", meaning_en: "Stomach / belly", meaning_np: "पेट", examples: [{ ja: "おなかがいたいです。", en: "My stomach hurts.", np: "मेरो पेट दुखेको छ।" }] },
+      { word: "いたい", romaji: "itai", meaning_en: "Painful / hurting", meaning_np: "दुख्ने / पीडादायक", examples: [{ ja: "はがいたいです。", en: "My tooth hurts.", np: "मेरो दाँत दुखेको छ।" }] },
+      { word: "保険証", romaji: "hokenshō", reading: "ほけんしょう", meaning_en: "Health insurance card", meaning_np: "स्वास्थ्य बीमा कार्ड", examples: [{ ja: "保険証をもっていますか。", en: "Do you have your health insurance card?", np: "तपाईंसँग स्वास्थ्य बीमा कार्ड छ?" }] },
+      { word: "マイナ保険証", romaji: "maina hokenshō", reading: "マイナほけんしょう", meaning_en: "My Number health insurance card", meaning_np: "माइ नम्बर स्वास्थ्य बीमा कार्ड", examples: [{ ja: "マイナ保険証をみせてください。", en: "Please show your My Number health insurance card.", np: "कृपया आफ्नो माइ नम्बर स्वास्थ्य बीमा कार्ड देखाउनुहोस्।" }] },
+      { word: "うけつけ", romaji: "uketsuke", meaning_en: "Reception desk", meaning_np: "रिसेप्सन / सोधपुछ कक्ष", examples: [{ ja: "うけつけはあちらです。", en: "The reception desk is over there.", np: "रिसेप्सन कक्ष उता छ।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -4796,6 +4809,36 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "ごちそうさまでした",
     note: "A more formal and polite way to say ごちそうさま (gochisōsama) is ごちそうさまでした (gochisōsama deshita), used to show greater respect, particularly when dining with guests or in formal settings.",
     examples: [{ ja: "ごちそうさまでした。おいしかったです。", en: "Thank you for the meal. It was delicious.", np: "खानाको लागि धन्यवाद। मिठो थियो।" }],
+  },
+  {
+    title: "Drugstores in Japan",
+    japanese: "くすりや",
+    note: "くすりや (kusuriya) means drugstore or pharmacy. Many Japanese drugstores also sell toiletries, cosmetics, supplements, and everyday household items.",
+    examples: [{ ja: "くすりやでせっけんもかえます。", en: "You can also buy soap at a drugstore.", np: "औषधि पसलमा साबुन पनि किन्न सकिन्छ।" }],
+  },
+  {
+    title: "Catching a Cold",
+    japanese: "かぜをひきます",
+    note: "かぜ means cold and ひきます means pull. Together, かぜをひきます is the natural Japanese phrase for catching a cold.",
+    examples: [{ ja: "かぜをひいたから、きょうはやすみます。", en: "I caught a cold, so I will rest today.", np: "मलाई रुघा लागेकोले आज आराम गर्छु।" }],
+  },
+  {
+    title: "Using いたい for Pain",
+    japanese: "〜がいたいです",
+    note: "いたい means painful or hurting. Put the body part before が to say what hurts: はがいたいです means 'my tooth hurts.'",
+    examples: [{ ja: "あたまがいたいです。", en: "My head hurts.", np: "मेरो टाउको दुखेको छ।" }],
+  },
+  {
+    title: "Healthcare Reception in Japan",
+    japanese: "マイナ保険証 / 受付",
+    note: "At a clinic or pharmacy reception, you may be asked for a My Number health insurance card (マイナ保険証). Japan moved away from newly issuing traditional health insurance cards in 2024, and their validity ended in 2025.",
+    examples: [{ ja: "受付でマイナ保険証をみせます。", en: "I show my My Number health insurance card at reception.", np: "म रिसेप्सनमा आफ्नो माइ नम्बर स्वास्थ्य बीमा कार्ड देखाउँछु।" }],
+  },
+  {
+    title: "Omotenashi: Japanese Hospitality",
+    japanese: "おもてなし",
+    note: "おもてなし describes thoughtful Japanese hospitality. It is often associated with anticipating a guest's needs and offering polite, attentive service.",
+    examples: [{ ja: "おもてなしのこころをたいせつにします。", en: "We value the spirit of hospitality.", np: "हामी आतिथ्यको भावनालाई महत्त्व दिन्छौँ।" }],
   },
   {
     title: "Gratitude Before a Meal",

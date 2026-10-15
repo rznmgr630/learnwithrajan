@@ -43,13 +43,14 @@ function NoteExamples({ examples }: { examples?: { ja: string; en: string; np: s
   );
 }
 
-type NoteGroupId = "grammar" | "dates" | "food" | "culture" | "daily";
+type NoteGroupId = "grammar" | "dates" | "food" | "health" | "culture" | "daily";
 type NoteSectionId = "words" | NoteGroupId;
 
 const NOTE_GROUPS: { id: NoteGroupId; label: string; description: string; icon: string }[] = [
   { id: "grammar", label: "Grammar & Usage", description: "Particles, adjective patterns, and useful expressions.", icon: "文" },
   { id: "dates", label: "Dates & Numbers", description: "Counting, calendars, and time expressions.", icon: "日" },
   { id: "food", label: "Food & Dining", description: "Meals, restaurants, and Japanese food culture.", icon: "食" },
+  { id: "health", label: "Health & Healthcare", description: "Body words, illness, pharmacy, and clinic language.", icon: "健" },
   { id: "culture", label: "Culture & Traditions", description: "Festivals, customs, and life in Japan.", icon: "祭" },
   { id: "daily", label: "Daily Life", description: "Travel, home, work, and everyday topics.", icon: "生" },
 ];
@@ -57,8 +58,9 @@ const NOTE_GROUPS: { id: NoteGroupId; label: string; description: string; icon: 
 function noteGroup(title: string): NoteGroupId {
   if (/Counting|Number|Hundreds|Day Before|Times|Moon and Sun|Sunrise|Date/.test(title)) return "dates";
   if (/Meal|Tea|Restaurant|Cuisine|Cafeteria|Set Meals|Curry|Bread|Breakfast|Miso|Oden|Nabe|Soba|Soufflé|Kōshū/.test(title)) return "food";
+  if (/Drugstore|Cold|Pain|Healthcare/.test(title)) return "health";
   if (/Particle|Adjective|Making|Softening|Present and|Using|Specific|Returning|Asking|Coming with|いちばん|ぜんぜん|きらい|でしょう|すごい|にがて|おだやか|Snow with|Giving|Receiving|Katakana|ちかく|Near a Place|Naming/.test(title)) return "grammar";
-  if (/Japanese|Hana|Kawaii|Hatsumōde|Ake Ome|Onsen|Kotatsu|Bonsai|Sapporo|Autumn|Summer|Rainy|Moon Viewing|Anime|Cinema|Karaoke|Oshogatsu|Coming-of-Age/.test(title)) return "culture";
+  if (/Japanese|Hana|Kawaii|Hatsumōde|Ake Ome|Onsen|Kotatsu|Bonsai|Sapporo|Autumn|Summer|Rainy|Moon Viewing|Anime|Cinema|Karaoke|Oshogatsu|Coming-of-Age|Omotenashi/.test(title)) return "culture";
   return "daily";
 }
 
