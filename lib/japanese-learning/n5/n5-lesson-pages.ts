@@ -4251,7 +4251,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       {
         question: { en: "What is the correct way to praise someone else's Japanese skill?", np: "अरूको जापानी भाषाको तारिफ गर्ने सही तरिका कुन हो?" },
         choices: [
-          { en: "にほんごがお上手ですね", np: "にほんごがお上手ですね" },
+          { en: "にほんごがお{上手|じょうず}ですね", np: "にほんごがお{上手|じょうず}ですね" },
           { en: "にほんごがじょうずですね", np: "にほんごがじょうずですね" },
           { en: "にほんごがすきですね", np: "にほんごがすきですね" },
           { en: "にほんごがわかりますね", np: "にほんごがわかりますね" },
@@ -4538,7 +4538,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     mcqs: [
       {
         question: { en: "Which verb do you use for animate beings (people, animals)?", np: "जीवित प्राणीहरू (मान्छे, जनावर) को लागि कुन verb प्रयोग गर्नुहुन्छ?" },
-        choices: ["います", "あります", "あります", "おります"],
+        choices: ["います", "あります", "です", "します"],
         correctIndex: 0,
         explanation: { en: "います is for animate beings that can move on their own (people, animals). あります is for inanimate objects.", np: "います, आफैं चल्न सक्ने जीवित प्राणीका लागि (मान्छे, जनावर)। あります, निर्जीव वस्तुका लागि।" },
       },
@@ -4953,24 +4953,24 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "Which counter is used for bottles of beer?", np: "बियरको बोतल गन्न कुन counter प्रयोग हुन्छ?" },
-        choices: ["〜本", "〜枚", "〜台", "〜匹"],
+        choices: ["〜{本|ほん}", "〜{枚|まい}", "〜{台|だい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜本 (ほん) counts long objects including bottles. Beer bottles = ビールをさんぼん.", np: "〜本 (ほん) ले बोतल सहित लामो वस्तु गन्छ। बियरको बोतल = ビールをさんぼん।" },
+        explanation: { en: "〜{本|ほん} counts long objects including bottles. Beer bottles = ビールをさんぼん.", np: "〜{本|ほん} ले बोतल सहित लामो वस्तु गन्छ। बियरको बोतल = ビールをさんぼん।" },
       },
       {
-        question: { en: "How do you say 'one bottle' using 〜本?", np: "〜本 प्रयोग गरी 'एक बोतल' कसरी भनिन्छ?" },
+        question: { en: "How do you say 'one bottle' using 〜{本|ほん}?", np: "〜{本|ほん} प्रयोग गरी 'एक बोतल' कसरी भनिन्छ?" },
         choices: ["いっぽん", "いちほん", "ひとつほん", "いちぽん"],
         correctIndex: 0,
-        explanation: { en: "1 with 〜本 = いっぽん (double consonant p). にほん (2), さんぼん (3).", np: "〜本 सँग 1 = いっぽん (double p)। にほん (२), さんぼん (३)।" },
+        explanation: { en: "1 with 〜{本|ほん} = いっぽん (double consonant p). にほん (2), さんぼん (3).", np: "〜{本|ほん} सँग 1 = いっぽん (double p)। にほん (२), さんぼん (३)।" },
       },
       {
         question: { en: "Which counter is for flat thin objects like stamps and paper?", np: "टिकट र कागज जस्ता flat पातलो वस्तुका लागि कुन counter हो?" },
-        choices: ["〜枚", "〜本", "〜台", "〜匹"],
+        choices: ["〜{枚|まい}", "〜{本|ほん}", "〜{台|だい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜枚 (まい) counts flat, thin objects: stamps (きって), paper (かみ), shirts (シャツ).", np: "〜枚 (まい) ले flat, पातलो वस्तु गन्छ: टिकट, कागज, सर्ट।" },
+        explanation: { en: "〜{枚|まい} counts flat, thin objects: stamps (きって), paper (かみ), shirts (シャツ).", np: "〜{枚|まい} ले flat, पातलो वस्तु गन्छ: टिकट, कागज, सर्ट।" },
       },
       {
-        question: { en: "How do you order 'three beers' using 〜本?", np: "〜本 प्रयोग गरी 'तीन बियर' कसरी अर्डर गर्ने?" },
+        question: { en: "How do you order 'three beers' using 〜{本|ほん}?", np: "〜{本|ほん} प्रयोग गरी 'तीन बियर' कसरी अर्डर गर्ने?" },
         choices: [
           "ビールをさんぼんください",
           "ビールをみっつください",
@@ -4982,9 +4982,9 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "Which counter is used for machines and cars?", np: "मेसिन र कारका लागि कुन counter हो?" },
-        choices: ["〜台", "〜本", "〜枚", "〜匹"],
+        choices: ["〜{台|だい}", "〜{本|ほん}", "〜{枚|まい}", "〜{匹|ひき}"],
         correctIndex: 0,
-        explanation: { en: "〜台 (だい) counts machines and vehicles: car (くるま), TV (テレビ), computer (パソコン).", np: "〜台 (だい) ले मेसिन र सवारी साधन: कार, टिभी, कम्प्युटर।" },
+        explanation: { en: "〜{台|だい} counts machines and vehicles: car (くるま), TV (テレビ), computer (パソコン).", np: "〜{台|だい} ले मेसिन र सवारी साधन: कार, टिभी, कम्प्युटर।" },
       },
       {
         question: { en: "What does いくつありますか mean?", np: "いくつありますか को अर्थ के हो?" },
@@ -5006,13 +5006,13 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           "きってをごだいください",
         ],
         correctIndex: 0,
-        explanation: { en: "Stamps are flat → 〜枚. Five = ご. きってをごまいください = five stamps please.", np: "टिकट flat → 〜枚। पाँच = ご। きってをごまいください = पाँच टिकट दिनुस्।" },
+        explanation: { en: "Stamps are flat → 〜{枚|まい}. Five = ご. きってをごまいください = five stamps please.", np: "टिकट flat → 〜{枚|まい}। पाँच = ご। きってをごまいください = पाँच टिकट दिनुस्।" },
       },
       {
         question: { en: "Fill the blank: ねこをさん___かっています。(keeping three cats)", np: "खाली भर्नुस्: ねこをさん___かっています।" },
         choices: ["びき", "ぼん", "まい", "だい"],
         correctIndex: 0,
-        explanation: { en: "〜匹 for small animals. さん + ひき → さんびき (b sound after さん). Three cats = さんびき.", np: "〜匹 सानो जनावरका लागि। さん + ひき → さんびき। तीन बिरालो = さんびき।" },
+        explanation: { en: "〜{匹|ひき} for small animals. さん + ひき → さんびき (b sound after さん). Three cats = さんびき.", np: "〜{匹|ひき} सानो जनावरका लागि। さん + ひき → さんびき। तीन बिरालो = さんびき।" },
       },
       {
         question: { en: "Native Japanese counter for 'eight'?", np: "'आठ' को लागि मौलिक जापानी counter के हो?" },
@@ -6021,13 +6021,13 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     mcqs: [
       {
         question: { en: "What is the て-form of たべる (Group 2)?", np: "たべる (Group 2) को て-form के हो?" },
-        choices: ["たべて", "たべって", "たべいて", "たべnte"],
+        choices: ["たべて", "たべって", "たべいて", "たべるて"],
         correctIndex: 0,
         explanation: { en: "Group 2: drop る, add て. たべる → drop る → たべ + て = たべて.", np: "Group 2: る हटाएर て। たべる → る हटाउनुस् → たべ + て = たべて।" },
       },
       {
         question: { en: "What is the て-form of かく (write)?", np: "かく (लेख्नु) को て-form के हो?" },
-        choices: ["かいて", "かって", "かくて", "かnde"],
+        choices: ["かいて", "かって", "かくて", "かいで"],
         correctIndex: 0,
         explanation: { en: "Group 1 -く: く → いて. かく → かいて.", np: "Group 1 -く: く → いて। かく → かいて।" },
       },
@@ -6089,7 +6089,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
       {
         question: { en: "What is the て-form of のむ (drink)?", np: "のむ (पिउनु) को て-form के हो?" },
-        choices: ["のんで", "のいで", "のって", "のmて"],
+        choices: ["のんで", "のいで", "のって", "のみて"],
         correctIndex: 0,
         explanation: { en: "Group 1 -む: む → んで. のむ → のんで.", np: "Group 1 -む: む → んで। のむ → のんで।" },
       },
