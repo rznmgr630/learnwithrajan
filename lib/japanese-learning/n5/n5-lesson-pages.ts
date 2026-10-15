@@ -6929,6 +6929,85 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "Which verb is used for putting on shoes?", np: "जुत्ता लगाउन कुन Verb प्रयोग हुन्छ?" }, choices: ["はきます", "きます", "かぶります", "かけます"], correctIndex: 0, explanation: { en: "Use はきます for shoes, trousers, and similar lower-body items.", np: "जुत्ता, पाइन्ट र यस्तै तल्लो शरीरका वस्तुका लागि はきます प्रयोग हुन्छ।" } },
     ],
   },
+  {
+    id: 23,
+    title: "Lesson 23 — when, automatic results and routes",
+    intro: [
+      { en: "Lesson 23 helps you describe when something happens, what happens automatically, and the route you take through a place.", np: "पाठ २३ मा कुनै कुरा कहिले हुन्छ, आफैं के हुन्छ, र कुनै ठाउँ हुँदै कसरी जाने भन्ने सिक्नुहुन्छ।" },
+      { en: "Use とき for a time situation, と for a natural result, and を to mark a route that you walk, cross, or pass through.", np: "समयको परिस्थिति भन्न とき, स्वाभाविक परिणाम भन्न と, र हिँड्ने, पार गर्ने वा जाने बाटो चिनाउन を प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "BQuyXYb8Pso", np: "H9KEWNELsTA" },
+    youtubeVideoIdPart2: { en: "C__8BCPN4Qc" },
+    youtubeTitle: "Minna no Nihongo · Lesson 23 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 23 notes",
+          np: "हस्तलिखित Chapter 23 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第23課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1IfZ-VPjC_lsPQZV6OLx_xEKU0WHOHA7T/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "ねるまえに、ドアをしめます。", reading: "Neru mae ni, doa o shimemasu.", english: { en: "Before sleeping, I close the door.", np: "सुत्नुअघि ढोका बन्द गर्छु।" } },
+      { speaker: "B", japanese: "ドアをひくと、ひらきます。", reading: "Doa o hiku to, hirakimasu.", english: { en: "When you pull the door, it opens.", np: "ढोका तान्दा खुल्छ।" } },
+      { speaker: "A", japanese: "えきへいくとき、このはしをわたります。", reading: "Eki e iku toki, kono hashi o watarimasu.", english: { en: "When I go to the station, I cross this bridge.", np: "स्टेशन जाँदा यो पुल पार गर्छु।" } },
+      { speaker: "B", japanese: "くるまにきをつけてください。", reading: "Kuruma ni ki o tsukete kudasai.", english: { en: "Please watch out for cars.", np: "कारमा ध्यान दिनुस्।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain form + とき — when", np: "plain form + とき — जब" },
+        meaning: { en: "Use a plain verb before とき to say when an action happens. Use the dictionary form for an action that has not happened yet, and the past form for an action that has already happened.", np: "कुनै काम कहिले हुन्छ भन्न plain Verb + とき प्रयोग हुन्छ। अझ नभएको कामका लागि dictionary form र भइसकेको कामका लागि past form प्रयोग गर्नुहोस्।" },
+        whereWeUse: [
+          { en: "Before going: にほんへいくとき、ビザがいります", np: "जानुअघि: にほんへいくとき、ビザがいります" },
+          { en: "After arriving: にほんへいったとき、すしをたべました", np: "पुगेपछि: にほんへいったとき、すしをたべました" },
+        ],
+        examples: [
+          { japanese: "みちをわたるとき、しんごうをみます。", reading: "Michi o wataru toki, shingō o mimasu.", english: { en: "When crossing the road, I look at the traffic light.", np: "बाटो पार गर्दा ट्राफिक लाइट हेर्छु।" }, scenario: { en: "Safety", np: "सुरक्षा" } },
+          { japanese: "びょういんへいったとき、せんせいにききました。", reading: "Byōin e itta toki, sensei ni kikimashita.", english: { en: "When I went to the hospital, I asked the doctor.", np: "अस्पताल जाँदा डाक्टरलाई सोधें।" }, scenario: { en: "Past event", np: "भूतकालको घटना" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Dictionary form + と — natural result", np: "dictionary form + と — स्वाभाविक परिणाम" },
+        meaning: { en: "Use dictionary form + と when one action or condition naturally and reliably causes the next result. It is not normally used for personal requests, commands, or intentions.", np: "एउटा काम वा अवस्था हुँदा अर्को नतिजा स्वाभाविक र नियमित रूपमा हुन्छ भने dictionary form + と प्रयोग हुन्छ। व्यक्तिगत अनुरोध, आदेश वा चाहनाका लागि सामान्यतया प्रयोग हुँदैन।" },
+        whereWeUse: [
+          { en: "Machine: このボタンをおすと、ドアがひらきます", np: "मेसिन: このボタンをおすと、ドアがひらきます" },
+          { en: "Direction: このみちをまっすぐいくと、えきがあります", np: "दिशा: このみちをまっすぐいくと、えきがあります" },
+        ],
+        examples: [
+          { japanese: "つまみをまわすと、おとがでます。", reading: "Tsumami o mawasu to, oto ga demasu.", english: { en: "When you turn the knob, sound comes out.", np: "नब घुमाउँदा आवाज निस्कन्छ।" }, scenario: { en: "Using a machine", np: "मेसिन चलाउँदा" } },
+          { japanese: "はるになると、あたたかくなります。", reading: "Haru ni naru to, atatakaku narimasu.", english: { en: "When spring comes, it becomes warm.", np: "वसन्त आउँदा न्यानो हुन्छ।" }, scenario: { en: "Seasonal change", np: "मौसम परिवर्तन" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Route + を + movement verb", np: "बाटो + を + चल्ने Verb" },
+        meaning: { en: "With movement verbs, を can mark the route or space you travel through, not an object. Common examples are 道を歩く, 橋を渡る, and 交差点を右へ曲がる.", np: "चल्ने Verb सँग を ले वस्तु होइन, हिँड्ने वा पार गर्ने बाटो जनाउन सक्छ। जस्तै 道を歩く, 橋を渡る, र 交差点を右へ曲がる।" },
+        whereWeUse: [
+          { en: "道を歩きます — walk along a road", np: "道を歩きます — बाटोमा हिँड्नु" },
+          { en: "橋を渡ります — cross a bridge", np: "橋を渡ります — पुल पार गर्नु" },
+        ],
+        examples: [
+          { japanese: "このはしをわたると、ちゅうしゃじょうがあります。", reading: "Kono hashi o wataru to, chūshajō ga arimasu.", english: { en: "When you cross this bridge, there is a parking lot.", np: "यो पुल पार गर्दा पार्किङ हुन्छ।" }, scenario: { en: "Giving directions", np: "बाटो बताउँदा" } },
+          { japanese: "つぎのこうさてんをひだりへまがってください。", reading: "Tsugi no kōsaten o hidari e magatte kudasai.", english: { en: "Please turn left at the next intersection.", np: "अर्को चोकमा बायाँ मोडिनुस्।" }, scenario: { en: "Directions", np: "दिशा" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "とき", romaji: "toki", name: { en: "when", np: "जब" }, meaning: { en: "Follows a plain clause to mark a time situation.", np: "समयको स्थिति देखाउन plain clause पछि आउँछ।" }, examples: [{ japanese: "ひまなとき、ほんをよみます。", reading: "Hima na toki, hon o yomimasu.", english: { en: "When I am free, I read books.", np: "फुर्सद हुँदा किताब पढ्छु।" }, scenario: { en: "Free time", np: "फुर्सद" } }] },
+      { particle: "と", romaji: "to", name: { en: "natural result", np: "स्वाभाविक परिणाम" }, meaning: { en: "Connects a condition to its natural result.", np: "एउटा अवस्था र त्यसको स्वाभाविक नतिजा जोड्छ।" }, examples: [{ japanese: "このボタンをおすと、でんきがつきます。", reading: "Kono botan o osu to, denki ga tsukimasu.", english: { en: "When you press this button, the light turns on.", np: "यो बटन थिच्दा बत्ती बल्छ।" }, scenario: { en: "Instructions", np: "निर्देशन" } }] },
+    ],
+    vocabulary: buildVocab(23),
+    mcqs: [
+      { question: { en: "Complete: みちをわたる ___、しんごうをみます。", np: "पूरा गर्नुस्: みちをわたる ___、しんごうをみます。" }, choices: ["とき", "を", "が", "に"], correctIndex: 0, explanation: { en: "Plain form + とき means ‘when doing V.’", np: "plain form + とき भनेको V गर्दा हो।" } },
+      { question: { en: "Which sentence gives a natural machine result?", np: "मेसिनको स्वाभाविक नतिजा देखाउने वाक्य कुन हो?" }, choices: ["つまみをまわすと、おとがでます。", "つまみをまわすと、おとをだしてください。", "つまみをまわすと、おとがでたいです。", "つまみをまわすと、おとをだしましょう。"], correctIndex: 0, explanation: { en: "The と pattern describes an automatic result, not a request or intention.", np: "と pattern ले स्वचालित नतिजा बताउँछ, अनुरोध वा इच्छा होइन।" } },
+      { question: { en: "Which route phrase is correct?", np: "सही बाटोको वाक्यांश कुन हो?" }, choices: ["はしをわたります", "はしがわたります", "はしにわたります", "はしとわたります"], correctIndex: 0, explanation: { en: "With movement verbs, を can mark the route: 橋を渡ります.", np: "चल्ने Verb सँग を ले बाटो जनाउन सक्छ: 橋を渡ります।" } },
+      { question: { en: "What does くるまにきをつけてください mean?", np: "くるまにきをつけてください को अर्थ के हो?" }, choices: [{ en: "Please watch out for cars", np: "कारमा ध्यान दिनुस्" }, { en: "Please repair the car", np: "कार मर्मत गर्नुस्" }, { en: "Please park the car", np: "कार पार्क गर्नुस्" }, { en: "Please pull the car", np: "कार तान्नुस्" }], correctIndex: 0, explanation: { en: "気をつける means pay attention or take care.", np: "気をつける भनेको ध्यान दिनु वा सावधानी अपनाउनु हो।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
