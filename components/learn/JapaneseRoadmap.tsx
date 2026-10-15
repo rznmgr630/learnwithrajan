@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { JapaneseDayDetailPanel } from "@/components/learn/JapaneseDayDetailPanel";
 import { JapaneseWeeklyTestPanel } from "@/components/learn/JapaneseWeeklyTestPanel";
@@ -16,7 +16,6 @@ import { stripRichMarkers } from "@/lib/learn/strip-rich-markers";
 import { pickLocalized } from "@/lib/i18n/pick";
 import type { LessonNavTarget } from "@/components/learn/LessonNav";
 import type { Locale } from "@/lib/i18n/types";
-import { scrollOpenSectionIntoView } from "@/lib/learn/scroll-open-section";
 
 /** Single pill style for all topic tags — color comes from theme accent only elsewhere. */
 const TAG_PILL =
@@ -46,22 +45,8 @@ export function JapaneseRoadmap() {
     toggleWeeklyTest,
     isWeeklyTestDone,
   } = useJapaneseN5Progress();
-  const [openWeekId, setOpenWeekId] = useState<string | null>("jn5-w1");
   const [detailDay, setDetailDay] = useState<number | null>(null);
   const [weeklyTestWeekId, setWeeklyTestWeekId] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("jpRoadmap:openWeek");
-      if (saved !== null) setOpenWeekId(saved === "" ? null : saved);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      sessionStorage.setItem("jpRoadmap:openWeek", openWeekId ?? "");
-    } catch {}
-  }, [openWeekId]);
 
   const barWidth = useMemo(
     () => `${Math.min(100, Math.round((completedCount / JP_TOTAL_DAYS) * 100))}%`,
@@ -104,62 +89,37 @@ export function JapaneseRoadmap() {
         </p>
       </div>
 
-      <div className="mt-8 space-y-2" id="jp-roadmap-weeks">
+      <div className="mt-8 flex flex-col gap-10" id="jp-roadmap-weeks">
         {JAPANESE_N5_WEEKS.map((week) => {
-          const open = openWeekId === week.id;
           const doneInWeek = week.days.filter((d) => isDone(d.day)).length;
           const totalInWeek = week.days.length;
           const wt = week.weeklyTest;
           const weeklyMarked = wt ? isWeeklyTestDone(wt.id) : false;
 
           return (
-            <div
-              key={week.id}
-              className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)]"
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  const header = e.currentTarget;
-                  const willOpen = !open;
-                  setOpenWeekId((cur) => (cur === week.id ? null : week.id));
-                  if (willOpen) scrollOpenSectionIntoView(header);
-                }}
-                className="flex w-full scroll-mt-20 items-center gap-3 px-4 py-4 text-left transition hover:bg-[color-mix(in_oklab,var(--elevated)_45%,transparent)] sm:px-5"
-              >
+            <div key={week.id}>
+              <div className="mb-4 flex items-center gap-3">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${week.dotClass}`} aria-hidden />
-                <span className="flex-1 font-medium text-[var(--text)]">
+                <h2 className="flex-1 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
                   <RichText text={pickLocalized(week.title, locale)} />
-                </span>
+                </h2>
+                <div className="flex-1 border-t border-[var(--border)]" />
                 <span className="text-sm tabular-nums text-[var(--muted)]">
                   {doneInWeek}/{totalInWeek} {t("jpRoadmap.doneSlash")}
                 </span>
-                <svg
-                  className={`h-5 w-5 shrink-0 text-[var(--muted)] transition-transform ${open ? "rotate-0" : "-rotate-90"}`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6.22 5.22a.75.75 0 0 1 1.06 0L10 7.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L6.22 6.28a.75.75 0 0 1 0-1.06Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+              </div>
 
-              {open ? (
-                <div className="border-t border-[var(--border)] px-4 py-5 sm:px-5">
-                  <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                     {week.days.map((d) => {
                       const checked = isDone(d.day);
                       return (
                         <li
                           key={d.day}
-                          className="flex flex-col rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-4 transition hover:border-[color-mix(in_oklab,var(--accent)_45%,var(--border))]"
+                          className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/50 hover:shadow-xl hover:shadow-black/10"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-medium text-[var(--muted)]">
+                            <span className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--elevated)] px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums text-[var(--faint)]">
                               {t("jpRoadmap.dayPrefix")} {d.day}
                             </span>
                             <button
@@ -193,10 +153,10 @@ export function JapaneseRoadmap() {
                           <button
                             type="button"
                             aria-label={`Open details for day ${d.day}: ${stripRichMarkers(d.title)}`}
-                            className="mt-3 flex flex-1 flex-col rounded-lg text-left outline-offset-2 ring-offset-[var(--background)] transition hover:bg-[color-mix(in_oklab,var(--elevated)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                            className="mt-3 flex flex-1 flex-col text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
                             onClick={() => setDetailDay(d.day)}
                           >
-                            <h3 className="text-sm font-semibold leading-snug text-[var(--text)]">
+                            <h3 className="text-sm font-semibold leading-snug text-[var(--text)] transition-colors duration-150 group-hover:text-[var(--accent)]">
                               <RichText text={d.title} />
                             </h3>
                             <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
@@ -213,10 +173,10 @@ export function JapaneseRoadmap() {
                         </li>
                       );
                     })}
-                  </ul>
+                </ul>
 
-                  {wt ? (
-                    <div className="mt-6 border-t border-[var(--border)] pt-6">
+                {wt ? (
+                  <div className="mt-5 border-t border-[var(--border)] pt-5">
                       <div className="flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] p-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -275,10 +235,9 @@ export function JapaneseRoadmap() {
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           );
         })}
