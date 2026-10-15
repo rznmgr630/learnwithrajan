@@ -255,6 +255,32 @@ function GrammarSection({
   );
 }
 
+function StudyResourcesSection({ resources }: { resources: NonNullable<N5LessonPageData["resources"]> }) {
+  const { locale } = useLocale();
+
+  return (
+    <div className="rounded-xl border border-[var(--accent)]/30 bg-[color-mix(in_oklab,var(--accent)_8%,var(--surface))] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+        {locale === "np" ? "अध्ययन सामग्री" : locale === "jp" ? "学習資料" : "Study resources"}
+      </p>
+      <div className="mt-3 space-y-2">
+        {resources.map((resource) => (
+          <a
+            key={resource.url}
+            href={resource.url}
+            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm font-medium text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          >
+            <span>{l(resource.title, locale)}</span>
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <path d="M7.5 4.5h8v8M15 4.5 5 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Particles ───────────────────────────────────────────────────────────────
 
 function ParticleItem({
@@ -433,6 +459,8 @@ export function N5LessonDrawerContent({
           </p>
         ))}
       </div>
+
+      {lesson.resources?.length ? <StudyResourcesSection resources={lesson.resources} /> : null}
 
       {/* 4 Accordions */}
       <Accordion number={1} title={l(SECTION_LABELS.conversation, locale)} defaultOpen>
