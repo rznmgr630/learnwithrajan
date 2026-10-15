@@ -48,6 +48,7 @@ const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "秒", r: "びょう", m: "second (time)", s: 9 },
   { k: "歳", r: "さい", m: "years old / age", s: 13 },
   { k: "寺", r: "てら・ジ", m: "temple", s: 6 },
+  { k: "門", r: "もん", m: "gate", s: 8 },
   { k: "刀", r: "かたな・トウ", m: "sword / katana", s: 2 },
   { k: "前", r: "まえ・ゼン", m: "before / front", s: 9 },
   { k: "後", r: "うしろ・あと", m: "after / behind", s: 9 },
