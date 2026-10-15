@@ -6329,6 +6329,49 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       },
     ],
   },
+  {
+    id: 16,
+    title: "Lesson 16 — て、てから・N1 は N2 が adjective",
+    intro: [
+      { en: "Lesson 16 connects actions with the て-form, shows which action happens first with てから, and describes one part of a person or thing with N1 は N2 が adjective.", np: "पाठ १६ मा て-form ले काम जोड्ने, てから ले कुन काम पहिले हुन्छ बताउने, र N1 は N2 が adjective ले व्यक्ति वा वस्तुको एउटा भाग वर्णन गर्ने सिक्नुहुन्छ।" },
+      { en: "Use V-て、V for a natural sequence. Use V-てから V when you need to stress that the first action finishes before the next begins.", np: "स्वाभाविक क्रमका लागि V-て、V। पहिलो काम सकिएपछि मात्र अर्को काम हुन्छ भनेर जोड दिन V-てから V प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "RrFuTlK4bCY", np: "QwhSOGssdBw" },
+    youtubeVideoIdPart2: { en: "XBb8DI_vNiI" },
+    youtubeTitle: "Minna no Nihongo · Lesson 16 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 16 notes",
+          np: "हस्तलिखित Chapter 16 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第16課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1vFLZUXC4ZuozchUhtnhmx45ijl3q7czC/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "しんじゅくで{電車|でんしゃ}をのりかえて、{大学|だいがく}へいきます。", reading: "Shinjuku de densha o norikaete, daigaku e ikimasu.", english: { en: "I change trains at Shinjuku and go to university.", np: "शिन्जुकुमा ट्रेन परिवर्तन गरेर विश्वविद्यालय जान्छु।" } },
+      { speaker: "B", japanese: "シャワーをあびてから、ねます。", reading: "Shawā o abite kara, nemasu.", english: { en: "I sleep after taking a shower.", np: "नुहाएपछि सुत्छु।" } },
+      { speaker: "A", japanese: "ラケシュさんはかみがながいです。", reading: "Rakeshu-san wa kami ga nagai desu.", english: { en: "Rakesh has long hair.", np: "राकेशको कपाल लामो छ।" } },
+      { speaker: "B", japanese: "そして、せがたかくて、あたまがいいです。", reading: "Soshite, se ga takakute, atama ga ii desu.", english: { en: "Also, he is tall and clever.", np: "अनि, अग्लो र बुद्धिमान छन्।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "V-て、V — connect actions", np: "V-て、V — कामहरू जोड्नु" }, meaning: { en: "Use the て-form to connect actions in a natural order: do A and then do B. The final verb carries the tense and politeness.", np: "कार्यलाई प्राकृतिक क्रममा जोड्न て-form प्रयोग हुन्छ: A गरेर B। अन्तिम Verb ले tense र विनम्रता देखाउँछ।" }, whereWeUse: [{ en: "Travel: でんしゃをおりて、バスにのります", np: "यात्रा: でんしゃをおりて、バスにのります" }, { en: "ATM: カードをいれて、あんしょうばんごうをおします", np: "ATM: カードをいれて、あんしょうばんごうをおします" }], examples: [{ japanese: "バスにのって、えきへいきます。", reading: "Basu ni notte, eki e ikimasu.", english: { en: "I get on the bus and go to the station.", np: "बस चढेर स्टेशन जान्छु।" }, scenario: { en: "Travel steps", np: "यात्राको क्रम" } }, { japanese: "かいしゃをやめて、だいがくにはいります。", reading: "Kaisha o yamete, daigaku ni hairimasu.", english: { en: "I leave the company and enter university.", np: "कम्पनी छोडेर विश्वविद्यालय प्रवेश गर्छु।" }, scenario: { en: "Life change", np: "जीवनको परिवर्तन" } }] },
+      { number: 2, name: { en: "V-てから V — after doing V", np: "V-てから V — V गरेपछि" }, meaning: { en: "V-てから makes the order explicit: first do V1, then do V2. The action before から always happens first.", np: "V-てから ले क्रम स्पष्ट बनाउँछ: पहिले V1, अनि V2। から अगाडिको काम सधैं पहिले हुन्छ।" }, whereWeUse: [{ en: "Routine: シャワーをあびてからねます", np: "दैनिक काम: シャワーをあびてからねます" }, { en: "Travel: でんしゃをおりてから、バスにのります", np: "यात्रा: でんしゃをおりてから、バスにのります" }], examples: [{ japanese: "カードをいれてから、ボタンをおします。", reading: "Kādo o irete kara, botan o oshimasu.", english: { en: "After inserting the card, I press the button.", np: "कार्ड राखेपछि बटन थिच्छु।" }, scenario: { en: "Using an ATM", np: "ATM चलाउँदा" } }, { japanese: "しょくじをしてから、ジョギングをします。", reading: "Shokuji o shite kara, jogingu o shimasu.", english: { en: "After eating, I go jogging.", np: "खाना खाएपछि जगिङ गर्छु।" }, scenario: { en: "Daily routine", np: "दैनिक काम" } }] },
+      { number: 3, name: { en: "N1 は N2 が adjective — describing a feature", np: "N1 は N2 が adjective — विशेषता वर्णन" }, meaning: { en: "Use N1 は N2 が adjective to describe a part or feature of N1. N1 is the whole person or thing; N2 is the feature being described.", np: "N1 は N2 が adjective ले N1 को भाग वा विशेषता वर्णन गर्छ। N1 पूरा व्यक्ति वा वस्तु हो, N2 वर्णन गरिने विशेषता हो।" }, whereWeUse: [{ en: "Appearance: ラケシュさんはかみがながいです", np: "रूप: ラケシュさんはかみがながいです" }, { en: "Ability: ラケシュさんはあたまがいいです", np: "क्षमता: ラケシュさんはあたまがいいです" }, { en: "Room: このへやはまどがあかるいです", np: "कोठा: このへやはまどがあかるいです" }], examples: [{ japanese: "マリアさんはせがたかいです。", reading: "Maria-san wa se ga takai desu.", english: { en: "Maria is tall.", np: "मारिया अग्ली छिन्।" }, scenario: { en: "Describing height", np: "उचाइ वर्णन" } }, { japanese: "わたしのいえはへやがひろいです。", reading: "Watashi no ie wa heya ga hiroi desu.", english: { en: "My house has spacious rooms.", np: "मेरो घरका कोठा फराकिला छन्।" }, scenario: { en: "Describing a house", np: "घर वर्णन" } }, { japanese: "ラケシュさんはかおがまるいです。", reading: "Rakeshu-san wa kao ga marui desu.", english: { en: "Rakesh has a round face.", np: "राकेशको अनुहार गोलो छ।" }, scenario: { en: "Describing appearance", np: "रूप वर्णन" } }] },
+    ],
+    particles: [
+      { particle: "てから", romaji: "te kara", name: { en: "after doing", np: "गरेपछि" }, meaning: { en: "Shows that the following action happens after the て-form action finishes.", np: "ते-form भएको काम सकिएपछि अर्को काम हुन्छ भनेर देखाउँछ।" }, examples: [{ japanese: "はをみがいてから、ねます。", reading: "Ha o migaite kara, nemasu.", english: { en: "I sleep after brushing my teeth.", np: "दाँत माझेपछि सुत्छु।" }, scenario: { en: "Routine", np: "दैनिक काम" } }] },
+    ],
+    vocabulary: buildVocab(16),
+    mcqs: [
+      { question: { en: "Which sentence means ‘After taking a shower, I sleep’ ?", np: "‘नुहाएपछि सुत्छु’ भन्ने वाक्य कुन हो?" }, choices: ["シャワーをあびてからねます。", "シャワーをあびますからねます。", "シャワーをあびてねますから。", "シャワーをあびたねます。"], correctIndex: 0, explanation: { en: "V-てから V: あびてから + ねます.", np: "V-てから V: あびてから + ねます।" } },
+      { question: { en: "Choose the correct train-transfer sentence.", np: "सही ट्रेन परिवर्तनको वाक्य छान्नुहोस्।" }, choices: ["しんじゅくででんしゃをのりかえます。", "しんじゅくにでんしゃをのりかえます。", "しんじゅくをでんしゃにのりかえます。", "しんじゅくがでんしゃをのりかえます。"], correctIndex: 0, explanation: { en: "Change trains at a location with で: しんじゅくでのりかえます.", np: "स्थानमा परिवर्तन गर्न で: しんじゅくでのりかえます।" } },
+      { question: { en: "Complete: ラケシュさんは かみが ___.", np: "पूरा गर्नुस्: ラケシュさんは かみが ___." }, choices: ["ながいです", "ながくです", "ながいなです", "ながくてです"], correctIndex: 0, explanation: { en: "N1 は N2 が adjective: かみがながいです.", np: "N1 は N2 が adjective: かみがながいです।" } },
+      { question: { en: "What does あたまがいい mean?", np: "あたまがいい को अर्थ के हो?" }, choices: [{ en: "Clever or smart", np: "बुद्धिमान वा दक्ष" }, { en: "Has a big head", np: "ठूलो टाउको छ" }, { en: "Has long hair", np: "लामो कपाल छ" }, { en: "Is young", np: "युवा छ" }], correctIndex: 0, explanation: { en: "あたまがいい is an idiom meaning smart or clever.", np: "あたまがいい भनेको बुद्धिमान वा दक्ष हो।" } },
+      { question: { en: "What do you do first at an ATM?", np: "ATM मा पहिले के गर्नुहुन्छ?" }, choices: ["キャッシュカードをいれます。", "きんがくをかくにんします。", "ボタンをおします。", "おかねをだします。"], correctIndex: 0, explanation: { en: "まず (first), insert the cash card: キャッシュカードをいれます.", np: "पहिले (まず) क्यास कार्ड राखिन्छ: キャッシュカードをいれます।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
