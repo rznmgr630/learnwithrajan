@@ -6753,6 +6753,101 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What does ビザがいる mean?", np: "ビザがいる को अर्थ के हो?" }, choices: [{ en: "A visa is needed", np: "भिसा चाहिन्छ" }, { en: "I have a visa", np: "मसँग भिसा छ" }, { en: "Please show your visa", np: "कृपया भिसा देखाउनुस्" }, { en: "I lost my visa", np: "मैले भिसा हराएँ" }], correctIndex: 0, explanation: { en: "いる here means ‘need’ and is the casual plain form of いります.", np: "यहाँ いる को अर्थ ‘चाहिनु’ हो र यो いります को casual plain form हो।" } },
     ],
   },
+  {
+    id: 21,
+    title: "Lesson 21 — opinions, quotations and events",
+    intro: [
+      { en: "Lesson 21 uses the plain form to express what you think and what someone says. You will also learn how to talk about events at a place and ask for agreement with でしょう？", np: "पाठ २१ मा आफूले के सोच्नुहुन्छ र कसैले के भन्छ भन्ने plain form सँग सिक्नुहुन्छ। स्थानमा हुने कार्यक्रम र でしょう？ ले सहमति माग्ने तरिका पनि सिक्नुहुन्छ।" },
+      { en: "Before と思います and といいます, use a plain sentence. Nouns and な-adjectives need だ before と.", np: "と思います र といいます अघि plain वाक्य प्रयोग गर्नुहोस्। Noun र な-adjective सँग と अघि だ चाहिन्छ।" },
+    ],
+    youtubeVideoId: { en: "PI6Fc5RJqMs", np: "K9DPcYJ2Oz4" },
+    youtubeVideoIdPart2: { en: "FJ7xNL_DLLY" },
+    youtubeTitle: "Minna no Nihongo · Lesson 21 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 21 notes",
+          np: "हस्तलिखित Chapter 21 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第21課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1PQf52f35bQoz45GRDJdi3Hksrp-GhbRI/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "あしたはあめがふるとおもいます。", reading: "Ashita wa ame ga furu to omoimasu.", english: { en: "I think it will rain tomorrow.", np: "मलाई लाग्छ भोलि पानी पर्छ।" } },
+      { speaker: "B", japanese: "そうですか。しあいはないとおもいます。", reading: "Sō desu ka. Shiai wa nai to omoimasu.", english: { en: "I see. I think there will not be a match.", np: "ए हो र। मलाई लाग्छ खेल हुँदैन।" } },
+      { speaker: "A", japanese: "ニュースで、しゅしょうは「けいざいはよくなる」といいました。", reading: "Nyūsu de, shushō wa ‘keizai wa yoku naru’ to iimashita.", english: { en: "On the news, the prime minister said, ‘The economy will improve.’", np: "समाचारमा प्रधानमन्त्रीले ‘अर्थतन्त्र राम्रो हुन्छ’ भन्नुभयो।" } },
+      { speaker: "B", japanese: "ほんとうにそうでしょうか。", reading: "Hontō ni sō deshō ka?", english: { en: "Do you think that is really so?", np: "के साँच्चै त्यस्तै होला?" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain form + と思います — I think that", np: "plain form + と思います — मलाई लाग्छ" },
+        meaning: { en: "Use a plain sentence before と思います to give your opinion or prediction. Nouns and な-adjectives take だ before と: しずかだとおもいます.", np: "आफ्नो विचार वा अनुमान दिन plain वाक्यपछि と思います प्रयोग गर्नुहोस्। Noun र な-adjective सँग と अघि だ आउँछ: しずかだとおもいます।" },
+        whereWeUse: [
+          { en: "Prediction: あしたはあめがふるとおもいます", np: "अनुमान: あしたはあめがふるとおもいます" },
+          { en: "Opinion: このデザインはいいとおもいます", np: "विचार: このデザインはいいとおもいます" },
+          { en: "Noun: ラケシュさんはサラリーマンだとおもいます", np: "Noun: ラケシュさんはサラリーマンだとおもいます" },
+        ],
+        examples: [
+          { japanese: "このしごとはやくにたつとおもいます。", reading: "Kono shigoto wa yaku ni tatsu to omoimasu.", english: { en: "I think this work will be useful.", np: "मलाई लाग्छ यो काम उपयोगी हुन्छ।" }, scenario: { en: "Giving an opinion", np: "विचार दिँदा" } },
+          { japanese: "たぶん、ぶっかはたかくならないとおもいます。", reading: "Tabun, bukka wa takaku naranai to omoimasu.", english: { en: "I think prices probably will not rise.", np: "मलाई लाग्छ मूल्य सायद बढ्दैन।" }, scenario: { en: "Prediction", np: "अनुमान" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Plain form + といいます — say that", np: "plain form + といいます — भन्छ" },
+        meaning: { en: "Use a plain sentence + といいます to report what someone says. For an exact short quote, put the words in Japanese quotation marks before といいます.", np: "कसैले के भन्छ भनेर बताउन plain वाक्य + といいます प्रयोग हुन्छ। ठीक शब्द उद्धृत गर्दा जापानी उद्धरण चिन्हभित्र राखेर といいます लगाउनुहोस्।" },
+        whereWeUse: [
+          { en: "Teacher: せんせいはしけんはむずかしいといいます", np: "शिक्षक: せんせいはしけんはむずかしいといいます" },
+          { en: "Quote: 「ありがとう」といいます", np: "उद्धरण: 「ありがとう」といいます" },
+        ],
+        examples: [
+          { japanese: "ニュースは、らいしゅうまつりがあるといいます。", reading: "Nyūsu wa, raishū matsuri ga aru to iimasu.", english: { en: "The news says there will be a festival next week.", np: "समाचारले अर्को हप्ता चाड हुन्छ भन्छ।" }, scenario: { en: "Reporting news", np: "समाचार बताउँदा" } },
+          { japanese: "ともだちは「アルバイトはたいへんだ」といいました。", reading: "Tomodachi wa ‘arubaito wa taihen da’ to iimashita.", english: { en: "My friend said, ‘Part-time work is hard.’", np: "मेरो साथीले ‘पार्ट टाइम काम गाह्रो छ’ भन्यो।" }, scenario: { en: "Reporting speech", np: "कसैको कुरा बताउँदा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Place で event が あります — an event takes place", np: "स्थान で कार्यक्रम が あります — कार्यक्रम हुन्छ" },
+        meaning: { en: "Use a place with で and an event with が あります to say where an event will take place. This あります means an event is held, not that an object exists.", np: "कार्यक्रम कहाँ हुन्छ भन्न स्थानसँग で र कार्यक्रमसँग が あります प्रयोग हुन्छ। यहाँ あります को अर्थ वस्तु हुनु होइन, कार्यक्रम सञ्चालन हुनु हो।" },
+        whereWeUse: [
+          { en: "Festival: きょうとでまつりがあります", np: "चाड: きょうとでまつりがあります" },
+          { en: "Speech: だいがくでスピーチがあります", np: "भाषण: だいがくでスピーチがあります" },
+        ],
+        examples: [
+          { japanese: "にちようびにスタジアムでサッカーのしあいがあります。", reading: "Nichiyōbi ni sutajiamu de sakkā no shiai ga arimasu.", english: { en: "There is a soccer match at the stadium on Sunday.", np: "आइतबार स्टेडियममा फुटबल खेल हुन्छ।" }, scenario: { en: "Event information", np: "कार्यक्रमको जानकारी" } },
+          { japanese: "らいげつ、とうきょうでデザインのてんらんかいがあります。", reading: "Raigetsu, Tōkyō de dezain no tenrankai ga arimasu.", english: { en: "There is a design exhibition in Tokyo next month.", np: "अर्को महिना टोक्योमा डिजाइन प्रदर्शनी हुन्छ।" }, scenario: { en: "Announcement", np: "घोषणा" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "〜でしょう？ — seeking agreement", np: "〜でしょう？ — सहमति खोज्नु" },
+        meaning: { en: "Use でしょう？ when you expect the listener to agree or when asking for a likely answer. It is softer than asking directly.", np: "सुन्ने व्यक्ति सहमत हुन्छ भन्ने अपेक्षा हुँदा वा सम्भावित उत्तर सोध्दा でしょう？ प्रयोग हुन्छ। यो सिधै प्रश्न गर्नुभन्दा नरम हुन्छ।" },
+        whereWeUse: [
+          { en: "Confirmation: きょうはひまでしょう？", np: "पुष्टि: きょうはひまでしょう？" },
+          { en: "Prediction: あしたはいいてんきでしょう？", np: "अनुमान: あしたはいいてんきでしょう？" },
+        ],
+        examples: [
+          { japanese: "このニュースはほんとうでしょう？", reading: "Kono nyūsu wa hontō deshō?", english: { en: "This news is true, isn't it?", np: "यो समाचार साँचो होला, हैन?" }, scenario: { en: "Checking information", np: "जानकारी पक्का गर्दा" } },
+          { japanese: "カーメンはおもしろいでしょう？", reading: "Kāmen wa omoshiroi deshō?", english: { en: "Carmen is interesting, isn't it?", np: "कार्मेन रोचक होला, हैन?" }, scenario: { en: "Shared opinion", np: "साझा विचार" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "とおもいます", romaji: "to omoimasu", name: { en: "opinion or prediction", np: "विचार वा अनुमान" }, meaning: { en: "Attaches to a plain sentence to say what you think.", np: "के सोच्नुहुन्छ भन्न plain वाक्यपछि जोडिन्छ।" }, examples: [{ japanese: "あしたはさむいとおもいます。", reading: "Ashita wa samui to omoimasu.", english: { en: "I think it will be cold tomorrow.", np: "मलाई लाग्छ भोलि चिसो हुन्छ।" }, scenario: { en: "Weather", np: "मौसम" } }] },
+      { particle: "といいます", romaji: "to iimasu", name: { en: "quotation", np: "उद्धरण" }, meaning: { en: "Attaches to a plain sentence or direct quote to report speech.", np: "कसैको कुरा बताउन plain वाक्य वा प्रत्यक्ष उद्धरणसँग जोडिन्छ।" }, examples: [{ japanese: "せんせいは「しゅくだいがあります」といいます。", reading: "Sensei wa ‘shukudai ga arimasu’ to iimasu.", english: { en: "The teacher says, ‘There is homework.’", np: "शिक्षकले ‘गृहकार्य छ’ भन्नुहुन्छ।" }, scenario: { en: "Classroom", np: "कक्षाकोठा" } }] },
+      { particle: "について", romaji: "ni tsuite", name: { en: "about", np: "बारेमा" }, meaning: { en: "Follows a noun to show the topic being discussed.", np: "कुन विषयमा कुरा हुँदैछ भनेर Noun पछि आउँछ।" }, examples: [{ japanese: "にほんのこうつうについてしらべます。", reading: "Nihon no kōtsū ni tsuite shirabemasu.", english: { en: "I will research transportation in Japan.", np: "जापानको यातायातबारे अनुसन्धान गर्छु।" }, scenario: { en: "Research topic", np: "अनुसन्धान विषय" } }] },
+    ],
+    vocabulary: buildVocab(21),
+    mcqs: [
+      { question: { en: "Complete: あしたはあめがふる ___ おもいます。", np: "पूरा गर्नुस्: あしたはあめがふる ___ おもいます。" }, choices: ["と", "を", "が", "に"], correctIndex: 0, explanation: { en: "Opinions use a plain sentence + とおもいます.", np: "विचारमा plain वाक्य + とおもいます प्रयोग हुन्छ।" } },
+      { question: { en: "Which sentence correctly uses だ before とおもいます?", np: "とおもいます अघि だ सही प्रयोग भएको वाक्य कुन हो?" }, choices: ["ラケシュさんはがくせいだとおもいます。", "ラケシュさんはがくせいとおもいます。", "ラケシュさんはがくせいですとおもいます。", "ラケシュさんはがくせいなとおもいます。"], correctIndex: 0, explanation: { en: "Nouns use だ before とおもいます: がくせいだとおもいます.", np: "Noun सँग とおもいます अघि だ आउँछ: がくせいだとおもいます।" } },
+      { question: { en: "Complete: だいがく ___ スピーチがあります。", np: "पूरा गर्नुस्: だいがく ___ スピーチがあります。" }, choices: ["で", "に", "を", "と"], correctIndex: 0, explanation: { en: "The event location uses で: だいがくでスピーチがあります.", np: "कार्यक्रम हुने स्थानमा で प्रयोग हुन्छ: だいがくでスピーチがあります।" } },
+      { question: { en: "What does たぶんあしたはいそがしいでしょう mean?", np: "たぶんあしたはいそがしいでしょう को अर्थ के हो?" }, choices: [{ en: "Tomorrow will probably be busy", np: "भोलि सायद व्यस्त हुन्छ" }, { en: "Tomorrow was busy", np: "भोलि व्यस्त थियो" }, { en: "Please be busy tomorrow", np: "कृपया भोलि व्यस्त हुनुस्" }, { en: "Tomorrow is not busy", np: "भोलि व्यस्त छैन" }], correctIndex: 0, explanation: { en: "たぶん means probably, and でしょう gives a likely prediction.", np: "たぶん भनेको सायद हो, でしょう ले सम्भावित अनुमान दिन्छ।" } },
+      { question: { en: "Which phrase means ‘about Japanese politics’ ?", np: "‘जापानी राजनीतिबारे’ कुन हो?" }, choices: ["にほんのせいじについて", "にほんのせいじと", "にほんのせいじで", "にほんのせいじが"], correctIndex: 0, explanation: { en: "Noun + について means ‘about / concerning’ that noun.", np: "Noun + について भनेको त्यस Noun बारेमा हो।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
