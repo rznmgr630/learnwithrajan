@@ -1,6 +1,6 @@
 /** Data for the N5 lesson accordion drawer content. */
 
-import { N5_VOCAB_BY_LESSON } from "@/lib/japanese-learning/n5/n5-vocab-data";
+import { N5_VOCAB_BY_LESSON, N5_VOCAB_SPRINT } from "@/lib/japanese-learning/n5/n5-vocab-data";
 import type { FuriganaString } from "@/lib/japanese-learning/furigana";
 
 export type { FuriganaString };
@@ -39,8 +39,10 @@ export type VocabRow = {
   example: string;
 };
 
-function buildVocab(minnaLesson: number): VocabRow[] {
-  return (N5_VOCAB_BY_LESSON[minnaLesson] ?? []).map((t, idx) => {
+function buildVocab(day: number): VocabRow[] {
+  const vocabulary = N5_VOCAB_BY_LESSON[day] ?? N5_VOCAB_SPRINT[day] ?? [];
+
+  return vocabulary.map((t, idx) => {
     const [romaji, kana, kanji, en, np, jp, example] = t;
     return {
       sn: idx + 1,
@@ -73,7 +75,7 @@ export type N5LessonPageData = {
   title: string;
   intro: L10n[];
   /** YouTube video IDs per locale. Falls back to `en` when a locale has no entry. */
-  youtubeVideoId: { en: string; np?: string; jp?: string };
+  youtubeVideoId?: { en: string; np?: string; jp?: string };
   /** Optional second video (Part 2) — shown as a Part 1 / Part 2 toggle in the Grammar accordion. */
   youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
@@ -7156,6 +7158,126 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
       { question: { en: "Which means ‘Even if it rains, I will go’?", np: "‘पानी परे पनि जान्छु’ कुन हो?" }, choices: ["あめがふっても、いきます。", "あめがふったら、いきます。", "あめがふるでも、いきます。", "あめがふりたら、いきます。"], correctIndex: 0, explanation: { en: "Verb て-form + も means ‘even if.’", np: "Verb て-form + も भनेको ‘भए पनि’ हो।" } },
       { question: { en: "What does もしチャンスがあったら mean?", np: "もしチャンスがあったら को अर्थ के हो?" }, choices: [{ en: "if I have a chance", np: "अवसर पाएँ भने" }, { en: "because I have a chance", np: "अवसर भएकाले" }, { en: "I had a chance", np: "मैले अवसर पाएँ" }, { en: "please give me a chance", np: "मलाई अवसर दिनुस्" }], correctIndex: 0, explanation: { en: "もし makes the たら condition explicit: ‘if there is a chance.’", np: "もし ले たら को सर्त स्पष्ट बनाउँछ: ‘अवसर भएमा।’" } },
       { question: { en: "What does 頑張ります mean?", np: "頑張ります को अर्थ के हो?" }, choices: [{ en: "do one’s best", np: "मेहनत गर्नु" }, { en: "be transferred", np: "सरुवा हुनु" }, { en: "grow old", np: "उमेर बढ्नु" }, { en: "consider", np: "सोच्नु" }], correctIndex: 0, explanation: { en: "頑張ります means to work hard or do one’s best.", np: "頑張ります भनेको मेहनत गर्नु वा सक्दो प्रयास गर्नु हो।" } },
+    ],
+  },
+  {
+    id: 26,
+    title: "Day 26 — grammar lattice review",
+    intro: [
+      { en: "Day 26 connects the grammar patterns from Lessons 1–25. Review the marker first, then decide whether the sentence needs a particle, form, or tense change.", np: "दिन २६ मा पाठ १–२५ का व्याकरण pattern जोडेर दोहोर्याउनुहोस्। पहिले marker हेर्नुहोस्, अनि particle, form वा tense के चाहिन्छ निर्णय गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 grammar sprint",
+    resources: [{ title: { en: "Open JLPT N5 grammar review videos", np: "JLPT N5 व्याकरण समीक्षा भिडियो खोल्नुहोस्", jp: "JLPT N5文法復習動画を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+grammar+review" }],
+    conversation: [
+      { speaker: "A", japanese: "まいあさ、{七時|しちじ}におきて、{八時|はちじ}に{会社|かいしゃ}へいきます。", reading: "Maiasa, shichi-ji ni okite, hachi-ji ni kaisha e ikimasu.", english: { en: "Every morning, I get up at seven and go to work at eight.", np: "हरेक बिहान सात बजे उठेर आठ बजे काममा जान्छु।" } },
+      { speaker: "B", japanese: "{土曜日|どようび}はともだちと{映画|えいが}をみます。", reading: "Doyōbi wa tomodachi to eiga o mimasu.", english: { en: "On Saturday, I watch a movie with a friend.", np: "शनिबार साथीसँग फिल्म हेर्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Particle lattice — choose the job", np: "Particle lattice — कामअनुसार छान्नुहोस्" }, meaning: { en: "Match each particle to its job: に for time or destination, で for an action place or method, を for an object, and と for a companion or quotation.", np: "प्रत्येक particle को काम मिलाउनुहोस्: समय वा गन्तव्यमा に, काम हुने ठाउँ वा साधनमा で, कर्ममा を, र साथ वा उद्धरणमा と।" }, whereWeUse: [{ en: "Time: 7時に起きます", np: "समय: 7時に起きます" }, { en: "Action place: 学校で勉強します", np: "काम हुने ठाउँ: 学校で勉強します" }], examples: [{ japanese: "{電車|でんしゃ}で{駅|えき}へいきます。", reading: "Densha de eki e ikimasu.", english: { en: "I go to the station by train.", np: "ट्रेनबाट स्टेशन जान्छु।" }, scenario: { en: "Transport", np: "यातायात" } }, { japanese: "ともだちとごはんをたべます。", reading: "Tomodachi to gohan o tabemasu.", english: { en: "I eat a meal with a friend.", np: "साथीसँग खाना खान्छु।" }, scenario: { en: "Company", np: "साथ" } }] },
+      { number: 2, name: { en: "Form check — polite, plain, and て-form", np: "Form check — polite, plain र て-form" }, meaning: { en: "Before choosing an answer, identify the form that follows the blank. A pattern such as てから needs the て-form, while ことができます needs the dictionary form.", np: "उत्तर छान्नुअघि blank पछि कुन form आउँछ हेर्नुहोस्। てから लाई て-form चाहिन्छ, ことができます लाई dictionary form चाहिन्छ।" }, whereWeUse: [{ en: "てから: 食べてから寝ます", np: "てから: 食べてから寝ます" }, { en: "Ability: 日本語を話すことができます", np: "क्षमता: 日本語を話すことができます" }], examples: [{ japanese: "シャワーをあびてから、ねます。", reading: "Shawā o abite kara, nemasu.", english: { en: "I sleep after taking a shower.", np: "नुहाएपछि सुत्छु।" }, scenario: { en: "Routine", np: "दैनिक काम" } }, { japanese: "{漢字|かんじ}をよむことができます。", reading: "Kanji o yomu koto ga dekimasu.", english: { en: "I can read kanji.", np: "म कांजी पढ्न सक्छु।" }, scenario: { en: "Ability", np: "क्षमता" } }] },
+    ],
+    particles: [{ particle: "に・で・を・と", romaji: "ni/de/o/to", name: { en: "core particle review", np: "मुख्य particle समीक्षा" }, meaning: { en: "Choose the particle by its role, not by translating one English word.", np: "अंग्रेजीको एउटै शब्द अनुवाद गरेर होइन, particle को कामअनुसार छान्नुहोस्।" }, examples: [{ japanese: "{学校|がっこう}で{日本語|にほんご}をべんきょうします。", reading: "Gakkō de Nihongo o benkyō shimasu.", english: { en: "I study Japanese at school.", np: "स्कुलमा जापानी पढ्छु।" }, scenario: { en: "Study", np: "पढाइ" } }] }],
+    vocabulary: buildVocab(26),
+    mcqs: [
+      { question: { en: "Complete: 7じ ___ おきます。", np: "पूरा गर्नुस्: 7じ ___ おきます。" }, choices: ["に", "で", "を", "と"], correctIndex: 0, explanation: { en: "Use に for a specific time.", np: "निश्चित समयसँग に प्रयोग हुन्छ।" } },
+      { question: { en: "Which pattern needs a dictionary-form verb?", np: "कुन pattern लाई dictionary-form Verb चाहिन्छ?" }, choices: ["ことができます", "てから", "てください", "てはいけません"], correctIndex: 0, explanation: { en: "Verb dictionary form + ことができます expresses ability.", np: "Verb dictionary form + ことができます ले क्षमता देखाउँछ।" } },
+      { question: { en: "Choose the correct sentence.", np: "सही वाक्य छान्नुहोस्।" }, choices: ["がっこうでにほんごをべんきょうします。", "がっこうににほんごをべんきょうします。", "がっこうをにほんごでべんきょうします。", "がっこうとにほんごをべんきょうします。"], correctIndex: 0, explanation: { en: "Use で for the place where an action happens.", np: "काम हुने ठाउँसँग で प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 27,
+    title: "Day 27 — listening tactics",
+    intro: [
+      { en: "Day 27 builds a repeatable listening method: read the choices, catch the key word, and decide the answer before worrying about every sound.", np: "दिन २७ मा दोहोर्याउन मिल्ने सुन्ने तरिका बनाउनुहोस्: विकल्प पढ्नुहोस्, मुख्य शब्द सुन्नुहोस्, अनि हरेक आवाजको चिन्ता नगरी उत्तर निर्णय गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 listening sprint",
+    resources: [{ title: { en: "Open JLPT N5 listening practice", np: "JLPT N5 सुन्ने अभ्यास खोल्नुहोस्", jp: "JLPT N5聴解練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+listening+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "もう{一度|いちど}きいてください。", reading: "Mō ichido kiite kudasai.", english: { en: "Please listen one more time.", np: "कृपया फेरि एक पटक सुन्नुहोस्।" } },
+      { speaker: "B", japanese: "はい。{質問|しつもん}のことばをメモします。", reading: "Hai. Shitsumon no kotoba o memo shimasu.", english: { en: "Okay. I will note the question words.", np: "हुन्छ। प्रश्नका शब्दहरू नोट गर्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Question words point to the answer", np: "प्रश्न शब्दले उत्तर देखाउँछ" }, meaning: { en: "Listen for いつ, どこ, だれ, なに, and いくら. They tell you what kind of information the answer must contain.", np: "いつ, どこ, だれ, なに र いくら सुन्नुहोस्। तिनले उत्तरमा कस्तो जानकारी चाहिन्छ बताउँछन्।" }, whereWeUse: [{ en: "どこ → place", np: "どこ → ठाउँ" }, { en: "いつ → time", np: "いつ → समय" }], examples: [{ japanese: "{駅|えき}はどこですか。", reading: "Eki wa doko desu ka.", english: { en: "Where is the station?", np: "स्टेशन कहाँ छ?" }, scenario: { en: "Place", np: "ठाउँ" } }, { japanese: "なんじにあいますか。", reading: "Nanji ni aimasu ka.", english: { en: "What time will we meet?", np: "कति बजे भेट्छौँ?" }, scenario: { en: "Time", np: "समय" } }] },
+      { number: 2, name: { en: "Listen for changes and negatives", np: "परिवर्तन र नकार सुन्नुहोस्" }, meaning: { en: "Words such as でも, じゃなくて, and ません often reverse or revise the first idea. Wait until the end before choosing.", np: "でも, じゃなくて र ません जस्ता शब्दले पहिलो विचार बदल्न सक्छन्। अन्त्य नसुनी उत्तर नछान्नुहोस्।" }, whereWeUse: [{ en: "AではなくB", np: "A होइन B" }, { en: "予定の変更", np: "योजना परिवर्तन" }], examples: [{ japanese: "{月曜日|げつようび}じゃなくて、{火曜日|かようび}にあいます。", reading: "Getsuyōbi ja nakute, kayōbi ni aimasu.", english: { en: "We will meet on Tuesday, not Monday.", np: "सोमबार होइन, मंगलबार भेट्छौँ।" }, scenario: { en: "Change", np: "परिवर्तन" } }, { japanese: "コーヒーはのみません。おちゃをのみます。", reading: "Kōhī wa nomimasen. Ocha o nomimasu.", english: { en: "I do not drink coffee. I drink tea.", np: "कफी पिउँदिनँ। चिया पिउँछु।" }, scenario: { en: "Negative", np: "नकार" } }] },
+    ],
+    particles: [{ particle: "でも・じゃなくて", romaji: "demo/ja nakute", name: { en: "contrast signals", np: "विरोध संकेत" }, meaning: { en: "These words often signal that the answer changes from the first thing you hear.", np: "यी शब्दले सुनेको पहिलो कुराबाट उत्तर परिवर्तन हुन्छ भन्ने सङ्केत दिन्छन्।" }, examples: [{ japanese: "{金曜日|きんようび}でもいいです。", reading: "Kin'yōbi demo ii desu.", english: { en: "Friday is okay too.", np: "शुक्रबार पनि ठीक छ।" }, scenario: { en: "Schedule", np: "तालिका" } }] }],
+    vocabulary: buildVocab(27),
+    mcqs: [
+      { question: { en: "Which word asks for a place?", np: "कुन शब्दले ठाउँ सोध्छ?" }, choices: ["どこ", "いつ", "だれ", "いくら"], correctIndex: 0, explanation: { en: "どこ asks where.", np: "どこ ले कहाँ सोध्छ।" } },
+      { question: { en: "What should you do when you hear じゃなくて?", np: "じゃなくて सुन्दा के गर्नुपर्छ?" }, choices: ["Listen for the corrected information", "Choose the first answer", "Stop listening", "Ignore the next phrase"], correctIndex: 0, explanation: { en: "じゃなくて replaces the first option with another one.", np: "じゃなくて ले पहिलो विकल्पको सट्टा अर्को कुरा दिन्छ।" } },
+      { question: { en: "Which is the best first step in a listening question?", np: "सुन्ने प्रश्नमा सबैभन्दा राम्रो पहिलो कदम कुन हो?" }, choices: ["Read the choices and predict the answer type", "Translate every word first", "Choose A immediately", "Skip the audio"], correctIndex: 0, explanation: { en: "Reading choices first gives you a target while listening.", np: "पहिले विकल्प पढ्दा सुन्दा खोज्ने लक्ष्य मिल्छ।" } },
+    ],
+  },
+  {
+    id: 28,
+    title: "Day 28 — kanji and vocabulary speed",
+    intro: [
+      { en: "Day 28 improves fast recognition. Learn each kanji with a reading, a meaning, and one short phrase instead of studying isolated shapes.", np: "दिन २८ मा छिटो चिन्ने क्षमता बढाउनुहोस्। छुट्टाछुट्टै आकार पढ्नुको सट्टा प्रत्येक कांजीलाई पढाइ, अर्थ र एउटा छोटो वाक्यांशसँग सिक्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 kanji and vocabulary sprint",
+    resources: [{ title: { en: "Open JLPT N5 kanji and vocabulary practice", np: "JLPT N5 कांजी र शब्द अभ्यास खोल्नुहोस्", jp: "JLPT N5漢字・語彙練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+kanji+vocabulary+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "{電車|でんしゃ}で{駅|えき}へいきます。", reading: "Densha de eki e ikimasu.", english: { en: "I go to the station by train.", np: "ट्रेनबाट स्टेशन जान्छु।" } },
+      { speaker: "B", japanese: "{本|ほん}をよんで、{手紙|てがみ}をかきます。", reading: "Hon o yonde, tegami o kakimasu.", english: { en: "I read a book and write a letter.", np: "किताब पढ्छु र पत्र लेख्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Read the whole word, not one character", np: "एउटा अक्षर होइन, पूरा शब्द पढ्नुहोस्" }, meaning: { en: "A kanji can have several readings. Learn the reading used in the complete vocabulary word before memorizing extra readings.", np: "एउटा कांजीका धेरै पढाइ हुन सक्छन्। थप पढाइ कण्ठ गर्नु अघि शब्दमा प्रयोग भएको पूरा पढाइ सिक्नुहोस्।" }, whereWeUse: [{ en: "電車 → でんしゃ", np: "電車 → でんしゃ" }, { en: "病院 → びょういん", np: "病院 → びょういん" }], examples: [{ japanese: "{電車|でんしゃ}にのります。", reading: "Densha ni norimasu.", english: { en: "I get on the train.", np: "ट्रेन चढ्छु।" }, scenario: { en: "Travel", np: "यात्रा" } }, { japanese: "{病院|びょういん}へいきます。", reading: "Byōin e ikimasu.", english: { en: "I go to the hospital.", np: "अस्पताल जान्छु।" }, scenario: { en: "Place", np: "ठाउँ" } }] },
+      { number: 2, name: { en: "Use contrast pairs", np: "मिल्दोजुल्दो जोडी प्रयोग गर्नुहोस्" }, meaning: { en: "Compare similar-looking characters in a short phrase. Say the word aloud and write it once to connect shape, sound, and meaning.", np: "मिल्दोजुल्दो देखिने अक्षरलाई छोटो वाक्यांशमा तुलना गर्नुहोस्। आकार, आवाज र अर्थ जोड्न शब्द ठूलो स्वरले भन्नुहोस् र एक पटक लेख्नुहोस्।" }, whereWeUse: [{ en: "日 / 目", np: "日 / 目" }, { en: "土 / 士", np: "土 / 士" }], examples: [{ japanese: "{日本語|にほんご}をよみます。", reading: "Nihongo o yomimasu.", english: { en: "I read Japanese.", np: "जापानी पढ्छु।" }, scenario: { en: "Reading", np: "पढाइ" } }, { japanese: "{水|みず}をのみます。", reading: "Mizu o nomimasu.", english: { en: "I drink water.", np: "पानी पिउँछु।" }, scenario: { en: "Daily life", np: "दैनिक जीवन" } }] },
+    ],
+    particles: [{ particle: "を", romaji: "o", name: { en: "object marker", np: "कर्म चिन्ह" }, meaning: { en: "Use を to connect an action verb to the word you read, write, eat, or drink.", np: "पढ्ने, लेख्ने, खाने वा पिउने कर्मसँग を प्रयोग हुन्छ।" }, examples: [{ japanese: "{本|ほん}をよみます。", reading: "Hon o yomimasu.", english: { en: "I read a book.", np: "किताब पढ्छु।" }, scenario: { en: "Object", np: "कर्म" } }] }],
+    vocabulary: buildVocab(28),
+    mcqs: [
+      { question: { en: "How do you read 電車?", np: "電車 कसरी पढिन्छ?" }, choices: ["でんしゃ", "てつしゃ", "えんしゃ", "でんじゃ"], correctIndex: 0, explanation: { en: "電車 is read でんしゃ.", np: "電車 लाई でんしゃ पढिन्छ।" } },
+      { question: { en: "Which is the best kanji review method?", np: "कांजी दोहोर्याउने सबैभन्दा राम्रो तरिका कुन हो?" }, choices: ["Read a word, say it, and write it once", "Memorize only the shape", "Avoid example phrases", "Study one character without meaning"], correctIndex: 0, explanation: { en: "A word and example connect reading, meaning, and shape.", np: "शब्द र उदाहरणले पढाइ, अर्थ र आकार जोड्छ।" } },
+      { question: { en: "Complete: ほん ___ よみます。", np: "पूरा गर्नुस्: ほん ___ よみます。" }, choices: ["を", "に", "で", "と"], correctIndex: 0, explanation: { en: "本 is the object of 読みます, so use を.", np: "本 読みます को कर्म हो, त्यसैले を प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 29,
+    title: "Day 29 — reading and particles",
+    intro: [
+      { en: "Day 29 trains you to read a short passage efficiently. Find the topic, notice contrast words, and use particles to identify who does what, where, and when.", np: "दिन २९ मा छोटो अनुच्छेद प्रभावकारी रूपमा पढ्ने अभ्यास गर्नुहोस्। विषय खोज्नुहोस्, विरोधका शब्द ध्यान दिनुहोस्, र कसले के, कहाँ र कहिले गर्छ भनेर particle प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 reading sprint",
+    resources: [{ title: { en: "Open JLPT N5 reading practice", np: "JLPT N5 पढाइ अभ्यास खोल्नुहोस्", jp: "JLPT N5読解練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+reading+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "{文章|ぶんしょう}をよむとき、まず{質問|しつもん}をみます。", reading: "Bunshō o yomu toki, mazu shitsumon o mimasu.", english: { en: "When reading a passage, I first look at the question.", np: "अनुच्छेद पढ्दा पहिले प्रश्न हेर्छु।" } },
+      { speaker: "B", japanese: "それから、{大切|たいせつ}なことばにせんをひきます。", reading: "Sore kara, taisetsu na kotoba ni sen o hikimasu.", english: { en: "Then I underline important words.", np: "त्यसपछि महत्त्वपूर्ण शब्दमा रेखा तान्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Topic, action, and location", np: "विषय, काम र ठाउँ" }, meaning: { en: "In a sentence, は often marks the topic, を marks the object, and で marks where an action happens. Find these first to understand the core meaning.", np: "वाक्यमा は ले विषय, を ले कर्म, र で ले काम हुने ठाउँ देखाउँछ। मुख्य अर्थ बुझ्न पहिले यी खोज्नुहोस्।" }, whereWeUse: [{ en: "Topic: わたしは", np: "विषय: わたしは" }, { en: "Place: 学校で", np: "ठाउँ: 学校で" }], examples: [{ japanese: "わたしは{学校|がっこう}で{日本語|にほんご}をべんきょうします。", reading: "Watashi wa gakkō de Nihongo o benkyō shimasu.", english: { en: "I study Japanese at school.", np: "म स्कुलमा जापानी पढ्छु।" }, scenario: { en: "Sentence core", np: "वाक्यको मुख्य भाग" } }, { japanese: "{母|はは}はスーパーで{野菜|やさい}をかいます。", reading: "Haha wa sūpā de yasai o kaimasu.", english: { en: "My mother buys vegetables at the supermarket.", np: "आमाले सुपरमार्केटमा तरकारी किन्नुहुन्छ।" }, scenario: { en: "Reading detail", np: "पढाइको विवरण" } }] },
+      { number: 2, name: { en: "Connectors show the flow", np: "जोड्ने शब्दले क्रम देखाउँछ" }, meaning: { en: "Words such as そして, でも, しかし, and だから connect ideas. They help you predict whether the next sentence adds, contrasts, or gives a result.", np: "そして, でも, しかし र だから जस्ता शब्दले विचार जोड्छन्। तिनले अर्को वाक्य थपिन्छ, विरोध हुन्छ वा नतिजा आउँछ भन्ने अनुमान गर्न मद्दत गर्छन्।" }, whereWeUse: [{ en: "でも / しかし: contrast", np: "でも / しかし: विरोध" }, { en: "だから: result", np: "だから: नतिजा" }], examples: [{ japanese: "あめです。だから、うちにいます。", reading: "Ame desu. Dakara, uchi ni imasu.", english: { en: "It is raining. Therefore, I stay home.", np: "पानी परिरहेको छ। त्यसैले घरमा बस्छु।" }, scenario: { en: "Result", np: "नतिजा" } }, { japanese: "{日本語|にほんご}はむずかしいです。でも、おもしろいです。", reading: "Nihongo wa muzukashii desu. Demo, omoshiroi desu.", english: { en: "Japanese is difficult, but interesting.", np: "जापानी गाह्रो छ, तर रोचक छ।" }, scenario: { en: "Contrast", np: "विरोध" } }] },
+    ],
+    particles: [{ particle: "は・を・で", romaji: "wa/o/de", name: { en: "reading anchors", np: "पढाइका आधार" }, meaning: { en: "These particles quickly reveal the topic, object, and action location in a passage.", np: "यी particle ले अनुच्छेदमा विषय, कर्म र काम हुने ठाउँ छिटो देखाउँछन्।" }, examples: [{ japanese: "{田中|たなか}さんは{図書館|としょかん}で{本|ほん}をよみます。", reading: "Tanaka-san wa toshokan de hon o yomimasu.", english: { en: "Tanaka reads a book at the library.", np: "तानाकाले पुस्तकालयमा किताब पढ्छन्।" }, scenario: { en: "Reading", np: "पढाइ" } }] }],
+    vocabulary: buildVocab(29),
+    mcqs: [
+      { question: { en: "What should you find first in a reading passage?", np: "पढाइको अनुच्छेदमा पहिले के खोज्नुपर्छ?" }, choices: ["The topic and the question being asked", "Every unknown kanji", "The last option only", "A dictionary immediately"], correctIndex: 0, explanation: { en: "The topic and question give you a target for the details.", np: "विषय र प्रश्नले विवरण खोज्ने लक्ष्य दिन्छ।" } },
+      { question: { en: "What does だから signal?", np: "だから ले के सङ्केत गर्छ?" }, choices: ["A result or reason", "A question", "A location", "A person"], correctIndex: 0, explanation: { en: "だから introduces a result based on the previous statement.", np: "だから ले अघिल्लो कथनको नतिजा देखाउँछ।" } },
+      { question: { en: "Complete: としょかん ___ ほんをよみます。", np: "पूरा गर्नुस्: としょかん ___ ほんをよみます。" }, choices: ["で", "に", "を", "と"], correctIndex: 0, explanation: { en: "Use で for the place where reading happens.", np: "पढ्ने काम हुने ठाउँसँग で प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 30,
+    title: "Day 30 — mock exam mindset",
+    intro: [
+      { en: "Day 30 is your final practice day. Use one timed mock to find weak areas, then review mistakes by pattern instead of trying to memorize every answer.", np: "दिन ३० अन्तिम अभ्यासको दिन हो। कमजोर क्षेत्र पत्ता लगाउन एउटा समयबद्ध मॉक दिनुहोस्, अनि हरेक उत्तर कण्ठ गर्नुको सट्टा pattern अनुसार गल्ती समीक्षा गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 mock exam sprint",
+    resources: [{ title: { en: "Open JLPT N5 mock exam practice", np: "JLPT N5 मॉक परीक्षा अभ्यास खोल्नुहोस्", jp: "JLPT N5模擬試験練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+mock+exam+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "もぎテストのまえに、{時間|じかん}をはかりましょう。", reading: "Mogi tesuto no mae ni, jikan o hakarimashō.", english: { en: "Before the mock test, let’s time ourselves.", np: "मॉक टेस्टअघि समय नापौँ।" } },
+      { speaker: "B", japanese: "まちがいをみなおして、つぎも{頑張|がんば}りましょう。", reading: "Machigai o minaoshite, tsugi mo ganbarimashō.", english: { en: "Let’s review mistakes and do our best next time too.", np: "गल्ती समीक्षा गरेर अर्को पटक पनि मेहनत गरौँ।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Timed-answer routine", np: "समयबद्ध उत्तर दिने बानी" }, meaning: { en: "Answer the clear questions first. Mark difficult questions, keep moving, and return when time remains.", np: "सजिला प्रश्न पहिले उत्तर दिनुहोस्। गाह्रा प्रश्न चिनो लगाउनुहोस्, अगाडि बढ्नुहोस्, र समय बाँकी हुँदा फर्कनुहोस्।" }, whereWeUse: [{ en: "First pass: clear answers", np: "पहिलो चरण: सजिला उत्तर" }, { en: "Second pass: marked questions", np: "दोस्रो चरण: चिनो लगाएका प्रश्न" }], examples: [{ japanese: "わからない{問題|もんだい}は、あとでもういちどみます。", reading: "Wakaranai mondai wa, ato de mō ichido mimasu.", english: { en: "I review questions I do not understand later.", np: "नबुझेका प्रश्न पछि फेरि हेर्छु।" }, scenario: { en: "Exam strategy", np: "परीक्षा रणनीति" } }, { japanese: "まず、かんたんな{問題|もんだい}にこたえます。", reading: "Mazu, kantan na mondai ni kotaemasu.", english: { en: "First, I answer the easy questions.", np: "पहिले सजिला प्रश्नको उत्तर दिन्छु।" }, scenario: { en: "First pass", np: "पहिलो चरण" } }] },
+      { number: 2, name: { en: "Review errors by pattern", np: "pattern अनुसार गल्ती समीक्षा" }, meaning: { en: "Group mistakes into categories such as particles, verb forms, vocabulary, or listening. Practice one fresh example for each category.", np: "गल्तीलाई particle, verb form, शब्दावली वा सुन्ने जस्ता समूहमा राख्नुहोस्। प्रत्येक समूहको एउटा नयाँ उदाहरण अभ्यास गर्नुहोस्।" }, whereWeUse: [{ en: "を / に / で confusion", np: "を / に / で को भ्रम" }, { en: "Plain versus て-form", np: "plain र て-form" }], examples: [{ japanese: "{間違|まちが}いをノートにかきます。", reading: "Machigai o nōto ni kakimasu.", english: { en: "I write mistakes in a notebook.", np: "गल्ती नोटबुकमा लेख्छु।" }, scenario: { en: "Review", np: "समीक्षा" } }, { japanese: "つぎのテストのために、よくれんしゅうします。", reading: "Tsugi no tesuto no tame ni, yoku renshū shimasu.", english: { en: "I practise well for the next test.", np: "अर्को टेस्टका लागि राम्रोसँग अभ्यास गर्छु।" }, scenario: { en: "Next step", np: "अर्को कदम" } }] },
+    ],
+    particles: [{ particle: "まえに・あとで", romaji: "mae ni/ato de", name: { en: "exam sequence", np: "परीक्षाको क्रम" }, meaning: { en: "Use these expressions to plan what you do before and after the mock exam.", np: "मॉक परीक्षाअघि र पछि गर्ने काम योजना बनाउन यी अभिव्यक्ति प्रयोग हुन्छन्।" }, examples: [{ japanese: "テストのあとで、こたえをかくにんします。", reading: "Tesuto no ato de, kotae o kakunin shimasu.", english: { en: "After the test, I check the answers.", np: "टेस्टपछि उत्तर जाँच्छु।" }, scenario: { en: "Review", np: "समीक्षा" } }] }],
+    vocabulary: buildVocab(30),
+    mcqs: [
+      { question: { en: "What is the best first pass in a timed mock?", np: "समयबद्ध मॉकमा सबैभन्दा राम्रो पहिलो चरण कुन हो?" }, choices: ["Answer the clear questions first", "Spend all time on one hard question", "Leave every answer blank", "Check answers before starting"], correctIndex: 0, explanation: { en: "Quick points leave time to return to difficult questions.", np: "छिटो अंक ल्याउँदा गाह्रा प्रश्नमा फर्कने समय बचत हुन्छ।" } },
+      { question: { en: "How should you review a mistake?", np: "गल्ती कसरी समीक्षा गर्नुपर्छ?" }, choices: ["Group it by pattern and make a new example", "Ignore it after scoring", "Memorize only the letter", "Delete the question"], correctIndex: 0, explanation: { en: "A new example checks whether you understand the pattern.", np: "नयाँ उदाहरणले pattern बुझेको छ कि छैन जाँच्छ।" } },
+      { question: { en: "What does 正解 mean?", np: "正解 को अर्थ के हो?" }, choices: [{ en: "correct answer", np: "सही जवाफ" }, { en: "wrong answer", np: "गल्ती जवाफ" }, { en: "time limit", np: "समय सीमा" }, { en: "practice book", np: "अभ्यास किताब" }], correctIndex: 0, explanation: { en: "正解 means the correct answer.", np: "正解 भनेको सही जवाफ हो।" } },
     ],
   },
 ];
