@@ -85,7 +85,33 @@ export type N5LessonPageData = {
   mcqs: LessonMcq[];
 };
 
-export const N5_LESSON_PAGES: N5LessonPageData[] = [
+const MINIMUM_EXERCISE_COUNT = 10;
+
+function addVocabularyExercises(lesson: N5LessonPageData): N5LessonPageData {
+  const questionsNeeded = MINIMUM_EXERCISE_COUNT - lesson.mcqs.length;
+
+  if (questionsNeeded <= 0) {
+    return lesson;
+  }
+
+  const vocabularyQuestions = lesson.vocabulary.slice(0, questionsNeeded).map((entry, index) => {
+    const distractors = lesson.vocabulary
+      .filter((candidate) => candidate.word !== entry.word)
+      .slice(index, index + 3)
+      .map((candidate) => candidate.meaning);
+
+    return {
+      question: { en: `What does ${entry.word} mean?`, np: `${entry.word} को अर्थ के हो?` },
+      choices: [entry.meaning, ...distractors],
+      correctIndex: 0,
+      explanation: { en: `${entry.word} means ${typeof entry.meaning === "string" ? entry.meaning : entry.meaning.en}.`, np: `${entry.word} को अर्थ ${typeof entry.meaning === "string" ? entry.meaning : entry.meaning.np ?? entry.meaning.en} हो।` },
+    };
+  });
+
+  return { ...lesson, mcqs: [...lesson.mcqs, ...vocabularyQuestions] };
+}
+
+const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
   {
     id: 1,
     title: "Lesson 1 — じこしょうかい (Self-Introduction)",
@@ -7133,6 +7159,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
     ],
   },
 ];
+
+export const N5_LESSON_PAGES = N5_LESSON_PAGE_DATA.map(addVocabularyExercises);
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
   return N5_LESSON_PAGES.find((l) => l.id === id);
