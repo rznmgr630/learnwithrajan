@@ -6563,6 +6563,102 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What does うんてんすることができますか mean?", np: "うんてんすることができますか को अर्थ के हो?" }, choices: [{ en: "Can you drive?", np: "तपाईं गाडी चलाउन सक्नुहुन्छ?" }, { en: "Please drive.", np: "कृपया गाडी चलाउनुस्।" }, { en: "I drove.", np: "मैले गाडी चलाएँ।" }, { en: "Do not drive.", np: "गाडी नचलाउनुस्।" }], correctIndex: 0, explanation: { en: "Dictionary form + ことができますか asks about ability.", np: "dictionary form + ことができますか ले क्षमता सोध्छ।" } },
     ],
   },
+  {
+    id: 19,
+    title: "Lesson 19 — experiences, example actions and becoming",
+    intro: [
+      { en: "Lesson 19 lets you talk about life experience, give a few example actions instead of a full list, and describe a change of state.", np: "पाठ १९ मा जीवनको अनुभव, पूरा सूची नदिई केही उदाहरणका काम, र अवस्था परिवर्तनबारे भन्न सिक्नुहुन्छ।" },
+      { en: "Use the past plain form for experience and example actions. Use くなります or になります to describe what something becomes.", np: "अनुभव र उदाहरणका कामका लागि plain past form प्रयोग गर्नुहोस्। कुनै कुरा के बन्छ भन्न くなります वा になります प्रयोग हुन्छ।" },
+    ],
+    youtubeVideoId: { en: "rNW5UdfWREQ", np: "U8vwQMZjC8o" },
+    youtubeVideoIdPart2: { en: "4e-l8PliQSU" },
+    youtubeTitle: "Minna no Nihongo · Lesson 19 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 19 notes",
+          np: "हस्तलिखित Chapter 19 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第19課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/14XG47bMihb-fQ29lOjo-Vu8rA9ILYg2c/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "にほんへいったことがありますか。", reading: "Nihon e itta koto ga arimasu ka?", english: { en: "Have you ever been to Japan?", np: "तपाईं जापान जानुभएको छ?" } },
+      { speaker: "B", japanese: "はい、いちどあります。きょうとにいきました。", reading: "Hai, ichido arimasu. Kyōto ni ikimashita.", english: { en: "Yes, once. I went to Kyoto.", np: "हो, एक पटक। म क्योटो गएँ।" } },
+      { speaker: "A", japanese: "きゅうじつは、ゴルフをしたり、やまにのぼったりします。", reading: "Kyūjitsu wa, gorufu o shitari, yama ni nobottari shimasu.", english: { en: "On days off, I do things like play golf and climb mountains.", np: "बिदामा गल्फ खेल्ने र पहाड चढ्ने जस्ता काम गर्छु।" } },
+      { speaker: "B", japanese: "だんだんあたたかくなりましたね。", reading: "Dandan atatakaku narimashita ne.", english: { en: "It has gradually become warm, hasn't it?", np: "बिस्तारै न्यानो भयो, हैन?" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "V-たことがあります — have done before", np: "V-たことがあります — पहिले गरेको अनुभव" },
+        meaning: { en: "Attach ことがあります to the plain past form to say that you have had an experience before. Use V-たことがありません for no experience.", np: "plain past form पछि ことがあります जोडेर पहिले अनुभव गरेको भन्न सकिन्छ। अनुभव नभए V-たことがありません प्रयोग गर्नुहोस्।" },
+        whereWeUse: [
+          { en: "Travel: にほんへいったことがあります", np: "यात्रा: にほんへいったことがあります" },
+          { en: "Food: すしをたべたことがあります", np: "खाना: すしをたべたことがあります" },
+        ],
+        examples: [
+          { japanese: "ホテルにとまったことがあります。", reading: "Hoteru ni tomatta koto ga arimasu.", english: { en: "I have stayed at a hotel before.", np: "म पहिले होटेलमा बसेको छु।" }, scenario: { en: "Travel experience", np: "यात्राको अनुभव" } },
+          { japanese: "すもうをみたことがありません。", reading: "Sumō o mita koto ga arimasen.", english: { en: "I have never watched sumo.", np: "मैले कहिल्यै सुमो हेरेको छैन।" }, scenario: { en: "No experience", np: "अनुभव नभएको" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Making the た-form", np: "た-form बनाउने" },
+        meaning: { en: "The た-form is the short past form. It follows the same sound groups as the て-form: いて → いた, んで → んだ, して → した, and so on.", np: "た-form छोटो भूतकाल हो। यसको ध्वनि समूह て-form जस्तै हुन्छ: いて → いた, んで → んだ, して → した आदि।" },
+        whereWeUse: [
+          { en: "かいて → かいた, いって → いった", np: "かいて → かいた, いって → いった" },
+          { en: "よんで → よんだ, たべて → たべた", np: "よんで → よんだ, たべて → たべた" },
+          { en: "して → した, きて → きた", np: "して → した, きて → きた" },
+        ],
+        examples: [
+          { japanese: "ケーキをたべたことがあります。", reading: "Kēki o tabeta koto ga arimasu.", english: { en: "I have eaten cake before.", np: "मैले पहिले केक खाएको छु।" }, scenario: { en: "Experience", np: "अनुभव" } },
+          { japanese: "なんかいもにっきをかきました。", reading: "Nankai mo nikki o kakimashita.", english: { en: "I wrote in my diary many times.", np: "मैले धेरै पटक डायरी लेखेँ।" }, scenario: { en: "Repeated action", np: "दोहोऱ्याएको काम" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "V-たり V-たりします — do things like V", np: "V-たり V-たりします — V जस्ता काम गर्नु" },
+        meaning: { en: "Use the た-form plus り to list a few representative actions. It does not give every action, and the order is not important. It is often used for habits.", np: "た-form पछि り जोडेर केही प्रतिनिधि काम मात्र भन्न सकिन्छ। यसले सबै काम बताउँदैन र क्रम महत्त्वपूर्ण हुँदैन। प्रायः बानीका लागि प्रयोग हुन्छ।" },
+        whereWeUse: [
+          { en: "Weekend: ゴルフをしたり、さんぽしたりします", np: "सप्ताहन्त: ゴルフをしたり、さんぽしたりします" },
+          { en: "At home: そうじしたり、せんたくしたりします", np: "घरमा: そうじしたり、せんたくしたりします" },
+        ],
+        examples: [
+          { japanese: "にちようびは、へやをそうじしたり、せんたくしたりします。", reading: "Nichiyōbi wa, heya o sōji shitari, sentaku shitari shimasu.", english: { en: "On Sundays, I do things like clean my room and wash clothes.", np: "आइतबार कोठा सफा गर्ने र लुगा धुने जस्ता काम गर्छु।" }, scenario: { en: "Weekend routine", np: "सप्ताहन्तको काम" } },
+          { japanese: "しゅみは、ゴルフをしたり、すもうをみたりすることです。", reading: "Shumi wa, gorufu o shitari, sumō o mitari suru koto desu.", english: { en: "My hobbies include things like playing golf and watching sumo.", np: "मेरो रुचिमा गल्फ खेल्ने र सुमो हेर्ने जस्ता काम छन्।" }, scenario: { en: "Hobbies", np: "रुचि" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "い-adjective くなります / な-adjective・N に なります", np: "い-adjective くなります / な-adjective・N に なります" },
+        meaning: { en: "Use い-adjective minus い + くなります to show a change. Use な-adjective or noun + に なります to show becoming a new state, role, or condition.", np: "परिवर्तन देखाउन い-adjective बाट い हटाएर くなります जोड्नुहोस्। नयाँ अवस्था, भूमिका वा स्थिति भन्न な-adjective वा Noun पछि に なります प्रयोग गर्नुहोस्।" },
+        whereWeUse: [
+          { en: "Weather: あたたかい → あたたかくなります", np: "मौसम: あたたかい → あたたかくなります" },
+          { en: "Health: げんき → げんきになります", np: "स्वास्थ्य: げんき → げんきになります" },
+          { en: "Role: せんせい → せんせいになります", np: "भूमिका: せんせい → せんせいになります" },
+        ],
+        examples: [
+          { japanese: "だんだんさむくなります。", reading: "Dandan samuku narimasu.", english: { en: "It gradually becomes cold.", np: "बिस्तारै चिसो हुन्छ।" }, scenario: { en: "Seasonal change", np: "मौसम परिवर्तन" } },
+          { japanese: "ダイエットをして、げんきになりました。", reading: "Daietto o shite, genki ni narimashita.", english: { en: "I dieted and became healthy.", np: "डाइट गरेर म स्वस्थ भएँ।" }, scenario: { en: "Health change", np: "स्वास्थ्य परिवर्तन" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "たことがあります", romaji: "ta koto ga arimasu", name: { en: "past experience", np: "विगतको अनुभव" }, meaning: { en: "Says that someone has done something at least once before.", np: "कसैले पहिले कम्तीमा एक पटक काम गरेको बताउँछ।" }, examples: [{ japanese: "にほんへいったことがあります。", reading: "Nihon e itta koto ga arimasu.", english: { en: "I have been to Japan.", np: "म जापान गएको छु।" }, scenario: { en: "Travel", np: "यात्रा" } }] },
+      { particle: "たり〜たりします", romaji: "tari tari shimasu", name: { en: "example actions", np: "उदाहरणका काम" }, meaning: { en: "Lists a few example actions, not a complete list.", np: "केही उदाहरणका काम भन्छ, पूरा सूची होइन।" }, examples: [{ japanese: "ほんをよんだり、おんがくをきいたりします。", reading: "Hon o yondari, ongaku o kiitari shimasu.", english: { en: "I do things like read books and listen to music.", np: "किताब पढ्ने र संगीत सुन्ने जस्ता काम गर्छु।" }, scenario: { en: "Free time", np: "फुर्सद" } }] },
+      { particle: "く / に なります", romaji: "ku / ni narimasu", name: { en: "become", np: "परिवर्तन" }, meaning: { en: "Shows a change into a new state, condition, or role.", np: "नयाँ अवस्था, स्थिति वा भूमिकामा परिवर्तन देखाउँछ।" }, examples: [{ japanese: "にほんごがじょうずになりました。", reading: "Nihongo ga jōzu ni narimashita.", english: { en: "My Japanese has become good.", np: "मेरो जापानी राम्रो भयो।" }, scenario: { en: "Progress", np: "प्रगति" } }] },
+    ],
+    vocabulary: buildVocab(19),
+    mcqs: [
+      { question: { en: "Which sentence means ‘I have climbed a mountain before’ ?", np: "‘म पहिले पहाड चढेको छु’ भन्ने वाक्य कुन हो?" }, choices: ["やまにのぼったことがあります。", "やまにのぼることがあります。", "やまにのぼったりします。", "やまにのぼりますか。"], correctIndex: 0, explanation: { en: "Experience uses the た-form + ことがあります: のぼったことがあります.", np: "अनुभवमा た-form + ことがあります: のぼったことがあります।" } },
+      { question: { en: "Complete: にちようびは、そうじし___、せんたくし___します。", np: "पूरा गर्नुस्: にちようびは、そうじし___、せんたくし___します。" }, choices: ["たり・たり", "て・て", "た・た", "ます・ます"], correctIndex: 0, explanation: { en: "Example actions use V-たり、V-たりします.", np: "उदाहरणका काममा V-たり、V-たりします प्रयोग हुन्छ।" } },
+      { question: { en: "What is the correct change form of さむい?", np: "さむい को सही परिवर्तन रूप कुन हो?" }, choices: ["さむくなります", "さむになります", "さむいになります", "さむくにします"], correctIndex: 0, explanation: { en: "For an い-adjective, remove い and add くなります: さむくなります.", np: "い-adjective मा い हटाएर くなります: さむくなります।" } },
+      { question: { en: "Complete: げんき___なりました。", np: "पूरा गर्नुस्: げんき___なりました。" }, choices: ["に", "く", "が", "を"], correctIndex: 0, explanation: { en: "A な-adjective uses に なります: げんきになりました.", np: "な-adjective सँग に なります: げんきになりました।" } },
+      { question: { en: "What does いちどもすもうをみたことがありません mean?", np: "いちどもすもうをみたことがありません को अर्थ के हो?" }, choices: [{ en: "I have never watched sumo", np: "मैले कहिल्यै सुमो हेरेको छैन" }, { en: "I watched sumo once", np: "मैले एक पटक सुमो हेरेँ" }, { en: "I want to watch sumo", np: "म सुमो हेर्न चाहन्छु" }, { en: "Please do not watch sumo", np: "कृपया सुमो नहेर्नुस्" }], correctIndex: 0, explanation: { en: "いちども with a negative means not even once, or never.", np: "नकारात्मक वाक्यमा いちども भनेको एक पटक पनि होइन, कहिल्यै होइन।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
