@@ -5732,8 +5732,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
         np: "यस पाठमा Verb को て-form सिक्नुहुनेछ — जापानी व्याकरणको सबभन्दा महत्त्वपूर्ण आधार। अनुरोध (てください), जारी कार्य वा अवस्था (ています), र Verb जोड्न प्रयोग।",
       },
       {
-        en: "て-form construction rules depend on verb group: Group 1 (u-verbs) — the final kana changes sound; Group 2 (ru-verbs) — drop る, add て; Irregular — する → して、くる → きて.",
-        np: "て-form बनाउने नियम Verb group अनुसार: Group 1 (u-verb) — अन्तिम kana परिवर्तन; Group 2 (ru-verb) — る हटाएर て; Irregular — する → して、くる → きて।",
+        en: "て-form construction rules depend on verb group: Group 1 (u-verbs) — the final kana changes sound; Group 2 (ru-verbs) — drop る, add て; Group 3 (irregular) — する → して、くる → きて.",
+        np: "て-form बनाउने नियम Verb group अनुसार: Group 1 (u-verb) — अन्तिम kana परिवर्तन; Group 2 (ru-verb) — る हटाएर て; Group 3 (अनियमित) — する → して、くる → きて।",
       },
       {
         en: "ています has two main meanings: an action in progress (いま よんでいます — reading now) and a resulting state (けっこんしています — is married, i.e. got married and the state continues).",
@@ -5822,8 +5822,8 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
           {
             japanese: "する → して ／ くる → きて",
             reading: "suru → shite / kuru → kite",
-            english: { en: "Irregular verbs", np: "अनियमित Verb" },
-            scenario: { en: "Irregular て-form", np: "अनियमित て-form" },
+            english: { en: "Group 3: irregular verbs", np: "Group 3: अनियमित Verb" },
+            scenario: { en: "Group 3 て-form", np: "Group 3 て-form" },
           },
           {
             japanese: "よむ → よんで ／ はなす → はなして",
