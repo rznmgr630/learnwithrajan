@@ -1354,6 +1354,11 @@ export const UI_STRINGS = {
     np: "प्रत्येक प्रश्नमा विकल्प छानेर पेश गर्नुहोस्। सही उत्तर र व्याख्या पेश गरेपछि मात्र देखिन्छ।",
     jp: "各問で選択してから提出してください。正答と解説は提出後にのみ表示されます。",
   },
+  "weeklyPanel.question": {
+    en: "Question {number}",
+    np: "प्रश्न {number}",
+    jp: "問題 {number}",
+  },
   "weeklyPanel.noteHeading": {
     en: "Note",
     np: "टिप्पणी",

@@ -9,6 +9,7 @@ import type {
 } from "@/lib/japanese-learning/types";
 import { MCQ_OPTION_TRANSLATIONS } from "@/lib/japanese-learning/mcq-option-translations";
 import { RichText } from "@/components/learn/RichText";
+import { FuriganaText } from "@/components/learn/FuriganaText";
 import { pickLocalized } from "@/lib/i18n/pick";
 import { LessonNav, type LessonNavTarget } from "@/components/learn/LessonNav";
 
@@ -76,6 +77,7 @@ function WeeklyTestItemBlock({
   onSelectChoice,
   shortDraft,
   onShortChange,
+  questionNumber,
 }: {
   item: JapaneseWeeklyTestItem;
   submitted: boolean;
@@ -83,6 +85,7 @@ function WeeklyTestItemBlock({
   onSelectChoice: (idx: number) => void;
   shortDraft: string;
   onShortChange: (value: string) => void;
+  questionNumber?: number;
 }) {
   const { locale, t, tParams } = useLocale();
 
@@ -90,9 +93,9 @@ function WeeklyTestItemBlock({
     return (
       <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_40%,transparent)] p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">聴解 · 準備</p>
-        <p className="mt-2 text-sm text-[var(--muted)]">{item.scenario}</p>
+        <p className="mt-2 text-sm text-[var(--muted)]"><FuriganaText text={item.scenario} /></p>
         <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.task")}</p>
-        <p className="mt-1 text-sm text-[var(--muted)]">{item.instruction}</p>
+        <p className="mt-1 text-sm text-[var(--muted)]"><FuriganaText text={item.instruction} /></p>
         {item.embedVideoId ? (
           <div className="mt-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{t("weeklyPanel.embedClip")}</p>
@@ -133,7 +136,9 @@ function WeeklyTestItemBlock({
   if (item.kind === "short") {
     return (
       <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
-        <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">{item.prompt}</p>
+        <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">
+          <FuriganaText text={item.prompt} />
+        </p>
         {!submitted ? (
           <textarea
             value={shortDraft}
@@ -169,7 +174,14 @@ function WeeklyTestItemBlock({
 
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] p-4">
-      <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">{mcq.prompt}</p>
+      {questionNumber ? (
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+          {tParams("weeklyPanel.question", { number: questionNumber })}
+        </p>
+      ) : null}
+      <p className="whitespace-pre-wrap text-sm font-medium text-[var(--text)]">
+        <FuriganaText text={mcq.prompt} />
+      </p>
       <ol className="mt-3 space-y-2">
         {choiceLabels.map((c, ci) => {
           const letter = choiceLetter(ci);
@@ -203,7 +215,7 @@ function WeeklyTestItemBlock({
                 onClick={() => onSelectChoice(ci)}
                 className={btnClass}
               >
-                <span className="font-mono text-xs opacity-80">{letter}.</span> {c}
+                <span className="font-mono text-xs opacity-80">{letter}.</span> <FuriganaText text={c} />
               </button>
             </li>
           );
@@ -415,35 +427,48 @@ export function JapaneseWeeklyTestPanel({
             <p className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_42%,transparent)] px-3 py-2 text-xs text-[var(--muted)]">{t("weeklyPanel.introHint")}</p>
           ) : null}
 
-          {activeSections.map((sec) => (
-            <div key={sec.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{sec.title}</h3>
-              {sec.blurb ? <p className="mt-1 text-xs text-[var(--faint)]">{sec.blurb}</p> : null}
-              <div className="mt-4 space-y-6">
-                {sec.items.map((item) => (
-                  <WeeklyTestItemBlock
-                    key={item.id}
-                    item={item}
-                    submitted={submitted}
-                    selectedIndex={choicePick[item.id]}
-                    onSelectChoice={(idx) =>
-                      setChoicePick((prev) => ({
-                        ...prev,
-                        [item.id]: idx,
-                      }))
-                    }
-                    shortDraft={item.kind === "short" ? (shortDrafts[item.id] ?? "") : ""}
-                    onShortChange={(value) =>
-                      setShortDrafts((prev) => ({
-                        ...prev,
-                        [item.id]: value,
-                      }))
-                    }
-                  />
-                ))}
+          {activeSections.map((sec, sectionIndex) => {
+            const questionOffset = activeSections
+              .slice(0, sectionIndex)
+              .reduce((count, previousSection) => count + previousSection.items.filter((item) => item.kind === "mcq").length, 0);
+
+            return (
+              <div key={sec.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  <FuriganaText text={sec.title} />
+                </h3>
+                {sec.blurb ? <p className="mt-1 text-xs text-[var(--faint)]">{sec.blurb}</p> : null}
+                <div className="mt-4 space-y-6">
+                  {sec.items.map((item, itemIndex) => (
+                    <WeeklyTestItemBlock
+                      key={item.id}
+                      item={item}
+                      submitted={submitted}
+                      selectedIndex={choicePick[item.id]}
+                      onSelectChoice={(idx) =>
+                        setChoicePick((prev) => ({
+                          ...prev,
+                          [item.id]: idx,
+                        }))
+                      }
+                      shortDraft={item.kind === "short" ? (shortDrafts[item.id] ?? "") : ""}
+                      questionNumber={
+                        item.kind === "mcq"
+                          ? questionOffset + sec.items.slice(0, itemIndex).filter((previousItem) => previousItem.kind === "mcq").length + 1
+                          : undefined
+                      }
+                      onShortChange={(value) =>
+                        setShortDrafts((prev) => ({
+                          ...prev,
+                          [item.id]: value,
+                        }))
+                      }
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {test.closingNote ? (
             <div className="rounded-lg border border-[var(--border)] bg-[color-mix(in_oklab,var(--elevated)_35%,transparent)] p-4">
