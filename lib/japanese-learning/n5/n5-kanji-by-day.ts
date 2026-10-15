@@ -77,12 +77,15 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
     "夜", "先", "秒", "歳", "京", "都", "自", "族", "刀", "明",
   ],
 
-  // ── Day 14 — seasons and weekdays ─────────────────────────────────────────
-  14: ["春", "夏", "秋", "冬", "曜"],
+  // ── Day 14 — seasons, nature, and places ──────────────────────────────────
+  14: ["春", "夏", "秋", "冬", "曜", "赤", "林", "海", "港"],
 
-  // ── Days 15–25 — grammar-focus lessons (no new kanji) ─────────────────────
+  // ── Day 15 — body, health, and animals ────────────────────────────────────
+  15: ["体", "頭", "首", "元", "牛", "馬", "鳥", "猫", "肉", "鶏"],
+
+  // ── Days 16–25 — grammar-focus lessons (no new kanji) ─────────────────────
   // The kanji accordion is hidden by the component when this array is empty.
-  15: [], 16: [], 17: [], 18: [], 19: [],
+  16: [], 17: [], 18: [], 19: [],
   20: [], 21: [], 22: [], 23: [], 24: [], 25: [],
 
   // ── Sprint Day 26 — numbers & counting review ──────────────────────────────
