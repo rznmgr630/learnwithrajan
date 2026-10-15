@@ -6848,6 +6848,87 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "Which phrase means ‘about Japanese politics’ ?", np: "‘जापानी राजनीतिबारे’ कुन हो?" }, choices: ["にほんのせいじについて", "にほんのせいじと", "にほんのせいじで", "にほんのせいじが"], correctIndex: 0, explanation: { en: "Noun + について means ‘about / concerning’ that noun.", np: "Noun + について भनेको त्यस Noun बारेमा हो।" } },
     ],
   },
+  {
+    id: 22,
+    title: "Lesson 22 — relative clauses and describing nouns",
+    intro: [
+      { en: "Lesson 22 teaches you to put a short sentence before a noun. This lets you say natural phrases such as ‘the book I bought’ and ‘the person who lives in Tokyo.’", np: "पाठ २२ मा Noun अगाडि छोटो वाक्य राख्न सिक्नुहुन्छ। यसले ‘मैले किनेको किताब’ र ‘टोक्योमा बस्ने व्यक्ति’ जस्ता प्राकृतिक वाक्यांश बनाउन मद्दत गर्छ।" },
+      { en: "Japanese relative clauses do not use words like who, which, or that. Put the plain clause directly before the noun it describes.", np: "जापानी relative clause मा who, which, वा that जस्ता शब्द चाहिँदैन। वर्णन गर्ने plain clause सिधै Noun अगाडि राख्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "GsCAlBGQRok", np: "75LemVC6H_k" },
+    youtubeVideoIdPart2: { en: "slFsRLvsopM" },
+    youtubeTitle: "Minna no Nihongo · Lesson 22 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 22 notes",
+          np: "हस्तलिखित Chapter 22 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第22課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1FYC3Z7ohi1qL6V0c4edheJ2WnyNNnw_2/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "これはきのうかったコートです。", reading: "Kore wa kinō katta kōto desu.", english: { en: "This is the coat I bought yesterday.", np: "यो मैले हिजो किनेको कोट हो।" } },
+      { speaker: "B", japanese: "きれいですね。どこでかいましたか。", reading: "Kirei desu ne. Doko de kaimashita ka?", english: { en: "It's nice. Where did you buy it?", np: "राम्रो छ। कहाँ किन्नुभयो?" } },
+      { speaker: "A", japanese: "パリでかったみせです。", reading: "Pari de katta mise desu.", english: { en: "It's a shop where I bought it in Paris.", np: "पेरिसमा मैले किनेको पसल हो।" } },
+      { speaker: "B", japanese: "うまれたまちはどこですか。", reading: "Umareta machi wa doko desu ka?", english: { en: "What is the town where you were born?", np: "तपाईं जन्मेको सहर कहाँ हो?" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain clause + noun — relative clause", np: "plain clause + noun — relative clause" },
+        meaning: { en: "Put a plain clause directly before a noun to describe it. The noun comes at the end of the phrase, and there is no Japanese word for who, which, or that.", np: "Noun को वर्णन गर्न plain clause सिधै त्यसको अगाडि राख्नुहोस्। Noun वाक्यांशको अन्त्यमा आउँछ र जापानीमा who, which, वा that का लागि छुट्टै शब्द हुँदैन।" },
+        whereWeUse: [
+          { en: "Object: きのうかったコート — the coat I bought yesterday", np: "वस्तु: きのうかったコート — मैले हिजो किनेको कोट" },
+          { en: "Person: とうきょうにすんでいるひと — a person living in Tokyo", np: "व्यक्ति: とうきょうにすんでいるひと — टोक्योमा बस्ने व्यक्ति" },
+        ],
+        examples: [
+          { japanese: "これはわたしがかいたえです。", reading: "Kore wa watashi ga kaita e desu.", english: { en: "This is the picture I drew.", np: "यो मैले कोरेको चित्र हो।" }, scenario: { en: "Showing something you made", np: "आफूले बनाएको कुरा देखाउँदा" } },
+          { japanese: "あれはきむらさんがすんでいるアパートです。", reading: "Are wa Kimura-san ga sunde iru apāto desu.", english: { en: "That is the apartment where Kimura lives.", np: "त्यो किमुराजी बस्ने अपार्टमेन्ट हो।" }, scenario: { en: "Describing a place", np: "स्थान वर्णन गर्दा" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Particles inside a relative clause", np: "relative clause भित्रका particle" },
+        meaning: { en: "Particles inside the describing clause keep their normal job. The larger sentence can then use a different particle after the noun. Read the clause as one complete description.", np: "वर्णन गर्ने clause भित्रका particle ले आफ्नै सामान्य काम गर्छन्। त्यसपछि ठूलो वाक्यमा Noun पछि अर्को particle आउन सक्छ। clause लाई एउटा पूरा वर्णनको रूपमा पढ्नुहोस्।" },
+        whereWeUse: [
+          { en: "わたしが きのう かった ほんを よみます", np: "わたしが きのう かった ほんを よみます" },
+          { en: "せんせいが かいた えを みます", np: "せんせいが かいた えを みます" },
+        ],
+        examples: [
+          { japanese: "わたしがきのうかったコートをきます。", reading: "Watashi ga kinō katta kōto o kimasu.", english: { en: "I wear the coat that I bought yesterday.", np: "मैले हिजो किनेको कोट लगाउँछु।" }, scenario: { en: "Clothing", np: "लुगा" } },
+          { japanese: "ともだちがくれたぼうしをかぶります。", reading: "Tomodachi ga kureta bōshi o kaburimasu.", english: { en: "I wear the hat my friend gave me.", np: "साथीले दिएको टोपी लगाउँछु।" }, scenario: { en: "Gift", np: "उपहार" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Adjectives and nouns before a noun", np: "Noun अघि adjective र noun" },
+        meaning: { en: "Use an い-adjective directly before a noun. Use な with a な-adjective, and の with a noun. These patterns work alongside verb relative clauses.", np: "い-adjective सिधै Noun अगाडि आउँछ। な-adjective सँग な र Noun सँग の प्रयोग हुन्छ। यी pattern, Verb relative clause सँगै काम गर्छन्।" },
+        whereWeUse: [
+          { en: "い-adjective: あたらしいセーター", np: "い-adjective: あたらしいセーター" },
+          { en: "な-adjective: きれいなアパート", np: "な-adjective: きれいなアパート" },
+          { en: "Noun: にほんのきもの", np: "Noun: にほんのきもの" },
+        ],
+        examples: [
+          { japanese: "これはやちんがやすいアパートです。", reading: "Kore wa yachin ga yasui apāto desu.", english: { en: "This is an apartment with cheap rent.", np: "यो सस्तो भाडा भएको अपार्टमेन्ट हो।" }, scenario: { en: "Looking for a home", np: "घर खोज्दा" } },
+          { japanese: "わしつのあるいえにすみたいです。", reading: "Washitsu no aru ie ni sumitai desu.", english: { en: "I want to live in a house that has a Japanese-style room.", np: "म जापानी शैलीको कोठा भएको घरमा बस्न चाहन्छु।" }, scenario: { en: "Housing preference", np: "घरको चाहना" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "plain clause + noun", romaji: "relative clause", name: { en: "noun description", np: "Noun वर्णन" }, meaning: { en: "A plain clause goes before the noun it describes.", np: "वर्णन गर्ने plain clause त्यस Noun अगाडि आउँछ।" }, examples: [{ japanese: "きのうみたえいが", reading: "Kinō mita eiga", english: { en: "the movie I watched yesterday", np: "मैले हिजो हेरेको फिल्म" }, scenario: { en: "Relative clause", np: "relative clause" } }] },
+      { particle: "〜のある", romaji: "no aru", name: { en: "having", np: "भएको" }, meaning: { en: "Noun のある before a noun describes something that has that noun.", np: "Noun のある लाई अर्को Noun अघि राखेर त्यस्तो Noun भएको कुरा वर्णन हुन्छ।" }, examples: [{ japanese: "おしいれのあるアパート", reading: "Oshiire no aru apāto", english: { en: "an apartment with a Japanese-style closet", np: "जापानी शैलीको दराज भएको अपार्टमेन्ट" }, scenario: { en: "Home listing", np: "घरको विवरण" } }] },
+    ],
+    vocabulary: buildVocab(22),
+    mcqs: [
+      { question: { en: "Which phrase means ‘the book I bought yesterday’ ?", np: "‘मैले हिजो किनेको किताब’ कुन हो?" }, choices: ["きのうかったほん", "きのうかうほん", "きのうかったのほん", "きのうかいましたほん"], correctIndex: 0, explanation: { en: "Use the plain past clause directly before the noun: きのうかったほん.", np: "plain भूतकाल clause सिधै Noun अगाडि: きのうかったほん।" } },
+      { question: { en: "Complete: せんせいがかいた え___ みます。", np: "पूरा गर्नुस्: せんせいがかいた え___ みます。" }, choices: ["を", "が", "に", "と"], correctIndex: 0, explanation: { en: "The relative clause ends at え. The main sentence uses えをみます.", np: "relative clause え मा सकिन्छ। मुख्य वाक्यमा えをみます हुन्छ।" } },
+      { question: { en: "Which is correct for ‘a beautiful apartment’ ?", np: "‘सुन्दर अपार्टमेन्ट’ को सही जापानी कुन हो?" }, choices: ["きれいなアパート", "きれいアパート", "きれいのアパート", "きれいだアパート"], correctIndex: 0, explanation: { en: "A な-adjective takes な before a noun: きれいなアパート.", np: "な-adjective ले Noun अघि な लिन्छ: きれいなアパート।" } },
+      { question: { en: "What does わしつのあるいえ mean?", np: "わしつのあるいえ को अर्थ के हो?" }, choices: [{ en: "a house with a Japanese-style room", np: "जापानी शैलीको कोठा भएको घर" }, { en: "a Japanese-style room in a house", np: "घरभित्रको जापानी शैलीको कोठा" }, { en: "a house near Japan", np: "जापान नजिकको घर" }, { en: "a rented house", np: "भाडाको घर" }], correctIndex: 0, explanation: { en: "Noun のある + noun means ‘a noun that has [the first noun].’", np: "Noun のある + Noun भनेको पहिलो Noun भएको अर्को Noun हो।" } },
+      { question: { en: "Which verb is used for putting on shoes?", np: "जुत्ता लगाउन कुन Verb प्रयोग हुन्छ?" }, choices: ["はきます", "きます", "かぶります", "かけます"], correctIndex: 0, explanation: { en: "Use はきます for shoes, trousers, and similar lower-body items.", np: "जुत्ता, पाइन्ट र यस्तै तल्लो शरीरका वस्तुका लागि はきます प्रयोग हुन्छ।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
