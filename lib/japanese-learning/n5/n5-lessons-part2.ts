@@ -230,9 +230,46 @@ export const JP_N5_PART2: N5LessonSpec[] = [
       { particle: "より／いちばん", note: "Than / superlative patterns." },
     ],
     grammarBullets: [
-      "Past tense of adjectives and noun+copula forms.",
-      "より／いちばん for JLPT listening comparisons.",
+      {
+        en: "Compare two things: Noun 1 は Noun 2 より adjective です. The topic before は has more of that quality: スペインは にほんより あたたかいです (Spain is warmer than Japan).",
+        np: "दुई कुरा तुलना: Noun 1 は Noun 2 より adjective です। は अगाडिको वस्तुमा त्यो गुण बढी हुन्छ: スペインは にほんより あたたかいです (स्पेन जापानभन्दा न्यानो छ)।",
+        jp: "2つを比べる形：名詞1は名詞2より形容詞です。「は」の前のもののほうが、その性質が強いです。スペインは日本より暖かいです。",
+      },
+      {
+        en: "Ask a two-item comparison with どちら: Noun 1 と Noun 2 と どちらが adjective ですか. Answer with the item plus のほうが: にほんと ネパールと どちらが ひろいですか。ネパールのほうが ひろいです。",
+        np: "दुई वस्तु तुलना गर्न どちら प्रयोग हुन्छ: Noun 1 と Noun 2 と どちらが adjective ですか। जवाफमा वस्तु + のほうが: にほんと ネパールと どちらが ひろいですか。ネパールのほうが ひろいです。",
+        jp: "2つを比べる質問は「名詞1と名詞2とどちらが形容詞ですか」。答えは「名詞のほうが形容詞です」。",
+      },
+      {
+        en: "For the strongest quality inside a group, use [group] のなかで [item] が いちばん adjective です. かぞくのなかで だれが いちばん せがたかいですか。",
+        np: "समूहभित्र सबैभन्दा धेरै गुण देखाउन [group] のなかで [item] が いちばん adjective です प्रयोग हुन्छ: かぞくのなかで だれが いちばん せがたかいですか।",
+        jp: "グループ内で最も強い性質は「[グループ]のなかで[項目]がいちばん形容詞です」。",
+      },
+      {
+        en: "Use question words for the item: だれ for people, どれ for things, and どこ for places. にほんで どこが いちばん さむいですか。",
+        np: "वस्तु सोध्न प्रश्न शब्द प्रयोग गर्नुहोस्: मानिसका लागि だれ, वस्तुका लागि どれ, र ठाउँका लागि どこ। にほんで どこが いちばん さむいですか।",
+        jp: "項目を尋ねるときは、人ならだれ、物ならどれ、場所ならどこを使います。にほんでどこがいちばんさむいですか。",
+      },
+      {
+        en: "Past forms let you compare a previous state: やすい → やすかったです; たかい → たかかったです.",
+        np: "भूतकालको तुलना: やすい → やすかったです; たかい → たかかったです।",
+        jp: "過去の比較にも使えます：やすい→やすかったです、たかい→たかかったです。",
+      },
     ],
+    grammarTable: {
+      caption: { en: "Comparison patterns", np: "तुलना ढाँचाहरू", jp: "比較のパターン" },
+      headers: [
+        { en: "Use", np: "प्रयोग", jp: "使い方" },
+        { en: "Pattern", np: "ढाँचा", jp: "パターン" },
+        { en: "Example", np: "उदाहरण", jp: "例文" },
+      ],
+      rows: [
+        [{ en: "Compare two things", np: "दुई कुरा तुलना", jp: "2つを比較" }, "Noun 1 は Noun 2 より adjective です", "スペインは にほんより あたたかいです。"],
+        [{ en: "Ask which of two", np: "दुईमध्ये कुन", jp: "2つのうちどちら" }, "Noun 1 と Noun 2 と どちらが adjective ですか", "にほんと ネパールと どちらが ひろいですか。"],
+        [{ en: "Answer which of two", np: "दुईमध्ये उत्तर", jp: "2つの比較の答え" }, "Noun のほうが adjective です", "ネパールのほうが ひろいです。"],
+        [{ en: "Most in a group", np: "समूहमा सबैभन्दा", jp: "グループで一番" }, "[group] のなかで [item] が いちばん adjective です", "かぞくのなかで ちちが いちばん せがたかいです。"],
+      ],
+    },
     mcqs: [
       {
         question: "Cheapest pattern:",
