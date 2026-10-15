@@ -7282,7 +7282,201 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
   },
 ];
 
-export const N5_LESSON_PAGES = N5_LESSON_PAGE_DATA.map(addVocabularyExercises);
+function conversationLine(
+  speaker: ConversationLine["speaker"],
+  japanese: FuriganaString,
+  reading: string,
+  en: string,
+  np: string,
+): ConversationLine {
+  return { speaker, japanese, reading, english: { en, np } };
+}
+
+const CONVERSATION_EXTENSIONS: Partial<Record<number, ConversationLine[]>> = {
+  9: [
+    conversationLine("A", "えをかくのがすきですか。", "E o kaku no ga suki desu ka?", "Do you like drawing?", "चित्र कोर्न मनपर्छ?"),
+    conversationLine("B", "はい、すきです。でも、へたです。", "Hai, suki desu. Demo, heta desu.", "Yes, I do. But I am not good at it.", "हो, मनपर्छ। तर दक्ष छैन।"),
+    conversationLine("A", "どんなえをかきたいですか。", "Donna e o kakitai desu ka?", "What kind of picture do you want to draw?", "कस्तो चित्र कोर्न चाहनुहुन्छ?"),
+    conversationLine("B", "にほんのふうけいをかきたいです。", "Nihon no fuukei o kakitai desu.", "I want to draw Japanese scenery.", "जापानको दृश्य कोर्न चाहन्छु।"),
+  ],
+  10: [
+    conversationLine("A", "いぬはどこにいますか。", "Inu wa doko ni imasu ka?", "Where is the dog?", "कुकुर कहाँ छ?"),
+    conversationLine("B", "いえのまえにいます。", "Ie no mae ni imasu.", "It is in front of the house.", "घरको अगाडि छ।"),
+    conversationLine("A", "そのそばになにがありますか。", "Sono soba ni nani ga arimasu ka?", "What is next to it?", "त्यसको छेउमा के छ?"),
+    conversationLine("B", "くるまがあります。", "Kuruma ga arimasu.", "There is a car.", "कार छ।"),
+  ],
+  11: [
+    conversationLine("A", "りんごをいくつかいましたか。", "Ringo o ikutsu kaimashita ka?", "How many apples did you buy?", "कति वटा स्याउ किन्नुभयो?"),
+    conversationLine("B", "みっつかいました。", "Mittsu kaimashita.", "I bought three.", "तीन वटा किनेँ।"),
+    conversationLine("A", "ねこがなんびきいますか。", "Neko ga nanbiki imasu ka?", "How many cats are there?", "कति वटा बिराला छन्?"),
+    conversationLine("B", "にひきいます。", "Nihiki imasu.", "There are two cats.", "दुई वटा बिराला छन्।"),
+  ],
+  12: [
+    conversationLine("A", "にほんごとえいごとどちらがむずかしいですか。", "Nihongo to eigo to dochira ga muzukashii desu ka?", "Which is harder, Japanese or English?", "जापानी र अङ्ग्रेजीमध्ये कुन गाह्रो छ?"),
+    conversationLine("B", "にほんごのほうがむずかしいです。", "Nihongo no hou ga muzukashii desu.", "Japanese is harder.", "जापानी गाह्रो छ।"),
+    conversationLine("A", "とうきょうとおおさかとどちらがにぎやかですか。", "Toukyou to Oosaka to dochira ga nigiyaka desu ka?", "Which is livelier, Tokyo or Osaka?", "टोकियो र ओसाकामध्ये कुन बढी चहलपहल छ?"),
+    conversationLine("B", "とうきょうのほうがにぎやかです。", "Toukyou no hou ga nigiyaka desu.", "Tokyo is livelier.", "टोकियो बढी चहलपहल छ।"),
+  ],
+  13: [
+    conversationLine("A", "たんじょうびになにがほしいですか。", "Tanjoubi ni nani ga hoshii desu ka?", "What do you want for your birthday?", "जन्मदिनमा के चाहनुहुन्छ?"),
+    conversationLine("B", "じてんしゃがほしいです。", "Jitensha ga hoshii desu.", "I want a bicycle.", "मलाई साइकल चाहिन्छ।"),
+    conversationLine("A", "じてんしゃをかいにいきますか。", "Jitensha o kai ni ikimasu ka?", "Will you go buy a bicycle?", "साइकल किन्न जानुहुन्छ?"),
+    conversationLine("B", "はい、デパートへいきます。", "Hai, depaato e ikimasu.", "Yes, I will go to the department store.", "हो, डिपार्टमेन्ट स्टोर जान्छु।"),
+  ],
+  14: [
+    conversationLine("A", "ここになまえをかいてください。", "Koko ni namae o kaite kudasai.", "Please write your name here.", "यहाँ आफ्नो नाम लेख्नुहोस्।"),
+    conversationLine("B", "はい、かきます。", "Hai, kakimasu.", "Yes, I will write it.", "हुन्छ, लेख्छु।"),
+    conversationLine("A", "いまなにをしていますか。", "Ima nani o shite imasu ka?", "What are you doing now?", "अहिले के गर्दै हुनुहुन्छ?"),
+    conversationLine("B", "にほんごをべんきょうしています。", "Nihongo o benkyou shite imasu.", "I am studying Japanese.", "जापानी पढ्दै छु।"),
+  ],
+  15: [
+    conversationLine("A", "ここでしゃしんをとってもいいですか。", "Koko de shashin o tottemo ii desu ka?", "May I take a photo here?", "यहाँ फोटो खिच्न मिल्छ?"),
+    conversationLine("B", "はい、いいです。", "Hai, ii desu.", "Yes, you may.", "हुन्छ।"),
+    conversationLine("A", "ここでたばこをすってもいいですか。", "Koko de tabako o sutte mo ii desu ka?", "May I smoke here?", "यहाँ चुरोट पिउन मिल्छ?"),
+    conversationLine("B", "いいえ、すってはいけません。", "Iie, sutte wa ikemasen.", "No, you must not smoke.", "हुँदैन, चुरोट पिउनु हुँदैन।"),
+    conversationLine("A", "しずかにしてください。", "Shizuka ni shite kudasai.", "Please be quiet.", "कृपया शान्त हुनुहोस्।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+  ],
+  16: [
+    conversationLine("A", "しんじゅくでのりかえますか。", "Shinjuku de norikaemasu ka?", "Will you change trains at Shinjuku?", "शिन्जुकुमा रेल फेर्नुहुन्छ?"),
+    conversationLine("B", "はい、のりかえます。", "Hai, norikaemasu.", "Yes, I will change trains.", "हो, रेल फेर्छु।"),
+    conversationLine("A", "どこでひるごはんをたべますか。", "Doko de hirugohan o tabemasu ka?", "Where will you eat lunch?", "दिउँसोको खाना कहाँ खानुहुन्छ?"),
+    conversationLine("B", "えきのちかくでたべます。", "Eki no chikaku de tabemasu.", "I will eat near the station.", "स्टेसन नजिक खान्छु।"),
+    conversationLine("A", "たべてから、なにをしますか。", "Tabete kara, nani o shimasu ka?", "What will you do after eating?", "खाएपछि के गर्नुहुन्छ?"),
+    conversationLine("B", "ともだちにあいます。", "Tomodachi ni aimasu.", "I will meet a friend.", "साथीलाई भेट्छु।"),
+  ],
+  17: [
+    conversationLine("A", "ここではしゃしんをとらないでください。", "Koko de wa shashin o toranai de kudasai.", "Please do not take photos here.", "यहाँ फोटो नखिच्नुहोस्।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+    conversationLine("A", "あしたパーティーにきませんか。", "Ashita paatii ni kimasen ka?", "Would you like to come to the party tomorrow?", "भोलि पार्टीमा आउनुहुन्छ?"),
+    conversationLine("B", "すみません、いけません。", "Sumimasen, ikemasen.", "Sorry, I cannot go.", "माफ गर्नुहोस्, जान सक्दिनँ।"),
+    conversationLine("A", "どうしてですか。", "Doushite desu ka?", "Why not?", "किन?"),
+    conversationLine("B", "ようじがあります。", "Youji ga arimasu.", "I have an appointment.", "मेरो काम छ।"),
+  ],
+  18: [
+    conversationLine("A", "ピアノをひくことができますか。", "Piano o hiku koto ga dekimasu ka?", "Can you play the piano?", "पियानो बजाउन सक्नुहुन्छ?"),
+    conversationLine("B", "はい、すこしできます。", "Hai, sukoshi dekimasu.", "Yes, a little.", "हो, अलिकति सक्छु।"),
+    conversationLine("A", "しゅみはなんですか。", "Shumi wa nan desu ka?", "What is your hobby?", "तपाईंको रुचि के हो?"),
+    conversationLine("B", "えをかくことです。", "E o kaku koto desu.", "It is drawing pictures.", "चित्र कोर्नु हो।"),
+    conversationLine("A", "まいばん、なにをしますか。", "Maiban, nani o shimasu ka?", "What do you do every evening?", "हरेक साँझ के गर्नुहुन्छ?"),
+    conversationLine("B", "ねるまえにほんをよみます。", "Neru mae ni hon o yomimasu.", "I read a book before sleeping.", "सुत्नुअघि किताब पढ्छु।"),
+  ],
+  19: [
+    conversationLine("A", "にほんへいったことがありますか。", "Nihon e itta koto ga arimasu ka?", "Have you ever been to Japan?", "जापान जानुभएको छ?"),
+    conversationLine("B", "はい、いちどあります。", "Hai, ichido arimasu.", "Yes, once.", "हो, एक पटक गएको छु।"),
+    conversationLine("A", "にほんでなにをしましたか。", "Nihon de nani o shimashita ka?", "What did you do in Japan?", "जापानमा के गर्नुभयो?"),
+    conversationLine("B", "きょうとをけんがくしました。", "Kyouto o kengaku shimashita.", "I visited Kyoto for study.", "क्योटो घुम्न गएँ।"),
+    conversationLine("A", "にほんごがじょうずになりましたか。", "Nihongo ga jouzu ni narimashita ka?", "Did you become better at Japanese?", "जापानीमा राम्रो हुनुभयो?"),
+    conversationLine("B", "すこしじょうずになりました。", "Sukoshi jouzu ni narimashita.", "I became a little better.", "अलिकति राम्रो भएँ।"),
+  ],
+  20: [
+    conversationLine("A", "これはだれのかばんですか。", "Kore wa dare no kaban desu ka?", "Whose bag is this?", "यो कसको झोला हो?"),
+    conversationLine("B", "たなかさんのかばんです。", "Tanaka-san no kaban desu.", "It is Tanaka's bag.", "यो तानाका-सानको झोला हो।"),
+    conversationLine("A", "たなかさんはきますか。", "Tanaka-san wa kimasu ka?", "Will Tanaka come?", "तानाका-सान आउनुहुन्छ?"),
+    conversationLine("B", "はい、くるといっています。", "Hai, kuru to itte imasu.", "Yes, they say they will come.", "हो, आउँछु भन्नुभएको छ।"),
+    conversationLine("A", "いま、たなかさんはどこですか。", "Ima, Tanaka-san wa doko desu ka?", "Where is Tanaka now?", "अहिले तानाका-सान कहाँ हुनुहुन्छ?"),
+    conversationLine("B", "えきにいるとおもいます。", "Eki ni iru to omoimasu.", "I think they are at the station.", "स्टेसनमा हुनुहुन्छ जस्तो लाग्छ।"),
+  ],
+  21: [
+    conversationLine("A", "らいしゅう、おまつりがありますね。", "Raishuu, omatsuri ga arimasu ne.", "There is a festival next week, right?", "अर्को हप्ता चाड छ, हैन?"),
+    conversationLine("B", "はい、いっしょにいきませんか。", "Hai, issho ni ikimasen ka?", "Yes. Shall we go together?", "हो। सँगै जाऔँ?"),
+    conversationLine("A", "いいですね。なにをみたいですか。", "Ii desu ne. Nani o mitai desu ka?", "Sounds good. What do you want to see?", "राम्रो। के हेर्न चाहनुहुन्छ?"),
+    conversationLine("B", "にほんのダンスをみたいです。", "Nihon no dansu o mitai desu.", "I want to see Japanese dance.", "जापानी नाच हेर्न चाहन्छु।"),
+    conversationLine("A", "しんぶんでみましたか。", "Shinbun de mimashita ka?", "Did you see it in the newspaper?", "पत्रिकामा देख्नुभयो?"),
+    conversationLine("B", "はい、みました。", "Hai, mimashita.", "Yes, I did.", "हो, देखें।"),
+  ],
+  22: [
+    conversationLine("A", "これはだれがつくったケーキですか。", "Kore wa dare ga tsukutta keeki desu ka?", "Who made this cake?", "यो केक कसले बनायो?"),
+    conversationLine("B", "ははがつくったケーキです。", "Haha ga tsukutta keeki desu.", "It is a cake my mother made.", "यो मेरी आमाले बनाएको केक हो।"),
+    conversationLine("A", "きのうかったほんはおもしろいですか。", "Kinou katta hon wa omoshiroi desu ka?", "Is the book you bought yesterday interesting?", "हिजो किनेको किताब रोचक छ?"),
+    conversationLine("B", "はい、とてもおもしろいです。", "Hai, totemo omoshiroi desu.", "Yes, it is very interesting.", "हो, धेरै रोचक छ।"),
+    conversationLine("A", "にほんでとったしゃしんをみせてください。", "Nihon de totta shashin o misete kudasai.", "Please show me the photos you took in Japan.", "जापानमा खिचेका फोटो देखाउनुहोस्।"),
+    conversationLine("B", "はい、どうぞ。", "Hai, douzo.", "Sure, here you are.", "हुन्छ, लिनुहोस्।"),
+  ],
+  23: [
+    conversationLine("A", "えきへいくみちはどこですか。", "Eki e iku michi wa doko desu ka?", "Which way is the station?", "स्टेसन जाने बाटो कुन हो?"),
+    conversationLine("B", "あのはしをわたってください。", "Ano hashi o watatte kudasai.", "Please cross that bridge.", "त्यो पुल पार गर्नुहोस्।"),
+    conversationLine("A", "しんごうがあかくなったら、まちます。", "Shingou ga akaku nattara, machimasu.", "When the light turns red, I wait.", "बत्ती रातो भएपछि म पर्खन्छु।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+    conversationLine("A", "まちがいをみつけたら、どうしますか。", "Machigai o mitsuketara, dou shimasu ka?", "What will you do if you find a mistake?", "गल्ती भेटेमा के गर्नुहुन्छ?"),
+    conversationLine("B", "せんせいにききます。", "Sensei ni kikimasu.", "I will ask the teacher.", "शिक्षकलाई सोध्छु।"),
+  ],
+  24: [
+    conversationLine("B", "それはよかったですね。", "Sore wa yokatta desu ne.", "That is nice.", "त्यो राम्रो भयो।"),
+    conversationLine("A", "ともだちにパーティーのじゅんびをてつだってあげます。", "Tomodachi ni paatii no junbi o tetsudatte agemasu.", "I will help my friend prepare for the party.", "म साथीलाई पार्टीको तयारीमा सहयोग गर्छु।"),
+    conversationLine("B", "ありがとうございます。", "Arigatou gozaimasu.", "Thank you.", "धन्यवाद।"),
+    conversationLine("A", "わたしもともだちにてつだってもらいます。", "Watashi mo tomodachi ni tetsudatte moraimasu.", "I will also have my friend help me.", "म पनि साथीबाट सहयोग पाउँछु।"),
+    conversationLine("B", "いっしょにじゅんびしましょう。", "Issho ni junbi shimashou.", "Let us prepare together.", "सँगै तयारी गरौँ।"),
+    conversationLine("A", "はい、そうしましょう。", "Hai, sou shimashou.", "Yes, let us do that.", "हुन्छ, त्यसै गरौँ।"),
+    conversationLine("B", "たのしみですね。", "Tanoshimi desu ne.", "I am looking forward to it.", "पर्खन सक्दिनँ।"),
+  ],
+  25: [
+    conversationLine("B", "チャンスがあったら、にほんへいきたいです。", "Chansu ga attara, Nihon e ikitai desu.", "If I get the chance, I want to go to Japan.", "अवसर पाएँ भने जापान जान चाहन्छु।"),
+    conversationLine("A", "いそがしくても、にほんごをべんきょうします。", "Isogashikute mo, nihongo o benkyou shimasu.", "Even if I am busy, I study Japanese.", "व्यस्त भए पनि जापानी पढ्छु।"),
+    conversationLine("B", "いいですね。", "Ii desu ne.", "That is good.", "राम्रो छ।"),
+    conversationLine("A", "あしたはれたら、さんぽしませんか。", "Ashita haretara, sanpo shimasen ka?", "If it is sunny tomorrow, shall we take a walk?", "भोलि घाम लागे घुम्न जाऔँ?"),
+    conversationLine("B", "はい、いきましょう。", "Hai, ikimashou.", "Yes, let us go.", "हो, जाऔँ।"),
+    conversationLine("A", "あめでも、かさをもっていきます。", "Ame demo, kasa o motte ikimasu.", "Even if it rains, I will take an umbrella.", "पानी परे पनि छाता लिएर जान्छु।"),
+    conversationLine("B", "わかりました。", "Wakarimashita.", "I understand.", "बुझें।"),
+  ],
+  26: [
+    conversationLine("A", "このぶんは、はとがのどちらをつかいますか。", "Kono bun wa, wa to ga no dochira o tsukaimasu ka?", "Which do we use in this sentence, wa or ga?", "यो वाक्यमा は र が मध्ये कुन प्रयोग हुन्छ?"),
+    conversationLine("B", "あたらしいじょうほうなら、がをつかいます。", "Atarashii jouhou nara, ga o tsukaimasu.", "For new information, use ga.", "नयाँ जानकारीका लागि が प्रयोग गर्छौं।"),
+    conversationLine("A", "ほんをよみますのほんには、なにをつかいますか。", "Hon o yomimasu no hon ni wa, nani o tsukaimasu ka?", "What do we use with hon in hon o yomimasu?", "ほんをよみます मा ほん सँग के प्रयोग हुन्छ?"),
+    conversationLine("B", "ををつかいます。", "O o tsukaimasu.", "We use o.", "を प्रयोग गर्छौं।"),
+    conversationLine("A", "がっこうへは、でんしゃでいきます。", "Gakkou e wa, densha de ikimasu.", "I go to school by train.", "म रेलबाट विद्यालय जान्छु।"),
+    conversationLine("B", "でんしゃはしゅだんのです。", "Densha wa shudan na no desu.", "Densha marks the means of travel.", "でんしゃ यातायातको साधन हो।"),
+    conversationLine("A", "もういちどれんしゅうしましょう。", "Mou ichido renshuu shimashou.", "Let us practise once more.", "फेरि एक पटक अभ्यास गरौँ।"),
+    conversationLine("B", "はい、れんしゅうします。", "Hai, renshuu shimasu.", "Yes, I will practise.", "हुन्छ, अभ्यास गर्छु।"),
+  ],
+  27: [
+    conversationLine("A", "さいしょに、なにをききますか。", "Saisho ni, nani o kikimasu ka?", "What do you listen for first?", "पहिले के सुन्नुहुन्छ?"),
+    conversationLine("B", "だれとばしょをききます。", "Dare to basho o kikimasu.", "I listen for the person and place.", "व्यक्ति र ठाउँ सुन्छु।"),
+    conversationLine("A", "わからないときは、どうしますか。", "Wakaranai toki wa, dou shimasu ka?", "What do you do when you do not understand?", "नबुझेको बेला के गर्नुहुन्छ?"),
+    conversationLine("B", "キーワードをかきます。", "Kiiwaado o kakimasu.", "I write down keywords.", "मुख्य शब्द लेख्छु।"),
+    conversationLine("A", "ぜんぶきこえなくてもいいですか。", "Zenbu kikoenakute mo ii desu ka?", "Is it okay if you cannot hear everything?", "सबै नसुने पनि हुन्छ?"),
+    conversationLine("B", "はい、だいじょうぶです。", "Hai, daijoubu desu.", "Yes, that is okay.", "हो, हुन्छ।"),
+    conversationLine("A", "もういちどききましょう。", "Mou ichido kikimashou.", "Let us listen once more.", "फेरि एक पटक सुनौँ।"),
+    conversationLine("B", "はい、ゆっくりききます。", "Hai, yukkuri kikimasu.", "Yes, I will listen carefully.", "हुन्छ, ध्यान दिएर सुन्छु।"),
+  ],
+  28: [
+    conversationLine("A", "このことばはどうよみますか。", "Kono kotoba wa dou yomimasu ka?", "How do you read this word?", "यो शब्द कसरी पढ्नुहुन्छ?"),
+    conversationLine("B", "{電車|でんしゃ}とよみます。", "Densha to yomimasu.", "It is read densha.", "यसलाई でんしゃ पढिन्छ।"),
+    conversationLine("A", "{病院|びょういん}はどこですか。", "Byouin wa doko desu ka?", "Where is the hospital?", "अस्पताल कहाँ छ?"),
+    conversationLine("B", "えきのちかくです。", "Eki no chikaku desu.", "It is near the station.", "स्टेसन नजिक छ।"),
+    conversationLine("A", "かんじをどうやっておぼえますか。", "Kanji o dou yatte oboemasu ka?", "How do you remember kanji?", "कान्जी कसरी सम्झनुहुन्छ?"),
+    conversationLine("B", "ことばといっしょにおぼえます。", "Kotoba to issho ni oboemasu.", "I remember them with words.", "शब्दसँगै सम्झन्छु।"),
+    conversationLine("A", "ほんをよんでみましょう。", "Hon o yonde mimashou.", "Let us try reading the book.", "किताब पढेर हेरौँ।"),
+    conversationLine("B", "はい、よみます。", "Hai, yomimasu.", "Yes, I will read it.", "हुन्छ, पढ्छु।"),
+  ],
+  29: [
+    conversationLine("A", "ぶんしょうをよむまえに、なにをみますか。", "Bunshou o yomu mae ni, nani o mimasu ka?", "What do you look at before reading a passage?", "गद्यांश पढ्नुअघि के हेर्नुहुन्छ?"),
+    conversationLine("B", "しつもんをみます。", "Shitsumon o mimasu.", "I look at the questions.", "प्रश्नहरू हेर्छु।"),
+    conversationLine("A", "だいじなことばは、どうしますか。", "Daiji na kotoba wa, dou shimasu ka?", "What do you do with important words?", "महत्त्वपूर्ण शब्द के गर्नुहुन्छ?"),
+    conversationLine("B", "せんをひきます。", "Sen o hikimasu.", "I underline them.", "रेखा तान्छु।"),
+    conversationLine("A", "だからは、なにをあらわしますか。", "Dakara wa, nani o arawashimasu ka?", "What does dakara show?", "だから ले के देखाउँछ?"),
+    conversationLine("B", "りゆうやけっかをあらわします。", "Riyuu ya kekka o arawashimasu.", "It shows a reason or result.", "कारण वा परिणाम देखाउँछ।"),
+    conversationLine("A", "もういちどぶんをよみましょう。", "Mou ichido bun o yomimashou.", "Let us read the sentence once more.", "वाक्य फेरि पढौँ।"),
+    conversationLine("B", "はい、よみます。", "Hai, yomimasu.", "Yes, I will read it.", "हुन्छ, पढ्छु।"),
+  ],
+  30: [
+    conversationLine("A", "テストのまえに、なにをしますか。", "Tesuto no mae ni, nani o shimasu ka?", "What do you do before a test?", "परीक्षाअघि के गर्नुहुन्छ?"),
+    conversationLine("B", "じかんをはかります。", "Jikan o hakarimasu.", "I time myself.", "समय नाप्छु।"),
+    conversationLine("A", "むずかしいもんだいは、どうしますか。", "Muzukashii mondai wa, dou shimasu ka?", "What do you do with a difficult question?", "गाह्रो प्रश्नलाई के गर्नुहुन्छ?"),
+    conversationLine("B", "あとで、もういちどみます。", "Ato de, mou ichido mimasu.", "I look at it again later.", "पछि फेरि हेर्छु।"),
+    conversationLine("A", "まちがいは、どうしますか。", "Machigai wa, dou shimasu ka?", "What do you do with mistakes?", "गल्तीलाई के गर्नुहुन्छ?"),
+    conversationLine("B", "ノートにかきます。", "Nooto ni kakimasu.", "I write them in a notebook.", "कापीमा लेख्छु।"),
+    conversationLine("A", "つぎのテストもがんばりましょう。", "Tsugi no tesuto mo ganbarimashou.", "Let us do our best on the next test too.", "अर्को परीक्षामा पनि मेहनत गरौँ।"),
+    conversationLine("B", "はい、がんばりましょう。", "Hai, ganbarimashou.", "Yes, let us do our best.", "हुन्छ, मेहनत गरौँ।"),
+  ],
+};
+
+function addConversationExtensions(lesson: N5LessonPageData): N5LessonPageData {
+  const extension = CONVERSATION_EXTENSIONS[lesson.id];
+  return extension ? { ...lesson, conversation: [...lesson.conversation, ...extension] } : lesson;
+}
+
+export const N5_LESSON_PAGES = N5_LESSON_PAGE_DATA.map(addConversationExtensions).map(addVocabularyExercises);
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
   return N5_LESSON_PAGES.find((l) => l.id === id);
