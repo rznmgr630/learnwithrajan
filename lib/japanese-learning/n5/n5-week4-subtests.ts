@@ -77,7 +77,7 @@ const GRAMMAR_BLOCKS: McqPoolRow[][] = [
     ["このボタンを（　）とドアがあきます。", ["おす", "おして", "おした", "おさない"], 0, "おすと."],
     ["わたしはちちにばいくを（　）。「私がもらう」", ["かってもらいました", "かってあげました", "かってくれました", "かいました"], 0, ""],
     ["テストが（　）、うれしいです。", ["おわったら", "おわると", "おわって", "おわらない"], 0, ""],
-    ["そらみちが（　）、ちゅういしてください。", ["きけんな", "きけんに", "きけんだ", "きけん"], 0, ""],
+    ["このみちが（　）ばあい、ちゅういしてください。", ["きけんな", "きけんに", "きけんだ", "きけん"], 0, "危険な場合。"],
     ["けさはそうじを（　）から、そうじきをつかいました。", ["おわって", "おわった", "おわる", "おわらない"], 0, ""],
   ],
   [
@@ -116,7 +116,7 @@ const READING_BLOCKS: McqPoolRow[][] = [
     ["【文】ともだちがわたしのへやをそうじしてくれました。\nソウジは？", ["Friend cleaned speaker's room for them.", "Speaker cleaned friend's.", "Paid cleaner.", "Messier."], 0, ""],
     ["【文】このケーキはわたしがつくったものです。\nケーキは？", ["Speaker made it.", "Store bought.", "Teacher made.", "Frozen only."], 0, ""],
     ["【文】じこがあったらすぐにけいさつにれんらくしてください。\n指示は？", ["If accident — contact police.", "Ignore.", "Run away only.", "Post online."], 0, ""],
-    ["【文】きょうはくうきょうへこんなかです。\n空港は？", ["Crowded today.", "Empty.", "Closed.", "Only cargo."], 0, ""],
+    ["【文】きょうのくうこうはこんでいます。\n空港は？", ["Crowded today.", "Empty.", "Closed.", "Only cargo."], 0, ""],
     ["【文】バスはこのえきまえにとまります。\nバスは？", ["Stops in front of station.", "Express no stops.", "Wrong city.", "Airport only."], 0, ""],
   ],
   [
@@ -161,14 +161,133 @@ const LISTENING_MCQ_BLOCKS: McqPoolRow[][] = [
   ],
 ];
 
+const WEEK4_FURIGANA: Record<string, string> = {
+  "一度": "いちど",
+  "別問題": "べつもんだい",
+  "留学生": "りゅうがくせい",
+  "予約": "よやく",
+  "連絡する": "れんらくする",
+  "空港": "くうこう",
+  "荷物": "にもつ",
+  "届く": "とどく",
+  "届ける": "とどける",
+  "運転する": "うんてんする",
+  "運転": "うんてん",
+  "込む": "こむ",
+  "反対": "はんたい",
+  "動き": "うごき",
+  "無料": "むりょう",
+  "電車": "でんしゃ",
+  "遅れる": "おくれる",
+  "招待": "しょうたい",
+  "準備": "じゅんび",
+  "説明": "せつめい",
+  "返事": "へんじ",
+  "忘れ物": "わすれもの",
+  "送別会": "そうべつかい",
+  "留守": "るす",
+  "冷蔵庫": "れいぞうこ",
+  "引っ越す": "ひっこす",
+  "散らかっている": "ちらかっている",
+  "片づける": "かたづける",
+  "連体修飾": "れんたいしゅうしょく",
+  "提出する": "ていしゅつする",
+  "危険": "きけん",
+  "場合": "ばあい",
+  "条件": "じょうけん",
+  "提案": "ていあん",
+  "場面": "ばめん",
+  "質問": "しつもん",
+  "読み": "よみ",
+  "問題": "もんだい",
+  "休み": "やすみ",
+  "勉強": "べんきょう",
+  "勉強自体": "べんきょうじたい",
+  "嫌い": "きらい",
+  "必ず": "かならず",
+  "外": "そと",
+  "雨": "あめ",
+  "家": "いえ",
+  "永久中止": "えいきゅうちゅうし",
+  "永久": "えいきゅう",
+  "中止": "ちゅうし",
+  "出国": "しゅっこく",
+  "来日": "らいにち",
+  "必要": "ひつよう",
+  "友だち": "ともだち",
+  "相手": "あいて",
+  "正しい": "ただしい",
+  "昨日": "きのう",
+  "時間": "じかん",
+  "理由": "りゆう",
+  "病気": "びょうき",
+  "学校": "がっこう",
+  "行動": "こうどう",
+  "注意": "ちゅうい",
+  "順番": "じゅんばん",
+  "山道": "やまみち",
+  "内容": "ないよう",
+  "筆者": "ひっしゃ",
+  "乗り遅れ": "のりおくれ",
+  "状況": "じょうきょう",
+  "事故": "じこ",
+  "警察": "けいさつ",
+  "指示": "しじ",
+  "駅前": "えきまえ",
+  "駅": "えき",
+  "計画": "けいかく",
+  "通勤時間": "つうきんじかん",
+  "近い": "ちかい",
+  "話し手": "はなして",
+  "聴解": "ちょうかい",
+  "依頼": "いらい",
+  "意味": "いみ",
+  "授受": "じゅじゅ",
+  "名詞": "めいし",
+  "私": "わたし",
+  "父": "ちち",
+  "車": "くるま",
+  "本": "ほん",
+  "時": "とき",
+  "文": "ぶん",
+  "空": "そら",
+  "道": "みち",
+  "店": "みせ",
+  "第": "だい",
+  "課": "か",
+  "五": "ご",
+};
+
+const WEEK4_KANJI_PATTERN = new RegExp(
+  Object.keys(WEEK4_FURIGANA)
+    .sort((a, b) => b.length - a.length)
+    .join("|"),
+  "g",
+);
+
+function withWeek4Furigana(text: string): string {
+  return text.replace(WEEK4_KANJI_PATTERN, (kanji) => `{${kanji}|${WEEK4_FURIGANA[kanji]}}`);
+}
+
+function addFuriganaToBlocks(blocks: McqPoolRow[][]): McqPoolRow[][] {
+  return blocks.map((block) =>
+    block.map(([prompt, choices, correctIndex, explanation]) => [
+      withWeek4Furigana(prompt),
+      choices.map(withWeek4Furigana),
+      correctIndex,
+      explanation ? withWeek4Furigana(explanation) : undefined,
+    ]),
+  );
+}
+
 function listeningIntroW4(testNum: number, tid: string): JapaneseWeeklyTestItem {
   const lessons = [22, 23, 24, 25];
   const a = lessons[(testNum - 1) % 4];
   const b = lessons[testNum % 4];
   return listeningIntroEmbedded(
     `${tid}-l-intro`,
-    "聴解（Week 4）：とき／ばあい／たら／てあげる・くれる・もらう／連体修飾を意識してください。Minna L22–L25 とスプリント聴解。",
-    "クリップを一度聞いてから、聴解四問に答えてください。",
+    withWeek4Furigana("聴解（Week 4）：とき／ばあい／たら／てあげる・くれる・もらう／連体修飾を意識してください。Minna L22–L25 とスプリント聴解。"),
+    withWeek4Furigana("クリップを一度聞いてから、聴解四問に答えてください。"),
     [a, b, 25],
     27,
   );
@@ -177,17 +296,18 @@ function listeningIntroW4(testNum: number, tid: string): JapaneseWeeklyTestItem 
 export function buildWeek4SubTests(): JapaneseWeeklySubTest[] {
   return buildJlptFivePaperWeek({
     weekPrefix: "jn5-w4",
-    vocabBlocks: VOCAB_BLOCKS,
-    grammarBlocks: GRAMMAR_BLOCKS,
-    readingBlocks: READING_BLOCKS,
-    listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
+    vocabBlocks: addFuriganaToBlocks(VOCAB_BLOCKS),
+    grammarBlocks: addFuriganaToBlocks(GRAMMAR_BLOCKS),
+    readingBlocks: addFuriganaToBlocks(READING_BLOCKS),
+    listeningMcqBlocks: addFuriganaToBlocks(LISTENING_MCQ_BLOCKS),
     listeningIntroForTest: listeningIntroW4,
     paperSubtitle: {
       en: "JLPT N5-style · 20 questions · Minna Lessons 22–25 · Days 22–28",
       np: "JLPT N5 शैली · २० प्रश्न · मिन्ना पाठ २२–२५ · दिन २२–२८",
       jp: "JLPT N5形式 · 20問 · 第22–25課 · Day 22–28",
     },
-    paperIntro:
+    paperIntro: withWeek4Furigana(
       "Week 4 の五つのペーパーは別問題です。とき・ばあい・たら・もし・授受（あげる／くれる／もらう）・名詞を修飾する節を確認します。",
+    ),
   });
 }

@@ -1,6 +1,6 @@
 /** Data for the N5 lesson accordion drawer content. */
 
-import { N5_VOCAB_BY_LESSON } from "@/lib/japanese-learning/n5/n5-vocab-data";
+import { N5_VOCAB_BY_LESSON, N5_VOCAB_SPRINT } from "@/lib/japanese-learning/n5/n5-vocab-data";
 import type { FuriganaString } from "@/lib/japanese-learning/furigana";
 
 export type { FuriganaString };
@@ -39,8 +39,10 @@ export type VocabRow = {
   example: string;
 };
 
-function buildVocab(minnaLesson: number): VocabRow[] {
-  return (N5_VOCAB_BY_LESSON[minnaLesson] ?? []).map((t, idx) => {
+function buildVocab(day: number): VocabRow[] {
+  const vocabulary = N5_VOCAB_BY_LESSON[day] ?? N5_VOCAB_SPRINT[day] ?? [];
+
+  return vocabulary.map((t, idx) => {
     const [romaji, kana, kanji, en, np, jp, example] = t;
     return {
       sn: idx + 1,
@@ -73,7 +75,7 @@ export type N5LessonPageData = {
   title: string;
   intro: L10n[];
   /** YouTube video IDs per locale. Falls back to `en` when a locale has no entry. */
-  youtubeVideoId: { en: string; np?: string; jp?: string };
+  youtubeVideoId?: { en: string; np?: string; jp?: string };
   /** Optional second video (Part 2) — shown as a Part 1 / Part 2 toggle in the Grammar accordion. */
   youtubeVideoIdPart2?: { np?: string; en?: string };
   youtubeTitle: string;
@@ -85,7 +87,33 @@ export type N5LessonPageData = {
   mcqs: LessonMcq[];
 };
 
-export const N5_LESSON_PAGES: N5LessonPageData[] = [
+const MINIMUM_EXERCISE_COUNT = 10;
+
+function addVocabularyExercises(lesson: N5LessonPageData): N5LessonPageData {
+  const questionsNeeded = MINIMUM_EXERCISE_COUNT - lesson.mcqs.length;
+
+  if (questionsNeeded <= 0) {
+    return lesson;
+  }
+
+  const vocabularyQuestions = lesson.vocabulary.slice(0, questionsNeeded).map((entry, index) => {
+    const distractors = lesson.vocabulary
+      .filter((candidate) => candidate.word !== entry.word)
+      .slice(index, index + 3)
+      .map((candidate) => candidate.meaning);
+
+    return {
+      question: { en: `What does ${entry.word} mean?`, np: `${entry.word} को अर्थ के हो?` },
+      choices: [entry.meaning, ...distractors],
+      correctIndex: 0,
+      explanation: { en: `${entry.word} means ${typeof entry.meaning === "string" ? entry.meaning : entry.meaning.en}.`, np: `${entry.word} को अर्थ ${typeof entry.meaning === "string" ? entry.meaning : entry.meaning.np ?? entry.meaning.en} हो।` },
+    };
+  });
+
+  return { ...lesson, mcqs: [...lesson.mcqs, ...vocabularyQuestions] };
+}
+
+const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
   {
     id: 1,
     title: "Lesson 1 — じこしょうかい (Self-Introduction)",
@@ -6753,7 +6781,702 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What does ビザがいる mean?", np: "ビザがいる को अर्थ के हो?" }, choices: [{ en: "A visa is needed", np: "भिसा चाहिन्छ" }, { en: "I have a visa", np: "मसँग भिसा छ" }, { en: "Please show your visa", np: "कृपया भिसा देखाउनुस्" }, { en: "I lost my visa", np: "मैले भिसा हराएँ" }], correctIndex: 0, explanation: { en: "いる here means ‘need’ and is the casual plain form of いります.", np: "यहाँ いる को अर्थ ‘चाहिनु’ हो र यो いります को casual plain form हो।" } },
     ],
   },
+  {
+    id: 21,
+    title: "Lesson 21 — opinions, quotations and events",
+    intro: [
+      { en: "Lesson 21 uses the plain form to express what you think and what someone says. You will also learn how to talk about events at a place and ask for agreement with でしょう？", np: "पाठ २१ मा आफूले के सोच्नुहुन्छ र कसैले के भन्छ भन्ने plain form सँग सिक्नुहुन्छ। स्थानमा हुने कार्यक्रम र でしょう？ ले सहमति माग्ने तरिका पनि सिक्नुहुन्छ।" },
+      { en: "Before と思います and といいます, use a plain sentence. Nouns and な-adjectives need だ before と.", np: "と思います र といいます अघि plain वाक्य प्रयोग गर्नुहोस्। Noun र な-adjective सँग と अघि だ चाहिन्छ।" },
+    ],
+    youtubeVideoId: { en: "PI6Fc5RJqMs", np: "K9DPcYJ2Oz4" },
+    youtubeVideoIdPart2: { en: "FJ7xNL_DLLY" },
+    youtubeTitle: "Minna no Nihongo · Lesson 21 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 21 notes",
+          np: "हस्तलिखित Chapter 21 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第21課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1PQf52f35bQoz45GRDJdi3Hksrp-GhbRI/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "あしたはあめがふるとおもいます。", reading: "Ashita wa ame ga furu to omoimasu.", english: { en: "I think it will rain tomorrow.", np: "मलाई लाग्छ भोलि पानी पर्छ।" } },
+      { speaker: "B", japanese: "そうですか。しあいはないとおもいます。", reading: "Sō desu ka. Shiai wa nai to omoimasu.", english: { en: "I see. I think there will not be a match.", np: "ए हो र। मलाई लाग्छ खेल हुँदैन।" } },
+      { speaker: "A", japanese: "ニュースで、しゅしょうは「けいざいはよくなる」といいました。", reading: "Nyūsu de, shushō wa ‘keizai wa yoku naru’ to iimashita.", english: { en: "On the news, the prime minister said, ‘The economy will improve.’", np: "समाचारमा प्रधानमन्त्रीले ‘अर्थतन्त्र राम्रो हुन्छ’ भन्नुभयो।" } },
+      { speaker: "B", japanese: "ほんとうにそうでしょうか。", reading: "Hontō ni sō deshō ka?", english: { en: "Do you think that is really so?", np: "के साँच्चै त्यस्तै होला?" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain form + と思います — I think that", np: "plain form + と思います — मलाई लाग्छ" },
+        meaning: { en: "Use a plain sentence before と思います to give your opinion or prediction. Nouns and な-adjectives take だ before と: しずかだとおもいます.", np: "आफ्नो विचार वा अनुमान दिन plain वाक्यपछि と思います प्रयोग गर्नुहोस्। Noun र な-adjective सँग と अघि だ आउँछ: しずかだとおもいます।" },
+        whereWeUse: [
+          { en: "Prediction: あしたはあめがふるとおもいます", np: "अनुमान: あしたはあめがふるとおもいます" },
+          { en: "Opinion: このデザインはいいとおもいます", np: "विचार: このデザインはいいとおもいます" },
+          { en: "Noun: ラケシュさんはサラリーマンだとおもいます", np: "Noun: ラケシュさんはサラリーマンだとおもいます" },
+        ],
+        examples: [
+          { japanese: "このしごとはやくにたつとおもいます。", reading: "Kono shigoto wa yaku ni tatsu to omoimasu.", english: { en: "I think this work will be useful.", np: "मलाई लाग्छ यो काम उपयोगी हुन्छ।" }, scenario: { en: "Giving an opinion", np: "विचार दिँदा" } },
+          { japanese: "たぶん、ぶっかはたかくならないとおもいます。", reading: "Tabun, bukka wa takaku naranai to omoimasu.", english: { en: "I think prices probably will not rise.", np: "मलाई लाग्छ मूल्य सायद बढ्दैन।" }, scenario: { en: "Prediction", np: "अनुमान" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Plain form + といいます — say that", np: "plain form + といいます — भन्छ" },
+        meaning: { en: "Use a plain sentence + といいます to report what someone says. For an exact short quote, put the words in Japanese quotation marks before といいます.", np: "कसैले के भन्छ भनेर बताउन plain वाक्य + といいます प्रयोग हुन्छ। ठीक शब्द उद्धृत गर्दा जापानी उद्धरण चिन्हभित्र राखेर といいます लगाउनुहोस्।" },
+        whereWeUse: [
+          { en: "Teacher: せんせいはしけんはむずかしいといいます", np: "शिक्षक: せんせいはしけんはむずかしいといいます" },
+          { en: "Quote: 「ありがとう」といいます", np: "उद्धरण: 「ありがとう」といいます" },
+        ],
+        examples: [
+          { japanese: "ニュースは、らいしゅうまつりがあるといいます。", reading: "Nyūsu wa, raishū matsuri ga aru to iimasu.", english: { en: "The news says there will be a festival next week.", np: "समाचारले अर्को हप्ता चाड हुन्छ भन्छ।" }, scenario: { en: "Reporting news", np: "समाचार बताउँदा" } },
+          { japanese: "ともだちは「アルバイトはたいへんだ」といいました。", reading: "Tomodachi wa ‘arubaito wa taihen da’ to iimashita.", english: { en: "My friend said, ‘Part-time work is hard.’", np: "मेरो साथीले ‘पार्ट टाइम काम गाह्रो छ’ भन्यो।" }, scenario: { en: "Reporting speech", np: "कसैको कुरा बताउँदा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Place で event が あります — an event takes place", np: "स्थान で कार्यक्रम が あります — कार्यक्रम हुन्छ" },
+        meaning: { en: "Use a place with で and an event with が あります to say where an event will take place. This あります means an event is held, not that an object exists.", np: "कार्यक्रम कहाँ हुन्छ भन्न स्थानसँग で र कार्यक्रमसँग が あります प्रयोग हुन्छ। यहाँ あります को अर्थ वस्तु हुनु होइन, कार्यक्रम सञ्चालन हुनु हो।" },
+        whereWeUse: [
+          { en: "Festival: きょうとでまつりがあります", np: "चाड: きょうとでまつりがあります" },
+          { en: "Speech: だいがくでスピーチがあります", np: "भाषण: だいがくでスピーチがあります" },
+        ],
+        examples: [
+          { japanese: "にちようびにスタジアムでサッカーのしあいがあります。", reading: "Nichiyōbi ni sutajiamu de sakkā no shiai ga arimasu.", english: { en: "There is a soccer match at the stadium on Sunday.", np: "आइतबार स्टेडियममा फुटबल खेल हुन्छ।" }, scenario: { en: "Event information", np: "कार्यक्रमको जानकारी" } },
+          { japanese: "らいげつ、とうきょうでデザインのてんらんかいがあります。", reading: "Raigetsu, Tōkyō de dezain no tenrankai ga arimasu.", english: { en: "There is a design exhibition in Tokyo next month.", np: "अर्को महिना टोक्योमा डिजाइन प्रदर्शनी हुन्छ।" }, scenario: { en: "Announcement", np: "घोषणा" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "〜でしょう？ — seeking agreement", np: "〜でしょう？ — सहमति खोज्नु" },
+        meaning: { en: "Use でしょう？ when you expect the listener to agree or when asking for a likely answer. It is softer than asking directly.", np: "सुन्ने व्यक्ति सहमत हुन्छ भन्ने अपेक्षा हुँदा वा सम्भावित उत्तर सोध्दा でしょう？ प्रयोग हुन्छ। यो सिधै प्रश्न गर्नुभन्दा नरम हुन्छ।" },
+        whereWeUse: [
+          { en: "Confirmation: きょうはひまでしょう？", np: "पुष्टि: きょうはひまでしょう？" },
+          { en: "Prediction: あしたはいいてんきでしょう？", np: "अनुमान: あしたはいいてんきでしょう？" },
+        ],
+        examples: [
+          { japanese: "このニュースはほんとうでしょう？", reading: "Kono nyūsu wa hontō deshō?", english: { en: "This news is true, isn't it?", np: "यो समाचार साँचो होला, हैन?" }, scenario: { en: "Checking information", np: "जानकारी पक्का गर्दा" } },
+          { japanese: "カーメンはおもしろいでしょう？", reading: "Kāmen wa omoshiroi deshō?", english: { en: "Carmen is interesting, isn't it?", np: "कार्मेन रोचक होला, हैन?" }, scenario: { en: "Shared opinion", np: "साझा विचार" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "とおもいます", romaji: "to omoimasu", name: { en: "opinion or prediction", np: "विचार वा अनुमान" }, meaning: { en: "Attaches to a plain sentence to say what you think.", np: "के सोच्नुहुन्छ भन्न plain वाक्यपछि जोडिन्छ।" }, examples: [{ japanese: "あしたはさむいとおもいます。", reading: "Ashita wa samui to omoimasu.", english: { en: "I think it will be cold tomorrow.", np: "मलाई लाग्छ भोलि चिसो हुन्छ।" }, scenario: { en: "Weather", np: "मौसम" } }] },
+      { particle: "といいます", romaji: "to iimasu", name: { en: "quotation", np: "उद्धरण" }, meaning: { en: "Attaches to a plain sentence or direct quote to report speech.", np: "कसैको कुरा बताउन plain वाक्य वा प्रत्यक्ष उद्धरणसँग जोडिन्छ।" }, examples: [{ japanese: "せんせいは「しゅくだいがあります」といいます。", reading: "Sensei wa ‘shukudai ga arimasu’ to iimasu.", english: { en: "The teacher says, ‘There is homework.’", np: "शिक्षकले ‘गृहकार्य छ’ भन्नुहुन्छ।" }, scenario: { en: "Classroom", np: "कक्षाकोठा" } }] },
+      { particle: "について", romaji: "ni tsuite", name: { en: "about", np: "बारेमा" }, meaning: { en: "Follows a noun to show the topic being discussed.", np: "कुन विषयमा कुरा हुँदैछ भनेर Noun पछि आउँछ।" }, examples: [{ japanese: "にほんのこうつうについてしらべます。", reading: "Nihon no kōtsū ni tsuite shirabemasu.", english: { en: "I will research transportation in Japan.", np: "जापानको यातायातबारे अनुसन्धान गर्छु।" }, scenario: { en: "Research topic", np: "अनुसन्धान विषय" } }] },
+    ],
+    vocabulary: buildVocab(21),
+    mcqs: [
+      { question: { en: "Complete: あしたはあめがふる ___ おもいます。", np: "पूरा गर्नुस्: あしたはあめがふる ___ おもいます。" }, choices: ["と", "を", "が", "に"], correctIndex: 0, explanation: { en: "Opinions use a plain sentence + とおもいます.", np: "विचारमा plain वाक्य + とおもいます प्रयोग हुन्छ।" } },
+      { question: { en: "Which sentence correctly uses だ before とおもいます?", np: "とおもいます अघि だ सही प्रयोग भएको वाक्य कुन हो?" }, choices: ["ラケシュさんはがくせいだとおもいます。", "ラケシュさんはがくせいとおもいます。", "ラケシュさんはがくせいですとおもいます。", "ラケシュさんはがくせいなとおもいます。"], correctIndex: 0, explanation: { en: "Nouns use だ before とおもいます: がくせいだとおもいます.", np: "Noun सँग とおもいます अघि だ आउँछ: がくせいだとおもいます।" } },
+      { question: { en: "Complete: だいがく ___ スピーチがあります。", np: "पूरा गर्नुस्: だいがく ___ スピーチがあります。" }, choices: ["で", "に", "を", "と"], correctIndex: 0, explanation: { en: "The event location uses で: だいがくでスピーチがあります.", np: "कार्यक्रम हुने स्थानमा で प्रयोग हुन्छ: だいがくでスピーチがあります।" } },
+      { question: { en: "What does たぶんあしたはいそがしいでしょう mean?", np: "たぶんあしたはいそがしいでしょう को अर्थ के हो?" }, choices: [{ en: "Tomorrow will probably be busy", np: "भोलि सायद व्यस्त हुन्छ" }, { en: "Tomorrow was busy", np: "भोलि व्यस्त थियो" }, { en: "Please be busy tomorrow", np: "कृपया भोलि व्यस्त हुनुस्" }, { en: "Tomorrow is not busy", np: "भोलि व्यस्त छैन" }], correctIndex: 0, explanation: { en: "たぶん means probably, and でしょう gives a likely prediction.", np: "たぶん भनेको सायद हो, でしょう ले सम्भावित अनुमान दिन्छ।" } },
+      { question: { en: "Which phrase means ‘about Japanese politics’ ?", np: "‘जापानी राजनीतिबारे’ कुन हो?" }, choices: ["にほんのせいじについて", "にほんのせいじと", "にほんのせいじで", "にほんのせいじが"], correctIndex: 0, explanation: { en: "Noun + について means ‘about / concerning’ that noun.", np: "Noun + について भनेको त्यस Noun बारेमा हो।" } },
+    ],
+  },
+  {
+    id: 22,
+    title: "Lesson 22 — relative clauses and describing nouns",
+    intro: [
+      { en: "Lesson 22 teaches you to put a short sentence before a noun. This lets you say natural phrases such as ‘the book I bought’ and ‘the person who lives in Tokyo.’", np: "पाठ २२ मा Noun अगाडि छोटो वाक्य राख्न सिक्नुहुन्छ। यसले ‘मैले किनेको किताब’ र ‘टोक्योमा बस्ने व्यक्ति’ जस्ता प्राकृतिक वाक्यांश बनाउन मद्दत गर्छ।" },
+      { en: "Japanese relative clauses do not use words like who, which, or that. Put the plain clause directly before the noun it describes.", np: "जापानी relative clause मा who, which, वा that जस्ता शब्द चाहिँदैन। वर्णन गर्ने plain clause सिधै Noun अगाडि राख्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "GsCAlBGQRok", np: "75LemVC6H_k" },
+    youtubeVideoIdPart2: { en: "slFsRLvsopM" },
+    youtubeTitle: "Minna no Nihongo · Lesson 22 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 22 notes",
+          np: "हस्तलिखित Chapter 22 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第22課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1FYC3Z7ohi1qL6V0c4edheJ2WnyNNnw_2/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "これはきのうかったコートです。", reading: "Kore wa kinō katta kōto desu.", english: { en: "This is the coat I bought yesterday.", np: "यो मैले हिजो किनेको कोट हो।" } },
+      { speaker: "B", japanese: "きれいですね。どこでかいましたか。", reading: "Kirei desu ne. Doko de kaimashita ka?", english: { en: "It's nice. Where did you buy it?", np: "राम्रो छ। कहाँ किन्नुभयो?" } },
+      { speaker: "A", japanese: "パリでかったみせです。", reading: "Pari de katta mise desu.", english: { en: "It's a shop where I bought it in Paris.", np: "पेरिसमा मैले किनेको पसल हो।" } },
+      { speaker: "B", japanese: "うまれたまちはどこですか。", reading: "Umareta machi wa doko desu ka?", english: { en: "What is the town where you were born?", np: "तपाईं जन्मेको सहर कहाँ हो?" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain clause + noun — relative clause", np: "plain clause + noun — relative clause" },
+        meaning: { en: "Put a plain clause directly before a noun to describe it. The noun comes at the end of the phrase, and there is no Japanese word for who, which, or that.", np: "Noun को वर्णन गर्न plain clause सिधै त्यसको अगाडि राख्नुहोस्। Noun वाक्यांशको अन्त्यमा आउँछ र जापानीमा who, which, वा that का लागि छुट्टै शब्द हुँदैन।" },
+        whereWeUse: [
+          { en: "Object: きのうかったコート — the coat I bought yesterday", np: "वस्तु: きのうかったコート — मैले हिजो किनेको कोट" },
+          { en: "Person: とうきょうにすんでいるひと — a person living in Tokyo", np: "व्यक्ति: とうきょうにすんでいるひと — टोक्योमा बस्ने व्यक्ति" },
+        ],
+        examples: [
+          { japanese: "これはわたしがかいたえです。", reading: "Kore wa watashi ga kaita e desu.", english: { en: "This is the picture I drew.", np: "यो मैले कोरेको चित्र हो।" }, scenario: { en: "Showing something you made", np: "आफूले बनाएको कुरा देखाउँदा" } },
+          { japanese: "あれはきむらさんがすんでいるアパートです。", reading: "Are wa Kimura-san ga sunde iru apāto desu.", english: { en: "That is the apartment where Kimura lives.", np: "त्यो किमुराजी बस्ने अपार्टमेन्ट हो।" }, scenario: { en: "Describing a place", np: "स्थान वर्णन गर्दा" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Particles inside a relative clause", np: "relative clause भित्रका particle" },
+        meaning: { en: "Particles inside the describing clause keep their normal job. The larger sentence can then use a different particle after the noun. Read the clause as one complete description.", np: "वर्णन गर्ने clause भित्रका particle ले आफ्नै सामान्य काम गर्छन्। त्यसपछि ठूलो वाक्यमा Noun पछि अर्को particle आउन सक्छ। clause लाई एउटा पूरा वर्णनको रूपमा पढ्नुहोस्।" },
+        whereWeUse: [
+          { en: "わたしが きのう かった ほんを よみます", np: "わたしが きのう かった ほんを よみます" },
+          { en: "せんせいが かいた えを みます", np: "せんせいが かいた えを みます" },
+        ],
+        examples: [
+          { japanese: "わたしがきのうかったコートをきます。", reading: "Watashi ga kinō katta kōto o kimasu.", english: { en: "I wear the coat that I bought yesterday.", np: "मैले हिजो किनेको कोट लगाउँछु।" }, scenario: { en: "Clothing", np: "लुगा" } },
+          { japanese: "ともだちがくれたぼうしをかぶります。", reading: "Tomodachi ga kureta bōshi o kaburimasu.", english: { en: "I wear the hat my friend gave me.", np: "साथीले दिएको टोपी लगाउँछु।" }, scenario: { en: "Gift", np: "उपहार" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Adjectives and nouns before a noun", np: "Noun अघि adjective र noun" },
+        meaning: { en: "Use an い-adjective directly before a noun. Use な with a な-adjective, and の with a noun. These patterns work alongside verb relative clauses.", np: "い-adjective सिधै Noun अगाडि आउँछ। な-adjective सँग な र Noun सँग の प्रयोग हुन्छ। यी pattern, Verb relative clause सँगै काम गर्छन्।" },
+        whereWeUse: [
+          { en: "い-adjective: あたらしいセーター", np: "い-adjective: あたらしいセーター" },
+          { en: "な-adjective: きれいなアパート", np: "な-adjective: きれいなアパート" },
+          { en: "Noun: にほんのきもの", np: "Noun: にほんのきもの" },
+        ],
+        examples: [
+          { japanese: "これはやちんがやすいアパートです。", reading: "Kore wa yachin ga yasui apāto desu.", english: { en: "This is an apartment with cheap rent.", np: "यो सस्तो भाडा भएको अपार्टमेन्ट हो।" }, scenario: { en: "Looking for a home", np: "घर खोज्दा" } },
+          { japanese: "わしつのあるいえにすみたいです。", reading: "Washitsu no aru ie ni sumitai desu.", english: { en: "I want to live in a house that has a Japanese-style room.", np: "म जापानी शैलीको कोठा भएको घरमा बस्न चाहन्छु।" }, scenario: { en: "Housing preference", np: "घरको चाहना" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "plain clause + noun", romaji: "relative clause", name: { en: "noun description", np: "Noun वर्णन" }, meaning: { en: "A plain clause goes before the noun it describes.", np: "वर्णन गर्ने plain clause त्यस Noun अगाडि आउँछ।" }, examples: [{ japanese: "きのうみたえいが", reading: "Kinō mita eiga", english: { en: "the movie I watched yesterday", np: "मैले हिजो हेरेको फिल्म" }, scenario: { en: "Relative clause", np: "relative clause" } }] },
+      { particle: "〜のある", romaji: "no aru", name: { en: "having", np: "भएको" }, meaning: { en: "Noun のある before a noun describes something that has that noun.", np: "Noun のある लाई अर्को Noun अघि राखेर त्यस्तो Noun भएको कुरा वर्णन हुन्छ।" }, examples: [{ japanese: "おしいれのあるアパート", reading: "Oshiire no aru apāto", english: { en: "an apartment with a Japanese-style closet", np: "जापानी शैलीको दराज भएको अपार्टमेन्ट" }, scenario: { en: "Home listing", np: "घरको विवरण" } }] },
+    ],
+    vocabulary: buildVocab(22),
+    mcqs: [
+      { question: { en: "Which phrase means ‘the book I bought yesterday’ ?", np: "‘मैले हिजो किनेको किताब’ कुन हो?" }, choices: ["きのうかったほん", "きのうかうほん", "きのうかったのほん", "きのうかいましたほん"], correctIndex: 0, explanation: { en: "Use the plain past clause directly before the noun: きのうかったほん.", np: "plain भूतकाल clause सिधै Noun अगाडि: きのうかったほん।" } },
+      { question: { en: "Complete: せんせいがかいた え___ みます。", np: "पूरा गर्नुस्: せんせいがかいた え___ みます。" }, choices: ["を", "が", "に", "と"], correctIndex: 0, explanation: { en: "The relative clause ends at え. The main sentence uses えをみます.", np: "relative clause え मा सकिन्छ। मुख्य वाक्यमा えをみます हुन्छ।" } },
+      { question: { en: "Which is correct for ‘a beautiful apartment’ ?", np: "‘सुन्दर अपार्टमेन्ट’ को सही जापानी कुन हो?" }, choices: ["きれいなアパート", "きれいアパート", "きれいのアパート", "きれいだアパート"], correctIndex: 0, explanation: { en: "A な-adjective takes な before a noun: きれいなアパート.", np: "な-adjective ले Noun अघि な लिन्छ: きれいなアパート।" } },
+      { question: { en: "What does わしつのあるいえ mean?", np: "わしつのあるいえ को अर्थ के हो?" }, choices: [{ en: "a house with a Japanese-style room", np: "जापानी शैलीको कोठा भएको घर" }, { en: "a Japanese-style room in a house", np: "घरभित्रको जापानी शैलीको कोठा" }, { en: "a house near Japan", np: "जापान नजिकको घर" }, { en: "a rented house", np: "भाडाको घर" }], correctIndex: 0, explanation: { en: "Noun のある + noun means ‘a noun that has [the first noun].’", np: "Noun のある + Noun भनेको पहिलो Noun भएको अर्को Noun हो।" } },
+      { question: { en: "Which verb is used for putting on shoes?", np: "जुत्ता लगाउन कुन Verb प्रयोग हुन्छ?" }, choices: ["はきます", "きます", "かぶります", "かけます"], correctIndex: 0, explanation: { en: "Use はきます for shoes, trousers, and similar lower-body items.", np: "जुत्ता, पाइन्ट र यस्तै तल्लो शरीरका वस्तुका लागि はきます प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 23,
+    title: "Lesson 23 — when, automatic results and routes",
+    intro: [
+      { en: "Lesson 23 helps you describe when something happens, what happens automatically, and the route you take through a place.", np: "पाठ २३ मा कुनै कुरा कहिले हुन्छ, आफैं के हुन्छ, र कुनै ठाउँ हुँदै कसरी जाने भन्ने सिक्नुहुन्छ।" },
+      { en: "Use とき for a time situation, と for a natural result, and を to mark a route that you walk, cross, or pass through.", np: "समयको परिस्थिति भन्न とき, स्वाभाविक परिणाम भन्न と, र हिँड्ने, पार गर्ने वा जाने बाटो चिनाउन を प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "BQuyXYb8Pso", np: "H9KEWNELsTA" },
+    youtubeVideoIdPart2: { en: "C__8BCPN4Qc" },
+    youtubeTitle: "Minna no Nihongo · Lesson 23 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 23 notes",
+          np: "हस्तलिखित Chapter 23 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第23課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1IfZ-VPjC_lsPQZV6OLx_xEKU0WHOHA7T/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "ねるまえに、ドアをしめます。", reading: "Neru mae ni, doa o shimemasu.", english: { en: "Before sleeping, I close the door.", np: "सुत्नुअघि ढोका बन्द गर्छु।" } },
+      { speaker: "B", japanese: "ドアをひくと、ひらきます。", reading: "Doa o hiku to, hirakimasu.", english: { en: "When you pull the door, it opens.", np: "ढोका तान्दा खुल्छ।" } },
+      { speaker: "A", japanese: "えきへいくとき、このはしをわたります。", reading: "Eki e iku toki, kono hashi o watarimasu.", english: { en: "When I go to the station, I cross this bridge.", np: "स्टेशन जाँदा यो पुल पार गर्छु।" } },
+      { speaker: "B", japanese: "くるまにきをつけてください。", reading: "Kuruma ni ki o tsukete kudasai.", english: { en: "Please watch out for cars.", np: "कारमा ध्यान दिनुस्।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain form + とき — when", np: "plain form + とき — जब" },
+        meaning: { en: "Use a plain verb before とき to say when an action happens. Use the dictionary form for an action that has not happened yet, and the past form for an action that has already happened.", np: "कुनै काम कहिले हुन्छ भन्न plain Verb + とき प्रयोग हुन्छ। अझ नभएको कामका लागि dictionary form र भइसकेको कामका लागि past form प्रयोग गर्नुहोस्।" },
+        whereWeUse: [
+          { en: "Before going: にほんへいくとき、ビザがいります", np: "जानुअघि: にほんへいくとき、ビザがいります" },
+          { en: "After arriving: にほんへいったとき、すしをたべました", np: "पुगेपछि: にほんへいったとき、すしをたべました" },
+        ],
+        examples: [
+          { japanese: "みちをわたるとき、しんごうをみます。", reading: "Michi o wataru toki, shingō o mimasu.", english: { en: "When crossing the road, I look at the traffic light.", np: "बाटो पार गर्दा ट्राफिक लाइट हेर्छु।" }, scenario: { en: "Safety", np: "सुरक्षा" } },
+          { japanese: "びょういんへいったとき、せんせいにききました。", reading: "Byōin e itta toki, sensei ni kikimashita.", english: { en: "When I went to the hospital, I asked the doctor.", np: "अस्पताल जाँदा डाक्टरलाई सोधें।" }, scenario: { en: "Past event", np: "भूतकालको घटना" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Dictionary form + と — natural result", np: "dictionary form + と — स्वाभाविक परिणाम" },
+        meaning: { en: "Use dictionary form + と when one action or condition naturally and reliably causes the next result. It is not normally used for personal requests, commands, or intentions.", np: "एउटा काम वा अवस्था हुँदा अर्को नतिजा स्वाभाविक र नियमित रूपमा हुन्छ भने dictionary form + と प्रयोग हुन्छ। व्यक्तिगत अनुरोध, आदेश वा चाहनाका लागि सामान्यतया प्रयोग हुँदैन।" },
+        whereWeUse: [
+          { en: "Machine: このボタンをおすと、ドアがひらきます", np: "मेसिन: このボタンをおすと、ドアがひらきます" },
+          { en: "Direction: このみちをまっすぐいくと、えきがあります", np: "दिशा: このみちをまっすぐいくと、えきがあります" },
+        ],
+        examples: [
+          { japanese: "つまみをまわすと、おとがでます。", reading: "Tsumami o mawasu to, oto ga demasu.", english: { en: "When you turn the knob, sound comes out.", np: "नब घुमाउँदा आवाज निस्कन्छ।" }, scenario: { en: "Using a machine", np: "मेसिन चलाउँदा" } },
+          { japanese: "はるになると、あたたかくなります。", reading: "Haru ni naru to, atatakaku narimasu.", english: { en: "When spring comes, it becomes warm.", np: "वसन्त आउँदा न्यानो हुन्छ।" }, scenario: { en: "Seasonal change", np: "मौसम परिवर्तन" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Route + を + movement verb", np: "बाटो + を + चल्ने Verb" },
+        meaning: { en: "With movement verbs, を can mark the route or space you travel through, not an object. Common examples are 道を歩く, 橋を渡る, and 交差点を右へ曲がる.", np: "चल्ने Verb सँग を ले वस्तु होइन, हिँड्ने वा पार गर्ने बाटो जनाउन सक्छ। जस्तै 道を歩く, 橋を渡る, र 交差点を右へ曲がる।" },
+        whereWeUse: [
+          { en: "道を歩きます — walk along a road", np: "道を歩きます — बाटोमा हिँड्नु" },
+          { en: "橋を渡ります — cross a bridge", np: "橋を渡ります — पुल पार गर्नु" },
+        ],
+        examples: [
+          { japanese: "このはしをわたると、ちゅうしゃじょうがあります。", reading: "Kono hashi o wataru to, chūshajō ga arimasu.", english: { en: "When you cross this bridge, there is a parking lot.", np: "यो पुल पार गर्दा पार्किङ हुन्छ।" }, scenario: { en: "Giving directions", np: "बाटो बताउँदा" } },
+          { japanese: "つぎのこうさてんをひだりへまがってください。", reading: "Tsugi no kōsaten o hidari e magatte kudasai.", english: { en: "Please turn left at the next intersection.", np: "अर्को चोकमा बायाँ मोडिनुस्।" }, scenario: { en: "Directions", np: "दिशा" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "とき", romaji: "toki", name: { en: "when", np: "जब" }, meaning: { en: "Follows a plain clause to mark a time situation.", np: "समयको स्थिति देखाउन plain clause पछि आउँछ।" }, examples: [{ japanese: "ひまなとき、ほんをよみます。", reading: "Hima na toki, hon o yomimasu.", english: { en: "When I am free, I read books.", np: "फुर्सद हुँदा किताब पढ्छु।" }, scenario: { en: "Free time", np: "फुर्सद" } }] },
+      { particle: "と", romaji: "to", name: { en: "natural result", np: "स्वाभाविक परिणाम" }, meaning: { en: "Connects a condition to its natural result.", np: "एउटा अवस्था र त्यसको स्वाभाविक नतिजा जोड्छ।" }, examples: [{ japanese: "このボタンをおすと、でんきがつきます。", reading: "Kono botan o osu to, denki ga tsukimasu.", english: { en: "When you press this button, the light turns on.", np: "यो बटन थिच्दा बत्ती बल्छ।" }, scenario: { en: "Instructions", np: "निर्देशन" } }] },
+    ],
+    vocabulary: buildVocab(23),
+    mcqs: [
+      { question: { en: "Complete: みちをわたる ___、しんごうをみます。", np: "पूरा गर्नुस्: みちをわたる ___、しんごうをみます。" }, choices: ["とき", "を", "が", "に"], correctIndex: 0, explanation: { en: "Plain form + とき means ‘when doing V.’", np: "plain form + とき भनेको V गर्दा हो।" } },
+      { question: { en: "Which sentence gives a natural machine result?", np: "मेसिनको स्वाभाविक नतिजा देखाउने वाक्य कुन हो?" }, choices: ["つまみをまわすと、おとがでます。", "つまみをまわすと、おとをだしてください。", "つまみをまわすと、おとがでたいです。", "つまみをまわすと、おとをだしましょう。"], correctIndex: 0, explanation: { en: "The と pattern describes an automatic result, not a request or intention.", np: "と pattern ले स्वचालित नतिजा बताउँछ, अनुरोध वा इच्छा होइन।" } },
+      { question: { en: "Which route phrase is correct?", np: "सही बाटोको वाक्यांश कुन हो?" }, choices: ["はしをわたります", "はしがわたります", "はしにわたります", "はしとわたります"], correctIndex: 0, explanation: { en: "With movement verbs, を can mark the route: 橋を渡ります.", np: "चल्ने Verb सँग を ले बाटो जनाउन सक्छ: 橋を渡ります।" } },
+      { question: { en: "What does くるまにきをつけてください mean?", np: "くるまにきをつけてください को अर्थ के हो?" }, choices: [{ en: "Please watch out for cars", np: "कारमा ध्यान दिनुस्" }, { en: "Please repair the car", np: "कार मर्मत गर्नुस्" }, { en: "Please park the car", np: "कार पार्क गर्नुस्" }, { en: "Please pull the car", np: "कार तान्नुस्" }], correctIndex: 0, explanation: { en: "気をつける means pay attention or take care.", np: "気をつける भनेको ध्यान दिनु वा सावधानी अपनाउनु हो।" } },
+    ],
+  },
+  {
+    id: 24,
+    title: "Lesson 24 — doing favours for people",
+    intro: [
+      { en: "Lesson 24 lets you say who does a helpful action for whom. Japanese changes the expression depending on whose point of view you use.", np: "पाठ २४ मा कसले कसका लागि सहयोगी काम गर्छ भन्ने भन्न सिक्नुहुन्छ। कसको दृष्टिकोणबाट बोलिएको हो भनेर जापानी अभिव्यक्ति बदलिन्छ।" },
+      { en: "Use てあげます when you do something for another person, てくれます when someone does something for you, and てもらいます when you receive someone’s help.", np: "अरूका लागि काम गर्दा てあげます, कसैले तपाईंका लागि काम गर्दा てくれます, र कसैको सहयोग पाउँदा てもらいます प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "K6yVCbz41as", np: "jorcUln_lNI" },
+    youtubeVideoIdPart2: { en: "VOslIM6LGOU" },
+    youtubeTitle: "Minna no Nihongo · Lesson 24 — Grammar",
+    resources: [
+      { title: { en: "Open handwritten Chapter 24 notes", np: "हस्तलिखित Chapter 24 नोटहरू खोल्नुहोस्", jp: "手書きの第24課ノートを開く" }, url: "https://drive.google.com/file/d/1nwOuMTtkw7Oxla3IH5UCvbTARBTPuefP/view?usp=drive_link" },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "わたしはともだちににほんごをおしえてあげます。", reading: "Watashi wa tomodachi ni nihongo o oshiete agemasu.", english: { en: "I teach Japanese to my friend.", np: "म साथीलाई जापानी सिकाइदिन्छु।" } },
+      { speaker: "B", japanese: "ともだちはわたしにコーヒーをいれてくれます。", reading: "Tomodachi wa watashi ni kōhī o irete kuremasu.", english: { en: "My friend makes coffee for me.", np: "साथीले मेरो लागि कफी बनाइदिन्छ।" } },
+      { speaker: "A", japanese: "せんせいにいみをせつめいしてもらいました。", reading: "Sensei ni imi o setsumei shite moraimashita.", english: { en: "I had the teacher explain the meaning to me.", np: "मैले शिक्षकबाट अर्थ बुझाइ पाएँ।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Verb て-form + あげます — do for someone", np: "Verb て-form + あげます — अरूका लागि गर्नु" },
+        meaning: { en: "Use this when the speaker or someone close to the speaker does a helpful action for another person. Mark the receiver with に.", np: "बोल्ने व्यक्ति वा नजिकको कसैले अरूका लागि सहयोगी काम गर्दा यो प्रयोग हुन्छ। सहयोग पाउने व्यक्तिलाई に ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "わたしは友達に日本語を教えてあげます", np: "わたしは友達に日本語を教えてあげます" }, { en: "母にコーヒーを入れてあげます", np: "母にコーヒーを入れてあげます" }],
+        examples: [
+          { japanese: "おばあちゃんにおかしをかってあげました。", reading: "Obāchan ni okashi o katte agemashita.", english: { en: "I bought sweets for my grandmother.", np: "मैले हजुरआमाका लागि मिठाई किनिदिएँ।" }, scenario: { en: "Helping family", np: "परिवारलाई सहयोग" } },
+          { japanese: "わたしがあんないしてあげます。", reading: "Watashi ga annai shite agemasu.", english: { en: "I will show you the way.", np: "म तपाईंलाई बाटो देखाइदिन्छु।" }, scenario: { en: "Offering help", np: "सहयोग प्रस्ताव गर्दा" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Verb て-form + くれます — someone does for me", np: "Verb て-form + くれます — कसैले मेरा लागि गर्छ" },
+        meaning: { en: "Use this when another person does a helpful action for you or your in-group. The person helping is marked with が or は.", np: "अरू कसैले तपाईं वा तपाईंको समूहका लागि सहयोगी काम गर्दा यो प्रयोग हुन्छ। सहयोग गर्ने व्यक्तिलाई が वा は ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "友達が手伝ってくれました", np: "友達が手伝ってくれました" }, { en: "父が駅まで送ってくれます", np: "父が駅まで送ってくれます" }],
+        examples: [
+          { japanese: "ともだちがわたしをえきまでおくってくれました。", reading: "Tomodachi ga watashi o eki made okutte kuremashita.", english: { en: "My friend escorted me to the station.", np: "साथीले मलाई स्टेशनसम्म पुर्‍याइदियो।" }, scenario: { en: "Receiving help", np: "सहयोग पाउँदा" } },
+          { japanese: "あにはべんとうをつくってくれました。", reading: "Ani wa bentō o tsukutte kuremashita.", english: { en: "My older brother made a boxed lunch for me.", np: "दाइले मेरो लागि टिफिन बनाइदिनुभयो।" }, scenario: { en: "Family favour", np: "परिवारको सहयोग" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "Verb て-form + もらいます — receive someone’s help", np: "Verb て-form + もらいます — कसैको सहयोग पाउनु" },
+        meaning: { en: "Use this from the receiver’s point of view when you receive a helpful action. Mark the person who helps with に.", np: "सहयोग पाउनेको दृष्टिकोणबाट सहयोग प्राप्त भएको भन्न यो प्रयोग हुन्छ। सहयोग गर्ने व्यक्तिलाई に ले चिनाउनुहोस्।" },
+        whereWeUse: [{ en: "先生に説明してもらいました", np: "先生に説明してもらいました" }, { en: "友達に手伝ってもらいます", np: "友達に手伝ってもらいます" }],
+        examples: [
+          { japanese: "せんせいにこのことばのいみをせつめいしてもらいました。", reading: "Sensei ni kono kotoba no imi o setsumei shite moraimashita.", english: { en: "I had the teacher explain this word’s meaning to me.", np: "मैले शिक्षकबाट यो शब्दको अर्थ बुझाइ पाएँ।" }, scenario: { en: "Classroom help", np: "कक्षाकोठाको सहयोग" } },
+          { japanese: "ともだちにパーティーのじゅんびをてつだってもらいます。", reading: "Tomodachi ni pātī no junbi o tetsudatte moraimasu.", english: { en: "I will have my friend help prepare for the party.", np: "म साथीबाट पार्टीको तयारीमा सहयोग लिन्छु।" }, scenario: { en: "Planning", np: "तयारी" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "に", romaji: "ni", name: { en: "receiver or helper", np: "सहयोग पाउने वा गर्ने व्यक्ति" }, meaning: { en: "With these patterns, に marks the person receiving help in てあげる, or the person giving help in てもらう.", np: "यी pattern मा に ले てあげる मा सहयोग पाउने र てもらう मा सहयोग गर्ने व्यक्ति जनाउँछ।" }, examples: [{ japanese: "せんせいにおしえてもらいました。", reading: "Sensei ni oshiete moraimashita.", english: { en: "I had the teacher teach me.", np: "मैले शिक्षकबाट सिकाइ पाएँ।" }, scenario: { en: "Receiving help", np: "सहयोग पाउँदा" } }] },
+      { particle: "が", romaji: "ga", name: { en: "helper", np: "सहयोग गर्ने व्यक्ति" }, meaning: { en: "In てくれる sentences, が often marks the person who kindly does something for you.", np: "てくれる वाक्यमा が ले तपाईंका लागि सहयोगी काम गर्ने व्यक्ति जनाउँछ।" }, examples: [{ japanese: "ともだちがてつだってくれました。", reading: "Tomodachi ga tetsudatte kuremashita.", english: { en: "My friend helped me.", np: "साथीले मलाई सहयोग गर्‍यो।" }, scenario: { en: "Favour", np: "सहयोग" } }] },
+    ],
+    vocabulary: buildVocab(24),
+    mcqs: [
+      { question: { en: "Choose the sentence for ‘I made coffee for my mother.’", np: "‘मैले आमाका लागि कफी बनाएँ’ कुन हो?" }, choices: ["ははにコーヒーをいれてあげました。", "ははがコーヒーをいれてくれました。", "ははにコーヒーをいれてもらいました。", "ははをコーヒーをいれました。"], correctIndex: 0, explanation: { en: "Use てあげました when you do something for another person.", np: "अरूका लागि काम गर्दा てあげました प्रयोग हुन्छ।" } },
+      { question: { en: "Which means ‘My friend helped me’?", np: "‘साथीले मलाई सहयोग गर्‍यो’ कुन हो?" }, choices: ["ともだちがてつだってくれました。", "ともだちにてつだってあげました。", "ともだちをてつだってもらいました。", "ともだちがてつだってあげました。"], correctIndex: 0, explanation: { en: "Use てくれました when another person does a favour for you.", np: "अरूले तपाईंका लागि सहयोग गर्दा てくれました प्रयोग हुन्छ।" } },
+      { question: { en: "Complete: せんせいに いみを せつめいして ___。", np: "पूरा गर्नुस्: せんせいに いみを せつめいして ___。" }, choices: ["もらいました", "あげました", "くれました", "います"], correctIndex: 0, explanation: { en: "The speaker receives the teacher’s help, so use てもらいました.", np: "बोल्ने व्यक्तिले शिक्षकको सहयोग पाउँछ, त्यसैले てもらいました प्रयोग हुन्छ।" } },
+      { question: { en: "What does 案内します mean?", np: "案内します को अर्थ के हो?" }, choices: [{ en: "show around; show the way", np: "बाटो देखाउनु" }, { en: "prepare", np: "तयार गर्नु" }, { en: "introduce", np: "परिचय गराउनु" }, { en: "explain", np: "व्याख्या गर्नु" }], correctIndex: 0, explanation: { en: "案内します is used for guiding someone or showing the way.", np: "案内します भनेको कसैलाई मार्गदर्शन वा बाटो देखाउनु हो।" } },
+    ],
+  },
+  {
+    id: 25,
+    title: "Lesson 25 — conditions with たら and ても",
+    intro: [
+      { en: "Lesson 25 teaches two useful condition patterns: たら for ‘if/when’ and ても/でも for ‘even if.’", np: "पाठ २५ मा दुई उपयोगी सर्तका pattern सिक्नुहुन्छ: ‘यदि/जब’ का लागि たら र ‘भए पनि’ का लागि ても/でも।" },
+      { en: "Use たら when the second action depends on a condition. Use ても or でも when the result stays the same despite that condition.", np: "दोस्रो काम सर्तमा निर्भर हुँदा たら प्रयोग गर्नुहोस्। सर्त भए पनि नतिजा उही रहँदा ても वा でも प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeVideoId: { en: "hJhPnXIZoTg", np: "ki_onABQ6fs" },
+    youtubeVideoIdPart2: { en: "VZmZiS5tnHs" },
+    youtubeTitle: "Minna no Nihongo · Lesson 25 — Grammar",
+    resources: [
+      { title: { en: "Open handwritten Chapter 25 notes", np: "हस्तलिखित Chapter 25 नोटहरू खोल्नुहोस्", jp: "手書きの第25課ノートを開く" }, url: "https://drive.google.com/file/d/1mSL05_APmVhijhajJvojPon-wzX_2o8Q/view?usp=drive_link" },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "じかんがあったら、いっしょにいっぱいのみましょう。", reading: "Jikan ga attara, issho ni ippai nomimashō.", english: { en: "If you have time, let’s have a drink together.", np: "समय भए सँगै बियर पिऔँ।" } },
+      { speaker: "B", japanese: "あめがふっても、えきへいきます。", reading: "Ame ga futtemo, eki e ikimasu.", english: { en: "Even if it rains, I will go to the station.", np: "पानी परे पनि स्टेशन जान्छु।" } },
+      { speaker: "A", japanese: "もしにほんへりゅうがくしたら、たいしかんへいきます。", reading: "Moshi Nihon e ryūgaku shitara, taishikan e ikimasu.", english: { en: "If I study in Japan, I will go to the embassy.", np: "यदि जापानमा अध्ययन गर्न गएँ भने दूतावास जान्छु।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Plain past + ら — if; when", np: "plain past + ら — यदि; जब" },
+        meaning: { en: "Attach ら to the plain past form to express a condition. The main clause happens after, or depends on, that condition.", np: "plain past form मा ら जोडेर सर्त व्यक्त गर्नुहोस्। मुख्य वाक्यको काम त्यो सर्तपछि वा त्यसमा निर्भर भएर हुन्छ।" },
+        whereWeUse: [{ en: "Verb: 行ったら", np: "Verb: 行ったら" }, { en: "い-adjective: 安かったら", np: "い-adjective: 安かったら" }, { en: "Noun / な-adjective: 暇だったら", np: "Noun / な-adjective: 暇だったら" }],
+        examples: [
+          { japanese: "にほんへいったら、すしをたべたいです。", reading: "Nihon e ittara, sushi o tabetai desu.", english: { en: "If I go to Japan, I want to eat sushi.", np: "जापान गएँ भने सुशी खान चाहन्छु।" }, scenario: { en: "Travel plan", np: "यात्रा योजना" } },
+          { japanese: "えきについたら、でんわしてください。", reading: "Eki ni tsuitara, denwa shite kudasai.", english: { en: "When you arrive at the station, please call me.", np: "स्टेशन पुगेपछि फोन गर्नुहोस्।" }, scenario: { en: "Meeting someone", np: "भेट्ने बेला" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "もし + たら — if", np: "もし + たら — यदि" },
+        meaning: { en: "Add もし before a たら clause to make the ‘if’ condition clearer or stronger. It is optional, so たら works by itself too.", np: "‘यदि’ को सर्त अझ स्पष्ट वा जोड दिएर भन्न たら clause अगाडि もし थप्नुहोस्। यो वैकल्पिक हो, त्यसैले たら एक्लै पनि प्रयोग हुन्छ।" },
+        whereWeUse: [{ en: "もし時間があったら、来てください", np: "もし時間があったら、来てください" }, { en: "もしチャンスがあったら、留学したいです", np: "もしチャンスがあったら、留学したいです" }],
+        examples: [
+          { japanese: "もしチャンスがあったら、にほんへりゅうがくしたいです。", reading: "Moshi chansu ga attara, Nihon e ryūgaku shitai desu.", english: { en: "If I have the chance, I want to study in Japan.", np: "अवसर पाएँ भने जापानमा अध्ययन गर्न चाहन्छु।" }, scenario: { en: "Future hope", np: "भविष्यको चाहना" } },
+          { japanese: "もしひまだったら、うちへきてください。", reading: "Moshi hima dattara, uchi e kite kudasai.", english: { en: "If you are free, please come to my house.", np: "फुर्सद भए मेरो घर आउनुहोस्।" }, scenario: { en: "Invitation", np: "निमन्त्रणा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "〜ても / 〜でも — even if", np: "〜ても / 〜でも — भए पनि" },
+        meaning: { en: "Use ても after a verb or い-adjective, and でも after a noun or な-adjective. The main result does not change even with the condition.", np: "Verb वा い-adjective पछि ても, Noun वा な-adjective पछि でも प्रयोग हुन्छ। सर्त भए पनि मुख्य नतिजा बदलिँदैन।" },
+        whereWeUse: [{ en: "Verb: 雨が降っても行きます", np: "Verb: 雨が降っても行きます" }, { en: "い-adjective: 高くても買います", np: "い-adjective: 高くても買います" }, { en: "Noun: 日曜日でも働きます", np: "Noun: 日曜日でも働きます" }],
+        examples: [
+          { japanese: "いくらたかくても、このほんをかいます。", reading: "Ikura takakutemo, kono hon o kaimasu.", english: { en: "No matter how expensive it is, I will buy this book.", np: "जति महँगो भए पनि यो किताब किन्छु।" }, scenario: { en: "Strong decision", np: "दृढ निर्णय" } },
+          { japanese: "いそがしくても、にほんごをべんきょうします。", reading: "Isogashikutemo, Nihongo o benkyō shimasu.", english: { en: "Even if I am busy, I study Japanese.", np: "व्यस्त भए पनि जापानी पढ्छु।" }, scenario: { en: "Study habit", np: "पढाइको बानी" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "たら", romaji: "tara", name: { en: "conditional", np: "सर्त" }, meaning: { en: "Adds an if-or-when condition after a plain past form.", np: "plain past form पछि यदि वा जबको सर्त थप्छ।" }, examples: [{ japanese: "あしたはれたら、さんぽします。", reading: "Ashita haretara, sanpo shimasu.", english: { en: "If it is sunny tomorrow, I will take a walk.", np: "भोलि घाम लागे हिँड्न जान्छु।" }, scenario: { en: "Plan", np: "योजना" } }] },
+      { particle: "ても／でも", romaji: "temo/demo", name: { en: "even if", np: "भए पनि" }, meaning: { en: "Shows that the main result does not change despite the condition.", np: "सर्त भए पनि मुख्य नतिजा नबदलिने देखाउँछ।" }, examples: [{ japanese: "にちようびでも、はたらきます。", reading: "Nichiyōbi demo, hatarakimasu.", english: { en: "Even on Sunday, I work.", np: "आइतबार भए पनि काम गर्छु।" }, scenario: { en: "Work", np: "काम" } }] },
+    ],
+    vocabulary: buildVocab(25),
+    mcqs: [
+      { question: { en: "Complete: えきに ___、でんわしてください。", np: "पूरा गर्नुस्: えきに ___、でんわしてください。" }, choices: ["ついたら", "ついても", "つくでも", "つきたら"], correctIndex: 0, explanation: { en: "着く becomes 着いたら for an if-or-when condition.", np: "着く लाई if-or-when सर्त बनाउन 着いたら हुन्छ।" } },
+      { question: { en: "Which means ‘Even if it rains, I will go’?", np: "‘पानी परे पनि जान्छु’ कुन हो?" }, choices: ["あめがふっても、いきます。", "あめがふったら、いきます。", "あめがふるでも、いきます。", "あめがふりたら、いきます。"], correctIndex: 0, explanation: { en: "Verb て-form + も means ‘even if.’", np: "Verb て-form + も भनेको ‘भए पनि’ हो।" } },
+      { question: { en: "What does もしチャンスがあったら mean?", np: "もしチャンスがあったら को अर्थ के हो?" }, choices: [{ en: "if I have a chance", np: "अवसर पाएँ भने" }, { en: "because I have a chance", np: "अवसर भएकाले" }, { en: "I had a chance", np: "मैले अवसर पाएँ" }, { en: "please give me a chance", np: "मलाई अवसर दिनुस्" }], correctIndex: 0, explanation: { en: "もし makes the たら condition explicit: ‘if there is a chance.’", np: "もし ले たら को सर्त स्पष्ट बनाउँछ: ‘अवसर भएमा।’" } },
+      { question: { en: "What does 頑張ります mean?", np: "頑張ります को अर्थ के हो?" }, choices: [{ en: "do one’s best", np: "मेहनत गर्नु" }, { en: "be transferred", np: "सरुवा हुनु" }, { en: "grow old", np: "उमेर बढ्नु" }, { en: "consider", np: "सोच्नु" }], correctIndex: 0, explanation: { en: "頑張ります means to work hard or do one’s best.", np: "頑張ります भनेको मेहनत गर्नु वा सक्दो प्रयास गर्नु हो।" } },
+    ],
+  },
+  {
+    id: 26,
+    title: "Day 26 — grammar lattice review",
+    intro: [
+      { en: "Day 26 connects the grammar patterns from Lessons 1–25. Review the marker first, then decide whether the sentence needs a particle, form, or tense change.", np: "दिन २६ मा पाठ १–२५ का व्याकरण pattern जोडेर दोहोर्याउनुहोस्। पहिले marker हेर्नुहोस्, अनि particle, form वा tense के चाहिन्छ निर्णय गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 grammar sprint",
+    resources: [{ title: { en: "Open JLPT N5 grammar review videos", np: "JLPT N5 व्याकरण समीक्षा भिडियो खोल्नुहोस्", jp: "JLPT N5文法復習動画を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+grammar+review" }],
+    conversation: [
+      { speaker: "A", japanese: "まいあさ、{七時|しちじ}におきて、{八時|はちじ}に{会社|かいしゃ}へいきます。", reading: "Maiasa, shichi-ji ni okite, hachi-ji ni kaisha e ikimasu.", english: { en: "Every morning, I get up at seven and go to work at eight.", np: "हरेक बिहान सात बजे उठेर आठ बजे काममा जान्छु।" } },
+      { speaker: "B", japanese: "{土曜日|どようび}はともだちと{映画|えいが}をみます。", reading: "Doyōbi wa tomodachi to eiga o mimasu.", english: { en: "On Saturday, I watch a movie with a friend.", np: "शनिबार साथीसँग फिल्म हेर्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Particle lattice — choose the job", np: "Particle lattice — कामअनुसार छान्नुहोस्" }, meaning: { en: "Match each particle to its job: に for time or destination, で for an action place or method, を for an object, and と for a companion or quotation.", np: "प्रत्येक particle को काम मिलाउनुहोस्: समय वा गन्तव्यमा に, काम हुने ठाउँ वा साधनमा で, कर्ममा を, र साथ वा उद्धरणमा と।" }, whereWeUse: [{ en: "Time: 7時に起きます", np: "समय: 7時に起きます" }, { en: "Action place: 学校で勉強します", np: "काम हुने ठाउँ: 学校で勉強します" }], examples: [{ japanese: "{電車|でんしゃ}で{駅|えき}へいきます。", reading: "Densha de eki e ikimasu.", english: { en: "I go to the station by train.", np: "ट्रेनबाट स्टेशन जान्छु।" }, scenario: { en: "Transport", np: "यातायात" } }, { japanese: "ともだちとごはんをたべます。", reading: "Tomodachi to gohan o tabemasu.", english: { en: "I eat a meal with a friend.", np: "साथीसँग खाना खान्छु।" }, scenario: { en: "Company", np: "साथ" } }] },
+      { number: 2, name: { en: "Form check — polite, plain, and て-form", np: "Form check — polite, plain र て-form" }, meaning: { en: "Before choosing an answer, identify the form that follows the blank. A pattern such as てから needs the て-form, while ことができます needs the dictionary form.", np: "उत्तर छान्नुअघि blank पछि कुन form आउँछ हेर्नुहोस्। てから लाई て-form चाहिन्छ, ことができます लाई dictionary form चाहिन्छ।" }, whereWeUse: [{ en: "てから: 食べてから寝ます", np: "てから: 食べてから寝ます" }, { en: "Ability: 日本語を話すことができます", np: "क्षमता: 日本語を話すことができます" }], examples: [{ japanese: "シャワーをあびてから、ねます。", reading: "Shawā o abite kara, nemasu.", english: { en: "I sleep after taking a shower.", np: "नुहाएपछि सुत्छु।" }, scenario: { en: "Routine", np: "दैनिक काम" } }, { japanese: "{漢字|かんじ}をよむことができます。", reading: "Kanji o yomu koto ga dekimasu.", english: { en: "I can read kanji.", np: "म कांजी पढ्न सक्छु।" }, scenario: { en: "Ability", np: "क्षमता" } }] },
+    ],
+    particles: [{ particle: "に・で・を・と", romaji: "ni/de/o/to", name: { en: "core particle review", np: "मुख्य particle समीक्षा" }, meaning: { en: "Choose the particle by its role, not by translating one English word.", np: "अंग्रेजीको एउटै शब्द अनुवाद गरेर होइन, particle को कामअनुसार छान्नुहोस्।" }, examples: [{ japanese: "{学校|がっこう}で{日本語|にほんご}をべんきょうします。", reading: "Gakkō de Nihongo o benkyō shimasu.", english: { en: "I study Japanese at school.", np: "स्कुलमा जापानी पढ्छु।" }, scenario: { en: "Study", np: "पढाइ" } }] }],
+    vocabulary: buildVocab(26),
+    mcqs: [
+      { question: { en: "Complete: 7じ ___ おきます。", np: "पूरा गर्नुस्: 7じ ___ おきます。" }, choices: ["に", "で", "を", "と"], correctIndex: 0, explanation: { en: "Use に for a specific time.", np: "निश्चित समयसँग に प्रयोग हुन्छ।" } },
+      { question: { en: "Which pattern needs a dictionary-form verb?", np: "कुन pattern लाई dictionary-form Verb चाहिन्छ?" }, choices: ["ことができます", "てから", "てください", "てはいけません"], correctIndex: 0, explanation: { en: "Verb dictionary form + ことができます expresses ability.", np: "Verb dictionary form + ことができます ले क्षमता देखाउँछ।" } },
+      { question: { en: "Choose the correct sentence.", np: "सही वाक्य छान्नुहोस्।" }, choices: ["がっこうでにほんごをべんきょうします。", "がっこうににほんごをべんきょうします。", "がっこうをにほんごでべんきょうします。", "がっこうとにほんごをべんきょうします。"], correctIndex: 0, explanation: { en: "Use で for the place where an action happens.", np: "काम हुने ठाउँसँग で प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 27,
+    title: "Day 27 — listening tactics",
+    intro: [
+      { en: "Day 27 builds a repeatable listening method: read the choices, catch the key word, and decide the answer before worrying about every sound.", np: "दिन २७ मा दोहोर्याउन मिल्ने सुन्ने तरिका बनाउनुहोस्: विकल्प पढ्नुहोस्, मुख्य शब्द सुन्नुहोस्, अनि हरेक आवाजको चिन्ता नगरी उत्तर निर्णय गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 listening sprint",
+    resources: [{ title: { en: "Open JLPT N5 listening practice", np: "JLPT N5 सुन्ने अभ्यास खोल्नुहोस्", jp: "JLPT N5聴解練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+listening+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "もう{一度|いちど}きいてください。", reading: "Mō ichido kiite kudasai.", english: { en: "Please listen one more time.", np: "कृपया फेरि एक पटक सुन्नुहोस्।" } },
+      { speaker: "B", japanese: "はい。{質問|しつもん}のことばをメモします。", reading: "Hai. Shitsumon no kotoba o memo shimasu.", english: { en: "Okay. I will note the question words.", np: "हुन्छ। प्रश्नका शब्दहरू नोट गर्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Question words point to the answer", np: "प्रश्न शब्दले उत्तर देखाउँछ" }, meaning: { en: "Listen for いつ, どこ, だれ, なに, and いくら. They tell you what kind of information the answer must contain.", np: "いつ, どこ, だれ, なに र いくら सुन्नुहोस्। तिनले उत्तरमा कस्तो जानकारी चाहिन्छ बताउँछन्।" }, whereWeUse: [{ en: "どこ → place", np: "どこ → ठाउँ" }, { en: "いつ → time", np: "いつ → समय" }], examples: [{ japanese: "{駅|えき}はどこですか。", reading: "Eki wa doko desu ka.", english: { en: "Where is the station?", np: "स्टेशन कहाँ छ?" }, scenario: { en: "Place", np: "ठाउँ" } }, { japanese: "なんじにあいますか。", reading: "Nanji ni aimasu ka.", english: { en: "What time will we meet?", np: "कति बजे भेट्छौँ?" }, scenario: { en: "Time", np: "समय" } }] },
+      { number: 2, name: { en: "Listen for changes and negatives", np: "परिवर्तन र नकार सुन्नुहोस्" }, meaning: { en: "Words such as でも, じゃなくて, and ません often reverse or revise the first idea. Wait until the end before choosing.", np: "でも, じゃなくて र ません जस्ता शब्दले पहिलो विचार बदल्न सक्छन्। अन्त्य नसुनी उत्तर नछान्नुहोस्।" }, whereWeUse: [{ en: "AではなくB", np: "A होइन B" }, { en: "予定の変更", np: "योजना परिवर्तन" }], examples: [{ japanese: "{月曜日|げつようび}じゃなくて、{火曜日|かようび}にあいます。", reading: "Getsuyōbi ja nakute, kayōbi ni aimasu.", english: { en: "We will meet on Tuesday, not Monday.", np: "सोमबार होइन, मंगलबार भेट्छौँ।" }, scenario: { en: "Change", np: "परिवर्तन" } }, { japanese: "コーヒーはのみません。おちゃをのみます。", reading: "Kōhī wa nomimasen. Ocha o nomimasu.", english: { en: "I do not drink coffee. I drink tea.", np: "कफी पिउँदिनँ। चिया पिउँछु।" }, scenario: { en: "Negative", np: "नकार" } }] },
+    ],
+    particles: [{ particle: "でも・じゃなくて", romaji: "demo/ja nakute", name: { en: "contrast signals", np: "विरोध संकेत" }, meaning: { en: "These words often signal that the answer changes from the first thing you hear.", np: "यी शब्दले सुनेको पहिलो कुराबाट उत्तर परिवर्तन हुन्छ भन्ने सङ्केत दिन्छन्।" }, examples: [{ japanese: "{金曜日|きんようび}でもいいです。", reading: "Kin'yōbi demo ii desu.", english: { en: "Friday is okay too.", np: "शुक्रबार पनि ठीक छ।" }, scenario: { en: "Schedule", np: "तालिका" } }] }],
+    vocabulary: buildVocab(27),
+    mcqs: [
+      { question: { en: "Which word asks for a place?", np: "कुन शब्दले ठाउँ सोध्छ?" }, choices: ["どこ", "いつ", "だれ", "いくら"], correctIndex: 0, explanation: { en: "どこ asks where.", np: "どこ ले कहाँ सोध्छ।" } },
+      { question: { en: "What should you do when you hear じゃなくて?", np: "じゃなくて सुन्दा के गर्नुपर्छ?" }, choices: ["Listen for the corrected information", "Choose the first answer", "Stop listening", "Ignore the next phrase"], correctIndex: 0, explanation: { en: "じゃなくて replaces the first option with another one.", np: "じゃなくて ले पहिलो विकल्पको सट्टा अर्को कुरा दिन्छ।" } },
+      { question: { en: "Which is the best first step in a listening question?", np: "सुन्ने प्रश्नमा सबैभन्दा राम्रो पहिलो कदम कुन हो?" }, choices: ["Read the choices and predict the answer type", "Translate every word first", "Choose A immediately", "Skip the audio"], correctIndex: 0, explanation: { en: "Reading choices first gives you a target while listening.", np: "पहिले विकल्प पढ्दा सुन्दा खोज्ने लक्ष्य मिल्छ।" } },
+    ],
+  },
+  {
+    id: 28,
+    title: "Day 28 — kanji and vocabulary speed",
+    intro: [
+      { en: "Day 28 improves fast recognition. Learn each kanji with a reading, a meaning, and one short phrase instead of studying isolated shapes.", np: "दिन २८ मा छिटो चिन्ने क्षमता बढाउनुहोस्। छुट्टाछुट्टै आकार पढ्नुको सट्टा प्रत्येक कांजीलाई पढाइ, अर्थ र एउटा छोटो वाक्यांशसँग सिक्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 kanji and vocabulary sprint",
+    resources: [{ title: { en: "Open JLPT N5 kanji and vocabulary practice", np: "JLPT N5 कांजी र शब्द अभ्यास खोल्नुहोस्", jp: "JLPT N5漢字・語彙練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+kanji+vocabulary+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "{電車|でんしゃ}で{駅|えき}へいきます。", reading: "Densha de eki e ikimasu.", english: { en: "I go to the station by train.", np: "ट्रेनबाट स्टेशन जान्छु।" } },
+      { speaker: "B", japanese: "{本|ほん}をよんで、{手紙|てがみ}をかきます。", reading: "Hon o yonde, tegami o kakimasu.", english: { en: "I read a book and write a letter.", np: "किताब पढ्छु र पत्र लेख्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Read the whole word, not one character", np: "एउटा अक्षर होइन, पूरा शब्द पढ्नुहोस्" }, meaning: { en: "A kanji can have several readings. Learn the reading used in the complete vocabulary word before memorizing extra readings.", np: "एउटा कांजीका धेरै पढाइ हुन सक्छन्। थप पढाइ कण्ठ गर्नु अघि शब्दमा प्रयोग भएको पूरा पढाइ सिक्नुहोस्।" }, whereWeUse: [{ en: "電車 → でんしゃ", np: "電車 → でんしゃ" }, { en: "病院 → びょういん", np: "病院 → びょういん" }], examples: [{ japanese: "{電車|でんしゃ}にのります。", reading: "Densha ni norimasu.", english: { en: "I get on the train.", np: "ट्रेन चढ्छु।" }, scenario: { en: "Travel", np: "यात्रा" } }, { japanese: "{病院|びょういん}へいきます。", reading: "Byōin e ikimasu.", english: { en: "I go to the hospital.", np: "अस्पताल जान्छु।" }, scenario: { en: "Place", np: "ठाउँ" } }] },
+      { number: 2, name: { en: "Use contrast pairs", np: "मिल्दोजुल्दो जोडी प्रयोग गर्नुहोस्" }, meaning: { en: "Compare similar-looking characters in a short phrase. Say the word aloud and write it once to connect shape, sound, and meaning.", np: "मिल्दोजुल्दो देखिने अक्षरलाई छोटो वाक्यांशमा तुलना गर्नुहोस्। आकार, आवाज र अर्थ जोड्न शब्द ठूलो स्वरले भन्नुहोस् र एक पटक लेख्नुहोस्।" }, whereWeUse: [{ en: "日 / 目", np: "日 / 目" }, { en: "土 / 士", np: "土 / 士" }], examples: [{ japanese: "{日本語|にほんご}をよみます。", reading: "Nihongo o yomimasu.", english: { en: "I read Japanese.", np: "जापानी पढ्छु।" }, scenario: { en: "Reading", np: "पढाइ" } }, { japanese: "{水|みず}をのみます。", reading: "Mizu o nomimasu.", english: { en: "I drink water.", np: "पानी पिउँछु।" }, scenario: { en: "Daily life", np: "दैनिक जीवन" } }] },
+    ],
+    particles: [{ particle: "を", romaji: "o", name: { en: "object marker", np: "कर्म चिन्ह" }, meaning: { en: "Use を to connect an action verb to the word you read, write, eat, or drink.", np: "पढ्ने, लेख्ने, खाने वा पिउने कर्मसँग を प्रयोग हुन्छ।" }, examples: [{ japanese: "{本|ほん}をよみます。", reading: "Hon o yomimasu.", english: { en: "I read a book.", np: "किताब पढ्छु।" }, scenario: { en: "Object", np: "कर्म" } }] }],
+    vocabulary: buildVocab(28),
+    mcqs: [
+      { question: { en: "How do you read 電車?", np: "電車 कसरी पढिन्छ?" }, choices: ["でんしゃ", "てつしゃ", "えんしゃ", "でんじゃ"], correctIndex: 0, explanation: { en: "電車 is read でんしゃ.", np: "電車 लाई でんしゃ पढिन्छ।" } },
+      { question: { en: "Which is the best kanji review method?", np: "कांजी दोहोर्याउने सबैभन्दा राम्रो तरिका कुन हो?" }, choices: ["Read a word, say it, and write it once", "Memorize only the shape", "Avoid example phrases", "Study one character without meaning"], correctIndex: 0, explanation: { en: "A word and example connect reading, meaning, and shape.", np: "शब्द र उदाहरणले पढाइ, अर्थ र आकार जोड्छ।" } },
+      { question: { en: "Complete: ほん ___ よみます。", np: "पूरा गर्नुस्: ほん ___ よみます。" }, choices: ["を", "に", "で", "と"], correctIndex: 0, explanation: { en: "本 is the object of 読みます, so use を.", np: "本 読みます को कर्म हो, त्यसैले を प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 29,
+    title: "Day 29 — reading and particles",
+    intro: [
+      { en: "Day 29 trains you to read a short passage efficiently. Find the topic, notice contrast words, and use particles to identify who does what, where, and when.", np: "दिन २९ मा छोटो अनुच्छेद प्रभावकारी रूपमा पढ्ने अभ्यास गर्नुहोस्। विषय खोज्नुहोस्, विरोधका शब्द ध्यान दिनुहोस्, र कसले के, कहाँ र कहिले गर्छ भनेर particle प्रयोग गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 reading sprint",
+    resources: [{ title: { en: "Open JLPT N5 reading practice", np: "JLPT N5 पढाइ अभ्यास खोल्नुहोस्", jp: "JLPT N5読解練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+reading+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "{文章|ぶんしょう}をよむとき、まず{質問|しつもん}をみます。", reading: "Bunshō o yomu toki, mazu shitsumon o mimasu.", english: { en: "When reading a passage, I first look at the question.", np: "अनुच्छेद पढ्दा पहिले प्रश्न हेर्छु।" } },
+      { speaker: "B", japanese: "それから、{大切|たいせつ}なことばにせんをひきます。", reading: "Sore kara, taisetsu na kotoba ni sen o hikimasu.", english: { en: "Then I underline important words.", np: "त्यसपछि महत्त्वपूर्ण शब्दमा रेखा तान्छु।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Topic, action, and location", np: "विषय, काम र ठाउँ" }, meaning: { en: "In a sentence, は often marks the topic, を marks the object, and で marks where an action happens. Find these first to understand the core meaning.", np: "वाक्यमा は ले विषय, を ले कर्म, र で ले काम हुने ठाउँ देखाउँछ। मुख्य अर्थ बुझ्न पहिले यी खोज्नुहोस्।" }, whereWeUse: [{ en: "Topic: わたしは", np: "विषय: わたしは" }, { en: "Place: 学校で", np: "ठाउँ: 学校で" }], examples: [{ japanese: "わたしは{学校|がっこう}で{日本語|にほんご}をべんきょうします。", reading: "Watashi wa gakkō de Nihongo o benkyō shimasu.", english: { en: "I study Japanese at school.", np: "म स्कुलमा जापानी पढ्छु।" }, scenario: { en: "Sentence core", np: "वाक्यको मुख्य भाग" } }, { japanese: "{母|はは}はスーパーで{野菜|やさい}をかいます。", reading: "Haha wa sūpā de yasai o kaimasu.", english: { en: "My mother buys vegetables at the supermarket.", np: "आमाले सुपरमार्केटमा तरकारी किन्नुहुन्छ।" }, scenario: { en: "Reading detail", np: "पढाइको विवरण" } }] },
+      { number: 2, name: { en: "Connectors show the flow", np: "जोड्ने शब्दले क्रम देखाउँछ" }, meaning: { en: "Words such as そして, でも, しかし, and だから connect ideas. They help you predict whether the next sentence adds, contrasts, or gives a result.", np: "そして, でも, しかし र だから जस्ता शब्दले विचार जोड्छन्। तिनले अर्को वाक्य थपिन्छ, विरोध हुन्छ वा नतिजा आउँछ भन्ने अनुमान गर्न मद्दत गर्छन्।" }, whereWeUse: [{ en: "でも / しかし: contrast", np: "でも / しかし: विरोध" }, { en: "だから: result", np: "だから: नतिजा" }], examples: [{ japanese: "あめです。だから、うちにいます。", reading: "Ame desu. Dakara, uchi ni imasu.", english: { en: "It is raining. Therefore, I stay home.", np: "पानी परिरहेको छ। त्यसैले घरमा बस्छु।" }, scenario: { en: "Result", np: "नतिजा" } }, { japanese: "{日本語|にほんご}はむずかしいです。でも、おもしろいです。", reading: "Nihongo wa muzukashii desu. Demo, omoshiroi desu.", english: { en: "Japanese is difficult, but interesting.", np: "जापानी गाह्रो छ, तर रोचक छ।" }, scenario: { en: "Contrast", np: "विरोध" } }] },
+    ],
+    particles: [{ particle: "は・を・で", romaji: "wa/o/de", name: { en: "reading anchors", np: "पढाइका आधार" }, meaning: { en: "These particles quickly reveal the topic, object, and action location in a passage.", np: "यी particle ले अनुच्छेदमा विषय, कर्म र काम हुने ठाउँ छिटो देखाउँछन्।" }, examples: [{ japanese: "{田中|たなか}さんは{図書館|としょかん}で{本|ほん}をよみます。", reading: "Tanaka-san wa toshokan de hon o yomimasu.", english: { en: "Tanaka reads a book at the library.", np: "तानाकाले पुस्तकालयमा किताब पढ्छन्।" }, scenario: { en: "Reading", np: "पढाइ" } }] }],
+    vocabulary: buildVocab(29),
+    mcqs: [
+      { question: { en: "What should you find first in a reading passage?", np: "पढाइको अनुच्छेदमा पहिले के खोज्नुपर्छ?" }, choices: ["The topic and the question being asked", "Every unknown kanji", "The last option only", "A dictionary immediately"], correctIndex: 0, explanation: { en: "The topic and question give you a target for the details.", np: "विषय र प्रश्नले विवरण खोज्ने लक्ष्य दिन्छ।" } },
+      { question: { en: "What does だから signal?", np: "だから ले के सङ्केत गर्छ?" }, choices: ["A result or reason", "A question", "A location", "A person"], correctIndex: 0, explanation: { en: "だから introduces a result based on the previous statement.", np: "だから ले अघिल्लो कथनको नतिजा देखाउँछ।" } },
+      { question: { en: "Complete: としょかん ___ ほんをよみます。", np: "पूरा गर्नुस्: としょかん ___ ほんをよみます。" }, choices: ["で", "に", "を", "と"], correctIndex: 0, explanation: { en: "Use で for the place where reading happens.", np: "पढ्ने काम हुने ठाउँसँग で प्रयोग हुन्छ।" } },
+    ],
+  },
+  {
+    id: 30,
+    title: "Day 30 — mock exam mindset",
+    intro: [
+      { en: "Day 30 is your final practice day. Use one timed mock to find weak areas, then review mistakes by pattern instead of trying to memorize every answer.", np: "दिन ३० अन्तिम अभ्यासको दिन हो। कमजोर क्षेत्र पत्ता लगाउन एउटा समयबद्ध मॉक दिनुहोस्, अनि हरेक उत्तर कण्ठ गर्नुको सट्टा pattern अनुसार गल्ती समीक्षा गर्नुहोस्।" },
+    ],
+    youtubeTitle: "JLPT N5 mock exam sprint",
+    resources: [{ title: { en: "Open JLPT N5 mock exam practice", np: "JLPT N5 मॉक परीक्षा अभ्यास खोल्नुहोस्", jp: "JLPT N5模擬試験練習を開く" }, url: "https://www.youtube.com/results?search_query=JLPT+N5+mock+exam+practice" }],
+    conversation: [
+      { speaker: "A", japanese: "もぎテストのまえに、{時間|じかん}をはかりましょう。", reading: "Mogi tesuto no mae ni, jikan o hakarimashō.", english: { en: "Before the mock test, let’s time ourselves.", np: "मॉक टेस्टअघि समय नापौँ।" } },
+      { speaker: "B", japanese: "まちがいをみなおして、つぎも{頑張|がんば}りましょう。", reading: "Machigai o minaoshite, tsugi mo ganbarimashō.", english: { en: "Let’s review mistakes and do our best next time too.", np: "गल्ती समीक्षा गरेर अर्को पटक पनि मेहनत गरौँ।" } },
+    ],
+    grammar: [
+      { number: 1, name: { en: "Timed-answer routine", np: "समयबद्ध उत्तर दिने बानी" }, meaning: { en: "Answer the clear questions first. Mark difficult questions, keep moving, and return when time remains.", np: "सजिला प्रश्न पहिले उत्तर दिनुहोस्। गाह्रा प्रश्न चिनो लगाउनुहोस्, अगाडि बढ्नुहोस्, र समय बाँकी हुँदा फर्कनुहोस्।" }, whereWeUse: [{ en: "First pass: clear answers", np: "पहिलो चरण: सजिला उत्तर" }, { en: "Second pass: marked questions", np: "दोस्रो चरण: चिनो लगाएका प्रश्न" }], examples: [{ japanese: "わからない{問題|もんだい}は、あとでもういちどみます。", reading: "Wakaranai mondai wa, ato de mō ichido mimasu.", english: { en: "I review questions I do not understand later.", np: "नबुझेका प्रश्न पछि फेरि हेर्छु।" }, scenario: { en: "Exam strategy", np: "परीक्षा रणनीति" } }, { japanese: "まず、かんたんな{問題|もんだい}にこたえます。", reading: "Mazu, kantan na mondai ni kotaemasu.", english: { en: "First, I answer the easy questions.", np: "पहिले सजिला प्रश्नको उत्तर दिन्छु।" }, scenario: { en: "First pass", np: "पहिलो चरण" } }] },
+      { number: 2, name: { en: "Review errors by pattern", np: "pattern अनुसार गल्ती समीक्षा" }, meaning: { en: "Group mistakes into categories such as particles, verb forms, vocabulary, or listening. Practice one fresh example for each category.", np: "गल्तीलाई particle, verb form, शब्दावली वा सुन्ने जस्ता समूहमा राख्नुहोस्। प्रत्येक समूहको एउटा नयाँ उदाहरण अभ्यास गर्नुहोस्।" }, whereWeUse: [{ en: "を / に / で confusion", np: "を / に / で को भ्रम" }, { en: "Plain versus て-form", np: "plain र て-form" }], examples: [{ japanese: "{間違|まちが}いをノートにかきます。", reading: "Machigai o nōto ni kakimasu.", english: { en: "I write mistakes in a notebook.", np: "गल्ती नोटबुकमा लेख्छु।" }, scenario: { en: "Review", np: "समीक्षा" } }, { japanese: "つぎのテストのために、よくれんしゅうします。", reading: "Tsugi no tesuto no tame ni, yoku renshū shimasu.", english: { en: "I practise well for the next test.", np: "अर्को टेस्टका लागि राम्रोसँग अभ्यास गर्छु।" }, scenario: { en: "Next step", np: "अर्को कदम" } }] },
+    ],
+    particles: [{ particle: "まえに・あとで", romaji: "mae ni/ato de", name: { en: "exam sequence", np: "परीक्षाको क्रम" }, meaning: { en: "Use these expressions to plan what you do before and after the mock exam.", np: "मॉक परीक्षाअघि र पछि गर्ने काम योजना बनाउन यी अभिव्यक्ति प्रयोग हुन्छन्।" }, examples: [{ japanese: "テストのあとで、こたえをかくにんします。", reading: "Tesuto no ato de, kotae o kakunin shimasu.", english: { en: "After the test, I check the answers.", np: "टेस्टपछि उत्तर जाँच्छु।" }, scenario: { en: "Review", np: "समीक्षा" } }] }],
+    vocabulary: buildVocab(30),
+    mcqs: [
+      { question: { en: "What is the best first pass in a timed mock?", np: "समयबद्ध मॉकमा सबैभन्दा राम्रो पहिलो चरण कुन हो?" }, choices: ["Answer the clear questions first", "Spend all time on one hard question", "Leave every answer blank", "Check answers before starting"], correctIndex: 0, explanation: { en: "Quick points leave time to return to difficult questions.", np: "छिटो अंक ल्याउँदा गाह्रा प्रश्नमा फर्कने समय बचत हुन्छ।" } },
+      { question: { en: "How should you review a mistake?", np: "गल्ती कसरी समीक्षा गर्नुपर्छ?" }, choices: ["Group it by pattern and make a new example", "Ignore it after scoring", "Memorize only the letter", "Delete the question"], correctIndex: 0, explanation: { en: "A new example checks whether you understand the pattern.", np: "नयाँ उदाहरणले pattern बुझेको छ कि छैन जाँच्छ।" } },
+      { question: { en: "What does 正解 mean?", np: "正解 को अर्थ के हो?" }, choices: [{ en: "correct answer", np: "सही जवाफ" }, { en: "wrong answer", np: "गल्ती जवाफ" }, { en: "time limit", np: "समय सीमा" }, { en: "practice book", np: "अभ्यास किताब" }], correctIndex: 0, explanation: { en: "正解 means the correct answer.", np: "正解 भनेको सही जवाफ हो।" } },
+    ],
+  },
 ];
+
+function conversationLine(
+  speaker: ConversationLine["speaker"],
+  japanese: FuriganaString,
+  reading: string,
+  en: string,
+  np: string,
+): ConversationLine {
+  return { speaker, japanese, reading, english: { en, np } };
+}
+
+const CONVERSATION_EXTENSIONS: Partial<Record<number, ConversationLine[]>> = {
+  9: [
+    conversationLine("A", "えをかくのがすきですか。", "E o kaku no ga suki desu ka?", "Do you like drawing?", "चित्र कोर्न मनपर्छ?"),
+    conversationLine("B", "はい、すきです。でも、へたです。", "Hai, suki desu. Demo, heta desu.", "Yes, I do. But I am not good at it.", "हो, मनपर्छ। तर दक्ष छैन।"),
+    conversationLine("A", "どんなえをかきたいですか。", "Donna e o kakitai desu ka?", "What kind of picture do you want to draw?", "कस्तो चित्र कोर्न चाहनुहुन्छ?"),
+    conversationLine("B", "にほんのふうけいをかきたいです。", "Nihon no fuukei o kakitai desu.", "I want to draw Japanese scenery.", "जापानको दृश्य कोर्न चाहन्छु।"),
+  ],
+  10: [
+    conversationLine("A", "いぬはどこにいますか。", "Inu wa doko ni imasu ka?", "Where is the dog?", "कुकुर कहाँ छ?"),
+    conversationLine("B", "いえのまえにいます。", "Ie no mae ni imasu.", "It is in front of the house.", "घरको अगाडि छ।"),
+    conversationLine("A", "そのそばになにがありますか。", "Sono soba ni nani ga arimasu ka?", "What is next to it?", "त्यसको छेउमा के छ?"),
+    conversationLine("B", "くるまがあります。", "Kuruma ga arimasu.", "There is a car.", "कार छ।"),
+  ],
+  11: [
+    conversationLine("A", "りんごをいくつかいましたか。", "Ringo o ikutsu kaimashita ka?", "How many apples did you buy?", "कति वटा स्याउ किन्नुभयो?"),
+    conversationLine("B", "みっつかいました。", "Mittsu kaimashita.", "I bought three.", "तीन वटा किनेँ।"),
+    conversationLine("A", "ねこがなんびきいますか。", "Neko ga nanbiki imasu ka?", "How many cats are there?", "कति वटा बिराला छन्?"),
+    conversationLine("B", "にひきいます。", "Nihiki imasu.", "There are two cats.", "दुई वटा बिराला छन्।"),
+  ],
+  12: [
+    conversationLine("A", "にほんごとえいごとどちらがむずかしいですか。", "Nihongo to eigo to dochira ga muzukashii desu ka?", "Which is harder, Japanese or English?", "जापानी र अङ्ग्रेजीमध्ये कुन गाह्रो छ?"),
+    conversationLine("B", "にほんごのほうがむずかしいです。", "Nihongo no hou ga muzukashii desu.", "Japanese is harder.", "जापानी गाह्रो छ।"),
+    conversationLine("A", "とうきょうとおおさかとどちらがにぎやかですか。", "Toukyou to Oosaka to dochira ga nigiyaka desu ka?", "Which is livelier, Tokyo or Osaka?", "टोकियो र ओसाकामध्ये कुन बढी चहलपहल छ?"),
+    conversationLine("B", "とうきょうのほうがにぎやかです。", "Toukyou no hou ga nigiyaka desu.", "Tokyo is livelier.", "टोकियो बढी चहलपहल छ।"),
+  ],
+  13: [
+    conversationLine("A", "たんじょうびになにがほしいですか。", "Tanjoubi ni nani ga hoshii desu ka?", "What do you want for your birthday?", "जन्मदिनमा के चाहनुहुन्छ?"),
+    conversationLine("B", "じてんしゃがほしいです。", "Jitensha ga hoshii desu.", "I want a bicycle.", "मलाई साइकल चाहिन्छ।"),
+    conversationLine("A", "じてんしゃをかいにいきますか。", "Jitensha o kai ni ikimasu ka?", "Will you go buy a bicycle?", "साइकल किन्न जानुहुन्छ?"),
+    conversationLine("B", "はい、デパートへいきます。", "Hai, depaato e ikimasu.", "Yes, I will go to the department store.", "हो, डिपार्टमेन्ट स्टोर जान्छु।"),
+  ],
+  14: [
+    conversationLine("A", "ここになまえをかいてください。", "Koko ni namae o kaite kudasai.", "Please write your name here.", "यहाँ आफ्नो नाम लेख्नुहोस्।"),
+    conversationLine("B", "はい、かきます。", "Hai, kakimasu.", "Yes, I will write it.", "हुन्छ, लेख्छु।"),
+    conversationLine("A", "いまなにをしていますか。", "Ima nani o shite imasu ka?", "What are you doing now?", "अहिले के गर्दै हुनुहुन्छ?"),
+    conversationLine("B", "にほんごをべんきょうしています。", "Nihongo o benkyou shite imasu.", "I am studying Japanese.", "जापानी पढ्दै छु।"),
+  ],
+  15: [
+    conversationLine("A", "ここでしゃしんをとってもいいですか。", "Koko de shashin o tottemo ii desu ka?", "May I take a photo here?", "यहाँ फोटो खिच्न मिल्छ?"),
+    conversationLine("B", "はい、いいです。", "Hai, ii desu.", "Yes, you may.", "हुन्छ।"),
+    conversationLine("A", "ここでたばこをすってもいいですか。", "Koko de tabako o sutte mo ii desu ka?", "May I smoke here?", "यहाँ चुरोट पिउन मिल्छ?"),
+    conversationLine("B", "いいえ、すってはいけません。", "Iie, sutte wa ikemasen.", "No, you must not smoke.", "हुँदैन, चुरोट पिउनु हुँदैन।"),
+    conversationLine("A", "しずかにしてください。", "Shizuka ni shite kudasai.", "Please be quiet.", "कृपया शान्त हुनुहोस्।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+  ],
+  16: [
+    conversationLine("A", "しんじゅくでのりかえますか。", "Shinjuku de norikaemasu ka?", "Will you change trains at Shinjuku?", "शिन्जुकुमा रेल फेर्नुहुन्छ?"),
+    conversationLine("B", "はい、のりかえます。", "Hai, norikaemasu.", "Yes, I will change trains.", "हो, रेल फेर्छु।"),
+    conversationLine("A", "どこでひるごはんをたべますか。", "Doko de hirugohan o tabemasu ka?", "Where will you eat lunch?", "दिउँसोको खाना कहाँ खानुहुन्छ?"),
+    conversationLine("B", "えきのちかくでたべます。", "Eki no chikaku de tabemasu.", "I will eat near the station.", "स्टेसन नजिक खान्छु।"),
+    conversationLine("A", "たべてから、なにをしますか。", "Tabete kara, nani o shimasu ka?", "What will you do after eating?", "खाएपछि के गर्नुहुन्छ?"),
+    conversationLine("B", "ともだちにあいます。", "Tomodachi ni aimasu.", "I will meet a friend.", "साथीलाई भेट्छु।"),
+  ],
+  17: [
+    conversationLine("A", "ここではしゃしんをとらないでください。", "Koko de wa shashin o toranai de kudasai.", "Please do not take photos here.", "यहाँ फोटो नखिच्नुहोस्।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+    conversationLine("A", "あしたパーティーにきませんか。", "Ashita paatii ni kimasen ka?", "Would you like to come to the party tomorrow?", "भोलि पार्टीमा आउनुहुन्छ?"),
+    conversationLine("B", "すみません、いけません。", "Sumimasen, ikemasen.", "Sorry, I cannot go.", "माफ गर्नुहोस्, जान सक्दिनँ।"),
+    conversationLine("A", "どうしてですか。", "Doushite desu ka?", "Why not?", "किन?"),
+    conversationLine("B", "ようじがあります。", "Youji ga arimasu.", "I have an appointment.", "मेरो काम छ।"),
+  ],
+  18: [
+    conversationLine("A", "ピアノをひくことができますか。", "Piano o hiku koto ga dekimasu ka?", "Can you play the piano?", "पियानो बजाउन सक्नुहुन्छ?"),
+    conversationLine("B", "はい、すこしできます。", "Hai, sukoshi dekimasu.", "Yes, a little.", "हो, अलिकति सक्छु।"),
+    conversationLine("A", "しゅみはなんですか。", "Shumi wa nan desu ka?", "What is your hobby?", "तपाईंको रुचि के हो?"),
+    conversationLine("B", "えをかくことです。", "E o kaku koto desu.", "It is drawing pictures.", "चित्र कोर्नु हो।"),
+    conversationLine("A", "まいばん、なにをしますか。", "Maiban, nani o shimasu ka?", "What do you do every evening?", "हरेक साँझ के गर्नुहुन्छ?"),
+    conversationLine("B", "ねるまえにほんをよみます。", "Neru mae ni hon o yomimasu.", "I read a book before sleeping.", "सुत्नुअघि किताब पढ्छु।"),
+  ],
+  19: [
+    conversationLine("A", "にほんへいったことがありますか。", "Nihon e itta koto ga arimasu ka?", "Have you ever been to Japan?", "जापान जानुभएको छ?"),
+    conversationLine("B", "はい、いちどあります。", "Hai, ichido arimasu.", "Yes, once.", "हो, एक पटक गएको छु।"),
+    conversationLine("A", "にほんでなにをしましたか。", "Nihon de nani o shimashita ka?", "What did you do in Japan?", "जापानमा के गर्नुभयो?"),
+    conversationLine("B", "きょうとをけんがくしました。", "Kyouto o kengaku shimashita.", "I visited Kyoto for study.", "क्योटो घुम्न गएँ।"),
+    conversationLine("A", "にほんごがじょうずになりましたか。", "Nihongo ga jouzu ni narimashita ka?", "Did you become better at Japanese?", "जापानीमा राम्रो हुनुभयो?"),
+    conversationLine("B", "すこしじょうずになりました。", "Sukoshi jouzu ni narimashita.", "I became a little better.", "अलिकति राम्रो भएँ।"),
+  ],
+  20: [
+    conversationLine("A", "これはだれのかばんですか。", "Kore wa dare no kaban desu ka?", "Whose bag is this?", "यो कसको झोला हो?"),
+    conversationLine("B", "たなかさんのかばんです。", "Tanaka-san no kaban desu.", "It is Tanaka's bag.", "यो तानाका-सानको झोला हो।"),
+    conversationLine("A", "たなかさんはきますか。", "Tanaka-san wa kimasu ka?", "Will Tanaka come?", "तानाका-सान आउनुहुन्छ?"),
+    conversationLine("B", "はい、くるといっています。", "Hai, kuru to itte imasu.", "Yes, they say they will come.", "हो, आउँछु भन्नुभएको छ।"),
+    conversationLine("A", "いま、たなかさんはどこですか。", "Ima, Tanaka-san wa doko desu ka?", "Where is Tanaka now?", "अहिले तानाका-सान कहाँ हुनुहुन्छ?"),
+    conversationLine("B", "えきにいるとおもいます。", "Eki ni iru to omoimasu.", "I think they are at the station.", "स्टेसनमा हुनुहुन्छ जस्तो लाग्छ।"),
+  ],
+  21: [
+    conversationLine("A", "らいしゅう、おまつりがありますね。", "Raishuu, omatsuri ga arimasu ne.", "There is a festival next week, right?", "अर्को हप्ता चाड छ, हैन?"),
+    conversationLine("B", "はい、いっしょにいきませんか。", "Hai, issho ni ikimasen ka?", "Yes. Shall we go together?", "हो। सँगै जाऔँ?"),
+    conversationLine("A", "いいですね。なにをみたいですか。", "Ii desu ne. Nani o mitai desu ka?", "Sounds good. What do you want to see?", "राम्रो। के हेर्न चाहनुहुन्छ?"),
+    conversationLine("B", "にほんのダンスをみたいです。", "Nihon no dansu o mitai desu.", "I want to see Japanese dance.", "जापानी नाच हेर्न चाहन्छु।"),
+    conversationLine("A", "しんぶんでみましたか。", "Shinbun de mimashita ka?", "Did you see it in the newspaper?", "पत्रिकामा देख्नुभयो?"),
+    conversationLine("B", "はい、みました。", "Hai, mimashita.", "Yes, I did.", "हो, देखें।"),
+  ],
+  22: [
+    conversationLine("A", "これはだれがつくったケーキですか。", "Kore wa dare ga tsukutta keeki desu ka?", "Who made this cake?", "यो केक कसले बनायो?"),
+    conversationLine("B", "ははがつくったケーキです。", "Haha ga tsukutta keeki desu.", "It is a cake my mother made.", "यो मेरी आमाले बनाएको केक हो।"),
+    conversationLine("A", "きのうかったほんはおもしろいですか。", "Kinou katta hon wa omoshiroi desu ka?", "Is the book you bought yesterday interesting?", "हिजो किनेको किताब रोचक छ?"),
+    conversationLine("B", "はい、とてもおもしろいです。", "Hai, totemo omoshiroi desu.", "Yes, it is very interesting.", "हो, धेरै रोचक छ।"),
+    conversationLine("A", "にほんでとったしゃしんをみせてください。", "Nihon de totta shashin o misete kudasai.", "Please show me the photos you took in Japan.", "जापानमा खिचेका फोटो देखाउनुहोस्।"),
+    conversationLine("B", "はい、どうぞ。", "Hai, douzo.", "Sure, here you are.", "हुन्छ, लिनुहोस्।"),
+  ],
+  23: [
+    conversationLine("A", "えきへいくみちはどこですか。", "Eki e iku michi wa doko desu ka?", "Which way is the station?", "स्टेसन जाने बाटो कुन हो?"),
+    conversationLine("B", "あのはしをわたってください。", "Ano hashi o watatte kudasai.", "Please cross that bridge.", "त्यो पुल पार गर्नुहोस्।"),
+    conversationLine("A", "しんごうがあかくなったら、まちます。", "Shingou ga akaku nattara, machimasu.", "When the light turns red, I wait.", "बत्ती रातो भएपछि म पर्खन्छु।"),
+    conversationLine("B", "はい、わかりました。", "Hai, wakarimashita.", "Yes, I understand.", "हुन्छ, बुझें।"),
+    conversationLine("A", "まちがいをみつけたら、どうしますか。", "Machigai o mitsuketara, dou shimasu ka?", "What will you do if you find a mistake?", "गल्ती भेटेमा के गर्नुहुन्छ?"),
+    conversationLine("B", "せんせいにききます。", "Sensei ni kikimasu.", "I will ask the teacher.", "शिक्षकलाई सोध्छु।"),
+  ],
+  24: [
+    conversationLine("B", "それはよかったですね。", "Sore wa yokatta desu ne.", "That is nice.", "त्यो राम्रो भयो।"),
+    conversationLine("A", "ともだちにパーティーのじゅんびをてつだってあげます。", "Tomodachi ni paatii no junbi o tetsudatte agemasu.", "I will help my friend prepare for the party.", "म साथीलाई पार्टीको तयारीमा सहयोग गर्छु।"),
+    conversationLine("B", "ありがとうございます。", "Arigatou gozaimasu.", "Thank you.", "धन्यवाद।"),
+    conversationLine("A", "わたしもともだちにてつだってもらいます。", "Watashi mo tomodachi ni tetsudatte moraimasu.", "I will also have my friend help me.", "म पनि साथीबाट सहयोग पाउँछु।"),
+    conversationLine("B", "いっしょにじゅんびしましょう。", "Issho ni junbi shimashou.", "Let us prepare together.", "सँगै तयारी गरौँ।"),
+    conversationLine("A", "はい、そうしましょう。", "Hai, sou shimashou.", "Yes, let us do that.", "हुन्छ, त्यसै गरौँ।"),
+    conversationLine("B", "たのしみですね。", "Tanoshimi desu ne.", "I am looking forward to it.", "पर्खन सक्दिनँ।"),
+  ],
+  25: [
+    conversationLine("B", "チャンスがあったら、にほんへいきたいです。", "Chansu ga attara, Nihon e ikitai desu.", "If I get the chance, I want to go to Japan.", "अवसर पाएँ भने जापान जान चाहन्छु।"),
+    conversationLine("A", "いそがしくても、にほんごをべんきょうします。", "Isogashikute mo, nihongo o benkyou shimasu.", "Even if I am busy, I study Japanese.", "व्यस्त भए पनि जापानी पढ्छु।"),
+    conversationLine("B", "いいですね。", "Ii desu ne.", "That is good.", "राम्रो छ।"),
+    conversationLine("A", "あしたはれたら、さんぽしませんか。", "Ashita haretara, sanpo shimasen ka?", "If it is sunny tomorrow, shall we take a walk?", "भोलि घाम लागे घुम्न जाऔँ?"),
+    conversationLine("B", "はい、いきましょう。", "Hai, ikimashou.", "Yes, let us go.", "हो, जाऔँ।"),
+    conversationLine("A", "あめでも、かさをもっていきます。", "Ame demo, kasa o motte ikimasu.", "Even if it rains, I will take an umbrella.", "पानी परे पनि छाता लिएर जान्छु।"),
+    conversationLine("B", "わかりました。", "Wakarimashita.", "I understand.", "बुझें।"),
+  ],
+  26: [
+    conversationLine("A", "このぶんは、はとがのどちらをつかいますか。", "Kono bun wa, wa to ga no dochira o tsukaimasu ka?", "Which do we use in this sentence, wa or ga?", "यो वाक्यमा は र が मध्ये कुन प्रयोग हुन्छ?"),
+    conversationLine("B", "あたらしいじょうほうなら、がをつかいます。", "Atarashii jouhou nara, ga o tsukaimasu.", "For new information, use ga.", "नयाँ जानकारीका लागि が प्रयोग गर्छौं।"),
+    conversationLine("A", "ほんをよみますのほんには、なにをつかいますか。", "Hon o yomimasu no hon ni wa, nani o tsukaimasu ka?", "What do we use with hon in hon o yomimasu?", "ほんをよみます मा ほん सँग के प्रयोग हुन्छ?"),
+    conversationLine("B", "ををつかいます。", "O o tsukaimasu.", "We use o.", "を प्रयोग गर्छौं।"),
+    conversationLine("A", "がっこうへは、でんしゃでいきます。", "Gakkou e wa, densha de ikimasu.", "I go to school by train.", "म रेलबाट विद्यालय जान्छु।"),
+    conversationLine("B", "でんしゃはしゅだんのです。", "Densha wa shudan na no desu.", "Densha marks the means of travel.", "でんしゃ यातायातको साधन हो।"),
+    conversationLine("A", "もういちどれんしゅうしましょう。", "Mou ichido renshuu shimashou.", "Let us practise once more.", "फेरि एक पटक अभ्यास गरौँ।"),
+    conversationLine("B", "はい、れんしゅうします。", "Hai, renshuu shimasu.", "Yes, I will practise.", "हुन्छ, अभ्यास गर्छु।"),
+  ],
+  27: [
+    conversationLine("A", "さいしょに、なにをききますか。", "Saisho ni, nani o kikimasu ka?", "What do you listen for first?", "पहिले के सुन्नुहुन्छ?"),
+    conversationLine("B", "だれとばしょをききます。", "Dare to basho o kikimasu.", "I listen for the person and place.", "व्यक्ति र ठाउँ सुन्छु।"),
+    conversationLine("A", "わからないときは、どうしますか。", "Wakaranai toki wa, dou shimasu ka?", "What do you do when you do not understand?", "नबुझेको बेला के गर्नुहुन्छ?"),
+    conversationLine("B", "キーワードをかきます。", "Kiiwaado o kakimasu.", "I write down keywords.", "मुख्य शब्द लेख्छु।"),
+    conversationLine("A", "ぜんぶきこえなくてもいいですか。", "Zenbu kikoenakute mo ii desu ka?", "Is it okay if you cannot hear everything?", "सबै नसुने पनि हुन्छ?"),
+    conversationLine("B", "はい、だいじょうぶです。", "Hai, daijoubu desu.", "Yes, that is okay.", "हो, हुन्छ।"),
+    conversationLine("A", "もういちどききましょう。", "Mou ichido kikimashou.", "Let us listen once more.", "फेरि एक पटक सुनौँ।"),
+    conversationLine("B", "はい、ゆっくりききます。", "Hai, yukkuri kikimasu.", "Yes, I will listen carefully.", "हुन्छ, ध्यान दिएर सुन्छु।"),
+  ],
+  28: [
+    conversationLine("A", "このことばはどうよみますか。", "Kono kotoba wa dou yomimasu ka?", "How do you read this word?", "यो शब्द कसरी पढ्नुहुन्छ?"),
+    conversationLine("B", "{電車|でんしゃ}とよみます。", "Densha to yomimasu.", "It is read densha.", "यसलाई でんしゃ पढिन्छ।"),
+    conversationLine("A", "{病院|びょういん}はどこですか。", "Byouin wa doko desu ka?", "Where is the hospital?", "अस्पताल कहाँ छ?"),
+    conversationLine("B", "えきのちかくです。", "Eki no chikaku desu.", "It is near the station.", "स्टेसन नजिक छ।"),
+    conversationLine("A", "かんじをどうやっておぼえますか。", "Kanji o dou yatte oboemasu ka?", "How do you remember kanji?", "कान्जी कसरी सम्झनुहुन्छ?"),
+    conversationLine("B", "ことばといっしょにおぼえます。", "Kotoba to issho ni oboemasu.", "I remember them with words.", "शब्दसँगै सम्झन्छु।"),
+    conversationLine("A", "ほんをよんでみましょう。", "Hon o yonde mimashou.", "Let us try reading the book.", "किताब पढेर हेरौँ।"),
+    conversationLine("B", "はい、よみます。", "Hai, yomimasu.", "Yes, I will read it.", "हुन्छ, पढ्छु।"),
+  ],
+  29: [
+    conversationLine("A", "ぶんしょうをよむまえに、なにをみますか。", "Bunshou o yomu mae ni, nani o mimasu ka?", "What do you look at before reading a passage?", "गद्यांश पढ्नुअघि के हेर्नुहुन्छ?"),
+    conversationLine("B", "しつもんをみます。", "Shitsumon o mimasu.", "I look at the questions.", "प्रश्नहरू हेर्छु।"),
+    conversationLine("A", "だいじなことばは、どうしますか。", "Daiji na kotoba wa, dou shimasu ka?", "What do you do with important words?", "महत्त्वपूर्ण शब्द के गर्नुहुन्छ?"),
+    conversationLine("B", "せんをひきます。", "Sen o hikimasu.", "I underline them.", "रेखा तान्छु।"),
+    conversationLine("A", "だからは、なにをあらわしますか。", "Dakara wa, nani o arawashimasu ka?", "What does dakara show?", "だから ले के देखाउँछ?"),
+    conversationLine("B", "りゆうやけっかをあらわします。", "Riyuu ya kekka o arawashimasu.", "It shows a reason or result.", "कारण वा परिणाम देखाउँछ।"),
+    conversationLine("A", "もういちどぶんをよみましょう。", "Mou ichido bun o yomimashou.", "Let us read the sentence once more.", "वाक्य फेरि पढौँ।"),
+    conversationLine("B", "はい、よみます。", "Hai, yomimasu.", "Yes, I will read it.", "हुन्छ, पढ्छु।"),
+  ],
+  30: [
+    conversationLine("A", "テストのまえに、なにをしますか。", "Tesuto no mae ni, nani o shimasu ka?", "What do you do before a test?", "परीक्षाअघि के गर्नुहुन्छ?"),
+    conversationLine("B", "じかんをはかります。", "Jikan o hakarimasu.", "I time myself.", "समय नाप्छु।"),
+    conversationLine("A", "むずかしいもんだいは、どうしますか。", "Muzukashii mondai wa, dou shimasu ka?", "What do you do with a difficult question?", "गाह्रो प्रश्नलाई के गर्नुहुन्छ?"),
+    conversationLine("B", "あとで、もういちどみます。", "Ato de, mou ichido mimasu.", "I look at it again later.", "पछि फेरि हेर्छु।"),
+    conversationLine("A", "まちがいは、どうしますか。", "Machigai wa, dou shimasu ka?", "What do you do with mistakes?", "गल्तीलाई के गर्नुहुन्छ?"),
+    conversationLine("B", "ノートにかきます。", "Nooto ni kakimasu.", "I write them in a notebook.", "कापीमा लेख्छु।"),
+    conversationLine("A", "つぎのテストもがんばりましょう。", "Tsugi no tesuto mo ganbarimashou.", "Let us do our best on the next test too.", "अर्को परीक्षामा पनि मेहनत गरौँ।"),
+    conversationLine("B", "はい、がんばりましょう。", "Hai, ganbarimashou.", "Yes, let us do our best.", "हुन्छ, मेहनत गरौँ।"),
+  ],
+};
+
+function addConversationExtensions(lesson: N5LessonPageData): N5LessonPageData {
+  const extension = CONVERSATION_EXTENSIONS[lesson.id];
+  return extension ? { ...lesson, conversation: [...lesson.conversation, ...extension] } : lesson;
+}
+
+export const N5_LESSON_PAGES = N5_LESSON_PAGE_DATA.map(addConversationExtensions).map(addVocabularyExercises);
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
   return N5_LESSON_PAGES.find((l) => l.id === id);
