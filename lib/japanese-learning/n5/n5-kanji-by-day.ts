@@ -5,7 +5,7 @@ import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool"
  * Strict no-repeat kanji assignment across lesson days.
  *
  * Days 1–13  — all pool kanji distributed exactly once, grouped from simpler to more complex themes.
- * Days 14–25 — empty (grammar-focus lessons; kanji section is hidden by the component).
+ * Day 14 — remaining season and weekday kanji. Days 15–25 — grammar-focus lessons.
  * Days 26–30 — curated review sets for sprint/mock-exam prep (intentional re-exposure).
  *
  * Characters must exist in n5-kanji-pool.ts ROWS — unknowns are silently skipped.
@@ -77,10 +77,12 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
     "夜", "先", "秒", "歳", "京", "都", "自", "族", "刀", "明",
   ],
 
-  // ── Days 14–25 — grammar-focus lessons (no new kanji) ─────────────────────
-  // All pool kanji have been introduced by Day 13.
+  // ── Day 14 — seasons and weekdays ─────────────────────────────────────────
+  14: ["春", "夏", "秋", "冬", "曜"],
+
+  // ── Days 15–25 — grammar-focus lessons (no new kanji) ─────────────────────
   // The kanji accordion is hidden by the component when this array is empty.
-  14: [], 15: [], 16: [], 17: [], 18: [], 19: [],
+  15: [], 16: [], 17: [], 18: [], 19: [],
   20: [], 21: [], 22: [], 23: [], 24: [], 25: [],
 
   // ── Sprint Day 26 — numbers & counting review ──────────────────────────────
