@@ -6372,6 +6372,101 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "What do you do first at an ATM?", np: "ATM मा पहिले के गर्नुहुन्छ?" }, choices: ["キャッシュカードをいれます。", "きんがくをかくにんします。", "ボタンをおします。", "おかねをだします。"], correctIndex: 0, explanation: { en: "まず (first), insert the cash card: キャッシュカードをいれます.", np: "पहिले (まず) क्यास कार्ड राखिन्छ: キャッシュカードをいれます।" } },
     ],
   },
+  {
+    id: 17,
+    title: "Lesson 17 — ない-form・negative requests and rules",
+    intro: [
+      { en: "Lesson 17 introduces the ない-form, the plain negative form of verbs. You will use it to make polite negative requests, say what is required, and say what is not required.", np: "पाठ १७ मा Verb को साधारण नकारात्मक रूप, ない-form सिक्नुहुन्छ। यसले विनम्र नकारात्मक अनुरोध, गर्नुपर्ने काम र नगरे पनि हुने काम भन्न मद्दत गर्छ।" },
+      { en: "Learn the form first, then attach the ending you need: ないでください, なければなりません, or なくてもいいです.", np: "पहिले form सिक्नुहोस्, त्यसपछि चाहिएको अन्त्य जोड्नुहोस्: ないでください, なければなりません, वा なくてもいいです।" },
+    ],
+    youtubeVideoId: { en: "bXSc2NWdXh4", np: "z6lIcbA9uPA" },
+    youtubeTitle: "Minna no Nihongo · Lesson 17 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 17 notes",
+          np: "हस्तलिखित Chapter 17 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第17課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/1_iG3igqwjLn-ldVUo---4b6gtGiGj0JS/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "どうしましたか。", reading: "Dō shimashita ka?", english: { en: "What's the matter?", np: "के भयो?" } },
+      { speaker: "B", japanese: "のどがいたいです。ねつもあります。", reading: "Nodo ga itai desu. Netsu mo arimasu.", english: { en: "My throat hurts. I also have a fever.", np: "मेरो घाँटी दुखेको छ। ज्वरो पनि छ।" } },
+      { speaker: "A", japanese: "きょうはざんぎょうしないでください。びょういんへいってください。", reading: "Kyō wa zangyō shinaide kudasai. Byōin e itte kudasai.", english: { en: "Please don't work overtime today. Please go to the hospital.", np: "आज ओभरटाइम काम नगर्नुस्। अस्पताल जानुस्।" } },
+      { speaker: "B", japanese: "ありがとうございます。", reading: "Arigatō gozaimasu.", english: { en: "Thank you.", np: "धन्यवाद।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Making the ない-form — Group 1 verbs", np: "ない-form बनाउने — Group 1 Verb" },
+        meaning: { en: "For Group 1 verbs, change the final ます-stem sound from the i-row to the a-row, then add ない. For verbs ending in う, use わない, not あない.", np: "Group 1 Verb मा अन्तिम ます-stem को i-row ध्वनि a-row मा बदल्नुहोस् र ない जोड्नुहोस्। う मा अन्त्य हुने Verb मा あない होइन, わない हुन्छ।" },
+        whereWeUse: [
+          { en: "かいます → かわない", np: "かいます → かわない" },
+          { en: "のみます → のまない", np: "のみます → のまない" },
+          { en: "はなします → はなさない", np: "はなします → はなさない" },
+        ],
+        examples: [
+          { japanese: "ここでしゃしんをとらないでください。", reading: "Koko de shashin o toranaide kudasai.", english: { en: "Please do not take photos here.", np: "यहाँ फोटो नखिच्नुस्।" }, scenario: { en: "Museum rule", np: "संग्रहालयको नियम" } },
+          { japanese: "あしたはかいしゃへいかなくてもいいです。", reading: "Ashita wa kaisha e ikanakute mo ii desu.", english: { en: "You do not have to go to the office tomorrow.", np: "भोलि कार्यालय जानु पर्दैन।" }, scenario: { en: "No obligation", np: "गर्नैपर्ने छैन" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "Making the ない-form — Group 2 and irregular verbs", np: "ない-form बनाउने — Group 2 र irregular Verb" },
+        meaning: { en: "For Group 2 verbs, remove ます and add ない. The two common irregular verbs are します → しない and きます → こない.", np: "Group 2 Verb मा ます हटाएर ない जोड्नुहोस्। सामान्य irregular Verb: します → しない र きます → こない।" },
+        whereWeUse: [
+          { en: "たべます → たべない", np: "たべます → たべない" },
+          { en: "みます → みない", np: "みます → みない" },
+          { en: "します → しない / きます → こない", np: "します → しない / きます → こない" },
+        ],
+        examples: [
+          { japanese: "しんぱいしないでください。", reading: "Shinpai shinaide kudasai.", english: { en: "Please do not worry.", np: "चिन्ता नगर्नुस्।" }, scenario: { en: "Reassuring someone", np: "कसैलाई ढाडस दिँदा" } },
+          { japanese: "くすりをのまなければなりません。", reading: "Kusuri o nomanakereba narimasen.", english: { en: "You must take medicine.", np: "औषधि खानैपर्छ।" }, scenario: { en: "Doctor's advice", np: "डाक्टरको सल्लाह" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "V-ないでください — please do not", np: "V-ないでください — नगर्नुस्" },
+        meaning: { en: "Attach ないでください to the ない-form stem to make a polite request not to do something. This is softer than a strict prohibition.", np: "ない-form को पछाडि でください जोडेर विनम्र रूपमा नगर्नुस् भन्न सकिन्छ। यो कडा निषेधभन्दा नरम अनुरोध हो।" },
+        whereWeUse: [
+          { en: "Classroom: ここでたばこをすわないでください", np: "कक्षाकोठा: ここでたばこをすわないでください" },
+          { en: "Health: むりをしないでください", np: "स्वास्थ्य: むりをしないでください" },
+        ],
+        examples: [
+          { japanese: "ここでおよがないでください。", reading: "Koko de oyoganai de kudasai.", english: { en: "Please do not swim here.", np: "यहाँ नपौडिनुस्।" }, scenario: { en: "Safety notice", np: "सुरक्षा सूचना" } },
+          { japanese: "きょうはむりをしないでください。", reading: "Kyō wa muri o shinaide kudasai.", english: { en: "Please don't overdo it today.", np: "आज धेरै मेहनत नगर्नुस्।" }, scenario: { en: "At the clinic", np: "क्लिनिकमा" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "V-なければなりません / V-なくてもいいです", np: "V-なければなりません / V-なくてもいいです" },
+        meaning: { en: "Use V-なければなりません for a requirement: must do V. Use V-なくてもいいです to say there is no requirement: do not have to do V.", np: "V-なければなりません ले V गर्नैपर्छ भन्ने देखाउँछ। V-なくてもいいです ले V गर्नैपर्दैन भन्ने देखाउँछ।" },
+        whereWeUse: [
+          { en: "Deadline: きんようびまでにレポートをださなければなりません", np: "deadline: きんようびまでにレポートをださなければなりません" },
+          { en: "Optional task: きょうはざんぎょうしなくてもいいです", np: "वैकल्पिक काम: きょうはざんぎょうしなくてもいいです" },
+        ],
+        examples: [
+          { japanese: "けんこうほけんしょうをもっていかなければなりません。", reading: "Kenkō hokenshō o motte ikanakereba narimasen.", english: { en: "You must take your health insurance card.", np: "स्वास्थ्य बीमा कार्ड लिएर जानुपर्छ।" }, scenario: { en: "Hospital visit", np: "अस्पताल जाँदा" } },
+          { japanese: "あしたははやくおきなくてもいいです。", reading: "Ashita wa hayaku okinakute mo ii desu.", english: { en: "You do not have to get up early tomorrow.", np: "भोलि चाँडै उठ्नुपर्दैन।" }, scenario: { en: "A day off", np: "बिदाको दिन" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "ないでください", romaji: "nai de kudasai", name: { en: "negative request", np: "नकारात्मक अनुरोध" }, meaning: { en: "Please do not do V.", np: "V नगर्नुस्।" }, examples: [{ japanese: "わすれないでください。", reading: "Wasurenaide kudasai.", english: { en: "Please don't forget.", np: "नबिर्सनुस्।" }, scenario: { en: "Reminder", np: "सम्झना" } }] },
+      { particle: "なければなりません", romaji: "nakereba narimasen", name: { en: "obligation", np: "गर्नैपर्ने" }, meaning: { en: "Must do V.", np: "V गर्नैपर्छ।" }, examples: [{ japanese: "くすりをのまなければなりません。", reading: "Kusuri o nomanakereba narimasen.", english: { en: "I must take medicine.", np: "मैले औषधि खानैपर्छ।" }, scenario: { en: "Medical advice", np: "स्वास्थ्य सल्लाह" } }] },
+      { particle: "なくてもいいです", romaji: "nakute mo ii desu", name: { en: "no obligation", np: "नगरे पनि हुन्छ" }, meaning: { en: "You do not have to do V.", np: "V गर्नैपर्दैन।" }, examples: [{ japanese: "きょうはざんぎょうしなくてもいいです。", reading: "Kyō wa zangyō shinakute mo ii desu.", english: { en: "You do not have to work overtime today.", np: "आज ओभरटाइम काम गर्नुपर्दैन।" }, scenario: { en: "Work", np: "काम" } }] },
+    ],
+    vocabulary: buildVocab(17),
+    mcqs: [
+      { question: { en: "What is the correct ない-form of のみます?", np: "のみます को सही ない-form कुन हो?" }, choices: ["のまない", "のまります", "のみない", "のんない"], correctIndex: 0, explanation: { en: "Group 1: のみます → のまない. The final み changes to ま before ない.", np: "Group 1: のみます → のまない। अन्तिम み, ない अघि ま हुन्छ।" } },
+      { question: { en: "Complete: ここで しゃしんを ___ ください。", np: "पूरा गर्नुस्: ここで しゃしんを ___ ください।" }, choices: ["とらないで", "とらなくて", "とりないで", "とらなければ"], correctIndex: 0, explanation: { en: "A polite negative request uses V-ないでください: とらないでください.", np: "विनम्र नकारात्मक अनुरोध: V-ないでください। とらないでください।" } },
+      { question: { en: "Which sentence means ‘I must submit the report by Friday’ ?", np: "‘शुक्रबारसम्म रिपोर्ट बुझाउनुपर्छ’ भन्ने वाक्य कुन हो?" }, choices: ["きんようびまでにレポートをださなければなりません。", "きんようびまでにレポートをださなくてもいいです。", "きんようびまでにレポートをださないでください。", "きんようびまでにレポートをだしますか。"], correctIndex: 0, explanation: { en: "なければなりません expresses a requirement. までに sets the deadline.", np: "なければなりません ले गर्नैपर्ने देखाउँछ। までに ले समय सीमा दिन्छ।" } },
+      { question: { en: "What does くすりをのまなくてもいいです mean?", np: "くすりをのまなくてもいいです को अर्थ के हो?" }, choices: [{ en: "You do not have to take medicine", np: "औषधि खानुपर्दैन" }, { en: "You must take medicine", np: "औषधि खानैपर्छ" }, { en: "Please do not take medicine", np: "औषधि नखानुस्" }, { en: "I took medicine", np: "मैले औषधि खाएँ" }], correctIndex: 0, explanation: { en: "V-なくてもいいです means the action is not required.", np: "V-なくてもいいです भनेको त्यो काम गर्नैपर्ने छैन।" } },
+      { question: { en: "How do you say ‘My throat hurts’ ?", np: "‘मेरो घाँटी दुख्यो’ कसरी भन्ने?" }, choices: ["のどがいたいです。", "のどをいたいです。", "のどがいたくないです。", "のどにいたいです。"], correctIndex: 0, explanation: { en: "The body part is marked with が: のどがいたいです.", np: "शरीरको दुखेको भागसँग が प्रयोग हुन्छ: のどがいたいです।" } },
+    ],
+  },
 ];
 
 export function getLessonPage(id: number): N5LessonPageData | undefined {
