@@ -6380,6 +6380,7 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { en: "Learn the form first, then attach the ending you need: ないでください, なければなりません, or なくてもいいです.", np: "पहिले form सिक्नुहोस्, त्यसपछि चाहिएको अन्त्य जोड्नुहोस्: ないでください, なければなりません, वा なくてもいいです।" },
     ],
     youtubeVideoId: { en: "bXSc2NWdXh4", np: "z6lIcbA9uPA" },
+    youtubeVideoIdPart2: { en: "YumXjO-6b8c" },
     youtubeTitle: "Minna no Nihongo · Lesson 17 — Grammar",
     resources: [
       {
@@ -6465,6 +6466,101 @@ export const N5_LESSON_PAGES: N5LessonPageData[] = [
       { question: { en: "Which sentence means ‘I must submit the report by Friday’ ?", np: "‘शुक्रबारसम्म रिपोर्ट बुझाउनुपर्छ’ भन्ने वाक्य कुन हो?" }, choices: ["きんようびまでにレポートをださなければなりません。", "きんようびまでにレポートをださなくてもいいです。", "きんようびまでにレポートをださないでください。", "きんようびまでにレポートをだしますか。"], correctIndex: 0, explanation: { en: "なければなりません expresses a requirement. までに sets the deadline.", np: "なければなりません ले गर्नैपर्ने देखाउँछ। までに ले समय सीमा दिन्छ।" } },
       { question: { en: "What does くすりをのまなくてもいいです mean?", np: "くすりをのまなくてもいいです को अर्थ के हो?" }, choices: [{ en: "You do not have to take medicine", np: "औषधि खानुपर्दैन" }, { en: "You must take medicine", np: "औषधि खानैपर्छ" }, { en: "Please do not take medicine", np: "औषधि नखानुस्" }, { en: "I took medicine", np: "मैले औषधि खाएँ" }], correctIndex: 0, explanation: { en: "V-なくてもいいです means the action is not required.", np: "V-なくてもいいです भनेको त्यो काम गर्नैपर्ने छैन।" } },
       { question: { en: "How do you say ‘My throat hurts’ ?", np: "‘मेरो घाँटी दुख्यो’ कसरी भन्ने?" }, choices: ["のどがいたいです。", "のどをいたいです。", "のどがいたくないです。", "のどにいたいです。"], correctIndex: 0, explanation: { en: "The body part is marked with が: のどがいたいです.", np: "शरीरको दुखेको भागसँग が प्रयोग हुन्छ: のどがいたいです।" } },
+    ],
+  },
+  {
+    id: 18,
+    title: "Lesson 18 — dictionary form・abilities, hobbies and before",
+    intro: [
+      { en: "Lesson 18 uses the dictionary form, the short form found in dictionaries. You will use it to say what someone can do, describe a hobby, and put one action before another.", np: "पाठ १८ मा शब्दकोशमा भेटिने छोटो रूप, dictionary form सिक्नुहुन्छ। यसले के गर्न सकिन्छ, रुचि के हो, र एउटा कामअघि अर्को काम भन्न मद्दत गर्छ।" },
+      { en: "The same dictionary form works with ことができます, ことです, and まえに. Learn the verb change first, then build the longer pattern.", np: "एउटै dictionary form ले ことができます, ことです, र まえに सँग काम गर्छ। पहिले Verb रूप सिक्नुहोस्, त्यसपछि लामो Pattern बनाउनुहोस्।" },
+    ],
+    youtubeVideoId: { en: "ioVrbrz4Y4c", np: "CNSzhBaQgTE" },
+    youtubeVideoIdPart2: { en: "c8df0txRlKQ" },
+    youtubeTitle: "Minna no Nihongo · Lesson 18 — Grammar",
+    resources: [
+      {
+        title: {
+          en: "Open handwritten Chapter 18 notes",
+          np: "हस्तलिखित Chapter 18 नोटहरू खोल्नुहोस्",
+          jp: "手書きの第18課ノートを開く",
+        },
+        url: "https://drive.google.com/file/d/16LXfYCIENjgQNmUIu7aTIkZKvcQdNXGW/view?usp=drive_link",
+      },
+    ],
+    conversation: [
+      { speaker: "A", japanese: "しゅみはなんですか。", reading: "Shumi wa nan desu ka?", english: { en: "What is your hobby?", np: "तपाईंको रुचि के हो?" } },
+      { speaker: "B", japanese: "わたしのしゅみはピアノをひくことです。", reading: "Watashi no shumi wa piano o hiku koto desu.", english: { en: "My hobby is playing the piano.", np: "मेरो रुचि पियानो बजाउनु हो।" } },
+      { speaker: "A", japanese: "ピアノをひくことができますか。", reading: "Piano o hiku koto ga dekimasu ka?", english: { en: "Can you play the piano?", np: "तपाईं पियानो बजाउन सक्नुहुन्छ?" } },
+      { speaker: "B", japanese: "はい、すこしできます。ねるまえに、にっきをかきます。", reading: "Hai, sukoshi dekimasu. Neru mae ni, nikki o kakimasu.", english: { en: "Yes, a little. Before sleeping, I write a diary.", np: "हो, अलिअलि सक्छु। सुत्नुअघि डायरी लेख्छु।" } },
+    ],
+    grammar: [
+      {
+        number: 1,
+        name: { en: "Making the dictionary form", np: "dictionary form बनाउने" },
+        meaning: { en: "The dictionary form is the plain form listed in a dictionary. Group 1 changes the final ます-stem sound to its u-row sound. Group 2 replaces ます with る. The irregular forms are します → する and きます → くる.", np: "dictionary form शब्दकोशमा देखिने साधारण रूप हो। Group 1 मा अन्तिम ます-stem को ध्वनि u-row मा बदलिन्छ। Group 2 मा ます को ठाउँमा る आउँछ। irregular: します → する र きます → くる।" },
+        whereWeUse: [
+          { en: "Group 1: かいます → かう, よみます → よむ", np: "Group 1: かいます → かう, よみます → よむ" },
+          { en: "Group 2: たべます → たべる, みます → みる", np: "Group 2: たべます → たべる, みます → みる" },
+          { en: "Irregular: します → する, きます → くる", np: "irregular: します → する, きます → くる" },
+        ],
+        examples: [
+          { japanese: "にほんごをはなすことができます。", reading: "Nihongo o hanasu koto ga dekimasu.", english: { en: "I can speak Japanese.", np: "म जापानी बोल्न सक्छु।" }, scenario: { en: "Ability", np: "क्षमता" } },
+          { japanese: "ねるまえに、ほんをよみます。", reading: "Neru mae ni, hon o yomimasu.", english: { en: "Before sleeping, I read a book.", np: "सुत्नुअघि किताब पढ्छु।" }, scenario: { en: "Daily routine", np: "दैनिक काम" } },
+        ],
+      },
+      {
+        number: 2,
+        name: { en: "V-dictionary form ことができます — can do V", np: "V-dictionary form ことができます — V गर्न सक्नु" },
+        meaning: { en: "Attach ことができます to the dictionary form to say that a person has the ability or opportunity to do something. Use できません for cannot.", np: "dictionary form पछि ことができます जोडेर कसैको क्षमता वा अवसर भन्न सकिन्छ। नसक्ने भए できません प्रयोग गर्नुहोस्।" },
+        whereWeUse: [
+          { en: "Skills: ピアノをひくことができます", np: "सीप: ピアノをひくことができます" },
+          { en: "Language ability: にほんごをはなすことができます", np: "भाषा क्षमता: にほんごをはなすことができます" },
+        ],
+        examples: [
+          { japanese: "くるまをうんてんすることができますか。", reading: "Kuruma o unten suru koto ga dekimasu ka?", english: { en: "Can you drive a car?", np: "तपाईं कार चलाउन सक्नुहुन्छ?" }, scenario: { en: "Asking about a skill", np: "सीप सोध्दा" } },
+          { japanese: "わたしはおよぐことができません。", reading: "Watashi wa oyogu koto ga dekimasen.", english: { en: "I cannot swim.", np: "म पौडिन सक्दिनँ।" }, scenario: { en: "Saying an ability is unavailable", np: "नसक्ने कुरा बताउँदा" } },
+        ],
+      },
+      {
+        number: 3,
+        name: { en: "しゅみは V-dictionary form ことです — my hobby is V-ing", np: "しゅみは V-dictionary form ことです — मेरो रुचि V गर्नु हो" },
+        meaning: { en: "Use this pattern to state a hobby as an activity. The verb stays in dictionary form before ことです.", np: "कामलाई रुचिको रूपमा भन्न यो Pattern प्रयोग हुन्छ। Verb, ことです अघि dictionary form मै रहन्छ।" },
+        whereWeUse: [
+          { en: "Music: しゅみはピアノをひくことです", np: "संगीत: しゅみはピアノをひくことです" },
+          { en: "Collection: しゅみはきってをあつめることです", np: "सङ्कलन: しゅみはきってをあつめることです" },
+        ],
+        examples: [
+          { japanese: "わたしのしゅみはにっきをかくことです。", reading: "Watashi no shumi wa nikki o kaku koto desu.", english: { en: "My hobby is writing a diary.", np: "मेरो रुचि डायरी लेख्नु हो।" }, scenario: { en: "Talking about hobbies", np: "रुचिबारे कुरा गर्दा" } },
+          { japanese: "わたしのしゅみはうたをうたうことです。", reading: "Watashi no shumi wa uta o utau koto desu.", english: { en: "My hobby is singing songs.", np: "मेरो रुचि गीत गाउनु हो।" }, scenario: { en: "Introducing yourself", np: "आफ्नो परिचय दिँदा" } },
+        ],
+      },
+      {
+        number: 4,
+        name: { en: "V-dictionary form / N の まえに — before", np: "V-dictionary form / N の まえに — अघि" },
+        meaning: { en: "Use the dictionary form + まえに before an action. With a noun, use N のまえに. The action before まえに happens later than the action in the main sentence.", np: "कामअघि dictionary form + まえに प्रयोग हुन्छ। Noun सँग N のまえに प्रयोग गर्नुहोस्। まえに अगाडिको काम मुख्य वाक्यको कामभन्दा पछि हुन्छ।" },
+        whereWeUse: [
+          { en: "Action: ねるまえに、はをみがきます", np: "काम: ねるまえに、はをみがきます" },
+          { en: "Noun: しょくじのまえに、てをあらいます", np: "Noun: しょくじのまえに、てをあらいます" },
+        ],
+        examples: [
+          { japanese: "りょこうのまえに、ホテルをよやくします。", reading: "Ryokō no mae ni, hoteru o yoyaku shimasu.", english: { en: "Before a trip, I reserve a hotel.", np: "यात्राअघि होटल बुक गर्छु।" }, scenario: { en: "Travel planning", np: "यात्रा तयारी" } },
+          { japanese: "しけんのまえに、にっきをよみます。", reading: "Shiken no mae ni, nikki o yomimasu.", english: { en: "Before the exam, I read my diary.", np: "परीक्षाअघि डायरी पढ्छु।" }, scenario: { en: "Time expression", np: "समयको अभिव्यक्ति" } },
+        ],
+      },
+    ],
+    particles: [
+      { particle: "ことができます", romaji: "koto ga dekimasu", name: { en: "ability", np: "क्षमता" }, meaning: { en: "After a dictionary-form verb, says that someone can do it.", np: "dictionary-form Verb पछि कसैले त्यो काम गर्न सक्छ भन्ने देखाउँछ।" }, examples: [{ japanese: "ピアノをひくことができます。", reading: "Piano o hiku koto ga dekimasu.", english: { en: "I can play the piano.", np: "म पियानो बजाउन सक्छु।" }, scenario: { en: "Skill", np: "सीप" } }] },
+      { particle: "ことです", romaji: "koto desu", name: { en: "hobby activity", np: "रुचिको काम" }, meaning: { en: "After a dictionary-form verb, turns an action into a hobby statement.", np: "dictionary-form Verb पछि कामलाई रुचिको वाक्य बनाउँछ।" }, examples: [{ japanese: "しゅみはほんをよむことです。", reading: "Shumi wa hon o yomu koto desu.", english: { en: "My hobby is reading books.", np: "मेरो रुचि किताब पढ्नु हो।" }, scenario: { en: "Hobby", np: "रुचि" } }] },
+      { particle: "まえに", romaji: "mae ni", name: { en: "before", np: "अघि" }, meaning: { en: "Uses a dictionary-form verb or N の to say before something.", np: "कुनै काम वा वस्तुअघि भन्न dictionary-form Verb वा N の प्रयोग हुन्छ।" }, examples: [{ japanese: "ねるまえに、シャワーをあびます。", reading: "Neru mae ni, shawā o abimasu.", english: { en: "Before sleeping, I take a shower.", np: "सुत्नुअघि नुहाउँछु।" }, scenario: { en: "Routine", np: "दैनिक काम" } }] },
+    ],
+    vocabulary: buildVocab(18),
+    mcqs: [
+      { question: { en: "What is the dictionary form of かきます?", np: "かきます को dictionary form कुन हो?" }, choices: ["かく", "かきる", "かきまする", "かいた"], correctIndex: 0, explanation: { en: "Group 1 changes the final き sound to く: かきます → かく.", np: "Group 1 मा अन्तिम き, く हुन्छ: かきます → かく।" } },
+      { question: { en: "Complete: わたしはピアノを ___ ことができます。", np: "पूरा गर्नुस्: わたしはピアノを ___ ことができます।" }, choices: ["ひく", "ひきます", "ひいて", "ひいた"], correctIndex: 0, explanation: { en: "ことができます needs the dictionary form: ひく.", np: "ことができます सँग dictionary form: ひく।" } },
+      { question: { en: "Which sentence says ‘My hobby is collecting stamps’ ?", np: "‘मेरो रुचि टिकट सङ्कलन गर्नु हो’ भन्ने वाक्य कुन हो?" }, choices: ["わたしのしゅみはきってをあつめることです。", "わたしのしゅみはきってをあつめます。", "わたしのしゅみはきってをあつめることができます。", "わたしのしゅみはきってをあつめないです。"], correctIndex: 0, explanation: { en: "Hobbies use dictionary form + ことです.", np: "रुचिका लागि dictionary form + ことです प्रयोग हुन्छ।" } },
+      { question: { en: "Complete: しょくじの ___、てをあらいます。", np: "पूरा गर्नुस्: しょくじの ___、てをあらいます。" }, choices: ["まえに", "ことです", "できます", "あとで"], correctIndex: 0, explanation: { en: "Noun + のまえに means before a noun.", np: "Noun + のまえに भनेको Noun अघि हो।" } },
+      { question: { en: "What does うんてんすることができますか mean?", np: "うんてんすることができますか को अर्थ के हो?" }, choices: [{ en: "Can you drive?", np: "तपाईं गाडी चलाउन सक्नुहुन्छ?" }, { en: "Please drive.", np: "कृपया गाडी चलाउनुस्।" }, { en: "I drove.", np: "मैले गाडी चलाएँ।" }, { en: "Do not drive.", np: "गाडी नचलाउनुस्।" }], correctIndex: 0, explanation: { en: "Dictionary form + ことができますか asks about ability.", np: "dictionary form + ことができますか ले क्षमता सोध्छ।" } },
     ],
   },
 ];
