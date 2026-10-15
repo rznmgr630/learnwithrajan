@@ -161,13 +161,93 @@ const LISTENING_MCQ_BLOCKS: McqPoolRow[][] = [
   ],
 ];
 
+const WEEK3_FURIGANA: Record<string, string> = {
+  "一度": "いちど",
+  "自己評価": "じこひょうか",
+  "別問題": "べつもんだい",
+  "危険": "きけん",
+  "経験": "けいけん",
+  "禁止": "きんし",
+  "漢字": "かんじ",
+  "文書": "ぶんしょ",
+  "目的": "もくてき",
+  "動作": "どうさ",
+  "用法": "ようほう",
+  "自然": "しぜん",
+  "場面": "ばめん",
+  "語感": "ごかん",
+  "順番": "じゅんばん",
+  "内容": "ないよう",
+  "態度": "たいど",
+  "義務": "ぎむ",
+  "行動": "こうどう",
+  "結果": "けっか",
+  "理由": "りゆう",
+  "状況": "じょうきょう",
+  "聴解": "ちょうかい",
+  "許可": "きょか",
+  "感想": "かんそう",
+  "依頼": "いらい",
+  "質問": "しつもん",
+  "注意": "ちゅうい",
+  "意見": "いけん",
+  "意識": "いしき",
+  "形式": "けいしき",
+  "引用": "いんよう",
+  "練習": "れんしゅう",
+  "基本": "きほん",
+  "意味": "いみ",
+  "場所": "ばしょ",
+  "前": "まえ",
+  "多": "おお",
+  "近": "ちか",
+  "何": "なに",
+  "考": "かんが",
+  "文": "ぶん",
+  "言": "い",
+  "答": "こた",
+  "問": "もん",
+  "第": "だい",
+  "課": "か",
+  "五": "ご",
+  "読": "よ",
+  "聞": "き",
+  "表": "あらわ",
+  "帰": "き",
+  "建": "けん",
+  "喜": "き",
+  "剣": "けん",
+};
+
+const WEEK3_KANJI_PATTERN = new RegExp(
+  Object.keys(WEEK3_FURIGANA)
+    .sort((a, b) => b.length - a.length)
+    .join("|"),
+  "g",
+);
+
+function withWeek3Furigana(text: string): string {
+  return text.replace(WEEK3_KANJI_PATTERN, (kanji) => `{${kanji}|${WEEK3_FURIGANA[kanji]}}`);
+}
+
+function addFuriganaToBlocks(blocks: McqPoolRow[][]): McqPoolRow[][] {
+  return blocks.map((block) =>
+    block.map(([prompt, choices, correctIndex, explanation]) => [
+      withWeek3Furigana(prompt),
+      choices.map(withWeek3Furigana),
+      correctIndex,
+      explanation ? withWeek3Furigana(explanation) : undefined,
+    ]),
+  );
+}
+
 function listeningIntroW3(testNum: number, tid: string): JapaneseWeeklyTestItem {
   const a = Math.min(21, 15 + testNum);
   const b = Math.min(21, 17 + testNum);
   return listeningIntroEmbedded(
     `${tid}-l-intro`,
-    "聴解（Week 3）：許可・禁止・義務・経験・意見（とおもう）を意識してください。Minna L15–L21。",
-    "クリップを一度聞いてから答えてください。",
+    withWeek3Furigana("聴解（Week 3）：許可・禁止・義務・経験・意見（とおもう）を意識してください。Minna L15–L21。"),
+    withWeek3Furigana("クリップを一度聞いてから答えてください。"),
     [a, b, 21],
     undefined,
   );
@@ -176,10 +256,10 @@ function listeningIntroW3(testNum: number, tid: string): JapaneseWeeklyTestItem 
 export function buildWeek3SubTests(): JapaneseWeeklySubTest[] {
   return buildJlptFivePaperWeek({
     weekPrefix: "jn5-w3",
-    vocabBlocks: VOCAB_BLOCKS,
-    grammarBlocks: GRAMMAR_BLOCKS,
-    readingBlocks: READING_BLOCKS,
-    listeningMcqBlocks: LISTENING_MCQ_BLOCKS,
+    vocabBlocks: addFuriganaToBlocks(VOCAB_BLOCKS),
+    grammarBlocks: addFuriganaToBlocks(GRAMMAR_BLOCKS),
+    readingBlocks: addFuriganaToBlocks(READING_BLOCKS),
+    listeningMcqBlocks: addFuriganaToBlocks(LISTENING_MCQ_BLOCKS),
     listeningIntroForTest: listeningIntroW3,
     paperSubtitle: {
       en: "JLPT N5-style · 20 questions · Minna Lessons 15–21 · Days 15–21",

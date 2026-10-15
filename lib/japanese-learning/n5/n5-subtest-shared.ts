@@ -105,11 +105,11 @@ export function buildJlptFivePaperWeek(options: {
       subtitle: paperSubtitle,
       intro: paperIntro,
       sections: [
-        { title: "言語知識（文字・語彙・漢字）", blurb: "5問", items: vocabItems },
-        { title: "言語知識（文法）", blurb: "6問", items: grammarItems },
-        { title: "読解", blurb: "5問", items: readingItems },
+        { title: "言語知識（{文字|もじ}・{語彙|ごい}・{漢字|かんじ}）", blurb: "5問", items: vocabItems },
+        { title: "言語知識（{文法|ぶんぽう}）", blurb: "6問", items: grammarItems },
+        { title: "{読解|どっかい}", blurb: "5問", items: readingItems },
         {
-          title: "聴解",
+          title: "{聴解|ちょうかい}",
           blurb: "リスニング · 4問（＋準備・クリップ）",
           items: [listeningIntroForTest(testNum, tid), ...listeningMcqs],
         },
