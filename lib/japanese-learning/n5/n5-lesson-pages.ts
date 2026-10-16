@@ -5077,7 +5077,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 12 नोटहरू खोल्नुहोस्",
           jp: "手書きの第12課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/175s6wkUccSeTNMB7_ofm3CesfB8Xdhup/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-12-notes",
       },
     ],
     conversation: [
@@ -5412,7 +5412,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 13 नोटहरू खोल्नुहोस्",
           jp: "手書きの第13課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1q0Iq9CEEIDWBT6vjGqWwkN0OI8ztqxTU/view?usp=sharing",
+        url: "/learn/japanese-n5/chapter-13-notes",
       },
     ],
     conversation: [
@@ -5778,7 +5778,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 14 नोटहरू खोल्नुहोस्",
           jp: "手書きの第14課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1zAR5NGmYsIMBJidMzOj4I7rOP4P5Viuz/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-14-notes",
       },
     ],
     conversation: [
@@ -6157,7 +6157,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 15 नोटहरू खोल्नुहोस्",
           jp: "手書きの第15課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1b3GpeuTy0mhakyPCm3fxbKf08iww8_f3/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-15-notes",
       },
     ],
     conversation: [
@@ -6374,7 +6374,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 16 नोटहरू खोल्नुहोस्",
           jp: "手書きの第16課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1vFLZUXC4ZuozchUhtnhmx45ijl3q7czC/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-16-notes",
       },
     ],
     conversation: [
@@ -6417,7 +6417,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 17 नोटहरू खोल्नुहोस्",
           jp: "手書きの第17課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1_iG3igqwjLn-ldVUo---4b6gtGiGj0JS/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-17-notes",
       },
     ],
     conversation: [
@@ -6513,7 +6513,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 18 नोटहरू खोल्नुहोस्",
           jp: "手書きの第18課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/16LXfYCIENjgQNmUIu7aTIkZKvcQdNXGW/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-18-notes",
       },
     ],
     conversation: [
@@ -6608,7 +6608,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 19 नोटहरू खोल्नुहोस्",
           jp: "手書きの第19課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/14XG47bMihb-fQ29lOjo-Vu8rA9ILYg2c/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-19-notes",
       },
     ],
     conversation: [
@@ -6704,7 +6704,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 20 नोटहरू खोल्नुहोस्",
           jp: "手書きの第20課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1u5deFj-_9L_SLRW1soxApooW_0M6cx2z/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-20-notes",
       },
     ],
     conversation: [
@@ -6798,7 +6798,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 21 नोटहरू खोल्नुहोस्",
           jp: "手書きの第21課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1PQf52f35bQoz45GRDJdi3Hksrp-GhbRI/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-21-notes",
       },
     ],
     conversation: [
@@ -6893,7 +6893,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 22 नोटहरू खोल्नुहोस्",
           jp: "手書きの第22課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1FYC3Z7ohi1qL6V0c4edheJ2WnyNNnw_2/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-22-notes",
       },
     ],
     conversation: [
@@ -6974,7 +6974,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
           np: "हस्तलिखित Chapter 23 नोटहरू खोल्नुहोस्",
           jp: "手書きの第23課ノートを開く",
         },
-        url: "https://drive.google.com/file/d/1IfZ-VPjC_lsPQZV6OLx_xEKU0WHOHA7T/view?usp=drive_link",
+        url: "/learn/japanese-n5/chapter-23-notes",
       },
     ],
     conversation: [
@@ -7047,7 +7047,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
     youtubeVideoIdPart2: { en: "VOslIM6LGOU" },
     youtubeTitle: "Minna no Nihongo · Lesson 24 — Grammar",
     resources: [
-      { title: { en: "Open handwritten Chapter 24 notes", np: "हस्तलिखित Chapter 24 नोटहरू खोल्नुहोस्", jp: "手書きの第24課ノートを開く" }, url: "https://drive.google.com/file/d/1nwOuMTtkw7Oxla3IH5UCvbTARBTPuefP/view?usp=drive_link" },
+      { title: { en: "Open handwritten Chapter 24 notes", np: "हस्तलिखित Chapter 24 नोटहरू खोल्नुहोस्", jp: "手書きの第24課ノートを開く" }, url: "/learn/japanese-n5/chapter-24-notes" },
     ],
     conversation: [
       { speaker: "A", japanese: "わたしはともだちににほんごをおしえてあげます。", reading: "Watashi wa tomodachi ni nihongo o oshiete agemasu.", english: { en: "I teach Japanese to my friend.", np: "म साथीलाई जापानी सिकाइदिन्छु।" } },
@@ -7109,7 +7109,7 @@ const N5_LESSON_PAGE_DATA: N5LessonPageData[] = [
     youtubeVideoIdPart2: { en: "VZmZiS5tnHs" },
     youtubeTitle: "Minna no Nihongo · Lesson 25 — Grammar",
     resources: [
-      { title: { en: "Open handwritten Chapter 25 notes", np: "हस्तलिखित Chapter 25 नोटहरू खोल्नुहोस्", jp: "手書きの第25課ノートを開く" }, url: "https://drive.google.com/file/d/1mSL05_APmVhijhajJvojPon-wzX_2o8Q/view?usp=drive_link" },
+      { title: { en: "Open handwritten Chapter 25 notes", np: "हस्तलिखित Chapter 25 नोटहरू खोल्नुहोस्", jp: "手書きの第25課ノートを開く" }, url: "/learn/japanese-n5/chapter-25-notes" },
     ],
     conversation: [
       { speaker: "A", japanese: "じかんがあったら、いっしょにいっぱいのみましょう。", reading: "Jikan ga attara, issho ni ippai nomimashō.", english: { en: "If you have time, let’s have a drink together.", np: "समय भए सँगै बियर पिऔँ।" } },
