@@ -37,6 +37,7 @@ export const PINNABLE_TRACKS: PinnableTrackMeta[] = [
   { id: "exercise", href: "/learn/exercise", title: "Exercise", groupKey: "hub.sectionPersonalDev" },
   { id: "motivation", href: "/learn/motivation", title: "Motivation", groupKey: "hub.sectionPersonalDev" },
   { id: "devotion", href: "/learn/devotion", title: "Devotion", groupKey: "hub.sectionPersonalDev" },
+  { id: "page-number-reference", href: "/learn/page-number-reference", title: "Page Number Reference", groupKey: "hub.sectionPersonalDev" },
 ];
 
 export function getPinnableTrack(id: string): PinnableTrackMeta | undefined {
