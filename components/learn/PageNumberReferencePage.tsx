@@ -31,6 +31,7 @@ const PAGE_NUMBERS = [
 export function PageNumberReferencePage() {
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [order, setOrder] = useState(() => [...PAGE_NUMBERS]);
+  const [resourceOpen, setResourceOpen] = useState(false);
   const allShown = revealed.size === order.length;
 
   function toggleAll() {
@@ -76,14 +77,13 @@ export function PageNumberReferencePage() {
         <p className="mt-2 text-[var(--muted)]">A clean table of the page and number pairs from your notes.</p>
 
         <div className="mt-8 flex justify-end gap-2">
-          <a
-            href="https://drive.google.com/file/d/1jIQpt9RW7NzS7RUbf8jNKEzNVGKM8wgE/view?usp=sharing"
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => setResourceOpen(true)}
             className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-3 py-2 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--text)]"
           >
-            Resource ↗
-          </a>
+            Resource
+          </button>
           <button
             type="button"
             onClick={shuffle}
@@ -135,6 +135,35 @@ export function PageNumberReferencePage() {
           </table>
         </div>
       </main>
+
+      {resourceOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true" aria-labelledby="page-number-resource-title">
+          <button
+            type="button"
+            aria-label="Close resource preview"
+            onClick={() => setResourceOpen(false)}
+            className="absolute inset-0 bg-black/60"
+          />
+          <div className="relative flex h-[min(90vh,52rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+              <h2 id="page-number-resource-title" className="font-semibold text-[var(--text)]">Resource preview</h2>
+              <button
+                type="button"
+                onClick={() => setResourceOpen(false)}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"
+              >
+                Close
+              </button>
+            </div>
+            <iframe
+              src="https://drive.google.com/file/d/1jIQpt9RW7NzS7RUbf8jNKEzNVGKM8wgE/preview"
+              title="Page number resource"
+              className="min-h-0 w-full flex-1 border-0"
+              allow="autoplay"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
