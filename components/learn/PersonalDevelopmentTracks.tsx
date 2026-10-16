@@ -121,6 +121,23 @@ export function PersonalDevelopmentTracks() {
                 Watch →
               </span>
             </Link>
+
+            <Link href="/learn/page-number-reference" className={subCardClass}>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)]">
+                    Page Number Reference
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-[var(--muted)]">
+                    A quick table of the page numbers from your notes
+                  </p>
+                </div>
+                <PinButton id="page-number-reference" />
+              </div>
+              <span className="mt-auto pt-4 text-xs font-medium text-[var(--accent)] transition group-hover:brightness-110">
+                Open table →
+              </span>
+            </Link>
           </div>
         </div>
       </div>
