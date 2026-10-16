@@ -14,10 +14,12 @@ const BookReader = dynamic(
 interface LibraryBookReaderProps {
   title: string;
   pdfUrl: string;
+  backHref?: string;
+  backLabel?: string;
 }
 
-export function LibraryBookReader({ title, pdfUrl }: LibraryBookReaderProps) {
-  return <BookReader title={title} pdfUrl={pdfUrl} />;
+export function LibraryBookReader({ title, pdfUrl, backHref, backLabel }: LibraryBookReaderProps) {
+  return <BookReader title={title} pdfUrl={pdfUrl} backHref={backHref} backLabel={backLabel} />;
 }
 
 export function FinanceBookReader() {

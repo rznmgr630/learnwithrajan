@@ -18,6 +18,8 @@ const pdfOptions = {
 interface BookReaderProps {
   title: string;
   pdfUrl: string;
+  backHref?: string;
+  backLabel?: string;
 }
 
 interface WordMeaning {
@@ -25,7 +27,7 @@ interface WordMeaning {
   translation: string | null;
 }
 
-export function BookReader({ title, pdfUrl }: BookReaderProps) {
+export function BookReader({ title, pdfUrl, backHref = "/library", backLabel = "← Library" }: BookReaderProps) {
   const pageStorageKey = `library:book-page:${pdfUrl}`;
   const pinCategory = ["finance-book", "psychology-of-money", "richest-man-in-babylon", "the-simple-path-to-wealth", "the-millionaire-next-door", "i-will-teach-you-to-be-rich", "your-money-or-your-life", "the-intelligent-investor", "a-random-walk-down-wall-street", "the-total-money-makeover"].some((slug) => pdfUrl.endsWith(slug)) ? "finance" : ["power-of-your-subconscious-mind", "eat-that-frog", "atomic-habits", "the-7-habits", "how-to-win-friends", "mindset", "the-mountain-is-you", "thinking-fast-and-slow", "think-again"].some((slug) => pdfUrl.endsWith(slug)) ? "personal" : pdfUrl.includes("/fiction/") || ["peter-pan-and-wendy", "the-jungle-book", "animal-farm", "the-wizard-of-oz", "frankenstein"].some((slug) => pdfUrl.endsWith(slug)) ? "fiction" : pdfUrl.includes("/software-engineering/") ? "software-engineering" : ["maile-dekheko-darbar", "gaukhane-katha"].some((slug) => pdfUrl.endsWith(slug)) ? "nepali" : "business";
   const pinStorageKey = `library:pinned-book:${pinCategory}`;
@@ -212,7 +214,7 @@ export function BookReader({ title, pdfUrl }: BookReaderProps) {
     <main ref={readerRef} className="fixed inset-0 z-30 flex min-h-0 flex-col overflow-hidden bg-[var(--background)] px-4 py-5 sm:px-6">
       <div className={`flex flex-wrap items-center justify-between gap-4 ${isFullscreen ? "hidden" : ""}`}>
         <div className="flex items-center gap-3">
-          <Link href="/library" className="text-sm font-medium text-[var(--accent)] transition hover:brightness-110">← Library</Link>
+          <Link href={backHref} className="text-sm font-medium text-[var(--accent)] transition hover:brightness-110">{backLabel}</Link>
           <span className="h-5 w-px bg-[var(--border)]" aria-hidden="true" />
           <h1 className="text-xl font-semibold tracking-tight text-[var(--text)] sm:text-2xl">{title}</h1>
         </div>
