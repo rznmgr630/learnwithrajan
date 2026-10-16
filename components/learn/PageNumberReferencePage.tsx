@@ -76,6 +76,14 @@ export function PageNumberReferencePage() {
         <p className="mt-2 text-[var(--muted)]">A clean table of the page and number pairs from your notes.</p>
 
         <div className="mt-8 flex justify-end gap-2">
+          <a
+            href="https://drive.google.com/file/d/1jIQpt9RW7NzS7RUbf8jNKEzNVGKM8wgE/view?usp=sharing"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-3 py-2 text-xs font-medium text-[var(--muted)] transition hover:text-[var(--text)]"
+          >
+            Resource ↗
+          </a>
           <button
             type="button"
             onClick={shuffle}
