@@ -23,9 +23,10 @@ async function getSessionStatus(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const requiresLogin = ["/learn/code-review", "/learn/dsa", "/learn/system-design", "/learn/backend-engineering", "/learn/compiler", "/library", "/todo", "/focus"]
     .some((path) => request.nextUrl.pathname.startsWith(path));
+  const requiresAdmin = request.nextUrl.pathname.startsWith("/admin");
   const session = await getSessionStatus(request);
 
-  if ((requiresLogin && session.isAuthenticated) || (!requiresLogin && session.isAdmin)) {
+  if ((requiresLogin && session.isAuthenticated) || (requiresAdmin && session.isAdmin) || (!requiresLogin && !requiresAdmin)) {
     return NextResponse.next();
   }
 
@@ -60,5 +61,6 @@ export const config = {
     "/library/:path*",
     "/todo/:path*",
     "/focus/:path*",
+    "/admin/:path*",
   ],
 };
