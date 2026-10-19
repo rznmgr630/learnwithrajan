@@ -822,6 +822,13 @@ export const ENGLISH_MEANING_DAYS: EnglishDay[] = [
         examples: [{ en: "Her meticulous editing made the article much cleaner.", np: "उनको सूक्ष्म सम्पादनले लेखलाई धेरै सफा बनायो।" }],
       },
       {
+        word: "fastidious",
+        pos: "adjective",
+        meaning: "Very attentive to detail and hard to please about standards",
+        meaning_np: "अत्यन्त छान्ने, सानो विवरणमा पनि ध्यान दिने",
+        examples: [{ en: "He is the most fastidious person I have ever met.", np: "उनी मैले भेटेको सबैभन्दा धेरै विवरणमा ध्यान दिने व्यक्ति हुन्।" }],
+      },
+      {
         word: "assertive",
         pos: "adjective",
         meaning: "Confidently expressing opinions and needs without being aggressive",
