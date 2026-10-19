@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "npm run lint && npm run build"
+    "test": "npm run lint && npm run test:unit && npm run build",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@wp-playground/client": "^3.1.54",
@@ -25,6 +26,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.4.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^3.2.4"
   }
 }
