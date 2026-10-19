@@ -17,5 +17,20 @@ service cloud.firestore {
     match /users/{userId}/learningProgress/{progressId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    match /users/{userId}/budget/{documentId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == "rajanmidun@gmail.com";
+    }
+
+    match /users/{userId}/budget/{documentId}/{subcollection}/{entry} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == "rajanmidun@gmail.com";
+    }
+
+    match /users/{userId}/budget/{documentId}/{subcollection}/{entry}/{nestedCollection}/{nestedEntry} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == "rajanmidun@gmail.com";
+    }
   }
 }
