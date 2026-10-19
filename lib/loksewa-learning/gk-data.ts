@@ -33,4 +33,21 @@ export const LOKSEWA_GK_TOPICS: GkTopic[] = [
       { term: "Doctor of Animals", meaning: "Veterinarian" },
     ],
   },
+  {
+    id: 2,
+    title: "Generations by Birth Year",
+    items: [
+      { term: "1883–1900", meaning: "Lost Generation" },
+      { term: "1901–1927", meaning: "Greatest Generation" },
+      { term: "1928–1945", meaning: "Silent Generation" },
+      { term: "1946–1964", meaning: "Baby Boomers" },
+      { term: "1965–1980", meaning: "Generation X" },
+      { term: "1981–1996", meaning: "Millennials" },
+      { term: "1997–2012", meaning: "Generation Z" },
+      { term: "2013–2024", meaning: "Generation Alpha" },
+      { term: "2025–2039", meaning: "Generation Beta" },
+      { term: "2040–2054", meaning: "Generation Gamma" },
+      { term: "2055–2069", meaning: "Generation Delta" },
+    ],
+  },
 ];
