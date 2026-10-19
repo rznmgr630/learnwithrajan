@@ -4805,6 +4805,24 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "スイカ", romaji: "Suica", meaning_en: "Suica IC card", meaning_np: "सुइका आईसी कार्ड", examples: [{ ja: "スイカででんしゃにのります。", en: "I ride the train with a Suica card.", np: "म सुइका कार्डले ट्रेन चढ्छु।" }] },
     ],
   },
+  {
+    day: 42,
+    category: "Travel, Food & Time",
+    words: [
+      { word: "さいごのバス", romaji: "saigo no basu", meaning_en: "Last bus", meaning_np: "अन्तिम बस", examples: [{ ja: "さいごのバスは八時半です。", en: "The last bus is at 8:30.", np: "अन्तिम बस साढे आठ बजे छ।" }] },
+      { word: "来年", romaji: "rainen", reading: "らいねん", meaning_en: "Next year", meaning_np: "अर्को वर्ष", examples: [{ ja: "来年もここに来ましょう。", en: "Let's come here again next year.", np: "अर्को वर्ष पनि यहाँ आउँ।" }] },
+      { word: "そろそろ", romaji: "sorosoro", meaning_en: "Soon / it is about time", meaning_np: "अब छिट्टै / अब समय भयो", examples: [{ ja: "そろそろ行きましょう。", en: "Let's get going soon.", np: "अब छिट्टै जाऔँ।" }] },
+      { word: "カモ", romaji: "kamo", meaning_en: "Duck", meaning_np: "हाँस", examples: [{ ja: "カモが池にいます。", en: "There is a duck in the pond.", np: "पोखरीमा हाँस छ।" }] },
+      { word: "はし", romaji: "hashi", meaning_en: "Bridge", meaning_np: "पुल", examples: [{ ja: "はしをわたります。", en: "I cross the bridge.", np: "म पुल पार गर्छु।" }] },
+      { word: "やたい", romaji: "yatai", meaning_en: "Food stall", meaning_np: "खानाको स्टल", examples: [{ ja: "あのやたいでドーナツを買いませんか。", en: "Shall we buy donuts at that food stall?", np: "त्यो खानाको स्टलमा डोनट किनौं?" }] },
+      { word: "もう一つください", romaji: "mō hitotsu kudasai", meaning_en: "One more, please", meaning_np: "कृपया अर्को एउटा दिनुहोस्", examples: [{ ja: "ドーナツをもう一つください。", en: "One more donut, please.", np: "कृपया अर्को एउटा डोनट दिनुहोस्।" }] },
+      { word: "やきそば", romaji: "yakisoba", meaning_en: "Yakisoba / stir-fried noodles", meaning_np: "याकिसोबा / भुटेको चाउमिन", examples: [{ ja: "やきそばを食べます。", en: "I eat yakisoba.", np: "म याकिसोबा खान्छु।" }] },
+      { word: "電車の事故", romaji: "densha no jiko", reading: "でんしゃのじこ", meaning_en: "Train accident", meaning_np: "ट्रेन दुर्घटना", examples: [{ ja: "電車の事故について聞きました。", en: "I heard about the train accident.", np: "मैले ट्रेन दुर्घटनाबारे सुनेँ।" }] },
+      { word: "アナウンス", romaji: "anaunsu", meaning_en: "Announcement", meaning_np: "घोषणा", examples: [{ ja: "駅でアナウンスを聞きます。", en: "I hear an announcement at the station.", np: "म स्टेशनमा घोषणा सुन्छु।" }] },
+      { word: "はじめてモノレールに乗りました", romaji: "hajimete monorēru ni norimashita", meaning_en: "I rode a monorail for the first time", meaning_np: "म पहिलो पटक मोनोरेल चढें", examples: [{ ja: "はじめてモノレールに乗りました。", en: "I rode a monorail for the first time.", np: "म पहिलो पटक मोनोरेल चढें।" }] },
+      { word: "今週はどうですか", romaji: "konshū wa dō desu ka", meaning_en: "How about this week?", meaning_np: "यो हप्ता कस्तो छ?", examples: [{ ja: "今週はどうですか。", en: "How about this week?", np: "यो हप्ता कस्तो छ?" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
