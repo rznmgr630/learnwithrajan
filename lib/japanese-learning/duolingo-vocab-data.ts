@@ -4789,6 +4789,22 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "うけつけ", romaji: "uketsuke", meaning_en: "Reception desk", meaning_np: "रिसेप्सन / सोधपुछ कक्ष", examples: [{ ja: "うけつけはあちらです。", en: "The reception desk is over there.", np: "रिसेप्सन कक्ष उता छ।" }] },
     ],
   },
+  {
+    day: 41,
+    category: "Transport & Rail Travel",
+    words: [
+      { word: "さくらもち", romaji: "sakuramochi", meaning_en: "Cherry blossom mochi", meaning_np: "चेरी ब्लसम मोची", examples: [{ ja: "ゆうめいなみせでさくらもちをかいます。", en: "I will buy cherry blossom mochi at a famous shop.", np: "म प्रसिद्ध पसलमा चेरी ब्लसम मोची किन्नेछु।" }] },
+      { word: "おります", romaji: "orimasu", meaning_en: "To get off / disembark", meaning_np: "ओर्लनु", examples: [{ ja: "きょうとでおります。", en: "I will get off at Kyoto.", np: "म क्योटोमा ओर्लनेछु।" }] },
+      { word: "つぎ", romaji: "tsugi", meaning_en: "Next", meaning_np: "अर्को", examples: [{ ja: "つぎのバスにのります。", en: "I will get on the next bus.", np: "म अर्को बस चढ्नेछु।" }] },
+      { word: "かいさつぐち", romaji: "kaisatsuguchi", meaning_en: "Ticket gate", meaning_np: "टिकट गेट", examples: [{ ja: "かいさつぐちはあそこです。", en: "The ticket gate is over there.", np: "टिकट गेट उता छ।" }] },
+      { word: "きっぷ", romaji: "kippu", meaning_en: "Ticket", meaning_np: "टिकट", examples: [{ ja: "きっぷを二まいかいます。", en: "I will buy two tickets.", np: "म दुईवटा टिकट किन्नेछु।" }] },
+      { word: "ばんせん", romaji: "bansen", meaning_en: "Platform number", meaning_np: "प्लेटफर्म नम्बर", examples: [{ ja: "二ばんせんからでんしゃがでます。", en: "The train leaves from platform two.", np: "ट्रेन प्लेटफर्म नम्बर दुईबाट छुट्छ।" }] },
+      { word: "ちかてつ", romaji: "chikatetsu", meaning_en: "Subway / metro", meaning_np: "सबवे / मेट्रो", examples: [{ ja: "ちかてつでしぶやへいきます。", en: "I will go to Shibuya by subway.", np: "म सबवेबाट शिबुया जानेछु।" }] },
+      { word: "のります", romaji: "norimasu", meaning_en: "To ride / get on", meaning_np: "चढ्नु", examples: [{ ja: "しんかんせんにのります。", en: "I will ride the Shinkansen.", np: "म शिन्कान्सेन चढ्नेछु।" }] },
+      { word: "しんかんせん", romaji: "shinkansen", meaning_en: "Shinkansen / bullet train", meaning_np: "शिन्कान्सेन / बुलेट ट्रेन", examples: [{ ja: "しんかんせんでおおさかへいきます。", en: "I will go to Osaka by Shinkansen.", np: "म शिन्कान्सेनबाट ओसाका जानेछु।" }] },
+      { word: "スイカ", romaji: "Suica", meaning_en: "Suica IC card", meaning_np: "सुइका आईसी कार्ड", examples: [{ ja: "スイカででんしゃにのります。", en: "I ride the train with a Suica card.", np: "म सुइका कार्डले ट्रेन चढ्छु।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -4809,6 +4825,36 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "ごちそうさまでした",
     note: "A more formal and polite way to say ごちそうさま (gochisōsama) is ごちそうさまでした (gochisōsama deshita), used to show greater respect, particularly when dining with guests or in formal settings.",
     examples: [{ ja: "ごちそうさまでした。おいしかったです。", en: "Thank you for the meal. It was delicious.", np: "खानाको लागि धन्यवाद। मिठो थियो।" }],
+  },
+  {
+    title: "Boarding and Leaving Transport",
+    japanese: "にのります / をおります",
+    note: "Use に with のります to say what you board: バスにのります. Use を with おります to say what you leave: バスをおります. Use で to name where you get off: きょうとでおります.",
+    examples: [{ ja: "つぎのバスにのって、きょうとでおります。", en: "I get on the next bus and get off at Kyoto.", np: "म अर्को बस चढ्छु र क्योटोमा ओर्लन्छु।" }],
+  },
+  {
+    title: "Counting Tickets",
+    japanese: "〜まい",
+    note: "まい is the counter for thin, flat objects such as tickets, sheets of paper, and shirts. 二まい means two tickets or two sheets, depending on the noun.",
+    examples: [{ ja: "きっぷを二まいかいます。", en: "I buy two tickets.", np: "म दुईवटा टिकट किन्छु।" }],
+  },
+  {
+    title: "Suica and PASMO Cards",
+    japanese: "スイカ / パスモ",
+    note: "Suica and PASMO are prepaid IC cards. You can tap them at many train and subway gates, and use them for shopping where the accepted-card mark is displayed.",
+    examples: [{ ja: "スイカでコンビニのかいものをします。", en: "I shop at a convenience store with Suica.", np: "म सुइका कार्डले कनभिनियन्स स्टोरमा किनमेल गर्छु।" }],
+  },
+  {
+    title: "Japan Rail Passes",
+    japanese: "JRパス",
+    note: "Some JR passes offer unlimited rides within a stated area and validity period. Check the covered routes, trains, and travel dates before buying one.",
+    examples: [{ ja: "JRパスでりょこうします。", en: "I travel with a JR Pass.", np: "म जेआर पास लिएर यात्रा गर्छु।" }],
+  },
+  {
+    title: "Shinkansen Safety",
+    japanese: "しんかんせん",
+    note: "The Tokaido Shinkansen has had no passenger fatalities or injuries from accidents since its service began. Its safety systems and punctual operations make it a landmark of Japanese rail travel.",
+    examples: [{ ja: "しんかんせんはとてもはやいです。", en: "The Shinkansen is very fast.", np: "शिन्कान्सेन धेरै छिटो छ।" }],
   },
   {
     title: "Drugstores in Japan",
