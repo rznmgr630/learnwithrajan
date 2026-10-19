@@ -44,7 +44,8 @@ function ThemeToggle() {
 
 function ToolsMenu() {
   const pathname = usePathname();
-  const isActive = pathname === "/todo" || pathname === "/focus" || pathname.startsWith("/learn/compiler");
+  const { isAdmin } = useAuth();
+  const isActive = pathname === "/todo" || pathname === "/focus" || pathname.startsWith("/learn/compiler") || pathname.startsWith("/admin/budget");
 
   return (
     <div className="group relative">
@@ -58,6 +59,7 @@ function ToolsMenu() {
           <Link href="/todo" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11" /></svg>Todo</Link>
           <Link href="/focus" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
           <Link href="/learn/compiler" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>Code Compiler</Link>
+          {isAdmin && <Link href="/admin/budget" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V5m0 14h16M8 16v-4m4 4V8m4 8v-6" /></svg>Budget</Link>}
         </div>
       </div>
     </div>
@@ -68,7 +70,7 @@ function SettingsMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const router = useRouter();
   const shouldShowAuthActions = !isLoading && !user;
 
@@ -164,6 +166,7 @@ function SettingsMenu() {
                   <Link href="/todo" onClick={() => setIsOpen(false)} className={mobileLinkClass("/todo")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11" /></svg>Todo</Link>
                   <Link href="/focus" onClick={() => setIsOpen(false)} className={mobileLinkClass("/focus")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
                   <Link href="/learn/compiler" onClick={() => setIsOpen(false)} className={mobileLinkClass("/learn/compiler")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>Code Compiler</Link>
+                  {isAdmin && <Link href="/admin/budget" onClick={() => setIsOpen(false)} className={mobileLinkClass("/admin/budget")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V5m0 14h16M8 16v-4m4 4V8m4 8v-6" /></svg>Budget</Link>}
                   <Link href="/learn" onClick={() => setIsOpen(false)} className={mobileLinkClass("/learn")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10l10-5 10 5-10 5-10-5Zm4 2v5c0 2.5 12 2.5 12 0v-5" /></svg>{t("nav.learningHub")}</Link>
                   <Link href="/blog" onClick={() => setIsOpen(false)} className={mobileLinkClass("/blog")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4zM7 8h10M7 12h10M7 16h6" /></svg>{t("nav.blog")}</Link>
                   {user && <Link href="/library" onClick={() => setIsOpen(false)} className={mobileLinkClass("/library")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h14v18H5zM8 3v18" /></svg>{t("nav.library")}</Link>}
