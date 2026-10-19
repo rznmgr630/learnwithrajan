@@ -37,10 +37,10 @@ export function LoksewaGKPage() {
             Loksewa · General Knowledge
           </span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text)] sm:text-4xl">
-            Types of Doctors
+            General Knowledge
           </h1>
           <p className="mt-2 max-w-lg text-[var(--muted)]">
-            Medical specialists and what each one treats — expand a topic to see the list.
+            Useful Loksewa facts, from medical specialists to generation names.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2">
