@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { LearnBackNav } from "@/components/learn/LearnBackNav";
-import { SPEAK_LIKE_A_PRO, UPGRADE_YOUR_ENGLISH, FULL_FORMS } from "@/lib/english-learning/speak-like-pro-data";
-import type { SpeakSwap, FullFormEntry } from "@/lib/english-learning/speak-like-pro-data";
+import { SAY_REPLY_PAIRS, SPEAK_LIKE_A_PRO, UPGRADE_YOUR_ENGLISH, FULL_FORMS } from "@/lib/english-learning/speak-like-pro-data";
+import type { SayReply, SpeakSwap, FullFormEntry } from "@/lib/english-learning/speak-like-pro-data";
 
 type SpeakGroup = {
   title: string;
@@ -60,6 +60,19 @@ function SwapList({ items, fromLabel, toLabel }: { items: SpeakSwap[]; fromLabel
   );
 }
 
+function SayReplyList({ items }: { items: SayReply[] }) {
+  return (
+    <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
+      {items.map((item) => (
+        <div key={item.id} className="grid gap-1 px-5 py-4 sm:grid-cols-2 sm:gap-5">
+          <p className="text-sm text-[var(--text)]"><span className="text-xs text-[var(--muted)]">Say: </span>{item.say}</p>
+          <p className="text-sm font-medium text-[var(--accent)]"><span className="text-xs text-[var(--muted)]">Reply: </span>{item.reply}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function FullFormList({ items }: { items: FullFormEntry[] }) {
   return (
     <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
@@ -84,9 +97,10 @@ function FullFormList({ items }: { items: FullFormEntry[] }) {
   );
 }
 
-type SectionId = "conversation" | "feelings" | "work" | "idioms" | "slang" | "upgrade" | "fullforms";
+type SectionId = "replies" | "conversation" | "feelings" | "work" | "idioms" | "slang" | "upgrade" | "fullforms";
 
 const SECTIONS: { id: SectionId; title: string; count: number; render: () => React.ReactNode }[] = [
+  { id: "replies", title: "Say It, Reply Naturally", count: SAY_REPLY_PAIRS.length, render: () => <SayReplyList items={SAY_REPLY_PAIRS} /> },
   { id: "conversation", title: "Conversation & Social English", count: SPEAK_LIKE_A_PRO_GROUPS[0].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[0].items} fromLabel="Don't say" toLabel="Say" /> },
   { id: "feelings", title: "Feelings & People", count: SPEAK_LIKE_A_PRO_GROUPS[1].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[1].items} fromLabel="Don't say" toLabel="Say" /> },
   { id: "work", title: "Work & Daily Life", count: SPEAK_LIKE_A_PRO_GROUPS[2].items.length, render: () => <SwapList items={SPEAK_LIKE_A_PRO_GROUPS[2].items} fromLabel="Don't say" toLabel="Say" /> },
@@ -102,7 +116,7 @@ const SECTIONS: { id: SectionId; title: string; count: number; render: () => Rea
 ];
 
 export function SpeakLikeProPage() {
-  const [openSections, setOpenSections] = useState<Set<SectionId>>(new Set(["conversation"]));
+  const [openSections, setOpenSections] = useState<Set<SectionId>>(new Set(["replies"]));
 
   function toggle(id: SectionId) {
     setOpenSections((prev) => {

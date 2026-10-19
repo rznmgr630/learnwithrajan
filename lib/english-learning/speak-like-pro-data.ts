@@ -4,6 +4,35 @@ export type SpeakSwap = {
   upgraded: string;
 };
 
+export type SayReply = {
+  id: number;
+  say: string;
+  reply: string;
+};
+
+export const SAY_REPLY_PAIRS: SayReply[] = [
+  { id: 1, say: "Thank you.", reply: "Anytime!" },
+  { id: 2, say: "How are you?", reply: "All good!" },
+  { id: 3, say: "Sorry.", reply: "No worries!" },
+  { id: 4, say: "Congratulations!", reply: "Cheers!" },
+  { id: 5, say: "Good morning.", reply: "Morning!" },
+  { id: 6, say: "Good night.", reply: "Sleep well!" },
+  { id: 7, say: "See you later.", reply: "Catch you later!" },
+  { id: 8, say: "I love it!", reply: "Me too!" },
+  { id: 9, say: "Really?", reply: "Totally!" },
+  { id: 10, say: "Can you help me?", reply: "Of course!" },
+  { id: 11, say: "I'm fine.", reply: "Great to hear!" },
+  { id: 12, say: "What's up?", reply: "Not much!" },
+  { id: 13, say: "That's amazing!", reply: "I know, right?" },
+  { id: 14, say: "Happy birthday!", reply: "Thanks a lot!" },
+  { id: 15, say: "Let's go!", reply: "I'm in!" },
+  { id: 16, say: "I agree.", reply: "Exactly!" },
+  { id: 17, say: "Excuse me.", reply: "Go ahead!" },
+  { id: 18, say: "Are you ready?", reply: "Absolutely!" },
+  { id: 19, say: "See you soon.", reply: "Can't wait!" },
+  { id: 20, say: "Good luck!", reply: "Thanks, I appreciate it!" },
+];
+
 export const SPEAK_LIKE_A_PRO: SpeakSwap[] = [
   { id: 1, basic: "Oh My God!", upgraded: "Holy Moly!" },
   { id: 2, basic: "I forgot.", upgraded: "It slipped my mind." },
