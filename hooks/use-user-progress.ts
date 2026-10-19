@@ -6,6 +6,7 @@ import { useAuthAction } from "@/context/AuthActionContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { db } from "@/lib/firebase";
+import { nextProgressValues } from "@/lib/user-progress-values";
 
 type ProgressValue = number | string;
 
@@ -57,10 +58,7 @@ export function useUserProgress<T extends ProgressValue>({ id, initialValues = [
       return;
     }
 
-    const wasCompleted = values.has(value);
-    const next = new Set(values);
-    if (wasCompleted) next.delete(value);
-    else next.add(value);
+    const { values: next, wasCompleted } = nextProgressValues(values, value);
     setValues(next);
 
     try {
