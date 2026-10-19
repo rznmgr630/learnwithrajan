@@ -6,6 +6,7 @@ import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
 import { createUserWithEmailAndPassword, reload, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { authModeHref, safeReturnPath } from "@/lib/auth-redirect";
 
 type AuthMode = "login" | "register";
 const resendCooldownMs = 2 * 60 * 1000;
@@ -44,16 +45,12 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [passwordResetCooldownSeconds, setPasswordResetCooldownSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isLogin = mode === "login";
-  const returnPath = () => {
-    if (typeof window === "undefined") return "/learn";
-    const next = new URLSearchParams(window.location.search).get("next");
-    return next?.startsWith("/") && !next.startsWith("//") ? next : "/learn";
-  };
+  const returnPath = () => safeReturnPath(typeof window === "undefined" ? "" : window.location.search);
   const switchAuthMode = (event: MouseEvent<HTMLAnchorElement>) => {
     const next = returnPath();
     if (next === "/learn") return;
     event.preventDefault();
-    router.push(`/${isLogin ? "register" : "login"}?next=${encodeURIComponent(next)}`);
+    router.push(authModeHref(isLogin ? "register" : "login", next));
   };
 
   useEffect(() => {
