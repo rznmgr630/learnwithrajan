@@ -323,13 +323,12 @@ function SpendingChart({
         </p>
       </section>
     );
-  const circumference = 2 * Math.PI * 42;
   const arcs = slices.map((slice, index) => ({
     slice,
-    length: (slice.amount / total) * circumference,
+    length: (slice.amount / total) * 100,
     offset: slices
       .slice(0, index)
-      .reduce((sum, item) => sum + (item.amount / total) * circumference, 0),
+      .reduce((sum, item) => sum + (item.amount / total) * 100, 0),
   }));
   return (
     <section className="order-3 mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
@@ -350,6 +349,7 @@ function SpendingChart({
             cx="50"
             cy="50"
             r="42"
+            pathLength="100"
             fill="none"
             stroke="var(--elevated)"
             strokeWidth="16"
@@ -360,11 +360,13 @@ function SpendingChart({
               cx="50"
               cy="50"
               r="42"
+              pathLength="100"
               fill="none"
               stroke={chartColors[index % chartColors.length]}
               strokeWidth="16"
-              strokeDasharray={`${length} ${circumference - length}`}
+              strokeDasharray={`${length} ${100 - length}`}
               strokeDashoffset={-offset}
+              strokeLinecap="butt"
               transform="rotate(-90 50 50)"
             />
           ))}
