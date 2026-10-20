@@ -1363,7 +1363,7 @@ export function BudgetTracker() {
                       }}
                       aria-label="Edit expense"
                       title="Edit expense"
-                      className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-[var(--elevated)] hover:text-[var(--accent)]"
+                      className="cursor-pointer rounded p-1 text-[var(--accent)] hover:bg-[var(--elevated)]"
                     >
                       <PencilIcon />
                     </button>
@@ -1377,7 +1377,7 @@ export function BudgetTracker() {
                       }
                       aria-label="Delete expense"
                       title="Delete expense"
-                      className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-red-500/10 hover:text-red-500"
+                      className="cursor-pointer rounded p-1 text-red-500 hover:bg-red-500/10"
                     >
                       <TrashIcon />
                     </button>
@@ -1486,7 +1486,7 @@ export function BudgetTracker() {
                         }}
                         aria-label={`Edit ${item.name}`}
                         title="Edit category"
-                        className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-[var(--elevated)] hover:text-[var(--accent)]"
+                        className="cursor-pointer rounded p-1 text-[var(--accent)] hover:bg-[var(--elevated)]"
                       >
                         <PencilIcon />
                       </button>
@@ -1500,7 +1500,7 @@ export function BudgetTracker() {
                         }
                         aria-label={`Delete ${item.name}`}
                         title="Delete category"
-                        className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-red-500/10 hover:text-red-500"
+                        className="cursor-pointer rounded p-1 text-red-500 hover:bg-red-500/10"
                       >
                         <TrashIcon />
                       </button>
@@ -1549,7 +1549,7 @@ export function BudgetTracker() {
                         }}
                         aria-label={`Edit ${item.name}`}
                         title="Edit recurring bill"
-                        className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-[var(--elevated)] hover:text-[var(--accent)]"
+                        className="cursor-pointer rounded p-1 text-[var(--accent)] hover:bg-[var(--elevated)]"
                       >
                         <PencilIcon />
                       </button>
@@ -1563,7 +1563,7 @@ export function BudgetTracker() {
                         }
                         aria-label={`Delete ${item.name}`}
                         title="Delete recurring bill"
-                        className="cursor-pointer rounded p-1 text-[var(--faint)] hover:bg-red-500/10 hover:text-red-500"
+                        className="cursor-pointer rounded p-1 text-red-500 hover:bg-red-500/10"
                       >
                         <TrashIcon />
                       </button>
