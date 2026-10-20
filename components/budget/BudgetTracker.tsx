@@ -1381,7 +1381,7 @@ export function BudgetTracker() {
               </h2>
               <form
                 onSubmit={categoryToEdit ? updateCategory : addCategory}
-                className="mt-4 flex gap-2"
+                className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2 sm:flex"
               >
                 <input
                   ref={categoryEditorRef}
@@ -1392,7 +1392,7 @@ export function BudgetTracker() {
                       : setCategoryName(event.target.value)
                   }
                   placeholder="Groceries"
-                  className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text)]"
+                  className="col-span-full min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text)] sm:col-auto"
                 />
                 <input
                   type="number"
@@ -1404,7 +1404,7 @@ export function BudgetTracker() {
                       : setCategoryLimit(event.target.value)
                   }
                   placeholder="Limit"
-                  className="w-24 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text)]"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text)] sm:w-24"
                 />
                 <select
                     value={categoryToEdit ? editedCategoryType : categoryType}
