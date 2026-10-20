@@ -1025,12 +1025,12 @@ export function BudgetTracker() {
             className="text-red-500"
           />
           <Summary
-            label="Safe to spend"
-            value={income - spent}
-            hint="Income minus recorded spending"
+            label="Available to spend"
+            value={income - spent - recurring}
+            hint="After spending and recurring bills"
             money={money}
             className={
-              income - spent < 0 ? "text-red-500" : "text-[var(--accent)]"
+              income - spent - recurring < 0 ? "text-red-500" : "text-[var(--accent)]"
             }
           />
           <Summary
