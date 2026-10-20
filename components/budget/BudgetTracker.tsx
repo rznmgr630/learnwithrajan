@@ -994,16 +994,16 @@ export function BudgetTracker() {
               Track spending and what remains safe to use.
             </p>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <label className="flex items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
-              <span>Currency</span>
+          <div className="grid w-full grid-cols-1 gap-2 min-[360px]:grid-cols-[minmax(0,.75fr)_minmax(0,1.25fr)] sm:flex sm:w-auto sm:items-center">
+            <label className="flex min-w-0 items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
+              <span className="whitespace-nowrap">Currency</span>
               <select
                 value={currency}
                 onChange={(event) =>
                   void saveCurrency(event.target.value as Currency)
                 }
                 disabled={Boolean(pendingAction)}
-                className="bg-transparent text-[var(--text)] outline-none disabled:opacity-50"
+                className="min-w-0 bg-transparent text-[var(--text)] outline-none disabled:opacity-50"
               >
                 {currencies.map((item) => (
                   <option key={item} value={item}>
@@ -1012,8 +1012,8 @@ export function BudgetTracker() {
                 ))}
               </select>
             </label>
-            <label className="flex items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
-              <span>Month</span>
+            <label className="flex min-w-0 items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
+              <span className="whitespace-nowrap">Month</span>
               <input
                 type="month"
                 value={month}
@@ -1023,7 +1023,7 @@ export function BudgetTracker() {
                   setExpenseDate(`${nextMonth}-01`);
                   setMonth(nextMonth);
                 }}
-                className="bg-transparent text-[var(--text)] outline-none"
+                className="min-w-0 bg-transparent text-[var(--text)] outline-none"
               />
             </label>
           </div>
