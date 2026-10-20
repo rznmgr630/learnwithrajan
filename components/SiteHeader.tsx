@@ -46,6 +46,7 @@ function ToolsMenu() {
   const pathname = usePathname();
   const { isAdmin } = useAuth();
   const isActive = pathname === "/todo" || pathname === "/focus" || pathname.startsWith("/learn/compiler") || pathname.startsWith("/admin/budget");
+  const toolLinkClass = (active: boolean) => `flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${active ? "bg-[var(--elevated)] font-medium text-[var(--text)]" : "text-[var(--muted)] hover:bg-[var(--elevated)] hover:text-[var(--text)]"}`;
 
   return (
     <div className="group relative">
@@ -56,10 +57,10 @@ function ToolsMenu() {
       </button>
       <div className="invisible absolute left-0 top-full z-30 w-40 pt-1 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 shadow-xl">
-          <Link href="/todo" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h11" /></svg>Todo</Link>
-          <Link href="/focus" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
-          <Link href="/learn/compiler" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>Code Compiler</Link>
-          {isAdmin && <Link href="/admin/budget" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V5m0 14h16M8 16v-4m4 4V8m4 8v-6" /></svg>Budget</Link>}
+          <Link href="/todo" className={toolLinkClass(pathname === "/todo")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a1 1 0 0 1-1 1H4a1 1 0 0 1 1-1h11" /></svg>Todo</Link>
+          <Link href="/focus" className={toolLinkClass(pathname === "/focus")}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>Focus</Link>
+          <Link href="/learn/compiler" className={toolLinkClass(pathname.startsWith("/learn/compiler"))}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 9 3 3-3 3M13 15h3" /><rect x="3" y="4" width="18" height="16" rx="2" /></svg>Code Compiler</Link>
+          {isAdmin && <Link href="/admin/budget" className={toolLinkClass(pathname.startsWith("/admin/budget"))}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19V5m0 14h16M8 16v-4m4 4V8m4 8v-6" /></svg>Budget</Link>}
         </div>
       </div>
     </div>
