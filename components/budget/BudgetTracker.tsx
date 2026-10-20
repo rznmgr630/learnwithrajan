@@ -548,7 +548,7 @@ export function BudgetTracker() {
     useState<Transaction | null>(null);
   const [billName, setBillName] = useState("");
   const [billAmount, setBillAmount] = useState("");
-  const [billDueDay, setBillDueDay] = useState("1");
+  const [billDueDay, setBillDueDay] = useState("");
   const [billToEdit, setBillToEdit] = useState("");
   const [editedBillName, setEditedBillName] = useState("");
   const [editedBillAmount, setEditedBillAmount] = useState("");
@@ -888,6 +888,7 @@ export function BudgetTracker() {
       });
       setBillName("");
       setBillAmount("");
+      setBillDueDay("");
     } catch {
       setError("We could not add that bill. Check your Firestore rules.");
     } finally {
@@ -1233,6 +1234,7 @@ export function BudgetTracker() {
                     ? setEditedBillDueDay(event.target.value)
                     : setBillDueDay(event.target.value)
                 }
+                placeholder="Due day"
                 aria-label="Due day"
                 className="min-w-0 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text)]"
               />
