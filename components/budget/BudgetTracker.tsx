@@ -1321,9 +1321,9 @@ export function BudgetTracker() {
                 monthTransactions.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center gap-3 py-3 text-sm"
+                    className="flex flex-wrap items-center gap-3 py-3 text-sm sm:flex-nowrap"
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 w-full sm:w-auto sm:flex-1">
                       <p className="truncate font-medium text-[var(--text)]">
                         {categories.find(
                           (category) => category.id === item.categoryId,
@@ -1435,9 +1435,9 @@ export function BudgetTracker() {
                   return (
                     <li
                       key={item.id}
-                      className="flex items-center gap-3 py-3 text-sm"
+                      className="flex flex-wrap items-center gap-3 py-3 text-sm sm:flex-nowrap"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 w-full sm:w-auto sm:flex-1">
                         <p className="truncate font-medium text-[var(--text)]">
                           {item.name}
                         </p>
@@ -1502,9 +1502,9 @@ export function BudgetTracker() {
                   bills.map((item) => (
                     <li
                       key={item.id}
-                      className="flex items-center gap-3 py-3 text-sm"
+                      className="flex flex-wrap items-center gap-3 py-3 text-sm sm:flex-nowrap"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 w-full sm:w-auto sm:flex-1">
                         <p className="truncate font-medium text-[var(--text)]">
                           {item.name}
                         </p>
