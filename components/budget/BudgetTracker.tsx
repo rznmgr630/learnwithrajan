@@ -966,8 +966,8 @@ export function BudgetTracker() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto flex max-w-5xl flex-col px-4 py-8 sm:px-6 sm:py-12">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-col overflow-x-clip px-4 py-8 sm:px-6 sm:py-12">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
               Admin tool
@@ -979,8 +979,8 @@ export function BudgetTracker() {
               Track spending and what remains safe to use.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)]">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <label className="flex items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
               <span>Currency</span>
               <select
                 value={currency}
@@ -997,7 +997,7 @@ export function BudgetTracker() {
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)]">
+            <label className="flex items-center justify-between gap-2 rounded-full bg-[var(--elevated)] px-3 py-1.5 text-sm text-[var(--muted)] sm:justify-start">
               <span>Month</span>
               <input
                 type="month"
