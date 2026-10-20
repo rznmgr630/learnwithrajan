@@ -553,6 +553,7 @@ export function BudgetTracker() {
   const [editedBillName, setEditedBillName] = useState("");
   const [editedBillAmount, setEditedBillAmount] = useState("");
   const [editedBillDueDay, setEditedBillDueDay] = useState("1");
+  const expenseEditorRef = useRef<HTMLInputElement>(null);
   const categoryEditorRef = useRef<HTMLInputElement>(null);
   const billEditorRef = useRef<HTMLInputElement>(null);
   const [deletionTarget, setDeletionTarget] = useState<DeletionTarget | null>(
@@ -562,6 +563,20 @@ export function BudgetTracker() {
     "income" | "category" | "expense" | "bill" | "delete" | null
   >(null);
   const [isRetirementOpen, setIsRetirementOpen] = useState(false);
+
+  useEffect(() => {
+    if (!editingTransaction) return;
+    const frame = requestAnimationFrame(() => {
+      const editor = expenseEditorRef.current;
+      if (!editor) return;
+      window.scrollTo({
+        top: editor.getBoundingClientRect().top + window.scrollY - 96,
+        behavior: "smooth",
+      });
+      editor.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [editingTransaction]);
 
   useEffect(() => {
     if (!firestore || !user || !isAdmin) return;
@@ -1259,6 +1274,7 @@ export function BudgetTracker() {
               className="mt-4 grid gap-2 sm:grid-cols-2"
             >
               <input
+                ref={expenseEditorRef}
                 type="number"
                 min="1"
                 value={expenseAmount}
