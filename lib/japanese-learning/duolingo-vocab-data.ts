@@ -3914,6 +3914,7 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
         meaning_en: "Dolphin",
         meaning_np: "डल्फिन",
         examples: [{ ja: "いるかはかしこいです。", en: "The dolphin is clever.", np: "डल्फिन बुद्धिमान छ।" }],
+        note: "This word is also commonly written in katakana as イルカ.",
       },
       {
         word: "たこ",
@@ -4916,6 +4917,15 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "タコライス", romaji: "tako raisu", meaning_en: "Taco rice", meaning_np: "टाको राइस (टाको शैलीको भात)", examples: [{ ja: "タコライスを食べます。", en: "I eat taco rice.", np: "म टाको राइस खान्छु।" }] },
       { word: "てんさい", romaji: "tensai", meaning_en: "Genius", meaning_np: "प्रतिभाशाली व्यक्ति / जिनियस", examples: [{ ja: "ジュニアはてんさいですね。", en: "Junior is a genius, isn't he?", np: "जुनियर प्रतिभाशाली छन्, हैन?" }] },
       { word: "いれます", romaji: "iremasu", meaning_en: "To put in; to add", meaning_np: "हाल्नु / थप्नु", examples: [{ ja: "タコライスにパイナップルとマンゴーを入れました。", en: "I added pineapple and mango to the taco rice.", np: "मैले टाको राइसमा भुइँकटहर र आँप हालेँ।" }] },
+      { word: "無料", romaji: "muryō", reading: "むりょう", meaning_en: "Free of charge", meaning_np: "निःशुल्क", examples: [{ ja: "チケットは無料ですか。", en: "Are the tickets free?", np: "टिकट निःशुल्क हुन्?" }] },
+      { word: "最高", romaji: "saikō", reading: "さいこう", meaning_en: "The best; excellent; amazing", meaning_np: "सबैभन्दा राम्रो; उत्कृष्ट", examples: [{ ja: "最高ですね。", en: "This is great.", np: "यो त उत्कृष्ट छ।" }] },
+      { word: "朝", romaji: "asa", reading: "あさ", meaning_en: "Morning", meaning_np: "बिहान", examples: [{ ja: "朝、イルカを見ました。", en: "I saw a dolphin in the morning.", np: "मैले बिहान डल्फिन देखेँ।" }] },
+      { word: "本当", romaji: "hontō", reading: "ほんとう", meaning_en: "Truth; really", meaning_np: "सत्य; साँच्चै", examples: [{ ja: "イルカは本当にかわいいですよ。", en: "Dolphins are really cute.", np: "डल्फिन साँच्चै प्यारा हुन्छन्।" }] },
+      { word: "かわいい", romaji: "kawaii", meaning_en: "Cute; lovely", meaning_np: "प्यारा / राम्रा", examples: [{ ja: "イルカは本当にかわいいですよ。", en: "Dolphins are really cute.", np: "डल्फिन साँच्चै प्यारा हुन्छन्।" }] },
+      { word: "長い", romaji: "nagai", reading: "ながい", meaning_en: "Long", meaning_np: "लामो", examples: [{ ja: "長いストローです。", en: "It is a long straw.", np: "यो लामो स्ट्रो हो।" }] },
+      { word: "ストロー", romaji: "sutorō", meaning_en: "Drinking straw", meaning_np: "पिउने स्ट्रो", examples: [{ ja: "長いストローを使います。", en: "I use a long straw.", np: "म लामो स्ट्रो प्रयोग गर्छु।" }] },
+      { word: "二枚", romaji: "nimai", reading: "にまい", meaning_en: "Two flat objects; two tickets", meaning_np: "दुईवटा पातला वस्तु / टिकट", examples: [{ ja: "チケットが二枚あります。", en: "There are two tickets.", np: "दुईवटा टिकट छन्।" }] },
+      { word: "そうですか", romaji: "sō desu ka", meaning_en: "Is that so?; I see.", meaning_np: "हो र?; ए, त्यसो हो?", examples: [{ ja: "そうですか。", en: "Is that so?", np: "हो र?" }] },
     ],
   },
 ];
