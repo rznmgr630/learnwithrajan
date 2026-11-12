@@ -4839,9 +4839,33 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "スタッフ", romaji: "sutaffu", meaning_en: "Staff / staff members / employees", meaning_np: "कर्मचारीहरू", examples: [{ ja: "りょかんのスタッフです。", en: "They are staff at the inn.", np: "उहाँ र्‍योकानका कर्मचारी हुनुहुन्छ।" }] },
     ],
   },
+  {
+    day: 44,
+    category: "Food, Rest & Travel",
+    words: [
+      { word: "さしみ", romaji: "sashimi", meaning_en: "Sashimi (sliced raw fish)", meaning_np: "सासिमी (काँचो माछाका पातला टुक्रा)", examples: [{ ja: "さしみはおいしいです。", en: "Sashimi is tasty.", np: "सासिमी मिठो हुन्छ।" }] },
+      { word: "きせつの魚", romaji: "kisetsu no sakana", reading: "きせつのさかな", meaning_en: "Seasonal fish / fish of the season", meaning_np: "मौसमी माछा", examples: [{ ja: "きせつの魚を食べます。", en: "I eat seasonal fish.", np: "म मौसमी माछा खान्छु।" }] },
+      { word: "きのこ", romaji: "kinoko", meaning_en: "Mushroom", meaning_np: "च्याउ", examples: [{ ja: "きのこを食べます。", en: "I eat mushrooms.", np: "म च्याउ खान्छु।" }] },
+      { word: "ぬぎます", romaji: "nugimasu", meaning_en: "To take off (clothing or shoes)", meaning_np: "(लुगा वा जुत्ता) फुकाल्नु", examples: [{ ja: "くつをぬぎます。", en: "I take off my shoes.", np: "म जुत्ता फुकाल्छु।" }] },
+      { word: "よく", romaji: "yoku", meaning_en: "Well", meaning_np: "राम्ररी", examples: [{ ja: "よくねました。", en: "I slept well.", np: "म राम्ररी सुतें।" }] },
+      { word: "りっぱな", romaji: "rippa na", meaning_en: "Splendid / fine", meaning_np: "भव्य / उत्कृष्ट", examples: [{ ja: "りっぱなりょかんです。", en: "It is a splendid inn.", np: "यो भव्य र्‍योकान हो।" }] },
+      { word: "京都のりょかん", romaji: "Kyōto no ryokan", reading: "きょうとのりょかん", meaning_en: "A traditional inn in Kyoto", meaning_np: "क्योटोको परम्परागत र्‍योकान", examples: [{ ja: "京都のりょかんでした。", en: "It was a traditional inn in Kyoto.", np: "त्यो क्योटोको परम्परागत र्‍योकान थियो।" }] },
+      { word: "みずうみ", romaji: "mizūmi", meaning_en: "Lake", meaning_np: "ताल", examples: [{ ja: "みずうみのちかくに行きます。", en: "I go near the lake.", np: "म ताल नजिक जान्छु।" }] },
+      { word: "そふぼ", romaji: "sofubo", meaning_en: "Grandparents", meaning_np: "हजुरबा र हजुरआमा", examples: [{ ja: "そふぼに会います。", en: "I visit my grandparents.", np: "म हजुरबा र हजुरआमालाई भेट्छु।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
+  {
+    title: "ほう with の and に for Direction",
+    japanese: "ほうに",
+    note: "When ほう is combined with a directional word, の links the direction to ほう and に marks the direction of travel. みなみのほうに means 'towards the south'; きたのほうに means 'towards the north.'",
+    examples: [
+      { ja: "みなみのほうにいきます。", en: "I will go towards the south.", np: "म दक्षिणतिर जानेछु।" },
+      { ja: "きたのほうにゆきがたくさんふります。", en: "It snows a lot in the north.", np: "उत्तरतिर धेरै हिउँ पर्छ।" },
+    ],
+  },
   {
     title: "が for Crowdedness",
     japanese: "が",
