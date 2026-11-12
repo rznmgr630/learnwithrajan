@@ -4823,9 +4823,62 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "今週はどうですか", romaji: "konshū wa dō desu ka", meaning_en: "How about this week?", meaning_np: "यो हप्ता कस्तो छ?", examples: [{ ja: "今週はどうですか。", en: "How about this week?", np: "यो हप्ता कस्तो छ?" }] },
     ],
   },
+  {
+    day: 43,
+    category: "Crowds, Direction & Travel",
+    words: [
+      { word: "下", romaji: "shita", reading: "した", meaning_en: "Down / below / under", meaning_np: "तल / मुनि", examples: [{ ja: "いすの下にかばんがあります。", en: "There is a bag under the chair.", np: "कुर्सीमुनि झोला छ।" }] },
+      { word: "すいています", romaji: "suite imasu", meaning_en: "To be less crowded", meaning_np: "कम भीड हुनु", examples: [{ ja: "この電車はすいています。", en: "This train is not crowded.", np: "यो ट्रेनमा कम भीड छ।" }] },
+      { word: "こんでいます", romaji: "konde imasu", meaning_en: "To be crowded", meaning_np: "भीड हुनु", examples: [{ ja: "電車がこんでいます。", en: "The train is crowded.", np: "ट्रेनमा भीड छ।" }] },
+      { word: "すすみます", romaji: "susumimasu", meaning_en: "To go forward / advance", meaning_np: "अगाडि बढ्नु", examples: [{ ja: "まっすぐすすみます。", en: "I go straight ahead.", np: "म सिधै अगाडि बढ्छु।" }] },
+      { word: "まっすぐ", romaji: "massugu", meaning_en: "Straight ahead", meaning_np: "सिधै अगाडि", examples: [{ ja: "まっすぐすすみます。", en: "I go straight ahead.", np: "म सिधै अगाडि बढ्छु।" }] },
+      { word: "ほう", romaji: "hō", meaning_en: "Direction / way", meaning_np: "दिशा / बाटो", examples: [{ ja: "こちらのほうへ行きます。", en: "I will go in this direction.", np: "म यही दिशातिर जान्छु।" }] },
+      { word: "がわ", romaji: "gawa", meaning_en: "Side", meaning_np: "पट्टि / किनार", examples: [{ ja: "ひがしがわです。", en: "It is the east side.", np: "यो पूर्वपट्टि हो।" }] },
+      { word: "かならず", romaji: "kanarazu", meaning_en: "Certainly / surely / definitely", meaning_np: "अवश्य / पक्कै", examples: [{ ja: "またかならず来ます。", en: "I will certainly come again.", np: "म फेरि अवश्य आउनेछु।" }] },
+      { word: "レビュー", romaji: "review", meaning_en: "Review", meaning_np: "समीक्षा", examples: [{ ja: "りょかんのレビューを読みます。", en: "I read the inn's review.", np: "म र्‍योकानको समीक्षा पढ्छु।" }] },
+      { word: "スタッフ", romaji: "sutaffu", meaning_en: "Staff / staff members / employees", meaning_np: "कर्मचारीहरू", examples: [{ ja: "りょかんのスタッフです。", en: "They are staff at the inn.", np: "उहाँ र्‍योकानका कर्मचारी हुनुहुन्छ।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
+  {
+    title: "が for Crowdedness",
+    japanese: "が",
+    note: "The subject marker が can indicate what is crowded or less crowded.",
+    examples: [{ ja: "電車がこんでいます。", en: "The train is crowded.", np: "ट्रेनमा भीड छ।" }],
+  },
+  {
+    title: "に for Location and Direction",
+    japanese: "に",
+    note: "に marks a specific location or destination where something stops or is parked. It can also mark the direction toward which an action is performed.",
+    examples: [
+      { ja: "コンビニのまえにとめます。", en: "I will stop or park the car in front of the convenience store.", np: "म सुविधा पसलको अगाडि गाडी रोक्छु वा पार्क गर्छु।" },
+      { ja: "みぎにまがります。", en: "I turn right.", np: "म दायाँ मोड्छु।" },
+    ],
+  },
+  {
+    title: "から and まで for Places",
+    japanese: "から / まで",
+    note: "When talking about places, から and まで can be used together to mark a starting point and an endpoint, respectively.",
+    examples: [{ ja: "駅から学校まで歩きます。", en: "I walk from the station to the school.", np: "म स्टेशनदेखि विद्यालयसम्म हिँड्छु।" }],
+  },
+  {
+    title: "がわ with Directional Words",
+    japanese: "がわ",
+    note: "がわ is commonly attached to directional words to describe a specific side of an object, location, or direction.",
+    examples: [{ ja: "ひがしがわです。", en: "It is the east side.", np: "यो पूर्वपट्टि हो।" }],
+  },
+  {
+    title: "Crowded Trains in Tokyo",
+    japanese: "こんでいます",
+    note: "Tokyo is known for crowded trains. During rush hours, trains can be so packed that station staff help push people into them.",
+  },
+  {
+    title: "Train Announcements",
+    japanese: "でぐちはひだりがわです",
+    note: "On Japanese trains, announcements such as でぐちはひだりがわです (deguchi wa hidari-gawa desu) tell passengers which side to disembark on.",
+  },
   {
     title: "Counting People: Seven",
     japanese: "しちにん / ななにん",
