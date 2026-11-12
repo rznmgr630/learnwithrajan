@@ -4873,6 +4873,21 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "港", romaji: "minato", reading: "みなと", meaning_en: "Port / harbor", meaning_np: "बन्दरगाह", examples: [{ ja: "港でクルーズを見ます。", en: "I watch the cruise at the harbor.", np: "म बन्दरगाहमा क्रुज हेर्छु।" }] },
     ],
   },
+  {
+    day: 46,
+    category: "Driving, Phone Calls & Actions",
+    words: [
+      { word: "ヒッチハイク", romaji: "hicchihāiku", meaning_en: "Hitchhiking; traveling by getting free rides", meaning_np: "लिफ्ट मागेर यात्रा गर्नु", examples: [{ ja: "ヒッチハイクで旅行します。", en: "I travel by hitchhiking.", np: "म लिफ्ट मागेर यात्रा गर्छु।" }] },
+      { word: "うんてん", romaji: "unten", meaning_en: "Driving", meaning_np: "गाडी चलाउनु / ड्राइभिङ", examples: [{ ja: "うんてんはたのしいです。", en: "Driving is fun.", np: "गाडी चलाउनु रमाइलो छ।" }] },
+      { word: "うんてんします", romaji: "unten shimasu", meaning_en: "To drive", meaning_np: "गाडी चलाउनु", examples: [{ ja: "毎日、車をうんてんします。", en: "I drive a car every day.", np: "म हरेक दिन गाडी चलाउँछु।" }] },
+      { word: "かんたん", romaji: "kantan", meaning_en: "Simple / easy (な-adjective)", meaning_np: "सरल / सजिलो", examples: [{ ja: "そのりょうりはかんたんです。", en: "That dish is simple.", np: "त्यो परिकार सरल छ।" }] },
+      { word: "やすい", romaji: "yasui", meaning_en: "Easy to do (verb suffix)", meaning_np: "गर्न सजिलो", examples: [{ ja: "このくつはあるきやすいです。", en: "These shoes are easy to walk in.", np: "यी जुत्तामा हिँड्न सजिलो छ।" }] },
+      { word: "ながら", romaji: "nagara", meaning_en: "While doing; at the same time", meaning_np: "गर्दै / एकै समयमा", examples: [{ ja: "テレビをみながら、ごはんをたべます。", en: "I eat while watching TV.", np: "म टिभी हेर्दै खाना खान्छु।" }] },
+      { word: "でんわ", romaji: "denwa", meaning_en: "Telephone / phone call", meaning_np: "टेलिफोन / फोन कल", examples: [{ ja: "ともだちにでんわをします。", en: "I call my friend.", np: "म साथीलाई फोन गर्छु।" }] },
+      { word: "かけます", romaji: "kakemasu", meaning_en: "To make (a phone call)", meaning_np: "(फोन) गर्नु", examples: [{ ja: "ともだちに電話をかけます。", en: "I will call my friend.", np: "म साथीलाई फोन गर्छु।" }] },
+      { word: "さんぽします", romaji: "sanpo shimasu", meaning_en: "To take a walk / go for a stroll", meaning_np: "हिँडडुल गर्नु / घुम्न जानु", examples: [{ ja: "公園をさんぽします。", en: "I take a walk in the park.", np: "म पार्कमा हिँडडुल गर्छु।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5139,8 +5154,11 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
   },
   {
     title: "Public Transport Etiquette",
-    note: "Public-transport etiquette is important in Japan. Speak softly, avoid loud conversations, music, or videos, and offer priority seats to people who need them. Eating and drinking are generally discouraged.",
-    examples: [{ ja: "電車で大きい声で話しません。", en: "I do not speak loudly on the train.", np: "म रेलमा ठूलो स्वरमा बोल्दिनँ।" }],
+    note: "Public-transport etiquette is important in Japan. Speak softly, avoid loud conversations, music, or videos, and offer priority seats to people who need them. Eating and drinking are generally discouraged. Speaking loudly on the phone in public places such as trains, buses, and restaurants is considered rude; people are expected to speak quietly or use earphones.",
+    examples: [
+      { ja: "電車で大きい声で話しません。", en: "I do not speak loudly on the train.", np: "म रेलमा ठूलो स्वरमा बोल्दिनँ।" },
+      { ja: "電車の中で大きな声で電話をしません。", en: "I do not speak loudly on the phone on the train.", np: "म रेलभित्र ठूलो स्वरमा फोनमा बोल्दिनँ।" },
+    ],
   },
   {
     title: "Thanking Someone for Their Work",
@@ -5764,5 +5782,43 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     title: "Japanese Pens",
     note: "Japan is known for high-quality pens designed for smooth writing and comfortable use. Some models have special features such as erasable ink or ink that glows in the dark.",
     examples: [{ ja: "日本のペンは書きやすいです。", en: "Japanese pens are easy to write with.", np: "जापानी कलमले लेख्न सजिलो हुन्छ।" }],
+  },
+  {
+    title: "Making Verbs with します",
+    japanese: "うんてんします",
+    note: "Attach します to the noun うんてん (driving) to make the verb うんてんします (to drive). This pattern also forms verbs from many other nouns.",
+    examples: [{ ja: "毎日、車をうんてんします。", en: "I drive a car every day.", np: "म हरेक दिन गाडी चलाउँछु।" }],
+  },
+  {
+    title: "やすい for Actions That Are Easy to Do",
+    japanese: "やすい",
+    note: "Replace the ます ending of a verb with やすい to describe an action that is easy to do: あるきます becomes あるきやすい (easy to walk). The actions connected by this form describe what is easy; かんたん describes a simple or uncomplicated thing or task.",
+    examples: [
+      { ja: "このくつはあるきやすいです。", en: "These shoes are easy to walk in.", np: "यी जुत्तामा हिँड्न सजिलो छ।" },
+      { ja: "そのりょうりはかんたんですから、つくりやすいです。", en: "That dish is simple, so it is easy to make.", np: "त्यो परिकार सरल छ, त्यसैले बनाउन सजिलो छ।" },
+    ],
+  },
+  {
+    title: "ながら for Simultaneous Actions",
+    japanese: "ながら",
+    note: "Replace the ます ending of the first verb with ながら, then add the main verb. The actions happen at the same time and must be done by the same person.",
+    examples: [{ ja: "テレビをみながら、ごはんをたべます。", en: "I eat while watching TV.", np: "म टिभी हेर्दै खाना खान्छु।" }],
+  },
+  {
+    title: "に Marks the Person Called",
+    japanese: "ともだちにでんわをかけます",
+    note: "In a phone-call expression, に marks the person receiving the call. 電話をかけます means 'to make a phone call.'",
+    examples: [{ ja: "ともだちに電話をかけます。", en: "I will call my friend.", np: "म साथीलाई फोन गर्छु।" }],
+  },
+  {
+    title: "あるきます and さんぽします",
+    japanese: "あるきます / さんぽします",
+    note: "あるきます means to walk in general. さんぽします means to take a walk or stroll, often leisurely for relaxation in places such as parks or neighbourhoods.",
+    examples: [{ ja: "公園をさんぽします。", en: "I take a walk in the park.", np: "म पार्कमा हिँडडुल गर्छु।" }],
+  },
+  {
+    title: "Japanese Music",
+    note: "Japanese music has a rich history. Traditional forms such as noh and kabuki have shaped its culture, while J-pop and anime music are popular around the world today.",
+    examples: [{ ja: "日本の音楽を聞きます。", en: "I listen to Japanese music.", np: "म जापानी संगीत सुन्छु।" }],
   },
 ];
