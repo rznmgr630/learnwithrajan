@@ -4928,9 +4928,70 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "そうですか", romaji: "sō desu ka", meaning_en: "Is that so?; I see.", meaning_np: "हो र?; ए, त्यसो हो?", examples: [{ ja: "そうですか。", en: "Is that so?", np: "हो र?" }] },
     ],
   },
+  {
+    day: 48,
+    category: "Okinawa, Comparisons & Choices",
+    words: [
+      { word: "おきなわ", romaji: "Okinawa", meaning_en: "Okinawa; a group of islands in southern Japan", meaning_np: "ओकिनावा; जापानको दक्षिणतिरका टापुहरूको समूह", examples: [{ ja: "おきなわは日本の南にあります。", en: "Okinawa is in the south of Japan.", np: "ओकिनावा जापानको दक्षिणमा छ।" }] },
+      { word: "うみがめ", romaji: "umigame", meaning_en: "Sea turtle", meaning_np: "समुद्री कछुवा", examples: [{ ja: "うみがめを見ました。", en: "I saw a sea turtle.", np: "मैले समुद्री कछुवा देखेँ।" }] },
+      { word: "メール", romaji: "mēru", meaning_en: "Email; message", meaning_np: "इमेल; सन्देश", examples: [{ ja: "メールをおくります。", en: "I send an email.", np: "म इमेल पठाउँछु।" }] },
+      { word: "きょう", romaji: "kyō", meaning_en: "Today", meaning_np: "आज", examples: [{ ja: "きょうはきのうよりあついです。", en: "Today is hotter than yesterday.", np: "आज हिजोभन्दा गर्मी छ।" }] },
+      { word: "きのう", romaji: "kinō", meaning_en: "Yesterday", meaning_np: "हिजो", examples: [{ ja: "きょうはきのうよりあついです。", en: "Today is hotter than yesterday.", np: "आज हिजोभन्दा गर्मी छ।" }] },
+      { word: "あつい", romaji: "atsui", meaning_en: "Hot (weather or temperature)", meaning_np: "गर्मी / तातो", examples: [{ ja: "きょうはあついです。", en: "It is hot today.", np: "आज गर्मी छ।" }] },
+      { word: "どちら", romaji: "dochira", meaning_en: "Which one; which of two", meaning_np: "कुन; दुईमध्ये कुन", examples: [{ ja: "りんごといちごと、どちらがあまいですか。", en: "Which is sweeter, apples or strawberries?", np: "स्याउ र स्ट्रबेरीमध्ये कुन बढी गुलियो छ?" }] },
+      { word: "まあまあ", romaji: "māmā", meaning_en: "So-so; not bad; fairly", meaning_np: "ठीकठाक; नराम्रो छैन", examples: [{ ja: "まあまあですね。", en: "It's so-so; not bad.", np: "ठीकठाक छ; नराम्रो छैन।" }] },
+      { word: "まどがわのせき", romaji: "madogawa no seki", meaning_en: "Window seat; seat by the window", meaning_np: "झ्यालछेउको सिट", examples: [{ ja: "まどがわのせきをおねがいします。", en: "A window seat, please.", np: "झ्यालछेउको सिट दिनुहोस्।" }] },
+      { word: "コーヒー", romaji: "kōhī", meaning_en: "Coffee", meaning_np: "कफी", examples: [{ ja: "コーヒーのほうがすきです。", en: "I like coffee more.", np: "मलाई कफी बढी मन पर्छ।" }] },
+      { word: "おちゃ", romaji: "ocha", meaning_en: "Green tea; tea", meaning_np: "हरियो चिया; चिया", examples: [{ ja: "コーヒーよりおちゃのほうがすきです。", en: "I like tea more than coffee.", np: "मलाई कफीभन्दा चिया बढी मन पर्छ।" }] },
+      { word: "こうちゃ", romaji: "kōcha", meaning_en: "Black tea", meaning_np: "कालो चिया", examples: [{ ja: "こうちゃにミルクを入れます。", en: "I put milk in black tea.", np: "म कालो चियामा दूध हाल्छु।" }] },
+      { word: "りんご", romaji: "ringo", meaning_en: "Apple", meaning_np: "स्याउ", examples: [{ ja: "りんごといちご、どちらがあまいですか。", en: "Which is sweeter, apples or strawberries?", np: "स्याउ र स्ट्रबेरीमध्ये कुन बढी गुलियो छ?" }] },
+      { word: "いちご", romaji: "ichigo", meaning_en: "Strawberry", meaning_np: "स्ट्रबेरी", examples: [{ ja: "りんごといちご、どちらがあまいですか。", en: "Which is sweeter, apples or strawberries?", np: "स्याउ र स्ट्रबेरीमध्ये कुन बढी गुलियो छ?" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
+  {
+    title: "Comparisons with より and のほうが",
+    japanese: "より / のほうが",
+    note: "より marks the thing used as the comparison ('than ...'). のほうが marks the option that is more or is preferred. In きのうよりきょうのほうがあついです, today is hotter than yesterday. For preferences, コーヒーよりおちゃのほうがすきです means 'I like tea more than coffee'; コーヒーのほうがすきです means 'I like coffee more.'",
+    examples: [
+      { ja: "きのうよりきょうのほうがあついです。", en: "Today is hotter than yesterday.", np: "आज हिजोभन्दा गर्मी छ।" },
+      { ja: "コーヒーよりおちゃのほうがすきです。", en: "I like tea more than coffee.", np: "मलाई कफीभन्दा चिया बढी मन पर्छ।" },
+    ],
+  },
+  {
+    title: "Choosing Between Two Things with と and どちら",
+    japanese: "AとBと、どちらが…ですか",
+    note: "Use と after each of the two nouns to present the choices, then ask どちらが…ですか ('which one…?'). どちら is used to choose between two options. A second と after the pair is optional in this pattern and does not change the meaning.",
+    examples: [
+      { ja: "りんごといちごと、どちらがあまいですか。", en: "Which is sweeter, apples or strawberries?", np: "स्याउ र स्ट्रबेरीमध्ये कुन बढी गुलियो छ?" },
+      { ja: "サッカーとやきゅう、どちらがすきですか。", en: "Which do you like, soccer or baseball?", np: "तपाईंलाई फुटबल र बेसबलमध्ये कुन मन पर्छ?" },
+    ],
+  },
+  {
+    title: "Past Negative Forms",
+    japanese: "くなかった / じゃなかった",
+    note: "For an い-adjective, change the final い to くなかった to say 'was not' (やすい → やすくなかった). じゃなかった is the past negative of です for nouns and な-adjectives, meaning 'was not' or 'were not.' Add です to make either form polite: やすくなかったです / げんきじゃなかったです.",
+    examples: [
+      { ja: "このくつはやすくなかったです。", en: "These shoes were not cheap.", np: "यी जुत्ता सस्ता थिएनन्।" },
+      { ja: "きのうはげんきじゃなかったです。", en: "I was not well yesterday.", np: "हिजो म सन्चो थिइनँ।" },
+    ],
+  },
+  {
+    title: "Tea in Japan",
+    japanese: "おちゃ / こうちゃ",
+    note: "おちゃ usually refers to green tea, commonly enjoyed plain in Japan. こうちゃ refers to black tea, which is often served with milk or sugar.",
+  },
+  {
+    title: "Okinawa and Tokyo",
+    note: "Okinawa is a southern Japanese island prefecture known for tropical beaches, clear water, Ryukyu culture, and its distinct history. Attractions include Shuri Castle and Churaumi Aquarium, known for whale sharks. Tokyo combines modern city life and traditional culture, with landmarks such as Tokyo Tower, Tokyo Skytree, and Sensō-ji Temple.",
+  },
+  {
+    title: "Black in Japanese Culture",
+    japanese: "黒",
+    note: "The screenshot describes black as a color associated with formality and dignity in Japan, and says black taxis can represent luxury or high-quality service.",
+  },
   {
     title: "ほう with の and に for Direction",
     japanese: "ほうに",
