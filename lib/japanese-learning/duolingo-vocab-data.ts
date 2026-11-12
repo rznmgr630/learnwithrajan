@@ -4854,6 +4854,25 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "そふぼ", romaji: "sofubo", meaning_en: "Grandparents", meaning_np: "हजुरबा र हजुरआमा", examples: [{ ja: "そふぼに会います。", en: "I visit my grandparents.", np: "म हजुरबा र हजुरआमालाई भेट्छु।" }] },
     ],
   },
+  {
+    day: 45,
+    category: "Resorts, Activities & Verbs",
+    words: [
+      { word: "アプリ", romaji: "apuri", meaning_en: "App / application", meaning_np: "एप / अनुप्रयोग", examples: [{ ja: "このアプリで日本語を勉強します。", en: "I study Japanese with this app.", np: "म यो एपबाट जापानी भाषा पढ्छु।" }] },
+      { word: "海外", romaji: "kaigai", reading: "かいがい", meaning_en: "Overseas / abroad", meaning_np: "विदेश / विदेशमा", examples: [{ ja: "来年、海外に行きます。", en: "I will go overseas next year.", np: "म अर्को वर्ष विदेश जानेछु।" }] },
+      { word: "リゾート", romaji: "rizōto", meaning_en: "Resort", meaning_np: "रिसोर्ट", examples: [{ ja: "海の近くのリゾートに行きます。", en: "I will go to a resort near the sea.", np: "म समुद्रनजिकको रिसोर्टमा जानेछु।" }] },
+      { word: "何日間", romaji: "nan nichi kan", reading: "なんにちかん", meaning_en: "How many days", meaning_np: "कति दिन", examples: [{ ja: "何日間、旅行しますか。", en: "How many days will you travel?", np: "तपाईं कति दिन यात्रा गर्नुहुन्छ?" }] },
+      { word: "ミニゴルフ", romaji: "mini gorufu", meaning_en: "Mini golf", meaning_np: "मिनी गल्फ", examples: [{ ja: "リゾートでミニゴルフをします。", en: "I play mini golf at the resort.", np: "म रिसोर्टमा मिनी गल्फ खेल्छु।" }] },
+      { word: "水着", romaji: "mizugi", reading: "みずぎ", meaning_en: "Swimsuit", meaning_np: "पौडी खेल्ने लुगा", examples: [{ ja: "水着を持っていきます。", en: "I will bring a swimsuit.", np: "म पौडी खेल्ने लुगा लिएर जानेछु।" }] },
+      { word: "食べ放題", romaji: "tabe hōdai", reading: "たべほうだい", meaning_en: "All-you-can-eat", meaning_np: "जति खाए पनि पाइने खाना", examples: [{ ja: "朝ごはんは食べ放題でした。", en: "Breakfast was all-you-can-eat.", np: "बिहानको खाना जति खाए पनि पाइने थियो।" }] },
+      { word: "けっこう", romaji: "kekkō", meaning_en: "Quite / fairly; quite a bit", meaning_np: "निकै / राम्रैसँग", examples: [{ ja: "けっこう食べました。", en: "I ate quite a bit.", np: "मैले निकै खाएँ।" }] },
+      { word: "かたい", romaji: "katai", meaning_en: "Hard / stiff", meaning_np: "कडा / कक्रक्क", examples: [{ ja: "このパンはかたいです。", en: "This bread is hard.", np: "यो रोटी कडा छ।" }] },
+      { word: "もちます", romaji: "mochimasu", meaning_en: "To carry / hold", meaning_np: "बोक्नु / समाउनु", examples: [{ ja: "大きい箱をもちます。", en: "I carry a big box.", np: "म ठूलो बाकस बोक्छु।" }] },
+      { word: "おぼえます", romaji: "oboemasu", meaning_en: "To remember / memorize", meaning_np: "सम्झनु / कण्ठ गर्नु", examples: [{ ja: "新しい言葉をおぼえます。", en: "I memorize new words.", np: "म नयाँ शब्दहरू कण्ठ गर्छु।" }] },
+      { word: "クルーズ", romaji: "kurūzu", meaning_en: "Cruise", meaning_np: "क्रुज यात्रा", examples: [{ ja: "クルーズに行きます。", en: "I am going on a cruise.", np: "म क्रुज यात्रामा जाँदै छु।" }] },
+      { word: "港", romaji: "minato", reading: "みなと", meaning_en: "Port / harbor", meaning_np: "बन्दरगाह", examples: [{ ja: "港でクルーズを見ます。", en: "I watch the cruise at the harbor.", np: "म बन्दरगाहमा क्रुज हेर्छु।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -5161,8 +5180,11 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
   {
     title: "The Particle で",
     japanese: "で",
-    note: "で marks the place where an action happens, similar to 'at' or 'in' in English.",
-    examples: [{ ja: "しょくどうで食べます。", en: "I eat in the cafeteria.", np: "म भोजनालयमा खान्छु。" }],
+    note: "で marks the place where an action happens, similar to 'at' or 'in' in English. It also marks the tool or medium used to perform an action, similar to 'with' or 'by' in English.",
+    examples: [
+      { ja: "しょくどうで食べます。", en: "I eat in the cafeteria.", np: "म भोजनालयमा खान्छु।" },
+      { ja: "ペンで書きます。", en: "I write with a pen.", np: "म कलमले लेख्छु।" },
+    ],
   },
   {
     title: "Set Meals",
@@ -5725,5 +5747,22 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
     japanese: "しなのがわ",
     note: "The Shinano River is Japan's longest river. It flows through Nagano and Niigata before reaching the Sea of Japan.",
     examples: [{ ja: "しなのがわは長い川です。", en: "The Shinano River is a long river.", np: "शिनानो नदी लामो नदी हो।" }],
+  },
+  {
+    title: "Using にくい to Say an Action Is Difficult",
+    japanese: "にくい",
+    note: "Attach にくい to the verb stem by replacing the ます ending with にくい. The resulting い-adjective describes an action that is difficult to do. むずかしい describes a difficult or complicated thing or task.",
+    examples: [{ ja: "この道は歩きにくいです。", en: "This road is difficult to walk on.", np: "यो बाटोमा हिँड्न गाह्रो छ।" }],
+  },
+  {
+    title: "Kanji and Meaning",
+    japanese: "漢字（かんじ）",
+    note: "Kanji, adapted from Chinese characters, represent words or meaningful parts of words. They can distinguish homophones and often allow more concise writing than hiragana alone.",
+    examples: [{ ja: "漢字で名前を書きます。", en: "I write my name in kanji.", np: "म आफ्नो नाम कान्जीमा लेख्छु।" }],
+  },
+  {
+    title: "Japanese Pens",
+    note: "Japan is known for high-quality pens designed for smooth writing and comfortable use. Some models have special features such as erasable ink or ink that glows in the dark.",
+    examples: [{ ja: "日本のペンは書きやすいです。", en: "Japanese pens are easy to write with.", np: "जापानी कलमले लेख्न सजिलो हुन्छ।" }],
   },
 ];
