@@ -4,7 +4,7 @@ import type { KanjiStrokeEntry } from "@/lib/japanese-learning/n5/n5-kanji-pool"
 /**
  * Strict no-repeat kanji assignment across lesson days.
  *
- * Days 1–19 introduce ten unique characters each. Day 20 introduces the remaining two
+ * Days 1–19 introduce ten unique characters each. Day 20 introduces the remaining
  * characters from the extended study set. Later grammar and sprint lessons remain empty.
  *
  * Characters must exist in n5-kanji-pool.ts ROWS — unknowns are silently skipped.
@@ -33,7 +33,7 @@ export const N5_KANJI_BY_DAY: Record<number, string[]> = {
   17: ["彼", "動", "知", "理", "内", "同", "心", "発", "実", "作"],
   18: ["当", "世", "度", "戦", "性", "対", "意", "用", "主", "通"],
   19: ["関", "文", "屋", "感", "郎", "業", "定", "政", "持", "取"],
-  20: ["所", "現"],
+  20: ["所", "現", "祭"],
 
   // ── Days 21–30 — grammar, review, and mock-exam lessons ───────────────────
   21: [], 22: [], 23: [], 24: [], 25: [],

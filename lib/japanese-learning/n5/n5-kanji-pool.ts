@@ -202,6 +202,7 @@ const ROWS: { k: string; r: string; m: string; s: number }[] = [
   { k: "取", r: "とる・シュ", m: "take", s: 8 },
   { k: "所", r: "ところ・ショ", m: "place", s: 8 },
   { k: "現", r: "あらわれる・ゲン", m: "appear / current", s: 11 },
+  { k: "祭", r: "まつり・サイ", m: "festival", s: 11 },
 ];
 
 /** Deduplicate by character (table above may repeat for teaching overlap). */
