@@ -4948,6 +4948,32 @@ export const DUOLINGO_DAYS: DuolingoDay[] = [
       { word: "いちご", romaji: "ichigo", meaning_en: "Strawberry", meaning_np: "स्ट्रबेरी", examples: [{ ja: "りんごといちご、どちらがあまいですか。", en: "Which is sweeter, apples or strawberries?", np: "स्याउ र स्ट्रबेरीमध्ये कुन बढी गुलियो छ?" }] },
     ],
   },
+  {
+    day: 49,
+    category: "Travel, Timing & Everyday Phrases",
+    words: [
+      { word: "イルカ", romaji: "iruka", meaning_en: "Dolphin", meaning_np: "डल्फिन", examples: [{ ja: "イルカはかわいいです。", en: "Dolphins are cute.", np: "डल्फिन प्यारा हुन्छ।" }] },
+      { word: "サーフィン", romaji: "sāfin", meaning_en: "Surfing", meaning_np: "सर्फिङ", examples: [{ ja: "サーフィンをします。", en: "I go surfing.", np: "म सर्फिङ गर्छु।" }] },
+      { word: "うみ", romaji: "umi", meaning_en: "Sea; ocean", meaning_np: "समुद्र", examples: [{ ja: "うみでおよぎます。", en: "I swim in the sea.", np: "म समुद्रमा पौडिन्छु।" }] },
+      { word: "いちごがり", romaji: "ichigo-gari", meaning_en: "Strawberry picking", meaning_np: "स्ट्रबेरी टिप्ने गतिविधि", examples: [{ ja: "いちごがりに行きます。", en: "I am going strawberry picking.", np: "म स्ट्रबेरी टिप्न जाँदैछु।" }] },
+      { word: "今週", reading: "こんしゅう", romaji: "konshū", meaning_en: "This week", meaning_np: "यो हप्ता", examples: [{ ja: "今週、日本へ行きます。", en: "I am going to Japan this week.", np: "म यो हप्ता जापान जाँदैछु।" }] },
+      { word: "間に合います", reading: "まにあいます", romaji: "maniaimasu", meaning_en: "To be on time; to make it in time", meaning_np: "समयमै पुग्नु", examples: [{ ja: "電車に間に合います。", en: "I will make the train.", np: "म ट्रेन समात्न समयमै पुग्छु।" }] },
+      { word: "遅れます", reading: "おくれます", romaji: "okuremasu", meaning_en: "To be late; to be delayed", meaning_np: "ढिलो हुनु; ढिलाइ हुनु", examples: [{ ja: "電車が遅れます。", en: "The train will be delayed.", np: "ट्रेन ढिलो हुनेछ।" }] },
+      { word: "到着", reading: "とうちゃく", romaji: "tōchaku", meaning_en: "Arrival", meaning_np: "आगमन", examples: [{ ja: "飛行機は三時に到着します。", en: "The plane arrives at three.", np: "विमान तीन बजे आइपुग्छ।" }] },
+      { word: "出発", reading: "しゅっぱつ", romaji: "shuppatsu", meaning_en: "Departure", meaning_np: "प्रस्थान", examples: [{ ja: "出発は七時です。", en: "Departure is at seven.", np: "प्रस्थान सात बजे हो।" }] },
+      { word: "いります", romaji: "irimasu", meaning_en: "To need; to require", meaning_np: "चाहिनु; आवश्यक पर्नु", examples: [{ ja: "旅行にはパスポートがいります。", en: "You need a passport for travel.", np: "यात्राका लागि पासपोर्ट चाहिन्छ।" }] },
+      { word: "おかね", romaji: "okane", meaning_en: "Money", meaning_np: "पैसा", examples: [{ ja: "おかねがいります。", en: "I need money.", np: "मलाई पैसा चाहिन्छ।" }] },
+      { word: "パスポート", romaji: "pasupōto", meaning_en: "Passport", meaning_np: "राहदानी", examples: [{ ja: "パスポートを見せてください。", en: "Please show me your passport.", np: "कृपया आफ्नो राहदानी देखाउनुहोस्।" }] },
+      { word: "ひこうき", romaji: "hikōki", meaning_en: "Airplane; plane", meaning_np: "हवाईजहाज", examples: [{ ja: "ひこうきで日本へ行きます。", en: "I will go to Japan by plane.", np: "म हवाईजहाजबाट जापान जान्छु।" }] },
+      { word: "くうこう", romaji: "kūkō", meaning_en: "Airport", meaning_np: "विमानस्थल", examples: [{ ja: "くうこうで友だちを待ちます。", en: "I will wait for my friend at the airport.", np: "म विमानस्थलमा साथीलाई पर्खन्छु।" }] },
+      { word: "えきいん", romaji: "ekiin", meaning_en: "Station attendant", meaning_np: "स्टेसन कर्मचारी", examples: [{ ja: "えきいんさんに聞きます。", en: "I will ask the station attendant.", np: "म स्टेसन कर्मचारीलाई सोध्छु।" }] },
+      { word: "むかしのかれし", romaji: "mukashi no kareshi", meaning_en: "Former boyfriend; ex-boyfriend", meaning_np: "पूर्व प्रेमी", examples: [{ ja: "あの人はむかしのかれしです。", en: "That person is my ex-boyfriend.", np: "उहाँ मेरो पूर्व प्रेमी हुनुहुन्छ।" }] },
+      { word: "どうしましょうか", romaji: "dō shimashō ka", meaning_en: "What shall we do?", meaning_np: "अब के गरौँ?", examples: [{ ja: "時間がありません。どうしましょうか。", en: "We don't have time. What shall we do?", np: "हामीसँग समय छैन। अब के गरौँ?" }] },
+      { word: "バラ", romaji: "bara", meaning_en: "Rose", meaning_np: "गुलाब", examples: [{ ja: "バラを一輪ください。", en: "One rose, please.", np: "एउटा गुलाब दिनुहोस्।" }] },
+      { word: "みせます", romaji: "misemasu", meaning_en: "To show", meaning_np: "देखाउनु", examples: [{ ja: "写真をみせます。", en: "I will show the photo.", np: "म फोटो देखाउँछु।" }] },
+      { word: "みせてください", romaji: "misete kudasai", meaning_en: "Please show me", meaning_np: "कृपया मलाई देखाउनुहोस्", examples: [{ ja: "パスポートをみせてください。", en: "Please show me your passport.", np: "कृपया आफ्नो राहदानी देखाउनुहोस्।" }] },
+    ],
+  },
 ];
 
 export const DUOLINGO_NOTES: DuolingoNote[] = [
@@ -4959,6 +4985,55 @@ export const DUOLINGO_NOTES: DuolingoNote[] = [
       { ja: "きのうよりきょうのほうがあついです。", en: "Today is hotter than yesterday.", np: "आज हिजोभन्दा गर्मी छ।" },
       { ja: "コーヒーよりおちゃのほうがすきです。", en: "I like tea more than coffee.", np: "मलाई कफीभन्दा चिया बढी मन पर्छ।" },
     ],
+  },
+  {
+    title: "Comparing with より",
+    japanese: "AはBより adjective です",
+    note: "To say that A is more [adjective] than B, use AはBより adjective です. Japanese adjectives do not take an English-style comparative ending: ちかい stays ちかい in きょうとはほっかいどうよりちかいです ('Kyoto is closer than Hokkaido').",
+    examples: [{ ja: "きょうとはほっかいどうよりちかいです。", en: "Kyoto is closer than Hokkaido.", np: "क्योटो होक्काइदोभन्दा नजिक छ।" }],
+  },
+  {
+    title: "それ and その",
+    japanese: "それ / その",
+    note: "それ means 'that' and stands alone as a pronoun. その also means 'that' but comes directly before a noun: それは本です ('That is a book'); その本はおもしろいです ('That book is interesting'). The same pattern applies to これ ('this') and この ('this + noun').",
+    examples: [
+      { ja: "それはおもしろい本です。", en: "That is an interesting book.", np: "त्यो एउटा रोचक किताब हो।" },
+      { ja: "その本はおもしろいです。", en: "That book is interesting.", np: "त्यो किताब रोचक छ।" },
+    ],
+  },
+  {
+    title: "Travel Verbs with します",
+    japanese: "到着します / 出発します",
+    note: "到着 (とうちゃく, arrival) and 出発 (しゅっぱつ, departure) are nouns. Add します to make verbs: 到着します means 'to arrive' and 出発します means 'to depart.'",
+    examples: [
+      { ja: "電車が到着します。", en: "The train will arrive.", np: "ट्रेन आइपुग्नेछ।" },
+      { ja: "飛行機が出発します。", en: "The plane will depart.", np: "विमान प्रस्थान गर्नेछ।" },
+    ],
+  },
+  {
+    title: "が for Delays and に for Missing Something",
+    japanese: "電車が遅れます / 電車に遅れます",
+    note: "電車が遅れます means the train itself is delayed; が marks the thing that is late. 電車に遅れます means the speaker is late for or misses the train; に marks the event or transport they are late for.",
+    examples: [
+      { ja: "電車が遅れます。", en: "The train is delayed.", np: "ट्रेन ढिलो भएको छ।" },
+      { ja: "電車に遅れました。", en: "I was late for the train.", np: "म ट्रेनका लागि ढिलो भएँ।" },
+    ],
+  },
+  {
+    title: "Asking Someone to Show Something",
+    japanese: "みせてください",
+    note: "みせてください means 'please show me.' It uses the て-form of みせます (to show) followed by ください, a polite request marker.",
+    examples: [{ ja: "パスポートをみせてください。", en: "Please show me your passport.", np: "कृपया आफ्नो राहदानी देखाउनुहोस्।" }],
+  },
+  {
+    title: "Airport and Travel Facts from the Screenshots",
+    note: "The lesson screenshots mention Kansai International Airport's artificial island and bridge connection, Japan Airlines' themed Pokémon aircraft, and visa-free travel and passport rankings. These are general lesson facts; visa rules and passport rankings can change, so check current official sources before relying on them for travel.",
+  },
+  {
+    title: "Strawberry Picking in Japan",
+    japanese: "いちごがり",
+    note: "いちごがり means strawberry picking. The lesson describes it as a popular seasonal activity where visitors pick and eat strawberries at farms.",
+    examples: [{ ja: "いちごがりでいちごを食べます。", en: "I eat strawberries while picking them.", np: "म स्ट्रबेरी टिप्दै खान्छु।" }],
   },
   {
     title: "Choosing Between Two Things with と and どちら",
