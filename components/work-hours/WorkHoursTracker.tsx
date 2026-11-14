@@ -230,7 +230,7 @@ export function WorkHoursTracker() {
                   <article key={workday.date} className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-[var(--muted)]">Day {index + 1}</p>
+                        <p className="text-xs font-medium text-[var(--muted)]">Day {sortedMonthWorkdays.length - index}</p>
                         <h3 className="mt-1 truncate font-medium text-[var(--text)]">{formatDate(workday.date, { weekday: "long" })}</h3>
                         <p className="mt-0.5 text-sm text-[var(--muted)]">{formatDate(workday.date, { year: "numeric", month: "short", day: "numeric" })}</p>
                       </div>
@@ -251,7 +251,7 @@ export function WorkHoursTracker() {
                   <tbody className="divide-y divide-[var(--border)]">
                     {sortedMonthWorkdays.map((workday, index) => (
                       <tr key={workday.date} className="text-[var(--text)]">
-                        <td className="px-5 py-3.5 text-[var(--muted)]">{index + 1}</td>
+                        <td className="px-5 py-3.5 text-[var(--muted)]">{sortedMonthWorkdays.length - index}</td>
                         <td className="px-5 py-3.5">{formatDate(workday.date, { weekday: "long" })}</td>
                         <td className="px-5 py-3.5">{formatDate(workday.date, { year: "numeric", month: "short", day: "numeric" })}</td>
                         <td className="px-5 py-3.5 text-right font-medium tabular-nums">{workday.hours} h{workday.minutes ? ` ${workday.minutes} min` : ""}</td>
