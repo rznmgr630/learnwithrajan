@@ -91,6 +91,10 @@ export function WorkHoursTracker() {
     () => workdays.filter((workday) => workday.date.startsWith(month)),
     [month, workdays],
   );
+  const sortedMonthWorkdays = useMemo(
+    () => [...monthWorkdays].sort((a, b) => b.date.localeCompare(a.date)),
+    [monthWorkdays],
+  );
   const totalMinutes = monthWorkdays.reduce((total, workday) => total + workday.hours * 60 + workday.minutes, 0);
   const totalHoursLabel = `${Math.floor(totalMinutes / 60)} h${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`;
   const selectedWorkday = workdays.find((workday) => workday.date === selectedDate);
@@ -217,27 +221,47 @@ export function WorkHoursTracker() {
               <input type="month" value={month} onChange={(event) => { setMonth(event.target.value); setSelectedDate(""); setHours(null); setMinutes(null); }} className="bg-transparent text-[var(--text)] outline-none" />
             </label>
           </div>
-          {monthWorkdays.length === 0 ? (
+          {sortedMonthWorkdays.length === 0 ? (
             <p className="px-5 py-12 text-center text-sm text-[var(--muted)]">No workdays logged for this month yet.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px] text-left text-sm">
-                <thead className="bg-[var(--elevated)] text-xs uppercase tracking-wide text-[var(--muted)]">
-                  <tr><th scope="col" className="px-5 py-3 font-medium">No.</th><th scope="col" className="px-5 py-3 font-medium">Day</th><th scope="col" className="px-5 py-3 font-medium">Date</th><th scope="col" className="px-5 py-3 text-right font-medium">Hours worked</th><th scope="col" className="px-5 py-3"><span className="sr-only">Actions</span></th></tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {[...monthWorkdays].sort((a, b) => b.date.localeCompare(a.date)).map((workday, index) => (
-                    <tr key={workday.date} className="text-[var(--text)]">
-                      <td className="px-5 py-3.5 text-[var(--muted)]">{index + 1}</td>
-                      <td className="px-5 py-3.5">{formatDate(workday.date, { weekday: "long" })}</td>
-                      <td className="px-5 py-3.5">{formatDate(workday.date, { year: "numeric", month: "short", day: "numeric" })}</td>
-                      <td className="px-5 py-3.5 text-right font-medium tabular-nums">{workday.hours} h{workday.minutes ? ` ${workday.minutes} min` : ""}</td>
-                      <td className="px-5 py-3.5 text-right"><div className="flex justify-end gap-1"><button type="button" onClick={() => editWorkday(workday)} aria-label={`Edit work hours for ${workday.date}`} className="rounded-md px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--elevated)]">Edit</button><button type="button" onClick={() => void removeWorkday(workday.date)} aria-label={`Delete work hours for ${workday.date}`} className="rounded-md px-2 py-1 text-xs text-[var(--muted)] hover:bg-red-500/10 hover:text-red-600">Delete</button></div></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="grid gap-3 p-3 sm:p-4 md:hidden">
+                {sortedMonthWorkdays.map((workday, index) => (
+                  <article key={workday.date} className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[var(--muted)]">Day {index + 1}</p>
+                        <h3 className="mt-1 truncate font-medium text-[var(--text)]">{formatDate(workday.date, { weekday: "long" })}</h3>
+                        <p className="mt-0.5 text-sm text-[var(--muted)]">{formatDate(workday.date, { year: "numeric", month: "short", day: "numeric" })}</p>
+                      </div>
+                      <p className="shrink-0 rounded-lg bg-[var(--elevated)] px-3 py-2 text-sm font-semibold tabular-nums text-[var(--text)]">{workday.hours} h{workday.minutes ? ` ${workday.minutes} min` : ""}</p>
+                    </div>
+                    <div className="mt-3 flex justify-end gap-2 border-t border-[var(--border)] pt-2">
+                      <button type="button" onClick={() => editWorkday(workday)} aria-label={`Edit work hours for ${workday.date}`} className="rounded-md px-3 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--elevated)]">Edit</button>
+                      <button type="button" onClick={() => void removeWorkday(workday.date)} aria-label={`Delete work hours for ${workday.date}`} className="rounded-md px-3 py-2 text-sm text-[var(--muted)] hover:bg-red-500/10 hover:text-red-600">Delete</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[600px] text-left text-sm">
+                  <thead className="bg-[var(--elevated)] text-xs uppercase tracking-wide text-[var(--muted)]">
+                    <tr><th scope="col" className="px-5 py-3 font-medium">No.</th><th scope="col" className="px-5 py-3 font-medium">Day</th><th scope="col" className="px-5 py-3 font-medium">Date</th><th scope="col" className="px-5 py-3 text-right font-medium">Hours worked</th><th scope="col" className="px-5 py-3"><span className="sr-only">Actions</span></th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)]">
+                    {sortedMonthWorkdays.map((workday, index) => (
+                      <tr key={workday.date} className="text-[var(--text)]">
+                        <td className="px-5 py-3.5 text-[var(--muted)]">{index + 1}</td>
+                        <td className="px-5 py-3.5">{formatDate(workday.date, { weekday: "long" })}</td>
+                        <td className="px-5 py-3.5">{formatDate(workday.date, { year: "numeric", month: "short", day: "numeric" })}</td>
+                        <td className="px-5 py-3.5 text-right font-medium tabular-nums">{workday.hours} h{workday.minutes ? ` ${workday.minutes} min` : ""}</td>
+                        <td className="px-5 py-3.5 text-right"><div className="flex justify-end gap-1"><button type="button" onClick={() => editWorkday(workday)} aria-label={`Edit work hours for ${workday.date}`} className="rounded-md px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--elevated)]">Edit</button><button type="button" onClick={() => void removeWorkday(workday.date)} aria-label={`Delete work hours for ${workday.date}`} className="rounded-md px-2 py-1 text-xs text-[var(--muted)] hover:bg-red-500/10 hover:text-red-600">Delete</button></div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
       </main>
