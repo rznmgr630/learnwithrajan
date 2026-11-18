@@ -412,7 +412,7 @@ export function LessonDayDetail({
         aria-label="Close day detail"
         onClick={onClose}
       />
-      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl">
+      <aside className="relative flex h-full w-full max-w-2xl flex-col border-l border-[var(--border)] bg-[var(--background)] shadow-2xl lg:w-1/2 lg:max-w-none">
         <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
           <div>
             <h2 className="text-lg font-semibold leading-snug text-[var(--text)]">
