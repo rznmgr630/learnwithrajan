@@ -423,15 +423,20 @@ export function WorkHoursTracker() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-4 sm:px-5">
             <div>
               <h2 className="text-lg font-semibold text-[var(--text)]">Logged workdays</h2>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-sm text-[var(--muted)]">{monthWorkdays.length} {monthWorkdays.length === 1 ? "logged day" : "logged days"}</span>
-                <span aria-hidden="true" className="hidden h-4 border-l border-[var(--border)] sm:block" />
-                <span className="text-sm font-semibold tabular-nums text-[var(--accent)]">{totalHoursLabel} total hours</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {monthlyJobTotals.map((job) => (
+                  <span key={job.id} className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-normal ${jobColorFor(job.id)}`}>
+                    <span>{job.name}</span><span className="tabular-nums">{job.days} {job.days === 1 ? "day" : "days"}</span><span className="tabular-nums">{formatMinutes(job.minutes)}</span>
+                  </span>
+                ))}
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--text)]">
+                  <span>Total</span><span className="tabular-nums">{monthWorkdays.length} {monthWorkdays.length === 1 ? "day" : "days"}</span><span className="tabular-nums">{totalHoursLabel}</span>
+                </span>
               </div>
             </div>
             <label className="flex items-center gap-2 rounded-full bg-[var(--elevated)] px-3 py-2 text-sm text-[var(--muted)]">
               Month
-              <input type="month" value={month} onChange={(event) => { setMonth(event.target.value); setSelectedDate(""); setHours(null); setMinutes(null); }} className="bg-transparent text-[var(--text)] outline-none" />
+              <input type="month" value={month} onChange={(event) => { setMonth(event.target.value); setSelectedDate(""); setEditingWorkdayId(null); setHours(null); setMinutes(null); }} className="bg-transparent text-[var(--text)] outline-none" />
             </label>
           </div>
           {sortedMonthWorkdays.length === 0 ? (
