@@ -204,16 +204,94 @@ export function WorkHoursTracker() {
     }
   }
 
-  async function removeWorkday(date: string) {
-    if (!db || !user || !isAdmin) return;
+  async function addJob(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = newJobName.trim();
+    if (!db || !user || !isAdmin || !name) return;
+    if (jobs.some((job) => job.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setError("A job with that name already exists.");
+      return;
+    }
+    const id = `job-${crypto.randomUUID()}`;
     setError("");
     try {
-      await deleteDoc(doc(db, "users", user.uid, "workHours", date));
-      if (selectedDate === date) {
+      const [savedJobs, savedWorkdays] = await Promise.all([
+        getDocs(collection(db, "users", user.uid, "workJobs")),
+        getDocs(collection(db, "users", user.uid, "workHours")),
+      ]);
+      const hasSavedJob1 = savedJobs.docs.some((item) => item.id === "job-1");
+      const hasJob1Workdays = savedWorkdays.docs.some((item) => String(item.data().jobId ?? "job-1") === "job-1");
+      if (!hasSavedJob1 && hasJob1Workdays) {
+        await setDoc(doc(db, "users", user.uid, "workJobs", "job-1"), { name: "Job 1", createdAt: serverTimestamp() });
+      }
+      await setDoc(doc(db, "users", user.uid, "workJobs", id), { name, createdAt: serverTimestamp() });
+      setSelectedJobId(id);
+      setNewJobName("");
+      setToast(`${name} added.`);
+    } catch {
+      setError("We could not add this job. Check your Firestore rules.");
+    }
+  }
+
+  async function saveJobName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const job = jobs.find((item) => item.id === editingJobId);
+    const name = editingJobName.trim();
+    if (!db || !user || !isAdmin || !job || !name) return;
+    if (jobs.some((item) => item.id !== job.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setError("A job with that name already exists.");
+      return;
+    }
+    setError("");
+    try {
+      await setDoc(doc(db, "users", user.uid, "workJobs", job.id), { name }, { merge: true });
+      setWorkdays((current) => current.map((workday) => workday.jobId === job.id ? { ...workday, jobName: name } : workday));
+      setEditingJobId(null);
+      setEditingJobName("");
+      setToast("Job name updated.");
+    } catch {
+      setError("We could not update this job. Check your Firestore rules.");
+    }
+  }
+
+  async function removeJob(job: Job) {
+    if (!db || !user || !isAdmin) return;
+    if (jobs.length <= 1) {
+      setError("Keep at least one job in your list.");
+      return;
+    }
+    try {
+      const entries = await getDocs(collection(db, "users", user.uid, "workHours"));
+      const hasWorkdays = entries.docs.some((entry) => String(entry.data().jobId ?? "job-1") === job.id);
+      if (hasWorkdays) {
+        setError(`“${job.name}” cannot be deleted because it has logged workdays.`);
+        return;
+      }
+      await deleteDoc(doc(db, "users", user.uid, "workJobs", job.id));
+      if (selectedJobId === job.id) setSelectedJobId(jobs.find((item) => item.id !== job.id)?.id ?? "job-1");
+      if (editingJobId === job.id) setEditingJobId(null);
+      setJobToDelete(null);
+      setError("");
+      setToast(`${job.name} deleted.`);
+    } catch {
+      setError("We could not delete this job. Check your Firestore rules.");
+    }
+  }
+
+  async function removeWorkday() {
+    if (!db || !user || !isAdmin) return;
+    if (!workdayToDelete) return;
+    setError("");
+    try {
+      const workday = workdayToDelete;
+      await deleteDoc(doc(db, "users", user.uid, "workHours", workday.id));
+      if (workday && selectedDate === workday.date && selectedJobId === workday.jobId) {
         setSelectedDate("");
+        setEditingWorkdayId(null);
         setHours(null);
         setMinutes(null);
       }
+      setWorkdayToDelete(null);
       setToast("Workday deleted.");
     } catch {
       setError("We could not remove this workday. Check your Firestore rules.");
@@ -222,7 +300,9 @@ export function WorkHoursTracker() {
   }
 
   function editWorkday(workday: Workday) {
+    setEditingWorkdayId(workday.id);
     setSelectedDate(workday.date);
+    setSelectedJobId(workday.jobId);
     setHours(String(Math.min(12, Math.max(1, workday.hours))));
     setMinutes(String(workday.minutes));
     setToast(`Editing work hours for ${formatDate(workday.date, { month: "short", day: "numeric" })}.`);
@@ -239,17 +319,84 @@ export function WorkHoursTracker() {
     <>
       <SiteHeader />
       {toast && <div role="status" aria-live="polite" className="fixed bottom-5 right-5 z-50 max-w-[calc(100vw-2.5rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--text)] shadow-xl">{toast}</div>}
+      {(workdayToDelete || jobToDelete) && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) { setWorkdayToDelete(null); setJobToDelete(null); setError(""); } }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-workday-title" className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
+            <h2 id="delete-workday-title" className="text-lg font-semibold text-[var(--text)]">{workdayToDelete ? "Delete this workday?" : "Delete this job?"}</h2>
+            {workdayToDelete ? (
+              <>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">This will remove the workday entry for <strong className="font-semibold text-[var(--text)]">{formatDate(workdayToDelete.date, { year: "numeric", month: "long", day: "numeric" })}</strong>.</p>
+                <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-[var(--elevated)] p-3 text-sm">
+                  <span className={`rounded-full px-3 py-1 text-xs font-normal ${jobColorFor(workdayToDelete.jobId)}`}>{jobNameFor(workdayToDelete)}</span>
+                  <span className="font-medium tabular-nums text-[var(--text)]">{workdayToDelete.hours} h{workdayToDelete.minutes ? ` ${workdayToDelete.minutes} min` : ""}</span>
+                </div>
+              </>
+            ) : (
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Delete <strong className="font-semibold text-[var(--text)]">{jobToDelete?.name}</strong>? This job can only be deleted when it has no workday entries.</p>
+            )}
+            {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => { setWorkdayToDelete(null); setJobToDelete(null); setError(""); }} className="min-h-10 rounded-lg border border-[var(--border)] px-4 text-sm font-medium text-[var(--text)] hover:bg-[var(--elevated)]">Cancel</button>
+              <button type="button" onClick={() => workdayToDelete ? void removeWorkday() : jobToDelete ? void removeJob(jobToDelete) : undefined} className="min-h-10 rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">{workdayToDelete ? "Delete workday" : "Delete job"}</button>
+            </div>
+          </section>
+        </div>
+      )}
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
         <header>
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Admin tool</p>
           <h1 className="mt-1 text-3xl font-semibold text-[var(--text)]">Work hours</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">Log the hours you worked. Only logged workdays appear in the table.</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">Log hours for each job. Only logged workdays appear in the table.</p>
         </header>
 
-        <form ref={formRef} onSubmit={saveWorkday} className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:grid-cols-[1fr_1.4fr_auto] sm:items-end sm:p-5">
+        <section aria-labelledby="jobs-heading" className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 px-5 pt-5">
+            <div>
+              <h2 id="jobs-heading" className="text-base font-semibold text-[var(--text)]">Your jobs</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">Manage the jobs you track work for.</p>
+            </div>
+            <span className="rounded-full bg-[var(--elevated)] px-3 py-1 text-xs font-medium text-[var(--muted)]">{jobs.length} {jobs.length === 1 ? "job" : "jobs"}</span>
+          </div>
+          <form onSubmit={addJob} className="flex flex-col gap-2 px-5 py-4 sm:flex-row">
+            <label className="sr-only" htmlFor="new-job-name">New job name</label>
+            <input id="new-job-name" required maxLength={80} value={newJobName} onChange={(event) => setNewJobName(event.target.value)} placeholder="Enter a job name, e.g. Consulting" className="min-h-11 min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm text-[var(--text)] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15" />
+            <button type="submit" className="min-h-11 rounded-xl bg-[var(--accent)] px-5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">Add job</button>
+          </form>
+          <div className="border-t border-[var(--border)] px-3 pb-3">
+            {jobs.map((job) => {
+              const hasWorkdays = workdays.some((workday) => workday.jobId === job.id);
+              const cannotDelete = hasWorkdays || jobs.length <= 1;
+              return editingJobId === job.id ? (
+                <form key={job.id} onSubmit={saveJobName} className="my-2 flex flex-col gap-2 rounded-xl bg-[var(--elevated)] p-3 sm:flex-row sm:items-center">
+                  <label className="sr-only" htmlFor={`edit-job-${job.id}`}>Edit {job.name}</label>
+                  <input id={`edit-job-${job.id}`} required maxLength={80} autoFocus value={editingJobName} onChange={(event) => setEditingJobName(event.target.value)} className="min-h-10 min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setEditingJobId(null)} className="min-h-9 rounded-lg px-3 text-sm text-[var(--muted)] hover:bg-[var(--surface)]">Cancel</button>
+                    <button type="submit" className="min-h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:opacity-90">Save</button>
+                  </div>
+                </form>
+              ) : (
+                <div key={job.id} className="group flex items-center gap-3 border-b border-[var(--border)] px-2 py-3 last:border-b-0">
+                  <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${jobColorFor(job.id).split(" ")[0]}`} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text)]">{job.name}</span>
+                  {hasWorkdays && <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-500" />In use</span>}
+                  <button type="button" onClick={() => { setEditingJobId(job.id); setEditingJobName(job.name); setError(""); }} aria-label={`Rename ${job.name}`} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-[var(--muted)] transition hover:bg-[var(--elevated)] hover:text-[var(--text)]"><EditIcon />Edit</button>
+                  <button type="button" onClick={() => { setJobToDelete(job); setError(""); }} aria-label={`Delete ${job.name}`} title={hasWorkdays ? "This job has workdays and cannot be deleted" : jobs.length <= 1 ? "Keep at least one job" : "Delete this job"} disabled={cannotDelete} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-35"><DeleteIcon />Delete</button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <form ref={formRef} onSubmit={saveWorkday} className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:grid-cols-[1fr_1fr_1.4fr_auto] sm:items-end sm:p-5">
+          <label className="grid gap-1.5 text-sm font-medium text-[var(--text)]">Job
+            <select required value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm">
+              {jobs.map((job) => <option key={job.id} value={job.id}>{job.name}</option>)}
+            </select>
+          </label>
           <label className="grid gap-1.5 text-sm font-medium text-[var(--text)]">
             Date
-            <input type="date" required min={dateBounds.min} max={dateBounds.max} value={selectedDate} onChange={(event) => { setSelectedDate(event.target.value); setHours(null); setMinutes(null); }} className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm" />
+            <input type="date" required min={dateBounds.min} max={dateBounds.max} value={selectedDate} onChange={(event) => { setSelectedDate(event.target.value); setEditingWorkdayId(null); setHours(null); setMinutes(null); }} className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm" />
           </label>
           <div className="grid grid-cols-2 gap-2">
             <label className="grid gap-1.5 text-sm font-medium text-[var(--text)]">
@@ -266,7 +413,7 @@ export function WorkHoursTracker() {
             </label>
           </div>
           <button type="submit" disabled={isSaving} className="min-h-11 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60">
-            {isSaving ? "Saving…" : workdays.some((item) => item.date === selectedDate) ? "Update workday" : "Add workday"}
+            {isSaving ? "Saving…" : editingWorkdayId || workdays.some((item) => item.date === selectedDate && item.jobId === selectedJobId) ? "Update workday" : "Add workday"}
           </button>
         </form>
 
