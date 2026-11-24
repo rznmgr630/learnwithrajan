@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -15,7 +16,22 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 
-type Workday = { date: string; hours: number; minutes: number };
+type Job = { id: string; name: string };
+type Workday = { id: string; date: string; hours: number; minutes: number; jobId: string; jobName: string };
+const JOB_PILL_COLORS = [
+  "bg-blue-500 text-white dark:bg-blue-500 dark:text-white",
+  "bg-emerald-500 text-white dark:bg-emerald-500 dark:text-white",
+  "bg-violet-500 text-white dark:bg-violet-500 dark:text-white",
+  "bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950",
+  "bg-rose-500 text-white dark:bg-rose-500 dark:text-white",
+  "bg-cyan-500 text-white dark:bg-cyan-500 dark:text-white",
+];
+function EditIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m15 5 4 4M4 20l4.2-.8L19 8.4a2.1 2.1 0 0 0-3-3L5.2 16.2 4 20Z" /></svg>;
+}
+function DeleteIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>;
+}
 
 const localDate = (date: Date) => {
   const year = date.getFullYear();
@@ -39,11 +55,20 @@ const formatDate = (value: string, options: Intl.DateTimeFormatOptions) => {
     new Date(year, month - 1, day),
   );
 };
+const formatMinutes = (minutes: number) => `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ""}`;
 
 export function WorkHoursTracker() {
   const { user, isAdmin, isLoading } = useAuth();
   const [workdays, setWorkdays] = useState<Workday[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([{ id: "job-1", name: "Job 1" }]);
+  const [selectedJobId, setSelectedJobId] = useState("job-1");
+  const [newJobName, setNewJobName] = useState("");
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const [editingJobName, setEditingJobName] = useState("");
+  const [workdayToDelete, setWorkdayToDelete] = useState<Workday | null>(null);
+  const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [selectedDate, setSelectedDate] = useState(localDate(new Date()));
+  const [editingWorkdayId, setEditingWorkdayId] = useState<string | null>(null);
   const [hours, setHours] = useState<string | null>(null);
   const [minutes, setMinutes] = useState<string | null>(null);
   const [month, setMonth] = useState(localMonth(new Date()));
@@ -62,19 +87,26 @@ export function WorkHoursTracker() {
   useEffect(() => {
     if (!db || !user || !isAdmin) return;
     const entries = collection(db, "users", user.uid, "workHours");
-    return onSnapshot(
+    const jobEntries = collection(db, "users", user.uid, "workJobs");
+    const unsubscribeJobs = onSnapshot(query(jobEntries, orderBy("createdAt", "asc")), (snapshot) => {
+      const savedJobs = snapshot.docs.map((item) => ({ id: item.id, name: String(item.data().name ?? "").trim() })).filter((job) => job.name);
+      setJobs(savedJobs.length ? savedJobs : [{ id: "job-1", name: "Job 1" }]);
+    });
+    const unsubscribeWorkdays = onSnapshot(
       query(entries, orderBy("date", "desc")),
       (snapshot) => {
         setWorkdays(
           snapshot.docs.flatMap((item) => {
             const date = String(item.data().date ?? item.id);
+            const jobId = String(item.data().jobId ?? "job-1");
+            const jobName = String(item.data().jobName ?? "Job 1").trim() || "Job 1";
             const value = Number(item.data().hours);
             const storedMinutes = Number(item.data().minutes);
             if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(value) || value <= 0) return [];
             if (Number.isInteger(storedMinutes) && storedMinutes >= 0 && storedMinutes <= 59)
-              return [{ date, hours: value, minutes: storedMinutes }];
+              return [{ id: item.id, date, hours: value, minutes: storedMinutes, jobId, jobName }];
             const totalMinutes = Math.round(value * 60);
-            return [{ date, hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 }];
+            return [{ id: item.id, date, hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60, jobId, jobName }];
           }),
         );
         setIsLoadingEntries(false);
@@ -85,6 +117,7 @@ export function WorkHoursTracker() {
         setIsLoadingEntries(false);
       },
     );
+    return () => { unsubscribeJobs(); unsubscribeWorkdays(); };
   }, [isAdmin, user]);
 
   const monthWorkdays = useMemo(
@@ -96,20 +129,49 @@ export function WorkHoursTracker() {
     [monthWorkdays],
   );
   const totalMinutes = monthWorkdays.reduce((total, workday) => total + workday.hours * 60 + workday.minutes, 0);
-  const totalHoursLabel = `${Math.floor(totalMinutes / 60)} h${totalMinutes % 60 ? ` ${totalMinutes % 60} min` : ""}`;
-  const selectedWorkday = workdays.find((workday) => workday.date === selectedDate);
+  const monthlyJobTotals = jobs.map((job) => ({
+    ...job,
+    workdays: monthWorkdays.filter((workday) => workday.jobId === job.id),
+  })).map((job) => ({
+    ...job,
+    days: job.workdays.length,
+    minutes: job.workdays.reduce((sum, workday) => sum + workday.hours * 60 + workday.minutes, 0),
+  })).filter((job) => job.minutes > 0);
+  const totalHoursLabel = formatMinutes(totalMinutes);
+  const selectedWorkday = workdays.find((workday) => workday.date === selectedDate && workday.jobId === selectedJobId);
+  const jobNameFor = (workday: Workday) => jobs.find((job) => job.id === workday.jobId)?.name ?? workday.jobName;
+  const jobColorFor = (jobId: string) => {
+    if (jobId === "job-1") return JOB_PILL_COLORS[0];
+    const otherJobs = jobs.filter((job) => job.id !== "job-1");
+    const jobIndex = otherJobs.findIndex((job) => job.id === jobId);
+    return JOB_PILL_COLORS[(jobIndex + 1) % JOB_PILL_COLORS.length] ?? JOB_PILL_COLORS[1];
+  };
   const selectedHours = hours ?? String(Math.min(12, Math.max(1, selectedWorkday?.hours ?? 1)));
   const selectedMinutes = minutes ?? String(selectedWorkday?.minutes ?? 0);
   const dateBounds = monthDateBounds(month);
 
   async function saveWorkday(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const isUpdating = workdays.some((workday) => workday.date === selectedDate);
+    const job = jobs.find((item) => item.id === selectedJobId);
+    const jobName = job?.name.trim() ?? "";
+    const existing = editingWorkdayId
+      ? workdays.find((workday) => workday.id === editingWorkdayId)
+      : workdays.find((workday) => workday.date === selectedDate && workday.jobId === selectedJobId);
+    const conflictingEntry = workdays.find((workday) => workday.id !== existing?.id && workday.date === selectedDate && workday.jobId === selectedJobId);
+    const isUpdating = Boolean(existing);
     const hourValue = Number(selectedHours);
     const minuteValue = Number(selectedMinutes);
     if (!db || !user || !isAdmin) return;
     if (!selectedDate || selectedDate.slice(0, 7) !== month) {
       setError("Choose a date within the selected month.");
+      return;
+    }
+    if (!job || !jobName) {
+      setError("Choose a job before saving work hours.");
+      return;
+    }
+    if (conflictingEntry) {
+      setError(`There is already a workday for ${jobName} on this date. Edit or delete that entry first.`);
       return;
     }
     if (!Number.isInteger(hourValue) || hourValue < 1 || hourValue > 12 || !Number.isInteger(minuteValue) || minuteValue < 0 || minuteValue > 59) {
@@ -119,14 +181,18 @@ export function WorkHoursTracker() {
     setIsSaving(true);
     setError("");
     try {
-      await setDoc(doc(db, "users", user.uid, "workHours", selectedDate), {
+      const entryId = existing?.id ?? `${selectedDate}__${selectedJobId}`;
+      await setDoc(doc(db, "users", user.uid, "workHours", entryId), {
         date: selectedDate,
+        jobId: selectedJobId,
+        jobName,
         hours: hourValue,
         minutes: minuteValue,
         updatedAt: serverTimestamp(),
       });
       setMonth(selectedDate.slice(0, 7));
       setSelectedDate("");
+      setEditingWorkdayId(null);
       setHours(null);
       setMinutes(null);
       setToast(isUpdating ? "Workday updated." : "Workday added.");
